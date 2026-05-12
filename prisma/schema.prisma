@@ -1,0 +1,479 @@
+// ============================================================
+// FITFUEL — PRISMA SCHEMA v1 (Prisma 7 compatible)
+// Connection config lives in prisma.config.ts — NOT here
+// Run: npx prisma migrate dev --name init
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum DietType {
+  VEGETARIAN
+  EGGETARIAN
+  NON_VEGETARIAN
+}
+
+enum MealPlanType {
+  // ── Phase 3 — Core (live at launch) ──
+  MUSCLE_GAIN
+  WEIGHT_LOSS
+  BALANCED_DIET
+  OFFICE_EMPLOYEE
+  JAIN_DIET
+  // ── Phase 9 — Lifestyle & Medical (coming soon) ──
+  HEALTHY_SEX_LIFESTYLE
+  ALCOHOL_RECOVERY
+  SMOKING_RECOVERY
+  DIABETES_MANAGEMENT
+  PCOS_HORMONAL_BALANCE
+  THYROID_SUPPORT
+  HYPERTENSION_DASH
+  POST_SURGERY_RECOVERY
+  MENTAL_HEALTH_STRESS
+  GUT_HEALTH_IBS
+  ANTI_AGING_LONGEVITY
+  CUSTOM_PERSONALIZED
+}
+
+enum PlanDuration {
+  TRIAL_DAY
+  WEEKLY
+  BI_WEEKLY
+  MONTHLY_EXCL_WEEKENDS
+  ONE_MONTH
+  TWO_MONTH
+  THREE_MONTH
+}
+
+enum MealsPerDay {
+  BREAKFAST_LUNCH
+  SNACK_DINNER
+  ALL_FOUR
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_FAILED
+  CONFIRMED
+  PROCESSING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PAYU
+  CASH_ON_DELIVERY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum DeliveryStatus {
+  PREPARING
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED_DELIVERY
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTREMELY_ACTIVE
+}
+
+enum FitnessGoal {
+  LOSE_WEIGHT
+  GAIN_MUSCLE
+  MAINTAIN
+  IMPROVE_FITNESS
+  MANAGE_CONDITION
+}
+
+// ============================================================
+// USER
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String?   @unique
+  email         String?   @unique
+  name          String?
+  avatarUrl     String?
+  role          Role      @default(CUSTOMER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       UserProfile?
+  addresses     Address[]
+  orders        Order[]
+  bodyMetrics   BodyMetric[]
+  nutritionLogs NutritionLog[]
+  workoutLogs   WorkoutLog[]
+  activePlans   ActivePlan[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id             String        @id @default(cuid())
+  userId         String        @unique
+  dateOfBirth    DateTime?
+  gender         Gender?
+  heightCm       Float?
+  weightKg       Float?
+  activityLevel  ActivityLevel?
+  fitnessGoal    FitnessGoal?
+  dietPreference DietType?
+  medicalNotes   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// ============================================================
+// ADDRESS
+// ============================================================
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String?
+  line1     String
+  line2     String?
+  area      String
+  city      String   @default("Pune")
+  pincode   String
+  landmark  String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@map("addresses")
+}
+
+// ============================================================
+// MEAL PLAN PRODUCT (catalogue)
+// ============================================================
+
+model MealPlanProduct {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  planType    MealPlanType
+  description String?
+  imageUrl    String?
+  isActive    Boolean      @default(true)
+  isLive      Boolean      @default(false)
+  phase       Int          @default(3)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  pricing     PlanPrice[]
+  orderItems  OrderItem[]
+  activePlans ActivePlan[]
+
+  @@map("meal_plan_products")
+}
+
+// ============================================================
+// PRICE TABLE — fixed lookup
+// Unique key: productId x diet x duration x mealsPerDay
+// ============================================================
+
+model PlanPrice {
+  id          String       @id @default(cuid())
+  productId   String
+  diet        DietType
+  duration    PlanDuration
+  mealsPerDay MealsPerDay
+  priceRs     Int
+  gstPercent  Int          @default(5)
+  isActive    Boolean      @default(true)
+
+  product     MealPlanProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, diet, duration, mealsPerDay])
+  @@map("plan_prices")
+}
+
+// ============================================================
+// ORDER
+// ============================================================
+
+model Order {
+  id            String        @id @default(cuid())
+  userId        String
+  addressId     String?
+  orderNumber   String        @unique
+  status        OrderStatus   @default(PENDING_PAYMENT)
+  subtotalRs    Int
+  gstRs         Int
+  totalRs       Int
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  payuTxnId     String?
+  payuPaymentId String?
+  notes         String?
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id])
+  address       Address?      @relation(fields: [addressId], references: [id])
+  items         OrderItem[]
+  deliveries    Delivery[]
+  payment       Payment?
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String       @id @default(cuid())
+  orderId     String
+  productId   String
+  diet        DietType
+  duration    PlanDuration
+  mealsPerDay MealsPerDay
+  priceRs     Int
+  gstRs       Int
+  totalRs     Int
+  quantity    Int          @default(1)
+
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     MealPlanProduct @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// ============================================================
+// PAYMENT
+// ============================================================
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amountRs      Int
+  payuTxnId     String?
+  payuPaymentId String?
+  payuHash      String?
+  rawResponse   Json?
+  failureReason String?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// ============================================================
+// DELIVERY
+// ============================================================
+
+model Delivery {
+  id            String         @id @default(cuid())
+  orderId       String
+  deliveryDate  DateTime
+  status        DeliveryStatus @default(PREPARING)
+  mealsIncluded String[]
+  driverName    String?
+  driverPhone   String?
+  trackingNotes String?
+  deliveredAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([deliveryDate])
+  @@map("deliveries")
+}
+
+// ============================================================
+// ACTIVE PLAN
+// ============================================================
+
+model ActivePlan {
+  id          String       @id @default(cuid())
+  userId      String
+  productId   String
+  diet        DietType
+  duration    PlanDuration
+  mealsPerDay MealsPerDay
+  startDate   DateTime
+  endDate     DateTime
+  isPaused    Boolean      @default(false)
+  pausedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user        User            @relation(fields: [userId], references: [id])
+  product     MealPlanProduct @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@index([endDate])
+  @@map("active_plans")
+}
+
+// ============================================================
+// BODY METRICS
+// ============================================================
+
+model BodyMetric {
+  id           String   @id @default(cuid())
+  userId       String
+  measuredAt   DateTime @default(now())
+  weightKg     Float?
+  bmi          Float?
+  bodyFatPct   Float?
+  muscleMassKg Float?
+  waterPct     Float?
+  boneMassKg   Float?
+  visceralFat  Float?
+  metabolicAge Int?
+  proteinPct   Float?
+  source       String   @default("manual")
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([measuredAt])
+  @@map("body_metrics")
+}
+
+// ============================================================
+// NUTRITION LOG
+// ============================================================
+
+model NutritionLog {
+  id         String   @id @default(cuid())
+  userId     String
+  logDate    DateTime
+  mealSlot   String
+  foodName   String
+  quantity   Float
+  unit       String   @default("g")
+  calories   Float?
+  proteinG   Float?
+  carbsG     Float?
+  fatG       Float?
+  fiberG     Float?
+  waterMl    Float?
+  source     String?
+  externalId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, logDate])
+  @@map("nutrition_logs")
+}
+
+// ============================================================
+// EXERCISE
+// ============================================================
+
+model Exercise {
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  description    String?
+  muscleGroups   String[]
+  equipment      String[]
+  level          String
+  setsReps       String?
+  videoUrl       String?
+  gifUrl         String?
+  instructions   String?
+  commonMistakes String?
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  workoutLogs    WorkoutLog[]
+
+  @@map("exercises")
+}
+
+model WorkoutLog {
+  id          String   @id @default(cuid())
+  userId      String
+  exerciseId  String
+  loggedAt    DateTime @default(now())
+  sets        Int?
+  reps        Int?
+  weightKg    Float?
+  durationMin Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+
+  @@index([userId, loggedAt])
+  @@map("workout_logs")
+}
+
+// ============================================================
+// ADMIN NOTES
+// ============================================================
+
+model AdminNote {
+  id        String   @id @default(cuid())
+  userId    String
+  authorId  String
+  note      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("admin_notes")
+}
