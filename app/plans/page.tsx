@@ -667,6 +667,9 @@ export default function PlansPage() {
                 {/* CTA — full width on mobile */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <button
+                    onClick={() => {
+                      window.location.href = `/checkout?diet=${diet}&dur=${dur}&meal=${meal}&price=${price}`;
+                    }}
                     style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
                       background: "#84cc16", color: "#000",
