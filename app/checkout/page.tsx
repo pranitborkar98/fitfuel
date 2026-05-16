@@ -189,7 +189,7 @@ function CheckoutInner() {
     console.log("[COD Order]", { form, diet, dur, meal, price: rawPrice });
 
     // Redirect to success page with cod=1 flag
-    router.push(`/order/success?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1`);
+    router.push(`/order/confirmation?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1`);
   }
 
   // ── PayU submit ──────────────────────────────────────────────────────────────
