@@ -18,38 +18,41 @@ export async function POST(req: NextRequest) {
     const firstname   = formData.get("firstname")   as string;
     const email       = formData.get("email")       as string;
     const hash        = formData.get("hash")        as string;
-    const mihpayid    = formData.get("mihpayid")    as string; // PayU payment ID
+    const mihpayid    = formData.get("mihpayid")    as string;
 
-    // â”€â”€ Verify hash â€” PayU reverse formula â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Verify hash — PayU reverse formula ──────────────────────────────────
     // Reverse: salt|status|||||||||||email|firstname|productinfo|amount|txnid|key
-    const reverseHash = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${process.env.PAYU_MERCHANT_KEY}`;
+    const reverseHash  = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${process.env.PAYU_MERCHANT_KEY}`;
     const expectedHash = crypto.createHash("sha512").update(reverseHash).digest("hex");
 
     if (hash !== expectedHash) {
-      console.error("[PayU] Hash mismatch â€” possible tampering", { txnid });
-      return NextResponse.redirect(`${BASE_URL}/checkout?error=invalid_hash`);
+      console.error("[PayU] Hash mismatch — possible tampering", { txnid });
+      return NextResponse.redirect(`${BASE_URL}/checkout?error=invalid_hash`, 303);
     }
 
     if (status !== "success") {
-      return NextResponse.redirect(`${BASE_URL}/checkout?error=payment_failed&txnid=${txnid}`);
+      return NextResponse.redirect(`${BASE_URL}/checkout?error=payment_failed&txnid=${txnid}`, 303);
     }
 
-    // â”€â”€ Payment verified â€” TODO Phase 3: save order to DB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Payment verified — TODO Phase 3: save order to DB ───────────────────
     // import { prisma } from "@/lib/prisma"
     // await prisma.orders.create({ ... })
     // await prisma.payments.create({ txnid, mihpayid, amount, status: "paid" })
 
     console.log("[PayU] Payment SUCCESS", { txnid, mihpayid, amount, email });
 
-    // Redirect to order confirmation
-    return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`);
+    // 303 = See Other — forces browser to GET the confirmation page (not POST)
+    return NextResponse.redirect(
+      `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`,
+      303
+    );
   } catch (err) {
     console.error("[PayU success handler error]", err);
-    return NextResponse.redirect(`${BASE_URL}/checkout?error=server_error`);
+    return NextResponse.redirect(`${BASE_URL}/checkout?error=server_error`, 303);
   }
 }
 
 // PayU also sends GET in some flows
 export async function GET() {
-  return NextResponse.redirect(`${BASE_URL}/plans`);
+  return NextResponse.redirect(`${BASE_URL}/plans`, 303);
 }
