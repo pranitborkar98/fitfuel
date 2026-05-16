@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck, MessageCircle, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, ShieldCheck, MessageCircle, AlertCircle, Banknote, CreditCard, FlaskConical } from "lucide-react";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -68,30 +68,98 @@ function Field({
   );
 }
 
+// ─── Payment method toggle ────────────────────────────────────────────────────
+type PayMethod = "online" | "cod";
+
+function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMethod) => void }) {
+  const options: { id: PayMethod; label: string; sub: string; icon: React.ReactNode }[] = [
+    {
+      id: "online",
+      label: "Pay Online",
+      sub: "UPI, cards, net banking via PayU",
+      icon: <CreditCard size={18} />,
+    },
+    {
+      id: "cod",
+      label: "Cash on Delivery",
+      sub: "Pay when your meals arrive",
+      icon: <Banknote size={18} />,
+    },
+  ];
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        Payment Method <span style={{ color: T.accent }}>*</span>
+      </label>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {options.map(opt => {
+          const active = value === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onChange(opt.id)}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                background: active ? "rgba(132,204,22,0.07)" : "#161616",
+                border: `1px solid ${active ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
+                borderRadius: 12, padding: "14px 16px",
+                cursor: "pointer", textAlign: "left",
+                transition: "all 0.2s",
+              }}
+            >
+              <div style={{ color: active ? T.accent : T.textMuted, marginTop: 1, flexShrink: 0 }}>
+                {opt.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: active ? T.textPrimary : T.textSecond, marginBottom: 2 }}>
+                  {opt.label}
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+                  {opt.sub}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Checkout inner (uses useSearchParams) ────────────────────────────────────
 function CheckoutInner() {
   const params = useSearchParams();
   const router = useRouter();
 
   // Plan params from URL (set by plans page)
-  const diet    = params.get("diet")    || "veg";
-  const dur     = params.get("dur")     || "monthly_ex";
-  const meal    = params.get("meal")    || "sd";
-  const price   = Number(params.get("price")  || 0);
-  const priceGST = Math.round(price * 1.05);
-  const error   = params.get("error");
-  const errMsg  = params.get("msg");
+  const diet     = params.get("diet")    || "veg";
+  const dur      = params.get("dur")     || "monthly_ex";
+  const meal     = params.get("meal")    || "sd";
+  const rawPrice = Number(params.get("price") || 0);
+  const error    = params.get("error");
+  const errMsg   = params.get("msg");
 
-  const productinfo = `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
+  // ₹1 test mode — append ?test=1 to URL to override amount
+  const isTest   = params.get("test") === "1";
+  const price    = isTest ? 1 : rawPrice;
+  const priceGST = isTest ? 1 : Math.round(rawPrice * 1.05);
+
+  const productinfo = isTest
+    ? "FitFuel TEST TRANSACTION — ignore"
+    : `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
 
   // Form state
   const [form, setForm] = useState({
     firstname: "", lastname: "", email: "", phone: "", address: "", city: "Pune", pincode: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [payuData, setPayuData] = useState<Record<string, string> | null>(null);
+  const [payMethod, setPayMethod] = useState<PayMethod>("online");
+  const [loading, setLoading]     = useState(false);
+  const [payuData, setPayuData]   = useState<Record<string, string> | null>(null);
+  const [codDone, setCodDone]     = useState(false);
 
-  // Auto-submit hidden form when payuData is ready
+  // Auto-submit hidden PayU form when payuData is ready
   useEffect(() => {
     if (payuData) {
       const formEl = document.getElementById("payu-form") as HTMLFormElement;
@@ -99,7 +167,7 @@ function CheckoutInner() {
     }
   }, [payuData]);
 
-  if (!price) {
+  if (!rawPrice && !isTest) {
     return (
       <div style={{ textAlign: "center", padding: "120px 20px", color: T.textSecond }}>
         <p style={{ fontSize: 16, marginBottom: 24 }}>No plan selected. Please choose a plan first.</p>
@@ -113,10 +181,20 @@ function CheckoutInner() {
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // ── COD submit ───────────────────────────────────────────────────────────────
+  async function handleCOD() {
     setLoading(true);
+    // TODO Phase 3: save COD order to DB
+    // await fetch("/api/orders/cod", { method: "POST", body: JSON.stringify({ form, diet, dur, meal, price: rawPrice }) })
+    console.log("[COD Order]", { form, diet, dur, meal, price: rawPrice });
 
+    // Redirect to success page with cod=1 flag
+    router.push(`/order/success?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1`);
+  }
+
+  // ── PayU submit ──────────────────────────────────────────────────────────────
+  async function handlePayU() {
+    setLoading(true);
     try {
       const res = await fetch("/api/payments/payu", {
         method: "POST",
@@ -130,15 +208,22 @@ function CheckoutInner() {
           address:     `${form.address}, ${form.city} - ${form.pincode}`,
         }),
       });
-
       if (!res.ok) throw new Error("Failed to initiate payment");
-
       const data = await res.json();
       setPayuData(data);
     } catch (err) {
       console.error(err);
       alert("Something went wrong. Please try WhatsApp ordering instead.");
       setLoading(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (payMethod === "cod") {
+      await handleCOD();
+    } else {
+      await handlePayU();
     }
   }
 
@@ -173,6 +258,26 @@ function CheckoutInner() {
             Complete Your Order
           </h1>
         </div>
+
+        {/* ₹1 test mode banner */}
+        {isTest && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)",
+              borderRadius: 12, padding: "14px 18px", marginBottom: 28,
+            }}
+          >
+            <FlaskConical size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 2 }}>Test mode — ₹1 charge</div>
+              <div style={{ fontSize: 13, color: T.textSecond }}>
+                This is a live ₹1 test transaction. Real PayU credentials, real charge, real confirmation. Remove <code style={{ color: "#fbbf24" }}>?test=1</code> for production.
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Error banner */}
         {error && (
@@ -221,7 +326,32 @@ function CheckoutInner() {
                 <Field label="Pincode" name="pincode" value={form.pincode} onChange={v => setForm(f => ({ ...f, pincode: v }))} placeholder="411014" maxLength={6} />
               </div>
 
-              {/* Submit */}
+              {/* Payment method toggle */}
+              <PayToggle value={payMethod} onChange={setPayMethod} />
+
+              {/* COD note */}
+              <AnimatePresence>
+                {payMethod === "cod" && (
+                  <motion.div
+                    key="cod-note"
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 20 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div style={{
+                      background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
+                      borderRadius: 10, padding: "12px 16px",
+                      fontSize: 13, color: T.textSecond, lineHeight: 1.6,
+                    }}>
+                      💵 Keep <strong style={{ color: T.textPrimary }}>{fmt(rawPrice)}</strong> ready at delivery.
+                      Our delivery partner will collect cash when your meals arrive.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -236,12 +366,21 @@ function CheckoutInner() {
                   transition: "all 0.2s",
                 }}
               >
-                {loading ? "Redirecting to PayU..." : <>Pay {fmt(priceGST)} securely <ArrowRight size={15} /></>}
+                {loading
+                  ? (payMethod === "cod" ? "Placing order..." : "Redirecting to PayU...")
+                  : payMethod === "cod"
+                    ? <><Banknote size={15} /> Place COD Order — {fmt(rawPrice)}</>
+                    : <>Pay {fmt(priceGST)} securely <ArrowRight size={15} /></>
+                }
               </button>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12 }}>
                 <ShieldCheck size={13} color={T.textMuted} />
-                <span style={{ fontSize: 12, color: T.textMuted }}>Secured by PayU · 256-bit SSL encryption</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>
+                  {payMethod === "cod"
+                    ? "No payment now · Pay cash at delivery"
+                    : "Secured by PayU · 256-bit SSL encryption"}
+                </span>
               </div>
             </form>
           </div>
@@ -256,7 +395,6 @@ function CheckoutInner() {
                 Order Summary
               </div>
 
-              {/* Plan details */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 {[
                   { label: "Diet",     value: DIET_LABELS[diet] || diet },
@@ -274,19 +412,40 @@ function CheckoutInner() {
 
               {/* Price breakdown */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, color: T.textMuted }}>Plan price</span>
-                  <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(price)}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
-                  <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(priceGST - price)}</span>
-                </div>
-                <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>Total</span>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>{fmt(priceGST)}</span>
-                </div>
+                {isTest ? (
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>Test charge</span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24" }}>₹1</span>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: T.textMuted }}>Plan price</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(rawPrice)}</span>
+                    </div>
+                    {payMethod === "online" && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
+                        <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(priceGST - rawPrice)}</span>
+                      </div>
+                    )}
+                    {payMethod === "cod" && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
+                        <span style={{ fontSize: 13, color: "#737373", fontStyle: "italic" }}>collected at delivery</span>
+                      </div>
+                    )}
+                    <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>
+                        {payMethod === "cod" ? "Pay at door" : "Total"}
+                      </span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>
+                        {payMethod === "cod" ? fmt(rawPrice) : fmt(priceGST)}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -301,7 +460,7 @@ function CheckoutInner() {
 
             {/* WhatsApp alternative */}
             <a
-              href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi FitFuel! I want to order:\n${productinfo}\nTotal: ${fmt(priceGST)} (incl. GST)`)}`}
+              href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi FitFuel! I want to order:\n${productinfo}\nTotal: ${fmt(rawPrice)} (excl. GST)`)}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{
