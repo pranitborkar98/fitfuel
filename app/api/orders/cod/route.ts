@@ -41,11 +41,20 @@ export async function POST(req: NextRequest) {
     const gst      = Math.round(subtotal * 0.05);
     const total    = subtotal + gst;
 
-    // 1. Upsert guest user
-    const user = await (prisma as any).user.upsert({
-      where:  { email },
-      update: { phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
-      create: { email, phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+   // 1. Upsert user — if auth user already exists (has Account), use them directly.
+//    Otherwise upsert a guest row (will be merged on first Google sign-in).
+const existingUser = await (prisma as any).user.findFirst({
+  where:   { email },
+  include: { accounts: true },
+});
+
+const user = existingUser
+  ? await (prisma as any).user.update({
+      where:  { id: existingUser.id },
+      data:   { phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+    })
+  : await (prisma as any).user.create({
+      data: { email, phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
     });
 
     // 2. Create address
