@@ -1,5 +1,5 @@
 // app/api/nutrition/diary/[id]/route.ts
-// DELETE /api/nutrition/diary/:id — remove a logged food entry
+// DELETE /api/nutrition/diary/:id â€” remove a logged food entry
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
