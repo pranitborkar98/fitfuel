@@ -209,9 +209,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ foodItemId: selectedFood.id, mealTypeId: activeSlot.id, date: fmt(selectedDate), quantity: Number(quantity) }),
       });
-      if (!res.ok) throw new Error();
-      setEntries(p => [...p, await res.json()]);
-      setSelectedFood(null); setSearchQ(""); setSearchResults([]); setQuantity("100"); setActiveSlot(null);
+            if (!res.ok) throw new Error();
+      const newEntry = await res.json();
+      setEntries(p => [...p, newEntry]);
+      setSelectedFood(null); setSearchQ(""); setSearchResults([]); setQuantity("100"); setActiveSlot(null);;
     } finally { setLogging(false); }
   }
 
