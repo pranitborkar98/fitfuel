@@ -1,7 +1,17 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+
+// ─── Extend NextAuth types ────────────────────────────────────────────────────
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id:   string;
+      role: string;
+    } & DefaultSession["user"];
+  }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -12,11 +22,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: {
-    strategy: "jwt", // JWT — no Session table needed, simpler for now
+    strategy: "jwt",
   },
   callbacks: {
     async jwt({ token, user }) {
-      // On first sign-in, user object is available — persist id + role to token
       if (user) {
         token.id   = user.id;
         token.role = (user as any).role ?? "CUSTOMER";
@@ -24,15 +33,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      // Expose id + role to the client session
       if (session.user) {
-        session.user.id   = token.id as string;
+        session.user.id   = token.id   as string;
         session.user.role = token.role as string;
       }
       return session;
     },
   },
   pages: {
-    signIn: "/auth/signin", // custom sign-in page (Phase 4)
+    signIn: "/auth/signin",
   },
 });
