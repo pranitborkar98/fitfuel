@@ -1,7 +1,7 @@
 "use client";
 
-// app/dashboard/nutrition/NutritionClient.tsx — Phase 6 v4
-// SparkyFitness-aligned: 3-col layout, fiber tracking, meal subtotals, edit entry, daily progress
+// app/dashboard/nutrition/NutritionClient.tsx — Phase 6 v4.1
+// SparkyFitness-aligned + FULLY MOBILE RESPONSIVE
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -80,7 +80,7 @@ function CalorieRing({ consumed, goal }: { consumed: number; goal: number }) {
 
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <svg viewBox="0 0 184 184" style={{ width: 184, height: 184, transform: "rotate(-90deg)" }}>
+      <svg viewBox="0 0 184 184" style={{ width: 160, height: 160, transform: "rotate(-90deg)" }}>
         <circle cx="92" cy="92" r="90" fill="none" stroke="#181818" strokeWidth="0.75" />
         <circle cx="92" cy="92" r={r} fill="none" stroke="#1c1c1c" strokeWidth="14" />
         <circle
@@ -94,18 +94,18 @@ function CalorieRing({ consumed, goal }: { consumed: number; goal: number }) {
       <div style={{ position: "absolute", textAlign: "center" }}>
         <p style={{
           fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: 52, fontWeight: 900, color: T.text, lineHeight: 1, letterSpacing: "-0.03em",
+          fontSize: 44, fontWeight: 900, color: T.text, lineHeight: 1, letterSpacing: "-0.03em",
         }}>
           {Math.round(consumed)}
         </p>
         <p style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>of {goal} kcal</p>
         <div style={{
-          marginTop: 8, display: "inline-flex", alignItems: "center",
+          marginTop: 6, display: "inline-flex", alignItems: "center",
           background: over ? T.redBg : T.accentBg,
           border: `1px solid ${over ? "rgba(248,113,113,0.2)" : T.accentBorder}`,
-          borderRadius: 999, padding: "3px 12px",
+          borderRadius: 999, padding: "3px 10px",
         }}>
-          <span style={{ fontSize: 11, fontWeight: 900, color: over ? T.red : T.accentLight, letterSpacing: "0.04em" }}>
+          <span style={{ fontSize: 10, fontWeight: 900, color: over ? T.red : T.accentLight, letterSpacing: "0.04em" }}>
             {over ? `+${Math.round(consumed - goal)} OVER` : `${Math.round(goal - consumed)} LEFT`}
           </span>
         </div>
@@ -120,20 +120,20 @@ function MacroCard({ icon: Icon, label, consumed, goal, color, bg, unit = "g" }:
 }) {
   const p = pct(consumed, goal);
   return (
-    <div style={{ background: "#0e0e0e", border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${color}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={13} style={{ color }} />
+    <div style={{ background: "#0e0e0e", border: `1px solid ${T.border}`, borderRadius: 12, padding: "12px 14px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: bg, border: `1px solid ${color}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon size={12} style={{ color }} />
         </div>
-        <span style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+        <span style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 10 }}>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, color: T.text, lineHeight: 1 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 8 }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 24, fontWeight: 900, color: T.text, lineHeight: 1 }}>
           {Math.round(consumed)}
         </span>
-        <span style={{ fontSize: 12, color: T.textGhost }}>/{goal}{unit}</span>
+        <span style={{ fontSize: 11, color: T.textGhost }}>/{goal}{unit}</span>
       </div>
-      <div style={{ height: 5, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
+      <div style={{ height: 4, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${p}%`, background: color, borderRadius: 999, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
       </div>
     </div>
@@ -143,9 +143,9 @@ function MacroCard({ icon: Icon, label, consumed, goal, color, bg, unit = "g" }:
 // ── Meal Subtotal Row ─────────────────────────────────────────
 function MealSubtotal({ kcal, protein, carbs, fat, fiber }: { kcal: number; protein: number; carbs: number; fat: number; fiber: number }) {
   return (
-    <div style={{ borderTop: `1px solid ${T.border}`, padding: "12px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0a0a0a" }}>
+    <div style={{ borderTop: `1px solid ${T.border}`, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0a0a0a", flexWrap: "wrap", gap: 8 }}>
       <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Total:</span>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
         <span style={{ fontSize: 12, color: T.text, fontWeight: 700 }}>{Math.round(kcal)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}> kcal</span></span>
         <span style={{ fontSize: 12, color: T.accentLight, fontWeight: 700 }}>{Math.round(protein)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>g protein</span></span>
         <span style={{ fontSize: 12, color: T.amber, fontWeight: 700 }}>{Math.round(carbs)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>g carbs</span></span>
@@ -309,13 +309,13 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   // ── RENDER ────────────────────────────────────────────────────
   return (
     <div style={{ background: T.bg, minHeight: "100vh", paddingTop: 88, paddingBottom: 100, color: T.text }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div>
             <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Dashboard</p>
-            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 44, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1 }}>
+            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 36, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1 }}>
               Fuel <span style={{ color: T.accent }}>Log</span>
             </h1>
           </div>
@@ -330,7 +330,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         </div>
 
         {/* Date navigator */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           {([-1, 1] as const).map(delta => {
             const disabled = delta === 1 && isToday;
             return (
@@ -344,13 +344,14 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
             );
           })}
           <div style={{ textAlign: "center" }}>
-            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 24, fontWeight: 800, color: T.text, letterSpacing: "0.01em" }}>{displayDate(selectedDate)}</p>
+            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: "0.01em" }}>{displayDate(selectedDate)}</p>
             <p style={{ fontSize: 12, color: T.textMuted }}>{selectedDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
           </div>
         </div>
 
-        {/* ── 3-COLUMN DASHBOARD ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr 260px", gap: 16, marginBottom: 24, alignItems: "start" }}>
+        {/* ── DASHBOARD GRID ── */}
+        {/* Desktop: 3 columns | Tablet: 2 columns | Mobile: 1 column */}
+        <div className="dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16, marginBottom: 24, alignItems: "start" }}>
           
           {/* LEFT: Calorie Ring + Energy */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -386,7 +387,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
             </div>
           </div>
 
-          {/* CENTER: Nutrition Summary + Trends Placeholder */}
+          {/* CENTER: Nutrition Summary + Trends */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -401,8 +402,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 </button>
               </div>
               
-              {/* 5 Macro Cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 20 }}>
+              {/* 5 Macro Cards - Responsive: 5 on desktop, 3 on tablet, 2 on mobile */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 8, marginBottom: 20 }}>
                 <MacroCard icon={Flame} label="Calories" consumed={totals.calories} goal={currentGoal.calories} color={T.accentLight} bg={T.accentBg} unit="kcal" />
                 <MacroCard icon={Dumbbell} label="Protein" consumed={totals.protein} goal={currentGoal.protein} color={T.accentLight} bg={T.accentBg} />
                 <MacroCard icon={Wheat} label="Carbs" consumed={totals.carbs} goal={currentGoal.carbs} color={T.amber} bg={T.amberBg} />
@@ -445,7 +446,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               </div>
               
               <div style={{ textAlign: "center", marginBottom: 16 }}>
-                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 900, color: T.blue, lineHeight: 1 }}>
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, color: T.blue, lineHeight: 1 }}>
                   {waterMl}<span style={{ fontSize: 14, fontWeight: 400, color: T.textMuted }}> / {currentGoal.waterMl}</span>
                 </p>
                 <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>ml</p>
@@ -515,16 +516,16 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               return (
                 <div key={mt.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, overflow: "hidden" }}>
                   {/* Header */}
-                  <div style={{ display: "flex", alignItems: "center", padding: "18px 22px", gap: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", padding: "16px 18px", gap: 12 }}>
                     <button
                       style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}
                       onClick={() => setCollapsed(c => ({ ...c, [mt.id]: !c[mt.id] }))}
                     >
-                      <div style={{ width: 42, height: 42, borderRadius: 11, background: "#161616", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 21, flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 11, background: "#161616", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
                         {mt.emoji ?? "🍽️"}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{mt.name}</p>
                           {hasFood && (
                             <span style={{ fontSize: 12, color: T.textMuted }}>
@@ -543,7 +544,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                           ) : "Nothing logged yet"}
                         </p>
                       </div>
-                      <span style={{ color: T.textMuted }}>
+                      <span style={{ color: T.textMuted, flexShrink: 0 }}>
                         {isCollapsed ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
                       </span>
                     </button>
@@ -563,25 +564,20 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     <div style={{ borderTop: `1px solid ${T.border}` }}>
                       {slotEntries.map((e, idx) => (
                         <div key={e.id} className="ff-entry-row"
-                          style={{ display: "flex", alignItems: "center", padding: "13px 22px", gap: 12, borderTop: idx > 0 ? "1px solid #161616" : "none" }}
+                          style={{ display: "flex", alignItems: "center", padding: "12px 18px", gap: 10, borderTop: idx > 0 ? "1px solid #161616" : "none", flexWrap: "wrap" }}
                         >
                           <div style={{ width: 6, height: 6, borderRadius: 999, background: T.accentBg, border: `1px solid ${T.accentBorder}`, flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                               <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.foodItem.name}</p>
                               {e.foodItem.brand && <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{e.foodItem.brand}</span>}
                             </div>
-                            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                              {e.quantity}g
-                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
+                            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2, display: "flex", flexWrap: "wrap", gap: "0 8px" }}>
+                              <span>{e.quantity}g</span>
                               <span style={{ color: T.accentLight, fontWeight: 700 }}>{Math.round(e.calories)} kcal</span>
-                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
                               <span style={{ color: T.accentLight }}>{Math.round(e.protein)}g protein</span>
-                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
                               <span style={{ color: T.amber }}>{Math.round(e.carbs)}g carbs</span>
-                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
                               <span style={{ color: T.red }}>{Math.round(e.fat)}g fat</span>
-                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
                               <span style={{ color: T.green }}>{Math.round(e.fiber)}g fiber</span>
                             </p>
                           </div>
@@ -683,8 +679,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 <button onClick={() => setSelectedFood(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}><X size={16} /></button>
               </div>
 
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginBottom: 16 }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 120 }}>
                   <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>Quantity</label>
                   <div style={{ display: "flex", alignItems: "center", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
                     <input type="number" min="1" max="5000" value={quantity} onChange={e => setQuantity(e.target.value)}
@@ -693,7 +689,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     <span style={{ paddingRight: 14, fontSize: 13, color: T.textMuted }}>g</span>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 6, paddingBottom: 1 }}>
+                <div style={{ display: "flex", gap: 6, paddingBottom: 1, flexWrap: "wrap" }}>
                   {[50, 100, 150, 200].map(q => (
                     <button key={q} onClick={() => setQuantity(String(q))}
                       style={{ padding: "12px 10px", borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s", background: quantity === String(q) ? T.accent : "transparent", color: quantity === String(q) ? "#000" : T.textMuted, border: `1px solid ${quantity === String(q) ? T.accent : T.border}` }}
@@ -703,7 +699,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               </div>
 
               {preview && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 8, marginBottom: 16 }}>
                   {[
                     { label: "kcal", value: preview.calories, color: T.accentLight, bg: T.accentBg },
                     { label: "Protein", value: preview.protein, color: T.accentLight, bg: T.accentBg },
@@ -712,7 +708,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     { label: "Fiber", value: preview.fiber, color: T.green, bg: T.greenBg },
                   ].map(m => (
                     <div key={m.label} style={{ background: m.bg, border: `1px solid ${m.color}20`, borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
-                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</p>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</p>
                       <p style={{ fontSize: 10, color: T.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</p>
                     </div>
                   ))}
@@ -826,9 +822,6 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 999px; }
-        @media (max-width: 1024px) {
-          .dashboard-grid { grid-template-columns: 1fr !important; }
-        }
       `}</style>
     </div>
   );
