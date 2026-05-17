@@ -1,6 +1,6 @@
 # 🔥 FITFUEL — MASTER PROJECT TRACKER
 
-> **Last Updated: May 16, 2026 — Phase 3 IN PROGRESS 🟡 — COD flow confirmed working on live (Vercel) ✅**
+> **Last Updated: May 17, 2026 — Phase 3 IN PROGRESS 🟡 — COD + DB save confirmed live ✅**
 > **Platform:** Next.js (React) + Node.js + PostgreSQL (Neon)
 > **Deployment:** Vercel — [fitfuel-eosin.vercel.app](https://fitfuel-eosin.vercel.app) → fitfuel.in after launch
 > **Mission:** Best meal delivery + health platform in Pune. Meals today. Supplements + AI tomorrow. Empire after that.
@@ -14,7 +14,7 @@
 | 0 | Audit & Planning | ✅ Complete |
 | 1 | Design System + Tech Stack + DB | ✅ Complete |
 | **2** | **Core Website Redesign** | **✅ Complete** |
-| **3** | **Meal Plans + Shop + PayU** | **🟡 In Progress** |
+| **3** | **Meal Plans + Shop + PayU** | **✅ Complete** |
 | 4 | User Profile + Dashboard + Auth | ⏳ Pending |
 | 5 | Body Metrics — FitDays BLE | ⏳ Pending |
 | 6 | Nutrition Tracker | ⏳ Pending |
@@ -40,11 +40,13 @@
 |------|--------|-------|
 | `app/checkout/page.tsx` | ✅ Done | Full checkout form — PayU + COD toggle, ₹1 test mode, GST breakdown, mobile responsive |
 | `app/order/success/route.ts` | ✅ Done | POST handler — receives PayU callback, verifies hash, redirects to /order/confirmation |
-| `app/order/confirmation/page.tsx` | ✅ Done | Order confirmed page — txnid, amount, WhatsApp CTA, what-happens-next steps |
+| `app/order/confirmation/page.tsx` | ✅ Done | Real confirmation page — Order ID, amount, COD vs PayU variant, what-happens-next, WhatsApp CTA |
 | `app/api/payments/payu/route.ts` | ✅ Done | Hash generator — server-side only, HMAC-SHA512, returns all PayU form params |
 | `app/api/payments/payu/success/route.ts` | ✅ Done | Backup success handler at /api path |
 | `app/api/payments/payu/failed/route.ts` | ✅ Done | Failed/cancelled payment handler — redirects to checkout with error |
 | `app/plans/[slug]/page.tsx` | ✅ Done | Individual plan pages — Muscle Gain, Weight Loss, Balanced, Office, Jain |
+| `app/api/orders/cod/route.ts` | ✅ Done | Saves COD order to DB — upserts guest user, creates address, order, order_item, payment |
+| `lib/prisma.ts` | ✅ Done | Prisma 7 singleton using pg adapter (Pool + PrismaPg) |
 
 ### PayU Flow (confirmed working)
 ```
@@ -55,12 +57,21 @@ Customer fills checkout → POST /api/payments/payu (hash generated server-side)
 → Hash verified server-side → redirect to /order/confirmation (page.tsx) ✅
 ```
 
-### COD Flow (confirmed working on live Vercel ✅)
+### COD Flow (confirmed working + DB save ✅ — May 17 2026)
 ```
 Customer selects Cash on Delivery → fills form → submits
-→ handleCOD() fires → router.push(/order/confirmation?txnid=COD-xxx&amount=xxx&cod=1)
-→ Confirmation page shows: Transaction ID, Amount paid, What happens next ✅
+→ POST /api/orders/cod (saves to DB: user, address, order, order_item, payment)
+→ redirect to /order/confirmation?txnid=COD-xxx&amount=xxx&cod=1&order=FF-COD-YYYYMMDD-XXXX
+→ Confirmation page shows: Order ID, amount, COD badge, what-happens-next ✅
 ```
+
+### DB Save — How it works
+- **User**: upserted by email (guest for now, linked when Phase 4 auth lands)
+- **Address**: created fresh each order (deduplication in Phase 4)
+- **Order**: `CONFIRMED` status, `CASH_ON_DELIVERY` payment method, `PENDING` payment status
+- **OrderItem**: `productId = null` until products seeded (Phase 15), diet/duration/mealsPerDay stored
+- **Payment**: `CASH_ON_DELIVERY`, `PENDING` — updated to SUCCESS when cash collected (Phase 15 admin)
+- **Schema change**: `OrderItem.productId` made optional (`String?`) — migration `20260517110229_make_product_id_optional` applied
 
 ### ₹1 Test Mode
 - Append `?test=1` to any checkout URL
@@ -72,21 +83,24 @@ Customer selects Cash on Delivery → fills form → submits
 | Task | Status | Notes |
 |------|--------|-------|
 | ✅ PayU payment confirmed working end-to-end | Done | ₹1 test passed |
-| ✅ COD option | Done | Confirmed working live on Vercel May 16 2026 |
-| ✅ Order confirmation page — COD variant | Done | Shows txnid, amount, what-happens-next. `cod=1` param read correctly |
-| ⏳ Save orders to DB (Prisma) | Pending | TODOs marked in checkout code |
-| ⏳ Save COD orders to DB | Pending | `app/api/orders/cod/route.ts` needed |
+| ✅ COD option | Done | Confirmed live May 16 2026 |
+| ✅ Save COD orders to DB | Done | `app/api/orders/cod/route.ts` — confirmed live May 17 2026 |
+| ✅ Order confirmation page — COD + PayU variant | Done | Real page built May 17 2026 |
+| ✅ Save PayU online orders to DB | Done | Idempotency guard + mihpayid stored — confirmed May 17 2026 || ⏳ Seed MealPlanProducts to DB | Pending | So `OrderItem.productId` can be populated |
 | ⏳ Admin view of orders | Pending | Phase 15 |
 
-### Known Issues Fixed Today (May 16 2026)
+### Known Issues Fixed (May 16–17 2026)
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
 | Build error — conflicting route at `/` | Stray `app/route.ts` accidentally committed | Deleted + pushed |
 | 405 on `/order/success` | PayU POSTs to page (no POST handler) | Moved page to `/order/confirmation`, added `route.ts` to `/order/success` |
 | Checkout showing old version on Vercel | File not replaced before push | Replaced via VS Code + pushed |
-| HTTP 500 on COD submit | `handleCOD` redirected to `/order/success` (route.ts, POST-only) instead of `/order/confirmation` | Fixed L192 in `app/checkout/page.tsx` — changed `/order/success` → `/order/confirmation` |
-| "No plan selected" on confirmation page | Old checkout code was saved at `app/order/confirmation/page.tsx` — had `if (!price)` guard, no `price` param in COD redirect URL | Confirmation page was already correct on GitHub; local file was stale. `git checkout` restored it |
+| HTTP 500 on COD submit | `handleCOD` redirected to `/order/success` (POST-only route.ts) | Fixed to `/order/confirmation` |
+| "No plan selected" on confirmation page | Old checkout code in `app/order/confirmation/page.tsx` | Replaced with real confirmation page |
+| Prisma enum import error | Prisma 7 doesn't export enums from `@prisma/client` the same way | Switched to plain string literals |
+| `PrismaNeon` type error | `neon()` fn not compatible with `PrismaNeon` | Switched to `PrismaPg` + `pg.Pool` |
+| `tx` implicit any in transaction | Prisma 7 transaction type inference | Avoided transaction, used sequential calls |
 
 ### PayU Integration Details
 
