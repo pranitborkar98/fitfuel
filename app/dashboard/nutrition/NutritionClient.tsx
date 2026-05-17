@@ -701,7 +701,7 @@ export default function NutritionClient({
                   <label className="text-sm text-neutral-400 w-36 flex-shrink-0">{label}</label>
                   <input
                     type="number" min={min} max={max}
-                    value={(goalDraft as Record<string, number>)[key]}
+                    value={(goalDraft as unknown as Record<string, number>)[key]}
                     onChange={e => setGoalDraft(prev => ({ ...prev, [key]: Number(e.target.value) }))}
                     className="flex-1 bg-[#080808] border border-white/8 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-lime-400/40 text-right"
                   />
