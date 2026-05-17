@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     // ── 3. Create Order + Payment in a transaction ────────────────────────────
     const orderNumber = genOrderNumber();
 
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: typeof prisma) => {
       const o = await tx.order.create({
         data: {
           userId:        user.id,
