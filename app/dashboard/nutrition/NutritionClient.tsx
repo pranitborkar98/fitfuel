@@ -1,13 +1,14 @@
 "use client";
 
-// app/dashboard/nutrition/NutritionClient.tsx — Phase 6 v3
-// Premium redesign: 184px hero ring · chunky macro cards · glowing water · bold typography
+// app/dashboard/nutrition/NutritionClient.tsx — Phase 6 v4
+// SparkyFitness-aligned: 3-col layout, fiber tracking, meal subtotals, edit entry, daily progress
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ChevronLeft, ChevronRight, Search, Plus, Trash2, X,
   Droplets, Target, Loader2, Check, Flame, Dumbbell,
   Wheat, Zap, ArrowLeft, ChevronDown, ChevronUp,
+  Pencil, Leaf, Minus,
 } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────
@@ -26,7 +27,7 @@ const T = {
   text:         "#f9fafb",
   textSecond:   "#a3a3a3",
   textMuted:    "#737373",
-  textGhost:    "#333333",
+  textGhost:    "#525252",
   red:          "#f87171",
   redBg:        "rgba(248,113,113,0.08)",
   amber:        "#fbbf24",
@@ -34,6 +35,9 @@ const T = {
   blue:         "#60a5fa",
   blueBg:       "rgba(96,165,250,0.08)",
   blueBorder:   "rgba(96,165,250,0.3)",
+  green:        "#4ade80",
+  greenBg:      "rgba(74,222,128,0.08)",
+  greenBorder:  "rgba(74,222,128,0.3)",
 };
 
 // ── Types ─────────────────────────────────────────────────────
@@ -48,7 +52,7 @@ interface FoodEntry {
   quantity: number; calories: number; protein: number; carbs: number;
   fat: number; fiber: number; foodItem: FoodItem; mealType: MealType;
 }
-interface Goal { calories: number; protein: number; carbs: number; fat: number; waterMl: number; }
+interface Goal { calories: number; protein: number; carbs: number; fat: number; fiber: number; waterMl: number; }
 interface Props {
   initialEntries: FoodEntry[]; mealTypes: MealType[]; goal: Goal;
   initialWaterMl: number; userName: string;
@@ -77,11 +81,8 @@ function CalorieRing({ consumed, goal }: { consumed: number; goal: number }) {
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
       <svg viewBox="0 0 184 184" style={{ width: 184, height: 184, transform: "rotate(-90deg)" }}>
-        {/* Outer decoration ring */}
         <circle cx="92" cy="92" r="90" fill="none" stroke="#181818" strokeWidth="0.75" />
-        {/* Track */}
         <circle cx="92" cy="92" r={r} fill="none" stroke="#1c1c1c" strokeWidth="14" />
-        {/* Progress */}
         <circle
           cx="92" cy="92" r={r} fill="none"
           stroke={ringColor} strokeWidth="14"
@@ -114,27 +115,42 @@ function CalorieRing({ consumed, goal }: { consumed: number; goal: number }) {
 }
 
 // ── Macro Stat Card ───────────────────────────────────────────
-function MacroCard({ icon: Icon, label, consumed, goal, color, bg }: {
-  icon: React.ElementType; label: string; consumed: number; goal: number; color: string; bg: string;
+function MacroCard({ icon: Icon, label, consumed, goal, color, bg, unit = "g" }: {
+  icon: React.ElementType; label: string; consumed: number; goal: number; color: string; bg: string; unit?: string;
 }) {
   const p = pct(consumed, goal);
   return (
-    <div style={{ background: "#0e0e0e", border: `1px solid ${T.border}`, borderRadius: 12, padding: "16px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: bg, border: `1px solid ${color}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={14} style={{ color }} />
+    <div style={{ background: "#0e0e0e", border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${color}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon size={13} style={{ color }} />
         </div>
         <span style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 900, color: T.text, lineHeight: 1 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 10 }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, color: T.text, lineHeight: 1 }}>
           {Math.round(consumed)}
         </span>
-        <span style={{ fontSize: 12, color: T.textGhost }}>/{goal}g</span>
+        <span style={{ fontSize: 12, color: T.textGhost }}>/{goal}{unit}</span>
       </div>
-      {/* Thick bar */}
-      <div style={{ height: 6, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
+      <div style={{ height: 5, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${p}%`, background: color, borderRadius: 999, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Meal Subtotal Row ─────────────────────────────────────────
+function MealSubtotal({ kcal, protein, carbs, fat, fiber }: { kcal: number; protein: number; carbs: number; fat: number; fiber: number }) {
+  return (
+    <div style={{ borderTop: `1px solid ${T.border}`, padding: "12px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0a0a0a" }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Total:</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <span style={{ fontSize: 12, color: T.text, fontWeight: 700 }}>{Math.round(kcal)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}> kcal</span></span>
+        <span style={{ fontSize: 12, color: T.accentLight, fontWeight: 700 }}>{Math.round(protein)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>g protein</span></span>
+        <span style={{ fontSize: 12, color: T.amber, fontWeight: 700 }}>{Math.round(carbs)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>g carbs</span></span>
+        <span style={{ fontSize: 12, color: T.red, fontWeight: 700 }}>{Math.round(fat)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>g fat</span></span>
+        <span style={{ fontSize: 12, color: T.green, fontWeight: 700 }}>{Math.round(fiber)}<span style={{ fontSize: 10, color: T.textMuted, fontWeight: 400 }}>g fiber</span></span>
       </div>
     </div>
   );
@@ -162,6 +178,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [goalsSaved, setGoalsSaved] = useState(false);
   const [collapsed,  setCollapsed]  = useState<Record<string, boolean>>({});
 
+  // Edit entry state
+  const [editingEntry, setEditingEntry] = useState<string | null>(null);
+  const [editQuantity, setEditQuantity] = useState("");
+
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isToday = fmt(selectedDate) === fmt(new Date());
 
@@ -180,8 +200,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   }, [selectedDate]);
 
   const totals = entries.reduce(
-    (a, e) => ({ calories: a.calories + e.calories, protein: a.protein + e.protein, carbs: a.carbs + e.carbs, fat: a.fat + e.fat }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    (a, e) => ({ calories: a.calories + e.calories, protein: a.protein + e.protein, carbs: a.carbs + e.carbs, fat: a.fat + e.fat, fiber: a.fiber + e.fiber }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
   );
 
   const doSearch = useCallback((q: string) => {
@@ -209,16 +229,27 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ foodItemId: selectedFood.id, mealTypeId: activeSlot.id, date: fmt(selectedDate), quantity: Number(quantity) }),
       });
-            if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error();
       const newEntry = await res.json();
       setEntries(p => [...p, newEntry]);
-      setSelectedFood(null); setSearchQ(""); setSearchResults([]); setQuantity("100"); setActiveSlot(null);;
+      setSelectedFood(null); setSearchQ(""); setSearchResults([]); setQuantity("100"); setActiveSlot(null);
     } finally { setLogging(false); }
   }
 
   async function deleteEntry(id: string) {
     await fetch(`/api/nutrition/diary/${id}`, { method: "DELETE" });
     setEntries(p => p.filter(e => e.id !== id));
+  }
+
+  async function updateEntry(id: string, newQty: number) {
+    const res = await fetch(`/api/nutrition/diary/${id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity: newQty }),
+    });
+    if (!res.ok) throw new Error();
+    const updated = await res.json();
+    setEntries(p => p.map(e => e.id === id ? updated : e));
+    setEditingEntry(null);
   }
 
   const glassMl       = 250;
@@ -232,6 +263,15 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
     const res = await fetch("/api/nutrition/water", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date: fmt(selectedDate), amountMl: change, action }),
+    });
+    setWaterMl((await res.json()).amountMl ?? waterMl);
+  }
+
+  async function adjustWater(delta: number) {
+    const action = delta > 0 ? "add" : "subtract";
+    const res = await fetch("/api/nutrition/water", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: fmt(selectedDate), amountMl: Math.abs(delta), action }),
     });
     setWaterMl((await res.json()).amountMl ?? waterMl);
   }
@@ -251,15 +291,25 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
     protein:  Math.round(selectedFood.per100Protein  * Number(quantity) / 100 * 10) / 10,
     carbs:    Math.round(selectedFood.per100Carbs    * Number(quantity) / 100 * 10) / 10,
     fat:      Math.round(selectedFood.per100Fat      * Number(quantity) / 100 * 10) / 10,
+    fiber:    Math.round(selectedFood.per100Fiber    * Number(quantity) / 100 * 10) / 10,
   } : null;
 
   const bySlot   = (id: string) => entries.filter(e => e.mealTypeId === id);
-  const slotKcal = (id: string) => bySlot(id).reduce((a, e) => a + e.calories, 0);
+  const slotTotals = (id: string) => {
+    const items = bySlot(id);
+    return items.reduce((a, e) => ({
+      kcal: a.kcal + e.calories, protein: a.protein + e.protein,
+      carbs: a.carbs + e.carbs, fat: a.fat + e.fat, fiber: a.fiber + e.fiber,
+    }), { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+  };
+  const slotKcal = (id: string) => slotTotals(id).kcal;
+
+  const calPct = pct(totals.calories, currentGoal.calories);
 
   // ── RENDER ────────────────────────────────────────────────────
   return (
     <div style={{ background: T.bg, minHeight: "100vh", paddingTop: 88, paddingBottom: 100, color: T.text }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
@@ -280,7 +330,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         </div>
 
         {/* Date navigator */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           {([-1, 1] as const).map(delta => {
             const disabled = delta === 1 && isToday;
             return (
@@ -299,75 +349,148 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           </div>
         </div>
 
-        {/* ── HERO SUMMARY CARD ── */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "32px", marginBottom: 16, position: "relative", overflow: "hidden" }}>
-          {/* Lime gradient accent line */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent 55%)` }} />
-          {/* Lime ambient glow */}
-          <div style={{ position: "absolute", top: -60, left: -60, width: 240, height: 240, borderRadius: "50%", background: `radial-gradient(circle, ${T.accentGlow} 0%, transparent 70%)`, pointerEvents: "none" }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: 40, flexWrap: "wrap", position: "relative" }}>
-            <CalorieRing consumed={totals.calories} goal={currentGoal.calories} />
-            <div style={{ flex: 1, minWidth: 240, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-              <MacroCard icon={Dumbbell} label="Protein" consumed={totals.protein} goal={currentGoal.protein} color={T.accentLight} bg={T.accentBg} />
-              <MacroCard icon={Wheat}   label="Carbs"   consumed={totals.carbs}   goal={currentGoal.carbs}   color={T.amber}      bg={T.amberBg} />
-              <MacroCard icon={Zap}     label="Fat"     consumed={totals.fat}     goal={currentGoal.fat}     color={T.red}        bg={T.redBg} />
-            </div>
-          </div>
-
-          <div style={{ marginTop: 24, paddingTop: 18, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: T.textMuted }}>
-              <span style={{ color: T.text, fontWeight: 700 }}>{Math.round(pct(totals.calories, currentGoal.calories))}%</span> of daily target
-            </span>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 17, fontWeight: 900, letterSpacing: "0.02em", color: totals.calories > currentGoal.calories ? T.red : T.accentLight }}>
-              {totals.calories > currentGoal.calories
-                ? `${Math.round(totals.calories - currentGoal.calories)} kcal over`
-                : `${Math.round(currentGoal.calories - totals.calories)} kcal remaining`}
-            </span>
-          </div>
-        </div>
-
-        {/* ── WATER CARD ── */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px 28px", marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: T.blueBg, border: `1px solid ${T.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Droplets size={18} style={{ color: T.blue }} />
+        {/* ── 3-COLUMN DASHBOARD ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr 260px", gap: 16, marginBottom: 24, alignItems: "start" }}>
+          
+          {/* LEFT: Calorie Ring + Energy */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px 20px", textAlign: "center" }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 16 }}>Daily Energy Goal</p>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <CalorieRing consumed={totals.calories} goal={currentGoal.calories} />
               </div>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: T.text, lineHeight: 1.2 }}>Water Intake</p>
-                <p style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Stay hydrated throughout the day</p>
+              <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16 }}>
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: T.accentLight }}>{Math.round(totals.calories)}</p>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>eaten kcal</p>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: T.red }}>0</p>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>burned kcal</p>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: T.text }}>{currentGoal.calories}</p>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>goal kcal</p>
+                </div>
+              </div>
+              {/* Daily Progress Bar */}
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>Daily Progress</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.text }}>{Math.round(calPct)}%</span>
+                </div>
+                <div style={{ height: 6, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${calPct}%`, background: calPct > 100 ? T.red : T.accent, borderRadius: 999, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
+                </div>
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, color: T.blue, lineHeight: 1 }}>
-                {waterMl}<span style={{ fontSize: 13, fontWeight: 400, color: T.textMuted }}> ml</span>
-              </p>
-              <p style={{ fontSize: 11, color: T.textMuted }}>of {currentGoal.waterMl} ml</p>
-            </div>
           </div>
 
-          {/* Thick progress bar */}
-          <div style={{ height: 8, background: "#181818", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
-            <div style={{ height: "100%", width: `${Math.min(100, (waterMl / currentGoal.waterMl) * 100)}%`, background: `linear-gradient(90deg, ${T.blue}, #93c5fd)`, borderRadius: 999, transition: "width 0.6s cubic-bezier(.4,0,.2,1)" }} />
-          </div>
-
-          {/* Glass buttons */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {Array.from({ length: totalGlasses }).map((_, i) => {
-              const filled = i < filledGlasses;
-              return (
-                <button key={i} onClick={() => logWater(i)} title={`${(i + 1) * glassMl}ml`}
-                  style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${filled ? T.blueBorder : T.border}`, background: filled ? T.blueBg : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: filled ? T.blue : T.textGhost, cursor: "pointer", transition: "all 0.15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.blueBorder; e.currentTarget.style.color = T.blue; e.currentTarget.style.background = T.blueBg; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = filled ? T.blueBorder : T.border; e.currentTarget.style.color = filled ? T.blue : T.textGhost; e.currentTarget.style.background = filled ? T.blueBg : "transparent"; }}
+          {/* CENTER: Nutrition Summary + Trends Placeholder */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px", position: "relative", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Nutrition Summary</p>
+                <button
+                  onClick={() => { setGoalDraft(currentGoal); setShowGoals(true); }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, color: T.textMuted, cursor: "pointer", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
                 >
-                  <Droplets size={17} />
+                  <Target size={12} /> Edit Goals
                 </button>
-              );
-            })}
+              </div>
+              
+              {/* 5 Macro Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 20 }}>
+                <MacroCard icon={Flame} label="Calories" consumed={totals.calories} goal={currentGoal.calories} color={T.accentLight} bg={T.accentBg} unit="kcal" />
+                <MacroCard icon={Dumbbell} label="Protein" consumed={totals.protein} goal={currentGoal.protein} color={T.accentLight} bg={T.accentBg} />
+                <MacroCard icon={Wheat} label="Carbs" consumed={totals.carbs} goal={currentGoal.carbs} color={T.amber} bg={T.amberBg} />
+                <MacroCard icon={Zap} label="Fat" consumed={totals.fat} goal={currentGoal.fat} color={T.red} bg={T.redBg} />
+                <MacroCard icon={Leaf} label="Fiber" consumed={totals.fiber} goal={currentGoal.fiber} color={T.green} bg={T.greenBg} />
+              </div>
+
+              {/* 14-Day Trends Placeholder */}
+              <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16 }}>
+                <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>14-Day Nutrition Trends</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    { label: "Calories (kcal)", color: T.accentLight, value: Math.round(totals.calories), goal: currentGoal.calories },
+                    { label: "Protein", color: T.accentLight, value: Math.round(totals.protein), goal: currentGoal.protein },
+                    { label: "Carbs", color: T.amber, value: Math.round(totals.carbs), goal: currentGoal.carbs },
+                    { label: "Fat", color: T.red, value: Math.round(totals.fat), goal: currentGoal.fat },
+                    { label: "Fiber", color: T.green, value: Math.round(totals.fiber), goal: currentGoal.fiber },
+                  ].map(trend => (
+                    <div key={trend.label}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>{trend.label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: trend.color }}>{trend.value}<span style={{ color: T.textMuted, fontWeight: 400 }}> / {trend.goal}</span></span>
+                      </div>
+                      <div style={{ height: 3, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct(trend.value, trend.goal)}%`, background: trend.color, borderRadius: 999, opacity: 0.6 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          <p style={{ fontSize: 11, color: T.textGhost, marginTop: 10 }}>Tap to log 250ml · Tap filled to undo</p>
+
+          {/* RIGHT: Water Intake */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <Droplets size={18} style={{ color: T.blue }} />
+                <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Water Intake</p>
+              </div>
+              
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 900, color: T.blue, lineHeight: 1 }}>
+                  {waterMl}<span style={{ fontSize: 14, fontWeight: 400, color: T.textMuted }}> / {currentGoal.waterMl}</span>
+                </p>
+                <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>ml</p>
+              </div>
+
+              {/* Water % + Quick buttons */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+                <button onClick={() => adjustWater(-250)}
+                  style={{ width: 36, height: 36, borderRadius: 8, background: T.cardDeep, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer" }}
+                >
+                  <Minus size={14} />
+                </button>
+                <div style={{ textAlign: "center", minWidth: 60 }}>
+                  <p style={{ fontSize: 20, fontWeight: 900, color: T.blue }}>{Math.round((waterMl / currentGoal.waterMl) * 100)}%</p>
+                </div>
+                <button onClick={() => adjustWater(250)}
+                  style={{ width: 36, height: 36, borderRadius: 8, background: T.blueBg, border: `1px solid ${T.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.blue, cursor: "pointer" }}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              <p style={{ fontSize: 10, color: T.textGhost, textAlign: "center", marginBottom: 12 }}>250 ml per drink</p>
+
+              {/* Thick progress bar */}
+              <div style={{ height: 8, background: "#181818", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+                <div style={{ height: "100%", width: `${Math.min(100, (waterMl / currentGoal.waterMl) * 100)}%`, background: `linear-gradient(90deg, ${T.blue}, #93c5fd)`, borderRadius: 999, transition: "width 0.6s cubic-bezier(.4,0,.2,1)" }} />
+              </div>
+
+              {/* Glass buttons */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                {Array.from({ length: totalGlasses }).map((_, i) => {
+                  const filled = i < filledGlasses;
+                  return (
+                    <button key={i} onClick={() => logWater(i)} title={`${(i + 1) * glassMl}ml`}
+                      style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${filled ? T.blueBorder : T.border}`, background: filled ? T.blueBg : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: filled ? T.blue : T.textGhost, cursor: "pointer", transition: "all 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = T.blueBorder; e.currentTarget.style.color = T.blue; e.currentTarget.style.background = T.blueBg; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = filled ? T.blueBorder : T.border; e.currentTarget.style.color = filled ? T.blue : T.textGhost; e.currentTarget.style.background = filled ? T.blueBg : "transparent"; }}
+                    >
+                      <Droplets size={16} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── MEAL SLOTS ── */}
@@ -384,9 +507,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {mealTypes.map(mt => {
               const slotEntries = bySlot(mt.id);
-              const kcal        = slotKcal(mt.id);
+              const st = slotTotals(mt.id);
+              const kcal = st.kcal;
               const isCollapsed = collapsed[mt.id];
-              const hasFood     = slotEntries.length > 0;
+              const hasFood = slotEntries.length > 0;
 
               return (
                 <div key={mt.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, overflow: "hidden" }}>
@@ -400,7 +524,14 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                         {mt.emoji ?? "🍽️"}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{mt.name}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{mt.name}</p>
+                          {hasFood && (
+                            <span style={{ fontSize: 12, color: T.textMuted }}>
+                              {Math.round(kcal)} / {Math.round(currentGoal.calories * 0.25)} kcal
+                            </span>
+                          )}
+                        </div>
                         <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>
                           {hasFood ? (
                             <>
@@ -436,24 +567,70 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                         >
                           <div style={{ width: 6, height: 6, borderRadius: 999, background: T.accentBg, border: `1px solid ${T.accentBorder}`, flexShrink: 0 }} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.foodItem.name}</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.foodItem.name}</p>
+                              {e.foodItem.brand && <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{e.foodItem.brand}</span>}
+                            </div>
                             <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
                               {e.quantity}g
                               <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
                               <span style={{ color: T.accentLight, fontWeight: 700 }}>{Math.round(e.calories)} kcal</span>
                               <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
-                              P{Math.round(e.protein)}g C{Math.round(e.carbs)}g F{Math.round(e.fat)}g
+                              <span style={{ color: T.accentLight }}>{Math.round(e.protein)}g protein</span>
+                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
+                              <span style={{ color: T.amber }}>{Math.round(e.carbs)}g carbs</span>
+                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
+                              <span style={{ color: T.red }}>{Math.round(e.fat)}g fat</span>
+                              <span style={{ margin: "0 5px", color: T.textGhost }}>·</span>
+                              <span style={{ color: T.green }}>{Math.round(e.fiber)}g fiber</span>
                             </p>
                           </div>
-                          <button className="ff-delete-btn" onClick={() => deleteEntry(e.id)}
-                            style={{ width: 30, height: 30, borderRadius: 8, background: T.redBg, border: "1px solid rgba(248,113,113,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: T.red, cursor: "pointer", transition: "all 0.15s", flexShrink: 0, opacity: 0 }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.18)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = T.redBg; }}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          
+                          {/* Edit + Delete buttons */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                            {editingEntry === e.id ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="number"
+                                  value={editQuantity}
+                                  onChange={ev => setEditQuantity(ev.target.value)}
+                                  style={{ width: 60, background: T.bg, border: `1px solid ${T.accentBorder}`, borderRadius: 6, padding: "6px 8px", fontSize: 13, fontWeight: 700, color: T.text, outline: "none", textAlign: "right" }}
+                                  autoFocus
+                                  onKeyDown={ev => {
+                                    if (ev.key === "Enter") updateEntry(e.id, Number(editQuantity));
+                                    if (ev.key === "Escape") setEditingEntry(null);
+                                  }}
+                                />
+                                <button onClick={() => updateEntry(e.id, Number(editQuantity))}
+                                  style={{ width: 28, height: 28, borderRadius: 6, background: T.accentBg, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, cursor: "pointer" }}
+                                >
+                                  <Check size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <button className="ff-edit-btn" onClick={() => { setEditingEntry(e.id); setEditQuantity(String(e.quantity)); }}
+                                  style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer", transition: "all 0.15s", opacity: 0 }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                                <button className="ff-delete-btn" onClick={() => deleteEntry(e.id)}
+                                  style={{ width: 30, height: 30, borderRadius: 8, background: T.redBg, border: "1px solid rgba(248,113,113,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: T.red, cursor: "pointer", transition: "all 0.15s", opacity: 0 }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.18)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = T.redBg; }}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       ))}
+                      
+                      {/* Meal Subtotal */}
+                      <MealSubtotal kcal={st.kcal} protein={st.protein} carbs={st.carbs} fat={st.fat} fiber={st.fiber} />
                     </div>
                   )}
                 </div>
@@ -526,15 +703,16 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               </div>
 
               {preview && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
                   {[
-                    { label: "kcal",    value: preview.calories, color: T.accentLight, bg: T.accentBg },
-                    { label: "Protein", value: preview.protein,  color: T.accentLight, bg: T.accentBg },
-                    { label: "Carbs",   value: preview.carbs,    color: T.amber,       bg: T.amberBg },
-                    { label: "Fat",     value: preview.fat,      color: T.red,         bg: T.redBg },
+                    { label: "kcal", value: preview.calories, color: T.accentLight, bg: T.accentBg },
+                    { label: "Protein", value: preview.protein, color: T.accentLight, bg: T.accentBg },
+                    { label: "Carbs", value: preview.carbs, color: T.amber, bg: T.amberBg },
+                    { label: "Fat", value: preview.fat, color: T.red, bg: T.redBg },
+                    { label: "Fiber", value: preview.fiber, color: T.green, bg: T.greenBg },
                   ].map(m => (
                     <div key={m.label} style={{ background: m.bg, border: `1px solid ${m.color}20`, borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
-                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 24, fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</p>
+                      <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</p>
                       <p style={{ fontSize: 10, color: T.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</p>
                     </div>
                   ))}
@@ -577,7 +755,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 900, color: T.accent, lineHeight: 1.1 }}>
                       {Math.round(food.per100Calories)}<span style={{ fontSize: 11, fontWeight: 400, color: T.textMuted }}> kcal</span>
                     </p>
-                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>P{food.per100Protein} C{food.per100Carbs} F{food.per100Fat}</p>
+                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>P{food.per100Protein} C{food.per100Carbs} F{food.per100Fat} Fi{food.per100Fiber}</p>
                   </div>
                 </button>
               );
@@ -605,11 +783,12 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
               {[
-                { key: "calories", label: "Calories",  unit: "kcal", color: T.accentLight },
-                { key: "protein",  label: "Protein",   unit: "g",    color: T.accentLight },
-                { key: "carbs",    label: "Carbs",     unit: "g",    color: T.amber },
-                { key: "fat",      label: "Fat",       unit: "g",    color: T.red },
-                { key: "waterMl",  label: "Water",     unit: "ml",   color: T.blue },
+                { key: "calories", label: "Calories", unit: "kcal", color: T.accentLight },
+                { key: "protein", label: "Protein", unit: "g", color: T.accentLight },
+                { key: "carbs", label: "Carbs", unit: "g", color: T.amber },
+                { key: "fat", label: "Fat", unit: "g", color: T.red },
+                { key: "fiber", label: "Fiber", unit: "g", color: T.green },
+                { key: "waterMl", label: "Water", unit: "ml", color: T.blue },
               ].map(({ key, label, unit, color }) => (
                 <div key={key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 4, height: 36, borderRadius: 999, background: color, flexShrink: 0 }} />
@@ -642,10 +821,14 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        .ff-entry-row:hover .ff-edit-btn { opacity: 1 !important; }
         .ff-entry-row:hover .ff-delete-btn { opacity: 1 !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 999px; }
+        @media (max-width: 1024px) {
+          .dashboard-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </div>
   );

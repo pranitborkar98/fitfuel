@@ -35,7 +35,14 @@ export default async function NutritionPage() {
     }),
   ]);
 
-  const defaultGoal = { calories: 2000, protein: 150, carbs: 250, fat: 67, waterMl: 2500 };
+  const defaultGoal = { 
+    calories: 2000, 
+    protein: 150, 
+    carbs: 250, 
+    fat: 67, 
+    fiber: 28,   // ← ADD THIS
+    waterMl: 2500 
+  };
 
   return (
     <NutritionClient

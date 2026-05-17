@@ -569,6 +569,8 @@ model NutritionGoal {
   protein   Float    @default(150)
   carbs     Float    @default(250)
   fat       Float    @default(67)
+  fiber     Int      @default(28)  
+
   waterMl   Int      @default(2500)
   updatedAt DateTime @updatedAt
 
