@@ -7,18 +7,20 @@ import { Zap } from "lucide-react";
 import Link from "next/link";
 
 const T = {
-  bg:         "#0a0a0a",
-  card:       "#111111",
-  cardBorder: "#1f1f1f",
-  accent:     "#84cc16",
-  textPrimary:"#f9fafb",
-  textSecond: "#a3a3a3",
-  textMuted:  "#737373",
+  bg:          "#0a0a0a",
+  card:        "#111111",
+  cardBorder:  "#1f1f1f",
+  accent:      "#84cc16",
+  textPrimary: "#f9fafb",
+  textSecond:  "#a3a3a3",
+  textMuted:   "#737373",
 };
 
 function SignInInner() {
-  const params      = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/";
+  const params = useSearchParams();
+
+  // ✅ FIX: was defaulting to "/" — now sends to /dashboard after login
+  const callbackUrl = params.get("callbackUrl") || "/dashboard";
   const error       = params.get("error");
 
   return (
@@ -43,7 +45,7 @@ function SignInInner() {
       }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
 
-        {/* Logo — matches Navbar exactly */}
+        {/* Logo */}
         <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 11, textDecoration: "none", marginBottom: 36 }}>
           <div style={{
             width: 36, height: 36, background: T.accent, borderRadius: 9,
@@ -90,7 +92,7 @@ function SignInInner() {
             boxShadow: "0 2px 12px rgba(0,0,0,0.3)", transition: "transform 0.2s, box-shadow 0.2s",
           }}
           onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.4)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)";   e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)"; }}
         >
           <svg width="18" height="18" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -119,7 +121,7 @@ function SignInInner() {
             textDecoration: "none", transition: "all 0.2s", boxSizing: "border-box",
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(132,204,22,0.3)"; (e.currentTarget as HTMLElement).style.color = T.textPrimary; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.cardBorder; (e.currentTarget as HTMLElement).style.color = T.textSecond; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.cardBorder;           (e.currentTarget as HTMLElement).style.color = T.textSecond; }}
         >
           💬 Order via WhatsApp instead
         </a>

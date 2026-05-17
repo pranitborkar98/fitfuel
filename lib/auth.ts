@@ -14,18 +14,15 @@ declare module "next-auth" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  useSecureCookies: true,
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "none" as const,
-        path: "/",
-        secure: true,
-      },
-    },
+
+  // ✅ REMOVED: useSecureCookies + custom cookies block
+  // Those were setting sameSite:"none" which browsers reject outside cross-origin iframes.
+  // NextAuth on Vercel HTTPS auto-sets __Secure- prefix + sameSite:lax correctly.
+
+  session: {
+    strategy: "database", // ✅ explicit — use DB sessions via PrismaAdapter
   },
+
   providers: [
     Google({
       clientId:     process.env.GOOGLE_CLIENT_ID!,
@@ -33,6 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
   ],
+
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
@@ -42,6 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+
   pages: {
     signIn: "/auth/signin",
   },

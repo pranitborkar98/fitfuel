@@ -126,8 +126,10 @@ model User {
   id            String    @id @default(cuid())
   phone         String?   @unique
   email         String?   @unique
+  emailVerified DateTime?           // ✅ ADDED — required by @auth/prisma-adapter
   name          String?
-  avatarUrl     String?
+  image         String?             // ✅ ADDED — NextAuth sets this from Google avatar URL
+  avatarUrl     String?             // keep your existing field too
   role          Role      @default(CUSTOMER)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
@@ -140,9 +142,8 @@ model User {
   nutritionLogs NutritionLog[]
   workoutLogs   WorkoutLog[]
   activePlans   ActivePlan[]
-  accounts      Account[]   
+  accounts      Account[]
   sessions      Session[]
-
 
   @@map("users")
 }
@@ -283,7 +284,7 @@ model OrderItem {
   totalRs     Int
   quantity    Int          @default(1)
 
-  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order       Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     MealPlanProduct? @relation(fields: [productId], references: [id])
 
   @@map("order_items")
@@ -481,7 +482,6 @@ model AdminNote {
   @@map("admin_notes")
 }
 
-
 // ============================================================
 // NEXTAUTH
 // ============================================================
@@ -514,6 +514,7 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
+
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique

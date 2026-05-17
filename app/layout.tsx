@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,11 +23,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+// ✅ Must be async — we call auth() server-side to pass session to SessionProvider
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // ✅ Fetch session server-side so SessionProvider hydrates correctly on first paint
+  // This avoids the flash of "unauthenticated" state on page load
+  const session = await auth();
+
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
@@ -37,9 +44,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        {/* ✅ SessionProvider wraps everything so useSession() works in any client component */}
+        <SessionProvider session={session}>
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   );
