@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { DietType, MealsPerDay, PlanDuration, PaymentMethod, PaymentStatus, OrderStatus } from "@prisma/client";
 
-// ─── Enum maps (URL param → Prisma enum) ─────────────────────────────────────
-const DIET_MAP: Record<string, DietType> = {
+// ─── Enum maps (URL param → Prisma enum string values) ───────────────────────
+const DIET_MAP: Record<string, string> = {
   veg:    "VEGETARIAN",
   egg:    "EGGETARIAN",
   nonveg: "NON_VEGETARIAN",
-  jain:   "VEGETARIAN", // Jain is vegetarian diet type
+  jain:   "VEGETARIAN",
 };
 
-const DUR_MAP: Record<string, PlanDuration> = {
+const DUR_MAP: Record<string, string> = {
   trial:       "TRIAL_DAY",
   weekly:      "WEEKLY",
   biweekly:    "BI_WEEKLY",
@@ -20,7 +19,7 @@ const DUR_MAP: Record<string, PlanDuration> = {
   three_month: "THREE_MONTH",
 };
 
-const MEAL_MAP: Record<string, MealsPerDay> = {
+const MEAL_MAP: Record<string, string> = {
   bl:  "BREAKFAST_LUNCH",
   sd:  "SNACK_DINNER",
   all: "ALL_FOUR",
@@ -101,12 +100,12 @@ export async function POST(req: NextRequest) {
           userId:        user.id,
           addressId:     addr.id,
           orderNumber,
-          status:        OrderStatus.CONFIRMED,      // COD = confirmed immediately
+          status:        "CONFIRMED",
           subtotalRs:    subtotal,
           gstRs:         gst,
           totalRs:       total,
-          paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
-          paymentStatus: PaymentStatus.PENDING,      // cash not yet collected
+          paymentMethod: "CASH_ON_DELIVERY",
+          paymentStatus: "PENDING",
           notes: JSON.stringify({ diet, dur, meal, isJain: diet === "jain" }),
         },
       });
@@ -129,8 +128,8 @@ export async function POST(req: NextRequest) {
       await tx.payment.create({
         data: {
           orderId:  o.id,
-          method:   PaymentMethod.CASH_ON_DELIVERY,
-          status:   PaymentStatus.PENDING,
+          method:   "CASH_ON_DELIVERY",
+          status:   "PENDING",
           amountRs: total,
         },
       });
