@@ -183,14 +183,32 @@ function CheckoutInner() {
 
   // ── COD submit ───────────────────────────────────────────────────────────────
   async function handleCOD() {
-    setLoading(true);
-    // TODO Phase 3: save COD order to DB
-    // await fetch("/api/orders/cod", { method: "POST", body: JSON.stringify({ form, diet, dur, meal, price: rawPrice }) })
-    console.log("[COD Order]", { form, diet, dur, meal, price: rawPrice });
-
-    // Redirect to success page with cod=1 flag
-    router.push(`/order/confirmation?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1`);
+  setLoading(true);
+  try {
+    const res = await fetch("/api/orders/cod", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstname: form.firstname,
+        lastname:  form.lastname,
+        email:     form.email,
+        phone:     form.phone,
+        address:   form.address,
+        city:      form.city,
+        pincode:   form.pincode,
+        diet, dur, meal,
+        price: rawPrice,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to place order");
+    router.push(`/order/confirmation?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1&order=${data.orderNumber}`);
+  } catch (err) {
+    console.error("[COD]", err);
+    alert("Something went wrong. Please try WhatsApp ordering instead.");
+    setLoading(false);
   }
+}
 
   // ── PayU submit ──────────────────────────────────────────────────────────────
   async function handlePayU() {

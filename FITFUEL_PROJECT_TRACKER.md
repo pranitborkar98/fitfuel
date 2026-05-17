@@ -1,321 +1,308 @@
 # 🔥 FITFUEL — MASTER PROJECT TRACKER
-> Last Updated: **Phase 2 IN PROGRESS — Homepage shell live, visual polish pass underway. Framer Motion animations next.**
-> Platform: **Next.js (React) + Node.js + PostgreSQL (Neon)**
-> Deployment: **Vercel** — subdomain app.fitfuel.in during build → fitfuel.in after launch
-> Mission: **Build one hell of a company.** Meals today. Supplements + wellness tomorrow. Empire after that.
+
+> **Last Updated: May 16, 2026 — Phase 3 IN PROGRESS 🟡 — COD flow confirmed working on live (Vercel) ✅**
+> **Platform:** Next.js (React) + Node.js + PostgreSQL (Neon)
+> **Deployment:** Vercel — [fitfuel-eosin.vercel.app](https://fitfuel-eosin.vercel.app) → fitfuel.in after launch
+> **Mission:** Best meal delivery + health platform in Pune. Meals today. Supplements + AI tomorrow. Empire after that.
 
 ---
 
-## 📍 CURRENT STAGE
-**Phase 1 — Design System + Architecture — IN PROGRESS (4/6 tasks done)**
-
-### Phase 1 task status:
-- [x] Next.js + Prisma initialised
-- [x] Schema v1 — 14 models, 17 enums — built + updated
-- [x] Migrations applied (init + add_plan_types_and_live_fields) — 14 tables live in Neon
-- [x] Seed COMPLETE — 17 products + 966 price rows in Neon ✅ (5 live, 12 coming soon)
-- [ ] **NEXT → Tailwind design tokens** — globals.css: black bg, lime #84cc16, typography scale, CSS variables
-- [ ] Folder structure finalised + GitHub repo created → Vercel auto-deploy
-
----
-
-## ✅ COMPLETED
-
-- [x] Crawl fitfuel.in — full content, structure, products, menus mapped
-- [x] Crawl SparkyFitness GitHub — full feature list extracted
-- [x] FitDays integration requirements noted — Web Bluetooth API approach confirmed
-- [x] Master project plan created
-- [x] Decision: Website (not mobile app) — domain live, payments exist
-- [x] All pre-build questions answered — decisions locked
-- [x] WordPress database (.sql) fully analysed — 171MB phpMyAdmin dump May 11, 2026
-- [x] Complete pricing matrix extracted — 5 plans × 3 diets × 7 durations × 3 meal combos
-- [x] Customer count confirmed: 179 registered users, 145 WooCommerce customers
-- [x] Order history confirmed: 21 total orders (3 completed, 3 processing, 7 cancelled, 8 failed)
-- [x] Business confirmed LIVE AND ACTIVE (last order Jan 2026, last payment Oct 2025)
-- [x] All meal plan products identified: Muscle Gain, Weight Loss, Balanced Diet, Office Employee, Jain Diet
-- [x] Meal image library catalogued: 37 named dishes + 200+ AI-generated images
-- [x] PayU credentials confirmed — Key: YviYBu — stored in .env.local
-- [x] Tech stack locked: Next.js + Prisma + Neon + Vercel + Tailwind + Zustand + NextAuth
-- [x] Next.js app created (create-next-app@16.2.6)
-- [x] Prisma 7 installed + configured for Neon adapter
-- [x] prisma.config.ts — datasource.url wired to Neon
-- [x] schema.prisma v1 — 14 models, 11 enums
-- [x] Migration 20260512003135_init — applied clean, no errors
-- [x] All 14 tables live in Neon PostgreSQL
-- [x] Seed file written (prisma/seed.ts) — 17 products + full price matrix
-- [x] **Seed EXECUTED** — 17 products + 966 price rows live in Neon ✅
-- [x] Schema updated: MealPlanType expanded to 17 values, isLive + phase fields added to MealPlanProduct
-- [x] pg adapter used for seed (replaced Neon serverless adapter — correct for Node.js scripts)
-- [x] Tailwind design tokens configured — globals.css, lime #84cc16, dark athletic
-- [x] Folder structure finalised
-- [x] GitHub repo created — https://github.com/pranitborkar98/fitfuel
-- [x] Vercel project connected to GitHub — https://fitfuel-eosin.vercel.app live
-- [x] **Phase 1 COMPLETE ✅**
-
----
-
-## 🗺️ ALL PHASES — BIRD'S EYE VIEW
+## 📍 PHASE STATUS OVERVIEW
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 0 | Audit & Planning | ✅ Done |
-| 1 | Design System + Tech Stack + DB Setup | ✅ Done |
-| 2 | Core Website Redesign (Homepage, Nav, Shell) | 🟡 In Progress — Shell done, polish pass needed |
-| 3 | Meal Plans + Shop + PayU | ⏳ Pending |
+| 0 | Audit & Planning | ✅ Complete |
+| 1 | Design System + Tech Stack + DB | ✅ Complete |
+| **2** | **Core Website Redesign** | **✅ Complete** |
+| **3** | **Meal Plans + Shop + PayU** | **🟡 In Progress** |
 | 4 | User Profile + Dashboard + Auth | ⏳ Pending |
-| 5 | Body Metrics — FitDays BLE Integration | ⏳ Pending |
-| 6 | Nutrition Tracker (SparkyFitness-inspired) | ⏳ Pending |
-| 7 | Exercise Library (Beginner/Inter/Expert + Reps/Sets) | ⏳ Pending |
-| 8 | Supplement Guide | ⏳ Pending |
-| 9 | Lifestyle Meal Plans (Medical, Sex, Alcohol, Smoking etc.) | ⏳ Pending |
+| 5 | Body Metrics — FitDays BLE | ⏳ Pending |
+| 6 | Nutrition Tracker | ⏳ Pending |
+| 7 | Exercise Library | ⏳ Pending |
+| 8 | Supplement Guide (Premium Tier) | ⏳ Pending |
+| 9 | Lifestyle Meal Plans (Medical, PCOS, etc.) | ⏳ Pending |
 | 10 | Live Delivery Tracking | ⏳ Pending |
-| 11 | Progress Tracking + Charts + Reports | ⏳ Pending |
+| 11 | Progress Tracking + Charts | ⏳ Pending |
 | 12 | AI Chatbot + AI Personal Trainer | ⏳ Pending |
 | 13 | Digital Meal Plans (PDF/downloadable) | ⏳ Pending |
-| 14 | Blog, FAQ, Testimonials, About (redesigned) | ⏳ Pending |
-| 15 | Admin Panel (solo owner ops) | ⏳ Pending |
+| 14 | Blog, FAQ, Testimonials | ⏳ Pending |
+| 15 | Admin Panel | ⏳ Pending |
 | 16 | Notifications — n8n (WhatsApp + Email) | ⏳ Pending |
 | 17 | QA, Performance, DNS cutover, Launch | ⏳ Pending |
 
 ---
 
-## 🏆 PRODUCT TIERS — LOCKED VISION
+## 🟡 PHASE 3 — MEAL PLANS + SHOP + PAYU — IN PROGRESS
 
-### STANDARD TIER (Phase 3 launch)
-- Meal delivery (physical) — all existing plans
-- Choose: Diet → Duration → Meals/day
-- Dashboard: order history, delivery tracking, today's meals
-- Body metrics (manual entry or FitDays BLE)
-- Nutrition tracker (basic)
-- Digital meal plans (downloadable PDFs, sold separately)
+### Files Built & Pushed
 
-Price anchor: Rs.400 trial → Rs.47,250 for 3-month all meals
+| File | Status | Notes |
+|------|--------|-------|
+| `app/checkout/page.tsx` | ✅ Done | Full checkout form — PayU + COD toggle, ₹1 test mode, GST breakdown, mobile responsive |
+| `app/order/success/route.ts` | ✅ Done | POST handler — receives PayU callback, verifies hash, redirects to /order/confirmation |
+| `app/order/confirmation/page.tsx` | ✅ Done | Order confirmed page — txnid, amount, WhatsApp CTA, what-happens-next steps |
+| `app/api/payments/payu/route.ts` | ✅ Done | Hash generator — server-side only, HMAC-SHA512, returns all PayU form params |
+| `app/api/payments/payu/success/route.ts` | ✅ Done | Backup success handler at /api path |
+| `app/api/payments/payu/failed/route.ts` | ✅ Done | Failed/cancelled payment handler — redirects to checkout with error |
+| `app/plans/[slug]/page.tsx` | ✅ Done | Individual plan pages — Muscle Gain, Weight Loss, Balanced, Office, Jain |
 
-### PREMIUM TIER (Phase 8+)
-Everything in Standard PLUS:
-- Supplement add-ons delivered with meals (whey sachets, creatine, vitamins, omega-3, pre-workout)
-- Full nutrition tracker with macros, micros, plan vs actual comparison
-- Exercise library access (full video library)
-- Personalised workout plan (trainer-assigned)
-- Priority WhatsApp support
-- Weekly check-in PDF report (automated via n8n)
+### PayU Flow (confirmed working)
+```
+Customer fills checkout → POST /api/payments/payu (hash generated server-side)
+→ Hidden form auto-submits to PayU (secure.payu.in/_payment)
+→ PayU processes payment
+→ PayU POSTs to surl: /order/success (route.ts)
+→ Hash verified server-side → redirect to /order/confirmation (page.tsx) ✅
+```
 
-Revenue: Meal plan + supplement add-on recurring revenue. Near-zero extra logistics (supplements packed with existing delivery).
+### COD Flow (confirmed working on live Vercel ✅)
+```
+Customer selects Cash on Delivery → fills form → submits
+→ handleCOD() fires → router.push(/order/confirmation?txnid=COD-xxx&amount=xxx&cod=1)
+→ Confirmation page shows: Transaction ID, Amount paid, What happens next ✅
+```
 
-### LUXURY TIER (Phase 12+)
-Everything in Premium PLUS:
-- Physical wellness add-ons (massage, spa, in-home yoga — partner tie-ups, Pune)
-- AI Personal Trainer (Claude API) — daily plans, form feedback, progressive overload tracking
-- Concierge onboarding: 1-on-1 video call with owner/nutritionist
-- Custom meal plan (fully personalized)
-- Quarterly body transformation report
-- Priority delivery slot (first delivery of the day)
+### ₹1 Test Mode
+- Append `?test=1` to any checkout URL
+- e.g. `https://fitfuel-eosin.vercel.app/checkout?diet=veg&dur=trial&meal=sd&price=400&test=1`
+- Real PayU charge of ₹1 — confirms gateway working end-to-end
 
-Target: Serious fitness enthusiasts, HNIs, corporate wellness buyers.
+### What's Still Pending in Phase 3
 
----
+| Task | Status | Notes |
+|------|--------|-------|
+| ✅ PayU payment confirmed working end-to-end | Done | ₹1 test passed |
+| ✅ COD option | Done | Confirmed working live on Vercel May 16 2026 |
+| ✅ Order confirmation page — COD variant | Done | Shows txnid, amount, what-happens-next. `cod=1` param read correctly |
+| ⏳ Save orders to DB (Prisma) | Pending | TODOs marked in checkout code |
+| ⏳ Save COD orders to DB | Pending | `app/api/orders/cod/route.ts` needed |
+| ⏳ Admin view of orders | Pending | Phase 15 |
 
-## 💰 COMPLETE PRICING MATRIX — AUTHORITATIVE
+### Known Issues Fixed Today (May 16 2026)
 
-Source: wp_wc_product_meta_lookup + wp_postmeta (confirmed from 171MB DB dump)
-Same pricing applies across ALL plans (diet-agnostic for price).
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Build error — conflicting route at `/` | Stray `app/route.ts` accidentally committed | Deleted + pushed |
+| 405 on `/order/success` | PayU POSTs to page (no POST handler) | Moved page to `/order/confirmation`, added `route.ts` to `/order/success` |
+| Checkout showing old version on Vercel | File not replaced before push | Replaced via VS Code + pushed |
+| HTTP 500 on COD submit | `handleCOD` redirected to `/order/success` (route.ts, POST-only) instead of `/order/confirmation` | Fixed L192 in `app/checkout/page.tsx` — changed `/order/success` → `/order/confirmation` |
+| "No plan selected" on confirmation page | Old checkout code was saved at `app/order/confirmation/page.tsx` — had `if (!price)` guard, no `price` param in COD redirect URL | Confirmation page was already correct on GitHub; local file was stale. `git checkout` restored it |
 
-| Duration | Meals/Day | Price (Rs.) |
-|----------|-----------|------------|
-| Trial Day | Breakfast + Lunch | 400 |
-| Trial Day | Snack + Dinner | 400 |
-| Trial Day | All 4 meals | 750 |
-| Weekly (7 days) | Breakfast + Lunch | 2,700 |
-| Weekly (7 days) | Snack + Dinner | 2,700 |
-| Weekly (7 days) | All 4 meals | 4,900 |
-| Bi-Weekly (15 days) | Breakfast + Lunch | 5,775 |
-| Bi-Weekly (15 days) | Snack + Dinner | 5,775 |
-| Bi-Weekly (15 days) | All 4 meals | 9,720 |
-| Monthly excl. Sat-Sun (~22 days) | Breakfast + Lunch | 7,560 (Veg/Egg) / 7,600 (Non-Veg) |
-| Monthly excl. Sat-Sun (~22 days) | Snack + Dinner | 7,560 (Veg/Egg) / 7,600 (Non-Veg) |
-| Monthly excl. Sat-Sun (~22 days) | All 4 meals | 13,860 |
-| 1 Month (full) | Breakfast + Lunch | 9,500 |
-| 1 Month (full) | Snack + Dinner | 9,500 |
-| 1 Month (full) | All 4 meals | 16,999 |
-| 2 Month | Breakfast + Lunch | 18,900 |
-| 2 Month | Snack + Dinner | 18,900 |
-| 2 Month | All 4 meals | 33,000 |
-| 3 Month | Breakfast + Lunch | 27,450 |
-| 3 Month | Snack + Dinner | 27,450 |
-| 3 Month | All 4 meals | 47,250 |
-
-GST: 5% added on top at checkout.
-Jain Diet: Vegetarian only (no Egg/Non-Veg options).
-Custom Personalized: No price matrix (trainer assigns).
-
----
-
-## 💳 PAYU INTEGRATION
+### PayU Integration Details
 
 | Field | Value |
 |-------|-------|
-| Merchant Key | YviYBu |
-| Merchant Salt | BHigtcZU3kzvpLC9ZFtnrWMYBVtYWz2R |
-| Currency | INR |
-| New Success URL | https://app.fitfuel.in/api/payments/payu/success |
-| New Failed URL | https://app.fitfuel.in/api/payments/payu/failed |
+| Merchant Key | `YviYBu` |
+| Merchant Salt | `BHigtcZU3kzvpLC9ZFtnrWMYBVtYWz2R` |
+| Mode | Production |
+| surl (success) | `https://fitfuel-eosin.vercel.app/order/success` |
+| furl (failed) | `https://fitfuel-eosin.vercel.app/api/payments/payu/failed` |
+| Hash formula | `key\|txnid\|amount\|productinfo\|firstname\|email\|\|\|\|\|\|\|\|\|\|salt` → HMAC-SHA512 |
 
-Hash formula (compute server-side ONLY): `key|txnid|amount|productinfo|firstname|email|||||||||||salt` → HMAC-SHA512
-After payment, PayU POSTs to success/failed URL — verify hash server-side before marking order paid.
+> ⚠️ Hash must be computed **server-side only**. Never expose salt to browser.
 
 ---
 
-## 🛠️ TECH STACK — LOCKED
+## ✅ PHASE 2 — CORE WEBSITE REDESIGN — COMPLETE
+
+### Pages — All Live on Vercel
+
+| Page | File | Status | Notes |
+|------|------|--------|-------|
+| Global Layout | `app/layout.tsx` | ✅ Done | Sticky nav, scroll progress bar, hamburger w/ AnimatePresence, footer with trial CTA |
+| Homepage | `app/page.tsx` | ✅ Done | Hero (3D tilt card), stats, plan cards, how-it-works, USPs, testimonials, CTA — full Framer Motion |
+| Plans + Pricing | `app/plans/page.tsx` | ✅ Done | Interactive configurator, Standard pricing, Premium/Luxury waitlists, Lifestyle coming soon. Mobile responsive (v2 — visibility fix + MD token alignment) |
+| About | `app/about/page.tsx` | ✅ Done | Brand story, kitchen, team, mission — pushed May 16 2026 |
+| Contact | `app/contact/page.tsx` | ✅ Done | WhatsApp, email, address, mailto form — pushed May 16 2026 |
+| Locations | `app/locations/page.tsx` | ✅ Done | 15 Pune zones, Google Maps embed, pincode checker — pushed May 16 2026 |
+
+### Components
+
+| Component | File | Status | Notes |
+|-----------|------|--------|-------|
+| Navbar | `components/Navbar.tsx` | ✅ Done | Scroll progress bar, AnimatePresence mobile menu |
+| Footer | `components/Footer.tsx` | ✅ Done | Full contrast audit, all text colors updated |
+
+### Polish Pass Checklist
+
+- [x] Framer Motion scroll animations — all sections wired (fadeUp + stagger + blur)
+- [x] 3D tilt hero card — spring physics, cursor glow, specular highlight, parallax inner layer
+- [x] `useReducedMotion()` wired — tilt + shimmer disabled for accessibility
+- [x] Scroll progress bar in Navbar
+- [x] AnimatedStat counters — IntersectionObserver triggered
+- [x] Design system tokens aligned — `page.tsx` / Navbar / Footer / `globals.css`
+- [x] `app/plans/page.tsx` — full pricing page with tier system + waitlists
+- [x] Mobile responsiveness — plans page pricing table, duration grid, meal buttons fixed
+- [x] Text visibility fix — gray scale corrected (`#ffffff` primary, `#a3a3a3` secondary, `#737373` muted)
+- [x] MD design token alignment — bg `#0a0a0a`, card `#111111`, border `#1f1f1f`
+- [x] About, Contact, Locations pages built + pushed
+- [ ] SEO: meta tags, OG image, sitemap.xml — Phase 17
+- [ ] Full mobile audit across all new pages (about/contact/locations)
+
+---
+
+## ✅ PHASE 1 — COMPLETE
+
+### Design System
+- [x] Tailwind design tokens — `globals.css` — black bg, lime `#84cc16`, typography scale, CSS variables
+- [x] Button classes: `btn-primary`, `btn-secondary`, `btn-ghost`
+- [x] Card, badge, glow-line, gradient-text utility classes
+- [x] Inter font via Next.js Google Fonts + Barlow Condensed loaded via `layout.tsx <head>`
+
+### Tech Stack
+- [x] Next.js app created (`create-next-app@16.2.6`)
+- [x] Prisma 7 installed + configured for Neon adapter
+- [x] `prisma.config.ts` — datasource wired to Neon
+- [x] GitHub repo: [github.com/pranitborkar98/fitfuel](https://github.com/pranitborkar98/fitfuel) — **PUBLIC**
+- [x] Vercel connected to GitHub — auto-deploy on push to `main`
+
+### Database
+- [x] `schema.prisma` v2 — 14 models, 17 enums
+- [x] Migration `20260512003135_init` applied — 14 tables live in Neon
+- [x] `MealPlanType` expanded — `isLive` + `phase` fields added
+- [x] Seed executed — **17 products + 966 price rows live in Neon** ✅
+  - 5 plans live (Phase 3), 12 coming soon (Phase 9)
+  - Jain: Veg only (21 rows). Non-veg MONTHLY_EXCL_WEEKENDS = ₹7,600 (others ₹7,560)
+
+---
+
+## ✅ PHASE 0 — COMPLETE
+
+- [x] Crawled fitfuel.in — full content, structure, products mapped
+- [x] WordPress DB (`u271592098_U9cur.sql`) analysed — 171MB phpMyAdmin dump, May 11 2026
+- [x] Complete pricing matrix extracted (5 plans × 3 diets × 7 durations × 3 meal combos)
+- [x] Customer data: 179 registered users, 145 WooCommerce customers
+- [x] Order history: 21 total (3 completed, 3 processing, 7 cancelled, 8 failed)
+- [x] Business confirmed LIVE — last order Jan 2026, webhook logs firing Apr 2026
+- [x] Meal image library catalogued: 37 named dishes + 200+ AI-generated
+- [x] PayU credentials confirmed — Key in `.env.local`
+- [x] All decisions locked
+- [x] Tech stack locked
+
+---
+
+## 💰 PRICING MATRIX
+
+Source: `wp_wc_product_meta_lookup` + `wp_postmeta` (171MB DB, confirmed)
+GST 5% added at checkout on all tiers.
+
+### Tier Multipliers
+| Tier | Multiplier | Phase | Status |
+|------|-----------|-------|--------|
+| Standard | 1.0× (base) | Phase 3 | 🟡 Building |
+| Premium | 1.25× on Standard | Phase 8 | ⏳ Waitlist open |
+| Luxury | 1.50× on Standard | Phase 12 | ⏳ Waitlist open |
+
+### Standard Tier — Active
+
+| Duration | Breakfast + Lunch | Snack + Dinner | All 4 meals |
+|----------|-------------------|----------------|-------------|
+| Trial day | ₹400 | ₹400 | ₹750 |
+| Weekly (7d) | ₹2,700 | ₹2,700 | ₹4,900 |
+| Bi-weekly (15d) | ₹5,775 | ₹5,775 | ₹9,720 |
+| Monthly excl. weekends | ₹7,560 | ₹7,560 | ₹13,860 |
+| 1 Month | ₹9,500 | ₹9,500 | ₹16,999 |
+| 2 Months | ₹18,900 | ₹18,900 | ₹33,000 |
+| 3 Months | ₹27,450 | ₹27,450 | ₹47,250 |
+
+> Non-Veg Monthly excl. weekends B+L / S+D = ₹7,600 (not ₹7,560)
+
+---
+
+## 📁 KEY FILES — CURRENT STATE
+
+| File | Status | Notes |
+|------|--------|-------|
+| `FITFUEL_PROJECT_TRACKER.md` | ✅ This file | Updated May 16 2026 |
+| `prisma/schema.prisma` | ✅ v2 | 14 models, 17 enums |
+| `prisma/seed.ts` | ✅ Executed | 17 products, 966 price rows live |
+| `app/globals.css` | ✅ Done | Gray scale + btn tokens corrected |
+| `app/layout.tsx` | ✅ Done | Navbar + Footer, Barlow Condensed in `<head>` |
+| `app/page.tsx` | ✅ Done | Full homepage — 3D card, all sections, Framer Motion |
+| `app/plans/page.tsx` | ✅ Done | Full pricing page — mobile responsive v2, visibility fixed |
+| `app/plans/[slug]/page.tsx` | ✅ Done | Individual plan pages |
+| `app/about/page.tsx` | ✅ Done | Pushed May 16 2026 |
+| `app/contact/page.tsx` | ✅ Done | Pushed May 16 2026 |
+| `app/locations/page.tsx` | ✅ Done | Pushed May 16 2026 — pincode checker, 15 zones, Maps embed |
+| `app/checkout/page.tsx` | ✅ Done | PayU + COD + ₹1 test mode — pushed May 16 2026 |
+| `app/order/success/route.ts` | ✅ Done | PayU POST handler — pushed May 16 2026 |
+| `app/order/confirmation/page.tsx` | ✅ Done | Order confirmed page — pushed May 16 2026 |
+| `app/api/payments/payu/route.ts` | ✅ Done | Hash generator — server-side |
+| `app/api/payments/payu/success/route.ts` | ✅ Done | Backup success handler |
+| `app/api/payments/payu/failed/route.ts` | ✅ Done | Failed payment handler |
+| `components/Navbar.tsx` | ✅ Done | Scroll progress, mobile hamburger |
+| `components/Footer.tsx` | ✅ Done | Contrast audited |
+| `u271592098_U9cur.sql` | ✅ Analysed | 171MB — keep for reference |
+| Meal images (5 zips, 1.63GB) | ✅ Catalogued | 37 named + 200+ AI-generated |
+
+---
+
+## 🛠️ TECH STACK
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js (React) |
-| Styling | Tailwind CSS |
-| State | Zustand |
-| Backend | Next.js API routes + Node.js |
+| Frontend | Next.js 16.2.6 (React) |
+| Styling | Tailwind CSS + custom CSS variables |
+| Animation | Framer Motion |
+| Icons | Lucide React |
+| State | Zustand (Phase 4+) |
+| Auth | NextAuth.js — Phone OTP (MSG91) + Google (Phase 4) |
+| Backend | Next.js API routes |
 | ORM | Prisma 7 |
 | Database | PostgreSQL (Neon — free tier, 0.5GB) |
-| Hosting | Vercel (connected to GitHub — pranitborkar98) |
-| Auth | NextAuth.js — Phone OTP (MSG91) + Google Sign-In |
-| Payments | PayU |
-| Notifications | n8n (self-hosted, free) — WhatsApp Business + Email |
-| Storage | Cloudinary or S3 (Phase 2) |
+| Payments | PayU (Phase 3) + COD |
+| Notifications | n8n self-hosted — WhatsApp Business API + Email (Phase 16) |
+| Delivery Tracking | Driver PWA — Web Bluetooth / smartphone (Phase 10) |
 | AI | Claude API (Anthropic) — Phase 12 |
-| Design | Dark Athletic — black bg, lime #84cc16 accent, white text |
+| Hosting | Vercel (GitHub auto-deploy on push to `main`) |
 
 ---
 
-## 🏗️ INFRASTRUCTURE STATUS
+## 🏆 PRODUCT TIERS
 
-| Service | Status | Details |
-|---------|--------|---------|
-| Domain fitfuel.in | ✅ Live | Hostinger — WordPress still running |
-| Neon PostgreSQL | ✅ Live | ep-lingering-wildflower-aqi59lyk.c-8.us-east-1.aws.neon.tech |
-| 14 DB tables | ✅ Live | Migration 20260512003135_init applied |
-| Next.js app | ✅ Created | C:\Users\VCOM\fitfuel |
-| Prisma 7 | ✅ Configured | Neon adapter, prisma.config.ts wired |
-| GitHub repo | ✅ Live | https://github.com/pranitborkar98/fitfuel (private) |
-| Vercel project | ✅ LIVE | https://fitfuel-eosin.vercel.app — auto-deploys on push to main |
-| Seed data | ✅ SEEDED | 17 products + 966 price rows live in Neon |
-| PayU | ✅ Confirmed | Credentials in .env.local |
-| Railway/n8n | ⏳ Phase 16 | Trial expired — revisit for n8n |
-| MSG91 | ⏳ Phase 4 | OTP auth — not needed yet |
-| WhatsApp API | ⏳ Phase 16 | Meta Business — not needed yet |
+### Standard — Active (Phase 3 launch)
+- Meal delivery — all 5 active plans (Veg, Egg, Non-Veg, Jain, Custom)
+- Choose diet → duration → meals per day
+- Dashboard: order history, delivery tracking, today's meals
+- Body metrics (manual entry or FitDays BLE)
+- Nutrition tracker (basic — calories + macros)
+- Digital meal plans (PDFs, sold separately)
 
----
+Price anchor: ₹400 trial → ₹47,250 for 3-month all meals
 
-## 🔐 ENVIRONMENT VARIABLES MASTER LIST
-> .env.local — NEVER commit to GitHub. Add to Vercel dashboard: Project Settings → Environment Variables.
+### Premium — Coming Soon (Phase 8) · 1.25× Standard
+- Supplement add-ons delivered with meals (whey, creatine, vitamins, omega-3, pre-workout)
+- Full nutrition tracker — macros, micros, plan vs actual
+- Exercise library + personalised workout plan
+- Priority WhatsApp support
+- Weekly PDF check-in report (automated via n8n)
 
-```
-# Database
-DATABASE_URL=postgresql://neondb_owner:npg_BpgWQF9ZLq7K@ep-lingering-wildflower-aqi59lyk.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
+Price anchor: ₹500 trial → ₹59,063 for 3-month all meals
 
-# PayU
-PAYU_MERCHANT_KEY=YviYBu
-PAYU_MERCHANT_SALT=BHigtcZU3kzvpLC9ZFtnrWMYBVtYWz2R
-PAYU_MODE=production
+### Luxury — Coming Soon (Phase 12) · 1.50× Standard
+- Physical wellness add-ons (massage, spa, in-home yoga — Pune partners)
+- AI Personal Trainer (Claude API) — daily plans, form feedback, progressive overload
+- Concierge onboarding: 1-on-1 video call with head coach
+- Fully custom meal plan (personalised by nutritionist)
+- Quarterly body transformation report
+- Priority delivery slot (first of the day)
 
-# Auth (Phase 4)
-NEXTAUTH_SECRET=generate-a-random-string-here
-NEXTAUTH_URL=https://app.fitfuel.in
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-MSG91_AUTH_KEY=
+Price anchor: ₹600 trial → ₹70,875 for 3-month all meals
 
-# AI (Phase 12)
-CLAUDE_API_KEY=
-
-# Storage (Phase 2)
-CLOUDINARY_URL=
-```
+### Lifestyle & Medical Plans — Coming Soon (Phase 9)
+Conditions: PCOS · Diabetic-friendly · Post-surgery recovery · Weight loss (clinical) · Thyroid · Heart health · High-protein athletic
+→ Waitlist open on website. Exact meal plans + pricing finalised in Phase 9.
 
 ---
 
-## 🗄️ DATABASE — 14 TABLES LIVE IN NEON
-
-| Table | Purpose |
-|-------|---------|
-| users | Auth — email, phone, Google ID, role |
-| user_profiles | Name, age, gender, height, goal, activity level |
-| addresses | Delivery addresses (multiple per user) |
-| meal_plan_products | 17 products (5 live Phase 3, 12 coming soon Phase 9) |
-| plan_prices | 966 price rows — full matrix seeded (PENDING) |
-| orders | Order header — user, product, plan choice, status |
-| order_items | Line items per order |
-| payments | PayU transaction records |
-| deliveries | Daily delivery status per order |
-| active_plans | Currently running subscription per user |
-| body_metrics | FitDays scale data — weight, BMI, body fat, muscle mass etc. |
-| nutrition_logs | Daily food log entries |
-| exercises | Exercise library — name, level, sets, reps, muscle groups |
-| workout_logs + admin_notes | Workout tracking + trainer notes |
-
----
-
-## 🔍 SEED FILE AUDIT — COMPLETE
-
-File: `prisma/seed.ts`
-Status: Written ✅ — **NOT RUN YET** ⚠️
-
-| Check | Result |
-|-------|--------|
-| Price matrix vs DB | ✅ 100% match — all 21 price rows correct |
-| Non-Veg MONTHLY_EXCL_WEEKENDS Rs.7,600 vs others Rs.7,560 | ✅ Correct — real DB variance |
-| FK delete order (planPrice before mealPlanProduct) | ✅ Correct |
-| Jain → Veg only | ✅ Correct |
-| Custom → no price matrix | ✅ Correct |
-| GST 5% in planPrice rows | ✅ Correct |
-| isActive: true on all rows | ✅ Correct |
-| dotenv/config import | ✅ Works with tsx |
-| 17 products total | ✅ 5 live (Phase 3) + 12 coming soon (Phase 9) |
-| Price row count (non-Jain): 3 diets × 3 meals × 7 durations = 63 per product | ✅ |
-| Price row count (Jain): 1 diet × 3 meals × 7 durations = 21 rows | ✅ |
-
-**⚠️ BLOCKER TO RUN SEED:**
-Add to `package.json` at root level (not inside "scripts"):
-```json
-"prisma": {
-  "seed": "tsx prisma/seed.ts"
-}
-```
-Then run: `npx prisma db seed`
-Expected output: 17 products, 966 price rows, 5 live, 12 coming soon.
-
----
-
-## 📋 BUSINESS INTELLIGENCE
-
-- 179 registered WordPress users
-- 145 WooCommerce customers
-- 21 recorded orders (Sep 2024 – Jan 2026)
-- 3 completed orders (Oct 2024: Rs.17,849 + Rs.2,834; Oct 2025: Rs.13,860)
-- Most recent order: Jan 2026 — Rs.13,860 (cancelled)
-- Highest attempted order: Rs.1,22,844.75 (failed — bulk 5-item, PayU issue)
-- Business IS running — webhook logs confirmed firing Apr 2026
-- Most failures = PayU gateway issues, not customer cancellations
-- Real offline/COD orders likely not all in DB
-
----
-
-## 🍽️ MEAL IMAGE LIBRARY
-
-### Named Dish Images (37 photos)
-Avocado Cocoa Mousse Almond Crackers, Avocado Toast with Poached Egg, Banana with Peanut Butter, Boiled Eggs with Masala Sweet Potatoes, Boiled Eggs with Paprika, Chia Pudding with Berries Almond Butter, Chickpea Avocado Wrap with Mint Yogurt Dip, Chickpea Spinach Curry with Red Rice, Dark Chocolate Almond Bites Raspberry Tea, Egg Bhurji Wrap with Beet Slaw, Fish Curry with Brown Rice Bhindi, Fruit Salad with Chia Seeds, Greek Yogurt Parfait with Seeds Honey, Greek Yogurt with Dark Chocolate Seeds, Grilled Chicken Beetroot Quinoa Bowl, Grilled Fish Brown Rice Steamed Veggies, Grilled Tofu Bowl with Quinoa Beetroot Tahini, Herbed Paneer Salad with Roasted Veggies Millet, Lentil Coconut Curry with Brown Rice, Methi Chicken with Bajra Roti, Moong Dal Khichdi with Ghee Cabbage Salad, Multigrain Paratha with Curd, Paneer Tikka with Millet Sauteed Greens, Protein Ladoo Oats Peanut Jaggery, Quinoa Muesli with Flax Coconut Yogurt, Ragi Porridge with Almonds Dates, Rajma Brown Rice Bowl with Mixed Salad, Soya Keema with Multigrain Toast, Spiced Oats with Banana Pumpkin Seeds, Stuffed Capsicum with Paneer Quinoa, Sweet Potato Hash with Kale Goat Cheese, Tandoori Chicken with Millet Salad, Thai Basil Stir Fry with Tofu Brown Rice, Tofu Stir Fry with Quinoa, Tofu Tikka with Whole Wheat Roti Mint Slaw, Trail Mix Nuts Seeds Raisins, Vegetable Stew with Red Rice Idiyappam
-
-### AI-Generated Images (200+ by category)
-Jain, Vegetarian, Eggetarian, Non-Vegetarian, Snacks — full catalogue in WordPress backup
-
----
-
-## 🧠 ALL DECISIONS — LOCKED
+## 🧠 DECISIONS — LOCKED
 
 | # | Topic | Decision |
 |---|-------|----------|
 | 1 | App vs Website | Website |
 | 2 | Keep WordPress? | NO — full rebuild. WordPress backup kept for reference only. |
 | 3 | Tech Stack | Next.js + Node.js + PostgreSQL |
-| 4 | Deployment | Vercel — subdomain app.fitfuel.in during build, then fitfuel.in |
+| 4 | Deployment | Vercel — subdomain during build, then fitfuel.in |
 | 5 | Migration strategy | Soft launch on subdomain — active customers stay on WordPress until cutover |
 | 6 | Auth | Phone OTP (MSG91) + Google Sign-In — NextAuth.js |
 | 7 | Payment | PayU (confirmed) + Cash on Delivery |
@@ -323,106 +310,65 @@ Jain, Vegetarian, Eggetarian, Non-Vegetarian, Snacks — full catalogue in WordP
 | 9 | Notifications | n8n self-hosted — WhatsApp Business API + Email |
 | 10 | Revenue streams | Meal delivery + Digital plans + Supplements (Premium) + AI Trainer (Luxury) |
 | 11 | Admin ops | Solo (owner only) for now |
-| 12 | Color / Design | DARK ATHLETIC — black bg, lime #84cc16 accent, white text |
-| 13 | FitDays / Body Metrics | Web Bluetooth API — in-browser BLE scale connection (Chrome) |
+| 12 | Design | Dark athletic — black `#0a0a0a`, lime `#84cc16`, white `#ffffff` — Barlow Condensed headings |
+| 13 | FitDays / Body Metrics | Web Bluetooth API — in-browser BLE (Chrome) |
 | 14 | Delivery Tracking | Driver PWA (smartphone) |
-| 15 | Exercise content | Custom 3D animated videos — placeholder now, animations later |
+| 15 | Exercise content | Custom 3D animated videos — placeholder now |
 | 16 | Language | English only |
 | 17 | Target city | Pune only (Kharadi base) — expand later |
-| 18 | SparkyFitness | Inspiration + feature reference — build equivalent natively |
-| 19 | Zomato/Swiggy | Already live separately — no website integration |
-| 20 | GST | 5% on meal plan products |
+| 18 | SparkyFitness | Inspiration + feature reference — build natively |
+| 19 | Zomato/Swiggy | Live separately — no website integration |
+| 20 | GST | 5% on all meal plan products |
 | 21 | Owner email | pranitborkar98@gmail.com |
 
 ---
 
-## ⚠️ PENDING INPUTS (non-blocking until relevant phase)
+## ⚠️ PENDING INPUTS
 
 | # | What | Phase | Status |
 |---|------|-------|--------|
-| 1 | MSG91 or Twilio account | Phase 4 | ⏳ Pending |
-| 2 | WhatsApp Business API / Meta Business account | Phase 16 | ⏳ Pending |
-| 3 | Hosting type confirmation (VPS vs shared) on Hostinger | Phase 16 (n8n) | ⏳ Check hPanel |
-| 4 | FitDays scale model number (BLE compatibility) | Phase 5 | ⏳ Pending |
-| 5 | Supplement supplier / source | Phase 8 | ⏳ Not urgent |
-| 6 | Wellness partner tie-ups (massage/spa) | Phase 12+ | ⏳ Not urgent |
+| 1 | MSG91 or Twilio account | 4 | ⏳ |
+| 2 | WhatsApp Business API / Meta Business account | 16 | ⏳ |
+| 3 | Hostinger VPS vs shared (for n8n) | 16 | ⏳ Check hPanel |
+| 4 | FitDays scale model number (BLE compatibility) | 5 | ⏳ |
+| 5 | Supplement supplier / source | 8 | ⏳ |
+| 6 | Wellness partner tie-ups (massage/spa) | 12+ | ⏳ |
 
 ---
 
-## 📁 FILES & ASSETS
+## 🍽️ MEAL IMAGE LIBRARY
 
-| File | Status | Notes |
-|------|--------|-------|
-| PROJECT_TRACKER.md | ✅ This file | Updated this session |
-| prisma/seed.ts | ✅ Written | NOT RUN — needs package.json fix |
-| u271592098_U9cur.sql | ✅ Analysed | 171MB phpMyAdmin dump — MariaDB 11.8, May 11 2026 |
-| Meal images (5 zips, 1.63GB) | ✅ Catalogued | 37 named + 200+ AI-generated |
+### Named Dish Photos (37)
+Avocado Cocoa Mousse Almond Crackers · Avocado Toast with Poached Egg · Banana with Peanut Butter · Boiled Eggs with Masala Sweet Potatoes · Boiled Eggs with Paprika · Chia Pudding with Berries Almond Butter · Chickpea Avocado Wrap with Mint Yogurt Dip · Chickpea Spinach Curry with Red Rice · Dark Chocolate Almond Bites Raspberry Tea · Egg Bhurji Wrap with Beet Slaw · Fish Curry with Brown Rice Bhindi · Fruit Salad with Chia Seeds · Greek Yogurt Parfait with Seeds Honey · Greek Yogurt with Dark Chocolate Seeds · Grilled Chicken Beetroot Quinoa Bowl · Grilled Fish Brown Rice Steamed Veggies · Grilled Tofu Bowl with Quinoa Beetroot Tahini · Herbed Paneer Salad with Roasted Veggies Millet · Lentil Coconut Curry with Brown Rice · Methi Chicken with Bajra Roti · Moong Dal Khichdi with Ghee Cabbage Salad · Multigrain Paratha with Curd · Paneer Tikka with Millet Sauteed Greens · Protein Ladoo Oats Peanut Jaggery · Quinoa Muesli with Flax Coconut Yogurt · Ragi Porridge with Almonds Dates · Rajma Brown Rice Bowl with Mixed Salad · Soya Keema with Multigrain Toast · Spiced Oats with Banana Pumpkin Seeds · Stuffed Capsicum with Paneer Quinoa · Sweet Potato Hash with Kale Goat Cheese · Tandoori Chicken with Millet Salad · Thai Basil Stir Fry with Tofu Brown Rice · Tofu Stir Fry with Quinoa · Tofu Tikka with Whole Wheat Roti Mint Slaw · Trail Mix Nuts Seeds Raisins · Vegetable Stew with Red Rice Idiyappam
 
----
-
-## 🔴 BLOCKERS
-
-**No blockers.** Phase 1 complete. Phase 2 — Core Website Redesign — starts now.
-
+### AI-Generated Images (200+)
+Jain · Vegetarian · Eggetarian · Non-Vegetarian · Snacks — full catalogue in WordPress backup
 
 ---
 
-## 📋 PHASE 2 — CORE WEBSITE REDESIGN — DETAILED PLAN
+## 📋 BUSINESS INTELLIGENCE
 
-### Pages to build:
-
-**1. Global Layout (app/layout.tsx)**
-- Sticky navbar: Logo + Nav links + CTA button ("Order Now")
-- Mobile hamburger menu
-- Footer: links, social, contact, GST info
-
-**2. Homepage (app/page.tsx)**
-- Hero section: Full-screen dark, headline, subheadline, two CTAs (Order Now + View Plans)
-- Social proof bar: customer count, orders delivered, rating
-- Plan categories: 5 meal plan cards with hover effects
-- Why FitFuel: 4-6 USP blocks (fresh, Pune-local, goal-based, dietitian-designed)
-- How it works: 3-step (Choose plan → We cook → Delivered to you)
-- Testimonials: 3-4 cards (from existing WordPress testimonials)
-- Final CTA banner: Trial day for ₹400
-
-**3. About Us (app/about/page.tsx)**
-- Brand story
-- Kitchen / food prep photos
-- Team (owner + nutritionist intro)
-- Mission statement
-
-**4. Contact Us (app/contact/page.tsx)**
-- WhatsApp button (direct link)
-- Email
-- Address (Kharadi, Pune)
-- Simple contact form (no backend needed yet — mailto fallback)
-
-**5. Delivery Locations (app/locations/page.tsx)**
-- List of Pune zones served
-- Simple map embed (Google Maps iframe)
-- Pincode checker (basic — type pincode, check if serviceable)
-
-### Design rules for ALL pages:
-- Background: #0a0a0a (near black)
-- Accent: #84cc16 (lime green)
-- Text: #ffffff primary, #a3a3a3 secondary
-- Font: Inter (already in Next.js default)
-- Cards: #111111 bg, 1px #1f1f1f border, subtle lime glow on hover
-- Buttons: lime bg + black text (primary), outlined lime (secondary)
-- Animations: subtle fade-in on scroll (Framer Motion — install in Phase 2)
-- NO stock photo vibes — dark, premium, athletic
-
-### Packages to install for Phase 2:
-```bash
-npm install framer-motion lucide-react
-```
+- 179 registered WordPress users · 145 WooCommerce customers
+- 21 recorded orders (Sep 2024 – Jan 2026)
+- 3 completed orders (Oct 2024: ₹17,849 + ₹2,834 · Oct 2025: ₹13,860)
+- Most recent order: Jan 2026 — ₹13,860 (cancelled)
+- Highest attempted: ₹1,22,844.75 (failed — bulk 5-item, PayU gateway issue)
+- Business IS running — webhook logs confirmed firing Apr 2026
+- Most failures = PayU gateway issues, not customer cancellations
+- Real offline/COD orders likely not all in DB
 
 ---
 
-## 🚀 WHAT WE'RE BUILDING
+## 🚀 THE VISION
 
-Year 1: Best meal delivery + health tracking platform in Pune.
-Year 2: Add supplements, digital plans, AI trainer — recurring revenue machine.
-Year 3: Luxury wellness tier, corporate clients, expand cities.
+FitFuel has been running in Pune since 2024 — real customers, real orders, real operations. This is a full platform revamp, not a launch.
 
-The tech we build now carries all of that. Every phase is a building block. Build it right once.
+**Now (Phase 3):** Wire ordering — PayU integration, order flow, individual plan pages. Standard tier goes live properly.
+
+**Phase 8:** Unlock Premium — supplements, full nutrition tracking, exercise library. Turn one-time meal customers into recurring health subscribers.
+
+**Phase 12:** Unlock Luxury — AI Personal Trainer (Claude API), concierge onboarding, wellness partners. FitFuel becomes Pune's premium health platform.
+
+**Beyond:** Lifestyle + medical plans, corporate clients, city expansion. Build the infrastructure once, scale it.
+
+Every phase is a building block. Build it right once.

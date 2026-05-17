@@ -271,7 +271,7 @@ model Order {
 model OrderItem {
   id          String       @id @default(cuid())
   orderId     String
-  productId   String
+  productId   String?
   diet        DietType
   duration    PlanDuration
   mealsPerDay MealsPerDay
@@ -281,7 +281,7 @@ model OrderItem {
   quantity    Int          @default(1)
 
   order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     MealPlanProduct @relation(fields: [productId], references: [id])
+  product     MealPlanProduct? @relation(fields: [productId], references: [id])
 
   @@map("order_items")
 }

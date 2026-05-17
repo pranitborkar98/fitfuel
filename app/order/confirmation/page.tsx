@@ -1,149 +1,511 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, MessageCircle } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, ShieldCheck, MessageCircle, AlertCircle, Banknote, CreditCard, FlaskConical } from "lucide-react";
 
+// ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
-  bg: "#0a0a0a", card: "#111111", cardBorder: "#1f1f1f",
-  accent: "#84cc16", textPrimary: "#ffffff", textSecond: "#a3a3a3", textMuted: "#737373",
+  bg:          "#0a0a0a",
+  card:        "#111111",
+  cardBorder:  "#1f1f1f",
+  accent:      "#84cc16",
+  accentLight: "#a3e635",
+  textPrimary: "#ffffff",
+  textSecond:  "#a3a3a3",
+  textMuted:   "#737373",
 };
 
 const WA_NUMBER = "919579738811";
 
+// ─── Plan labels ──────────────────────────────────────────────────────────────
+const DIET_LABELS: Record<string, string> = {
+  veg: "Vegetarian", egg: "Eggetarian", nonveg: "Non-Vegetarian", jain: "Jain",
+};
+const DUR_LABELS: Record<string, string> = {
+  trial: "Trial Day", weekly: "Weekly (7 days)", biweekly: "Bi-weekly (15 days)",
+  monthly_ex: "Monthly excl. weekends", monthly: "1 Month", two_month: "2 Months", three_month: "3 Months",
+};
+const MEAL_LABELS: Record<string, string> = {
+  bl: "Breakfast + Lunch", sd: "Snack + Dinner", all: "All 4 meals",
+};
+
 function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
 
-function SuccessInner() {
-  const params  = useSearchParams();
-  const txnid   = params.get("txnid")  || "";
-  const amount  = params.get("amount") || "";
-
+// ─── Input component ──────────────────────────────────────────────────────────
+function Field({
+  label, name, type = "text", value, onChange, placeholder, required = true, maxLength,
+}: {
+  label: string; name: string; type?: string; value: string;
+  onChange: (v: string) => void; placeholder: string; required?: boolean; maxLength?: number;
+}) {
+  const [focused, setFocused] = useState(false);
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px" }}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        style={{ width: "100%", maxWidth: 520, textAlign: "center" }}
-      >
-        {/* Success icon */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.4, type: "spring", stiffness: 200 }}
-          style={{
-            width: 80, height: 80, borderRadius: "50%",
-            background: "rgba(132,204,22,0.1)",
-            border: "2px solid rgba(132,204,22,0.4)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 28px",
-          }}
-        >
-          <CheckCircle size={40} color={T.accent} />
-        </motion.div>
-
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase", marginBottom: 12 }}>
-          Payment Confirmed
-        </div>
-
-        <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: "clamp(2rem, 8vw, 3.5rem)",
-          fontWeight: 900, textTransform: "uppercase",
-          color: T.textPrimary, lineHeight: 1, marginBottom: 16,
-        }}>
-          You're all set!
-        </h1>
-
-        <p style={{ fontSize: 15, color: T.textSecond, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: "0 auto 32px" }}>
-          Your FitFuel order is confirmed. Fresh meals will be at your door between <strong style={{ color: T.textPrimary }}>7am–10am</strong> starting tomorrow.
-        </p>
-
-        {/* Order details card */}
-        {txnid && (
-          <div style={{
-            background: T.card, border: `1px solid ${T.cardBorder}`,
-            borderRadius: 16, padding: "20px 24px",
-            marginBottom: 28, textAlign: "left",
-          }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {[
-                { label: "Transaction ID", value: txnid },
-                { label: "Amount paid",    value: amount ? fmt(Math.round(Number(amount))) : "—" },
-                { label: "Status",         value: "✅ Paid" },
-              ].map(row => (
-                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 13, color: T.textMuted }}>{row.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>{row.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* What happens next */}
-        <div style={{
-          background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.18)",
-          borderRadius: 14, padding: "18px 20px",
-          marginBottom: 28, textAlign: "left",
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-            What happens next
-          </div>
-          {[
-            "You'll receive a WhatsApp confirmation within 30 minutes",
-            "Our kitchen starts prep early morning with fresh ingredients",
-            "Meals delivered 7am–10am to your registered address",
-          ].map((step, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < 2 ? 10 : 0 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(132,204,22,0.15)", border: "1px solid rgba(132,204,22,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color: T.accent }}>
-                {i + 1}
-              </div>
-              <span style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.6 }}>{step}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-          <Link href="/plans" style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            background: T.accent, color: "#000",
-            fontWeight: 800, fontSize: 13, padding: "12px 24px",
-            borderRadius: 10, textDecoration: "none",
-            letterSpacing: "0.07em", textTransform: "uppercase",
-          }}>
-            View Plans <ArrowRight size={14} />
-          </Link>
-          <a
-            href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi FitFuel! I just completed my order. My transaction ID is: " + txnid)}`}
-            target="_blank" rel="noopener noreferrer"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              background: "transparent", border: `1px solid ${T.cardBorder}`,
-              color: T.textSecond, fontWeight: 700, fontSize: 13,
-              padding: "12px 20px", borderRadius: 10, textDecoration: "none",
-              letterSpacing: "0.07em", textTransform: "uppercase",
-            }}
-          >
-            <MessageCircle size={14} /> WhatsApp Us
-          </a>
-        </div>
-      </motion.div>
+    <div>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        {label}{required && <span style={{ color: T.accent, marginLeft: 2 }}>*</span>}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        maxLength={maxLength}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: "100%", background: "#161616",
+          border: `1px solid ${focused ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
+          borderRadius: 10, padding: "13px 16px",
+          fontSize: 14, color: T.textPrimary, outline: "none",
+          boxSizing: "border-box", transition: "border-color 0.2s",
+        }}
+      />
     </div>
   );
 }
 
-export default function OrderSuccessPage() {
+// ─── Payment method toggle ────────────────────────────────────────────────────
+type PayMethod = "online" | "cod";
+
+function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMethod) => void }) {
+  const options: { id: PayMethod; label: string; sub: string; icon: React.ReactNode }[] = [
+    {
+      id: "online",
+      label: "Pay Online",
+      sub: "UPI, cards, net banking via PayU",
+      icon: <CreditCard size={18} />,
+    },
+    {
+      id: "cod",
+      label: "Cash on Delivery",
+      sub: "Pay when your meals arrive",
+      icon: <Banknote size={18} />,
+    },
+  ];
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        Payment Method <span style={{ color: T.accent }}>*</span>
+      </label>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {options.map(opt => {
+          const active = value === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onChange(opt.id)}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                background: active ? "rgba(132,204,22,0.07)" : "#161616",
+                border: `1px solid ${active ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
+                borderRadius: 12, padding: "14px 16px",
+                cursor: "pointer", textAlign: "left",
+                transition: "all 0.2s",
+              }}
+            >
+              <div style={{ color: active ? T.accent : T.textMuted, marginTop: 1, flexShrink: 0 }}>
+                {opt.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: active ? T.textPrimary : T.textSecond, marginBottom: 2 }}>
+                  {opt.label}
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+                  {opt.sub}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Checkout inner (uses useSearchParams) ────────────────────────────────────
+function CheckoutInner() {
+  const params = useSearchParams();
+  const router = useRouter();
+
+  // Plan params from URL (set by plans page)
+  const diet     = params.get("diet")    || "veg";
+  const dur      = params.get("dur")     || "monthly_ex";
+  const meal     = params.get("meal")    || "sd";
+  const rawPrice = Number(params.get("price") || 0);
+  const error    = params.get("error");
+  const errMsg   = params.get("msg");
+
+  // ₹1 test mode — append ?test=1 to URL to override amount
+  const isTest   = params.get("test") === "1";
+  const price    = isTest ? 1 : rawPrice;
+  const priceGST = isTest ? 1 : Math.round(rawPrice * 1.05);
+
+  const productinfo = isTest
+    ? "FitFuel TEST TRANSACTION — ignore"
+    : `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
+
+  // Form state
+  const [form, setForm] = useState({
+    firstname: "", lastname: "", email: "", phone: "", address: "", city: "Pune", pincode: "",
+  });
+  const [payMethod, setPayMethod] = useState<PayMethod>("online");
+  const [loading, setLoading]     = useState(false);
+  const [payuData, setPayuData]   = useState<Record<string, string> | null>(null);
+  const [codDone, setCodDone]     = useState(false);
+
+  // Auto-submit hidden PayU form when payuData is ready
+  useEffect(() => {
+    if (payuData) {
+      const formEl = document.getElementById("payu-form") as HTMLFormElement;
+      if (formEl) formEl.submit();
+    }
+  }, [payuData]);
+
+  if (!rawPrice && !isTest) {
+    return (
+      <div style={{ textAlign: "center", padding: "120px 20px", color: T.textSecond }}>
+        <p style={{ fontSize: 16, marginBottom: 24 }}>No plan selected. Please choose a plan first.</p>
+        <button onClick={() => router.push("/plans")} style={{
+          background: T.accent, color: "#000", fontWeight: 800, fontSize: 13,
+          padding: "12px 28px", borderRadius: 10, border: "none", cursor: "pointer",
+        }}>
+          View Plans
+        </button>
+      </div>
+    );
+  }
+
+  // ── COD submit ───────────────────────────────────────────────────────────────
+  async function handleCOD() {
+    setLoading(true);
+    // TODO Phase 3: save COD order to DB
+    // await fetch("/api/orders/cod", { method: "POST", body: JSON.stringify({ form, diet, dur, meal, price: rawPrice }) })
+    console.log("[COD Order]", { form, diet, dur, meal, price: rawPrice });
+
+    // Redirect to success page with cod=1 flag
+    router.push(`/order/success?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1`);
+  }
+
+  // ── PayU submit ──────────────────────────────────────────────────────────────
+  async function handlePayU() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/payments/payu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstname:   form.firstname,
+          email:       form.email,
+          phone:       form.phone,
+          amount:      priceGST.toFixed(2),
+          productinfo,
+          address:     `${form.address}, ${form.city} - ${form.pincode}`,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to initiate payment");
+      const data = await res.json();
+      setPayuData(data);
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try WhatsApp ordering instead.");
+      setLoading(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (payMethod === "cod") {
+      await handleCOD();
+    } else {
+      await handlePayU();
+    }
+  }
+
+  return (
+    <div style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, paddingTop: 100, paddingBottom: 80 }}>
+
+      {/* Hidden PayU form — auto-submitted after hash received */}
+      {payuData && (
+        <form id="payu-form" method="POST" action={payuData.payuUrl} style={{ display: "none" }}>
+          {Object.entries(payuData).map(([k, v]) =>
+            k !== "payuUrl" ? <input key={k} type="hidden" name={k} value={v} /> : null
+          )}
+        </form>
+      )}
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 1 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>
+              Checkout
+            </span>
+          </div>
+          <h1 style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: "clamp(2rem, 6vw, 3.5rem)",
+            fontWeight: 900, textTransform: "uppercase",
+            color: T.textPrimary, lineHeight: 1, letterSpacing: "-0.01em",
+          }}>
+            Complete Your Order
+          </h1>
+        </div>
+
+        {/* ₹1 test mode banner */}
+        {isTest && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)",
+              borderRadius: 12, padding: "14px 18px", marginBottom: 28,
+            }}
+          >
+            <FlaskConical size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 2 }}>Test mode — ₹1 charge</div>
+              <div style={{ fontSize: 13, color: T.textSecond }}>
+                This is a live ₹1 test transaction. Real PayU credentials, real charge, real confirmation. Remove <code style={{ color: "#fbbf24" }}>?test=1</code> for production.
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: "flex", alignItems: "flex-start", gap: 12,
+              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
+              borderRadius: 12, padding: "14px 18px", marginBottom: 28,
+            }}
+          >
+            <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#f9fafb", marginBottom: 2 }}>Payment was not completed</div>
+              <div style={{ fontSize: 13, color: T.textSecond }}>
+                {errMsg || "Your payment was cancelled or failed. Please try again or order via WhatsApp."}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Two-column layout */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }} className="checkout-grid">
+
+          {/* Left — form */}
+          <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "28px 24px" }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, marginBottom: 24 }}>Your details</h2>
+
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }} className="name-grid">
+                <Field label="First name" name="firstname" value={form.firstname} onChange={v => setForm(f => ({ ...f, firstname: v }))} placeholder="Rahul" />
+                <Field label="Last name" name="lastname" value={form.lastname} onChange={v => setForm(f => ({ ...f, lastname: v }))} placeholder="Sharma" required={false} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }} className="name-grid">
+                <Field label="Email" name="email" type="email" value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} placeholder="rahul@email.com" />
+                <Field label="Phone" name="phone" type="tel" value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} placeholder="9876543210" maxLength={10} />
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <Field label="Delivery address" name="address" value={form.address} onChange={v => setForm(f => ({ ...f, address: v }))} placeholder="Flat 4B, Koregaon Park Road..." />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }} className="name-grid">
+                <Field label="City" name="city" value={form.city} onChange={v => setForm(f => ({ ...f, city: v }))} placeholder="Pune" />
+                <Field label="Pincode" name="pincode" value={form.pincode} onChange={v => setForm(f => ({ ...f, pincode: v }))} placeholder="411014" maxLength={6} />
+              </div>
+
+              {/* Payment method toggle */}
+              <PayToggle value={payMethod} onChange={setPayMethod} />
+
+              {/* COD note */}
+              <AnimatePresence>
+                {payMethod === "cod" && (
+                  <motion.div
+                    key="cod-note"
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 20 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div style={{
+                      background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
+                      borderRadius: 10, padding: "12px 16px",
+                      fontSize: 13, color: T.textSecond, lineHeight: 1.6,
+                    }}>
+                      💵 Keep <strong style={{ color: T.textPrimary }}>{fmt(rawPrice)}</strong> ready at delivery.
+                      Our delivery partner will collect cash when your meals arrive.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  background: loading ? "rgba(132,204,22,0.5)" : T.accent,
+                  color: "#000", fontWeight: 900, fontSize: 14,
+                  padding: "15px 0", borderRadius: 10, border: "none",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  boxShadow: loading ? "none" : "0 4px 20px rgba(132,204,22,0.35)",
+                  transition: "all 0.2s",
+                }}
+              >
+                {loading
+                  ? (payMethod === "cod" ? "Placing order..." : "Redirecting to PayU...")
+                  : payMethod === "cod"
+                    ? <><Banknote size={15} /> Place COD Order — {fmt(rawPrice)}</>
+                    : <>Pay {fmt(priceGST)} securely <ArrowRight size={15} /></>
+                }
+              </button>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 12 }}>
+                <ShieldCheck size={13} color={T.textMuted} />
+                <span style={{ fontSize: 12, color: T.textMuted }}>
+                  {payMethod === "cod"
+                    ? "No payment now · Pay cash at delivery"
+                    : "Secured by PayU · 256-bit SSL encryption"}
+                </span>
+              </div>
+            </form>
+          </div>
+
+          {/* Right — order summary */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+            {/* Plan summary */}
+            <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>
+                Order Summary
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                {[
+                  { label: "Diet",     value: DIET_LABELS[diet] || diet },
+                  { label: "Duration", value: DUR_LABELS[dur]   || dur  },
+                  { label: "Meals",    value: MEAL_LABELS[meal]  || meal },
+                ].map(row => (
+                  <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 13, color: T.textMuted }}>{row.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ height: 1, background: T.cardBorder, marginBottom: 16 }} />
+
+              {/* Price breakdown */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {isTest ? (
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>Test charge</span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24" }}>₹1</span>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: T.textMuted }}>Plan price</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(rawPrice)}</span>
+                    </div>
+                    {payMethod === "online" && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
+                        <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(priceGST - rawPrice)}</span>
+                      </div>
+                    )}
+                    {payMethod === "cod" && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
+                        <span style={{ fontSize: 13, color: "#737373", fontStyle: "italic" }}>collected at delivery</span>
+                      </div>
+                    )}
+                    <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>
+                        {payMethod === "cod" ? "Pay at door" : "Total"}
+                      </span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>
+                        {payMethod === "cod" ? fmt(rawPrice) : fmt(priceGST)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Free delivery badge */}
+            <div style={{
+              background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
+              borderRadius: 12, padding: "14px 18px",
+              fontSize: 13, color: T.textSecond, lineHeight: 1.6,
+            }}>
+              🚚 <strong style={{ color: T.textPrimary }}>Free delivery</strong> — 7am–10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
+            </div>
+
+            {/* WhatsApp alternative */}
+            <a
+              href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi FitFuel! I want to order:\n${productinfo}\nTotal: ${fmt(rawPrice)} (excl. GST)`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                background: "transparent", border: `1px solid ${T.cardBorder}`,
+                borderRadius: 12, padding: "13px 0",
+                fontSize: 13, fontWeight: 700, color: T.textSecond,
+                textDecoration: "none", transition: "all 0.2s",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(132,204,22,0.3)";
+                (e.currentTarget as HTMLElement).style.color = T.textPrimary;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.borderColor = T.cardBorder;
+                (e.currentTarget as HTMLElement).style.color = T.textSecond;
+              }}
+            >
+              <MessageCircle size={15} />
+              Order via WhatsApp instead
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 720px) {
+          .checkout-grid { grid-template-columns: 1fr !important; }
+          .name-grid     { grid-template-columns: 1fr !important; }
+        }
+        * { box-sizing: border-box; }
+      `}</style>
+    </div>
+  );
+}
+
+// ─── Page wrapper (Suspense required for useSearchParams) ─────────────────────
+export default function CheckoutPage() {
   return (
     <Suspense fallback={
       <div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#a3a3a3" }}>
-        Loading...
+        Loading checkout...
       </div>
     }>
-      <SuccessInner />
+      <CheckoutInner />
     </Suspense>
   );
 }
