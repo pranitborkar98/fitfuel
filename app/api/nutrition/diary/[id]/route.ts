@@ -15,11 +15,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const entry = await prisma.foodEntry.findUnique({ where: { id: params.id } });
+  const { id } = await params; const entry = await prisma.foodEntry.findUnique({ where: { id } });
 
   if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (entry.userId !== session.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  await prisma.foodEntry.delete({ where: { id: params.id } });
+  await prisma.foodEntry.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
