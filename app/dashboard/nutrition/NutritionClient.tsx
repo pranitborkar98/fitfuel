@@ -27,7 +27,7 @@ const T = {
   text:         "#f9fafb",
   textSecond:   "#a3a3a3",
   textMuted:    "#737373",
-  textGhost:    "#525252",
+  textGhost:    "#a3a3a3",
   red:          "#f87171",
   redBg:        "rgba(248,113,113,0.08)",
   amber:        "#fbbf24",
