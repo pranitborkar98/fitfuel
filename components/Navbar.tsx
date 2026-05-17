@@ -143,8 +143,12 @@ export default function Navbar() {
                       zIndex: 100,
                     }}
                   >
-                    <DropItem href="/dashboard" icon={<LayoutDashboard size={14} />} label="Dashboard" onClick={() => setUserMenu(false)} />
+               
+                    <DropItem href="/dashboard"         icon={<LayoutDashboard size={14} />} label="Dashboard"    onClick={() => setUserMenu(false)} />
+                    <DropItem href="/dashboard/profile" icon={<User size={14} />}            label="Edit Profile" onClick={() => setUserMenu(false)} />
                     <div style={{ height: 1, background: "#1a1a1a", margin: "6px 0" }} />
+
+
                     <button
                       onClick={() => { setUserMenu(false); signOut({ callbackUrl: "/" }); }}
                       style={{
@@ -249,20 +253,29 @@ export default function Navbar() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 12, borderTop: "1px solid #1a1a1a" }}>
                 {isLoggedIn ? (
                   <>
-                    <Link
-                      href="/dashboard" onClick={() => setIsOpen(false)}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", fontSize: 14, fontWeight: 600, color: "#f9fafb", textDecoration: "none", borderRadius: 8, border: "1px solid #242424" }}
-                    >
-                      <LayoutDashboard size={14} />
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => { setIsOpen(false); signOut({ callbackUrl: "/" }); }}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", fontSize: 14, fontWeight: 600, color: "#9ca3af", background: "transparent", border: "1px solid #242424", borderRadius: 8, cursor: "pointer" }}
-                    >
-                      <LogOut size={14} />
-                      Sign Out
-                    </button>
+                   <>
+  <Link
+    href="/dashboard" onClick={() => setIsOpen(false)}
+    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", fontSize: 14, fontWeight: 600, color: "#f9fafb", textDecoration: "none", borderRadius: 8, border: "1px solid #242424" }}
+  >
+    <LayoutDashboard size={14} />
+    Dashboard
+  </Link>
+  <Link
+    href="/dashboard/profile" onClick={() => setIsOpen(false)}
+    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", fontSize: 14, fontWeight: 600, color: "#f9fafb", textDecoration: "none", borderRadius: 8, border: "1px solid #242424" }}
+  >
+    <User size={14} />
+    Edit Profile
+  </Link>
+  <button
+    onClick={() => { setIsOpen(false); signOut({ callbackUrl: "/" }); }}
+    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px", fontSize: 14, fontWeight: 600, color: "#9ca3af", background: "transparent", border: "1px solid #242424", borderRadius: 8, cursor: "pointer" }}
+  >
+    <LogOut size={14} />
+    Sign Out
+  </button>
+</>
                   </>
                 ) : (
                   <Link

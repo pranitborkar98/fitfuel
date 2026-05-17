@@ -147,7 +147,12 @@ export default function DashboardClient({ session, orders, user }: { session: an
 
         {/* Account */}
         <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 32px" }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Account</h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700 }}>Account</h2>
+            <Link href="/dashboard/profile" style={{ fontSize: 13, fontWeight: 600, color: T.accent, textDecoration: "none" }}>
+              Edit Profile →
+            </Link>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Row label="Name"  value={user?.name  ?? "—"} />
             <Row label="Email" value={user?.email ?? "—"} />
