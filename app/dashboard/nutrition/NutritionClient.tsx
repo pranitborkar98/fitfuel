@@ -324,7 +324,7 @@ export default function NutritionClient({
 
   // ── Render ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
+    <div className="min-h-screen bg-[#080808] text-white pt-20" style={{ paddingTop: 80 }}>
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-10 bg-[#080808]/90 backdrop-blur-md border-b border-white/5">

@@ -34,10 +34,8 @@ const STATUS_COLOR: Record<string, string> = {
   PROCESSING:      "#60a5fa",
 };
 
-// Body Metrics is now LIVE — removed from this list
 const comingSoon = [
-  { icon: <Utensils size={20} />, label: "Nutrition Tracker", desc: "Log meals, track calories and macros daily",  phase: 6 },
-  { icon: <Dumbbell size={20} />, label: "Exercise Library",  desc: "Workouts, sets, reps — beginner to expert",  phase: 7 },
+  { icon: <Dumbbell size={20} />, label: "Exercise Library", desc: "Workouts, sets, reps — beginner to expert", phase: 7 },
 ];
 
 export default function DashboardClient({ session, orders, user }: { session: any; orders: any[]; user: any }) {
@@ -130,7 +128,7 @@ export default function DashboardClient({ session, orders, user }: { session: an
         <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Features</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 32 }}>
 
-          {/* Body Metrics — LIVE card */}
+          {/* Body Metrics — LIVE */}
           <Link href="/dashboard/body-metrics" style={{ textDecoration: "none" }}>
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
@@ -144,7 +142,27 @@ export default function DashboardClient({ session, orders, user }: { session: an
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Body Metrics</p>
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
-                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>Track 13 body composition parameters — connect your MEDITIVE BLE scale or log manually.</p>
+                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>Track 13 body composition parameters — connect your FitDays BLE scale or log manually.</p>
+              </div>
+              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+          </Link>
+
+          {/* Nutrition Tracker — LIVE */}
+          <Link href="/dashboard/nutrition" style={{ textDecoration: "none" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                <Utensils size={20} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Nutrition Tracker</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                </div>
+                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>Log meals, track calories, macros and water daily.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
