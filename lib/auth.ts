@@ -67,13 +67,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         data:   { userId: user.id },
       });
 
-      // Copy over phone number if auth user doesn't have one yet
-      if (!user.phone) {
-        await (prisma as any).user.update({
-          where: { id: user.id },
-          data:  { phone: guestUser.phone },
-        });
-      }
+     // Copy over phone number if auth user doesn't have one yet
+const authUser = await (prisma as any).user.findUnique({ where: { id: user.id } });
+if (!authUser?.phone && guestUser.phone) {
+  await (prisma as any).user.update({
+    where: { id: user.id },
+    data:  { phone: guestUser.phone },
+  });
+}
 
       // Delete the guest user (orders/addresses already re-parented above)
       await (prisma as any).user.delete({
