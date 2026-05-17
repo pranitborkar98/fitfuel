@@ -324,39 +324,23 @@ export default function NutritionClient({
 
   // ── Render ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-20" style={{ paddingTop: 80 }}>
+    <div style={{ background: "#080808", minHeight: "100vh", paddingTop: 88, paddingBottom: 80, color: "#f9fafb" }}>
 
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-10 bg-[#080808]/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1 text-sm text-neutral-500 hover:text-white transition-colors"
-          >
-            <ChevronLeft size={15} />
-            <span>Dashboard</span>
-          </Link>
-
-          <div className="text-center">
-            <p className="text-[9px] tracking-[0.2em] text-neutral-600 uppercase">Phase 6 · Nutrition</p>
-            <h1
-              className="text-base font-black uppercase tracking-tight leading-none"
-              style={{ fontFamily: "'Barlow Condensed', 'Arial Narrow', sans-serif" }}
-            >
-              FUEL <span className="text-lime-400">LOG</span>
-            </h1>
-          </div>
-
-          <button
-            onClick={() => setShowGoals(true)}
-            className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
-          >
-            <Target size={15} className="text-neutral-400" />
-          </button>
-        </div>
-      </header>
+    
 
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+
+        <div className="flex items-center justify-between mb-2">
+  <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>
+    Fuel <span style={{ color: "#84cc16" }}>Log</span>
+  </h1>
+  <button
+    onClick={() => setShowGoals(true)}
+    className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+  >
+    <Target size={15} className="text-neutral-400" />
+  </button>
+</div>
 
         {/* ── Date navigator ── */}
         <div className="flex items-center justify-between">
