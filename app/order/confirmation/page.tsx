@@ -2,8 +2,9 @@
 
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession, signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { CheckCircle, MessageCircle, Truck, ChefHat, Clock, Banknote } from "lucide-react";
+import { CheckCircle, MessageCircle, Truck, ChefHat, Clock, Banknote, LogIn } from "lucide-react";
 
 const T = {
   bg:          "#0a0a0a",
@@ -19,8 +20,9 @@ const WA_NUMBER = "919579738811";
 function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
 
 function ConfirmationInner() {
-  const params  = useSearchParams();
-  const router  = useRouter();
+  const params   = useSearchParams();
+  const router   = useRouter();
+  const { data: session } = useSession();
 
   const txnid   = params.get("txnid")  || "";
   const amount  = Number(params.get("amount") || 0);
@@ -32,12 +34,14 @@ function ConfirmationInner() {
   );
 
   const steps = [
-    { icon: <CheckCircle size={18} />, title: "Order confirmed",   sub: "We've received your order"                        },
+    { icon: <CheckCircle size={18} />, title: "Order confirmed",   sub: "We've received your order" },
     { icon: <ChefHat     size={18} />, title: "Fresh preparation", sub: "Your meals are cooked fresh daily in our kitchen" },
-    { icon: <Clock       size={18} />, title: "Delivery by 10am",  sub: "7am – 10am to your door every day"                },
+    { icon: <Clock       size={18} />, title: "Delivery by 10am",  sub: "7am – 10am to your door every day" },
     { icon: <Truck       size={18} />, title: isCOD ? "Pay cash at door" : "Payment received ✓",
-      sub: isCOD ? `Keep ${fmt(amount)} + 5% GST ready` : "Paid online via PayU"                                          },
+      sub: isCOD ? `Keep ${fmt(amount)} + 5% GST ready` : "Paid online via PayU" },
   ];
+
+  const isGuest = !session;
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, paddingTop: 100, paddingBottom: 80 }}>
@@ -120,6 +124,41 @@ function ConfirmationInner() {
             </div>
           </div>
         </motion.div>
+
+        {/* Guest sign-in nudge — only shown when not logged in */}
+        {isGuest && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
+            style={{
+              background: "rgba(132,204,22,0.05)",
+              border: "1px solid rgba(132,204,22,0.25)",
+              borderRadius: 16, padding: "20px",
+              marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>
+                Save your order history
+              </div>
+              <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>
+                Sign in with Google to track this order and future deliveries on your dashboard.
+              </div>
+            </div>
+            <button
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
+                background: T.accent, color: "#000",
+                fontWeight: 800, fontSize: 12,
+                padding: "10px 18px", borderRadius: 8, border: "none",
+                cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+              }}
+            >
+              <LogIn size={13} /> Sign in with Google
+            </button>
+          </motion.div>
+        )}
 
         {/* What happens next */}
         <motion.div
