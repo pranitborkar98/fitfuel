@@ -1,7 +1,7 @@
 // ============================================================
 // FITFUEL — PRISMA SCHEMA v1 (Prisma 7 compatible)
 // Connection config lives in prisma.config.ts — NOT here
-// Run: npx prisma migrate dev --name init
+// Run: npx prisma migrate dev --name add-nutrition-tracker
 // ============================================================
 
 generator client {
@@ -126,24 +126,29 @@ model User {
   id            String    @id @default(cuid())
   phone         String?   @unique
   email         String?   @unique
-  emailVerified DateTime?           // ✅ ADDED — required by @auth/prisma-adapter
+  emailVerified DateTime?
   name          String?
-  image         String?             // ✅ ADDED — NextAuth sets this from Google avatar URL
-  avatarUrl     String?             // keep your existing field too
+  image         String?
+  avatarUrl     String?
   role          Role      @default(CUSTOMER)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  profile       UserProfile?
-  addresses     Address[]
-  orders        Order[]
-  bodyMetrics   BodyMetric[]
-  nutritionLogs NutritionLog[]
-  workoutLogs   WorkoutLog[]
-  activePlans   ActivePlan[]
-  accounts      Account[]
-  sessions      Session[]
+  profile        UserProfile?
+  addresses      Address[]
+  orders         Order[]
+  bodyMetrics    BodyMetric[]
+  workoutLogs    WorkoutLog[]
+  activePlans    ActivePlan[]
+  accounts       Account[]
+  sessions       Session[]
+
+  // ── Phase 6 — Nutrition Tracker ──
+  foodItems      FoodItem[]
+  foodEntries    FoodEntry[]
+  nutritionGoal  NutritionGoal?
+  waterLogs      WaterLog[]
 
   @@map("users")
 }
@@ -217,8 +222,7 @@ model MealPlanProduct {
 }
 
 // ============================================================
-// PRICE TABLE — fixed lookup
-// Unique key: productId x diet x duration x mealsPerDay
+// PRICE TABLE
 // ============================================================
 
 model PlanPrice {
@@ -393,35 +397,6 @@ model BodyMetric {
 }
 
 // ============================================================
-// NUTRITION LOG
-// ============================================================
-
-model NutritionLog {
-  id         String   @id @default(cuid())
-  userId     String
-  logDate    DateTime
-  mealSlot   String
-  foodName   String
-  quantity   Float
-  unit       String   @default("g")
-  calories   Float?
-  proteinG   Float?
-  carbsG     Float?
-  fatG       Float?
-  fiberG     Float?
-  waterMl    Float?
-  source     String?
-  externalId String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, logDate])
-  @@map("nutrition_logs")
-}
-
-// ============================================================
 // EXERCISE
 // ============================================================
 
@@ -523,4 +498,95 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+// ============================================================
+// PHASE 6 — NUTRITION TRACKER
+// ============================================================
+
+// Meal slots: Breakfast / Lunch / Dinner / Snacks (seeded)
+model MealType {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  emoji     String?
+  sortOrder Int         @default(0)
+  entries   FoodEntry[]
+
+  @@map("meal_types")
+}
+
+// Food library — global (userId null) + user-created custom foods
+model FoodItem {
+  id             String      @id @default(cuid())
+  name           String
+  brand          String?
+  category       String?
+  per100Calories Float
+  per100Protein  Float       @default(0)
+  per100Carbs    Float       @default(0)
+  per100Fat      Float       @default(0)
+  per100Fiber    Float       @default(0)
+  isCustom       Boolean     @default(false)
+  userId         String?     // null = global seed food; set = user's custom food
+  createdAt      DateTime    @default(now())
+
+  entries        FoodEntry[]
+  user           User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([name])
+  @@map("food_items")
+}
+
+// Daily food diary entries
+model FoodEntry {
+  id         String    @id @default(cuid())
+  userId     String
+  foodItemId String
+  mealTypeId String
+  entryDate  DateTime  @db.Date
+  quantity   Float     // grams
+  calories   Float     // computed at log time
+  protein    Float
+  carbs      Float
+  fat        Float
+  fiber      Float     @default(0)
+  notes      String?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItem   FoodItem  @relation(fields: [foodItemId], references: [id])
+  mealType   MealType  @relation(fields: [mealTypeId], references: [id])
+
+  @@index([userId, entryDate])
+  @@map("food_entries")
+}
+
+// Daily macro + water targets per user
+model NutritionGoal {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  calories  Float    @default(2000)
+  protein   Float    @default(150)
+  carbs     Float    @default(250)
+  fat       Float    @default(67)
+  waterMl   Int      @default(2500)
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("nutrition_goals")
+}
+
+// Daily water log — one row per user per day (upserted)
+model WaterLog {
+  id        String   @id @default(cuid())
+  userId    String
+  entryDate DateTime @db.Date
+  amountMl  Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, entryDate])
+  @@map("water_logs")
 }
