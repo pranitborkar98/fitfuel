@@ -90,7 +90,7 @@ export default function Navbar() {
         {/* Desktop CTAs */}
         <div className="ff-nav-desktop" style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Link
-            href="/login"
+            href="/auth/signin"
             style={{
               display: "inline-flex", alignItems: "center",
               fontSize: 14, fontWeight: 600, color: "#9ca3af",
@@ -177,7 +177,7 @@ export default function Navbar() {
               </nav>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 12, borderTop: "1px solid #1a1a1a" }}>
                 <Link
-                  href="/login"
+                  href="/auth/signin"
                   onClick={() => setIsOpen(false)}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "11px", fontSize: 14, fontWeight: 600, color: "#9ca3af", textDecoration: "none", borderRadius: 8, border: "1px solid #242424", transition: "all 0.2s" }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#f9fafb"; (e.currentTarget as HTMLElement).style.borderColor = "#3a3a3a"; }}
