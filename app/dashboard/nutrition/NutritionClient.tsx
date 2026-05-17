@@ -328,7 +328,7 @@ export default function NutritionClient({
 
     
 
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }} className="space-y-4">
 
         <div className="flex items-center justify-between mb-2">
   <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>
