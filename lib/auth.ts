@@ -3,7 +3,6 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
-// ─── Extend NextAuth types ────────────────────────────────────────────────────
 declare module "next-auth" {
   interface Session {
     user: {
@@ -19,25 +18,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId:     process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,  
-
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id   = user.id;
-        token.role = (user as any).role ?? "CUSTOMER";
-      }
-      return token;
-    },
-    async session({ session, token }) {
+    async session({ session, user }) {
       if (session.user) {
-        session.user.id   = token.id   as string;
-        session.user.role = token.role as string;
+        session.user.id   = user.id;
+        session.user.role = (user as any).role ?? "CUSTOMER";
       }
       return session;
     },

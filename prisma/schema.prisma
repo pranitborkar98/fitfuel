@@ -141,6 +141,7 @@ model User {
   workoutLogs   WorkoutLog[]
   activePlans   ActivePlan[]
   accounts      Account[]   
+  sessions      Session[]
 
 
   @@map("users")
@@ -512,4 +513,13 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
