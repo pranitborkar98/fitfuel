@@ -1,6 +1,6 @@
 # 🔥 FITFUEL — MASTER PROJECT TRACKER
 
-> **Last Updated: May 17, 2026 — Phase 3 IN PROGRESS 🟡 — COD + DB save confirmed live ✅**
+> **Last Updated: May 17, 2026 — Phase 4 IN PROGRESS 🟡 — Auth ✅, Dashboard ✅, Order history ✅, Guest merge ✅, Profile/Addresses pending**
 > **Platform:** Next.js (React) + Node.js + PostgreSQL (Neon)
 > **Deployment:** Vercel — [fitfuel-eosin.vercel.app](https://fitfuel-eosin.vercel.app) → fitfuel.in after launch
 > **Mission:** Best meal delivery + health platform in Pune. Meals today. Supplements + AI tomorrow. Empire after that.
@@ -13,9 +13,9 @@
 |-------|------|--------|
 | 0 | Audit & Planning | ✅ Complete |
 | 1 | Design System + Tech Stack + DB | ✅ Complete |
-| **2** | **Core Website Redesign** | **✅ Complete** |
-| **3** | **Meal Plans + Shop + PayU** | **✅ Complete** |
-| 4 | User Profile + Dashboard + Auth | ⏳ Pending |
+| 2 | Core Website Redesign | ✅ Complete |
+| 3 | Meal Plans + Shop + PayU | ✅ Complete |
+| **4** | **User Profile + Dashboard + Auth** | **🟡 In Progress — Auth ✅, Dashboard ✅, Order history ✅, Guest merge ✅, Profile/Addresses pending** |
 | 5 | Body Metrics — FitDays BLE | ⏳ Pending |
 | 6 | Nutrition Tracker | ⏳ Pending |
 | 7 | Exercise Library | ⏳ Pending |
@@ -32,7 +32,84 @@
 
 ---
 
-## 🟡 PHASE 3 — MEAL PLANS + SHOP + PAYU — IN PROGRESS
+## 🟡 PHASE 4 — USER PROFILE + DASHBOARD + AUTH — IN PROGRESS
+
+### Files Built & Pushed
+
+| File | Status | Notes |
+|------|--------|-------|
+| `lib/auth.ts` | ✅ Done | NextAuth v5 — Google provider, PrismaAdapter, database sessions, signIn event guest merge |
+| `app/api/auth/[...nextauth]/route.ts` | ✅ Done | NextAuth route handler — `export const { GET, POST } = handlers` |
+| `app/auth/signin/page.tsx` | ✅ Done | Custom sign-in page — FitFuel styled, Google button, WhatsApp fallback, callbackUrl → `/dashboard` |
+| `app/layout.tsx` | ✅ Done | Added `SessionProvider` wrapping tree — server-side `auth()` passed as prop |
+| `app/dashboard/page.tsx` | ✅ Done | Server component — fetches real orders from DB by userId, redirects if unauthenticated |
+| `app/dashboard/DashboardClient.tsx` | ✅ Done | Client UI — order history, account details, coming soon cards |
+| `components/Navbar.tsx` | ✅ Done | Auth-aware ✅ — avatar + first name + dropdown (Dashboard, Sign Out) when logged in; Sign In when logged out |
+| `prisma/schema.prisma` | ✅ Done | Added `emailVerified DateTime?` + `image String?` to User — required by PrismaAdapter |
+
+### Schema Changes (Phase 4)
+- Added `Account` model — NextAuth OAuth account linking
+- Added `Session` model — database sessions
+- Added `VerificationToken` model — email verification (future)
+- Added `emailVerified DateTime?` to `User` — PrismaAdapter requires this field
+- Added `image String?` to `User` — NextAuth sets this from Google avatar URL
+- Migrations applied: `add-nextauth-accounts`, `add-session-table`, `add-emailverified-image` ✅
+
+### Google OAuth Setup
+
+| Field | Value |
+|-------|-------|
+| Provider | Google Cloud Console — project: vercel-496612 |
+| OAuth Client | Web client 1 — created May 17 2026 |
+| Authorized redirect URI | `https://fitfuel-eosin.vercel.app/api/auth/callback/google` |
+| Vercel env vars set | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` |
+
+### Auth Flow (confirmed working ✅ — May 17 2026)
+```
+User clicks "Continue with Google" on /auth/signin
+→ signIn("google", { callbackUrl: "/dashboard" })
+→ Google OAuth → /api/auth/callback/google
+→ PrismaAdapter writes Session + Account rows to Neon
+→ Redirect to /dashboard ✅
+→ Navbar shows avatar + "Pranit" + dropdown ✅
+→ Dashboard shows "Welcome back PRANIT 💪" ✅
+```
+
+### Guest → Auth Merge Flow (confirmed working ✅ — May 17 2026)
+```
+Guest places COD order (no login) → guest User row created in Neon by email
+→ Guest signs in with Google (same email)
+→ NextAuth signIn event fires → finds guest User row (no accounts linked)
+→ Orders + addresses re-parented to auth User
+→ Guest User row deleted
+→ Dashboard shows merged orders immediately ✅
+```
+
+### Bugs Fixed (May 17 2026)
+
+| Bug | Cause | Fix |
+|-----|-------|-----|
+| Redirected to homepage after login | `callbackUrl` defaulted to `"/"` | Changed to `"/dashboard"` in signin page |
+| Session not persisting | `sameSite: "none"` on cookie config — rejected by browsers outside cross-origin iframes | Removed entire custom `cookies` block — NextAuth handles it correctly on Vercel HTTPS |
+| `useSession()` returning null in Navbar | No `SessionProvider` in layout | Added `SessionProvider` with server-side `session` prop to `app/layout.tsx` |
+| PrismaAdapter silently failing on user create | `emailVerified` + `image` columns missing from `users` table | Added both fields to schema, ran migration |
+| Guest orders not merging | `createUser` event only fires on first-ever login — existing auth user skipped it | Moved merge logic to `signIn` event which fires on every login |
+| Dashboard showing empty orders | `page.tsx` was a hardcoded static shell with no DB query | Rebuilt as server component — fetches real orders from Neon by userId |
+| TypeScript error on `user.phone` | NextAuth `User` type doesn't include `phone` | Fetch auth user from DB directly before phone check |
+
+### What's Still Pending in Phase 4
+
+| Task | Status |
+|------|--------|
+| ✅ Wire real order history to dashboard — fetch from DB by userId | Done — server component queries Neon directly, no Phase 15 dependency |
+| ✅ Link Phase 3 guest orders to auth user on first login (same email) | Done — signIn event merge, live May 17 2026 |
+| ⏳ Saved addresses UI | Pending |
+| ⏳ MSG91 phone OTP (second auth provider) | Pending — needs MSG91 account |
+| ⏳ User profile edit (name, phone, diet preference, fitness goal) | Pending |
+
+---
+
+## ✅ PHASE 3 — MEAL PLANS + SHOP + PAYU — COMPLETE
 
 ### Files Built & Pushed
 
@@ -66,7 +143,7 @@ Customer selects Cash on Delivery → fills form → submits
 ```
 
 ### DB Save — How it works
-- **User**: upserted by email (guest for now, linked when Phase 4 auth lands)
+- **User**: upserted by email (guest for now, merged to auth user on Google sign-in via Phase 4 signIn event)
 - **Address**: created fresh each order (deduplication in Phase 4)
 - **Order**: `CONFIRMED` status, `CASH_ON_DELIVERY` payment method, `PENDING` payment status
 - **OrderItem**: `productId = null` until products seeded (Phase 15), diet/duration/mealsPerDay stored
@@ -78,15 +155,11 @@ Customer selects Cash on Delivery → fills form → submits
 - e.g. `https://fitfuel-eosin.vercel.app/checkout?diet=veg&dur=trial&meal=sd&price=400&test=1`
 - Real PayU charge of ₹1 — confirms gateway working end-to-end
 
-### What's Still Pending in Phase 3
+### Remaining Pending in Phase 3
 
 | Task | Status | Notes |
 |------|--------|-------|
-| ✅ PayU payment confirmed working end-to-end | Done | ₹1 test passed |
-| ✅ COD option | Done | Confirmed live May 16 2026 |
-| ✅ Save COD orders to DB | Done | `app/api/orders/cod/route.ts` — confirmed live May 17 2026 |
-| ✅ Order confirmation page — COD + PayU variant | Done | Real page built May 17 2026 |
-| ✅ Save PayU online orders to DB | Done | Idempotency guard + mihpayid stored — confirmed May 17 2026 || ⏳ Seed MealPlanProducts to DB | Pending | So `OrderItem.productId` can be populated |
+| ⏳ Seed MealPlanProducts to DB | Pending | So `OrderItem.productId` can be populated — Phase 15 |
 | ⏳ Admin view of orders | Pending | Phase 15 |
 
 ### Known Issues Fixed (May 16–17 2026)
@@ -203,7 +276,7 @@ GST 5% added at checkout on all tiers.
 ### Tier Multipliers
 | Tier | Multiplier | Phase | Status |
 |------|-----------|-------|--------|
-| Standard | 1.0× (base) | Phase 3 | 🟡 Building |
+| Standard | 1.0× (base) | Phase 3 | ✅ Live |
 | Premium | 1.25× on Standard | Phase 8 | ⏳ Waitlist open |
 | Luxury | 1.50× on Standard | Phase 12 | ⏳ Waitlist open |
 
@@ -227,9 +300,13 @@ GST 5% added at checkout on all tiers.
 
 | File | Status | Notes |
 |------|--------|-------|
-| `FITFUEL_PROJECT_TRACKER.md` | ✅ This file | Updated May 16 2026 |
-| `prisma/schema.prisma` | ✅ v2 | 14 models, 17 enums |
+| `FITFUEL_PROJECT_TRACKER.md` | ✅ This file | Updated May 17 2026 |
+| `prisma/schema.prisma` | ✅ v3 | Added Account, Session, VerificationToken (Phase 4) |
 | `prisma/seed.ts` | ✅ Executed | 17 products, 966 price rows live |
+| `lib/auth.ts` | ✅ Done | NextAuth v5 — Google, PrismaAdapter, database sessions, signIn event guest merge |
+| `lib/prisma.ts` | ✅ Done | Prisma 7 singleton — PrismaPg + pg.Pool |
+| `app/api/auth/[...nextauth]/route.ts` | ✅ Done | NextAuth route handler |
+| `app/auth/signin/page.tsx` | ✅ Done | Custom sign-in page |
 | `app/globals.css` | ✅ Done | Gray scale + btn tokens corrected |
 | `app/layout.tsx` | ✅ Done | Navbar + Footer, Barlow Condensed in `<head>` |
 | `app/page.tsx` | ✅ Done | Full homepage — 3D card, all sections, Framer Motion |
@@ -238,13 +315,16 @@ GST 5% added at checkout on all tiers.
 | `app/about/page.tsx` | ✅ Done | Pushed May 16 2026 |
 | `app/contact/page.tsx` | ✅ Done | Pushed May 16 2026 |
 | `app/locations/page.tsx` | ✅ Done | Pushed May 16 2026 — pincode checker, 15 zones, Maps embed |
-| `app/checkout/page.tsx` | ✅ Done | PayU + COD + ₹1 test mode — pushed May 16 2026 |
-| `app/order/success/route.ts` | ✅ Done | PayU POST handler — pushed May 16 2026 |
-| `app/order/confirmation/page.tsx` | ✅ Done | Order confirmed page — pushed May 16 2026 |
+| `app/checkout/page.tsx` | ✅ Done | PayU + COD + ₹1 test mode |
+| `app/order/success/route.ts` | ✅ Done | PayU POST handler |
+| `app/order/confirmation/page.tsx` | ✅ Done | Order confirmed page — COD + PayU variant |
 | `app/api/payments/payu/route.ts` | ✅ Done | Hash generator — server-side |
 | `app/api/payments/payu/success/route.ts` | ✅ Done | Backup success handler |
 | `app/api/payments/payu/failed/route.ts` | ✅ Done | Failed payment handler |
-| `components/Navbar.tsx` | ✅ Done | Scroll progress, mobile hamburger |
+| `app/api/orders/cod/route.ts` | ✅ Done | COD order save to DB — checks for existing auth user before creating guest |
+| `app/dashboard/page.tsx` | ✅ Done | Server component — fetches real orders from Neon by userId |
+| `app/dashboard/DashboardClient.tsx` | ✅ Done | Client UI — order history with status badges, account details, coming soon cards |
+| `components/Navbar.tsx` | ✅ Done | Auth-aware ✅ — avatar + dropdown live |
 | `components/Footer.tsx` | ✅ Done | Contrast audited |
 | `u271592098_U9cur.sql` | ✅ Analysed | 171MB — keep for reference |
 | Meal images (5 zips, 1.63GB) | ✅ Catalogued | 37 named + 200+ AI-generated |
@@ -260,11 +340,11 @@ GST 5% added at checkout on all tiers.
 | Animation | Framer Motion |
 | Icons | Lucide React |
 | State | Zustand (Phase 4+) |
-| Auth | NextAuth.js — Phone OTP (MSG91) + Google (Phase 4) |
+| Auth | NextAuth.js v5 beta — Google OAuth live, Phone OTP (MSG91) Phase 4 |
 | Backend | Next.js API routes |
 | ORM | Prisma 7 |
 | Database | PostgreSQL (Neon — free tier, 0.5GB) |
-| Payments | PayU (Phase 3) + COD |
+| Payments | PayU ✅ + COD ✅ |
 | Notifications | n8n self-hosted — WhatsApp Business API + Email (Phase 16) |
 | Delivery Tracking | Driver PWA — Web Bluetooth / smartphone (Phase 10) |
 | AI | Claude API (Anthropic) — Phase 12 |
@@ -277,10 +357,10 @@ GST 5% added at checkout on all tiers.
 ### Standard — Active (Phase 3 launch)
 - Meal delivery — all 5 active plans (Veg, Egg, Non-Veg, Jain, Custom)
 - Choose diet → duration → meals per day
-- Dashboard: order history, delivery tracking, today's meals
-- Body metrics (manual entry or FitDays BLE)
-- Nutrition tracker (basic — calories + macros)
-- Digital meal plans (PDFs, sold separately)
+- Dashboard: order history ✅, delivery tracking (Phase 10), today's meals (Phase 10)
+- Body metrics (manual entry or FitDays BLE) — Phase 5
+- Nutrition tracker (basic — calories + macros) — Phase 6
+- Digital meal plans (PDFs, sold separately) — Phase 13
 
 Price anchor: ₹400 trial → ₹47,250 for 3-month all meals
 
@@ -318,7 +398,7 @@ Conditions: PCOS · Diabetic-friendly · Post-surgery recovery · Weight loss (c
 | 3 | Tech Stack | Next.js + Node.js + PostgreSQL |
 | 4 | Deployment | Vercel — subdomain during build, then fitfuel.in |
 | 5 | Migration strategy | Soft launch on subdomain — active customers stay on WordPress until cutover |
-| 6 | Auth | Phone OTP (MSG91) + Google Sign-In — NextAuth.js |
+| 6 | Auth | Phone OTP (MSG91) + Google Sign-In — NextAuth.js v5 |
 | 7 | Payment | PayU (confirmed) + Cash on Delivery |
 | 8 | Pricing model | Fixed price lookup table from DB — not formula-based |
 | 9 | Notifications | n8n self-hosted — WhatsApp Business API + Email |
@@ -334,6 +414,7 @@ Conditions: PCOS · Diabetic-friendly · Post-surgery recovery · Weight loss (c
 | 19 | Zomato/Swiggy | Live separately — no website integration |
 | 20 | GST | 5% on all meal plan products |
 | 21 | Owner email | pranitborkar98@gmail.com |
+| 22 | Guest checkout | Keep guest checkout — post-order sign-in nudge on confirmation page (Phase 4 remaining) |
 
 ---
 
@@ -377,7 +458,7 @@ Jain · Vegetarian · Eggetarian · Non-Vegetarian · Snacks — full catalogue 
 
 FitFuel has been running in Pune since 2024 — real customers, real orders, real operations. This is a full platform revamp, not a launch.
 
-**Now (Phase 3):** Wire ordering — PayU integration, order flow, individual plan pages. Standard tier goes live properly.
+**Now (Phase 4):** Auth live ✅ — Google Sign-In working, dashboard showing real order history, guest→auth merge live. Remaining: saved addresses, profile edit, MSG91 OTP.
 
 **Phase 8:** Unlock Premium — supplements, full nutrition tracking, exercise library. Turn one-time meal customers into recurring health subscribers.
 
