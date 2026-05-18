@@ -41,11 +41,19 @@ html {
   scroll-behavior: smooth;
 }
 
-body {
+html,
+body,
+main {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tailwind v4 Preflight can reset backgrounds — lock dark on key elements */
+#__next,
+[data-nextjs-scroll-focus-boundary] {
+  background-color: var(--bg-primary);
 }
 
 /* ── Scrollbar ── */
