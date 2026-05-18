@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 // app/dashboard/exercises/ExercisesClient.tsx
-// Phase 7 — Exercise Library + Workout Logger
-// Tabs: Browse · Workout · History
+// Phase 7 â€” Exercise Library + Workout Logger
+// Tabs: Browse Â· Workout Â· History
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -12,7 +12,7 @@ import {
   Zap, Target, Activity, Filter, TrendingUp
 } from "lucide-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface Exercise {
   id: string;
@@ -69,7 +69,7 @@ interface ExercisesClientProps {
   muscles: string[];
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
@@ -121,7 +121,7 @@ function CategoryPill({ category }: { category: string }) {
 }
 
 function formatDuration(mins: number | null) {
-  if (!mins) return "—";
+  if (!mins) return "â€”";
   if (mins < 60) return `${mins}m`;
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
@@ -130,7 +130,7 @@ function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
 
-// ─── Exercise Card ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Exercise Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ExerciseCard({
   exercise,
@@ -186,7 +186,7 @@ function ExerciseCard({
           {exercise.name}
         </p>
         <p className="text-[11px] text-white/30 leading-snug line-clamp-1">
-          {exercise.primaryMuscles.slice(0, 2).join(" · ")}
+          {exercise.primaryMuscles.slice(0, 2).join(" Â· ")}
           {exercise.primaryMuscles.length > 2 && ` +${exercise.primaryMuscles.length - 2}`}
         </p>
         {exercise.equipment && (
@@ -213,7 +213,7 @@ function ExerciseCard({
   );
 }
 
-// ─── Exercise Detail Modal ────────────────────────────────────────────────────
+// â”€â”€â”€ Exercise Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ExerciseModal({
   exercise,
@@ -298,17 +298,17 @@ function ExerciseModal({
           <div className="flex flex-wrap gap-2 mb-5">
             {detail.equipment && (
               <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06]">
-                🏋️ {detail.equipment}
+                ðŸ‹ï¸ {detail.equipment}
               </span>
             )}
             {detail.force && (
               <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06] capitalize">
-                ↕ {detail.force}
+                â†• {detail.force}
               </span>
             )}
             {detail.mechanic && (
               <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06] capitalize">
-                ⚙ {detail.mechanic}
+                âš™ {detail.mechanic}
               </span>
             )}
           </div>
@@ -373,7 +373,7 @@ function ExerciseModal({
   );
 }
 
-// ─── Browse Tab ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Browse Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BrowseTab({
   initialExercises,
@@ -458,7 +458,7 @@ function BrowseTab({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
           <input
             type="text"
-            placeholder="Search 873 exercises…"
+            placeholder="Search 873 exercisesâ€¦"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all"
@@ -523,7 +523,7 @@ function BrowseTab({
       {/* Count */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-[11px] text-white/25 font-medium">
-          {loading ? "Searching…" : `${total.toLocaleString()} exercise${total !== 1 ? "s" : ""}${(q || hasFilters) ? " found" : ""}`}
+          {loading ? "Searchingâ€¦" : `${total.toLocaleString()} exercise${total !== 1 ? "s" : ""}${(q || hasFilters) ? " found" : ""}`}
         </p>
         {totalPages > 1 && (
           <p className="text-[11px] text-white/25">Page {currentPage}/{totalPages}</p>
@@ -593,7 +593,7 @@ function BrowseTab({
   );
 }
 
-// ─── Set Row ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Set Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SetRow({
   set,
@@ -629,7 +629,7 @@ function SetRow({
             onChange={(e) => onUpdate({ weightKg: e.target.value ? Number(e.target.value) : null })}
             className="w-16 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
           />
-          <span className="text-white/20 text-xs font-bold">×</span>
+          <span className="text-white/20 text-xs font-bold">Ã—</span>
           <input
             type="number"
             placeholder="reps"
@@ -653,7 +653,7 @@ function SetRow({
   );
 }
 
-// ─── Active Workout Exercise Card ─────────────────────────────────────────────
+// â”€â”€â”€ Active Workout Exercise Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WorkoutExerciseCard({
   we,
@@ -789,7 +789,7 @@ function WorkoutExerciseCard({
   );
 }
 
-// ─── Workout Tab ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Workout Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WorkoutTab({
   initialExercises,
@@ -882,7 +882,7 @@ function WorkoutTab({
     setFinishing(false);
   }
 
-  // ── No active session ──
+  // â”€â”€ No active session â”€â”€
   if (!activeSession) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4">
@@ -895,7 +895,7 @@ function WorkoutTab({
         </p>
         <input
           type="text"
-          placeholder='Session name — e.g. "Push Day"'
+          placeholder='Session name â€” e.g. "Push Day"'
           value={sessionName}
           onChange={(e) => setSessionName(e.target.value)}
           className="w-full max-w-sm bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder-white/25 text-center focus:outline-none focus:border-white/20 mb-4 transition-all"
@@ -910,7 +910,7 @@ function WorkoutTab({
     );
   }
 
-  // ── Browse to add exercises ──
+  // â”€â”€ Browse to add exercises â”€â”€
   if (showBrowse) {
     return (
       <div>
@@ -941,7 +941,7 @@ function WorkoutTab({
     );
   }
 
-  // ── Active session ──
+  // â”€â”€ Active session â”€â”€
   const totalSets = workoutExercises.reduce((s, we) => s + we.sets.filter((st) => st.completed).length, 0);
 
   return (
@@ -1011,13 +1011,13 @@ function WorkoutTab({
         disabled={finishing}
         className="w-full bg-lime-400 text-black font-bold py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.98] transition-all disabled:opacity-50 text-sm tracking-wide shadow-lg shadow-lime-400/15"
       >
-        {finishing ? "Saving…" : "Finish Workout"}
+        {finishing ? "Savingâ€¦" : "Finish Workout"}
       </button>
     </div>
   );
 }
 
-// ─── History Tab ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ History Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function HistoryTab() {
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
@@ -1080,7 +1080,7 @@ function HistoryTab() {
                     <p className="text-sm font-semibold text-white">{s.name ?? "Workout"}</p>
                     <p className="text-[11px] text-white/30 mt-0.5">
                       {s.exercises.length} exercise{s.exercises.length !== 1 ? "s" : ""}
-                      {s.durationMins ? ` · ${formatDuration(s.durationMins)}` : ""}
+                      {s.durationMins ? ` Â· ${formatDuration(s.durationMins)}` : ""}
                     </p>
                   </div>
                   {s.caloriesBurned ? (
@@ -1124,7 +1124,7 @@ function HistoryTab() {
   );
 }
 
-// ─── Root Component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Root Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Tab = "browse" | "workout" | "history";
 
@@ -1145,7 +1145,7 @@ export default function ExercisesClient({
   ];
 
   return (
-    <div className="min-h-screen bg-[#080808] px-4 sm:px-6 pt-6 pb-10 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-[#080808] px-4 sm:px-6 lg:px-8 pt-6 pb-10 max-w-5xl mx-auto overflow-x-hidden">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
@@ -1155,7 +1155,7 @@ export default function ExercisesClient({
           <div>
             <h1 className="text-xl font-bold text-white tracking-tight">Exercise Library</h1>
             <p className="text-[11px] text-white/25 font-medium">
-              {initialTotal.toLocaleString()} exercises · browse, log, track
+              {initialTotal.toLocaleString()} exercises Â· browse, log, track
             </p>
           </div>
         </div>
