@@ -5,9 +5,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, { params }: Params) {
+  const { id } = await params;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     // Verify session ownership
     const workoutSession = await prisma.workoutSession.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id, userId: session.user.id },
     });
     if (!workoutSession) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -35,12 +36,12 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     // Get next order position
     const count = await prisma.workoutExercise.count({
-      where: { workoutSessionId: params.id },
+      where: { workoutSessionId: id },
     });
 
     const workoutExercise = await prisma.workoutExercise.create({
       data: {
-        workoutSessionId: params.id,
+        workoutSessionId: id,
         exerciseId,
         orderInSession: count, // 0-indexed
         notes: notes ?? null,
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 // DELETE /api/workout/sessions/:id/exercises  — remove exercise from session
 // Body: { workoutExerciseId }
 export async function DELETE(req: NextRequest, { params }: Params) {
+  const { id } = await params;
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -82,7 +84,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     const workoutExercise = await prisma.workoutExercise.findFirst({
       where: {
         id: workoutExerciseId,
-        workoutSession: { id: params.id, userId: session.user.id },
+        workoutSession: { id, userId: session.user.id },
       },
     });
     if (!workoutExercise) {

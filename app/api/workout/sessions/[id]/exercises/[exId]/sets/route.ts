@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-type Params = { params: { id: string; exId: string } };
+type Params = { params: Promise<{ id: string; exId: string }> };
 
 // Helper — verify the workoutExercise belongs to this user's session
 async function verifyOwnership(sessionId: string, exId: string, userId: string) {
@@ -22,13 +22,14 @@ async function verifyOwnership(sessionId: string, exId: string, userId: string) 
 // ── POST — add a set ──────────────────────────────────────────
 // Body: { reps?, weightKg?, durationSecs?, distanceM?, notes? }
 export async function POST(req: NextRequest, { params }: Params) {
+  const { id, exId } = await params;
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const workoutExercise = await verifyOwnership(params.id, params.exId, session.user.id);
+    const workoutExercise = await verifyOwnership(id, exId, session.user.id);
     if (!workoutExercise) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -37,12 +38,12 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     // Get next set number
     const setCount = await prisma.workoutSet.count({
-      where: { workoutExerciseId: params.exId },
+      where: { workoutExerciseId: exId },
     });
 
     const set = await prisma.workoutSet.create({
       data: {
-        workoutExerciseId: params.exId,
+        workoutExerciseId: exId,
         setNumber:         setCount + 1, // 1-indexed
         reps:              reps         ?? null,
         weightKg:          weightKg     ?? null,
@@ -63,13 +64,14 @@ export async function POST(req: NextRequest, { params }: Params) {
 // ── PATCH — update a set ──────────────────────────────────────
 // Body: { setId, reps?, weightKg?, durationSecs?, distanceM?, completed?, notes? }
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id, exId } = await params;
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const workoutExercise = await verifyOwnership(params.id, params.exId, session.user.id);
+    const workoutExercise = await verifyOwnership(id, exId, session.user.id);
     if (!workoutExercise) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -101,13 +103,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // ── DELETE — remove a set ─────────────────────────────────────
 // Body: { setId }
 export async function DELETE(req: NextRequest, { params }: Params) {
+  const { id, exId } = await params;
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const workoutExercise = await verifyOwnership(params.id, params.exId, session.user.id);
+    const workoutExercise = await verifyOwnership(id, exId, session.user.id);
     if (!workoutExercise) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
