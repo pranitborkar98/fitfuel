@@ -1,6 +1,6 @@
 # 🔥 FITFUEL — MASTER PROJECT TRACKER
 
-> **Last Updated: May 18, 2026 — Phase 6 COMPLETE ✅ — Nutrition Tracker live (food diary, 50 Indian foods, macro rings, water tracker, goals). Migration + seed pending push.**
+> **Last Updated: May 18, 2026 — Phase 6 COMPLETE ✅ — Nutrition Tracker live + pushed. Migration `add-nutrition-tracker` applied. 50 Indian foods + 4 meal types seeded to Neon.**
 > **Platform:** Next.js (React) + Node.js + PostgreSQL (Neon)
 > **Deployment:** Vercel — [fitfuel-eosin.vercel.app](https://fitfuel-eosin.vercel.app) → fitfuel.in after launch
 > **Mission:** Best meal delivery + health platform in Pune. Meals today. Supplements + AI tomorrow. Empire after that.
@@ -17,7 +17,7 @@
 | 3 | Meal Plans + Shop + PayU | ✅ Complete |
 | 4 | User Profile + Dashboard + Auth | ✅ Complete |
 | 5 | Body Metrics — FitDays BLE | ✅ Complete (scale hardware test pending) |
-| **6** | **Nutrition Tracker** | ✅ Complete (migration + seed push pending) |
+| **6** | **Nutrition Tracker** | ✅ **Complete — pushed to main** |
 | 7 | Exercise Library | ⏳ Pending |
 | 8 | Supplement Guide (Premium Tier) | ⏳ Pending |
 | 9 | Lifestyle Meal Plans (Medical, PCOS, etc.) | ⏳ Pending |
@@ -34,32 +34,27 @@
 
 ## ✅ PHASE 6 — NUTRITION TRACKER — COMPLETE
 
-### Files Built
+### Commit
+```
+feat: phase 6 nutrition tracker - food diary, 50 Indian foods, macro rings, water tracker, goals
+Migration: add-nutrition-tracker applied ✅
+Seed: seed-nutrition.ts executed — 50 Indian foods + 4 meal types live in Neon ✅
+Pushed → main ✅ (May 18 2026)
+```
+
+### Files Built & Pushed
 
 | File | Status | Notes |
 |------|--------|-------|
-| `prisma/schema.prisma` | ✅ Done | v4 — replaced NutritionLog placeholder with 5 Phase 6 models; added nutrition relations to User |
-| `prisma/seed-nutrition.ts` | ✅ Done | 50 Indian foods (per-100g macros) + 4 meal types seeded |
-| `app/dashboard/nutrition/page.tsx` | ✅ Done | Server component — auth guard, SSR initial data (entries + goal + water + meal types) |
-| `app/dashboard/nutrition/NutritionClient.tsx` | ✅ Done | Full client UI — diary, food search modal, macro rings, water tracker, goals modal |
-| `app/api/nutrition/foods/route.ts` | ✅ Done | GET search food library + POST add custom food |
-| `app/api/nutrition/diary/route.ts` | ✅ Done | GET diary by date (entries + meal types + totals) + POST log food entry |
-| `app/api/nutrition/diary/[id]/route.ts` | ✅ Done | DELETE food entry |
-| `app/api/nutrition/goals/route.ts` | ✅ Done | GET goals (or defaults) + PATCH upsert goals |
-| `app/api/nutrition/water/route.ts` | ✅ Done | GET water for date + POST add/subtract/set daily total |
-
-### To Push (Pending)
-```bash
-# 1. Replace prisma/schema.prisma with Phase 6 version
-# 2. Run migration
-npx prisma migrate dev --name add-nutrition-tracker
-# 3. Seed Indian foods + meal types
-npx ts-node prisma/seed-nutrition.ts
-# 4. git add + commit + push
-git add .
-git commit -m "feat: phase 6 nutrition tracker - food diary, 50 Indian foods, macro rings, water tracker, goals"
-git push origin main
-```
+| `prisma/schema.prisma` | ✅ Pushed | v4 — 5 Phase 6 models added, NutritionLog placeholder removed |
+| `prisma/seed-nutrition.ts` | ✅ Pushed + Executed | 50 Indian foods (per-100g macros) + 4 meal types seeded |
+| `app/dashboard/nutrition/page.tsx` | ✅ Pushed | Server component — auth guard, SSR initial data (entries + goal + water + meal types) |
+| `app/dashboard/nutrition/NutritionClient.tsx` | ✅ Pushed | Full client UI — diary, food search modal, macro rings, water tracker, goals modal |
+| `app/api/nutrition/foods/route.ts` | ✅ Pushed | GET search food library + POST add custom food |
+| `app/api/nutrition/diary/route.ts` | ✅ Pushed | GET diary by date (entries + meal types + totals) + POST log food entry |
+| `app/api/nutrition/diary/[id]/route.ts` | ✅ Pushed | DELETE food entry |
+| `app/api/nutrition/goals/route.ts` | ✅ Pushed | GET goals (or defaults) + PATCH upsert goals |
+| `app/api/nutrition/water/route.ts` | ✅ Pushed | GET water for date + POST add/subtract/set daily total |
 
 ### Schema Changes (Phase 6)
 - **Removed:** `NutritionLog` model (flat placeholder — replaced entirely)
@@ -69,38 +64,25 @@ git push origin main
 - **Added:** `NutritionGoal` — daily targets per user (calories, protein, carbs, fat, waterMl)
 - **Added:** `WaterLog` — daily water total per user (one row per user per day, upserted)
 - **Updated:** `User` — added relations: `foodItems`, `foodEntries`, `nutritionGoal`, `waterLogs`
-- Migration name: `add-nutrition-tracker`
+- Migration name: `add-nutrition-tracker` ✅
 
 ### Features Built
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Date navigator — prev/next day | ✅ Done | Disabled forward past today |
-| SSR initial load for today | ✅ Done | Server fetches today's diary, water, goal — no loading flash |
-| Daily summary card | ✅ Done | SVG donut ring (calories consumed vs goal) + 3 macro progress bars |
-| 4 meal slots — Breakfast / Lunch / Dinner / Snacks | ✅ Done | Each collapsible, shows kcal total, entry count |
-| Food search modal (full-screen) | ✅ Done | Debounced search, popular foods on open, food library |
-| Quantity selector + quick buttons (50/100/150/200g) | ✅ Done | Live macro preview before logging |
-| Log food entry | ✅ Done | Macros computed server-side at log time from per-100g values |
-| Delete food entry | ✅ Done | Hover-reveal trash button, optimistic UI update |
-| Water tracker | ✅ Done | Glass buttons (250ml each), tap to add/undo, daily progress bar |
-| Goals modal | ✅ Done | Edit calories/protein/carbs/fat/waterMl targets — PATCH upsert |
-| Date change fetches new diary | ✅ Done | Parallel fetch diary + water for past dates |
-| Remaining kcal strip | ✅ Done | Shows "X kcal left" or "X kcal over" in red |
-| Custom food support | ✅ Done | User can add custom foods via POST /api/nutrition/foods |
-
-### Seed Data — 50 Indian Foods (per 100g)
-Categories: Grains & Staples · Dals & Legumes · Vegetables · Dairy · Eggs & Meat · Nuts & Seeds · Fruits · Street Food · Beverages & Supplements
-
-Includes: Basmati Rice, Roti, Paratha, Poha, Upma, Idli, Dosa, Oats, Toor/Masoor/Chana/Moong Dal, Rajma, Chole, Potato, Palak, Bhindi, Tomato, Onion, Gobhi, Gajar, Paneer, Dahi, Milk, Ghee, Butter, Egg (whole/white), Chicken Breast/Thigh, Mutton, Salmon, Rohu, Almonds, Walnuts, Peanuts, Chia Seeds, Banana, Apple, Mango, Papaya, Orange, Guava, Vada Pav, Samosa, Pav Bhaji, Misal Pav, Biryani, Chai, Lassi, Coconut Water, Whey Protein
-
-### 4 Meal Types (Seeded)
-| Name | Emoji | Sort Order |
-|------|-------|------------|
-| Breakfast | 🌅 | 0 |
-| Lunch | ☀️ | 1 |
-| Dinner | 🌙 | 2 |
-| Snacks | 🍎 | 3 |
+| Feature | Status |
+|---------|--------|
+| Date navigator — prev/next day (disabled forward past today) | ✅ Done |
+| SSR initial load for today (no loading flash) | ✅ Done |
+| Daily summary card — SVG donut ring (calories vs goal) + 3 macro progress bars | ✅ Done |
+| 4 meal slots — Breakfast / Lunch / Dinner / Snacks (collapsible, kcal total, entry count) | ✅ Done |
+| Food search modal (full-screen, debounced, popular foods on open) | ✅ Done |
+| Quantity selector + quick buttons (50/100/150/200g) with live macro preview | ✅ Done |
+| Log food entry (macros computed server-side from per-100g values) | ✅ Done |
+| Delete food entry (hover-reveal trash, optimistic UI update) | ✅ Done |
+| Water tracker (glass buttons 250ml each, tap to add/undo, daily progress bar) | ✅ Done |
+| Goals modal (edit calories/protein/carbs/fat/waterMl — PATCH upsert) | ✅ Done |
+| Date change fetches new diary (parallel fetch diary + water) | ✅ Done |
+| Remaining kcal strip ("X kcal left" or "X kcal over" in red) | ✅ Done |
+| Custom food support (POST /api/nutrition/foods) | ✅ Done |
 
 ### API Routes — Phase 6
 
@@ -111,16 +93,30 @@ Includes: Basmati Rice, Roti, Paratha, Poha, Upma, Idli, Dosa, Oats, Toor/Masoor
 | `/api/nutrition/diary` | GET | Required | Fetch diary + meal types + daily totals for a date |
 | `/api/nutrition/diary` | POST | Required | Log a food entry (macros computed server-side) |
 | `/api/nutrition/diary/[id]` | DELETE | Required | Delete a food entry (ownership verified) |
+| `/api/nutrition/diary/[id]` | PATCH | Required | Update food entry quantity (inline edit) |
 | `/api/nutrition/goals` | GET | Required | Get user goals (returns defaults if none set) |
 | `/api/nutrition/goals` | PATCH | Required | Upsert user goals |
 | `/api/nutrition/water` | GET | Required | Get water intake for a date |
 | `/api/nutrition/water` | POST | Required | Add/subtract/set daily water (action param) |
 
+### Seed Data — 50 Indian Foods (per 100g, live in Neon ✅)
+Categories: Grains & Staples · Dals & Legumes · Vegetables · Dairy · Eggs & Meat · Nuts & Seeds · Fruits · Street Food · Beverages & Supplements
+
+Includes: Basmati Rice, Roti, Paratha, Poha, Upma, Idli, Dosa, Oats, Toor/Masoor/Chana/Moong Dal, Rajma, Chole, Potato, Palak, Bhindi, Tomato, Onion, Gobhi, Gajar, Paneer, Dahi, Milk, Ghee, Butter, Egg (whole/white), Chicken Breast/Thigh, Mutton, Salmon, Rohu, Almonds, Walnuts, Peanuts, Chia Seeds, Banana, Apple, Mango, Papaya, Orange, Guava, Vada Pav, Samosa, Pav Bhaji, Misal Pav, Biryani, Chai, Lassi, Coconut Water, Whey Protein
+
+### 4 Meal Types (Seeded ✅)
+| Name | Emoji | Sort Order |
+|------|-------|------------|
+| Breakfast | 🌅 | 0 |
+| Lunch | ☀️ | 1 |
+| Dinner | 🌙 | 2 |
+| Snacks | 🍎 | 3 |
+
 ### Design Notes
 - Full-screen food search modal — no drawer, feels native on mobile
 - Dark FitFuel theme — `#080808` bg, `#neutral-900` cards, `lime-400` accents
 - SVG donut ring with smooth CSS transition for calorie progress
-- Water: glass buttons (250ml each), tap filled glass to undo — no confusing sliders
+- Water: glass buttons (250ml each), tap filled glass to undo
 - Goals modal is bottom sheet — tap outside to dismiss
 
 ### What's NOT in Phase 6 (deferred)
@@ -133,15 +129,29 @@ Includes: Basmati Rice, Roti, Paratha, Poha, Upma, Idli, Dosa, Oats, Toor/Masoor
 | Meal planning (weekly) | 9 |
 | Multiple goal profiles | 8 Premium |
 
+### Phase 6 — Fully Complete ✅
+All files pushed. Nutrition card confirmed live in `DashboardClient.tsx` (Body Metrics + Nutrition Tracker both show as LIVE cards with `ChevronRight` nav).
+
+### Notes for Phase 7
+- `burned kcal` stat in Calorie Ring is hardcoded to `0` — Phase 7 workout logging must feed `workout_logs` → burned kcal → this field
+- `14-Day Nutrition Trends` section is a single-day placeholder — real 14-day aggregation deferred to Phase 11 (Progress Tracking)
+- `PATCH /api/nutrition/diary/[id]` handles inline quantity edits (edit pencil on hover) — not listed in API table above but live and wired
+
 ### Page Location
 ```
 /dashboard/nutrition
 ```
-Accessible via Dashboard → Nutrition card (DashboardClient.tsx update needed — add card)
 
 ---
 
 ## ✅ PHASE 5 — BODY METRICS — FITDAYS BLE — COMPLETE
+
+### Commit
+```
+feat: phase 5 body metrics - BLE connect UI, 13 params, manual entry, live dashboard card
+4 files changed, 861 insertions(+), 13 deletions(-)
+Pushed: f9f3201 → main ✅ (May 17 2026, 11:43 PM)
+```
 
 ### Files Built & Pushed
 
@@ -152,48 +162,25 @@ Accessible via Dashboard → Nutrition card (DashboardClient.tsx update needed �
 | `app/api/user/metrics/route.ts` | ✅ Done | GET + POST — fetches and saves body metrics to Neon by userId |
 | `app/dashboard/DashboardClient.tsx` | ✅ Updated | Added Body Metrics card linking to /dashboard/body-metrics |
 
-### Commit
-```
-feat: phase 5 body metrics - BLE connect UI, 13 params, manual entry, live dashboard card
-4 files changed, 861 insertions(+), 13 deletions(-)
-Pushed: f9f3201 → main ✅ (May 17 2026, 11:43 PM)
-```
-
 ### Features Built
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| BLE connect UI — "Retry Connect" button | ✅ Done | Web Bluetooth API — targets FitDays scale GATT profile |
-| Manual entry fallback — "+ Manual Entry" | ✅ Done | Form to enter all 13 params manually without scale |
-| 13 body metrics display | ✅ Done | Weight, BMI, Body Fat, Fat-Free Weight, Subcutaneous Fat, Visceral Fat, Body Water, Skeletal Muscle, + more |
+| BLE connect UI — "Retry Connect" button | ✅ Done | Web Bluetooth API — FitDays GATT profile |
+| Manual entry fallback — "+ Manual Entry" | ✅ Done | All 13 params manually |
+| 13 body metrics display | ✅ Done | Weight, BMI, Body Fat, Fat-Free Weight, Subcutaneous Fat, Visceral Fat, Body Water, Skeletal Muscle + more |
 | Status badges (Normal / Healthy / Average) | ✅ Done | Color-coded per param range |
-| Overview tab | ✅ Done | Live metric cards with colored top borders |
-| History tab | ✅ Done | UI scaffolded |
-| Log tab | ✅ Done | UI scaffolded |
+| Overview / History / Log tabs | ✅ Done | History + Log scaffolded |
 | API — save metrics to DB | ✅ Done | POST /api/user/metrics |
 | API — fetch latest metrics | ✅ Done | GET /api/user/metrics |
-| Dashboard card | ✅ Done | Body Metrics card added to main dashboard |
+| Dashboard card | ✅ Done | Body Metrics card on main dashboard |
 
 ### 13 Body Parameters Tracked
-1. Weight (kg)
-2. BMI
-3. Body Fat %
-4. Fat-Free Weight (kg)
-5. Subcutaneous Fat %
-6. Visceral Fat (level)
-7. Body Water %
-8. Skeletal Muscle %
-9. Muscle Mass (kg)
-10. Bone Mass (kg)
-11. Protein %
-12. BMR (kcal)
-13. Body Age
+Weight (kg) · BMI · Body Fat % · Fat-Free Weight (kg) · Subcutaneous Fat % · Visceral Fat (level) · Body Water % · Skeletal Muscle % · Muscle Mass (kg) · Bone Mass (kg) · Protein % · BMR (kcal) · Body Age
 
 ### Physical Scale Testing
-- **Status: PENDING** — No FitDays scale hardware available yet
-- BLE connection UI built and coded to FitDays GATT profile
-- Manual entry fully functional as fallback
-- To test: plug in a FitDays BLE scale → click "Retry Connect" on /dashboard/body-metrics → browser will prompt BLE pairing → data populates automatically
+- **Status: PENDING** — No FitDays scale hardware yet
+- BLE UI built to FitDays GATT profile; manual entry fully functional as fallback
 
 ### Page Live
 ```
@@ -209,23 +196,19 @@ https://fitfuel-eosin.vercel.app/dashboard/body-metrics
 | File | Status | Notes |
 |------|--------|-------|
 | `lib/auth.ts` | ✅ Done | NextAuth v5 — Google provider, PrismaAdapter, database sessions, signIn event guest merge |
-| `app/api/auth/[...nextauth]/route.ts` | ✅ Done | NextAuth route handler — `export const { GET, POST } = handlers` |
-| `app/auth/signin/page.tsx` | ✅ Done | Custom sign-in page — FitFuel styled, Google button, WhatsApp fallback, callbackUrl → `/dashboard` |
-| `app/layout.tsx` | ✅ Done | Added `SessionProvider` wrapping tree — server-side `auth()` passed as prop |
+| `app/api/auth/[...nextauth]/route.ts` | ✅ Done | NextAuth route handler |
+| `app/auth/signin/page.tsx` | ✅ Done | Custom sign-in page — Google button, WhatsApp fallback, callbackUrl → `/dashboard` |
+| `app/layout.tsx` | ✅ Done | `SessionProvider` wrapping tree — server-side `auth()` passed as prop |
 | `app/dashboard/page.tsx` | ✅ Done | Server component — fetches real orders from DB by userId, redirects if unauthenticated |
 | `app/dashboard/DashboardClient.tsx` | ✅ Done | Client UI — order history, account details, body metrics card, coming soon cards |
-| `components/Navbar.tsx` | ✅ Done | Auth-aware ✅ — avatar + first name + dropdown (Dashboard, Sign Out) when logged in; Sign In when logged out |
-| `prisma/schema.prisma` | ✅ Done | Added `emailVerified DateTime?` + `image String?` to User — required by PrismaAdapter |
+| `components/Navbar.tsx` | ✅ Done | Auth-aware — avatar + first name + dropdown (Dashboard, Sign Out) when logged in |
 | `app/api/user/profile/route.ts` | ✅ Done | GET + PATCH — fetches and updates User + UserProfile |
 | `app/dashboard/profile/page.tsx` | ✅ Done | Server component — fetches user + profile from Neon |
 | `app/dashboard/profile/ProfileClient.tsx` | ✅ Done | Profile edit form — name, phone, diet, goal, gender |
 
 ### Schema Changes (Phase 4)
-- Added `Account` model — NextAuth OAuth account linking
-- Added `Session` model — database sessions
-- Added `VerificationToken` model — email verification (future)
-- Added `emailVerified DateTime?` to `User` — PrismaAdapter requires this field
-- Added `image String?` to `User` — NextAuth sets this from Google avatar URL
+- Added `Account`, `Session`, `VerificationToken` models (NextAuth)
+- Added `emailVerified DateTime?` + `image String?` to `User`
 - Migrations applied: `add-nextauth-accounts`, `add-session-table`, `add-emailverified-image` ✅
 
 ### Google OAuth Setup
@@ -233,48 +216,39 @@ https://fitfuel-eosin.vercel.app/dashboard/body-metrics
 | Field | Value |
 |-------|-------|
 | Provider | Google Cloud Console — project: vercel-496612 |
-| OAuth Client | Web client 1 — created May 17 2026 |
+| OAuth Client | Web client 1 |
 | Authorized redirect URI | `https://fitfuel-eosin.vercel.app/api/auth/callback/google` |
 | Vercel env vars set | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` |
 
 ### Auth Flow (confirmed working ✅ — May 17 2026)
 ```
-User clicks "Continue with Google" on /auth/signin
-→ signIn("google", { callbackUrl: "/dashboard" })
+User clicks "Continue with Google" → signIn("google", { callbackUrl: "/dashboard" })
 → Google OAuth → /api/auth/callback/google
 → PrismaAdapter writes Session + Account rows to Neon
-→ Redirect to /dashboard ✅
-→ Navbar shows avatar + "Pranit" + dropdown ✅
-→ Dashboard shows "Welcome back PRANIT 💪" ✅
+→ Redirect to /dashboard ✅ → Navbar shows avatar + "Pranit" + dropdown ✅
 ```
 
 ### Guest → Auth Merge Flow (confirmed working ✅ — May 17 2026)
 ```
-Guest places COD order (no login) → guest User row created in Neon by email
+Guest places COD order → guest User row created by email
 → Guest signs in with Google (same email)
-→ NextAuth signIn event fires → finds guest User row (no accounts linked)
-→ Orders + addresses re-parented to auth User
-→ Guest User row deleted
+→ NextAuth signIn event: finds guest User, re-parents orders + addresses, deletes guest row
 → Dashboard shows merged orders immediately ✅
 ```
 
-### Bugs Fixed (May 17 2026)
+### Bugs Fixed
 
-| Bug | Cause | Fix |
-|-----|-------|-----|
-| Redirected to homepage after login | `callbackUrl` defaulted to `"/"` | Changed to `"/dashboard"` in signin page |
-| Session not persisting | `sameSite: "none"` on cookie config — rejected by browsers outside cross-origin iframes | Removed entire custom `cookies` block — NextAuth handles it correctly on Vercel HTTPS |
-| `useSession()` returning null in Navbar | No `SessionProvider` in layout | Added `SessionProvider` with server-side `session` prop to `app/layout.tsx` |
-| PrismaAdapter silently failing on user create | `emailVerified` + `image` columns missing from `users` table | Added both fields to schema, ran migration |
-| Guest orders not merging | `createUser` event only fires on first-ever login — existing auth user skipped it | Moved merge logic to `signIn` event which fires on every login |
-| Dashboard showing empty orders | `page.tsx` was a hardcoded static shell with no DB query | Rebuilt as server component — fetches real orders from Neon by userId |
-| TypeScript error on `user.phone` | NextAuth `User` type doesn't include `phone` | Fetch auth user from DB directly before phone check |
+| Bug | Fix |
+|-----|-----|
+| Redirected to homepage after login | Changed callbackUrl to `"/dashboard"` |
+| Session not persisting | Removed custom `cookies` block — NextAuth handles on Vercel HTTPS |
+| `useSession()` returning null | Added `SessionProvider` with server-side session prop to layout |
+| PrismaAdapter failing silently | Added `emailVerified` + `image` to schema, ran migration |
+| Guest orders not merging | Moved merge logic from `createUser` to `signIn` event |
+| Dashboard showing empty orders | Rebuilt as server component with real DB query |
 
-### What's Pending in Phase 4
-
-| Task | Status |
-|------|--------|
-| skip — MSG91 phone OTP (second auth provider) | Pending — needs MSG91 account |
+### Pending in Phase 4
+- MSG91 phone OTP (second auth provider) — needs MSG91 account ⏳
 
 ---
 
@@ -282,41 +256,30 @@ Guest places COD order (no login) → guest User row created in Neon by email
 
 ### Files Built & Pushed
 
-| File | Status | Notes |
-|------|--------|-------|
-| `app/checkout/page.tsx` | ✅ Done | Full checkout form — PayU + COD toggle, ₹1 test mode, GST breakdown, mobile responsive |
-| `app/order/success/route.ts` | ✅ Done | POST handler — receives PayU callback, verifies hash, redirects to /order/confirmation |
-| `app/order/confirmation/page.tsx` | ✅ Done | Real confirmation page — Order ID, amount, COD vs PayU variant, what-happens-next, WhatsApp CTA |
-| `app/api/payments/payu/route.ts` | ✅ Done | Hash generator — server-side only, HMAC-SHA512, returns all PayU form params |
-| `app/api/payments/payu/success/route.ts` | ✅ Done | Backup success handler at /api path |
-| `app/api/payments/payu/failed/route.ts` | ✅ Done | Failed/cancelled payment handler — redirects to checkout with error |
-| `app/plans/[slug]/page.tsx` | ✅ Done | Individual plan pages — Muscle Gain, Weight Loss, Balanced, Office, Jain |
-| `app/api/orders/cod/route.ts` | ✅ Done | Saves COD order to DB — upserts guest user, creates address, order, order_item, payment |
-| `lib/prisma.ts` | ✅ Done | Prisma 7 singleton using pg adapter (Pool + PrismaPg) |
+| File | Status |
+|------|--------|
+| `app/checkout/page.tsx` | ✅ Done |
+| `app/order/success/route.ts` | ✅ Done |
+| `app/order/confirmation/page.tsx` | ✅ Done |
+| `app/api/payments/payu/route.ts` | ✅ Done |
+| `app/api/payments/payu/success/route.ts` | ✅ Done |
+| `app/api/payments/payu/failed/route.ts` | ✅ Done |
+| `app/plans/[slug]/page.tsx` | ✅ Done |
+| `app/api/orders/cod/route.ts` | ✅ Done |
+| `lib/prisma.ts` | ✅ Done |
 
-### PayU Flow (confirmed working)
+### PayU Flow (confirmed working ✅)
 ```
-Customer fills checkout → POST /api/payments/payu (hash generated server-side)
-→ Hidden form auto-submits to PayU (secure.payu.in/_payment)
-→ PayU processes payment
-→ PayU POSTs to surl: /order/success (route.ts)
-→ Hash verified server-side → redirect to /order/confirmation (page.tsx) ✅
+Checkout → POST /api/payments/payu (hash generated server-side)
+→ Hidden form → secure.payu.in/_payment
+→ PayU POSTs to /order/success → hash verified → /order/confirmation ✅
 ```
 
 ### COD Flow (confirmed working + DB save ✅ — May 17 2026)
 ```
-Customer selects Cash on Delivery → fills form → submits
-→ POST /api/orders/cod (saves to DB: user, address, order, order_item, payment)
-→ redirect to /order/confirmation?txnid=COD-xxx&amount=xxx&cod=1&order=FF-COD-YYYYMMDD-XXXX
-→ Confirmation page shows: Order ID, amount, COD badge, what-happens-next ✅
+COD selected → POST /api/orders/cod (saves user, address, order, order_item, payment)
+→ redirect to /order/confirmation?txnid=COD-xxx&cod=1&order=FF-COD-... ✅
 ```
-
-### Remaining Pending in Phase 3
-
-| Task | Status | Notes |
-|------|--------|-------|
-| ⏳ Seed MealPlanProducts to DB | Pending | So `OrderItem.productId` can be populated — Phase 15 |
-| ⏳ Admin view of orders | Pending | Phase 15 |
 
 ### PayU Integration Details
 
@@ -325,82 +288,70 @@ Customer selects Cash on Delivery → fills form → submits
 | Merchant Key | `YviYBu` |
 | Merchant Salt | `BHigtcZU3kzvpLC9ZFtnrWMYBVtYWz2R` |
 | Mode | Production |
-| surl (success) | `https://fitfuel-eosin.vercel.app/order/success` |
-| furl (failed) | `https://fitfuel-eosin.vercel.app/api/payments/payu/failed` |
+| surl | `https://fitfuel-eosin.vercel.app/order/success` |
+| furl | `https://fitfuel-eosin.vercel.app/api/payments/payu/failed` |
 | Hash formula | `key\|txnid\|amount\|productinfo\|firstname\|email\|\|\|\|\|\|\|\|\|\|salt` → HMAC-SHA512 |
 
 > ⚠️ Hash must be computed **server-side only**. Never expose salt to browser.
+
+### Remaining Pending
+- Seed MealPlanProducts to DB so `OrderItem.productId` can be populated — Phase 15
+- Admin view of orders — Phase 15
 
 ---
 
 ## ✅ PHASE 2 — CORE WEBSITE REDESIGN — COMPLETE
 
-### Pages — All Live on Vercel
+### Pages Live on Vercel
 
-| Page | File | Status | Notes |
-|------|------|--------|-------|
-| Global Layout | `app/layout.tsx` | ✅ Done | Sticky nav, scroll progress bar, hamburger w/ AnimatePresence, footer with trial CTA |
-| Homepage | `app/page.tsx` | ✅ Done | Hero (3D tilt card), stats, plan cards, how-it-works, USPs, testimonials, CTA — full Framer Motion |
-| Plans + Pricing | `app/plans/page.tsx` | ✅ Done | Interactive configurator, Standard pricing, Premium/Luxury waitlists, Lifestyle coming soon. Mobile responsive (v2 — visibility fix + MD token alignment) |
-| About | `app/about/page.tsx` | ✅ Done | Brand story, kitchen, team, mission — pushed May 16 2026 |
-| Contact | `app/contact/page.tsx` | ✅ Done | WhatsApp, email, address, mailto form — pushed May 16 2026 |
-| Locations | `app/locations/page.tsx` | ✅ Done | 15 Pune zones, Google Maps embed, pincode checker — pushed May 16 2026 |
+| Page | Status |
+|------|--------|
+| Global Layout (`app/layout.tsx`) | ✅ Sticky nav, scroll progress bar, hamburger, footer |
+| Homepage (`app/page.tsx`) | ✅ Hero 3D tilt card, stats, plan cards, how-it-works, testimonials, CTA |
+| Plans + Pricing (`app/plans/page.tsx`) | ✅ Interactive configurator, Standard pricing, waitlists, mobile responsive v2 |
+| About (`app/about/page.tsx`) | ✅ Pushed May 16 2026 |
+| Contact (`app/contact/page.tsx`) | ✅ Pushed May 16 2026 |
+| Locations (`app/locations/page.tsx`) | ✅ 15 Pune zones, Google Maps embed, pincode checker — May 16 2026 |
+| Individual Plan Pages (`app/plans/[slug]/page.tsx`) | ✅ Done |
 
-### Polish Pass Checklist
+### Polish Pass
+- Framer Motion scroll animations — fadeUp + stagger + blur ✅
+- 3D tilt hero card — spring physics, cursor glow, parallax ✅
+- `useReducedMotion()` — tilt + shimmer disabled for accessibility ✅
+- AnimatedStat counters — IntersectionObserver triggered ✅
+- Design tokens aligned — `#ffffff` primary, `#a3a3a3` secondary, `#737373` muted ✅
+- MD token alignment — bg `#0a0a0a`, card `#111111`, border `#1f1f1f` ✅
 
-- [x] Framer Motion scroll animations — all sections wired (fadeUp + stagger + blur)
-- [x] 3D tilt hero card — spring physics, cursor glow, specular highlight, parallax inner layer
-- [x] `useReducedMotion()` wired — tilt + shimmer disabled for accessibility
-- [x] Scroll progress bar in Navbar
-- [x] AnimatedStat counters — IntersectionObserver triggered
-- [x] Design system tokens aligned — `page.tsx` / Navbar / Footer / `globals.css`
-- [x] `app/plans/page.tsx` — full pricing page with tier system + waitlists
-- [x] Mobile responsiveness — plans page pricing table, duration grid, meal buttons fixed
-- [x] Text visibility fix — gray scale corrected (`#ffffff` primary, `#a3a3a3` secondary, `#737373` muted)
-- [x] MD design token alignment — bg `#0a0a0a`, card `#111111`, border `#1f1f1f`
-- [x] About, Contact, Locations pages built + pushed
-- [ ] SEO: meta tags, OG image, sitemap.xml — Phase 17
-- [ ] Full mobile audit across all new pages (about/contact/locations)
+### Pending (Phase 17)
+- SEO: meta tags, OG image, sitemap.xml
+- Full mobile audit across about/contact/locations
 
 ---
 
 ## ✅ PHASE 1 — COMPLETE
 
-### Design System
-- [x] Tailwind design tokens — `globals.css` — black bg, lime `#84cc16`, typography scale, CSS variables
-- [x] Button classes: `btn-primary`, `btn-secondary`, `btn-ghost`
-- [x] Card, badge, glow-line, gradient-text utility classes
-- [x] Inter font via Next.js Google Fonts + Barlow Condensed loaded via `layout.tsx <head>`
-
-### Tech Stack
-- [x] Next.js app created (`create-next-app@16.2.6`)
-- [x] Prisma 7 installed + configured for Neon adapter
-- [x] `prisma.config.ts` — datasource wired to Neon
-- [x] GitHub repo: [github.com/pranitborkar98/fitfuel](https://github.com/pranitborkar98/fitfuel) — **PUBLIC**
-- [x] Vercel connected to GitHub — auto-deploy on push to `main`
-
-### Database
-- [x] `schema.prisma` v2 — 14 models, 17 enums
-- [x] Migration `20260512003135_init` applied — 14 tables live in Neon
-- [x] `MealPlanType` expanded — `isLive` + `phase` fields added
-- [x] Seed executed — **17 products + 966 price rows live in Neon** ✅
-  - 5 plans live (Phase 3), 12 coming soon (Phase 9)
-  - Jain: Veg only (21 rows). Non-veg MONTHLY_EXCL_WEEKENDS = ₹7,600 (others ₹7,560)
+- Tailwind design tokens — `globals.css` — black bg, lime `#84cc16`, typography scale ✅
+- Button classes: `btn-primary`, `btn-secondary`, `btn-ghost` ✅
+- Next.js app created (`create-next-app@16.2.6`) ✅
+- Prisma 7 + Neon adapter configured ✅
+- GitHub repo: [github.com/pranitborkar98/fitfuel](https://github.com/pranitborkar98/fitfuel) — PUBLIC ✅
+- Vercel connected to GitHub — auto-deploy on push to `main` ✅
+- Schema v2 — 14 models, 17 enums — migration `20260512003135_init` applied ✅
+- Seed executed — **17 products + 966 price rows live in Neon** ✅
 
 ---
 
 ## ✅ PHASE 0 — COMPLETE
 
-- [x] Crawled fitfuel.in — full content, structure, products mapped
-- [x] WordPress DB (`u271592098_U9cur.sql`) analysed — 171MB phpMyAdmin dump, May 11 2026
-- [x] Complete pricing matrix extracted (5 plans × 3 diets × 7 durations × 3 meal combos)
-- [x] Customer data: 179 registered users, 145 WooCommerce customers
-- [x] Order history: 21 total (3 completed, 3 processing, 7 cancelled, 8 failed)
-- [x] Business confirmed LIVE — last order Jan 2026, webhook logs firing Apr 2026
-- [x] Meal image library catalogued: 37 named dishes + 200+ AI-generated
-- [x] PayU credentials confirmed — Key in `.env.local`
-- [x] All decisions locked
-- [x] Tech stack locked
+- Crawled fitfuel.in — full content, structure, products mapped ✅
+- WordPress DB (`u271592098_U9cur.sql`) analysed — 171MB phpMyAdmin dump, May 11 2026 ✅
+- Complete pricing matrix extracted ✅
+- Customer data: 179 registered users, 145 WooCommerce customers ✅
+- Order history: 21 total (3 completed, 3 processing, 7 cancelled, 8 failed) ✅
+- Business confirmed LIVE — last order Jan 2026, webhook logs firing Apr 2026 ✅
+- Meal image library catalogued: 37 named dishes + 200+ AI-generated ✅
+- PayU credentials confirmed ✅
+- All decisions locked ✅
 
 ---
 
@@ -439,33 +390,33 @@ GST 5% added at checkout on all tiers.
 | `FITFUEL_PROJECT_TRACKER.md` | ✅ This file | Updated May 18 2026 |
 | `prisma/schema.prisma` | ✅ v4 | Phase 6 — 5 nutrition models added, NutritionLog removed |
 | `prisma/seed.ts` | ✅ Executed | 17 products, 966 price rows live |
-| `prisma/seed-nutrition.ts` | ✅ Built | 50 Indian foods + 4 meal types — run after migration |
-| `lib/auth.ts` | ✅ Done | NextAuth v5 — Google, PrismaAdapter, database sessions, signIn event guest merge |
+| `prisma/seed-nutrition.ts` | ✅ Executed | 50 Indian foods + 4 meal types live in Neon |
+| `lib/auth.ts` | ✅ Done | NextAuth v5 — Google, PrismaAdapter, database sessions, guest merge |
 | `lib/prisma.ts` | ✅ Done | Prisma 7 singleton — PrismaPg + pg.Pool |
 | `app/api/auth/[...nextauth]/route.ts` | ✅ Done | NextAuth route handler |
 | `app/auth/signin/page.tsx` | ✅ Done | Custom sign-in page |
 | `app/globals.css` | ✅ Done | Gray scale + btn tokens corrected |
-| `app/layout.tsx` | ✅ Done | Navbar + Footer, Barlow Condensed in `<head>` |
+| `app/layout.tsx` | ✅ Done | Navbar + Footer + SessionProvider |
 | `app/page.tsx` | ✅ Done | Full homepage — 3D card, all sections, Framer Motion |
-| `app/plans/page.tsx` | ✅ Done | Full pricing page — mobile responsive v2, visibility fixed |
+| `app/plans/page.tsx` | ✅ Done | Full pricing page — mobile responsive v2 |
 | `app/plans/[slug]/page.tsx` | ✅ Done | Individual plan pages |
 | `app/about/page.tsx` | ✅ Done | Pushed May 16 2026 |
 | `app/contact/page.tsx` | ✅ Done | Pushed May 16 2026 |
-| `app/locations/page.tsx` | ✅ Done | Pushed May 16 2026 — pincode checker, 15 zones, Maps embed |
+| `app/locations/page.tsx` | ✅ Done | Pincode checker, 15 zones, Maps embed |
 | `app/checkout/page.tsx` | ✅ Done | PayU + COD + ₹1 test mode |
 | `app/order/success/route.ts` | ✅ Done | PayU POST handler |
-| `app/order/confirmation/page.tsx` | ✅ Done | Order confirmed page — COD + PayU variant |
+| `app/order/confirmation/page.tsx` | ✅ Done | COD + PayU variant |
 | `app/api/payments/payu/route.ts` | ✅ Done | Hash generator — server-side |
 | `app/api/payments/payu/success/route.ts` | ✅ Done | Backup success handler |
 | `app/api/payments/payu/failed/route.ts` | ✅ Done | Failed payment handler |
 | `app/api/orders/cod/route.ts` | ✅ Done | COD order save to DB |
-| `app/dashboard/page.tsx` | ✅ Done | Server component — fetches real orders from Neon by userId |
-| `app/dashboard/DashboardClient.tsx` | ✅ Done | ⚠️ Needs Nutrition card added (link to /dashboard/nutrition) |
-| `app/dashboard/profile/page.tsx` | ✅ Done | Server component — fetches user + profile from Neon |
-| `app/dashboard/profile/ProfileClient.tsx` | ✅ Done | Profile edit form — name, phone, diet, goal, gender |
+| `app/dashboard/page.tsx` | ✅ Done | Server component — real orders from Neon by userId |
+| `app/dashboard/DashboardClient.tsx` | ✅ Done | Body Metrics + Nutrition Tracker both live as LIVE cards |
+| `app/dashboard/profile/page.tsx` | ✅ Done | Server component — fetches user + profile |
+| `app/dashboard/profile/ProfileClient.tsx` | ✅ Done | Profile edit form |
 | `app/dashboard/body-metrics/page.tsx` | ✅ Done | Server component — auth guard, fetches latest metrics |
 | `app/dashboard/body-metrics/BodyMetricsClient.tsx` | ✅ Done | BLE connect UI, 13 params, manual entry, tabs |
-| `app/api/user/metrics/route.ts` | ✅ Done | GET + POST body metrics — reads/writes Neon |
+| `app/api/user/metrics/route.ts` | ✅ Done | GET + POST body metrics |
 | `app/api/user/profile/route.ts` | ✅ Done | GET + PATCH user profile |
 | `app/dashboard/nutrition/page.tsx` | ✅ Done | Server component — SSR today's diary, goal, water |
 | `app/dashboard/nutrition/NutritionClient.tsx` | ✅ Done | Full nutrition UI — diary, food search, macro rings, water, goals |
@@ -474,7 +425,7 @@ GST 5% added at checkout on all tiers.
 | `app/api/nutrition/diary/[id]/route.ts` | ✅ Done | DELETE entry |
 | `app/api/nutrition/goals/route.ts` | ✅ Done | GET + PATCH goals |
 | `app/api/nutrition/water/route.ts` | ✅ Done | GET + POST water |
-| `components/Navbar.tsx` | ✅ Done | Auth-aware — avatar + dropdown live |
+| `components/Navbar.tsx` | ✅ Done | Auth-aware — avatar + dropdown |
 | `components/Footer.tsx` | ✅ Done | Contrast audited |
 | `u271592098_U9cur.sql` | ✅ Analysed | 171MB — keep for reference |
 | Meal images (5 zips, 1.63GB) | ✅ Catalogued | 37 named + 200+ AI-generated |
@@ -507,7 +458,6 @@ GST 5% added at checkout on all tiers.
 
 ### Standard — Active (Phase 3 launch)
 - Meal delivery — all 5 active plans (Veg, Egg, Non-Veg, Jain, Custom)
-- Choose diet → duration → meals per day
 - Dashboard: order history ✅, delivery tracking (Phase 10), today's meals (Phase 10)
 - Body metrics (manual entry ✅ or FitDays BLE ✅ UI — hardware test pending) — Phase 5 ✅
 - Nutrition tracker (calories + macros + water) — Phase 6 ✅
@@ -536,7 +486,6 @@ Price anchor: ₹600 trial → ₹70,875 for 3-month all meals
 
 ### Lifestyle & Medical Plans — Coming Soon (Phase 9)
 Conditions: PCOS · Diabetic-friendly · Post-surgery recovery · Weight loss (clinical) · Thyroid · Heart health · High-protein athletic
-→ Waitlist open on website. Exact meal plans + pricing finalised in Phase 9.
 
 ---
 
@@ -555,7 +504,7 @@ Conditions: PCOS · Diabetic-friendly · Post-surgery recovery · Weight loss (c
 | 9 | Notifications | n8n self-hosted — WhatsApp Business API + Email |
 | 10 | Revenue streams | Meal delivery + Digital plans + Supplements (Premium) + AI Trainer (Luxury) |
 | 11 | Admin ops | Solo (owner only) for now |
-| 12 | Design | Dark athletic — black `#0a0a0a`, lime `#84cc16`, white `#ffffff` — Barlow Condensed headings |
+| 12 | Design | Dark athletic — black `#0a0a0a`, lime `#84cc16`, white `#ffffff` |
 | 13 | FitDays / Body Metrics | Web Bluetooth API — in-browser BLE (Chrome) |
 | 14 | Delivery Tracking | Driver PWA (smartphone) |
 | 15 | Exercise content | Custom 3D animated videos — placeholder now |
@@ -576,7 +525,7 @@ Conditions: PCOS · Diabetic-friendly · Post-surgery recovery · Weight loss (c
 | # | What | Phase | Status |
 |---|------|-------|--------|
 | 1 | MSG91 or Twilio account | 4 | ⏳ |
-| 2 | FitDays scale model number (BLE compatibility check) | 5 | ⏳ — UI built, need hardware to confirm GATT profile match |
+| 2 | FitDays scale model number (BLE compatibility check) | 5 | ⏳ — UI built, need hardware |
 | 3 | WhatsApp Business API / Meta Business account | 16 | ⏳ |
 | 4 | Hostinger VPS vs shared (for n8n) | 16 | ⏳ Check hPanel |
 | 5 | Supplement supplier / source | 8 | ⏳ |
@@ -607,11 +556,39 @@ Jain · Vegetarian · Eggetarian · Non-Vegetarian · Snacks — full catalogue 
 
 ---
 
+## 🗄️ DATABASE — CURRENT STATE (Phase 6 Schema v4)
+
+| Table | Purpose |
+|-------|---------|
+| users | Auth — email, phone, Google ID, role, emailVerified, image |
+| user_profiles | Name, age, gender, height, goal, activity level |
+| addresses | Delivery addresses (multiple per user) |
+| accounts | NextAuth OAuth account linking |
+| sessions | NextAuth database sessions |
+| verification_tokens | Email verification (future) |
+| meal_plan_products | 17 products (5 live Phase 3, 12 coming soon Phase 9) |
+| plan_prices | 966 price rows — full matrix seeded |
+| orders | Order header — user, product, plan choice, status |
+| order_items | Line items per order |
+| payments | PayU + COD transaction records |
+| deliveries | Daily delivery status per order |
+| active_plans | Currently running subscription per user |
+| body_metrics | FitDays scale data — 13 params |
+| exercises | Exercise library — name, level, sets, reps, muscle groups (Phase 7) |
+| workout_logs | Workout tracking (Phase 7) |
+| meal_types | Breakfast / Lunch / Dinner / Snacks (seeded ✅) |
+| food_items | Food library — 50 Indian foods seeded + user custom foods (per-100g macros) |
+| food_entries | Diary log — userId, foodItemId, mealTypeId, entryDate, qty, computed macros |
+| nutrition_goals | Daily targets per user — calories, protein, carbs, fat, waterMl |
+| water_logs | Daily water total per user (one row per user per day, upserted) |
+
+---
+
 ## 🚀 THE VISION
 
 FitFuel has been running in Pune since 2024 — real customers, real orders, real operations. This is a full platform revamp, not a launch.
 
-**Now (Phase 6 done):** Nutrition Tracker live ✅ — food diary, 50 Indian foods seeded, macro rings, water tracker, daily goals. Migration + seed push pending.
+**Now (Phase 6 done):** Nutrition Tracker live + pushed ✅ — food diary, 50 Indian foods seeded, macro rings, water tracker, daily goals. All running on Neon.
 
 **Phase 7:** Exercise Library — exercise catalogue, workout logging.
 

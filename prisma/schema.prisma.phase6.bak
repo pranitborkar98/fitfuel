@@ -1,7 +1,7 @@
 // ============================================================
-// FITFUEL — PRISMA SCHEMA v5 (Phase 7 — Exercise Library)
+// FITFUEL — PRISMA SCHEMA v1 (Prisma 7 compatible)
 // Connection config lives in prisma.config.ts — NOT here
-// Run: npx prisma migrate dev --name add-exercise-library
+// Run: npx prisma migrate dev --name add-nutrition-tracker
 // ============================================================
 
 generator client {
@@ -135,22 +135,20 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  profile         UserProfile?
-  addresses       Address[]
-  orders          Order[]
-  bodyMetrics     BodyMetric[]
-  activePlans     ActivePlan[]
-  accounts        Account[]
-  sessions        Session[]
+  profile        UserProfile?
+  addresses      Address[]
+  orders         Order[]
+  bodyMetrics    BodyMetric[]
+  workoutLogs    WorkoutLog[]
+  activePlans    ActivePlan[]
+  accounts       Account[]
+  sessions       Session[]
 
   // ── Phase 6 — Nutrition Tracker ──
-  foodItems       FoodItem[]
-  foodEntries     FoodEntry[]
-  nutritionGoal   NutritionGoal?
-  waterLogs       WaterLog[]
-
-  // ── Phase 7 — Exercise Library ──
-  workoutSessions WorkoutSession[]
+  foodItems      FoodItem[]
+  foodEntries    FoodEntry[]
+  nutritionGoal  NutritionGoal?
+  waterLogs      WaterLog[]
 
   @@map("users")
 }
@@ -399,86 +397,48 @@ model BodyMetric {
 }
 
 // ============================================================
-// PHASE 7 — EXERCISE LIBRARY
+// EXERCISE
 // ============================================================
 
-// ~800 exercises seeded from free-exercise-db
-// Images served from GitHub CDN — paths stored as relative strings
-// e.g. images[0] = "Barbell_Squat/0.jpg"
-// Full URL: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/images/{path}
-
 model Exercise {
-  id               String   @id   // raw id from JSON e.g. "Barbell_Squat"
-  name             String
-  category         String         // strength | stretching | cardio | plyometrics | powerlifting | strongman | olympic_weightlifting
-  level            String         // beginner | intermediate | expert
-  force            String?        // push | pull | static
-  mechanic         String?        // compound | isolation
-  equipment        String?        // body only | barbell | dumbbell | cable | machine | etc.
-  primaryMuscles   String[]
-  secondaryMuscles String[]
-  instructions     String[]
-  images           String[]       // relative paths — always 2 per exercise
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  description    String?
+  muscleGroups   String[]
+  equipment      String[]
+  level          String
+  setsReps       String?
+  videoUrl       String?
+  gifUrl         String?
+  instructions   String?
+  commonMistakes String?
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  workoutExercises WorkoutExercise[]
+  workoutLogs    WorkoutLog[]
 
-  @@index([category])
-  @@index([level])
-  @@index([equipment])
   @@map("exercises")
 }
 
-// A single workout session (groups multiple exercises)
-model WorkoutSession {
-  id             String    @id @default(cuid())
-  userId         String
-  name           String?                        // e.g. "Push Day", "Morning Workout"
-  date           DateTime  @db.Date
-  startedAt      DateTime?
-  completedAt    DateTime?
-  durationMins   Int?                           // total session duration
-  caloriesBurned Int?                           // fed into nutrition calorie ring
-  notes          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+model WorkoutLog {
+  id          String   @id @default(cuid())
+  userId      String
+  exerciseId  String
+  loggedAt    DateTime @default(now())
+  sets        Int?
+  reps        Int?
+  weightKg    Float?
+  durationMin Int?
+  notes       String?
+  createdAt   DateTime @default(now())
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exercises      WorkoutExercise[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
 
-  @@index([userId, date])
-  @@map("workout_sessions")
-}
-
-// An exercise within a session (ordered)
-model WorkoutExercise {
-  id               String   @id @default(cuid())
-  workoutSessionId String
-  exerciseId       String
-  orderInSession   Int                          // 0-indexed display order
-  notes            String?
-
-  workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
-  exercise         Exercise       @relation(fields: [exerciseId], references: [id])
-  sets             WorkoutSet[]
-
-  @@map("workout_exercises")
-}
-
-// Individual set within a workout exercise
-model WorkoutSet {
-  id                String   @id @default(cuid())
-  workoutExerciseId String
-  setNumber         Int                         // 1-indexed
-  reps              Int?
-  weightKg          Float?
-  durationSecs      Int?                        // for planks, holds, time-based cardio
-  distanceM         Float?                      // for running, rowing, etc.
-  completed         Boolean  @default(false)
-  notes             String?
-
-  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
-
-  @@map("workout_sets")
+  @@index([userId, loggedAt])
+  @@map("workout_logs")
 }
 
 // ============================================================
@@ -609,7 +569,8 @@ model NutritionGoal {
   protein   Float    @default(150)
   carbs     Float    @default(250)
   fat       Float    @default(67)
-  fiber     Int      @default(28)
+  fiber     Int      @default(28)  
+
   waterMl   Int      @default(2500)
   updatedAt DateTime @updatedAt
 

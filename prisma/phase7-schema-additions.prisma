@@ -1,0 +1,93 @@
+// ============================================================
+// PHASE 7 — ADD THESE MODELS TO YOUR prisma/schema.prisma
+// Place after the WaterLog model (end of Phase 6 models)
+// Also update the User model with new relations (shown below)
+// ============================================================
+
+// ── EXISTING User model — ADD these 2 relations to it ────────
+// foodItems        FoodItem[]         <- already there from Phase 6
+// foodEntries      FoodEntry[]        <- already there from Phase 6
+// nutritionGoal    NutritionGoal?     <- already there from Phase 6
+// waterLogs        WaterLog[]         <- already there from Phase 6
+// ADD THESE:
+// workoutSessions  WorkoutSession[]
+// ─────────────────────────────────────────────────────────────
+
+// ── Exercise Library (seeded from free-exercise-db, ~800 rows) ─
+
+model Exercise {
+  id             String   @id                          // e.g. "Barbell_Squat"
+  name           String
+  category       String                               // strength | stretching | cardio | plyometrics | powerlifting | strongman | olympic_weightlifting
+  level          String                               // beginner | intermediate | expert
+  force          String?                              // push | pull | static | null
+  mechanic       String?                              // compound | isolation | null
+  equipment      String?                              // body only | barbell | dumbbell | etc.
+  primaryMuscles String[]                             // e.g. ["chest", "triceps"]
+  secondaryMuscles String[]
+  instructions   String[]                             // step-by-step array
+  images         String[]                             // relative paths e.g. ["Barbell_Squat/0.jpg", "Barbell_Squat/1.jpg"]
+
+  workoutExercises WorkoutExercise[]
+
+  @@map("exercises")
+}
+
+// ── Workout Session (groups multiple exercises together) ───────
+
+model WorkoutSession {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String?                              // e.g. "Push Day", "Morning Workout"
+  date           DateTime @db.Date
+  startedAt      DateTime?
+  completedAt    DateTime?
+  durationMins   Int?                                 // total duration in minutes
+  caloriesBurned Int?                                 // fed to nutrition calorie ring
+  notes          String?
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises      WorkoutExercise[]
+
+  @@index([userId, date])
+  @@map("workout_sessions")
+}
+
+// ── Exercise within a session ──────────────────────────────────
+
+model WorkoutExercise {
+  id               String   @id @default(cuid())
+  workoutSessionId String
+  exerciseId       String
+  orderInSession   Int                                // 0-indexed position
+  notes            String?
+
+  workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  exercise         Exercise       @relation(fields: [exerciseId], references: [id])
+  sets             WorkoutSet[]
+
+  @@map("workout_exercises")
+}
+
+// ── Individual set within a workout exercise ───────────────────
+
+model WorkoutSet {
+  id                String   @id @default(cuid())
+  workoutExerciseId String
+  setNumber         Int                                // 1-indexed
+  reps              Int?
+  weightKg          Float?
+  durationSecs      Int?                              // for time-based exercises (planks, etc.)
+  distanceM         Float?                            // for cardio exercises
+  completed         Boolean  @default(false)
+  notes             String?
+
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@map("workout_sets")
+}
+
+// ============================================================
+// MIGRATION NAME TO USE:
+//   npx prisma migrate dev --name add-exercise-library
+// ============================================================

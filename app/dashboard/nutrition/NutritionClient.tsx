@@ -161,6 +161,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [selectedDate, setSelectedDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const [entries,      setEntries]      = useState<FoodEntry[]>(initialEntries);
   const [waterMl,      setWaterMl]      = useState(initialWaterMl);
+  const [burnedKcal,   setBurnedKcal]   = useState(0);
   const [loadingDiary, setLoadingDiary] = useState(false);
   const [currentGoal,  setCurrentGoal]  = useState<Goal>(goal);
 
@@ -188,14 +189,23 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   function goDay(delta: number) { const d = new Date(selectedDate); d.setDate(d.getDate() + delta); setSelectedDate(d); }
 
   useEffect(() => {
-    if (isToday) { setEntries(initialEntries); setWaterMl(initialWaterMl); return; }
-    setLoadingDiary(true);
     const ds = fmt(selectedDate);
+    if (isToday) {
+      setEntries(initialEntries);
+      setWaterMl(initialWaterMl);
+      fetch(`/api/workout/burned?date=${ds}`).then(r => r.json()).then(d => setBurnedKcal(d.caloriesBurned ?? 0)).catch(() => {});
+      return;
+    }
+    setLoadingDiary(true);
     Promise.all([
       fetch(`/api/nutrition/diary?date=${ds}`).then(r => r.json()),
       fetch(`/api/nutrition/water?date=${ds}`).then(r => r.json()),
-    ]).then(([diary, water]) => { setEntries(diary.entries ?? []); setWaterMl(water.amountMl ?? 0); })
-      .finally(() => setLoadingDiary(false));
+      fetch(`/api/workout/burned?date=${ds}`).then(r => r.json()),
+    ]).then(([diary, water, burned]) => {
+      setEntries(diary.entries ?? []);
+      setWaterMl(water.amountMl ?? 0);
+      setBurnedKcal(burned.caloriesBurned ?? 0);
+    }).finally(() => setLoadingDiary(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
@@ -366,7 +376,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   <p style={{ fontSize: 10, color: T.textMuted }}>eaten kcal</p>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: T.red }}>0</p>
+                  <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: T.red }}>{burnedKcal}</p>
                   <p style={{ fontSize: 10, color: T.textMuted }}>burned kcal</p>
                 </div>
                 <div style={{ textAlign: "center" }}>
