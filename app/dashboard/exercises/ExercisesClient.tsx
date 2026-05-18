@@ -72,7 +72,7 @@ interface ExercisesClientProps {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const IMG_BASE =
-  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/images/";
+  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
 const CATEGORY_COLORS: Record<string, string> = {
   strength:               "bg-lime-400/10 text-lime-400 border-lime-400/20",
