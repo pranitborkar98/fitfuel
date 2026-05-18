@@ -9,7 +9,7 @@ import {
   Search, SlidersHorizontal, X, ChevronLeft, ChevronRight,
   Play, Plus, Trash2, CheckCircle2, Circle, ChevronDown,
   Dumbbell, Flame, Clock, Calendar, BarChart2, ArrowLeft,
-  Zap, Target, Activity, Info
+  Zap, Target, Activity, Filter, TrendingUp
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,32 +74,48 @@ interface ExercisesClientProps {
 const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  strength:               "bg-lime-400/10 text-lime-400 border-lime-400/20",
-  cardio:                 "bg-orange-400/10 text-orange-400 border-orange-400/20",
-  stretching:             "bg-blue-400/10 text-blue-400 border-blue-400/20",
-  plyometrics:            "bg-purple-400/10 text-purple-400 border-purple-400/20",
-  powerlifting:           "bg-red-400/10 text-red-400 border-red-400/20",
-  strongman:              "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
-  olympic_weightlifting:  "bg-cyan-400/10 text-cyan-400 border-cyan-400/20",
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
+  strength:              { bg: "bg-lime-400/10",   text: "text-lime-400",   dot: "bg-lime-400" },
+  cardio:                { bg: "bg-orange-400/10", text: "text-orange-400", dot: "bg-orange-400" },
+  stretching:            { bg: "bg-sky-400/10",    text: "text-sky-400",    dot: "bg-sky-400" },
+  plyometrics:           { bg: "bg-violet-400/10", text: "text-violet-400", dot: "bg-violet-400" },
+  powerlifting:          { bg: "bg-red-400/10",    text: "text-red-400",    dot: "bg-red-400" },
+  strongman:             { bg: "bg-amber-400/10",  text: "text-amber-400",  dot: "bg-amber-400" },
+  olympic_weightlifting: { bg: "bg-cyan-400/10",   text: "text-cyan-400",   dot: "bg-cyan-400" },
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  beginner:     "text-green-400",
-  intermediate: "text-yellow-400",
+  beginner:     "text-emerald-400",
+  intermediate: "text-amber-400",
   expert:       "text-red-400",
 };
 
-function levelDots(level: string) {
-  const filled = level === "beginner" ? 1 : level === "intermediate" ? 2 : 3;
+const LEVEL_BAR: Record<string, number> = {
+  beginner: 1, intermediate: 2, expert: 3,
+};
+
+function LevelBadge({ level }: { level: string }) {
+  const filled = LEVEL_BAR[level] ?? 1;
+  const color = LEVEL_COLORS[level] ?? "text-lime-400";
   return (
-    <span className="flex gap-0.5 items-center">
+    <span className={`flex items-center gap-[3px] ${color}`}>
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className={`w-1.5 h-1.5 rounded-full ${i < filled ? LEVEL_COLORS[level]?.replace("text-", "bg-") ?? "bg-lime-400" : "bg-neutral-700"}`}
+          className={`inline-block rounded-[2px] ${i < filled ? color.replace("text-", "bg-") : "bg-neutral-700"}`}
+          style={{ width: 6, height: i < filled ? 10 + i * 2 : 6 }}
         />
       ))}
+    </span>
+  );
+}
+
+function CategoryPill({ category }: { category: string }) {
+  const c = CATEGORY_COLORS[category] ?? { bg: "bg-neutral-800", text: "text-neutral-400", dot: "bg-neutral-500" };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase ${c.bg} ${c.text}`}>
+      <span className={`w-1 h-1 rounded-full ${c.dot}`} />
+      {category.replace(/_/g, " ")}
     </span>
   );
 }
@@ -129,54 +145,52 @@ function ExerciseCard({
   inWorkout?: boolean;
   added?: boolean;
 }) {
-  const imgSrc = exercise.images[0]
-    ? `${IMG_BASE}${exercise.images[0]}`
-    : null;
-
-  const catColor = CATEGORY_COLORS[exercise.category] ?? "bg-neutral-700/40 text-neutral-400 border-neutral-700";
+  const imgSrc = exercise.images[0] ? `${IMG_BASE}${exercise.images[0]}` : null;
+  const [imgErr, setImgErr] = useState(false);
 
   return (
     <div
-      className="group relative bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden cursor-pointer hover:border-neutral-700 transition-all duration-200 hover:shadow-lg hover:shadow-black/40"
+      className="group relative bg-[#111111] border border-white/[0.06] rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-white/[0.12] hover:bg-[#161616] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/60"
       onClick={onClick}
     >
-      {/* Thumbnail */}
-      <div className="relative h-36 bg-neutral-800 overflow-hidden">
-        {imgSrc ? (
+      {/* Image area */}
+      <div className="relative h-40 overflow-hidden bg-[#0d0d0d]">
+        {imgSrc && !imgErr ? (
           <img
             src={imgSrc}
             alt={exercise.name}
-            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+            className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
+            onError={() => setImgErr(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Dumbbell className="w-10 h-10 text-neutral-700" />
+            <Dumbbell className="w-9 h-9 text-white/10" />
           </div>
         )}
-        {/* Category badge */}
-        <span className={`absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${catColor}`}>
-          {exercise.category.replace(/_/g, " ")}
-        </span>
-        {/* Level dots */}
-        <span className="absolute top-2 right-2 bg-black/60 rounded-full px-2 py-1 flex items-center gap-1">
-          {levelDots(exercise.level)}
-        </span>
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-transparent opacity-70" />
+
+        {/* Top badges */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
+          <CategoryPill category={exercise.category} />
+          <span className="bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1">
+            <LevelBadge level={exercise.level} />
+          </span>
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="p-3">
-        <p className="text-sm font-semibold text-white leading-snug line-clamp-1 mb-1">
+      {/* Content */}
+      <div className="p-3 pt-2.5">
+        <p className="text-[13px] font-semibold text-white leading-snug line-clamp-1 mb-1">
           {exercise.name}
         </p>
-        <p className="text-[11px] text-neutral-500 mb-2">
+        <p className="text-[11px] text-white/30 leading-snug line-clamp-1">
           {exercise.primaryMuscles.slice(0, 2).join(" · ")}
           {exercise.primaryMuscles.length > 2 && ` +${exercise.primaryMuscles.length - 2}`}
         </p>
         {exercise.equipment && (
-          <p className="text-[10px] text-neutral-600 uppercase tracking-wide">
+          <p className="text-[10px] text-white/20 uppercase tracking-widest mt-1.5 font-medium">
             {exercise.equipment}
           </p>
         )}
@@ -186,13 +200,13 @@ function ExerciseCard({
       {inWorkout && onAdd && (
         <button
           onClick={(e) => { e.stopPropagation(); onAdd(); }}
-          className={`absolute bottom-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+          className={`absolute bottom-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
             added
-              ? "bg-lime-400 text-black"
-              : "bg-neutral-800 text-neutral-400 hover:bg-lime-400 hover:text-black"
+              ? "bg-lime-400 text-black scale-110"
+              : "bg-white/10 text-white/60 hover:bg-lime-400 hover:text-black"
           }`}
         >
-          {added ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {added ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
         </button>
       )}
     </div>
@@ -214,6 +228,7 @@ function ExerciseModal({
 }) {
   const [detail, setDetail] = useState<Exercise>(exercise);
   const [loading, setLoading] = useState(!exercise.instructions);
+  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (!exercise.instructions) {
@@ -224,81 +239,96 @@ function ExerciseModal({
     }
   }, [exercise.id, exercise.instructions]);
 
-  const img0 = detail.images[0] ? `${IMG_BASE}${detail.images[0]}` : null;
-  const img1 = detail.images[1] ? `${IMG_BASE}${detail.images[1]}` : null;
-  const catColor = CATEGORY_COLORS[detail.category] ?? "bg-neutral-700/40 text-neutral-400 border-neutral-700";
+  const images = detail.images
+    .slice(0, 2)
+    .map((src) => `${IMG_BASE}${src}`)
+    .filter((_, i) => !imgErrors[i]);
+
+  const catStyle = CATEGORY_COLORS[detail.category] ?? { bg: "bg-neutral-800", text: "text-neutral-400", dot: "bg-neutral-500" };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-xl bg-neutral-950 border border-neutral-800 rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-y-auto">
-        {/* Images */}
-        <div className="grid grid-cols-2 h-48 sm:h-56 overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
-          {[img0, img1].map((src, i) =>
-            src ? (
-              <img key={i} src={src} alt="" className="w-full h-full object-cover object-top" />
-            ) : (
-              <div key={i} className="bg-neutral-800 flex items-center justify-center">
-                <Dumbbell className="w-10 h-10 text-neutral-700" />
-              </div>
-            )
-          )}
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full sm:max-w-lg bg-[#0e0e0e] border border-white/[0.08] rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+
+        {/* Hero images */}
+        <div className="relative h-52 sm:h-60 rounded-t-3xl sm:rounded-t-3xl overflow-hidden bg-[#0a0a0a]">
+          <div className="grid grid-cols-2 h-full gap-0.5">
+            {[0, 1].map((i) => {
+              const src = detail.images[i] ? `${IMG_BASE}${detail.images[i]}` : null;
+              return src && !imgErrors[i] ? (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className="w-full h-full object-cover object-top"
+                  onError={() => setImgErrors((p) => ({ ...p, [i]: true }))}
+                />
+              ) : (
+                <div key={i} className="w-full h-full flex items-center justify-center bg-[#111]">
+                  <Dumbbell className="w-8 h-8 text-white/10" />
+                </div>
+              );
+            })}
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent" />
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:bg-black/70 transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-white/70" />
+          </button>
         </div>
 
-        <div className="p-5">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h2 className="text-lg font-bold text-white leading-tight">{detail.name}</h2>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${catColor}`}>
-                  {detail.category.replace(/_/g, " ")}
-                </span>
-                <span className={`text-[11px] font-medium capitalize ${LEVEL_COLORS[detail.level]}`}>
-                  {detail.level}
-                </span>
-              </div>
+        <div className="px-5 pb-6 -mt-4 relative z-10">
+          {/* Title */}
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-white leading-tight mb-2">{detail.name}</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <CategoryPill category={detail.category} />
+              <span className={`text-[11px] font-semibold capitalize ${LEVEL_COLORS[detail.level] ?? "text-white/40"}`}>
+                {detail.level}
+              </span>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors ml-3 flex-shrink-0">
-              <X className="w-4 h-4 text-neutral-400" />
-            </button>
           </div>
 
-          {/* Meta pills */}
-          <div className="flex flex-wrap gap-2 mb-4">
+          {/* Meta row */}
+          <div className="flex flex-wrap gap-2 mb-5">
             {detail.equipment && (
-              <span className="text-[11px] bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg">
+              <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06]">
                 🏋️ {detail.equipment}
               </span>
             )}
             {detail.force && (
-              <span className="text-[11px] bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg capitalize">
+              <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06] capitalize">
                 ↕ {detail.force}
               </span>
             )}
             {detail.mechanic && (
-              <span className="text-[11px] bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg capitalize">
+              <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06] capitalize">
                 ⚙ {detail.mechanic}
               </span>
             )}
           </div>
 
           {/* Muscles */}
-          <div className="mb-4">
-            <p className="text-[11px] text-neutral-500 uppercase tracking-widest mb-2">Primary muscles</p>
+          <div className="mb-5 p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+            <p className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-semibold mb-2">Primary Muscles</p>
             <div className="flex flex-wrap gap-1.5">
               {detail.primaryMuscles.map((m) => (
-                <span key={m} className="text-[11px] bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full capitalize">
+                <span key={m} className="text-[11px] bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2.5 py-0.5 rounded-full capitalize font-medium">
                   {m}
                 </span>
               ))}
             </div>
             {detail.secondaryMuscles.length > 0 && (
               <>
-                <p className="text-[11px] text-neutral-500 uppercase tracking-widest mt-3 mb-2">Secondary</p>
+                <p className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-semibold mt-3 mb-2">Secondary</p>
                 <div className="flex flex-wrap gap-1.5">
                   {detail.secondaryMuscles.map((m) => (
-                    <span key={m} className="text-[11px] bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded-full capitalize">
+                    <span key={m} className="text-[11px] bg-white/[0.05] text-white/40 px-2.5 py-0.5 rounded-full capitalize">
                       {m}
                     </span>
                   ))}
@@ -309,30 +339,30 @@ function ExerciseModal({
 
           {/* Instructions */}
           <div className="mb-5">
-            <p className="text-[11px] text-neutral-500 uppercase tracking-widest mb-3">Instructions</p>
+            <p className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-semibold mb-3">Instructions</p>
             {loading ? (
               <div className="space-y-2">
-                {[1, 2, 3].map((i) => <div key={i} className="h-4 bg-neutral-800 rounded animate-pulse" />)}
+                {[1, 2, 3].map((i) => <div key={i} className="h-4 bg-white/[0.06] rounded-lg animate-pulse" />)}
               </div>
             ) : (
               <ol className="space-y-3">
                 {(detail.instructions ?? []).map((step, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-neutral-800 text-neutral-400 text-[10px] font-bold flex items-center justify-center mt-0.5">
+                  <li key={i} className="flex gap-3 group/step">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-lime-400/10 text-lime-400 text-[10px] font-bold flex items-center justify-center mt-0.5 border border-lime-400/20">
                       {i + 1}
                     </span>
-                    <p className="text-sm text-neutral-300 leading-relaxed">{step}</p>
+                    <p className="text-[13px] text-white/60 leading-relaxed group-hover/step:text-white/80 transition-colors">{step}</p>
                   </li>
                 ))}
               </ol>
             )}
           </div>
 
-          {/* Add to workout CTA */}
+          {/* CTA */}
           {inWorkout && onAddToWorkout && (
             <button
               onClick={() => { onAddToWorkout(); onClose(); }}
-              className="w-full bg-lime-400 text-black font-bold py-3 rounded-xl hover:bg-lime-300 transition-colors"
+              className="w-full bg-lime-400 text-black font-bold py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.98] transition-all text-sm tracking-wide"
             >
               + Add to Workout
             </button>
@@ -403,7 +433,6 @@ function BrowseTab({
     setLoading(false);
   }, []);
 
-  // Debounced search on q change
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -419,92 +448,100 @@ function BrowseTab({
 
   const totalPages = Math.ceil(total / LIMIT);
   const currentPage = Math.floor(offset / LIMIT) + 1;
-
   const hasFilters = !!(category || level || equip || muscle);
 
   return (
     <div>
-      {/* Search + filter bar */}
+      {/* Search bar */}
       <div className="flex gap-2 mb-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
           <input
             type="text"
-            placeholder="Search exercises..."
+            placeholder="Search 873 exercises…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-700"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all"
           />
           {q && (
-            <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-              <X className="w-3.5 h-3.5 text-neutral-500" />
+            <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+          className={`relative flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-all ${
             showFilters || hasFilters
               ? "bg-lime-400/10 border-lime-400/30 text-lime-400"
-              : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+              : "bg-white/[0.04] border-white/[0.08] text-white/40 hover:border-white/15 hover:text-white/60"
           }`}
         >
-          <SlidersHorizontal className="w-4 h-4" />
-          {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-lime-400" />}
+          <Filter className="w-4 h-4" />
+          {hasFilters && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-lime-400" />
+          )}
         </button>
       </div>
 
-      {/* Filter dropdowns */}
+      {/* Filter panel */}
       {showFilters && (
-        <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-neutral-900 border border-neutral-800 rounded-xl">
-          {[
-            { label: "Category", value: category, set: setCategory, options: categories },
-            { label: "Level",    value: level,    set: setLevel,    options: levels },
-            { label: "Equipment",value: equip,    set: setEquip,    options: equipment },
-            { label: "Muscle",   value: muscle,   set: setMuscle,   options: muscles },
-          ].map(({ label, value, set, options }) => (
-            <div key={label}>
-              <label className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">{label}</label>
-              <select
-                value={value}
-                onChange={(e) => { set(e.target.value); setOffset(0); }}
-                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none appearance-none capitalize"
-              >
-                <option value="">All</option>
-                {options.map((o) => (
-                  <option key={o} value={o} className="capitalize">{o.replace(/_/g, " ")}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+        <div className="mb-4 p-4 bg-white/[0.03] border border-white/[0.07] rounded-2xl">
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Category", value: category, set: setCategory, options: categories },
+              { label: "Level",    value: level,    set: setLevel,    options: levels },
+              { label: "Equipment",value: equip,    set: setEquip,    options: equipment },
+              { label: "Muscle",   value: muscle,   set: setMuscle,   options: muscles },
+            ].map(({ label, value, set, options }) => (
+              <div key={label}>
+                <label className="text-[10px] text-white/30 uppercase tracking-[0.12em] font-semibold block mb-1.5">{label}</label>
+                <select
+                  value={value}
+                  onChange={(e) => { set(e.target.value); setOffset(0); }}
+                  className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-white/20 appearance-none capitalize cursor-pointer"
+                >
+                  <option value="">All</option>
+                  {options.map((o) => (
+                    <option key={o} value={o} className="capitalize bg-neutral-900">{o.replace(/_/g, " ")}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
           {hasFilters && (
             <button
               onClick={() => { setCategory(""); setLevel(""); setEquip(""); setMuscle(""); setOffset(0); }}
-              className="col-span-2 text-xs text-neutral-500 hover:text-white transition-colors text-center py-1"
+              className="mt-3 w-full text-xs text-white/30 hover:text-white/60 transition-colors py-1 text-center"
             >
-              Clear filters
+              Clear all filters
             </button>
           )}
         </div>
       )}
 
-      {/* Results count */}
-      <p className="text-[11px] text-neutral-600 mb-3">
-        {loading ? "Loading..." : `${total.toLocaleString()} exercise${total !== 1 ? "s" : ""}`}
-        {(q || hasFilters) && !loading && " found"}
-      </p>
+      {/* Count */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[11px] text-white/25 font-medium">
+          {loading ? "Searching…" : `${total.toLocaleString()} exercise${total !== 1 ? "s" : ""}${(q || hasFilters) ? " found" : ""}`}
+        </p>
+        {totalPages > 1 && (
+          <p className="text-[11px] text-white/25">Page {currentPage}/{totalPages}</p>
+        )}
+      </div>
 
       {/* Grid */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="bg-neutral-900 rounded-xl h-52 animate-pulse border border-neutral-800" />
+            <div key={i} className="bg-white/[0.03] rounded-2xl h-52 animate-pulse border border-white/[0.05]" />
           ))}
         </div>
       ) : exercises.length === 0 ? (
-        <div className="text-center py-16 text-neutral-600">
-          <Dumbbell className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No exercises found</p>
+        <div className="text-center py-20 text-white/20">
+          <Dumbbell className="w-10 h-10 mx-auto mb-3 opacity-40" />
+          <p className="text-sm font-medium">No exercises found</p>
+          <p className="text-xs mt-1 text-white/15">Try adjusting your filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -523,28 +560,27 @@ function BrowseTab({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6">
+        <div className="flex items-center justify-center gap-3 mt-8">
           <button
             onClick={() => setOffset(offset - LIMIT)}
             disabled={offset === 0}
-            className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center disabled:opacity-30 hover:border-neutral-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center disabled:opacity-20 hover:bg-white/[0.08] hover:border-white/15 transition-all"
           >
-            <ChevronLeft className="w-4 h-4 text-neutral-400" />
+            <ChevronLeft className="w-4 h-4 text-white/60" />
           </button>
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-white/30 font-medium tabular-nums">
             {currentPage} / {totalPages}
           </span>
           <button
             onClick={() => setOffset(offset + LIMIT)}
             disabled={offset + LIMIT >= total}
-            className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center disabled:opacity-30 hover:border-neutral-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center disabled:opacity-20 hover:bg-white/[0.08] hover:border-white/15 transition-all"
           >
-            <ChevronRight className="w-4 h-4 text-neutral-400" />
+            <ChevronRight className="w-4 h-4 text-white/60" />
           </button>
         </div>
       )}
 
-      {/* Exercise detail modal */}
       {selectedExercise && (
         <ExerciseModal
           exercise={selectedExercise}
@@ -573,8 +609,8 @@ function SetRow({
   isTimeBase: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 py-1.5">
-      <span className="w-6 text-center text-[11px] text-neutral-600 font-mono">{setNum}</span>
+    <div className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-colors ${set.completed ? "bg-lime-400/[0.04]" : ""}`}>
+      <span className="w-5 text-center text-[11px] text-white/25 font-mono flex-shrink-0">{setNum}</span>
 
       {isTimeBase ? (
         <input
@@ -582,7 +618,7 @@ function SetRow({
           placeholder="secs"
           value={set.durationSecs ?? ""}
           onChange={(e) => onUpdate({ durationSecs: e.target.value ? Number(e.target.value) : null })}
-          className="w-20 bg-neutral-800 border border-neutral-700 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-lime-500"
+          className="w-20 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
         />
       ) : (
         <>
@@ -591,26 +627,26 @@ function SetRow({
             placeholder="kg"
             value={set.weightKg ?? ""}
             onChange={(e) => onUpdate({ weightKg: e.target.value ? Number(e.target.value) : null })}
-            className="w-16 bg-neutral-800 border border-neutral-700 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-lime-500"
+            className="w-16 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
           />
-          <span className="text-neutral-700 text-xs">×</span>
+          <span className="text-white/20 text-xs font-bold">×</span>
           <input
             type="number"
             placeholder="reps"
             value={set.reps ?? ""}
             onChange={(e) => onUpdate({ reps: e.target.value ? Number(e.target.value) : null })}
-            className="w-16 bg-neutral-800 border border-neutral-700 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-lime-500"
+            className="w-16 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
           />
         </>
       )}
 
       <button
         onClick={() => onUpdate({ completed: !set.completed })}
-        className={`ml-auto transition-colors ${set.completed ? "text-lime-400" : "text-neutral-700 hover:text-neutral-500"}`}
+        className={`ml-auto transition-all ${set.completed ? "text-lime-400 scale-110" : "text-white/20 hover:text-white/40"}`}
       >
         {set.completed ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
       </button>
-      <button onClick={onDelete} className="text-neutral-700 hover:text-red-400 transition-colors">
+      <button onClick={onDelete} className="text-white/15 hover:text-red-400 transition-colors">
         <Trash2 className="w-3.5 h-3.5" />
       </button>
     </div>
@@ -635,16 +671,14 @@ function WorkoutExerciseCard({
 
   const isTimeBase = ["stretching", "cardio"].includes(we.exercise.category ?? "");
   const imgSrc = we.exercise.images[0] ? `${IMG_BASE}${we.exercise.images[0]}` : null;
+  const completedSets = sets.filter((s) => s.completed).length;
+  const progress = sets.length > 0 ? completedSets / sets.length : 0;
 
   async function addSet() {
     const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        isTimeBase
-          ? { durationSecs: null }
-          : { reps: null, weightKg: null }
-      ),
+      body: JSON.stringify(isTimeBase ? { durationSecs: null } : { reps: null, weightKg: null }),
     });
     const data = await res.json();
     if (data.set) {
@@ -679,43 +713,47 @@ function WorkoutExerciseCard({
     onSetsChange(newSets);
   }
 
-  const completedSets = sets.filter((s) => s.completed).length;
-
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+    <div className="bg-[#111111] border border-white/[0.06] rounded-2xl overflow-hidden">
+      {/* Header */}
       <div
-        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-neutral-800/50 transition-colors"
+        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
         onClick={() => setCollapsed(!collapsed)}
       >
         {imgSrc ? (
-          <img src={imgSrc} alt="" className="w-10 h-10 rounded-lg object-cover object-top flex-shrink-0" />
+          <img src={imgSrc} alt="" className="w-10 h-10 rounded-xl object-cover object-top flex-shrink-0" />
         ) : (
-          <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center flex-shrink-0">
-            <Dumbbell className="w-5 h-5 text-neutral-700" />
+          <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center flex-shrink-0">
+            <Dumbbell className="w-5 h-5 text-white/20" />
           </div>
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white truncate">{we.exercise.name}</p>
-          <p className="text-[11px] text-neutral-500">
-            {sets.length === 0 ? "No sets yet" : `${completedSets}/${sets.length} sets done`}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden max-w-[80px]">
+              <div
+                className="h-full bg-lime-400 rounded-full transition-all duration-300"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-white/30">
+              {sets.length === 0 ? "No sets" : `${completedSets}/${sets.length}`}
+            </p>
+          </div>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          className="text-neutral-700 hover:text-red-400 transition-colors mr-1"
+          className="text-white/15 hover:text-red-400 transition-colors mr-1 p-1"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
-        <ChevronDown
-          className={`w-4 h-4 text-neutral-600 transition-transform ${collapsed ? "" : "rotate-180"}`}
-        />
+        <ChevronDown className={`w-4 h-4 text-white/20 transition-transform duration-200 ${collapsed ? "" : "rotate-180"}`} />
       </div>
 
       {!collapsed && (
-        <div className="px-3 pb-3 border-t border-neutral-800 pt-2">
-          {/* Column headers */}
+        <div className="px-3 pb-3 border-t border-white/[0.05] pt-2">
           {sets.length > 0 && (
-            <div className="flex items-center gap-2 mb-1 text-[10px] text-neutral-600 uppercase tracking-widest pl-6">
+            <div className="flex items-center gap-2 mb-1 text-[10px] text-white/20 uppercase tracking-widest pl-7">
               {isTimeBase ? (
                 <span className="w-20 text-center">Duration</span>
               ) : (
@@ -728,7 +766,6 @@ function WorkoutExerciseCard({
             </div>
           )}
 
-          {/* Sets */}
           {sets.map((set, i) => (
             <SetRow
               key={set.id}
@@ -742,7 +779,7 @@ function WorkoutExerciseCard({
 
           <button
             onClick={addSet}
-            className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-neutral-800 text-xs text-neutral-600 hover:text-lime-400 hover:border-lime-400/30 transition-colors"
+            className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-white/[0.08] text-xs text-white/25 hover:text-lime-400 hover:border-lime-400/20 transition-all"
           >
             <Plus className="w-3.5 h-3.5" /> Add Set
           </button>
@@ -771,7 +808,6 @@ function WorkoutTab({
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Start timer when session is active
   useEffect(() => {
     if (activeSession) {
       timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
@@ -830,8 +866,6 @@ function WorkoutTab({
     if (!activeSession) return;
     setFinishing(true);
     const durationMins = Math.round(elapsed / 60);
-
-    // Rough calorie estimate: 5 kcal/min average
     const totalSets = workoutExercises.reduce((s, we) => s + we.sets.length, 0);
     const caloriesBurned = Math.round(durationMins * 5 + totalSets * 3);
 
@@ -851,43 +885,46 @@ function WorkoutTab({
   // ── No active session ──
   if (!activeSession) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-lime-400/10 border border-lime-400/20 flex items-center justify-center mb-5">
-          <Zap className="w-8 h-8 text-lime-400" />
+      <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+        <div className="w-20 h-20 rounded-3xl bg-lime-400/10 border border-lime-400/20 flex items-center justify-center mb-6">
+          <Zap className="w-9 h-9 text-lime-400" />
         </div>
-        <h3 className="text-white font-bold text-lg mb-1">Start a Workout</h3>
-        <p className="text-neutral-500 text-sm mb-6 max-w-xs">
-          Log exercises, track sets and reps, and burn those calories.
+        <h3 className="text-white font-bold text-xl mb-2">Start a Workout</h3>
+        <p className="text-white/30 text-sm mb-8 max-w-xs leading-relaxed">
+          Log exercises, track sets and reps, and crush your goals.
         </p>
         <input
           type="text"
-          placeholder='Name (e.g. "Push Day") — optional'
+          placeholder='Session name — e.g. "Push Day"'
           value={sessionName}
           onChange={(e) => setSessionName(e.target.value)}
-          className="w-full max-w-xs bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-600 text-center focus:outline-none focus:border-neutral-700 mb-3"
+          className="w-full max-w-sm bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder-white/25 text-center focus:outline-none focus:border-white/20 mb-4 transition-all"
         />
         <button
           onClick={startSession}
-          className="flex items-center gap-2 bg-lime-400 text-black font-bold px-6 py-3 rounded-xl hover:bg-lime-300 transition-colors"
+          className="flex items-center gap-2 bg-lime-400 text-black font-bold px-8 py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.97] transition-all text-sm tracking-wide shadow-lg shadow-lime-400/20"
         >
-          <Play className="w-4 h-4" /> Start Workout
+          <Play className="w-4 h-4 fill-black" /> Start Workout
         </button>
       </div>
     );
   }
 
-  // ── Active session ──
+  // ── Browse to add exercises ──
   if (showBrowse) {
     return (
       <div>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => setShowBrowse(false)}
-            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center hover:border-neutral-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center hover:bg-white/[0.08] transition-all"
           >
-            <ArrowLeft className="w-4 h-4 text-neutral-400" />
+            <ArrowLeft className="w-4 h-4 text-white/60" />
           </button>
-          <p className="text-sm font-semibold text-white">Add Exercise</p>
+          <div>
+            <p className="text-sm font-semibold text-white">Add Exercise</p>
+            <p className="text-[11px] text-white/30">{addedIds.size} added so far</p>
+          </div>
         </div>
         <BrowseTab
           initialExercises={initialExercises}
@@ -904,40 +941,45 @@ function WorkoutTab({
     );
   }
 
+  // ── Active session ──
+  const totalSets = workoutExercises.reduce((s, we) => s + we.sets.filter((st) => st.completed).length, 0);
+
   return (
     <div>
-      {/* Session header */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
+      {/* Session header card */}
+      <div className="relative bg-[#111111] border border-white/[0.06] rounded-2xl p-4 mb-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-lime-400/[0.04] to-transparent pointer-events-none" />
+        <div className="relative flex items-start justify-between mb-4">
           <div>
-            <p className="text-white font-bold">{activeSession.name ?? "Workout"}</p>
-            <p className="text-[11px] text-neutral-500">In progress</p>
+            <p className="text-white font-bold text-base">{activeSession.name ?? "Workout"}</p>
+            <p className="text-[11px] text-white/30 mt-0.5">In progress</p>
           </div>
-          <div className="flex items-center gap-1.5 bg-lime-400/10 border border-lime-400/20 rounded-full px-3 py-1">
-            <Clock className="w-3.5 h-3.5 text-lime-400" />
-            <span className="text-sm font-mono font-bold text-lime-400">{formatElapsed(elapsed)}</span>
+          <div className="flex items-center gap-1.5 bg-lime-400/10 border border-lime-400/20 rounded-full px-3 py-1.5">
+            <Clock className="w-3 h-3 text-lime-400" />
+            <span className="text-sm font-mono font-bold text-lime-400 tabular-nums">{formatElapsed(elapsed)}</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-center">
-          <div className="bg-neutral-800 rounded-lg py-2">
-            <p className="text-lg font-bold text-white">{workoutExercises.length}</p>
-            <p className="text-[10px] text-neutral-500">Exercises</p>
-          </div>
-          <div className="bg-neutral-800 rounded-lg py-2">
-            <p className="text-lg font-bold text-white">
-              {workoutExercises.reduce((s, we) => s + we.sets.filter((st) => st.completed).length, 0)}
-            </p>
-            <p className="text-[10px] text-neutral-500">Sets done</p>
-          </div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { val: workoutExercises.length, label: "Exercises" },
+            { val: totalSets, label: "Sets Done" },
+            { val: `~${Math.round(elapsed / 60 * 5 + totalSets * 3)}`, label: "kcal est." },
+          ].map(({ val, label }) => (
+            <div key={label} className="bg-white/[0.04] rounded-xl py-2.5">
+              <p className="text-lg font-bold text-white">{val}</p>
+              <p className="text-[10px] text-white/25 mt-0.5">{label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Exercises */}
-      <div className="space-y-3 mb-4">
+      <div className="space-y-2.5 mb-4">
         {workoutExercises.length === 0 ? (
-          <div className="text-center py-8 text-neutral-600">
+          <div className="text-center py-10 text-white/20">
             <Target className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No exercises added yet</p>
+            <p className="text-sm">No exercises yet</p>
+            <p className="text-xs mt-1 text-white/15">Tap "Add Exercise" below</p>
           </div>
         ) : (
           workoutExercises.map((we) => (
@@ -959,7 +1001,7 @@ function WorkoutTab({
       {/* Actions */}
       <button
         onClick={() => setShowBrowse(true)}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-neutral-800 text-sm text-neutral-500 hover:text-lime-400 hover:border-lime-400/30 transition-colors mb-3"
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-white/[0.08] text-sm text-white/30 hover:text-lime-400 hover:border-lime-400/20 transition-all mb-3"
       >
         <Plus className="w-4 h-4" /> Add Exercise
       </button>
@@ -967,9 +1009,9 @@ function WorkoutTab({
       <button
         onClick={finishSession}
         disabled={finishing}
-        className="w-full bg-lime-400 text-black font-bold py-3 rounded-xl hover:bg-lime-300 transition-colors disabled:opacity-60"
+        className="w-full bg-lime-400 text-black font-bold py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.98] transition-all disabled:opacity-50 text-sm tracking-wide shadow-lg shadow-lime-400/15"
       >
-        {finishing ? "Saving..." : "Finish Workout"}
+        {finishing ? "Saving…" : "Finish Workout"}
       </button>
     </div>
   );
@@ -993,7 +1035,7 @@ function HistoryTab() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 bg-neutral-900 rounded-xl animate-pulse border border-neutral-800" />
+          <div key={i} className="h-20 bg-white/[0.03] rounded-2xl animate-pulse border border-white/[0.05]" />
         ))}
       </div>
     );
@@ -1001,15 +1043,14 @@ function HistoryTab() {
 
   if (sessions.length === 0) {
     return (
-      <div className="text-center py-16 text-neutral-600">
-        <BarChart2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">No workouts yet</p>
-        <p className="text-xs mt-1">Complete your first workout to see history</p>
+      <div className="text-center py-20 text-white/20">
+        <TrendingUp className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm font-medium">No workouts yet</p>
+        <p className="text-xs mt-1 text-white/15">Complete your first workout to see history</p>
       </div>
     );
   }
 
-  // Group by date
   const grouped: Record<string, WorkoutSession[]> = {};
   sessions.forEach((s) => {
     const d = s.date.split("T")[0];
@@ -1018,61 +1059,57 @@ function HistoryTab() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {Object.entries(grouped).map(([date, daySessions]) => (
         <div key={date}>
-          <p className="text-[11px] text-neutral-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+          <p className="text-[10px] text-white/25 uppercase tracking-[0.15em] font-semibold mb-2.5 flex items-center gap-2">
             <Calendar className="w-3 h-3" />
             {new Date(date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
           </p>
           <div className="space-y-2">
             {daySessions.map((s) => (
-              <div
-                key={s.id}
-                className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden"
-              >
+              <div key={s.id} className="bg-[#111111] border border-white/[0.06] rounded-2xl overflow-hidden">
                 <div
-                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-neutral-800/50 transition-colors"
+                  className="flex items-center gap-3 p-3.5 cursor-pointer hover:bg-white/[0.02] transition-colors"
                   onClick={() => setExpanded(expanded === s.id ? null : s.id)}
                 >
-                  <div className="w-9 h-9 rounded-lg bg-lime-400/10 border border-lime-400/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-lime-400/10 border border-lime-400/15 flex items-center justify-center flex-shrink-0">
                     <Activity className="w-4 h-4 text-lime-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white">{s.name ?? "Workout"}</p>
-                    <p className="text-[11px] text-neutral-500">
+                    <p className="text-[11px] text-white/30 mt-0.5">
                       {s.exercises.length} exercise{s.exercises.length !== 1 ? "s" : ""}
                       {s.durationMins ? ` · ${formatDuration(s.durationMins)}` : ""}
                     </p>
                   </div>
-                  <div className="text-right mr-2">
-                    {s.caloriesBurned ? (
-                      <div className="flex items-center gap-1 text-orange-400">
-                        <Flame className="w-3.5 h-3.5" />
-                        <span className="text-sm font-bold">{s.caloriesBurned}</span>
+                  {s.caloriesBurned ? (
+                    <div className="text-right mr-1">
+                      <div className="flex items-center gap-1 text-orange-400 justify-end">
+                        <Flame className="w-3 h-3" />
+                        <span className="text-sm font-bold tabular-nums">{s.caloriesBurned}</span>
                       </div>
-                    ) : null}
-                    <p className="text-[10px] text-neutral-600">kcal</p>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-neutral-700 transition-transform ${expanded === s.id ? "rotate-180" : ""}`} />
+                      <p className="text-[10px] text-white/20">kcal</p>
+                    </div>
+                  ) : null}
+                  <ChevronDown className={`w-4 h-4 text-white/20 transition-transform duration-200 ${expanded === s.id ? "rotate-180" : ""}`} />
                 </div>
 
                 {expanded === s.id && s.exercises.length > 0 && (
-                  <div className="border-t border-neutral-800 px-3 py-2">
+                  <div className="border-t border-white/[0.05] px-3.5 py-2">
                     {s.exercises.map((we) => {
-                      const totalSets = we.sets.length;
                       const imgSrc = we.exercise.images[0] ? `${IMG_BASE}${we.exercise.images[0]}` : null;
                       return (
-                        <div key={we.id} className="flex items-center gap-2.5 py-2 border-b border-neutral-800 last:border-0">
+                        <div key={we.id} className="flex items-center gap-2.5 py-2 border-b border-white/[0.04] last:border-0">
                           {imgSrc ? (
-                            <img src={imgSrc} alt="" className="w-8 h-8 rounded-md object-cover object-top flex-shrink-0" />
+                            <img src={imgSrc} alt="" className="w-8 h-8 rounded-lg object-cover object-top flex-shrink-0" />
                           ) : (
-                            <div className="w-8 h-8 rounded-md bg-neutral-800 flex items-center justify-center flex-shrink-0">
-                              <Dumbbell className="w-4 h-4 text-neutral-700" />
+                            <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                              <Dumbbell className="w-3.5 h-3.5 text-white/20" />
                             </div>
                           )}
-                          <p className="flex-1 text-xs text-neutral-300">{we.exercise.name}</p>
-                          <p className="text-[11px] text-neutral-500">{totalSets} set{totalSets !== 1 ? "s" : ""}</p>
+                          <p className="flex-1 text-xs text-white/60 font-medium">{we.exercise.name}</p>
+                          <p className="text-[11px] text-white/25">{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
                         </div>
                       );
                     })}
@@ -1102,9 +1139,9 @@ export default function ExercisesClient({
   const [tab, setTab] = useState<Tab>("browse");
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "browse",  label: "Browse",  icon: <Search className="w-4 h-4" /> },
-    { id: "workout", label: "Workout", icon: <Zap className="w-4 h-4" /> },
-    { id: "history", label: "History", icon: <BarChart2 className="w-4 h-4" /> },
+    { id: "browse",  label: "Browse",  icon: <Search className="w-3.5 h-3.5" /> },
+    { id: "workout", label: "Workout", icon: <Zap className="w-3.5 h-3.5" /> },
+    { id: "history", label: "History", icon: <BarChart2 className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -1112,30 +1149,32 @@ export default function ExercisesClient({
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-lime-400/10 border border-lime-400/20 flex items-center justify-center">
-            <Dumbbell className="w-4 h-4 text-lime-400" />
+          <div className="w-9 h-9 rounded-xl bg-lime-400/10 border border-lime-400/15 flex items-center justify-center">
+            <Dumbbell className="w-4.5 h-4.5 text-lime-400" />
           </div>
-          <h1 className="text-xl font-bold text-white">Exercise Library</h1>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Exercise Library</h1>
+            <p className="text-[11px] text-white/25 font-medium">
+              {initialTotal.toLocaleString()} exercises · browse, log, track
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-neutral-500 ml-11">
-          {initialTotal.toLocaleString()} exercises · browse, log, track
-        </p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex bg-neutral-900 border border-neutral-800 rounded-xl p-1 mb-5 gap-1">
+      <div className="flex bg-white/[0.03] border border-white/[0.07] rounded-2xl p-1 mb-6 gap-1">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               tab === t.id
-                ? "bg-lime-400 text-black shadow-sm"
-                : "text-neutral-500 hover:text-neutral-300"
+                ? "bg-lime-400 text-black shadow-sm shadow-lime-400/20"
+                : "text-white/30 hover:text-white/60"
             }`}
           >
             {t.icon}
-            <span className="hidden sm:inline">{t.label}</span>
+            <span className="hidden sm:inline tracking-wide">{t.label}</span>
           </button>
         ))}
       </div>
