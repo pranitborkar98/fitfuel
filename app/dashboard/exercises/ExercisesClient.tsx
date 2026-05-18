@@ -532,7 +532,7 @@ function BrowseTab({
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="bg-white/[0.03] rounded-2xl h-52 animate-pulse border border-white/[0.05]" />
           ))}
@@ -544,7 +544,7 @@ function BrowseTab({
           <p className="text-xs mt-1 text-white/15">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {exercises.map((ex) => (
             <ExerciseCard
               key={ex.id}
@@ -1145,7 +1145,7 @@ export default function ExercisesClient({
   ];
 
   return (
-    <div className="min-h-screen bg-[#080808] px-4 py-6 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-[#080808] px-4 sm:px-6 pt-6 pb-10 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
