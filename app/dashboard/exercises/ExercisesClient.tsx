@@ -1,18 +1,23 @@
 ﻿"use client";
 
 // app/dashboard/exercises/ExercisesClient.tsx
-// Phase 7 â€” Exercise Library + Workout Logger
-// Tabs: Browse Â· Workout Â· History
+// Phase 7 — Exercise Library + Workout Logger
+// Premium redesign: 5-6 col grid, refined dark UI, fixed encoding
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Search, SlidersHorizontal, X, ChevronLeft, ChevronRight,
+  Search, X, ChevronLeft, ChevronRight,
   Play, Plus, Trash2, CheckCircle2, Circle, ChevronDown,
   Dumbbell, Flame, Clock, Calendar, BarChart2, ArrowLeft,
-  Zap, Target, Activity, Filter, TrendingUp
+  Zap, Target, Activity, SlidersHorizontal, TrendingUp,
 } from "lucide-react";
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Google Fonts injection ─────────────────────────────────────────────────
+const FONT_LINK = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+`;
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 interface Exercise {
   id: string;
@@ -69,59 +74,29 @@ interface ExercisesClientProps {
   muscles: string[];
 }
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  strength:              { bg: "bg-lime-400/10",   text: "text-lime-400",   dot: "bg-lime-400" },
-  cardio:                { bg: "bg-orange-400/10", text: "text-orange-400", dot: "bg-orange-400" },
-  stretching:            { bg: "bg-sky-400/10",    text: "text-sky-400",    dot: "bg-sky-400" },
-  plyometrics:           { bg: "bg-violet-400/10", text: "text-violet-400", dot: "bg-violet-400" },
-  powerlifting:          { bg: "bg-red-400/10",    text: "text-red-400",    dot: "bg-red-400" },
-  strongman:             { bg: "bg-amber-400/10",  text: "text-amber-400",  dot: "bg-amber-400" },
-  olympic_weightlifting: { bg: "bg-cyan-400/10",   text: "text-cyan-400",   dot: "bg-cyan-400" },
+const CAT: Record<string, { accent: string; label: string; glow: string }> = {
+  strength:              { accent: "#a3e635", label: "Strength",    glow: "rgba(163,230,53,0.15)" },
+  cardio:                { accent: "#fb923c", label: "Cardio",      glow: "rgba(251,146,60,0.15)" },
+  stretching:            { accent: "#38bdf8", label: "Stretching",  glow: "rgba(56,189,248,0.15)" },
+  plyometrics:           { accent: "#c084fc", label: "Plyometrics", glow: "rgba(192,132,252,0.15)" },
+  powerlifting:          { accent: "#f87171", label: "Powerlifting",glow: "rgba(248,113,113,0.15)" },
+  strongman:             { accent: "#fbbf24", label: "Strongman",   glow: "rgba(251,191,36,0.15)" },
+  olympic_weightlifting: { accent: "#22d3ee", label: "Olympic",     glow: "rgba(34,211,238,0.15)" },
 };
 
-const LEVEL_COLORS: Record<string, string> = {
-  beginner:     "text-emerald-400",
-  intermediate: "text-amber-400",
-  expert:       "text-red-400",
+const LEVEL_CONFIG: Record<string, { color: string; bars: number; label: string }> = {
+  beginner:     { color: "#4ade80", bars: 1, label: "Beginner" },
+  intermediate: { color: "#fbbf24", bars: 2, label: "Intermediate" },
+  expert:       { color: "#f87171", bars: 3, label: "Expert" },
 };
-
-const LEVEL_BAR: Record<string, number> = {
-  beginner: 1, intermediate: 2, expert: 3,
-};
-
-function LevelBadge({ level }: { level: string }) {
-  const filled = LEVEL_BAR[level] ?? 1;
-  const color = LEVEL_COLORS[level] ?? "text-lime-400";
-  return (
-    <span className={`flex items-center gap-[3px] ${color}`}>
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className={`inline-block rounded-[2px] ${i < filled ? color.replace("text-", "bg-") : "bg-neutral-700"}`}
-          style={{ width: 6, height: i < filled ? 10 + i * 2 : 6 }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function CategoryPill({ category }: { category: string }) {
-  const c = CATEGORY_COLORS[category] ?? { bg: "bg-neutral-800", text: "text-neutral-400", dot: "bg-neutral-500" };
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase ${c.bg} ${c.text}`}>
-      <span className={`w-1 h-1 rounded-full ${c.dot}`} />
-      {category.replace(/_/g, " ")}
-    </span>
-  );
-}
 
 function formatDuration(mins: number | null) {
-  if (!mins) return "â€”";
+  if (!mins) return "—";
   if (mins < 60) return `${mins}m`;
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
@@ -130,7 +105,51 @@ function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
 
-// â”€â”€â”€ Exercise Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Micro components ────────────────────────────────────────────────────────
+
+function LevelBars({ level }: { level: string }) {
+  const cfg = LEVEL_CONFIG[level] ?? LEVEL_CONFIG.beginner;
+  return (
+    <span className="flex items-end gap-[3px]">
+      {[1, 2, 3].map((b) => (
+        <span
+          key={b}
+          style={{
+            width: 4,
+            height: 6 + b * 3,
+            borderRadius: 2,
+            background: b <= cfg.bars ? cfg.color : "rgba(255,255,255,0.12)",
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function CatChip({ category }: { category: string }) {
+  const c = CAT[category];
+  if (!c) return null;
+  return (
+    <span
+      style={{
+        fontSize: 9,
+        fontWeight: 700,
+        letterSpacing: "0.1em",
+        textTransform: "uppercase",
+        color: c.accent,
+        background: `${c.accent}18`,
+        border: `1px solid ${c.accent}30`,
+        borderRadius: 6,
+        padding: "2px 7px",
+        fontFamily: "DM Sans, sans-serif",
+      }}
+    >
+      {c.label}
+    </span>
+  );
+}
+
+// ─── Exercise Card ────────────────────────────────────────────────────────────
 
 function ExerciseCard({
   exercise,
@@ -147,73 +166,120 @@ function ExerciseCard({
 }) {
   const imgSrc = exercise.images[0] ? `${IMG_BASE}${exercise.images[0]}` : null;
   const [imgErr, setImgErr] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const cat = CAT[exercise.category];
+  const lvl = LEVEL_CONFIG[exercise.level] ?? LEVEL_CONFIG.beginner;
 
   return (
     <div
-      className="group relative bg-[#111111] border border-white/[0.06] rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-white/[0.12] hover:bg-[#161616] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/60"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onClick={onClick}
+      style={{
+        background: hovered ? "#161616" : "#101010",
+        border: `1px solid ${hovered ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.055)"}`,
+        borderRadius: 16,
+        overflow: "hidden",
+        cursor: "pointer",
+        transform: hovered ? "translateY(-2px)" : "none",
+        transition: "all 0.18s ease",
+        boxShadow: hovered ? "0 12px 40px rgba(0,0,0,0.6)" : "none",
+        position: "relative",
+      }}
     >
-      {/* Image area */}
-      <div className="relative h-40 overflow-hidden bg-[#0d0d0d]">
+      {/* Image */}
+      <div style={{ position: "relative", height: 130, background: "#0a0a0a", overflow: "hidden" }}>
         {imgSrc && !imgErr ? (
           <img
             src={imgSrc}
             alt={exercise.name}
-            className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
             onError={() => setImgErr(true)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "top",
+              transform: hovered ? "scale(1.05)" : "scale(1)",
+              transition: "transform 0.4s ease",
+            }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Dumbbell className="w-9 h-9 text-white/10" />
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Dumbbell size={28} color="rgba(255,255,255,0.08)" />
           </div>
         )}
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-transparent opacity-70" />
-
-        {/* Top badges */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
-          <CategoryPill category={exercise.category} />
-          <span className="bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1">
-            <LevelBadge level={exercise.level} />
-          </span>
+        {/* gradient */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to top, #101010 0%, transparent 55%)",
+          pointerEvents: "none",
+        }} />
+        {/* top chips */}
+        <div style={{ position: "absolute", top: 8, left: 8, right: 8, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <CatChip category={exercise.category} />
+          <LevelBars level={exercise.level} />
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-3 pt-2.5">
-        <p className="text-[13px] font-semibold text-white leading-snug line-clamp-1 mb-1">
+      <div style={{ padding: "10px 12px 12px" }}>
+        <p style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#fff",
+          margin: 0,
+          marginBottom: 4,
+          lineHeight: 1.35,
+          fontFamily: "DM Sans, sans-serif",
+          overflow: "hidden",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+        }}>
           {exercise.name}
         </p>
-        <p className="text-[11px] text-white/30 leading-snug line-clamp-1">
-          {exercise.primaryMuscles.slice(0, 2).join(" Â· ")}
-          {exercise.primaryMuscles.length > 2 && ` +${exercise.primaryMuscles.length - 2}`}
-        </p>
+        {exercise.primaryMuscles.length > 0 && (
+          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", margin: 0, fontFamily: "DM Sans, sans-serif", textTransform: "capitalize" }}>
+            {exercise.primaryMuscles.slice(0, 2).join(" · ")}
+            {exercise.primaryMuscles.length > 2 && ` +${exercise.primaryMuscles.length - 2}`}
+          </p>
+        )}
         {exercise.equipment && (
-          <p className="text-[10px] text-white/20 uppercase tracking-widest mt-1.5 font-medium">
+          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", margin: "5px 0 0", fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             {exercise.equipment}
           </p>
         )}
       </div>
 
-      {/* Add to workout button */}
+      {/* Add button */}
       {inWorkout && onAdd && (
         <button
           onClick={(e) => { e.stopPropagation(); onAdd(); }}
-          className={`absolute bottom-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
-            added
-              ? "bg-lime-400 text-black scale-110"
-              : "bg-white/10 text-white/60 hover:bg-lime-400 hover:text-black"
-          }`}
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 10,
+            width: 26,
+            height: 26,
+            borderRadius: "50%",
+            background: added ? "#a3e635" : "rgba(255,255,255,0.08)",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.15s ease",
+            color: added ? "#000" : "rgba(255,255,255,0.5)",
+          }}
         >
-          {added ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+          {added ? <CheckCircle2 size={13} /> : <Plus size={13} />}
         </button>
       )}
     </div>
   );
 }
 
-// â”€â”€â”€ Exercise Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Exercise Modal ───────────────────────────────────────────────────────────
 
 function ExerciseModal({
   exercise,
@@ -239,21 +305,31 @@ function ExerciseModal({
     }
   }, [exercise.id, exercise.instructions]);
 
-  const images = detail.images
-    .slice(0, 2)
-    .map((src) => `${IMG_BASE}${src}`)
-    .filter((_, i) => !imgErrors[i]);
-
-  const catStyle = CATEGORY_COLORS[detail.category] ?? { bg: "bg-neutral-800", text: "text-neutral-400", dot: "bg-neutral-500" };
+  const cat = CAT[detail.category];
+  const lvl = LEVEL_CONFIG[detail.level] ?? LEVEL_CONFIG.beginner;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-md" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg bg-[#0e0e0e] border border-white/[0.08] rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-
-        {/* Hero images */}
-        <div className="relative h-52 sm:h-60 rounded-t-3xl sm:rounded-t-3xl overflow-hidden bg-[#0a0a0a]">
-          <div className="grid grid-cols-2 h-full gap-0.5">
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }}
+      />
+      {/* Sheet */}
+      <div style={{
+        position: "relative",
+        width: "100%",
+        maxWidth: 520,
+        background: "#0d0d0d",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: "24px 24px 0 0",
+        maxHeight: "92vh",
+        overflowY: "auto",
+        boxShadow: "0 -20px 80px rgba(0,0,0,0.8)",
+      }}>
+        {/* Hero */}
+        <div style={{ position: "relative", height: 220, background: "#080808", borderRadius: "24px 24px 0 0", overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", height: "100%", gap: 2 }}>
             {[0, 1].map((i) => {
               const src = detail.images[i] ? `${IMG_BASE}${detail.images[i]}` : null;
               return src && !imgErrors[i] ? (
@@ -261,74 +337,96 @@ function ExerciseModal({
                   key={i}
                   src={src}
                   alt=""
-                  className="w-full h-full object-cover object-top"
                   onError={() => setImgErrors((p) => ({ ...p, [i]: true }))}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
                 />
               ) : (
-                <div key={i} className="w-full h-full flex items-center justify-center bg-[#111]">
-                  <Dumbbell className="w-8 h-8 text-white/10" />
+                <div key={i} style={{ width: "100%", height: "100%", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Dumbbell size={28} color="rgba(255,255,255,0.06)" />
                 </div>
               );
             })}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent" />
-
-          {/* Close button */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0d0d0d 0%, transparent 60%)" }} />
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:bg-black/70 transition-colors"
+            style={{
+              position: "absolute", top: 14, right: 14,
+              width: 32, height: 32,
+              borderRadius: "50%",
+              background: "rgba(0,0,0,0.6)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
           >
-            <X className="w-3.5 h-3.5 text-white/70" />
+            <X size={14} />
           </button>
         </div>
 
-        <div className="px-5 pb-6 -mt-4 relative z-10">
-          {/* Title */}
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-white leading-tight mb-2">{detail.name}</h2>
-            <div className="flex items-center gap-2 flex-wrap">
-              <CategoryPill category={detail.category} />
-              <span className={`text-[11px] font-semibold capitalize ${LEVEL_COLORS[detail.level] ?? "text-white/40"}`}>
-                {detail.level}
+        <div style={{ padding: "0 22px 28px", marginTop: -8, position: "relative", zIndex: 1 }}>
+          {/* Title row */}
+          <div style={{ marginBottom: 16 }}>
+            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
+              {detail.name}
+            </h2>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <CatChip category={detail.category} />
+              <span style={{ fontSize: 11, color: lvl.color, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>
+                {lvl.label}
               </span>
             </div>
           </div>
 
-          {/* Meta row */}
-          <div className="flex flex-wrap gap-2 mb-5">
-            {detail.equipment && (
-              <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06]">
-                ðŸ‹ï¸ {detail.equipment}
+          {/* Meta pills */}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
+            {[
+              detail.equipment && `🏋️ ${detail.equipment}`,
+              detail.force && `↕ ${detail.force}`,
+              detail.mechanic && `⚙ ${detail.mechanic}`,
+            ].filter(Boolean).map((label) => (
+              <span key={label as string} style={{
+                fontSize: 11, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 10px",
+                fontFamily: "DM Sans, sans-serif", textTransform: "capitalize",
+              }}>
+                {label}
               </span>
-            )}
-            {detail.force && (
-              <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06] capitalize">
-                â†• {detail.force}
-              </span>
-            )}
-            {detail.mechanic && (
-              <span className="text-[11px] bg-white/[0.06] text-white/50 px-2.5 py-1 rounded-lg border border-white/[0.06] capitalize">
-                âš™ {detail.mechanic}
-              </span>
-            )}
+            ))}
           </div>
 
           {/* Muscles */}
-          <div className="mb-5 p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-            <p className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-semibold mb-2">Primary Muscles</p>
-            <div className="flex flex-wrap gap-1.5">
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px", marginBottom: 18 }}>
+            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 10px", fontFamily: "DM Sans, sans-serif" }}>
+              Primary Muscles
+            </p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {detail.primaryMuscles.map((m) => (
-                <span key={m} className="text-[11px] bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2.5 py-0.5 rounded-full capitalize font-medium">
+                <span key={m} style={{
+                  fontSize: 11, background: `${cat?.accent ?? "#a3e635"}15`,
+                  color: cat?.accent ?? "#a3e635",
+                  border: `1px solid ${cat?.accent ?? "#a3e635"}30`,
+                  borderRadius: 20, padding: "3px 10px", textTransform: "capitalize",
+                  fontFamily: "DM Sans, sans-serif", fontWeight: 500,
+                }}>
                   {m}
                 </span>
               ))}
             </div>
             {detail.secondaryMuscles.length > 0 && (
               <>
-                <p className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-semibold mt-3 mb-2">Secondary</p>
-                <div className="flex flex-wrap gap-1.5">
+                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "14px 0 10px", fontFamily: "DM Sans, sans-serif" }}>
+                  Secondary
+                </p>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {detail.secondaryMuscles.map((m) => (
-                    <span key={m} className="text-[11px] bg-white/[0.05] text-white/40 px-2.5 py-0.5 rounded-full capitalize">
+                    <span key={m} style={{
+                      fontSize: 11, background: "rgba(255,255,255,0.04)",
+                      color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: 20, padding: "3px 10px", textTransform: "capitalize",
+                      fontFamily: "DM Sans, sans-serif",
+                    }}>
                       {m}
                     </span>
                   ))}
@@ -338,31 +436,57 @@ function ExerciseModal({
           </div>
 
           {/* Instructions */}
-          <div className="mb-5">
-            <p className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-semibold mb-3">Instructions</p>
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 14px", fontFamily: "DM Sans, sans-serif" }}>
+              Instructions
+            </p>
             {loading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => <div key={i} className="h-4 bg-white/[0.06] rounded-lg animate-pulse" />)}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} style={{ height: 14, background: "rgba(255,255,255,0.05)", borderRadius: 8, animation: "pulse 1.5s infinite" }} />
+                ))}
               </div>
             ) : (
-              <ol className="space-y-3">
+              <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
                 {(detail.instructions ?? []).map((step, i) => (
-                  <li key={i} className="flex gap-3 group/step">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-lime-400/10 text-lime-400 text-[10px] font-bold flex items-center justify-center mt-0.5 border border-lime-400/20">
+                  <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <span style={{
+                      flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
+                      background: `${cat?.accent ?? "#a3e635"}15`,
+                      border: `1px solid ${cat?.accent ?? "#a3e635"}30`,
+                      color: cat?.accent ?? "#a3e635",
+                      fontSize: 10, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: "DM Sans, sans-serif",
+                    }}>
                       {i + 1}
                     </span>
-                    <p className="text-[13px] text-white/60 leading-relaxed group-hover/step:text-white/80 transition-colors">{step}</p>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+                      {step}
+                    </p>
                   </li>
                 ))}
               </ol>
             )}
           </div>
 
-          {/* CTA */}
           {inWorkout && onAddToWorkout && (
             <button
               onClick={() => { onAddToWorkout(); onClose(); }}
-              className="w-full bg-lime-400 text-black font-bold py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.98] transition-all text-sm tracking-wide"
+              style={{
+                width: "100%",
+                background: "#a3e635",
+                color: "#000",
+                border: "none",
+                borderRadius: 14,
+                padding: "14px",
+                fontSize: 13,
+                fontWeight: 700,
+                fontFamily: "Syne, sans-serif",
+                letterSpacing: "0.05em",
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
             >
               + Add to Workout
             </button>
@@ -373,7 +497,7 @@ function ExerciseModal({
   );
 }
 
-// â”€â”€â”€ Browse Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Browse Tab ───────────────────────────────────────────────────────────────
 
 function BrowseTab({
   initialExercises,
@@ -399,18 +523,15 @@ function BrowseTab({
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
-
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
   const [equip, setEquip] = useState("");
   const [muscle, setMuscle] = useState("");
   const [offset, setOffset] = useState(0);
-  const LIMIT = 20;
-
   const [showFilters, setShowFilters] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-
+  const LIMIT = 30;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchExercises = useCallback(async (params: {
@@ -425,7 +546,6 @@ function BrowseTab({
     if (params.muscle)   sp.set("muscle", params.muscle);
     sp.set("limit", String(LIMIT));
     sp.set("offset", String(params.offset));
-
     const res = await fetch(`/api/exercises?${sp}`);
     const data = await res.json();
     setExercises(data.exercises ?? []);
@@ -452,42 +572,75 @@ function BrowseTab({
 
   return (
     <div>
-      {/* Search bar */}
-      <div className="flex gap-2 mb-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+      {/* Search + filter row */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <div style={{ position: "relative", flex: 1 }}>
+          <Search size={15} color="rgba(255,255,255,0.2)" style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)" }} />
           <input
             type="text"
-            placeholder="Search 873 exercisesâ€¦"
+            placeholder={`Search ${initialTotal.toLocaleString()} exercises…`}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all"
+            style={{
+              width: "100%",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 12,
+              padding: "10px 36px 10px 38px",
+              fontSize: 13,
+              color: "#fff",
+              fontFamily: "DM Sans, sans-serif",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
           {q && (
-            <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
-              <X className="w-3.5 h-3.5" />
+            <button
+              onClick={() => setQ("")}
+              style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)" }}
+            >
+              <X size={13} />
             </button>
           )}
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`relative flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-            showFilters || hasFilters
-              ? "bg-lime-400/10 border-lime-400/30 text-lime-400"
-              : "bg-white/[0.04] border-white/[0.08] text-white/40 hover:border-white/15 hover:text-white/60"
-          }`}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "10px 14px",
+            background: showFilters || hasFilters ? "rgba(163,230,53,0.1)" : "rgba(255,255,255,0.04)",
+            border: `1px solid ${showFilters || hasFilters ? "rgba(163,230,53,0.3)" : "rgba(255,255,255,0.08)"}`,
+            borderRadius: 12,
+            color: showFilters || hasFilters ? "#a3e635" : "rgba(255,255,255,0.4)",
+            cursor: "pointer",
+            fontSize: 13,
+            fontFamily: "DM Sans, sans-serif",
+            fontWeight: 500,
+            position: "relative",
+          }}
         >
-          <Filter className="w-4 h-4" />
+          <SlidersHorizontal size={15} />
           {hasFilters && (
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-lime-400" />
+            <span style={{
+              position: "absolute", top: -4, right: -4,
+              width: 8, height: 8,
+              borderRadius: "50%",
+              background: "#a3e635",
+            }} />
           )}
         </button>
       </div>
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="mb-4 p-4 bg-white/[0.03] border border-white/[0.07] rounded-2xl">
-          <div className="grid grid-cols-2 gap-3">
+        <div style={{
+          marginBottom: 16,
+          padding: 16,
+          background: "rgba(255,255,255,0.025)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 16,
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {[
               { label: "Category", value: category, set: setCategory, options: categories },
               { label: "Level",    value: level,    set: setLevel,    options: levels },
@@ -495,15 +648,29 @@ function BrowseTab({
               { label: "Muscle",   value: muscle,   set: setMuscle,   options: muscles },
             ].map(({ label, value, set, options }) => (
               <div key={label}>
-                <label className="text-[10px] text-white/30 uppercase tracking-[0.12em] font-semibold block mb-1.5">{label}</label>
+                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 6px", fontFamily: "DM Sans, sans-serif" }}>
+                  {label}
+                </p>
                 <select
                   value={value}
                   onChange={(e) => { set(e.target.value); setOffset(0); }}
-                  className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-white/20 appearance-none capitalize cursor-pointer"
+                  style={{
+                    width: "100%",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 10,
+                    padding: "8px 10px",
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.7)",
+                    outline: "none",
+                    appearance: "none",
+                    fontFamily: "DM Sans, sans-serif",
+                    cursor: "pointer",
+                  }}
                 >
                   <option value="">All</option>
                   {options.map((o) => (
-                    <option key={o} value={o} className="capitalize bg-neutral-900">{o.replace(/_/g, " ")}</option>
+                    <option key={o} value={o} style={{ background: "#111" }}>{o.replace(/_/g, " ")}</option>
                   ))}
                 </select>
               </div>
@@ -512,7 +679,7 @@ function BrowseTab({
           {hasFilters && (
             <button
               onClick={() => { setCategory(""); setLevel(""); setEquip(""); setMuscle(""); setOffset(0); }}
-              className="mt-3 w-full text-xs text-white/30 hover:text-white/60 transition-colors py-1 text-center"
+              style={{ marginTop: 12, width: "100%", background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}
             >
               Clear all filters
             </button>
@@ -520,31 +687,33 @@ function BrowseTab({
         </div>
       )}
 
-      {/* Count */}
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[11px] text-white/25 font-medium">
-          {loading ? "Searchingâ€¦" : `${total.toLocaleString()} exercise${total !== 1 ? "s" : ""}${(q || hasFilters) ? " found" : ""}`}
+      {/* Meta row */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+          {loading ? "Searching…" : `${total.toLocaleString()} result${total !== 1 ? "s" : ""}`}
         </p>
         {totalPages > 1 && (
-          <p className="text-[11px] text-white/25">Page {currentPage}/{totalPages}</p>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+            {currentPage} / {totalPages}
+          </p>
         )}
       </div>
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="bg-white/[0.03] rounded-2xl h-52 animate-pulse border border-white/[0.05]" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div key={i} style={{ height: 190, background: "rgba(255,255,255,0.03)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.05)" }} />
           ))}
         </div>
       ) : exercises.length === 0 ? (
-        <div className="text-center py-20 text-white/20">
-          <Dumbbell className="w-10 h-10 mx-auto mb-3 opacity-40" />
-          <p className="text-sm font-medium">No exercises found</p>
-          <p className="text-xs mt-1 text-white/15">Try adjusting your filters</p>
+        <div style={{ textAlign: "center", padding: "80px 0", color: "rgba(255,255,255,0.18)" }}>
+          <Dumbbell size={36} style={{ margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 14, margin: 0, fontFamily: "DM Sans, sans-serif" }}>No exercises found</p>
+          <p style={{ fontSize: 12, margin: "4px 0 0", color: "rgba(255,255,255,0.12)", fontFamily: "DM Sans, sans-serif" }}>Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
           {exercises.map((ex) => (
             <ExerciseCard
               key={ex.id}
@@ -560,23 +729,39 @@ function BrowseTab({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-8">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 28 }}>
           <button
             onClick={() => setOffset(offset - LIMIT)}
             disabled={offset === 0}
-            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center disabled:opacity-20 hover:bg-white/[0.08] hover:border-white/15 transition-all"
+            style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.5)",
+              cursor: offset === 0 ? "not-allowed" : "pointer",
+              opacity: offset === 0 ? 0.3 : 1,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
           >
-            <ChevronLeft className="w-4 h-4 text-white/60" />
+            <ChevronLeft size={15} />
           </button>
-          <span className="text-xs text-white/30 font-medium tabular-nums">
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif", fontVariantNumeric: "tabular-nums" }}>
             {currentPage} / {totalPages}
           </span>
           <button
             onClick={() => setOffset(offset + LIMIT)}
             disabled={offset + LIMIT >= total}
-            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center disabled:opacity-20 hover:bg-white/[0.08] hover:border-white/15 transition-all"
+            style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.5)",
+              cursor: offset + LIMIT >= total ? "not-allowed" : "pointer",
+              opacity: offset + LIMIT >= total ? 0.3 : 1,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
           >
-            <ChevronRight className="w-4 h-4 text-white/60" />
+            <ChevronRight size={15} />
           </button>
         </div>
       )}
@@ -593,82 +778,66 @@ function BrowseTab({
   );
 }
 
-// â”€â”€â”€ Set Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Set Row ──────────────────────────────────────────────────────────────────
 
 function SetRow({
-  set,
-  setNum,
-  onUpdate,
-  onDelete,
-  isTimeBase,
+  set, setNum, onUpdate, onDelete, isTimeBase,
 }: {
-  set: WorkoutSet;
-  setNum: number;
+  set: WorkoutSet; setNum: number;
   onUpdate: (data: Partial<WorkoutSet>) => void;
-  onDelete: () => void;
-  isTimeBase: boolean;
+  onDelete: () => void; isTimeBase: boolean;
 }) {
-  return (
-    <div className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-colors ${set.completed ? "bg-lime-400/[0.04]" : ""}`}>
-      <span className="w-5 text-center text-[11px] text-white/25 font-mono flex-shrink-0">{setNum}</span>
+  const inputStyle = {
+    width: 60,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 8,
+    padding: "6px 8px",
+    fontSize: 12,
+    color: "#fff",
+    textAlign: "center" as const,
+    outline: "none",
+    fontFamily: "DM Sans, sans-serif",
+  };
 
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "8px 6px",
+      borderRadius: 10,
+      background: set.completed ? "rgba(163,230,53,0.04)" : "transparent",
+    }}>
+      <span style={{ width: 18, textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>{setNum}</span>
       {isTimeBase ? (
-        <input
-          type="number"
-          placeholder="secs"
-          value={set.durationSecs ?? ""}
-          onChange={(e) => onUpdate({ durationSecs: e.target.value ? Number(e.target.value) : null })}
-          className="w-20 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
-        />
+        <input type="number" placeholder="secs" value={set.durationSecs ?? ""} onChange={(e) => onUpdate({ durationSecs: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
       ) : (
         <>
-          <input
-            type="number"
-            placeholder="kg"
-            value={set.weightKg ?? ""}
-            onChange={(e) => onUpdate({ weightKg: e.target.value ? Number(e.target.value) : null })}
-            className="w-16 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
-          />
-          <span className="text-white/20 text-xs font-bold">Ã—</span>
-          <input
-            type="number"
-            placeholder="reps"
-            value={set.reps ?? ""}
-            onChange={(e) => onUpdate({ reps: e.target.value ? Number(e.target.value) : null })}
-            className="w-16 bg-white/[0.05] border border-white/[0.08] rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-lime-400/40 transition-colors"
-          />
+          <input type="number" placeholder="kg" value={set.weightKg ?? ""} onChange={(e) => onUpdate({ weightKg: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
+          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 700 }}>×</span>
+          <input type="number" placeholder="reps" value={set.reps ?? ""} onChange={(e) => onUpdate({ reps: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
         </>
       )}
-
-      <button
-        onClick={() => onUpdate({ completed: !set.completed })}
-        className={`ml-auto transition-all ${set.completed ? "text-lime-400 scale-110" : "text-white/20 hover:text-white/40"}`}
-      >
-        {set.completed ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+      <button onClick={() => onUpdate({ completed: !set.completed })} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: set.completed ? "#a3e635" : "rgba(255,255,255,0.2)", transform: set.completed ? "scale(1.1)" : "none", transition: "all 0.15s" }}>
+        {set.completed ? <CheckCircle2 size={15} /> : <Circle size={15} />}
       </button>
-      <button onClick={onDelete} className="text-white/15 hover:text-red-400 transition-colors">
-        <Trash2 className="w-3.5 h-3.5" />
+      <button onClick={onDelete} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.15)" }}>
+        <Trash2 size={13} />
       </button>
     </div>
   );
 }
 
-// â”€â”€â”€ Active Workout Exercise Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Workout Exercise Card ────────────────────────────────────────────────────
 
 function WorkoutExerciseCard({
-  we,
-  sessionId,
-  onSetsChange,
-  onRemove,
+  we, sessionId, onSetsChange, onRemove,
 }: {
-  we: WorkoutExercise;
-  sessionId: string;
+  we: WorkoutExercise; sessionId: string;
   onSetsChange: (sets: WorkoutSet[]) => void;
   onRemove: () => void;
 }) {
   const [sets, setSets] = useState<WorkoutSet[]>(we.sets);
   const [collapsed, setCollapsed] = useState(false);
-
   const isTimeBase = ["stretching", "cardio"].includes(we.exercise.category ?? "");
   const imgSrc = we.exercise.images[0] ? `${IMG_BASE}${we.exercise.images[0]}` : null;
   const completedSets = sets.filter((s) => s.completed).length;
@@ -676,112 +845,91 @@ function WorkoutExerciseCard({
 
   async function addSet() {
     const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(isTimeBase ? { durationSecs: null } : { reps: null, weightKg: null }),
     });
     const data = await res.json();
-    if (data.set) {
-      const newSets = [...sets, data.set];
-      setSets(newSets);
-      onSetsChange(newSets);
-    }
+    if (data.set) { const n = [...sets, data.set]; setSets(n); onSetsChange(n); }
   }
 
   async function updateSet(setId: string, update: Partial<WorkoutSet>) {
     const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ setId, ...update }),
     });
     const data = await res.json();
-    if (data.set) {
-      const newSets = sets.map((s) => (s.id === setId ? data.set : s));
-      setSets(newSets);
-      onSetsChange(newSets);
-    }
+    if (data.set) { const n = sets.map((s) => (s.id === setId ? data.set : s)); setSets(n); onSetsChange(n); }
   }
 
   async function deleteSet(setId: string) {
     await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: "DELETE", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ setId }),
     });
-    const newSets = sets.filter((s) => s.id !== setId);
-    setSets(newSets);
-    onSetsChange(newSets);
+    const n = sets.filter((s) => s.id !== setId); setSets(n); onSetsChange(n);
   }
 
   return (
-    <div className="bg-[#111111] border border-white/[0.06] rounded-2xl overflow-hidden">
-      {/* Header */}
+    <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden" }}>
       <div
-        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
         onClick={() => setCollapsed(!collapsed)}
+        style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, cursor: "pointer" }}
       >
         {imgSrc ? (
-          <img src={imgSrc} alt="" className="w-10 h-10 rounded-xl object-cover object-top flex-shrink-0" />
+          <img src={imgSrc} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
         ) : (
-          <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center flex-shrink-0">
-            <Dumbbell className="w-5 h-5 text-white/20" />
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Dumbbell size={18} color="rgba(255,255,255,0.2)" />
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{we.exercise.name}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden max-w-[80px]">
-              <div
-                className="h-full bg-lime-400 rounded-full transition-all duration-300"
-                style={{ width: `${progress * 100}%` }}
-              />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "DM Sans, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {we.exercise.name}
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <div style={{ flex: 1, maxWidth: 80, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ width: `${progress * 100}%`, height: "100%", background: "#a3e635", borderRadius: 2, transition: "width 0.3s" }} />
             </div>
-            <p className="text-[11px] text-white/30">
+            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", fontFamily: "DM Sans, sans-serif" }}>
               {sets.length === 0 ? "No sets" : `${completedSets}/${sets.length}`}
             </p>
           </div>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          className="text-white/15 hover:text-red-400 transition-colors mr-1 p-1"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
+        <button onClick={(e) => { e.stopPropagation(); onRemove(); }} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.15)", marginRight: 4 }}>
+          <Trash2 size={13} />
         </button>
-        <ChevronDown className={`w-4 h-4 text-white/20 transition-transform duration-200 ${collapsed ? "" : "rotate-180"}`} />
+        <ChevronDown size={15} color="rgba(255,255,255,0.2)" style={{ transform: collapsed ? "none" : "rotate(180deg)", transition: "transform 0.2s" }} />
       </div>
 
       {!collapsed && (
-        <div className="px-3 pb-3 border-t border-white/[0.05] pt-2">
+        <div style={{ padding: "0 12px 12px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           {sets.length > 0 && (
-            <div className="flex items-center gap-2 mb-1 text-[10px] text-white/20 uppercase tracking-widest pl-7">
-              {isTimeBase ? (
-                <span className="w-20 text-center">Duration</span>
-              ) : (
+            <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 2, paddingLeft: 26, fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "DM Sans, sans-serif" }}>
+              {isTimeBase ? <span style={{ width: 60, textAlign: "center" }}>Duration</span> : (
                 <>
-                  <span className="w-16 text-center">Weight</span>
-                  <span className="w-4" />
-                  <span className="w-16 text-center">Reps</span>
+                  <span style={{ width: 60, textAlign: "center" }}>Weight</span>
+                  <span style={{ width: 16 }} />
+                  <span style={{ width: 60, textAlign: "center" }}>Reps</span>
                 </>
               )}
             </div>
           )}
-
           {sets.map((set, i) => (
-            <SetRow
-              key={set.id}
-              set={set}
-              setNum={i + 1}
-              isTimeBase={isTimeBase}
-              onUpdate={(u) => updateSet(set.id, u)}
-              onDelete={() => deleteSet(set.id)}
-            />
+            <SetRow key={set.id} set={set} setNum={i + 1} isTimeBase={isTimeBase} onUpdate={(u) => updateSet(set.id, u)} onDelete={() => deleteSet(set.id)} />
           ))}
-
           <button
             onClick={addSet}
-            className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-white/[0.08] text-xs text-white/25 hover:text-lime-400 hover:border-lime-400/20 transition-all"
+            style={{
+              marginTop: 8, width: "100%",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "8px",
+              background: "none",
+              border: "1px dashed rgba(255,255,255,0.08)",
+              borderRadius: 10, fontSize: 12, color: "rgba(255,255,255,0.22)",
+              cursor: "pointer", fontFamily: "DM Sans, sans-serif",
+            }}
           >
-            <Plus className="w-3.5 h-3.5" /> Add Set
+            <Plus size={13} /> Add Set
           </button>
         </div>
       )}
@@ -789,15 +937,10 @@ function WorkoutExerciseCard({
   );
 }
 
-// â”€â”€â”€ Workout Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Workout Tab ──────────────────────────────────────────────────────────────
 
 function WorkoutTab({
-  initialExercises,
-  initialTotal,
-  categories,
-  levels,
-  equipment,
-  muscles,
+  initialExercises, initialTotal, categories, levels, equipment, muscles,
 }: Omit<ExercisesClientProps, "initialTotal"> & { initialTotal: number }) {
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
@@ -826,23 +969,17 @@ function WorkoutTab({
 
   async function startSession() {
     const res = await fetch("/api/workout/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: sessionName || null, date: todayStr() }),
     });
     const data = await res.json();
-    if (data.session) {
-      setActiveSession({ ...data.session, exercises: [] });
-      setWorkoutExercises([]);
-      setAddedIds(new Set());
-    }
+    if (data.session) { setActiveSession({ ...data.session, exercises: [] }); setWorkoutExercises([]); setAddedIds(new Set()); }
   }
 
   async function addExercise(ex: Exercise) {
     if (!activeSession || addedIds.has(ex.id)) return;
     const res = await fetch(`/api/workout/sessions/${activeSession.id}/exercises`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ exerciseId: ex.id }),
     });
     const data = await res.json();
@@ -854,8 +991,7 @@ function WorkoutTab({
 
   async function removeExercise(weId: string, exId: string) {
     await fetch(`/api/workout/sessions/${activeSession!.id}/exercises`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: "DELETE", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ workoutExerciseId: weId }),
     });
     setWorkoutExercises((prev) => prev.filter((w) => w.id !== weId));
@@ -868,156 +1004,146 @@ function WorkoutTab({
     const durationMins = Math.round(elapsed / 60);
     const totalSets = workoutExercises.reduce((s, we) => s + we.sets.length, 0);
     const caloriesBurned = Math.round(durationMins * 5 + totalSets * 3);
-
     await fetch(`/api/workout/sessions/${activeSession.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completedAt: new Date().toISOString(), durationMins, caloriesBurned }),
     });
-
-    setActiveSession(null);
-    setWorkoutExercises([]);
-    setAddedIds(new Set());
-    setSessionName("");
-    setFinishing(false);
+    setActiveSession(null); setWorkoutExercises([]); setAddedIds(new Set()); setSessionName(""); setFinishing(false);
   }
 
-  // â”€â”€ No active session â”€â”€
+  const btnPrimary: React.CSSProperties = {
+    background: "#a3e635", color: "#000", border: "none", borderRadius: 14,
+    padding: "14px", fontSize: 13, fontWeight: 700,
+    fontFamily: "Syne, sans-serif", letterSpacing: "0.04em",
+    cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+  };
+
   if (!activeSession) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-        <div className="w-20 h-20 rounded-3xl bg-lime-400/10 border border-lime-400/20 flex items-center justify-center mb-6">
-          <Zap className="w-9 h-9 text-lime-400" />
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 16px", textAlign: "center" }}>
+        <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <Zap size={32} color="#a3e635" />
         </div>
-        <h3 className="text-white font-bold text-xl mb-2">Start a Workout</h3>
-        <p className="text-white/30 text-sm mb-8 max-w-xs leading-relaxed">
+        <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
+          Start a Workout
+        </h3>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", margin: "0 0 28px", maxWidth: 280, lineHeight: 1.6, fontFamily: "DM Sans, sans-serif" }}>
           Log exercises, track sets and reps, and crush your goals.
         </p>
         <input
           type="text"
-          placeholder='Session name â€” e.g. "Push Day"'
+          placeholder='Session name — e.g. "Push Day"'
           value={sessionName}
           onChange={(e) => setSessionName(e.target.value)}
-          className="w-full max-w-sm bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-sm text-white placeholder-white/25 text-center focus:outline-none focus:border-white/20 mb-4 transition-all"
+          style={{
+            width: "100%", maxWidth: 320,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 14, padding: "12px 16px",
+            fontSize: 13, color: "#fff",
+            fontFamily: "DM Sans, sans-serif",
+            textAlign: "center", outline: "none", marginBottom: 14, boxSizing: "border-box",
+          }}
         />
-        <button
-          onClick={startSession}
-          className="flex items-center gap-2 bg-lime-400 text-black font-bold px-8 py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.97] transition-all text-sm tracking-wide shadow-lg shadow-lime-400/20"
-        >
-          <Play className="w-4 h-4 fill-black" /> Start Workout
+        <button onClick={startSession} style={{ ...btnPrimary, maxWidth: 320, boxShadow: "0 8px 30px rgba(163,230,53,0.2)" }}>
+          <Play size={15} style={{ fill: "#000" }} /> Start Workout
         </button>
       </div>
     );
   }
 
-  // â”€â”€ Browse to add exercises â”€â”€
   if (showBrowse) {
     return (
       <div>
-        <div className="flex items-center gap-3 mb-5">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <button
             onClick={() => setShowBrowse(false)}
-            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center hover:bg-white/[0.08] transition-all"
+            style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            <ArrowLeft className="w-4 h-4 text-white/60" />
+            <ArrowLeft size={15} />
           </button>
           <div>
-            <p className="text-sm font-semibold text-white">Add Exercise</p>
-            <p className="text-[11px] text-white/30">{addedIds.size} added so far</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#fff", fontFamily: "Syne, sans-serif" }}>Add Exercise</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>{addedIds.size} added</p>
           </div>
         </div>
         <BrowseTab
-          initialExercises={initialExercises}
-          initialTotal={initialTotal}
-          categories={categories}
-          levels={levels}
-          equipment={equipment}
-          muscles={muscles}
-          workoutMode={true}
-          addedIds={addedIds}
-          onAdd={(ex) => { addExercise(ex); }}
+          initialExercises={initialExercises} initialTotal={initialTotal}
+          categories={categories} levels={levels} equipment={equipment} muscles={muscles}
+          workoutMode addedIds={addedIds} onAdd={addExercise}
         />
       </div>
     );
   }
 
-  // â”€â”€ Active session â”€â”€
-  const totalSets = workoutExercises.reduce((s, we) => s + we.sets.filter((st) => st.completed).length, 0);
+  const totalCompletedSets = workoutExercises.reduce((s, we) => s + we.sets.filter((st) => st.completed).length, 0);
 
   return (
     <div>
-      {/* Session header card */}
-      <div className="relative bg-[#111111] border border-white/[0.06] rounded-2xl p-4 mb-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-lime-400/[0.04] to-transparent pointer-events-none" />
-        <div className="relative flex items-start justify-between mb-4">
+      {/* Session header */}
+      <div style={{ position: "relative", background: "#101010", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: 16, marginBottom: 14, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(163,230,53,0.05) 0%, transparent 60%)", pointerEvents: "none" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <p className="text-white font-bold text-base">{activeSession.name ?? "Workout"}</p>
-            <p className="text-[11px] text-white/30 mt-0.5">In progress</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "Syne, sans-serif" }}>{activeSession.name ?? "Workout"}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>In progress</p>
           </div>
-          <div className="flex items-center gap-1.5 bg-lime-400/10 border border-lime-400/20 rounded-full px-3 py-1.5">
-            <Clock className="w-3 h-3 text-lime-400" />
-            <span className="text-sm font-mono font-bold text-lime-400 tabular-nums">{formatElapsed(elapsed)}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 20, padding: "6px 12px" }}>
+            <Clock size={12} color="#a3e635" />
+            <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: "#a3e635" }}>{formatElapsed(elapsed)}</span>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
           {[
             { val: workoutExercises.length, label: "Exercises" },
-            { val: totalSets, label: "Sets Done" },
-            { val: `~${Math.round(elapsed / 60 * 5 + totalSets * 3)}`, label: "kcal est." },
+            { val: totalCompletedSets, label: "Sets Done" },
+            { val: `~${Math.round(elapsed / 60 * 5 + totalCompletedSets * 3)}`, label: "kcal est." },
           ].map(({ val, label }) => (
-            <div key={label} className="bg-white/[0.04] rounded-xl py-2.5">
-              <p className="text-lg font-bold text-white">{val}</p>
-              <p className="text-[10px] text-white/25 mt-0.5">{label}</p>
+            <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "10px 0", textAlign: "center" }}>
+              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "Syne, sans-serif" }}>{val}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Exercises */}
-      <div className="space-y-2.5 mb-4">
+      {/* Exercise list */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
         {workoutExercises.length === 0 ? (
-          <div className="text-center py-10 text-white/20">
-            <Target className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No exercises yet</p>
-            <p className="text-xs mt-1 text-white/15">Tap "Add Exercise" below</p>
+          <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.18)" }}>
+            <Target size={28} style={{ margin: "0 auto 8px" }} />
+            <p style={{ margin: 0, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>No exercises yet</p>
           </div>
-        ) : (
-          workoutExercises.map((we) => (
-            <WorkoutExerciseCard
-              key={we.id}
-              we={we}
-              sessionId={activeSession.id}
-              onSetsChange={(sets) => {
-                setWorkoutExercises((prev) =>
-                  prev.map((w) => (w.id === we.id ? { ...w, sets } : w))
-                );
-              }}
-              onRemove={() => removeExercise(we.id, we.exerciseId)}
-            />
-          ))
-        )}
+        ) : workoutExercises.map((we) => (
+          <WorkoutExerciseCard
+            key={we.id} we={we} sessionId={activeSession.id}
+            onSetsChange={(sets) => setWorkoutExercises((prev) => prev.map((w) => w.id === we.id ? { ...w, sets } : w))}
+            onRemove={() => removeExercise(we.id, we.exerciseId)}
+          />
+        ))}
       </div>
 
-      {/* Actions */}
       <button
         onClick={() => setShowBrowse(true)}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-white/[0.08] text-sm text-white/30 hover:text-lime-400 hover:border-lime-400/20 transition-all mb-3"
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          padding: "12px", background: "none",
+          border: "1px dashed rgba(255,255,255,0.08)",
+          borderRadius: 14, fontSize: 13, color: "rgba(255,255,255,0.28)",
+          cursor: "pointer", fontFamily: "DM Sans, sans-serif", marginBottom: 10,
+        }}
       >
-        <Plus className="w-4 h-4" /> Add Exercise
+        <Plus size={15} /> Add Exercise
       </button>
 
-      <button
-        onClick={finishSession}
-        disabled={finishing}
-        className="w-full bg-lime-400 text-black font-bold py-3.5 rounded-2xl hover:bg-lime-300 active:scale-[0.98] transition-all disabled:opacity-50 text-sm tracking-wide shadow-lg shadow-lime-400/15"
-      >
-        {finishing ? "Savingâ€¦" : "Finish Workout"}
+      <button onClick={finishSession} disabled={finishing} style={{ ...btnPrimary, opacity: finishing ? 0.5 : 1, boxShadow: "0 6px 24px rgba(163,230,53,0.15)" }}>
+        {finishing ? "Saving…" : "Finish Workout"}
       </button>
     </div>
   );
 }
 
-// â”€â”€â”€ History Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── History Tab ──────────────────────────────────────────────────────────────
 
 function HistoryTab() {
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
@@ -1025,28 +1151,23 @@ function HistoryTab() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/workout/sessions?limit=30")
-      .then((r) => r.json())
-      .then((d) => setSessions(d.sessions ?? []))
-      .finally(() => setLoading(false));
+    fetch("/api/workout/sessions?limit=30").then((r) => r.json()).then((d) => setSessions(d.sessions ?? [])).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 bg-white/[0.03] rounded-2xl animate-pulse border border-white/[0.05]" />
-        ))}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {[1, 2, 3].map((i) => <div key={i} style={{ height: 72, background: "rgba(255,255,255,0.03)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.05)" }} />)}
       </div>
     );
   }
 
   if (sessions.length === 0) {
     return (
-      <div className="text-center py-20 text-white/20">
-        <TrendingUp className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm font-medium">No workouts yet</p>
-        <p className="text-xs mt-1 text-white/15">Complete your first workout to see history</p>
+      <div style={{ textAlign: "center", padding: "80px 0", color: "rgba(255,255,255,0.18)" }}>
+        <TrendingUp size={36} style={{ margin: "0 auto 12px" }} />
+        <p style={{ margin: 0, fontSize: 14, fontFamily: "DM Sans, sans-serif" }}>No workouts yet</p>
+        <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.12)", fontFamily: "DM Sans, sans-serif" }}>Complete your first workout to see history</p>
       </div>
     );
   }
@@ -1059,57 +1180,57 @@ function HistoryTab() {
   });
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {Object.entries(grouped).map(([date, daySessions]) => (
         <div key={date}>
-          <p className="text-[10px] text-white/25 uppercase tracking-[0.15em] font-semibold mb-2.5 flex items-center gap-2">
-            <Calendar className="w-3 h-3" />
+          <p style={{ margin: "0 0 10px", fontSize: 9, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 700, fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+            <Calendar size={11} />
             {new Date(date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
           </p>
-          <div className="space-y-2">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {daySessions.map((s) => (
-              <div key={s.id} className="bg-[#111111] border border-white/[0.06] rounded-2xl overflow-hidden">
+              <div key={s.id} style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden" }}>
                 <div
-                  className="flex items-center gap-3 p-3.5 cursor-pointer hover:bg-white/[0.02] transition-colors"
                   onClick={() => setExpanded(expanded === s.id ? null : s.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", cursor: "pointer" }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-lime-400/10 border border-lime-400/15 flex items-center justify-center flex-shrink-0">
-                    <Activity className="w-4 h-4 text-lime-400" />
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Activity size={16} color="#a3e635" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white">{s.name ?? "Workout"}</p>
-                    <p className="text-[11px] text-white/30 mt-0.5">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "DM Sans, sans-serif" }}>{s.name ?? "Workout"}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>
                       {s.exercises.length} exercise{s.exercises.length !== 1 ? "s" : ""}
-                      {s.durationMins ? ` Â· ${formatDuration(s.durationMins)}` : ""}
+                      {s.durationMins ? ` · ${formatDuration(s.durationMins)}` : ""}
                     </p>
                   </div>
                   {s.caloriesBurned ? (
-                    <div className="text-right mr-1">
-                      <div className="flex items-center gap-1 text-orange-400 justify-end">
-                        <Flame className="w-3 h-3" />
-                        <span className="text-sm font-bold tabular-nums">{s.caloriesBurned}</span>
+                    <div style={{ textAlign: "right", marginRight: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#fb923c", justifyContent: "flex-end" }}>
+                        <Flame size={12} />
+                        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif" }}>{s.caloriesBurned}</span>
                       </div>
-                      <p className="text-[10px] text-white/20">kcal</p>
+                      <p style={{ margin: 0, fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: "DM Sans, sans-serif" }}>kcal</p>
                     </div>
                   ) : null}
-                  <ChevronDown className={`w-4 h-4 text-white/20 transition-transform duration-200 ${expanded === s.id ? "rotate-180" : ""}`} />
+                  <ChevronDown size={15} color="rgba(255,255,255,0.2)" style={{ transform: expanded === s.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </div>
 
                 {expanded === s.id && s.exercises.length > 0 && (
-                  <div className="border-t border-white/[0.05] px-3.5 py-2">
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 14px" }}>
                     {s.exercises.map((we) => {
                       const imgSrc = we.exercise.images[0] ? `${IMG_BASE}${we.exercise.images[0]}` : null;
                       return (
-                        <div key={we.id} className="flex items-center gap-2.5 py-2 border-b border-white/[0.04] last:border-0">
+                        <div key={we.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                           {imgSrc ? (
-                            <img src={imgSrc} alt="" className="w-8 h-8 rounded-lg object-cover object-top flex-shrink-0" />
+                            <img src={imgSrc} alt="" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                              <Dumbbell className="w-3.5 h-3.5 text-white/20" />
+                            <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <Dumbbell size={12} color="rgba(255,255,255,0.2)" />
                             </div>
                           )}
-                          <p className="flex-1 text-xs text-white/60 font-medium">{we.exercise.name}</p>
-                          <p className="text-[11px] text-white/25">{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
+                          <p style={{ flex: 1, margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{we.exercise.name}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.22)", fontFamily: "DM Sans, sans-serif" }}>{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
                         </div>
                       );
                     })}
@@ -1124,86 +1245,118 @@ function HistoryTab() {
   );
 }
 
-// â”€â”€â”€ Root Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Root Component ───────────────────────────────────────────────────────────
 
 type Tab = "browse" | "workout" | "history";
 
 export default function ExercisesClient({
-  initialExercises,
-  initialTotal,
-  categories,
-  levels,
-  equipment,
-  muscles,
+  initialExercises, initialTotal, categories, levels, equipment, muscles,
 }: ExercisesClientProps) {
   const [tab, setTab] = useState<Tab>("browse");
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "browse",  label: "Browse",  icon: <Search className="w-3.5 h-3.5" /> },
-    { id: "workout", label: "Workout", icon: <Zap className="w-3.5 h-3.5" /> },
-    { id: "history", label: "History", icon: <BarChart2 className="w-3.5 h-3.5" /> },
+    { id: "browse",  label: "Browse",  icon: <Search size={14} /> },
+    { id: "workout", label: "Workout", icon: <Zap size={14} /> },
+    { id: "history", label: "History", icon: <BarChart2 size={14} /> },
   ];
 
   return (
-    <div style={{ paddingTop: 88, paddingBottom: 40, maxWidth: 1024, margin: "0 auto", minHeight: "100vh", background: "#080808", paddingLeft: 16, paddingRight: 16 }}>
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-lime-400/10 border border-lime-400/15 flex items-center justify-center">
-            <Dumbbell className="w-4.5 h-4.5 text-lime-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Exercise Library</h1>
-            <p className="text-[11px] text-white/25 font-medium">
-              {initialTotal.toLocaleString()} exercises Â· browse, log, track
-            </p>
+    <>
+      <style>{FONT_LINK}</style>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.7} }
+        * { box-sizing: border-box; }
+        input::placeholder { color: rgba(255,255,255,0.22); }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        select option { background: #111; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+      `}</style>
+
+      <div style={{
+        paddingTop: 88,
+        paddingBottom: 48,
+        maxWidth: 1120,
+        margin: "0 auto",
+        minHeight: "100vh",
+        background: "#080808",
+        paddingLeft: 18,
+        paddingRight: 18,
+      }}>
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 13,
+              background: "rgba(163,230,53,0.1)",
+              border: "1px solid rgba(163,230,53,0.18)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Dumbbell size={18} color="#a3e635" />
+            </div>
+            <div>
+              <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
+                Exercise Library
+              </h1>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+                {initialTotal.toLocaleString()} exercises · browse, log, track
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tab bar */}
-      <div className="flex bg-white/[0.03] border border-white/[0.07] rounded-2xl p-1 mb-6 gap-1">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              tab === t.id
-                ? "bg-lime-400 text-black shadow-sm shadow-lime-400/20"
-                : "text-white/30 hover:text-white/60"
-            }`}
-          >
-            {t.icon}
-            <span className="hidden sm:inline tracking-wide">{t.label}</span>
-          </button>
-        ))}
-      </div>
+        {/* Tab bar */}
+        <div style={{
+          display: "flex",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 16,
+          padding: 4,
+          marginBottom: 22,
+          gap: 4,
+        }}>
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                flex: 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                padding: "10px 0",
+                borderRadius: 12,
+                border: "none",
+                background: tab === t.id ? "#a3e635" : "transparent",
+                color: tab === t.id ? "#000" : "rgba(255,255,255,0.3)",
+                fontFamily: tab === t.id ? "Syne, sans-serif" : "DM Sans, sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.18s ease",
+                boxShadow: tab === t.id ? "0 2px 12px rgba(163,230,53,0.2)" : "none",
+              }}
+            >
+              {t.icon}
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
 
-      {/* Tab content */}
-      {tab === "browse" && (
-        <BrowseTab
-          initialExercises={initialExercises}
-          initialTotal={initialTotal}
-          categories={categories}
-          levels={levels}
-          equipment={equipment}
-          muscles={muscles}
-        />
-      )}
-      {tab === "workout" && (
-        <WorkoutTab
-          initialExercises={initialExercises}
-          initialTotal={initialTotal}
-          categories={categories}
-          levels={levels}
-          equipment={equipment}
-          muscles={muscles}
-        />
-      )}
-      {tab === "history" && <HistoryTab />}
-    </div>
+        {/* Content */}
+        {tab === "browse" && (
+          <BrowseTab
+            initialExercises={initialExercises} initialTotal={initialTotal}
+            categories={categories} levels={levels} equipment={equipment} muscles={muscles}
+          />
+        )}
+        {tab === "workout" && (
+          <WorkoutTab
+            initialExercises={initialExercises} initialTotal={initialTotal}
+            categories={categories} levels={levels} equipment={equipment} muscles={muscles}
+          />
+        )}
+        {tab === "history" && <HistoryTab />}
+      </div>
+    </>
   );
 }
-
-
-
