@@ -1145,7 +1145,7 @@ export default function ExercisesClient({
   ];
 
   return (
-    <div className="min-h-screen bg-[#080808] px-4 sm:px-6 lg:px-8 pt-6 pb-10 max-w-5xl mx-auto overflow-x-hidden">
+    <div className="min-h-screen bg-[#080808] px-4 sm:px-6 lg:px-8 pt-[84px] pb-10 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
@@ -1204,3 +1204,4 @@ export default function ExercisesClient({
     </div>
   );
 }
+
