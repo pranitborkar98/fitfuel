@@ -343,7 +343,7 @@ export default function SupplementsClient({
 }: {
   userGoal: string | null;
   userName: string | null;
-}) {
+})  {
   const defaultGoal = mapProfileGoal(userGoal);
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
