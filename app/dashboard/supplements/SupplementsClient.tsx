@@ -1,14 +1,11 @@
 "use client";
 // app/dashboard/supplements/SupplementsClient.tsx
-// Phase 8 — Premium Supplements Dashboard
-// Personalised stack + 5-question quiz + full catalogue + detail modal
+// Phase 8 — Supplements Dashboard
+// All logged-in users get full access — no premium gate
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import {
-  Lock, ArrowRight, ChevronRight, ChevronLeft, X,
-  Sparkles, CheckCircle2, RefreshCw, Clock, Zap,
-  Star, Filter, ChevronDown,
+  X, Sparkles, CheckCircle2, RefreshCw, ChevronLeft, Star,
 } from "lucide-react";
 import {
   SUPPLEMENTS, STACKS, GOAL_META, CATEGORY_META,
@@ -20,7 +17,7 @@ const FONT = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 `;
 
-// ── Goal mapping (user profile goal → SupplementGoal) ────────────────────────
+// ── Map profile goal string → SupplementGoal ──────────────────────────────────
 function mapProfileGoal(raw: string | null): SupplementGoal {
   if (!raw) return "balanced";
   const r = raw.toLowerCase();
@@ -37,10 +34,10 @@ const QUIZ_STEPS = [
     question: "What's your primary goal right now?",
     emoji: "🎯",
     options: [
-      { value: "muscle_gain",  label: "Build Muscle",       emoji: "💪" },
-      { value: "weight_loss",  label: "Lose Fat",           emoji: "🔥" },
-      { value: "balanced",     label: "Stay Healthy",       emoji: "⚖️" },
-      { value: "performance",  label: "Peak Performance",   emoji: "⚡" },
+      { value: "muscle_gain", label: "Build Muscle",     emoji: "💪" },
+      { value: "weight_loss", label: "Lose Fat",         emoji: "🔥" },
+      { value: "balanced",    label: "Stay Healthy",     emoji: "⚖️" },
+      { value: "performance", label: "Peak Performance", emoji: "⚡" },
     ],
   },
   {
@@ -48,9 +45,9 @@ const QUIZ_STEPS = [
     question: "How often do you train per week?",
     emoji: "📅",
     options: [
-      { value: "low",    label: "1–2 times",   emoji: "🚶" },
-      { value: "medium", label: "3–4 times",   emoji: "🏃" },
-      { value: "high",   label: "5–7 times",   emoji: "🏋️" },
+      { value: "low",    label: "1–2 times", emoji: "🚶" },
+      { value: "medium", label: "3–4 times", emoji: "🏃" },
+      { value: "high",   label: "5–7 times", emoji: "🏋️" },
     ],
   },
   {
@@ -58,11 +55,11 @@ const QUIZ_STEPS = [
     question: "What's your biggest challenge?",
     emoji: "💬",
     options: [
-      { value: "recovery", label: "Poor recovery",      emoji: "😣" },
-      { value: "energy",   label: "Low energy",         emoji: "😴" },
-      { value: "strength", label: "Strength plateau",   emoji: "📉" },
-      { value: "weight",   label: "Stubborn weight",    emoji: "⚖️" },
-      { value: "sleep",    label: "Bad sleep",          emoji: "🌙" },
+      { value: "recovery", label: "Poor recovery",    emoji: "😣" },
+      { value: "energy",   label: "Low energy",       emoji: "😴" },
+      { value: "strength", label: "Strength plateau", emoji: "📉" },
+      { value: "weight",   label: "Stubborn weight",  emoji: "⚖️" },
+      { value: "sleep",    label: "Bad sleep",        emoji: "🌙" },
     ],
   },
   {
@@ -80,9 +77,9 @@ const QUIZ_STEPS = [
     question: "Monthly supplement budget?",
     emoji: "💰",
     options: [
-      { value: "low",  label: "Under ₹1,000",    emoji: "🪙" },
-      { value: "mid",  label: "₹1,000–2,500",    emoji: "💳" },
-      { value: "high", label: "₹2,500+",         emoji: "🏆" },
+      { value: "low",  label: "Under ₹1,000", emoji: "🪙" },
+      { value: "mid",  label: "₹1,000–2,500", emoji: "💳" },
+      { value: "high", label: "₹2,500+",      emoji: "🏆" },
     ],
   },
 ];
@@ -92,7 +89,11 @@ function SupplementCard({
   supp,
   highlight = false,
   onClick,
-}: { supp: Supplement; highlight?: boolean; onClick: () => void }) {
+}: {
+  supp: Supplement;
+  highlight?: boolean;
+  onClick: () => void;
+}) {
   const [hovered, setHovered] = useState(false);
   const catMeta = CATEGORY_META[supp.category];
 
@@ -115,17 +116,15 @@ function SupplementCard({
       }}
     >
       {highlight && (
-        <div style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, background: `radial-gradient(circle, ${supp.accent}15 0%, transparent 70%)` }} />
+        <div style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, background: `radial-gradient(circle, ${supp.accent}15 0%, transparent 70%)`, pointerEvents: "none" }} />
       )}
       {supp.popular && (
         <div style={{
           position: "absolute", top: 10, right: 10,
-          background: "rgba(255,200,0,0.12)",
-          border: "1px solid rgba(255,200,0,0.25)",
+          background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
           borderRadius: 6, padding: "2px 7px",
           fontSize: 9, fontWeight: 700, color: "#fbbf24",
-          letterSpacing: "0.1em", textTransform: "uppercase",
-          fontFamily: "DM Sans, sans-serif",
+          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif",
         }}>
           Popular
         </div>
@@ -148,9 +147,10 @@ function SupplementCard({
       <p style={{ margin: "0 0 12px", fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.4 }}>
         {supp.tagline}
       </p>
-
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-        <ClockIcon size={10} color="rgba(255,255,255,0.2)" />
+        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
         <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif" }}>{supp.dosage}</span>
       </div>
     </div>
@@ -174,6 +174,7 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
           padding: "32px 22px 20px", textAlign: "center",
           background: `linear-gradient(135deg, ${supp.accent}08 0%, transparent 60%)`,
           borderBottom: "1px solid rgba(255,255,255,0.05)",
+          position: "relative",
         }}>
           <button
             onClick={onClose}
@@ -190,7 +191,6 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
         </div>
 
         <div style={{ padding: "20px 22px 32px" }}>
-          {/* Description */}
           <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: "0 0 20px" }}>
             {supp.description}
           </p>
@@ -210,10 +210,7 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
 
           {/* Dosage + Timing */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-            {[
-              { label: "Dosage", value: supp.dosage },
-              { label: "Timing", value: supp.timing },
-            ].map(({ label, value }) => (
+            {[{ label: "Dosage", value: supp.dosage }, { label: "Timing", value: supp.timing }].map(({ label, value }) => (
               <div key={label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>{label}</p>
                 <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", fontFamily: "DM Sans, sans-serif" }}>{value}</p>
@@ -221,13 +218,13 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
             ))}
           </div>
 
-          {/* Price placeholder */}
+          {/* Price */}
           <div style={{ background: `${supp.accent}08`, border: `1px solid ${supp.accent}20`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>Estimated Price</p>
               <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: supp.accent, fontFamily: "Syne, sans-serif" }}>{supp.priceRange}</p>
             </div>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontFamily: "DM Sans, sans-serif" }}>Finalised with supplier</span>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontFamily: "DM Sans, sans-serif" }}>Coming soon</span>
           </div>
 
           {supp.veganFriendly && (
@@ -243,51 +240,34 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
 }
 
 // ── Quiz Modal ────────────────────────────────────────────────────────────────
-function QuizModal({
-  onComplete,
-  onClose,
-}: {
-  onComplete: (answers: QuizAnswers) => void;
-  onClose: () => void;
-}) {
+function QuizModal({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => void; onClose: () => void }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<QuizAnswers>>({});
-
   const current = QUIZ_STEPS[step];
-  const progress = ((step) / QUIZ_STEPS.length) * 100;
   const canProceed = answers[current.key] !== undefined;
+  const progress = (step / QUIZ_STEPS.length) * 100;
 
   function handleSelect(value: string) {
     setAnswers((prev) => ({ ...prev, [current.key]: value }));
   }
 
   function handleNext() {
-    if (step < QUIZ_STEPS.length - 1) {
-      setStep(step + 1);
-    } else {
-      onComplete(answers as QuizAnswers);
-    }
+    if (step < QUIZ_STEPS.length - 1) setStep(step + 1);
+    else onComplete(answers as QuizAnswers);
   }
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }} />
-      <div style={{
-        position: "relative", width: "100%", maxWidth: 480,
-        background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 24, overflow: "hidden",
-        boxShadow: "0 20px 80px rgba(0,0,0,0.9)",
-      }}>
-        {/* Progress bar */}
+      <div style={{ position: "relative", width: "100%", maxWidth: 480, background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 80px rgba(0,0,0,0.9)" }}>
+        {/* Progress */}
         <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
           <div style={{ height: "100%", width: `${progress}%`, background: "#a3e635", transition: "width 0.3s ease" }} />
         </div>
 
         <div style={{ padding: "28px 28px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif" }}>
-              {step + 1} / {QUIZ_STEPS.length}
-            </span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif" }}>{step + 1} / {QUIZ_STEPS.length}</span>
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)" }}>
               <X size={16} />
             </button>
@@ -295,9 +275,7 @@ function QuizModal({
 
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ fontSize: 36, marginBottom: 14 }}>{current.emoji}</div>
-            <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>
-              {current.question}
-            </h3>
+            <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>{current.question}</h3>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
@@ -355,79 +333,18 @@ function QuizModal({
   );
 }
 
-// ── Upgrade Wall ──────────────────────────────────────────────────────────────
-function UpgradeWall({ userName }: { userName: string | null }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 24px", textAlign: "center" }}>
-      <div style={{
-        width: 72, height: 72, borderRadius: 22,
-        background: "rgba(163,230,53,0.08)",
-        border: "1px solid rgba(163,230,53,0.18)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        marginBottom: 20,
-      }}>
-        <Lock size={30} color="#a3e635" />
-      </div>
-      <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 10px" }}>
-        {userName ? `${userName.split(" ")[0]}, ` : ""}this is a Premium feature
-      </h2>
-      <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 14, color: "rgba(255,255,255,0.35)", margin: "0 0 32px", maxWidth: 340, lineHeight: 1.7 }}>
-        Upgrade to a Premium meal plan to unlock your personalised supplement stack, the full catalogue, and expert dosage guides.
-      </p>
-
-      {/* What you get */}
-      <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: "20px 24px", marginBottom: 28, width: "100%", maxWidth: 380, textAlign: "left" }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 14px", fontFamily: "DM Sans, sans-serif" }}>
-          Premium includes
-        </p>
-        {[
-          "Personalised supplement stack based on your goal",
-          "5-question quiz to fine-tune your recommendations",
-          "Full catalogue — 15 supplements, 5 categories",
-          "Expert dosage, timing, and science explainers",
-          "Delivered with your FitFuel meal box",
-        ].map((item) => (
-          <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
-            <CheckCircle2 size={14} color="#a3e635" style={{ flexShrink: 0, marginTop: 1 }} />
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.5 }}>{item}</span>
-          </div>
-        ))}
-      </div>
-
-      <Link
-        href="/plans"
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          background: "#a3e635", color: "#000",
-          fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14,
-          padding: "14px 28px", borderRadius: 14, textDecoration: "none",
-          boxShadow: "0 8px 30px rgba(163,230,53,0.25)",
-        }}
-      >
-        Upgrade to Premium <ArrowRight size={16} />
-      </Link>
-      <Link href="/supplements" style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif", textDecoration: "none" }}>
-        Preview the catalogue →
-      </Link>
-    </div>
-  );
-}
-
-// ── Root Component ────────────────────────────────────────────────────────────
+// ── Root ──────────────────────────────────────────────────────────────────────
 
 const CATEGORIES: Array<"all" | SupplementCategory> = ["all", "protein", "performance", "recovery", "health", "weight"];
 
 export default function SupplementsClient({
-  isPremium,
   userGoal,
   userName,
 }: {
-  isPremium: boolean;
   userGoal: string | null;
   userName: string | null;
 }) {
   const defaultGoal = mapProfileGoal(userGoal);
-
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [selectedSupp, setSelectedSupp] = useState<Supplement | null>(null);
@@ -448,48 +365,31 @@ export default function SupplementsClient({
   const activeGoal: SupplementGoal = quizAnswers?.goal ?? defaultGoal;
   const goalMeta = GOAL_META[activeGoal];
 
-  if (!isPremium) return (
-    <>
-      <style>{FONT}</style>
-      <div style={{ paddingTop: 88, background: "#080808", minHeight: "100vh", paddingLeft: 18, paddingRight: 18 }}>
-        <UpgradeWall userName={userName} />
-      </div>
-    </>
-  );
-
   return (
     <>
       <style>{FONT}</style>
-      <style>{`* { box-sizing: border-box; } input::placeholder { color: rgba(255,255,255,0.22); }`}</style>
+      <style>{`* { box-sizing: border-box; }`}</style>
 
       <div style={{ paddingTop: 88, paddingBottom: 48, maxWidth: 1120, margin: "0 auto", minHeight: "100vh", background: "#080808", paddingLeft: 18, paddingRight: 18 }}>
 
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 13, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Sparkles size={18} color="#a3e635" />
-              </div>
-              <div>
-                <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
-                  My Supplements
-                </h1>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
-                  Premium · personalised stack + full catalogue
-                </p>
-              </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 13, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={18} color="#a3e635" />
             </div>
-
-            {/* Premium badge */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.08)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 20, padding: "6px 14px" }}>
-              <Star size={12} color="#a3e635" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#a3e635", fontFamily: "DM Sans, sans-serif" }}>Premium Active</span>
+            <div>
+              <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
+                Supplement Guide
+              </h1>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+                Personalised stack · 15 supplements · 5 categories
+              </p>
             </div>
           </div>
         </div>
 
-        {/* ── Your Stack section ── */}
+        {/* ── Your Stack ── */}
         <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px 20px 24px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, right: 0, width: 200, height: 200, background: `radial-gradient(circle, ${goalMeta.accent}08 0%, transparent 70%)`, pointerEvents: "none" }} />
 
@@ -497,9 +397,7 @@ export default function SupplementsClient({
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <span style={{ fontSize: 18 }}>{goalMeta.emoji}</span>
-                <span style={{ fontFamily: "Syne, sans-serif", fontSize: 16, fontWeight: 700, color: "#fff" }}>
-                  Your Stack
-                </span>
+                <span style={{ fontFamily: "Syne, sans-serif", fontSize: 16, fontWeight: 700, color: "#fff" }}>Your Stack</span>
                 <span style={{
                   fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
                   color: goalMeta.accent, background: `${goalMeta.accent}15`,
@@ -510,15 +408,14 @@ export default function SupplementsClient({
                 </span>
               </div>
               <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>
-                {quizAnswers ? "Based on your quiz answers" : `Based on your profile goal — take the quiz to refine`}
+                {quizAnswers ? "Based on your quiz answers" : "Based on your profile goal — take the quiz to refine"}
               </p>
             </div>
             <button
               onClick={() => setShowQuiz(true)}
               style={{
                 display: "flex", alignItems: "center", gap: 7,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 10, padding: "8px 14px",
                 fontSize: 12, color: "rgba(255,255,255,0.5)",
                 cursor: "pointer", fontFamily: "DM Sans, sans-serif", fontWeight: 500,
@@ -538,7 +435,7 @@ export default function SupplementsClient({
 
         {/* ── Full Catalogue ── */}
         <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
             <div>
               <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 17, fontWeight: 700, color: "#fff", margin: "0 0 2px" }}>Full Catalogue</h2>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
@@ -547,7 +444,7 @@ export default function SupplementsClient({
             </div>
           </div>
 
-          {/* Category filter tabs */}
+          {/* Category tabs */}
           <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
             {CATEGORIES.map((cat) => {
               const active = cat === catFilter;
@@ -568,15 +465,12 @@ export default function SupplementsClient({
                   }}
                 >
                   {meta && <span>{meta.emoji}</span>}
-                  <span style={{ textTransform: cat === "all" ? "none" : "capitalize" }}>
-                    {cat === "all" ? "All" : meta?.label ?? cat}
-                  </span>
+                  <span>{cat === "all" ? "All" : meta?.label ?? cat}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 10 }}>
             {filteredCatalogue.map((supp) => (
               <SupplementCard key={supp.id} supp={supp} onClick={() => setSelectedSupp(supp)} />
@@ -584,10 +478,10 @@ export default function SupplementsClient({
           </div>
         </div>
 
-        {/* ── Price note ── */}
+        {/* Price note */}
         <div style={{ marginTop: 28, padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14 }}>
           <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>
-            💡 <strong style={{ color: "rgba(255,255,255,0.4)" }}>Prices are estimates</strong> — final pricing will be confirmed once our supplier partnership is live. Premium members will be notified first.
+            💡 <strong style={{ color: "rgba(255,255,255,0.4)" }}>Prices are estimates</strong> — final pricing will be confirmed once our supplier partnership is live. You'll be notified first.
           </p>
         </div>
       </div>
@@ -603,14 +497,5 @@ export default function SupplementsClient({
         <SupplementModal supp={selectedSupp} onClose={() => setSelectedSupp(null)} />
       )}
     </>
-  );
-}
-
-// Inline Clock icon
-function ClockIcon({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
   );
 }
