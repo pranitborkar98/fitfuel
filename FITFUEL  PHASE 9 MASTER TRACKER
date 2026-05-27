@@ -1,0 +1,1479 @@
+# FITFUEL — PHASE 9 MASTER TRACKER
+> **Created: May 20, 2026**
+> **Last Updated: May 20, 2026 — 9A schema migrated ✅ · 9B TDEE lib + meal-plans-data.ts complete ✅ · 3 tracker gaps patched**
+> **Purpose: Complete blueprint for Phase 9 — The Foundation Phase**
+> **This file is the single source of truth for everything Phase 9 touches**
+> **Update status after every build session**
+
+---
+
+## WHY PHASE 9 IS THE MOST IMPORTANT PHASE
+
+Every phase before this was a feature. Phase 9 is the **business itself in code form.**
+
+- The recipe DB is the SOP for every kitchen, franchise, and partner we ever onboard
+- The plan schedule is what makes per-gram tracking possible — India's first
+- The tier system wired to real plans is what unlocks Premium and Luxury revenue
+- The lifestyle + medical + sports catalogue is what makes FitFuel a health platform, not a tiffin service
+- Every future phase (AI trainer, digital PDFs, franchise portal, nutrition consulting) runs on what we build here
+
+**Build it right once. Scale forever.**
+
+---
+
+## PHASE 9 STATUS OVERVIEW
+
+| Sub-Phase | Name | Status |
+|-----------|------|--------|
+| 9A | Recipe Database Schema | ✅ COMPLETE — migrated May 20 |
+| 9B | Personalisation Engine | ✅ COMPLETE — tdee.ts + meal-plans-data.ts |
+| 9C | Plan Schedule System | Pending |
+| 9D | Exercise Schedule Wiring | Pending |
+| 9E | Individual Standard Plan Pages | Pending |
+| 9F | Lifestyle / Medical Plan Pages | Pending |
+| 9G | Sports Nutrition Plan Pages | Pending |
+| 9H | Tier Comparison + Pricing Page | Pending |
+| 9I | Public Trust Pages | Pending |
+| 9J | Dashboard Wiring — Today's Meals | Pending |
+| 9K | Dashboard Wiring — Plan Progress | Pending |
+| 9L | Net Calorie Engine | Pending |
+| 9M | Lightweight Recipe Admin | Pending |
+| 9N | Onboarding Flow | Pending |
+| 9O | Homepage Sections Update | Pending |
+
+---
+
+## COMPLETED — 9A + 9B REFERENCE
+
+### 9A — What Was Built
+Migration name: `add-recipe-plan-schedule-system`
+New models: `Recipe`, `RecipeIngredient`, `RecipeStep`, `MealPlan`, `PlanScheduleSlot`, `UserActivePlan`, `MealLog`, `ExerciseSchedule`, `ExerciseScheduleDay`
+New enums: `MealSlot`, `PlanTier`, `PlanCategory`, `DietVariant`
+Extended: `UserProfile` (onboarding fields, TDEE, targets), `FoodItem` (recipeIngredients relation), `User` (userActivePlans, mealLogs), `Role` (added OWNER)
+
+### 9B — What Was Built
+- `lib/tdee.ts` — BMR (Mifflin-St Jeor), TDEE, calorie targets with floor safety, macro targets, serving multiplier, BMI, ideal weight range, weeks-to-goal
+- `lib/meal-plans-data.ts` — Full static plan catalogue: standard, lifestyle/medical, sports. `LAUNCH_PLANS` array, `getPlanBySlug()`, `getPlansByCategory()`, `CONDITION_COLORS` map
+
+### Known Schema Gap — Fix in Next Migration
+`FoodEntry` model is missing `mealLogId String?` back-reference. When `MealLog` is confirmed and auto-creates a `FoodEntry`, you cannot query "was this food entry from a plan or manual?" from the `FoodEntry` side. **Add in next schema migration** (can bundle with 9C seed migration):
+
+```prisma
+// Add to FoodEntry model:
+mealLogId  String?   // null = manual entry; set = auto-created from MealLog confirmation
+```
+
+---
+
+## PHASE 9A — RECIPE DATABASE SCHEMA
+
+### New Prisma Models Required
+
+#### Recipe
+Core unit of the entire platform. Every meal, every plan, every PDF, every SOP.
+
+```prisma
+model Recipe {
+  id                String              @id @default(cuid())
+  name              String
+  slug              String              @unique
+  description       String
+  shortDescription  String              // one-line tagline for cards
+  cuisineType       String              // NorthIndian, SouthIndian, Continental, etc.
+  mealType          MealSlot            // BREAKFAST, LUNCH, DINNER, SNACK
+  dietaryTags       String[]            // VEG, EGG, NON_VEG, JAIN, VEGAN
+  planCategories    String[]            // weight_loss, pcos, diabetic, sports_strength, etc.
+  tierAvailability  PlanTier[]          // STANDARD, PREMIUM, LUXURY
+  servingSizeGrams  Int                 // canonical serving size in grams
+  prepTimeMins      Int
+  cookTimeMins      Int
+  difficulty        String              // easy, medium, hard
+  equipmentNeeded   String[]
+  allergens         String[]
+  shelfLifeHours    Int                 // how long after cooking
+  packagingType     String              // box, container, pouch
+  kitchenStation    String              // hot_kitchen, cold_prep, assembly
+  costPerServing    Decimal?            // ingredient cost — for margin tracking
+  seasonTags        String[]            // monsoon, summer, winter, all_year
+  rotationGroup     Int                 // 1-60 — ensures no repeat in 60-day cycle
+  imageUrl          String?
+  videoUrl          String?
+  isActive          Boolean             @default(true)
+  isFeatured        Boolean             @default(false)
+
+  // Macros — per canonical serving
+  caloriesPerServing    Int
+  proteinGrams          Decimal
+  carbsGrams            Decimal
+  fatGrams              Decimal
+  fibreGrams            Decimal
+
+  // Macros — per 100g (computed, stored for fast lookup)
+  caloriesPer100g       Int
+  proteinPer100g        Decimal
+  carbsPer100g          Decimal
+  fatPer100g            Decimal
+  fibrePer100g          Decimal
+
+  // Micronutrients per serving (key ones for medical plans)
+  ironMg                Decimal?
+  calciumMg             Decimal?
+  vitaminDMcg           Decimal?
+  vitaminCMg            Decimal?
+  vitaminB12Mcg         Decimal?
+  folateMcg             Decimal?
+  sodiumMg              Decimal?
+  potassiumMg           Decimal?
+  omegaThreeGrams       Decimal?
+  zincMg                Decimal?
+  magnesiumMg           Decimal?
+  seleniumMcg           Decimal?
+  glycaemicIndex        Int?            // critical for diabetic + PCOS plans
+
+  ingredients           RecipeIngredient[]
+  steps                 RecipeStep[]
+  scheduleSlots         PlanScheduleSlot[]
+  mealLogs              MealLog[]
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@map("recipes")
+}
+```
+
+#### RecipeIngredient
+Links a recipe to food_items (existing table). Quantities in raw grams.
+
+```prisma
+model RecipeIngredient {
+  id                String    @id @default(cuid())
+  recipeId          String
+  foodItemId        String
+  quantityGrams     Decimal   // raw weight before cooking
+  cookedWeightFactor Decimal  @default(1.0)  // cooked/raw ratio (rice: 2.5, chicken: 0.75)
+  prepNote          String?   // "soaked overnight", "finely chopped", "boiled"
+  isOptional        Boolean   @default(false)
+  substituteFor     String?   // ingredient id this can replace
+  orderInRecipe     Int
+
+  recipe            Recipe    @relation(fields: [recipeId], references: [id])
+  foodItem          FoodItem  @relation(fields: [foodItemId], references: [id])
+
+  @@map("recipe_ingredients")
+}
+```
+
+#### RecipeStep
+Step-by-step SOP — scales to franchise kitchen.
+
+```prisma
+model RecipeStep {
+  id              String    @id @default(cuid())
+  recipeId        String
+  stepNumber      Int
+  title           String    // "Marinate the chicken"
+  instruction     String    // full instruction text
+  durationMins    Int?
+  temperatureC    Int?      // for baking/cooking temp
+  technique       String?   // "saute", "steam", "grill", "blend"
+  kitchenNote     String?   // note for kitchen staff only
+  imageUrl        String?
+
+  recipe          Recipe    @relation(fields: [recipeId], references: [id])
+
+  @@map("recipe_steps")
+}
+```
+
+#### MealPlan
+Plan definition — extends/replaces meal_plan_products conceptually.
+
+```prisma
+model MealPlan {
+  id                  String        @id @default(cuid())
+  name                String
+  slug                String        @unique
+  category            PlanCategory  // STANDARD, LIFESTYLE_MEDICAL, SPORTS
+  subCategory         String        // weight_loss, pcos, diabetic, strength, etc.
+  displayName         String        // "Weight Loss — Non Vegetarian"
+  tagline             String
+  description         String
+  longDescription     String        // full sales page description
+  whoIsItFor          String        // target customer description
+  keyPrinciples       String[]      // nutritional principles bullet points
+  whatIsAvoided       String[]      // excluded ingredients/foods
+  dietaryVariant      DietVariant   // VEG, EGG, NON_VEG, JAIN, VEGAN
+  tier                PlanTier      // STANDARD, PREMIUM, LUXURY
+  avgCaloriesPerDay   Int
+  avgProteinGrams     Int
+  avgCarbsGrams       Int
+  avgFatGrams         Int
+  cycleLengthDays     Int           @default(60)  // 60-day no-repeat
+  mealsPerDay         Int           @default(4)   // B+L+D+S
+  nutritionistName    String?
+  nutritionistCred    String?       // "MSc Nutrition, RD"
+  nutritionistBio     String?
+  medicalDisclaimer   String?       // for lifestyle/medical plans
+  isActive            Boolean       @default(false)  // flip to true when ready to sell
+  isFeatured          Boolean       @default(false)
+  sortOrder           Int           @default(0)
+  imageUrl            String?
+  accentColor         String?       // hex — for plan page theming
+
+  scheduleSlots       PlanScheduleSlot[]
+  activePlans         UserActivePlan[]
+  productId           String?       // links to meal_plan_products for pricing
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@map("meal_plans")
+}
+```
+
+#### PlanScheduleSlot
+60-day rotating schedule. Day → Meal Slot → Recipe.
+
+```prisma
+model PlanScheduleSlot {
+  id          String    @id @default(cuid())
+  mealPlanId  String
+  dayNumber   Int       // 1–60
+  mealSlot    MealSlot  // BREAKFAST, LUNCH, DINNER, SNACK
+  recipeId    String
+  servingMultiplier Decimal @default(1.0)  // adjust portion for this slot
+
+  mealPlan    MealPlan  @relation(fields: [mealPlanId], references: [id])
+  recipe      Recipe    @relation(fields: [recipeId], references: [id])
+
+  @@unique([mealPlanId, dayNumber, mealSlot])
+  @@map("plan_schedule_slots")
+}
+```
+
+#### UserActivePlan
+Tracks which plan a user is on and which day they're currently on.
+
+```prisma
+model UserActivePlan {
+  id            String    @id @default(cuid())
+  userId        String
+  mealPlanId    String
+  orderId       String?   // links to orders table
+  startDate     DateTime
+  endDate       DateTime
+  currentDay    Int       @default(1)  // auto-increments daily
+  status        String    @default("active")  // active, paused, completed, cancelled
+  pausedUntil   DateTime?
+  skipDates     DateTime[]  // dates user skipped delivery
+  calorieTarget Int?      // personalised — overrides plan default
+  proteinTarget Int?
+  carbTarget    Int?
+  fatTarget     Int?
+
+  user          User      @relation(fields: [userId], references: [id])
+  mealPlan      MealPlan  @relation(fields: [mealPlanId], references: [id])
+  mealLogs      MealLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("user_active_plans")
+}
+```
+
+#### MealLog
+Did the user eat today's planned meal? Links plan → nutrition tracker.
+
+```prisma
+model MealLog {
+  id              String    @id @default(cuid())
+  userId          String
+  userActivePlanId String
+  recipeId        String
+  mealSlot        MealSlot
+  logDate         DateTime
+  plannedGrams    Int       // what the plan prescribed
+  actualGrams     Int?      // what user actually ate (adjusted)
+  confirmedAt     DateTime? // when user tapped "I ate this"
+  skipped         Boolean   @default(false)
+  rating          Int?      // 1-5 meal feedback
+  ratingNote      String?
+
+  user            User      @relation(fields: [userId], references: [id])
+  activePlan      UserActivePlan @relation(fields: [userActivePlanId], references: [id])
+  recipe          Recipe    @relation(fields: [recipeId], references: [id])
+
+  // auto-creates FoodEntry in nutrition tracker when confirmed
+  foodEntryId     String?
+
+  createdAt       DateTime  @default(now())
+
+  @@map("meal_logs")
+}
+```
+
+#### ExerciseSchedule
+Workout plan linked to a meal plan type.
+
+```prisma
+model ExerciseSchedule {
+  id              String    @id @default(cuid())
+  mealPlanCategory String   // weight_loss, muscle_gain, pcos, etc.
+  tier            PlanTier
+  name            String    // "Weight Loss 5-Day Program"
+  description     String
+  weeklyStructure Json      // { mon: ["chest", "triceps"], tue: ["cardio"], ... }
+  daysPerWeek     Int
+  sessionDurationMins Int
+
+  workoutDays     ExerciseScheduleDay[]
+
+  @@map("exercise_schedules")
+}
+
+model ExerciseScheduleDay {
+  id                  String    @id @default(cuid())
+  scheduleId          String
+  dayOfWeek           String    // monday, tuesday, ... or rest
+  focusArea           String    // "Upper body strength", "LISS Cardio", "Rest + Mobility"
+  exercises           Json      // [{ exerciseId, sets, reps, restSecs, notes }]
+  estimatedCalories   Int
+  isRestDay           Boolean   @default(false)
+
+  schedule            ExerciseSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@map("exercise_schedule_days")
+}
+```
+
+### New Enums
+
+```prisma
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum PlanTier {
+  STANDARD
+  PREMIUM
+  LUXURY
+}
+
+enum PlanCategory {
+  STANDARD
+  LIFESTYLE_MEDICAL
+  SPORTS
+  CORPORATE
+  DIGITAL
+}
+
+enum DietVariant {
+  VEG
+  EGG
+  NON_VEG
+  JAIN
+  VEGAN
+}
+```
+
+### Schema Migration Name
+`add-recipe-plan-schedule-system` ✅ DONE
+
+### Existing Tables Extended
+
+```prisma
+// Added to UserProfile:
+targetWeightKg      Float?
+age                 Int?
+healthConditions    String[]
+dietaryRestrictions String[]
+allergies           String[]
+tdee                Int?
+calorieTarget       Int?
+onboardingComplete  Boolean   @default(false)
+
+// Added to FoodItem:
+recipeIngredients   RecipeIngredient[]
+
+// Added to User:
+userActivePlans     UserActivePlan[]
+mealLogs            MealLog[]
+
+// Added to Role enum:
+OWNER
+```
+
+---
+
+## PHASE 9B — PERSONALISATION ENGINE
+
+### How Customisation Works
+
+Each customer gets a **customised calorie target** mapped to their body metrics. The 60-day rotating schedule is the same for everyone on that plan — but serving sizes scale per user.
+
+### Files Built
+- `lib/tdee.ts` ✅
+- `lib/meal-plans-data.ts` ✅
+
+### TDEE Calculation (Mifflin-St Jeor)
+
+```typescript
+// lib/tdee.ts
+export function calculateTDEE(profile: {
+  weightKg: number
+  heightCm: number
+  age: number
+  gender: 'male' | 'female'
+  activityLevel: ActivityLevel
+}): number {
+  // BMR
+  const bmr = profile.gender === 'male'
+    ? 10 * profile.weightKg + 6.25 * profile.heightCm - 5 * profile.age + 5
+    : 10 * profile.weightKg + 6.25 * profile.heightCm - 5 * profile.age - 161
+
+  // Activity multipliers
+  const multipliers = {
+    sedentary: 1.2,
+    lightly_active: 1.375,
+    moderately_active: 1.55,
+    very_active: 1.725,
+    athlete: 1.9
+  }
+
+  return Math.round(bmr * multipliers[profile.activityLevel])
+}
+
+// Calorie targets by goal
+export function getCalorieTarget(tdee: number, goal: string): number {
+  const adjustments: Record<string, number> = {
+    weight_loss: -500,
+    aggressive_weight_loss: -750,
+    maintenance: 0,
+    lean_bulk: +300,
+    muscle_gain: +500,
+    performance: +200,
+  }
+  return tdee + (adjustments[goal] ?? 0)
+}
+
+// Serving size multiplier — how much of a recipe this user gets
+export function getServingMultiplier(
+  userCalorieTarget: number,
+  planDefaultCalories: number
+): number {
+  return Math.round((userCalorieTarget / planDefaultCalories) * 10) / 10
+}
+```
+
+### Macro Targets by Goal
+
+```typescript
+export function getMacroTargets(calorieTarget: number, goal: string, weightKg: number) {
+  const proteinPerKg: Record<string, number> = {
+    weight_loss: 2.0,
+    muscle_gain: 2.2,
+    maintenance: 1.6,
+    performance: 2.4,
+    sports_endurance: 1.8,
+    recovery: 1.8,
+    pcos: 1.8,
+    diabetic: 1.6,
+  }
+
+  const proteinG = Math.round((proteinPerKg[goal] ?? 1.6) * weightKg)
+  const proteinKcal = proteinG * 4
+
+  const fatG = Math.round((calorieTarget * 0.27) / 9)
+  const fatKcal = fatG * 9
+
+  const carbsKcal = calorieTarget - proteinKcal - fatKcal
+  const carbsG = Math.round(carbsKcal / 4)
+
+  return { calorieTarget, proteinG, carbsG, fatG }
+}
+```
+
+### Onboarding Form Fields
+
+Collected at order placement OR in dashboard profile setup:
+
+- Current weight (kg)
+- Height (cm)
+- Age
+- Gender
+- Activity level (5 options with descriptions)
+- Primary goal (weight loss / muscle gain / maintenance / performance / health condition)
+- Dietary preference (Veg / Egg / Non-Veg / Jain / Vegan)
+- Health conditions (multi-select: PCOS, Diabetic, Thyroid, Heart, None, Other)
+- Allergies (multi-select: nuts, dairy, gluten, shellfish, none)
+- Meal timing preference (early breakfast 6-7am / standard 7-8am / late 8-9am)
+
+---
+
+## PHASE 9C — PLAN SCHEDULE SYSTEM
+
+### The 60-Day No-Repeat MOAT
+
+Every plan has 60 unique day schedules. No dish repeats in 60 days. This is a business-level commitment that requires:
+
+1. A scheduling algorithm that validates no recipe appears twice in a 60-day window
+2. Seasonal rotation (monsoon recipes in Jun-Sep, summer in Mar-May)
+3. Variety across meal types within a day (no two similar proteins in B+L)
+
+### Schedule Validation Rule
+
+```typescript
+function validateSchedule(slots: PlanScheduleSlot[]): ValidationResult {
+  const bySlot = groupBy(slots, 'mealSlot')
+
+  for (const [slot, slotSlots] of Object.entries(bySlot)) {
+    const recipeIds = slotSlots.map(s => s.recipeId)
+    const unique = new Set(recipeIds)
+    if (unique.size !== recipeIds.length) {
+      return { valid: false, error: `Duplicate recipe in ${slot} slot` }
+    }
+  }
+
+  // Also check: no same main ingredient (chicken) on consecutive days
+  // No same cuisine type 3 days in a row
+  return { valid: true }
+}
+```
+
+### Seed Structure (start with Weight Loss Non-Veg)
+
+Build `prisma/seed-recipes.ts` with:
+- 30 unique recipes for Weight Loss Non-Veg to start (extend to 60 within Phase 9)
+- Full macro data per recipe
+- Linked to existing food_items where possible
+- Complete 30-day schedule mapped (extend to 60 within Phase 9)
+
+Initial seed target: **1 full plan × 30 days × 4 meals = 120 schedule slots**
+
+### API Routes Required
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/plans/[slug]/schedule` | GET | Full 60-day schedule for a plan |
+| `/api/plans/[slug]/schedule/[day]` | GET | Single day meals |
+| `/api/user/active-plan` | GET | Current user's active plan + current day |
+| `/api/user/active-plan/meals/today` | GET | Today's meals with macros |
+| `/api/user/active-plan/meals/log` | POST | Log a meal (confirm eaten, adjust grams) |
+| `/api/user/active-plan/meals/rate` | POST | Rate a meal 1-5 |
+| `/api/user/active-plan/pause` | POST | Pause plan |
+| `/api/user/active-plan/skip` | POST | Skip a specific date |
+
+---
+
+## PHASE 9D — EXERCISE SCHEDULE WIRING
+
+### The Gap
+
+Exercise library exists. Workout logger exists. But neither is connected to the meal plan. A customer on Weight Loss gets a random browse — they should get **a structured program**.
+
+### Exercise Programs per Plan Category
+
+| Plan Category | Program Type | Days/Week | Focus |
+|---------------|-------------|-----------|-------|
+| Weight Loss | HIIT + Strength | 5 | Fat burn, metabolism boost |
+| Muscle Gain | PPL Split | 6 | Progressive overload |
+| Balanced | Full Body | 3–4 | General fitness |
+| PCOS | Low-impact Strength | 4 | Hormone balance, no excessive cardio |
+| Diabetic | Walking + Light Strength | 5 | Blood sugar management |
+| Thyroid | Moderate Strength + Yoga | 4 | No excessive cardio for hypo |
+| Heart | Cardio + Light Strength | 5 | Zone 2 cardio priority |
+| Sports Endurance | Periodised Cardio | 6 | VO2 max, threshold |
+| Sports Strength | Powerlifting base | 5 | Strength + power |
+| Recovery/Rehab | Gentle Mobility | 3 | Joint health, no impact |
+| PCOS Female | Strength + Yoga hybrid | 4 | Low cortisol, hormone support |
+| Obesity | Low-impact progressive | 5 | Joint-safe, start easy |
+| Knee Health | Swimming/Cycling + PT | 4 | No knee loading |
+| Senior | Chair exercises + Walking | 5 | Functional movement |
+
+### Dashboard Integration
+
+```
+UserActivePlan → mealPlan.subCategory → ExerciseSchedule
+→ today's day of week → ExerciseScheduleDay
+→ Dashboard: "Today's Workout: Upper Body Strength — 45 mins"
+→ Click → opens ExercisesClient in Workout tab with today's exercises pre-loaded
+→ Complete workout → logs to WorkoutSession → kcal burned feeds Net Calorie Engine
+```
+
+---
+
+## PHASE 9E — INDIVIDUAL STANDARD PLAN PAGES
+
+### Plans to Build Pages For
+
+| Plan | Slug | Variants | Status |
+|------|------|----------|--------|
+| Weight Loss | `weight-loss` | Veg, Egg, Non-Veg | Pending |
+| Muscle Gain | `muscle-gain` | Veg, Egg, Non-Veg | Pending |
+| Balanced | `balanced` | Veg, Egg, Non-Veg, Jain | Pending |
+| Jain | `jain` | Veg/Jain | Pending |
+| Custom | `custom` | All | Pending |
+
+### Page Structure — `/plans/[slug]`
+
+Each plan page is a **full sales page**. Template shared, data driven:
+
+```
+1. Hero Section
+   - Plan name + tagline
+   - Key stats strip: avg kcal/day, protein target, meal count
+   - "Start Trial Day — ₹399" CTA
+   - Dietary variant switcher (Veg / Egg / Non-Veg tabs)
+
+2. Who Is This For
+   - Target customer persona
+   - 3–4 bullet points
+   - "Is this right for me?" quiz trigger  ← PLAN RECOMMENDATION QUIZ (see below)
+
+3. What You Get
+   - B + L + D + S breakdown with sample times
+   - Calorie range per meal
+   - Key nutrients highlighted
+
+4. 7-Day Sample Menu
+   - Monday–Sunday tabs
+   - Each day: B/L/D/S with dish name + macros (P/F/C/kcal)
+   - Meal image per dish
+   - "Full 60-day rotating menu — no dish repeats"
+
+5. Nutritional Principles
+   - What this plan prioritises
+   - Key foods featured
+   - What's excluded / why
+
+6. Per-Gram Tracking
+   - "Track every gram in your dashboard" — feature highlight
+   - Screenshot/mockup of dashboard meal card
+
+7. Pricing Matrix
+   - Duration options (Trial / Weekly / Bi-weekly / Monthly / 2M / 3M)
+   - Price per plan
+   - Tier comparison strip (Standard shown, Premium + Luxury teased)
+
+8. Meal Feedback Loop
+   - "Rate your meals. We listen. Menu evolves."
+
+9. Testimonials
+   - 3–4 customer results specific to this plan
+
+10. FAQ
+    - Plan-specific questions (can I swap a meal? what if I miss a day? etc.)
+
+11. CTA
+    - "Order Now" → checkout
+    - "Try Trial Day — ₹399"
+    - "WhatsApp us" for questions
+```
+
+### Plan Recommendation Quiz
+**Added — was discussed in previous session, missing from original tracker.**
+
+A 3-step interactive widget embedded on `/plans` overview page and triggered via "Is this right for me?" on individual plan pages. Converts undecided visitors.
+
+```
+Step 1: What is your primary goal?
+  → Lose weight / Build muscle / Manage a health condition / Improve performance / Eat healthy
+
+Step 2: What is your dietary preference?
+  → Vegetarian / Eggetarian / Non-Vegetarian / Jain / Vegan
+
+Step 3: Do you have any health conditions?
+  → None / PCOS / Diabetes / Thyroid / Heart / Other
+
+→ Result: "Based on your answers, we recommend: [Plan Name]"
+→ CTA: "View Plan" → /plans/[slug] or /lifestyle-plans/[slug]
+```
+
+Lives in: `components/PlanQuiz.tsx` — used on `/plans` overview + triggered from individual plan pages.
+
+### File Structure
+
+```
+app/
+  plans/
+    page.tsx                    ← General plans overview (exists, needs redesign)
+    [slug]/
+      page.tsx                  ← Server component — fetch plan data
+      PlanDetailClient.tsx      ← Full client sales page
+  components/
+    PlanQuiz.tsx                ← Plan recommendation quiz (shared)
+  api/
+    plans/
+      [slug]/route.ts           ← GET plan + 7-day sample schedule
+      [slug]/schedule/route.ts  ← GET full 60-day schedule
+```
+
+---
+
+## PHASE 9F — LIFESTYLE / MEDICAL PLAN PAGES
+
+### Complete Plan Catalogue
+
+#### Standard Lifestyle Plans
+
+| Plan | Slug | Variants | Key Principles | Status |
+|------|------|----------|----------------|--------|
+| Weight Loss | `weight-loss` | Veg/Egg/NV | Deficit, high protein | Pending |
+| Muscle Gain | `muscle-gain` | Veg/Egg/NV | Surplus, very high protein | Pending |
+| Balanced | `balanced` | Veg/Egg/NV/Jain | Maintenance, full macros | Pending |
+| Intermittent Fasting | `intermittent-fasting` | Veg/NV | 16:8 window meals, breaking fast correctly | Pending |
+| Vegan Muscle | `vegan-muscle` | Vegan only | Complete protein combining, B12 | Pending |
+| Keto Indian | `keto-indian` | Veg/NV | Low carb Indian adaptation, paneer-heavy | Pending |
+| Body Recomposition | `body-recomp` | Veg/NV | Simultaneous fat loss + muscle | Pending |
+| Lean Bulk | `lean-bulk` | Veg/NV | Clean surplus, controlled macros | Pending |
+| Cutting Phase | `cutting` | Veg/NV | Competition-lite, lean physique | Pending |
+
+#### Medical / Condition Plans
+
+| Plan | Slug | Variants | Key Principles | Medical Notes | Status |
+|------|------|----------|----------------|---------------|--------|
+| PCOS / PCOD | `pcos` | Veg/NV | Low GI, anti-inflammatory, hormone balance | Consult gynecologist | Pending |
+| Diabetic-Friendly | `diabetic` | Veg/NV | Controlled carbs, low GI, no refined sugar | Not a substitute for medication | Pending |
+| Pre-Diabetic | `pre-diabetic` | Veg/NV | GI management, weight normalisation | Early intervention | Pending |
+| Thyroid Support | `thyroid` | Veg/NV | Goitrogen-aware, selenium, iodine balance | Hypo vs Hyper variants | Pending |
+| Heart & Cholesterol | `heart-health` | Veg/NV | Low sat fat, omega-3, high fibre, DASH | Cardiologist referral note | Pending |
+| Hypertension / BP | `hypertension` | Veg/NV | Low sodium, DASH adaptation, potassium-rich | Monitor BP regularly | Pending |
+| Fatty Liver / NAFLD | `fatty-liver` | Veg/NV | Low fat, no alcohol, high antioxidants | Ultrasound baseline | Pending |
+| Kidney Health | `kidney-health` | Veg/NV | Low potassium, low phosphorus, controlled protein | Must consult nephrologist | Pending |
+| Uric Acid / Gout | `gout` | Veg/NV | Low purine, no red meat, low dal | Very specific — needs lab values | Pending |
+| Anaemia Correction | `anaemia` | Veg/NV | Iron-rich, Vitamin C pairing, B12, folate | Blood test baseline required | Pending |
+| Vitamin D Deficiency | `vitamin-d` | Veg/NV | D3 food sources, sun exposure note | Supplement pairing guide | Pending |
+| B12 Deficiency | `b12-deficiency` | Veg/NV | Fortified foods, eggs, dairy emphasis | Critical for vegetarians | Pending |
+| Obesity Management | `obesity` | Veg/NV | BMI 30+, clinical deficit, metabolic reset | Not a crash diet | Pending |
+| Knee Health / Joints | `knee-health` | Veg/NV | Anti-inflammatory, collagen, Vit D, calcium | Weight management component | Pending |
+| Post-Surgery Recovery | `post-surgery` | Veg/NV | Soft foods, anti-inflammatory, wound healing | Surgeon clearance required | Pending |
+| Post-COVID Recovery | `post-covid` | Veg/NV | Lung health, fatigue recovery, immunity | Gradual reintroduction | Pending |
+| Cancer Recovery | `cancer-recovery` | Veg/NV | High cal, easy digest, immune support | Oncologist coordination required | Pending |
+| Liver Detox | `liver-detox` | Veg only | Anti-inflammatory, antioxidant, no alcohol | 21-day reset program | Pending |
+| Gut Health / IBS | `gut-health` | Veg/NV | Low-FODMAP, anti-inflammatory, probiotics | Food diary tracking | Pending |
+
+#### Female-Specific Plans
+
+| Plan | Slug | Variants | Key Principles | Status |
+|------|------|----------|----------------|--------|
+| PCOS / PCOD | `pcos` | (above) | | Pending |
+| Menopause Nutrition | `menopause` | Veg/NV | Calcium, Vit D, phytoestrogens, bone density | Pending |
+| Fertility / Pre-Conception | `fertility` | Veg/NV | Folate, iron, DHA, zinc, antioxidants | Pending |
+| Post-Pregnancy / Lactation | `post-pregnancy` | Veg/NV | Iron, calcium, folate, calorie surplus | Pending |
+| PMS Management | `pms` | Veg/NV | Magnesium, B6, low sodium, anti-bloat | Pending |
+| Female Athlete | `female-athlete` | Veg/NV | Higher iron needs, different macro targets | Pending |
+| Hormonal Acne | `hormonal-acne` | Veg/NV | Low GI, anti-inflammatory, zinc, dairy-free option | Pending |
+
+#### Skin & Hair Plans
+
+| Plan | Slug | Variants | Key Principles | Status |
+|------|------|----------|----------------|--------|
+| Anti-Aging / Collagen | `anti-aging` | Veg/NV | Vit C, E, zinc, omega-3, lycopene | Pending |
+| Acne Clearing | `acne-skin` | Veg/NV | Low GI, anti-inflammatory, zinc, no dairy option | Pending |
+| Hair Fall / Hair Health | `hair-health` | Veg/NV | Biotin, iron, protein, selenium | Pending |
+| Eczema / Psoriasis | `eczema` | Veg/NV | Omega-3, anti-inflammatory, elimination approach | Pending |
+| Glow / Hyperpigmentation | `skin-glow` | Veg/NV | Vit C foods, antioxidants, hydration focus | Pending |
+
+#### Addiction & Recovery Plans
+
+| Plan | Slug | Variants | Key Principles | Status |
+|------|------|----------|----------------|--------|
+| Smoking Cessation | `quit-smoking` | Veg/NV | Vit C depletion fix, antioxidants, mood foods | Pending |
+| Alcohol Recovery | `alcohol-recovery` | Veg/NV | B vitamins, liver support, blood sugar stabilisation | Pending |
+| 21-Day Detox Reset | `detox-reset` | Veg only | No sugar, no processed, anti-inflammatory clean slate | Pending |
+
+#### Senior & Kids Plans
+
+| Plan | Slug | Variants | Key Principles | Status |
+|------|------|----------|----------------|--------|
+| Senior Nutrition (55+) | `senior` | Veg/NV | Soft textures, calcium, B12, low sodium | Pending |
+| Kids & Teen (8–17) | `kids-teen` | Veg/NV | Growth, iron, DHA, no junk | Pending |
+
+#### Seasonal / Festival Plans
+**Added — was discussed in previous session, missing from original tracker.**
+
+Time-limited, high-conversion during festivals. Same recipe DB, specific plan configurations. Launch as limited-time products.
+
+| Plan | Slug | Season | Key Principles | Status |
+|------|------|--------|----------------|--------|
+| Navratri Fasting | `navratri` | Oct (9 days) | Saatvik, no grains, kuttu/singhara, dairy-based, high energy | Pending |
+| Ramadan — Sehri & Iftar | `ramadan` | Mar–Apr (30 days) | Pre-dawn high protein + complex carb, sunset high carb + hydration, no dehydrating foods | Pending |
+| Post-Diwali Detox | `diwali-detox` | Nov (21 days) | Anti-inflammatory reset, no sugar, no processed, liver support after festive excess | Pending |
+| Shravan / Ekadashi | `shravan` | Jul–Aug | No non-veg, saatvik, dairy-forward, light on digestion | Pending |
+
+**Implementation note:** Seasonal plans are toggled active/inactive via `MealPlan.isActive` flag. No special schema needed — the existing system handles it. Admin flips them live during the festival window and deactivates after.
+
+### Lifestyle Plan Page Structure — `/lifestyle-plans/[slug]`
+
+Medical plans need MORE trust content than standard plans:
+
+```
+1. Condition Hero
+   - Condition name + empathetic tagline ("Living with PCOS? Food is your medicine.")
+   - Key stats: avg kcal, key nutrients, plan duration
+   - "Start Trial Day" CTA
+
+2. Understanding the Condition
+   - Plain-language explanation of the condition
+   - Why diet matters for this specific condition
+   - What the science says (1–2 evidence points)
+
+3. Is This Plan Right for You?
+   - Checklist: who this is for + who should consult a doctor first
+   - Medical disclaimer (mandatory for all medical plans)
+   - "Not sure?" → Plan recommendation quiz  ← LINKS TO PLAN QUIZ
+
+4. Nutritional Principles
+   - What we prioritise and why (condition-specific)
+   - Foods featured prominently
+   - Foods excluded and why
+
+5. Nutritionist Credit
+   - Photo, name, credentials, specialisation
+   - "This plan was designed by..."
+
+6. 7-Day Sample Menu
+   - Same structure as standard plans + GI index per meal for diabetic/PCOS
+
+7. How FitFuel Helps
+   - Per-gram tracking
+   - Dashboard logging
+   - Supplement pairing suggestions
+
+8. Customer Results
+   - Condition-specific testimonials ("Lost 8kg managing PCOS in 3 months")
+
+9. Pricing + FAQ
+   - Same structure as standard plans
+   - Additional FAQ: "Can I use this alongside medication?" etc.
+
+10. CTA + Medical Disclaimer Footer
+```
+
+### Public Landing — `/lifestyle-plans`
+
+Category overview page with:
+- Condition category cards (Medical / Female / Skin & Hair / Recovery / Senior / Seasonal)
+- Search by condition
+- "Not sure which plan?" → triggers Plan Recommendation Quiz
+- Featured testimonials per category
+
+---
+
+## PHASE 9G — SPORTS NUTRITION PLAN PAGES
+
+### Sports Plans Catalogue
+
+| Plan | Slug | Target Athlete | Macro Profile | Status |
+|------|------|----------------|---------------|--------|
+| Performance / Endurance | `endurance` | Runners, cyclists, swimmers | High carb (55%), mod protein, low fat | Pending |
+| Strength & Hypertrophy | `strength-hypertrophy` | Gym, powerlifting, bodybuilding | Very high protein (2.2g/kg), carb cycling | Pending |
+| Competition Prep | `competition-prep` | Bodybuilders, combat sports | Periodised — bulk/cut phases | Pending |
+| Recovery Nutrition | `sports-recovery` | Post-injury, post-surgery athletes | Anti-inflammatory, collagen, Vit C, protein | Pending |
+| Cricket Nutrition | `cricket` | Cricket players, club to state level | Intermittent high energy, match day vs training day | Pending |
+| Football / Futsal | `football` | Football, futsal players | High carb on match day, recovery focus | Pending |
+| Swimming | `swimming` | Competitive swimmers | High volume calories, dual daily training support | Pending |
+| Martial Arts / MMA | `martial-arts` | BJJ, MMA, boxing, wrestling | Weight class management, performance | Pending |
+| Female Athlete | `female-athlete` | Women in sport | Higher iron, hormonal considerations | Pending |
+| Youth Athlete (14–18) | `youth-athlete` | School/college sport | Growth + performance balance | Pending |
+
+### Sports Nutrition Landing — `/sports-nutrition`
+
+```
+Hero: "Fuel Your Performance"
+Sub: "Sport-specific nutrition engineered for Indian athletes"
+
+→ Sport selector (Cricket / Football / Running / Gym / Swimming / MMA / Other)
+→ Goal selector (Build strength / Improve endurance / Competition prep / Recovery)
+→ "Find my plan" → recommended plan page (uses Plan Quiz logic)
+
+Featured plans grid
+Athlete testimonials
+"Talk to a sports nutritionist" CTA (online consulting hook)
+```
+
+---
+
+## PHASE 9H — TIER COMPARISON + PRICING PAGE
+
+### Page Route: `/pricing`
+
+This is the **upsell engine**. Shows what you get at each tier across all plan types.
+
+### Tier Feature Matrix
+
+| Feature | Standard | Premium | Luxury |
+|---------|----------|---------|--------|
+| Price multiplier | 1.0x base | 1.25x | 1.5x |
+| All meal plan types | ✓ | ✓ | ✓ |
+| Core recipes | ✓ | ✓ | ✓ |
+| Upgraded ingredients | — | ✓ | ✓ |
+| Weekly chef special dish | — | ✓ | ✓ |
+| Premium protein cuts | — | ✓ | ✓ |
+| Nutrition tracker | ✓ | ✓ | ✓ |
+| Per-gram meal logging | ✓ | ✓ | ✓ |
+| Exercise library | ✓ | ✓ | ✓ |
+| Linked workout schedule | — | ✓ | ✓ |
+| Supplement guide | ✓ | ✓ | ✓ |
+| Supplement delivery add-on | — | ✓ | ✓ |
+| Body metrics tracking | ✓ | ✓ | ✓ |
+| Weekly progress PDF report | — | ✓ | ✓ |
+| Priority WhatsApp support | — | ✓ | ✓ |
+| 1-on-1 nutritionist consult | — | — | ✓ |
+| AI personal trainer | — | — | ✓ |
+| Custom meal plan | — | — | ✓ |
+| Wellness partner access | — | — | ✓ |
+| Concierge delivery slot | — | — | ✓ |
+| Quarterly transformation report | — | — | ✓ |
+
+### Pricing Page Sections
+
+```
+1. Hero: "Choose Your Level"
+2. Tier cards — Standard / Premium / Luxury
+3. Full feature comparison table (above)
+4. "Which tier is right for me?" — uses Plan Recommendation Quiz (Step 3 output maps to tier)
+5. Plan + Tier price calculator (pick plan type + duration + tier = price)
+6. Premium waitlist CTA
+7. Luxury waitlist CTA (concierge feel — "We'll call you")
+8. FAQ on tiers
+```
+
+---
+
+## PHASE 9I — PUBLIC TRUST PAGES
+
+All these are missing and blocking conversions:
+
+| Page | Route | Priority | Status |
+|------|-------|----------|--------|
+| How It Works | `/how-it-works` | Critical | Pending |
+| Our Kitchen | `/our-kitchen` | High | Pending |
+| Our Ingredients | `/our-ingredients` | High | Pending |
+| Our Nutritionists | `/our-team` | Critical for medical plans | Pending |
+| Testimonials / Results | `/results` | High | Pending |
+| FAQ | `/faq` | High | Pending |
+| Corporate Plans | `/corporate` | Medium | Pending |
+| Refund & Cancellation | `/refund-policy` | Required | Pending |
+| Terms & Conditions | `/terms` | Required | Pending |
+| Privacy Policy | `/privacy` | Required | Pending |
+| Medical Disclaimer | `/medical-disclaimer` | Required for medical plans | Pending |
+| Allergen Policy | `/allergen-policy` | Required | Pending |
+| FSSAI Compliance | Inline on footer + `/our-kitchen` | Legal requirement | Pending |
+
+### How It Works Page — `/how-it-works`
+
+```
+Step 1: Tell us about you
+  → Onboarding: weight, goal, diet preference, health condition
+
+Step 2: We build your plan
+  → 60-day rotating menu, no repeats, personalised calories
+
+Step 3: We cook fresh daily
+  → Kitchen: 4am prep, olive oil only, no frying, fresh sourced
+
+Step 4: Delivered by 8am
+  → Your area, 6 days/week, eco packaging
+
+Step 5: Track it all
+  → Tap "I ate this" → auto-logs macros → see your progress
+
+Step 6: Adjust and evolve
+  → Meal feedback, plan swap, tier upgrade anytime
+```
+
+---
+
+## PHASE 9J + 9K — DASHBOARD WIRING
+
+### Today's Meals Card (New — most important dashboard addition)
+
+```
+┌─────────────────────────────────────┐
+│ Today's Meals — Day 14 of 60       │
+│ Weight Loss Non-Veg · Standard     │
+├─────────────────────────────────────┤
+│ 🌅 Breakfast  7:00–9:00am          │
+│ Moong Dal Chilla — 280g            │
+│ 25g P · 5g F · 36g C · 289 kcal  │
+│ [I ate this] [Adjust grams] [Skip] │
+├─────────────────────────────────────┤
+│ ☀️ Lunch  12:30–2:00pm             │
+│ Tandoori Chicken Salad — 320g      │
+│ 50g P · 5g F · 10g C · 285 kcal  │
+│ [I ate this] [Adjust grams] [Skip] │
+├─────────────────────────────────────┤
+│ 🌙 Dinner  7:00–8:30pm             │
+│ Fish Tikka + Brown Rice — 400g     │
+│ 37g P · 7g F · 54g C · 427 kcal  │
+│ [I ate this] [Adjust grams] [Skip] │
+├─────────────────────────────────────┤
+│ 🍎 Snack  4:00–5:00pm              │
+│ Masala Oats — 150g                 │
+│ 6g P · 7.5g F · 32g C · 220 kcal │
+│ [I ate this] [Adjust grams] [Skip] │
+├─────────────────────────────────────┤
+│ Today's total: 1,221 / 1,800 kcal │
+│ ██████████░░░░░░░  68%            │
+└─────────────────────────────────────┘
+```
+
+When user taps "I ate this" → creates FoodEntry in nutrition tracker diary automatically.
+When user adjusts grams → macros recalculate per gram, FoodEntry updates.
+
+### Plan Progress Card
+
+```
+┌─────────────────────────────────────┐
+│ Your Plan                           │
+│ Weight Loss Non-Veg · Standard     │
+│ Day 14 of 30 · ██████░░░░  47%    │
+│ Started: May 7 · Ends: Jun 6       │
+│ [Renew now — 5 days left warning]  │
+│ [Upgrade to Premium]               │
+└─────────────────────────────────────┘
+```
+
+### Net Calorie Engine
+
+```
+Today's Balance:
+In:   1,221 kcal (from meals)
+Out:  340 kcal (from workout)
+Net:  881 kcal consumed of 1,800 target
+Remaining: 919 kcal
+
+[Ring visualization — meals vs workout vs target]
+```
+
+---
+
+## PHASE 9L — NET CALORIE ENGINE
+
+### How It Works
+
+```typescript
+// lib/netCalories.ts
+export async function getDailyCalorieBalance(userId: string, date: Date) {
+  // Calories IN — from MealLog (plan meals confirmed) + FoodEntry (manual)
+  const mealLogCalories = await getMealLogCalories(userId, date)
+  const manualCalories = await getNutritionDiaryCalories(userId, date)
+  const totalIn = mealLogCalories + manualCalories
+
+  // Calories OUT — from WorkoutSession
+  const caloriesBurned = await getWorkoutCalories(userId, date)
+
+  // Target — from UserActivePlan or UserProfile
+  const target = await getCalorieTarget(userId)
+
+  return {
+    in: totalIn,
+    out: caloriesBurned,
+    net: totalIn - caloriesBurned,
+    target,
+    remaining: target - (totalIn - caloriesBurned),
+    status: totalIn - caloriesBurned < target ? 'under' : 'over'
+  }
+}
+```
+
+---
+
+## PHASE 9M — LIGHTWEIGHT RECIPE ADMIN
+
+### Why Now (Not Phase 15)
+
+Phase 15 is the full admin panel. But you need to enter hundreds of recipes now. Building a lightweight recipe CRUD inside the dashboard means you can enter recipes without touching code.
+
+### Routes
+
+```
+/dashboard/admin/recipes           — recipe list + search
+/dashboard/admin/recipes/new       — create recipe form
+/dashboard/admin/recipes/[id]      — edit recipe
+/dashboard/admin/plans             — meal plan list
+/dashboard/admin/plans/[id]/schedule — 60-day schedule builder (day × meal slot grid)
+```
+
+### Access Control
+
+```typescript
+// Only users with role === 'ADMIN' or role === 'OWNER' can access
+// Add to middleware.ts — redirect non-admin to /dashboard
+```
+
+### Recipe Form Fields
+
+Grouped into tabs:
+1. Basic Info (name, slug, description, dietary tags, meal type, cuisine)
+2. Ingredients (ingredient search → food_items, quantity, prep note)
+3. Macros (auto-computed from ingredients OR manual override)
+4. Instructions (step builder — add/reorder/delete steps)
+5. Operations (tier, kitchen station, shelf life, cost, packaging)
+6. Media (image upload URL, video URL)
+
+---
+
+## PHASE 9N — ONBOARDING FLOW
+
+### When It Triggers
+
+1. New user signs up → after email verification → onboarding modal
+2. Existing user places first order → post-checkout onboarding
+3. User visits dashboard without completing profile → banner + "Complete setup"
+
+### Onboarding Steps (5 steps, progress bar)
+
+```
+Step 1: Your body
+  Current weight (kg) · Height (cm) · Age · Gender
+
+Step 2: Your goal
+  Weight loss / Muscle gain / Maintenance / Health condition / Performance
+
+Step 3: Your lifestyle
+  Activity level (with descriptions) · Dietary preference
+
+Step 4: Health check
+  Any conditions? (PCOS / Diabetic / Thyroid / Heart / None / Other)
+  Any allergies?
+
+Step 5: Your numbers
+  Show calculated TDEE + recommended calorie target
+  "Your plan has been personalised to X kcal/day"
+  → Complete → saves to UserProfile → redirect to dashboard
+```
+
+---
+
+## PHASE 9O — HOMEPAGE UPDATES
+
+Sections to add to existing homepage:
+
+| Section | Content | Status |
+|---------|---------|--------|
+| Plan categories strip | Standard / Lifestyle / Sports — 3 cards with entry points | Pending |
+| How it works — 5 step | Visual process strip | Pending |
+| The MOAT highlight | "Track every gram. No dish repeats in 60 days. Personalised to your body." | Pending |
+| Tier comparison strip | 3 tier cards — pricing anchoring | Pending |
+| Testimonials strip | 4–6 customer results with photos | Pending |
+| Trust badges row | FSSAI · Olive oil only · No frying · Fresh daily · 5★ rated | Pending |
+| Live stats | "Serving X customers in Pune · Y meals delivered" | Pending |
+| Plan recommendation quiz widget | Embedded on homepage — 3 steps → recommended plan | Pending |
+
+---
+
+## COMPLETE FILE LIST — PHASE 9
+
+### New Files to Create
+
+```
+prisma/
+  schema.prisma                             ← Updated ✅ — 9 new models + enums
+  migrations/add-recipe-plan-schedule-system/ ✅ DONE
+  seed-recipes.ts                           ← Weight Loss Non-Veg — 30 recipes to start
+  seed-meal-plans.ts                        ← All plan definitions
+  seed-schedule.ts                          ← 30-day schedule for Weight Loss Non-Veg
+
+lib/
+  tdee.ts                                   ← ✅ DONE
+  meal-plans-data.ts                        ← ✅ DONE
+  net-calories.ts                           ← Net calorie engine
+
+app/
+  plans/
+    page.tsx                                ← Redesigned plans overview + PlanQuiz
+    [slug]/
+      page.tsx                              ← Server component
+      PlanDetailClient.tsx                  ← Full plan sales page
+
+  lifestyle-plans/
+    page.tsx                                ← Lifestyle landing
+    LifestyleLanding.tsx                    ← Client component
+    [slug]/
+      page.tsx                              ← Server component
+      LifestylePlanClient.tsx               ← Medical plan sales page
+
+  sports-nutrition/
+    page.tsx                                ← Sports landing
+    SportsNutritionLanding.tsx
+    [slug]/
+      page.tsx
+      SportsPlanClient.tsx
+
+  pricing/
+    page.tsx                                ← Tier comparison page
+    PricingClient.tsx
+
+  how-it-works/
+    page.tsx
+
+  our-kitchen/
+    page.tsx
+
+  our-team/
+    page.tsx
+
+  results/
+    page.tsx
+
+  faq/
+    page.tsx
+
+  corporate/
+    page.tsx
+
+  refund-policy/
+    page.tsx
+
+  terms/
+    page.tsx
+
+  privacy/
+    page.tsx
+
+  medical-disclaimer/
+    page.tsx
+
+  dashboard/
+    admin/
+      recipes/
+        page.tsx                            ← Recipe list
+        new/page.tsx                        ← Create recipe
+        [id]/page.tsx                       ← Edit recipe
+        RecipeForm.tsx                      ← Shared form component
+      plans/
+        page.tsx                            ← Plan list
+        [id]/schedule/page.tsx              ← Schedule builder
+    DashboardClient.tsx                     ← Updated — add Today's Meals + Plan Progress cards
+
+  api/
+    plans/
+      route.ts                              ← GET all plans
+      [slug]/route.ts                       ← GET plan detail
+      [slug]/schedule/route.ts              ← GET 60-day schedule
+      [slug]/schedule/[day]/route.ts        ← GET single day
+    user/
+      active-plan/
+        route.ts                            ← GET active plan
+        meals/
+          today/route.ts                    ← GET today's meals with macros
+          log/route.ts                      ← POST log meal
+          rate/route.ts                     ← POST rate meal (1-5 stars + note)
+        pause/route.ts                      ← POST pause plan
+        skip/route.ts                       ← POST skip date
+    admin/
+      recipes/
+        route.ts                            ← GET list + POST create
+        [id]/route.ts                       ← GET + PATCH + DELETE
+      plans/
+        route.ts                            ← GET + POST
+        [id]/route.ts                       ← GET + PATCH
+        [id]/schedule/route.ts              ← GET + POST schedule slots
+
+  components/
+    PlanQuiz.tsx                            ← Plan recommendation quiz (shared across pages)
+```
+
+### Files to Modify
+
+```
+prisma/schema.prisma                        ← ✅ Done. Next: add mealLogId to FoodEntry
+app/dashboard/DashboardClient.tsx           ← Add Today's Meals card, Plan Progress, Net Calories
+app/dashboard/profile/ProfileClient.tsx     ← Add onboarding fields, TDEE display
+app/page.tsx                                ← Add new homepage sections + PlanQuiz widget
+app/globals.css                             ← Any new CSS vars if needed
+middleware.ts                               ← Add admin route protection
+```
+
+---
+
+## DATABASE MIGRATION PLAN
+
+```bash
+# 1. ✅ DONE
+npx prisma migrate dev --name add-recipe-plan-schedule-system
+
+# 2. Next migration — add mealLogId back-reference to FoodEntry
+npx prisma migrate dev --name add-meal-log-id-to-food-entry
+
+# 3. Seed meal plan definitions
+npx ts-node prisma/seed-meal-plans.ts
+
+# 4. Seed initial recipes (Weight Loss Non-Veg — 30 to start)
+npx ts-node prisma/seed-recipes.ts
+
+# 5. Seed 30-day schedule
+npx ts-node prisma/seed-schedule.ts
+
+# 6. Verify in Neon console
+```
+
+---
+
+## BUILD ORDER — PHASE 9
+
+Execute in this exact order. Each step unlocks the next.
+
+```
+WEEK 1 — Foundation
+  Day 1-2:  Schema (9A) ✅ DONE
+  Day 3:    TDEE lib + meal-plans-data.ts (9B) ✅ DONE
+  Day 4-5:  seed-meal-plans.ts — all plan definitions
+  Day 5-6:  seed-recipes.ts — Weight Loss Non-Veg (30 recipes to start)
+  Day 7:    seed-schedule.ts — 30-day schedule (extend to 60 later)
+
+WEEK 2 — Admin + Plan Pages
+  Day 8-9:  Recipe Admin UI (9M) — create + edit recipes in dashboard
+  Day 10:   Plan Admin UI — schedule builder grid
+  Day 11-12: /plans/[slug] — standard plan pages (9E) + PlanQuiz component
+  Day 13-14: /lifestyle-plans/[slug] — lifestyle plan pages (9F) — PCOS + Diabetic first
+
+WEEK 3 — Dashboard Wiring
+  Day 15-16: Today's Meals card + API routes (9J)
+  Day 17:    Plan Progress card (9K)
+  Day 18:    Net Calorie Engine (9L)
+  Day 19:    Exercise Schedule wiring (9D)
+  Day 20:    Onboarding flow (9N)
+
+WEEK 4 — Public Pages + Polish
+  Day 21-22: /sports-nutrition pages (9G)
+  Day 23:    /pricing — tier comparison (9H)
+  Day 24-25: Trust pages — How It Works, Our Kitchen, Our Team, Results, FAQ
+  Day 26:    Legal pages — T&C, Privacy, Refund, Medical Disclaimer
+  Day 27:    Homepage updates (9O)
+  Day 28:    QA + wire to existing checkout + push to main
+```
+
+---
+
+## UPCOMING PHASES — INFORMED BY PHASE 9
+
+| Phase | Name | How Phase 9 Enables It |
+|-------|------|------------------------|
+| 10 | Live Delivery Tracking | UserActivePlan.currentDay tells kitchen what to pack per customer |
+| 11 | Progress Tracking + Charts | MealLog + WorkoutSession + BodyMetrics all exist — just visualise |
+| 12 | AI Chatbot + AI Trainer | Recipe DB + UserActivePlan + macros = full context for Claude API |
+| 13 | Digital Meal Plans (PDF) | Pull MealPlan + PlanScheduleSlot + Recipe from DB → generate PDF |
+| 14 | Blog, FAQ, Testimonials | FAQ page built in Phase 9. Blog + testimonials extend it |
+| 15 | Admin Panel | Recipe admin built in Phase 9M — Phase 15 extends it |
+| 16 | n8n Notifications | "Today's meal" push uses MealLog + PlanScheduleSlot data |
+| Online Consulting | Nutrition consulting | Nutritionist sees UserActivePlan + MealLog + BodyMetrics |
+| Courses | Online courses | Recipe + nutrition knowledge already structured — pull into course modules |
+| Franchise | Franchise portal | RecipeStep SOP + batch scaling already in DB |
+| Corporate | B2B plans | MealPlan with corporate pricing tier — schema already supports it |
+| Seasonal | Festival plans | MealPlan.isActive toggle — Navratri, Ramadan, Diwali Detox, Shravan |
+
+---
+
+## REVENUE STREAMS — PHASE 9 UNLOCKS
+
+| Stream | How | When |
+|--------|-----|------|
+| Standard plan sales (all types) | Full plan catalogue live | Phase 9 complete |
+| Lifestyle plan premium | Medical plans at slight premium | Phase 9F |
+| Sports plan sales | New customer segment | Phase 9G |
+| Seasonal / festival plans | Time-limited, high-conversion | Phase 9F (toggle on/off) |
+| Premium tier upgrade | Tier page + upgrade CTA in dashboard | Phase 9H |
+| Luxury waitlist | Concierge landing | Phase 9H |
+| Corporate waitlist | `/corporate` page | Phase 9I |
+| Digital plans (future) | DB ready for PDF generation | Phase 13 |
+| Online consulting hook | CTA live on plan pages | Phase 9F/G |
+
+---
+
+## WHAT WE ARE WIRING FROM PREVIOUS PHASES
+
+| Phase | Built | How Phase 9 Wires It |
+|-------|-------|----------------------|
+| Phase 4 | Auth + User Profile | UserProfile extended with body metrics + onboarding |
+| Phase 5 | Body Metrics (BLE) | BodyMetrics → feeds TDEE calculation + progress tracking |
+| Phase 6 | Nutrition Tracker | MealLog auto-creates FoodEntry when meal confirmed |
+| Phase 7 | Exercise Library + Logger | ExerciseSchedule links to plan → Today's Workout card |
+| Phase 8 | Supplement Guide | Supplement recommendations linked to plan category on plan pages |
+
+---
+
+## LEGAL REQUIREMENTS (Non-Negotiable)
+
+| Requirement | Where | Status |
+|-------------|-------|--------|
+| FSSAI license 21523035002815 | Footer + /our-kitchen | Pending |
+| Medical disclaimer | All lifestyle/medical plan pages + /medical-disclaimer | Pending |
+| Allergen policy | /allergen-policy + checkout | Pending |
+| Nutritionist credentials | All medical plan pages | Pending |
+| "Not a substitute for medical advice" | Medical plans + checkout | Pending |
+| Privacy policy | /privacy | Pending |
+| Terms & conditions | /terms | Pending |
+| Refund & cancellation | /refund-policy | Pending |
+
+---
+
+## DESIGN SYSTEM — PHASE 9
+
+Consistent with Phases 7 + 8.
+
+| Property | Value |
+|----------|-------|
+| Display font | Syne (600/700/800) |
+| Body font | DM Sans (300/400/500/600) |
+| Background | #080808 |
+| Card background | #101010 / #161616 hover |
+| Max width | 1120px |
+| Standard plans accent | #a3e635 (lime) |
+| Lifestyle/Medical accent | Per condition (PCOS: rose, Diabetic: teal, Heart: red, Skin: amber) |
+| Sports accent | #c084fc (purple) |
+| Tier accents | Standard: #a3e635 · Premium: #f59e0b · Luxury: #e879f9 |
+| Seasonal plans accent | #f97316 (orange) |
+
+### Per-Condition Color System
+
+| Condition | Accent |
+|-----------|--------|
+| PCOS | #f472b6 (rose) |
+| Diabetic | #2dd4bf (teal) |
+| Thyroid | #a78bfa (violet) |
+| Heart | #fb7185 (red) |
+| Gut health | #34d399 (emerald) |
+| Obesity | #fb923c (orange) |
+| Knee/Joints | #38bdf8 (sky blue) |
+| Skin & hair | #fbbf24 (amber) |
+| Smoking recovery | #4ade80 (green) |
+| Alcohol recovery | #94a3b8 (slate) |
+| Female plans | #f9a8d4 (pink) |
+| Sports | #c084fc (purple) |
+| Senior | #67e8f9 (cyan) |
+| Seasonal / festival | #f97316 (orange) |
+
+---
+
+## NOTES + DECISIONS — PHASE 9
+
+| # | Decision | Choice |
+|---|----------|--------|
+| 1 | Recipe entry method | Seed script first (Week 1) + Recipe Admin UI (Week 2) |
+| 2 | First plan to fully build | Weight Loss Non-Veg — has most existing content from WordPress |
+| 3 | 60-day schedule — launch with | 30 days first, extend to 60 within Phase 9 |
+| 4 | Lifestyle plans — launch with | PCOS, Diabetic, Gut Health, Post-Pregnancy, Acne, Hair Health |
+| 5 | Sports plans — launch with | Strength/Hypertrophy, Endurance, Cricket |
+| 6 | Personalisation | Onboarding → TDEE → calorie target → stored in UserActivePlan |
+| 7 | Franchise fields | Cost per serving, kitchen station, batch scaling — seed now, portal Phase 15+ |
+| 8 | Medical disclaimer | Every medical plan page + checkout for medical plans |
+| 9 | Nutritionist credit | Placeholder with real credentials required before going live on medical plans |
+| 10 | Tier activation | Standard fully live. Premium + Luxury = waitlist only until Phase 12 |
+| 11 | Plan recommendation quiz | Built as shared component in Phase 9E, reused across /plans, /lifestyle-plans, /pricing, homepage |
+| 12 | Seasonal plans | Same schema, toggled via isActive. First seasonal: Navratri (Oct). Build in Phase 9F window. |
+| 13 | FoodEntry mealLogId | Add in next migration alongside seed scripts. Not blocking 9C. |
+
+---
+
+> **Last Updated: May 20, 2026 — 9A ✅ 9B ✅ — 3 tracker gaps patched (plan quiz, seasonal plans, FoodEntry mealLogId)**
+> **Next action: 9C — seed-meal-plans.ts → seed-recipes.ts → seed-schedule.ts**
+> **Owner: Pranit Borkar — pranitborkar98@gmail.com**
+> **Platform: fitfuel-eosin.vercel.app → fitfuel.in after launch**

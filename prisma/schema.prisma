@@ -1,7 +1,16 @@
 // ============================================================
-// FITFUEL — PRISMA SCHEMA v5 (Phase 7 — Exercise Library)
-// Connection config lives in prisma.config.ts — NOT here
-// Run: npx prisma migrate dev --name add-exercise-library
+// FITFUEL — PRISMA SCHEMA v6.1 (Phase 9 — Recipe + Plan System)
+// UPDATED: May 20, 2026 — Fixes 4 critical gaps from v6.0
+//
+// CHANGES IN THIS VERSION:
+// 1. FoodEntry + MealLog: bidirectional relation (mealLogId back-ref)
+// 2. MealPlan + MealPlanProduct: bridge relation + MealPlan.planPrices
+// 3. PlanPrice: dual-link (productId legacy + mealPlanId new)
+// 4. UserActivePlan: order relation + duration/mealsPerDay fields
+// 5. Order: userActivePlans back-relation
+//
+// MIGRATION NAME: fix-phase9-relations-and-pricing-bridge
+// Run: npx prisma migrate dev --name fix-phase9-relations-and-pricing-bridge
 // ============================================================
 
 generator client {
@@ -19,6 +28,7 @@ datasource db {
 enum Role {
   CUSTOMER
   ADMIN
+  OWNER
 }
 
 enum DietType {
@@ -118,6 +128,37 @@ enum FitnessGoal {
   MANAGE_CONDITION
 }
 
+// ── Phase 9 — New Enums ──
+
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum PlanTier {
+  STANDARD
+  PREMIUM
+  LUXURY
+}
+
+enum PlanCategory {
+  STANDARD
+  LIFESTYLE_MEDICAL
+  SPORTS
+  CORPORATE
+  DIGITAL
+}
+
+enum DietVariant {
+  VEG
+  EGG
+  NON_VEG
+  JAIN
+  VEGAN
+}
+
 // ============================================================
 // USER
 // ============================================================
@@ -132,6 +173,7 @@ model User {
   avatarUrl     String?
   role          Role      @default(CUSTOMER)
   isActive      Boolean   @default(true)
+  referralCode            String?    @unique  // generated on signup
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -152,6 +194,10 @@ model User {
   // ── Phase 7 — Exercise Library ──
   workoutSessions WorkoutSession[]
 
+  // ── Phase 9 — Plan System ──
+  userActivePlans UserActivePlan[]
+  mealLogs        MealLog[]
+
   @@map("users")
 }
 
@@ -169,9 +215,22 @@ model UserProfile {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
+  // ── Phase 9 — Onboarding + Personalisation fields ──
+  targetWeightKg      Float?
+  age                 Int?
+  healthConditions    String[]   // pcos, diabetic, thyroid, heart, etc.
+  dietaryRestrictions String[]   // no_pork, no_beef, nut_allergy, etc.
+  allergies           String[]   // nuts, dairy, gluten, shellfish
+  tdee                Int?       // computed + stored after onboarding
+  calorieTarget       Int?       // personalised target (= TDEE ± goal adjustment)
+  onboardingComplete  Boolean    @default(false)
+
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+
+  weeklyConsistencyScore  Int?       // 0-100, recomputed every Sunday — feeds AI trainer
+  referredBy              String?    // userId of referrer
 }
 
 // ============================================================
@@ -199,7 +258,9 @@ model Address {
 }
 
 // ============================================================
-// MEAL PLAN PRODUCT (catalogue)
+// MEAL PLAN PRODUCT (catalogue — Phase 3, preserved)
+// DEPRECATED: Migrate checkout to MealPlan + PlanPrice directly.
+// Kept for backward compatibility during transition.
 // ============================================================
 
 model MealPlanProduct {
@@ -219,6 +280,7 @@ model MealPlanProduct {
   pricing     PlanPrice[]
   orderItems  OrderItem[]
   activePlans ActivePlan[]
+  mealPlans   MealPlan[]   // ← NEW: bridge to Phase 9 MealPlan
 
   @@map("meal_plan_products")
 }
@@ -226,10 +288,21 @@ model MealPlanProduct {
 // ============================================================
 // PRICE TABLE
 // ============================================================
+// Dual-link: productId = legacy (MealPlanProduct), mealPlanId = new (MealPlan)
+// During transition, populate both. Eventually drop productId + diet fields.
+// ============================================================
 
 model PlanPrice {
   id          String       @id @default(cuid())
-  productId   String
+
+  // Legacy link — MealPlanProduct (Phase 3)
+  productId   String?
+  product     MealPlanProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // New link — MealPlan (Phase 9, 103 variants)
+  mealPlanId  String?
+  mealPlan    MealPlan?        @relation(fields: [mealPlanId], references: [id])
+
   diet        DietType
   duration    PlanDuration
   mealsPerDay MealsPerDay
@@ -237,9 +310,8 @@ model PlanPrice {
   gstPercent  Int          @default(5)
   isActive    Boolean      @default(true)
 
-  product     MealPlanProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
-
   @@unique([productId, diet, duration, mealsPerDay])
+  @@unique([mealPlanId, duration, mealsPerDay])  // ← NEW: unique for new plan pricing
   @@map("plan_prices")
 }
 
@@ -266,11 +338,12 @@ model Order {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  user          User          @relation(fields: [userId], references: [id])
-  address       Address?      @relation(fields: [addressId], references: [id])
-  items         OrderItem[]
-  deliveries    Delivery[]
-  payment       Payment?
+  user            User          @relation(fields: [userId], references: [id])
+  address         Address?      @relation(fields: [addressId], references: [id])
+  items           OrderItem[]
+  deliveries      Delivery[]
+  payment         Payment?
+  userActivePlans UserActivePlan[]  // ← NEW: link to active plan record
 
   @@index([userId])
   @@index([status])
@@ -345,7 +418,10 @@ model Delivery {
 }
 
 // ============================================================
-// ACTIVE PLAN
+// ACTIVE PLAN (Phase 3 — DEPRECATED)
+// ============================================================
+// Kept for backward compatibility. Migrate existing rows to
+// UserActivePlan, then drop this table in a future migration.
 // ============================================================
 
 model ActivePlan {
@@ -402,25 +478,20 @@ model BodyMetric {
 // PHASE 7 — EXERCISE LIBRARY
 // ============================================================
 
-// ~800 exercises seeded from free-exercise-db
-// Images served from GitHub CDN — paths stored as relative strings
-// e.g. images[0] = "Barbell_Squat/0.jpg"
-// Full URL: https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/images/{path}
-
 model Exercise {
-  id               String   @id   // raw id from JSON e.g. "Barbell_Squat"
+  id               String   @id
   name             String
-  category         String         // strength | stretching | cardio | plyometrics | powerlifting | strongman | olympic_weightlifting
-  level            String         // beginner | intermediate | expert
-  force            String?        // push | pull | static
-  mechanic         String?        // compound | isolation
-  equipment        String?        // body only | barbell | dumbbell | cable | machine | etc.
+  category         String
+  level            String
+  force            String?
+  mechanic         String?
+  equipment        String?
   primaryMuscles   String[]
   secondaryMuscles String[]
   instructions     String[]
-  images           String[]       // relative paths — always 2 per exercise
+  images           String[]
 
-  workoutExercises WorkoutExercise[]
+  workoutExercises  WorkoutExercise[]
 
   @@index([category])
   @@index([level])
@@ -428,16 +499,15 @@ model Exercise {
   @@map("exercises")
 }
 
-// A single workout session (groups multiple exercises)
 model WorkoutSession {
   id             String    @id @default(cuid())
   userId         String
-  name           String?                        // e.g. "Push Day", "Morning Workout"
+  name           String?
   date           DateTime  @db.Date
   startedAt      DateTime?
   completedAt    DateTime?
-  durationMins   Int?                           // total session duration
-  caloriesBurned Int?                           // fed into nutrition calorie ring
+  durationMins   Int?
+  caloriesBurned Int?
   notes          String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -449,12 +519,11 @@ model WorkoutSession {
   @@map("workout_sessions")
 }
 
-// An exercise within a session (ordered)
 model WorkoutExercise {
   id               String   @id @default(cuid())
   workoutSessionId String
   exerciseId       String
-  orderInSession   Int                          // 0-indexed display order
+  orderInSession   Int
   notes            String?
 
   workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
@@ -464,15 +533,14 @@ model WorkoutExercise {
   @@map("workout_exercises")
 }
 
-// Individual set within a workout exercise
 model WorkoutSet {
   id                String   @id @default(cuid())
   workoutExerciseId String
-  setNumber         Int                         // 1-indexed
+  setNumber         Int
   reps              Int?
   weightKg          Float?
-  durationSecs      Int?                        // for planks, holds, time-based cardio
-  distanceM         Float?                      // for running, rowing, etc.
+  durationSecs      Int?
+  distanceM         Float?
   completed         Boolean  @default(false)
   notes             String?
 
@@ -544,7 +612,6 @@ model Session {
 // PHASE 6 — NUTRITION TRACKER
 // ============================================================
 
-// Meal slots: Breakfast / Lunch / Dinner / Snacks (seeded)
 model MealType {
   id        String      @id @default(cuid())
   name      String      @unique
@@ -555,7 +622,6 @@ model MealType {
   @@map("meal_types")
 }
 
-// Food library — global (userId null) + user-created custom foods
 model FoodItem {
   id             String      @id @default(cuid())
   name           String
@@ -567,31 +633,38 @@ model FoodItem {
   per100Fat      Float       @default(0)
   per100Fiber    Float       @default(0)
   isCustom       Boolean     @default(false)
-  userId         String?     // null = global seed food; set = user's custom food
+  userId         String?
   createdAt      DateTime    @default(now())
 
-  entries        FoodEntry[]
-  user           User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries             FoodEntry[]
+  user                User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ── Phase 9 — Recipe system back-relation ──
+  recipeIngredients   RecipeIngredient[]
 
   @@index([name])
   @@map("food_items")
 }
 
-// Daily food diary entries
 model FoodEntry {
   id         String    @id @default(cuid())
   userId     String
   foodItemId String
   mealTypeId String
   entryDate  DateTime  @db.Date
-  quantity   Float     // grams
-  calories   Float     // computed at log time
+  quantity   Float
+  calories   Float
   protein    Float
   carbs      Float
   fat        Float
   fiber      Float     @default(0)
   notes      String?
   createdAt  DateTime  @default(now())
+
+  // ── Phase 9 FIX: back-reference to MealLog ──
+  // null = manually logged entry; set = auto-created from MealLog confirmation
+  mealLogId  String?   @unique
+  mealLog    MealLog?  @relation(fields: [mealLogId], references: [id])
 
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   foodItem   FoodItem  @relation(fields: [foodItemId], references: [id])
@@ -601,7 +674,6 @@ model FoodEntry {
   @@map("food_entries")
 }
 
-// Daily macro + water targets per user
 model NutritionGoal {
   id        String   @id @default(cuid())
   userId    String   @unique
@@ -618,7 +690,6 @@ model NutritionGoal {
   @@map("nutrition_goals")
 }
 
-// Daily water log — one row per user per day (upserted)
 model WaterLog {
   id        String   @id @default(cuid())
   userId    String
@@ -630,4 +701,290 @@ model WaterLog {
 
   @@unique([userId, entryDate])
   @@map("water_logs")
+}
+
+// ============================================================
+// PHASE 9A — RECIPE DATABASE
+// ============================================================
+
+// Core unit of the platform. Every meal, every plan, every PDF, every SOP.
+model Recipe {
+  id               String     @id @default(cuid())
+  name             String
+  slug             String     @unique
+  description      String
+  shortDescription String     // one-line tagline for cards
+  cuisineType      String     // NorthIndian, SouthIndian, Continental, etc.
+  mealType         MealSlot   // BREAKFAST, LUNCH, DINNER, SNACK
+  dietaryTags      String[]   // VEG, EGG, NON_VEG, JAIN, VEGAN
+  planCategories   String[]   // weight_loss, pcos, diabetic, sports_strength, etc.
+  tierAvailability PlanTier[] // STANDARD, PREMIUM, LUXURY
+  servingSizeGrams Int        // canonical serving size in grams
+  prepTimeMins     Int
+  cookTimeMins     Int
+  difficulty       String     // easy, medium, hard
+  equipmentNeeded  String[]
+  allergens        String[]
+  shelfLifeHours   Int        // how long after cooking
+  packagingType    String     // box, container, pouch
+  kitchenStation   String     // hot_kitchen, cold_prep, assembly
+  costPerServing   Decimal?   // ingredient cost — for margin tracking
+  seasonTags       String[]   // monsoon, summer, winter, all_year
+  rotationGroup    Int        // 1-60 — ensures no repeat in 60-day cycle
+  imageUrl         String?
+  videoUrl         String?
+  isActive         Boolean    @default(true)
+  isFeatured       Boolean    @default(false)
+  swapAwayCount           Int        @default(0)  // incremented on meal swap request
+  avgRating               Float?                  // recomputed from MealLog ratings
+
+  // Macros — per canonical serving
+  caloriesPerServing Int
+  proteinGrams       Decimal
+  carbsGrams         Decimal
+  fatGrams           Decimal
+  fibreGrams         Decimal
+
+  // Macros — per 100g (computed + stored for fast lookup)
+  caloriesPer100g    Int
+  proteinPer100g     Decimal
+  carbsPer100g       Decimal
+  fatPer100g         Decimal
+  fibrePer100g       Decimal
+
+  // Micronutrients per serving — key ones for medical plans
+  ironMg           Decimal?
+  calciumMg        Decimal?
+  vitaminDMcg      Decimal?
+  vitaminCMg       Decimal?
+  vitaminB12Mcg    Decimal?
+  folateMcg        Decimal?
+  sodiumMg         Decimal?
+  potassiumMg      Decimal?
+  omegaThreeGrams  Decimal?
+  zincMg           Decimal?
+  magnesiumMg      Decimal?
+  seleniumMcg      Decimal?
+  glycaemicIndex   Int?       // critical for diabetic + PCOS plans
+
+  ingredients    RecipeIngredient[]
+  steps          RecipeStep[]
+  scheduleSlots  PlanScheduleSlot[]
+  mealLogs       MealLog[]
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([mealType])
+  @@index([rotationGroup])
+  @@map("recipes")
+}
+
+// Links a recipe to a food_item. Quantities in raw grams.
+model RecipeIngredient {
+  id                 String   @id @default(cuid())
+  recipeId           String
+  foodItemId         String
+  quantityGrams      Decimal  // raw weight before cooking
+  cookedWeightFactor Decimal  @default(1.0) // cooked/raw ratio — rice: 2.5, chicken: 0.75
+  prepNote           String?  // "soaked overnight", "finely chopped", "boiled"
+  isOptional         Boolean  @default(false)
+  substituteFor      String?  // ingredient id this can replace
+  orderInRecipe      Int
+
+  recipe             Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  foodItem           FoodItem @relation(fields: [foodItemId], references: [id])
+
+  @@map("recipe_ingredients")
+}
+
+// Step-by-step SOP — scales to franchise kitchen.
+model RecipeStep {
+  id           String   @id @default(cuid())
+  recipeId     String
+  stepNumber   Int
+  title        String   // "Marinate the chicken"
+  instruction  String   // full instruction text
+  durationMins Int?
+  temperatureC Int?     // for baking/cooking temp
+  technique    String?  // "saute", "steam", "grill", "blend"
+  kitchenNote  String?  // note for kitchen staff only
+  imageUrl     String?
+
+  recipe       Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("recipe_steps")
+}
+
+// ============================================================
+// PHASE 9A — MEAL PLAN SYSTEM
+// ============================================================
+
+// Plan definition — the full catalogue of FitFuel plans.
+model MealPlan {
+  id               String       @id @default(cuid())
+  name             String
+  slug             String       @unique
+  category         PlanCategory // STANDARD, LIFESTYLE_MEDICAL, SPORTS
+  subCategory      String       // weight_loss, pcos, diabetic, strength, etc.
+  displayName      String       // "Weight Loss — Non Vegetarian"
+  tagline          String
+  description      String
+  longDescription  String       // full sales page description
+  whoIsItFor       String       // target customer description
+  keyPrinciples    String[]     // nutritional principles bullet points
+  whatIsAvoided    String[]     // excluded ingredients / foods
+  dietaryVariant   DietVariant  // VEG, EGG, NON_VEG, JAIN, VEGAN
+  tier             PlanTier     // STANDARD, PREMIUM, LUXURY
+  avgCaloriesPerDay   Int
+  avgProteinGrams     Int
+  avgCarbsGrams       Int
+  avgFatGrams         Int
+  cycleLengthDays     Int        @default(30) // 30-day no-repeat
+  mealsPerDay         Int        @default(4)  // B+L+D+S
+  nutritionistName    String?
+  nutritionistCred    String?    // "MSc Nutrition, RD"
+  nutritionistBio     String?
+  medicalDisclaimer   String?    // for lifestyle / medical plans
+  isActive            Boolean    @default(false) // flip to true when ready to sell
+  isFeatured          Boolean    @default(false)
+  sortOrder           Int        @default(0)
+  imageUrl            String?
+  accentColor         String?    // hex — for plan page theming
+
+  // Links to legacy pricing (MealPlanProduct) for checkout compatibility
+  productId           String?
+  product             MealPlanProduct? @relation(fields: [productId], references: [id])
+
+  scheduleSlots       PlanScheduleSlot[]
+  userActivePlans     UserActivePlan[]
+  planPrices          PlanPrice[]        // ← NEW: direct pricing links
+
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([category])
+  @@index([subCategory])
+  @@map("meal_plans")
+}
+
+// 30-day rotating schedule. Day → Meal Slot → Recipe.
+model PlanScheduleSlot {
+  id                String   @id @default(cuid())
+  mealPlanId        String
+  dayNumber         Int      // 1–60
+  mealSlot          MealSlot // BREAKFAST, LUNCH, DINNER, SNACK
+  recipeId          String
+  servingMultiplier Decimal  @default(1.0) // adjust portion for this slot
+
+  mealPlan          MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  recipe            Recipe   @relation(fields: [recipeId], references: [id])
+
+  @@unique([mealPlanId, dayNumber, mealSlot])
+  @@index([mealPlanId, dayNumber])
+  @@map("plan_schedule_slots")
+}
+
+// Tracks which plan a user is on and which day they're currently on.
+model UserActivePlan {
+  id            String     @id @default(cuid())
+  userId        String
+  mealPlanId    String
+  orderId       String?
+  startDate     DateTime
+  endDate       DateTime
+  currentDay    Int        @default(1) // auto-increments daily
+  status        String     @default("active") // active, paused, completed, cancelled
+  pausedUntil   DateTime?
+  skipDates     DateTime[] // dates user skipped delivery
+  calorieTarget Int?       // personalised — overrides plan default
+  proteinTarget Int?
+  carbTarget    Int?
+  fatTarget     Int?
+
+  // ── NEW: denormalised from Order for fast dashboard queries ──
+  duration      PlanDuration?
+  mealsPerDay   MealsPerDay?
+
+  // ── NEW: proper relation to Order ──
+  order         Order?     @relation(fields: [orderId], references: [id])
+
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan      MealPlan   @relation(fields: [mealPlanId], references: [id])
+  mealLogs      MealLog[]
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([userId, status])
+  @@index([endDate])
+  @@map("user_active_plans")
+}
+
+// Did the user eat today's planned meal? Links plan → nutrition tracker.
+model MealLog {
+  id               String         @id @default(cuid())
+  userId           String
+  userActivePlanId String
+  recipeId         String
+  mealSlot         MealSlot
+  logDate          DateTime       @db.Date
+  plannedGrams     Int            // what the plan prescribed
+  actualGrams      Int?           // what user actually ate (adjusted)
+  confirmedAt      DateTime?      // when user tapped "I ate this"
+  skipped          Boolean        @default(false)
+  rating           Int?           // 1-5 meal feedback
+  ratingNote       String?
+
+  // ── Phase 9 FIX: bidirectional relation to FoodEntry ──
+  // MealLog creates FoodEntry → FoodEntry stores mealLogId as back-reference
+  foodEntry        FoodEntry?
+
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activePlan       UserActivePlan @relation(fields: [userActivePlanId], references: [id])
+  recipe           Recipe         @relation(fields: [recipeId], references: [id])
+
+  createdAt        DateTime       @default(now())
+
+  @@index([userId, logDate])
+  @@index([userActivePlanId])
+  @@map("meal_logs")
+}
+
+// ============================================================
+// PHASE 9D — EXERCISE SCHEDULE (linked to plan categories)
+// ============================================================
+
+// Workout program linked to a meal plan type / category.
+model ExerciseSchedule {
+  id                  String   @id @default(cuid())
+  mealPlanCategory    String   // weight_loss, muscle_gain, pcos, etc.
+  tier                PlanTier
+  name                String   // "Weight Loss 5-Day Program"
+  description         String
+  weeklyStructure     Json     // { mon: ["chest", "triceps"], tue: ["cardio"], ... }
+  daysPerWeek         Int
+  sessionDurationMins Int
+
+  workoutDays         ExerciseScheduleDay[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([mealPlanCategory])
+  @@map("exercise_schedules")
+}
+
+model ExerciseScheduleDay {
+  id                String           @id @default(cuid())
+  scheduleId        String
+  dayOfWeek         String           // monday, tuesday, ... or rest
+  focusArea         String           // "Upper body strength", "LISS Cardio", "Rest + Mobility"
+  exercises         Json             // [{ exerciseId, sets, reps, restSecs, notes }]
+  estimatedCalories Int
+  isRestDay         Boolean          @default(false)
+
+  schedule          ExerciseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("exercise_schedule_days")
 }

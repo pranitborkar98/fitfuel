@@ -1,0 +1,17 @@
+{
+  "completed": [
+    "balanced-egg"
+  ],
+  "failed": [
+    "balanced-egg",
+    "weight-loss-veg",
+    "weight-loss-egg",
+    "weight-loss-non-veg",
+    "muscle-gain-veg",
+    "muscle-gain-egg",
+    "muscle-gain-non-veg",
+    "balanced-veg",
+    "balanced-non-veg",
+    "balanced-jain"
+  ]
+}
