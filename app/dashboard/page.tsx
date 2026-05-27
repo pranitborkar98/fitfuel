@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -7,18 +8,63 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard");
 
-  const [orders, user] = await Promise.all([
+  const userId = session.user.id;
+
+  const [orders, user, rawActivePlan] = await Promise.all([
     (prisma as any).order.findMany({
-      where:   { userId: session.user.id },
+      where:   { userId },
       orderBy: { createdAt: "desc" },
       take:    10,
       include: { items: true },
     }),
     (prisma as any).user.findUnique({
-      where: { id: session.user.id },
+      where:  { id: userId },
       select: { name: true, email: true, phone: true, image: true, role: true },
+    }),
+    (prisma as any).userActivePlan.findFirst({
+      where: { userId, status: "active" },
+      include: {
+        mealPlan: {
+          select: {
+            id: true, name: true, slug: true,
+            tier: true, category: true, dietVariant: true,
+            caloriesPerDay: true,
+          },
+        },
+      },
     }),
   ]);
 
-  return <DashboardClient session={session} orders={orders} user={user} />;
+  // Enrich active plan with calculated fields
+  let activePlan = null;
+  if (rawActivePlan) {
+    const startDate = new Date(rawActivePlan.startDate);
+    const today = new Date();
+    const diffDays = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const currentDay = (diffDays % 30) + 1;
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 30);
+    const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+
+    activePlan = {
+      id: rawActivePlan.id,
+      currentDay,
+      startDate: rawActivePlan.startDate,
+      endDate: endDate.toISOString(),
+      daysRemaining,
+      status: rawActivePlan.status,
+      calorieTarget: rawActivePlan.calorieTarget,
+      proteinTarget: rawActivePlan.proteinTarget,
+      mealPlan: rawActivePlan.mealPlan,
+    };
+  }
+
+  return (
+    <DashboardClient
+      session={session}
+      orders={orders}
+      user={user}
+      activePlan={activePlan}
+    />
+  );
 }

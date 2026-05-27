@@ -2,8 +2,10 @@
 
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
+  Calendar, Target, CheckCircle2, Circle,
 } from "lucide-react";
 
 const T = {
@@ -34,10 +36,106 @@ const STATUS_COLOR: Record<string, string> = {
   PROCESSING:      "#60a5fa",
 };
 
-const comingSoon: { icon: React.ReactNode; label: string; desc: string; phase: number }[] = [];
+const SLOT_EMOJI: Record<string, string> = {
+  BREAKFAST: "🌅",
+  LUNCH: "☀️",
+  SNACK: "🍎",
+  DINNER: "🌙",
+};
 
-export default function DashboardClient({ session, orders, user }: { session: any; orders: any[]; user: any }) {
+type Meal = {
+  slotId: string;
+  mealSlot: string;
+  label: string;
+  time: string;
+  emoji: string;
+  isLogged: boolean;
+  dayNumber: number;
+  recipe: {
+    id: string;
+    name: string;
+    caloriesPerServing: number;
+    proteinPerServing: number;
+    carbsPerServing: number;
+    fatPerServing: number;
+  };
+};
+
+type ActivePlan = {
+  id: string;
+  currentDay: number;
+  startDate: string;
+  endDate: string;
+  daysRemaining: number;
+  calorieTarget: number | null;
+  proteinTarget: number | null;
+  mealPlan: {
+    name: string;
+    slug: string;
+    tier: string;
+    dietVariant: string;
+    caloriesPerDay: number;
+  };
+};
+
+export default function DashboardClient({
+  session, orders, user, activePlan,
+}: {
+  session: any;
+  orders: any[];
+  user: any;
+  activePlan: ActivePlan | null;
+}) {
   const firstName = user?.name?.split(" ")[0] ?? "there";
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [mealsLoading, setMealsLoading] = useState(false);
+  const [loggingSlot, setLoggingSlot] = useState<string | null>(null);
+  const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!activePlan) return;
+    setMealsLoading(true);
+    fetch("/api/user/active-plan/meals/today")
+      .then(r => r.json())
+      .then(data => {
+        if (data.meals) {
+          setMeals(data.meals);
+          const logged = new Set<string>(
+            data.meals.filter((m: Meal) => m.isLogged).map((m: Meal) => m.slotId)
+          );
+          setLoggedSlots(logged);
+        }
+      })
+      .finally(() => setMealsLoading(false));
+  }, [activePlan]);
+
+  async function handleLogMeal(meal: Meal) {
+    if (loggedSlots.has(meal.slotId) || loggingSlot === meal.slotId) return;
+    setLoggingSlot(meal.slotId);
+    try {
+      const res = await fetch("/api/user/active-plan/meals/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planScheduleSlotId: meal.slotId,
+          dayNumber: meal.dayNumber,
+        }),
+      });
+      if (res.ok || res.status === 409) {
+        setLoggedSlots(prev => new Set([...prev, meal.slotId]));
+      }
+    } finally {
+      setLoggingSlot(null);
+    }
+  }
+
+  const totalCalories = meals.reduce((sum, m) => sum + (m.recipe?.caloriesPerServing ?? 0), 0);
+  const loggedCalories = meals
+    .filter(m => loggedSlots.has(m.slotId))
+    .reduce((sum, m) => sum + (m.recipe?.caloriesPerServing ?? 0), 0);
+  const calorieTarget = activePlan?.calorieTarget ?? activePlan?.mealPlan?.caloriesPerDay ?? 1600;
+  const progressPct = Math.min(100, Math.round((loggedCalories / calorieTarget) * 100));
+  const dayProgress = activePlan ? Math.round((activePlan.currentDay / 30) * 100) : 0;
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", paddingTop: 88, paddingBottom: 80, color: T.text }}>
@@ -66,20 +164,166 @@ export default function DashboardClient({ session, orders, user }: { session: an
           </button>
         </div>
 
-        {/* Active Plan */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Active Plan</p>
-              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>No active plan yet</h2>
-              <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.6 }}>Start with a trial day for just ₹400 — fresh meals delivered to your door.</p>
+        {/* Active Plan Card */}
+        {activePlan ? (
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
+
+            {/* Plan header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
+              <div>
+                <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active Plan</p>
+                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{activePlan.mealPlan.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 8px", fontWeight: 700 }}>
+                    {activePlan.mealPlan.tier}
+                  </span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.mealPlan.dietVariant}</span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.daysRemaining} days remaining</span>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontSize: 28, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: T.accent, lineHeight: 1 }}>
+                  Day {activePlan.currentDay}
+                </p>
+                <p style={{ fontSize: 12, color: T.textMuted }}>of 30</p>
+              </div>
             </div>
-            <Link href="/plans" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "11px 22px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
-              <Zap size={14} fill="currentColor" /> Order Now
-            </Link>
+
+            {/* Day progress bar */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: T.textMuted }}>Plan progress</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>{dayProgress}%</span>
+              </div>
+              <div style={{ height: 4, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${dayProgress}%`, background: T.accent, borderRadius: 2, transition: "width 0.6s ease" }} />
+              </div>
+            </div>
+
+            {/* Today's Meals */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Today's Meals</p>
+                {calorieTarget && (
+                  <p style={{ fontSize: 12, color: T.textMuted }}>
+                    {loggedCalories} / {calorieTarget} kcal
+                    {loggedCalories > 0 && (
+                      <span style={{ color: T.accent, marginLeft: 6 }}>({progressPct}%)</span>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              {mealsLoading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} style={{ height: 56, background: "#0f0f0f", borderRadius: 10, border: `1px solid ${T.border}`, animation: "pulse 1.5s infinite" }} />
+                  ))}
+                </div>
+              ) : meals.length === 0 ? (
+                <div style={{ background: "#0f0f0f", border: `1px dashed ${T.border}`, borderRadius: 10, padding: "20px 24px", textAlign: "center" }}>
+                  <p style={{ fontSize: 13, color: T.textMuted }}>No meals scheduled for today. Your plan may not have a schedule set up yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {meals.map(meal => {
+                    const isLogged = loggedSlots.has(meal.slotId);
+                    const isLogging = loggingSlot === meal.slotId;
+                    return (
+                      <div key={meal.slotId} style={{
+                        background: "#0f0f0f",
+                        border: `1px solid ${isLogged ? "#365314" : T.border}`,
+                        borderRadius: 10,
+                        padding: "14px 16px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        transition: "border-color 0.2s",
+                      }}>
+                        <span style={{ fontSize: 20, flexShrink: 0 }}>{meal.emoji}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: isLogged ? T.accent : T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {meal.recipe?.name ?? meal.label}
+                            </p>
+                            <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0 }}>{meal.time}</span>
+                          </div>
+                          {meal.recipe && (
+                            <p style={{ fontSize: 11, color: T.textMuted }}>
+                              {meal.recipe.proteinPerServing}g P · {meal.recipe.fatPerServing}g F · {meal.recipe.carbsPerServing}g C · {meal.recipe.caloriesPerServing} kcal
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleLogMeal(meal)}
+                          disabled={isLogged || isLogging}
+                          style={{
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: isLogged ? "#1a2e05" : "transparent",
+                            border: `1px solid ${isLogged ? "#365314" : T.border}`,
+                            borderRadius: 6,
+                            padding: "6px 12px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: isLogged ? T.accent : T.textMuted,
+                            cursor: isLogged ? "default" : "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {isLogged
+                            ? <><CheckCircle2 size={12} /> Logged</>
+                            : isLogging
+                            ? "Logging..."
+                            : <><Circle size={12} /> I ate this</>
+                          }
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Calorie bar */}
+              {loggedCalories > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${progressPct}%`, background: progressPct >= 100 ? "#ef4444" : T.accent, borderRadius: 2, transition: "width 0.4s ease" }} />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          /* No active plan */
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Active Plan</p>
+                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>No active plan yet</h2>
+                <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.6 }}>
+                  Complete your{" "}
+                  <Link href="/onboarding" style={{ color: T.accent, textDecoration: "none", fontWeight: 700 }}>setup</Link>
+                  {" "}or start with a trial day for just ₹400.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link href="/onboarding" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", color: T.accent, fontWeight: 700, fontSize: 13, textDecoration: "none", padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.accent}`, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                  Set Up Plan
+                </Link>
+                <Link href="/plans" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "11px 22px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                  <Zap size={14} fill="currentColor" /> Order Now
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Recent Orders */}
         <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
@@ -126,7 +370,6 @@ export default function DashboardClient({ session, orders, user }: { session: an
         <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Features</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 32 }}>
 
-          {/* Body Metrics — LIVE */}
           <Link href="/dashboard/body-metrics" style={{ textDecoration: "none" }}>
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
@@ -146,7 +389,6 @@ export default function DashboardClient({ session, orders, user }: { session: an
             </div>
           </Link>
 
-          {/* Nutrition Tracker — LIVE */}
           <Link href="/dashboard/nutrition" style={{ textDecoration: "none" }}>
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
@@ -166,7 +408,6 @@ export default function DashboardClient({ session, orders, user }: { session: an
             </div>
           </Link>
 
-          {/* Exercise Library — LIVE */}
           <Link href="/dashboard/exercises" style={{ textDecoration: "none" }}>
             <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
@@ -185,22 +426,6 @@ export default function DashboardClient({ session, orders, user }: { session: an
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
           </Link>
-
-          {/* Coming Soon cards */}
-          {comingSoon.map((item) => (
-            <div key={item.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, opacity: 0.6 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a1a1a", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, flexShrink: 0 }}>
-                {item.icon}
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700 }}>{item.label}</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 4, padding: "2px 6px" }}>PHASE {item.phase}</span>
-                </div>
-                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>{item.desc}</p>
-              </div>
-            </div>
-          ))}
 
         </div>
 
