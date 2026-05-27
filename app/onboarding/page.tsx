@@ -1,6 +1,7 @@
 // app/onboarding/page.tsx
 import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { auth } from '../../auth'
+
 import { prisma } from '@/lib/prisma'
 import OnboardingClient from './OnboardingClient'
 

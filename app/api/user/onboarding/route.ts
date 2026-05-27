@@ -1,8 +1,10 @@
 // app/api/user/onboarding/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { auth } from '../../../../auth'
+
+
 import { prisma } from '@/lib/prisma'
-import { calculateTDEE, calculateCalorieTarget, calculateMacroTargets } from '@/lib/tdee'
+import { calculateTDEE, getCalorieTarget, getMacroTargets } from '@/lib/tdee'
 import { addDays } from 'date-fns'
 
 // ── Plan selection logic ──────────────────────────────────────
@@ -71,8 +73,8 @@ export async function POST(req: NextRequest) {
 
     // ── Calculate TDEE + targets ──────────────────────────────
     const tdee = calculateTDEE({ weightKg, heightCm, age, gender, activityLevel })
-    const calorieTarget = calculateCalorieTarget(tdee, goal)
-    const macros = calculateMacroTargets(calorieTarget, weightKg, goal)
+    const calorieTarget = getCalorieTarget(tdee, goal, gender.toUpperCase() as any)
+    const macros = getMacroTargets(calorieTarget, goal as any, weightKg)
 
     // ── Determine plan slug ───────────────────────────────────
     const primaryCondition = healthConditions[0] ?? 'none'
@@ -155,9 +157,9 @@ export async function POST(req: NextRequest) {
           currentDay: 1,
           status: 'active',
           calorieTarget,
-          proteinTarget: macros.proteinGrams,
-          carbTarget: macros.carbsGrams,
-          fatTarget: macros.fatGrams,
+          proteinTarget: macros.proteinG,
+          carbTarget: macros.carbsG,
+          fatTarget: macros.fatG,
         },
       })
 
