@@ -1,7 +1,6 @@
 // app/api/user/onboarding/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '../../../../auth'
-
+import { auth } from '@/lib/auth'
 
 import { prisma } from '@/lib/prisma'
 import { calculateTDEE, getCalorieTarget, getMacroTargets } from '@/lib/tdee'
