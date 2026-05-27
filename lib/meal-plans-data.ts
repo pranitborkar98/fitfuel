@@ -421,7 +421,7 @@ export const STANDARD_PLANS: PlanMeta[] = [
     displayName: 'Lean Bulk — Vegetarian',
     tagline: 'Controlled surplus. Clean gains. No fat spillover.',
     description: 'A controlled-surplus vegetarian plan for clean muscle gain with minimal fat accumulation.',
-    longDescription: 'A lean bulk is the art of eating just enough above maintenance to fuel muscle growth without accumulating excess body fat. This vegetarian plan keeps the surplus tight at 200–300 kcal above TDEE, prioritises clean food sources, and gives you the controlled gains that don\',
+    longDescription: 'A lean bulk is the art of eating just enough above maintenance to fuel muscle growth without accumulating excess body fat. This vegetarian plan keeps the surplus tight at 200–300 kcal above TDEE, prioritises clean food sources, and gives you the controlled gains that don\'t exceed your fat gain limits',
     whoIsItFor: 'Vegetarians who are already lean (under 15% body fat) and want to add muscle mass without the fat gain that comes with traditional bulking.',
     keyPrinciples: ['Tight calorie surplus: 200–300 kcal above TDEE only', 'High protein to maximise muscle gain from the surplus', 'Clean food sources — no dirty bulk', 'Carb timing for training performance', 'Weekly check-ins recommended to stay within fat gain limits'],
     whatIsAvoided: ['Excess calorie surplus beyond 300 kcal', 'Junk food surplus', 'Alcohol', 'Very high fat meals that displace protein'],
