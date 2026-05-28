@@ -410,11 +410,21 @@ export default function BodyMetricsClient({ user }: { user: any }) {
       setBleStatus("connected");
       characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
         const data: DataView = event.target.value;
+
+        // Log every raw packet so we can see exactly what the scale sends
+        const raw = Array.from({ length: data.byteLength }, (_: any, i: number) => data.getUint8(i).toString(16).padStart(2, "0"));
+        console.log("[MEDITIVE BLE] raw:", raw.join(" "), `(${data.byteLength}b)`);
+
         const parsed = parseFitDaysPacket(data);
+        console.log("[MEDITIVE BLE] parsed:", parsed);
         if (!parsed) return;
-        if (parsed.stable) {
-          setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
-          if (hasSavedBio) {
+
+        // Accept stable OR any reading with plausible weight
+        // (some MEDITIVE models never set the stable flag)
+        if (!parsed.stable && parsed.weight < 10) return;
+
+        setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
+        if (hasSavedBio) {
             const bio = profileBio as UserBio;
             const computed = computeAllMetrics(parsed.weight, parsed.impedance, bio);
             setMetrics(computed);
