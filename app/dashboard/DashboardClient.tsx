@@ -67,15 +67,18 @@ type ActivePlan = {
   startDate: string;
   endDate: string;
   daysRemaining: number;
+  status: string;
   calorieTarget: number | null;
   proteinTarget: number | null;
   mealPlan: {
+    id: string;
     name: string;
     slug: string;
     tier: string;
+    category: string;
     dietVariant: string;
     caloriesPerDay: number;
-  };
+  } | null;
 };
 
 export default function DashboardClient({
@@ -173,13 +176,13 @@ export default function DashboardClient({
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
               <div>
                 <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active Plan</p>
-                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{activePlan.mealPlan.name}</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{activePlan.mealPlan?.name}</h2>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 8px", fontWeight: 700 }}>
-                    {activePlan.mealPlan.tier}
+                    {activePlan.mealPlan?.tier}
                   </span>
                   <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.mealPlan.dietVariant}</span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.mealPlan?.dietVariant}</span>
                   <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
                   <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.daysRemaining} days remaining</span>
                 </div>
