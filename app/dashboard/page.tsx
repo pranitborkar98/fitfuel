@@ -19,7 +19,7 @@ type ActivePlan = {
     slug: string;
     tier: string;
     category: string;
-    dietVariant: string;
+    dietaryVariant: string;
     caloriesPerDay: number;
   } | null;
 };
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         mealPlan: {
           select: {
             id: true, name: true, slug: true,
-            tier: true, category: true, dietVariant: true,
+            tier: true, category: true, dietaryVariant: true,
             caloriesPerDay: true,
           },
         },
