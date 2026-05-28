@@ -77,7 +77,7 @@ type ActivePlan = {
     tier: string;
     category: string;
     dietaryVariant: string;
-    caloriesPerDay: number;
+    avgCaloriesPerDay: number;
   } | null;
 };
 
@@ -136,7 +136,7 @@ export default function DashboardClient({
   const loggedCalories = meals
     .filter(m => loggedSlots.has(m.slotId))
     .reduce((sum, m) => sum + (m.recipe?.caloriesPerServing ?? 0), 0);
-  const calorieTarget = activePlan?.calorieTarget ?? activePlan?.mealPlan?.caloriesPerDay ?? 1600;
+  const calorieTarget = activePlan?.calorieTarget ?? activePlan?.mealPlan?.avgCaloriesPerDay ?? 1600;
   const progressPct = Math.min(100, Math.round((loggedCalories / calorieTarget) * 100));
   const dayProgress = activePlan ? Math.round((activePlan.currentDay / 30) * 100) : 0;
 

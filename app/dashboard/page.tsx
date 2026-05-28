@@ -20,7 +20,7 @@ type ActivePlan = {
     tier: string;
     category: string;
     dietaryVariant: string;
-    caloriesPerDay: number;
+    avgCaloriesPerDay: number;
   } | null;
 };
 
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
           select: {
             id: true, name: true, slug: true,
             tier: true, category: true, dietaryVariant: true,
-            caloriesPerDay: true,
+            avgCaloriesPerDay: true,
           },
         },
       },
