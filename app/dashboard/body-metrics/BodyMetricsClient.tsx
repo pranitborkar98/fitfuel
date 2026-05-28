@@ -386,52 +386,15 @@ export default function BodyMetricsClient({ user }: { user: any }) {
   };
   const hasSavedBio = !!(profileBio.heightCm && profileBio.age);
 
-  // ── BLE connection + packet subscription ──────────────────────────────────
-  const connectBLE = useCallback(async () => {
-    if (!("bluetooth" in navigator)) {
-      setBleStatus("unsupported");
-      return;
-    }
-    setBleStatus("scanning");
-    setBleError(null);
-
-    try {
-      // Request the MEDITIVE/FitDays scale
-      // These scales advertise with service 0xFFF0
-      const device = await (navigator as any).bluetooth.requestDevice({
-        filters: [{ services: ["0000fff0-0000-1000-8000-00805f9b34fb"] }],
-        optionalServices: ["0000fff0-0000-1000-8000-00805f9b34fb"],
-      });
-
-      device.addEventListener("gattserverdisconnected", () => {
-        setBleStatus("idle");
-      });
-
-      // Connect GATT
-      const server  = await device.gatt.connect();
-      const service = await server.getPrimaryService("0000fff0-0000-1000-8000-00805f9b34fb");
-
-      // FitDays scales notify on 0xFFF1 (some models use 0xFFF4)
-      let characteristic: any;
-      try {
-        characteristic = await service.getCharacteristic("0000fff1-0000-1000-8000-00805f9b34fb");
-      } catch {
-        // Fallback to FFF4
-        characteristic = await service.getCharacteristic("0000fff4-0000-1000-8000-00805f9b34fb");
-      }
-
-      await characteristic.startNotifications();
-
+  // ── Shared handler: subscribe to characteristic and listen for scale data ──
+  const subscribeToScale = useCallback((characteristic: any) => {
+    characteristic.startNotifications().then(() => {
       setBleStatus("connected");
-
       characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
         const data: DataView = event.target.value;
         const parsed = parseFitDaysPacket(data);
-
         if (!parsed) return;
-
         if (parsed.stable) {
-          // Final stable reading — if profile has bio, skip the prompt
           setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
           if (hasSavedBio) {
             const bio = profileBio as UserBio;
@@ -449,22 +412,94 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           }
         }
       });
+    });
+  }, [hasSavedBio]);
+
+  // ── BLE connection — acceptAllDevices so every nearby device is visible ────
+  // NOTE: filters + acceptAllDevices cannot coexist in Web Bluetooth API.
+  // Using acceptAllDevices:true is the only way to guarantee the picker shows
+  // devices whose advertisement payload doesn't include the service UUID.
+  const connectBLE = useCallback(async () => {
+    if (!("bluetooth" in navigator)) {
+      setBleStatus("unsupported");
+      return;
+    }
+    setBleStatus("scanning");
+    setBleError(null);
+
+    try {
+      const device = await (navigator as any).bluetooth.requestDevice({
+        // acceptAllDevices shows ALL nearby BLE devices (phone, scale, anything).
+        // This is required because many scales don't include service UUIDs in
+        // their advertisement packets — they only expose services after GATT connect.
+        acceptAllDevices: true,
+        // optionalServices lets us access these services POST-connection.
+        // They must be declared here even with acceptAllDevices.
+        optionalServices: [
+          "0000fff0-0000-1000-8000-00805f9b34fb", // FitDays / MEDITIVE primary
+          "0000ffb0-0000-1000-8000-00805f9b34fb", // some MEDITIVE variants
+          "0000fee0-0000-1000-8000-00805f9b34fb", // alternate scale service
+          "0000180d-0000-1000-8000-00805f9b34fb", // heart rate (generic, harmless)
+          "0000180a-0000-1000-8000-00805f9b34fb", // device information
+        ],
+      });
+
+      device.addEventListener("gattserverdisconnected", () => setBleStatus("idle"));
+
+      const server = await device.gatt.connect();
+
+      // Probe services in priority order
+      const serviceUuids = [
+        "0000fff0-0000-1000-8000-00805f9b34fb",
+        "0000ffb0-0000-1000-8000-00805f9b34fb",
+        "0000fee0-0000-1000-8000-00805f9b34fb",
+      ];
+      let service: any = null;
+      for (const uuid of serviceUuids) {
+        try { service = await server.getPrimaryService(uuid); break; } catch { /* try next */ }
+      }
+
+      if (!service) {
+        setBleError("Connected to device, but no scale data service found. Make sure you selected your MEDITIVE scale, then try again.");
+        setBleStatus("failed");
+        return;
+      }
+
+      // Probe characteristics in priority order
+      const charUuids = [
+        "0000fff1-0000-1000-8000-00805f9b34fb",
+        "0000fff4-0000-1000-8000-00805f9b34fb",
+        "0000ffb2-0000-1000-8000-00805f9b34fb",
+      ];
+      let characteristic: any = null;
+      for (const uuid of charUuids) {
+        try { characteristic = await service.getCharacteristic(uuid); break; } catch { /* try next */ }
+      }
+
+      if (!characteristic) {
+        setBleError("Scale service found but couldn't read measurement data. Try Manual Entry.");
+        setBleStatus("failed");
+        setShowManual(true);
+        return;
+      }
+
+      subscribeToScale(characteristic);
 
     } catch (err: any) {
       console.error("BLE error:", err);
-      // If no device found matching filter, fall back to acceptAllDevices
-      if (err?.message?.includes("no device") || err?.message?.includes("NotFoundError")) {
-        setBleError("Scale not found. Make sure it's on and you're standing on it, then try again.");
-      } else if (err?.name === "NotAllowedError") {
-        setBleError("Bluetooth permission denied. Please allow Bluetooth access and try again.");
-      } else {
+      if (err?.name === "NotAllowedError") {
+        setBleError("Bluetooth permission denied. Please click Allow when the browser asks for Bluetooth access.");
+      } else if (err?.name === "NotFoundError") {
+        // User cancelled the picker — not a real error
         setBleError(null);
+      } else {
+        setBleError(`Connection failed: ${err?.message ?? "unknown error"}. Make sure the scale is powered on and nearby.`);
       }
       setBleStatus("failed");
     }
-  }, []);
+  }, [subscribeToScale]);
 
-  // Fallback: try acceptAllDevices if the filter approach fails
+  // connectBLEFallback kept for BleButton "failed" retry — same logic, alias
   const connectBLEFallback = useCallback(async () => {
     if (!("bluetooth" in navigator)) { setBleStatus("unsupported"); return; }
     setBleStatus("scanning");
@@ -475,17 +510,19 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         optionalServices: [
           "0000fff0-0000-1000-8000-00805f9b34fb",
           "0000ffb0-0000-1000-8000-00805f9b34fb",
+          "0000fee0-0000-1000-8000-00805f9b34fb",
         ],
       });
       device.addEventListener("gattserverdisconnected", () => setBleStatus("idle"));
 
       const server = await device.gatt.connect();
 
-      // Try to get FFF0 service
-      let service: any;
-      try {
-        service = await server.getPrimaryService("0000fff0-0000-1000-8000-00805f9b34fb");
-      } catch {
+      let service: any = null;
+      for (const uuid of ["0000fff0-0000-1000-8000-00805f9b34fb", "0000ffb0-0000-1000-8000-00805f9b34fb"]) {
+        try { service = await server.getPrimaryService(uuid); break; } catch { /* try next */ }
+      }
+
+      if (!service) {
         setBleError("Connected, but couldn't find scale data service. Try the Manual Entry button instead.");
         setBleStatus("connected");
         setShowManual(true);
@@ -499,35 +536,18 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         characteristic = await service.getCharacteristic("0000fff4-0000-1000-8000-00805f9b34fb");
       }
 
-      await characteristic.startNotifications();
-      setBleStatus("connected");
+      subscribeToScale(characteristic);
 
-      characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
-        const data: DataView = event.target.value;
-        const parsed = parseFitDaysPacket(data);
-        if (parsed?.stable) {
-          setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
-          if (hasSavedBio) {
-            const bio = profileBio as UserBio;
-            const computed = computeAllMetrics(parsed.weight, parsed.impedance, bio);
-            setMetrics(computed);
-            const draft: Partial<Record<keyof Metrics, string>> = {};
-            for (const key of Object.keys(computed) as (keyof Metrics)[]) {
-              const v = computed[key];
-              if (v !== null) draft[key] = String(v);
-            }
-            setManualDraft(draft);
-            setShowManual(true);
-          } else {
-            setShowBioPrompt(true);
-          }
-        }
-      });
-
-    } catch {
+    } catch (err: any) {
+      console.error("BLE fallback error:", err);
+      if (err?.name === "NotAllowedError") {
+        setBleError("Bluetooth permission denied. Please allow Bluetooth access and try again.");
+      } else if (err?.name !== "NotFoundError") {
+        setBleError(`Connection failed: ${err?.message ?? "unknown error"}.`);
+      }
       setBleStatus("failed");
     }
-  }, []);
+  }, [subscribeToScale]);
 
   // ── Once user provides bio, compute all metrics and pre-fill form ──────────
   function handleBioConfirm(bio: UserBio) {
