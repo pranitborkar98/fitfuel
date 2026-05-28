@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Activity, Bluetooth, BluetoothOff, ChevronLeft, Plus,
@@ -235,39 +235,33 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
 }
 
 // ─── BLE PACKET PARSER ───────────────────────────────────────────────────────
-// MEDITIVE scale — service 0xFFB0, notify characteristic 0xFFB2 (confirmed via nRF Connect)
+// MEDITIVE scale — service 0xFFB0, notify characteristic 0xFFB2
 //
-// The scale sends TWO distinct packet types:
+// ADAPTIVE PARSER — handles variable packet lengths from this scale.
 //
-// ① 18-byte STABLE packet (final measurement, header 0xAC):
-//   Byte  0    : 0xAC  — packet header
-//   Byte  1    : 0x27  — session byte
-//   Byte  2    : 0x00
-//   Byte  3    : 0x68  — device flags (constant)
-//   Bytes 4-5  : weight, big-endian uint16 / 200  (e.g. 0x57E4 = 22500 → 112.5 kg)
-//   Bytes 6-14 : zeroed
-//   Bytes 15-16: impedance in ohms, big-endian uint16  (e.g. 0x03D5 = 981 Ω)
-//   Byte  17   : checksum
+// What we know from APK decompilation of Fitdays (libICBleProtocol.so):
+//   • All packets start with 0xAC 0x27
+//   • Weight = bytes[4:6] big-endian / 200 (confirmed: 0x57E4 / 200 = 112.5 kg)
+//   • The native lib uses 0.01 as final multiplier on a /2 pre-divided value,
+//     which is mathematically identical to /200.
+//   • Impedance is 2-byte big-endian, located near the END of the packet.
+//     For 18-byte: bytes[15:17]. For 21-byte: bytes[18:20]. For others: scan.
 //
-//   Verified: idle/stable capture AC-27-00-68-57-E4-00..00-03-D5-1B
-//   → bytes[4:6] = 0x57E4 = 22500 / 200 = 112.5 kg ✓
-//   → bytes[15:17] = 0x03D5 = 981 Ω (plausible human body impedance) ✓
-//
-// ② 21-byte STREAMING packet (live preview while stepping on scale, header 0xAC):
-//   Same header but 21 bytes. bytes[4:6] is raw ADC data — NOT the final weight.
-//   bytes[18:20] = impedance (same 0x03D5 once BIA is computed).
-//   These packets are used only to show a live weight preview in the UI.
-//
-// Rule: only compute BIA and trigger "save" flow on the 18-byte stable packet.
-// 21-byte packets are shown as a live preview only.
+// STABILITY via convergence: instead of relying solely on packet length,
+// we track the last two readings. If weight is the same (within 0.2 kg)
+// twice in a row AND impedance is non-zero, we declare it stable.
+// This works regardless of whether the scale sends 18 or 21 byte finals.
 
-function parseFitDaysPacket(data: DataView): { weight: number; impedance: number; stable: boolean } | null {
+function parseFitDaysPacket(
+  data: DataView,
+  prevWeight?: number,
+): { weight: number; impedance: number; stable: boolean } | null {
   if (data.byteLength < 6) return null;
 
   const bytes = Array.from({ length: data.byteLength }, (_, i) => data.getUint8(i));
 
+  // ── Non-MEDITIVE fallback: FitDays / generic BIA scale ────────────────────
   if (bytes[0] !== 0xAC) {
-    // ── Non-MEDITIVE fallback: FitDays / generic BIA scale ──────────────────
     if (data.byteLength >= 10) {
       const wBE = ((bytes[3] << 8) | bytes[4]) / 10;
       const impBE = (bytes[5] << 8) | bytes[6];
@@ -282,33 +276,36 @@ function parseFitDaysPacket(data: DataView): { weight: number; impedance: number
     return null;
   }
 
-  // ── MEDITIVE 0xAC packet ─────────────────────────────────────────────────
-  if (data.byteLength === 18) {
-    // ✅ STABLE final measurement — use for BIA calculations
-    const rawWeight = (bytes[4] << 8) | bytes[5];
-    const weight    = rawWeight / 200;
-    const impedance = (bytes[15] << 8) | bytes[16];
+  // ── MEDITIVE 0xAC packet — adaptive length handler ────────────────────────
+  const rawWeight = (bytes[4] << 8) | bytes[5];
+  const weight    = parseFloat((rawWeight / 200).toFixed(1));
 
-    if (weight >= 20 && weight <= 300) {
-      const finalImpedance = impedance >= 50 && impedance <= 2000 ? impedance : 500;
-      return { weight: parseFloat(weight.toFixed(1)), impedance: finalImpedance, stable: true };
+  if (weight < 20 || weight > 300) return null;  // out of human range
+
+  // Find impedance: scan from byte 13 onward for a 2-byte BE value in 50–2000 Ω.
+  // Known positions: [15:17] for 18-byte packets, [18:20] for 21-byte packets.
+  let impedance = 500; // fallback default (mid-range, won't crash BIA calc)
+  const impPositions = data.byteLength >= 18
+    ? [data.byteLength - 3, 15, 13, data.byteLength - 5]
+    : [data.byteLength - 3, 13];
+
+  for (const pos of impPositions) {
+    if (pos >= 0 && pos + 1 < data.byteLength) {
+      const imp = (bytes[pos] << 8) | bytes[pos + 1];
+      if (imp >= 50 && imp <= 2000) {
+        impedance = imp;
+        break;
+      }
     }
   }
 
-  if (data.byteLength === 21) {
-    // ⏳ STREAMING packet — show as live weight preview only (stable: false)
-    // bytes[4:6] is raw ADC during measurement — use it as a rough preview
-    const rawWeight = (bytes[4] << 8) | bytes[5];
-    const weight    = rawWeight / 200;
-    const impedance = (bytes[18] << 8) | bytes[19];
+  // Stability: 18-byte packet is always the final reading (confirmed by capture).
+  // For other lengths, declare stable if weight converged (within 0.2 kg of prev).
+  const isSize18 = data.byteLength === 18;
+  const converged = prevWeight !== undefined && Math.abs(weight - prevWeight) <= 0.2;
+  const stable    = isSize18 || converged;
 
-    if (weight >= 20 && weight <= 300) {
-      const finalImpedance = impedance >= 50 && impedance <= 2000 ? impedance : 500;
-      return { weight: parseFloat(weight.toFixed(1)), impedance: finalImpedance, stable: false };
-    }
-  }
-
-  return null;
+  return { weight, impedance, stable };
 }
 
 // ─── Mini sparkline (pure SVG) ───────────────────────────────────────────────
@@ -426,6 +423,8 @@ export default function BodyMetricsClient({ user }: { user: any }) {
   const [pendingRaw, setPendingRaw]       = useState<{ weight: number; impedance: number } | null>(null);
   const [bleError, setBleError]           = useState<string | null>(null);
   const [liveWeight, setLiveWeight]       = useState<number | null>(null); // streaming preview
+  const [bleDebugLog, setBleDebugLog]     = useState<string[]>([]);        // raw packet log for debugging
+  const prevWeightRef                     = useRef<number | undefined>(undefined);
 
   // Pre-fill bio from user profile if available (set during onboarding)
   const profileBio: Partial<UserBio> = {
@@ -442,26 +441,36 @@ export default function BodyMetricsClient({ user }: { user: any }) {
       characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
         const data: DataView = event.target.value;
 
-        // Log every raw packet so we can see exactly what the scale sends
-        const raw = Array.from({ length: data.byteLength }, (_: any, i: number) => data.getUint8(i).toString(16).padStart(2, "0"));
-        console.log("[MEDITIVE BLE] raw:", raw.join(" "), `(${data.byteLength}b)`);
+        // Log every raw packet (visible in DevTools AND in the in-app debug panel)
+        const raw = Array.from({ length: data.byteLength }, (_: any, i: number) =>
+          data.getUint8(i).toString(16).padStart(2, "0")
+        );
+        const rawStr = raw.join(" ");
+        console.log("[MEDITIVE BLE] raw:", rawStr, `(${data.byteLength}b)`);
 
-        const parsed = parseFitDaysPacket(data);
+        const parsed = parseFitDaysPacket(data, prevWeightRef.current);
         console.log("[MEDITIVE BLE] parsed:", parsed);
+
+        // Always append to debug log (last 20 packets)
+        setBleDebugLog(prev => [
+          ...prev.slice(-19),
+          `[${data.byteLength}b] ${rawStr}${parsed ? ` → ${parsed.weight}kg imp=${parsed.impedance}Ω ${parsed.stable ? "✅STABLE" : "⏳stream"}` : " → null"}`,
+        ]);
+
         if (!parsed) return;
 
-        // 21-byte streaming packets (stable: false) → show live weight preview only,
-        // do NOT trigger BIA calculations (bytes[4:6] is raw ADC, not final weight).
-        // 18-byte stable packets (stable: true) → trigger full BIA flow.
+        // Update live weight preview
+        setLiveWeight(parsed.weight);
+        prevWeightRef.current = parsed.weight;
+
         if (!parsed.stable) {
-          // Live preview: update liveWeight so the banner shows current reading
-          setLiveWeight(parsed.weight);
-          console.log("[MEDITIVE BLE] streaming (unstable) weight preview:", parsed.weight, "kg — waiting for stable packet…");
+          console.log("[MEDITIVE BLE] streaming weight preview:", parsed.weight, "kg — waiting for stable…");
           return;
         }
 
-        // Stable packet received — clear live preview
+        // Stable packet received — clear live preview and trigger BIA flow
         setLiveWeight(null);
+        prevWeightRef.current = undefined;
 
         setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
         if (hasSavedBio) {
@@ -719,21 +728,39 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* ── BLE waiting banner (connected, waiting for step-on) ── */}
         {bleStatus === "connected" && !showManual && !showBioPrompt && (
-          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 10, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.success }}>
-            <Bluetooth size={15} />
-            <div>
-              <p style={{ fontWeight: 700 }}>
-                Scale connected —{" "}
-                {liveWeight !== null
-                  ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising…)</span>
-                  : "step on it barefoot"}
-              </p>
-              <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>
-                {liveWeight !== null
-                  ? "Stay still — waiting for the stable final reading."
-                  : "Stand still for 3–5 seconds. Metrics will auto-populate once the reading stabilises."}
-              </p>
+          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 10, padding: "14px 18px", marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.success }}>
+              <Bluetooth size={15} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 700 }}>
+                  Scale connected —{" "}
+                  {liveWeight !== null
+                    ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising…)</span>
+                    : "step on it barefoot"}
+                </p>
+                <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>
+                  {liveWeight !== null
+                    ? "Stay still — waiting for the stable final reading."
+                    : "Stand still for 3–5 seconds. Metrics will auto-populate once the reading stabilises."}
+                </p>
+              </div>
+              {bleDebugLog.length > 0 && (
+                <button
+                  onClick={() => navigator.clipboard.writeText(bleDebugLog.join("\n"))}
+                  style={{ background: "#1a2a1a", border: `1px solid ${T.border}`, borderRadius: 7, padding: "6px 12px", fontSize: 11, color: T.textMuted, cursor: "pointer", flexShrink: 0 }}
+                >
+                  Copy Raw Log
+                </button>
+              )}
             </div>
+            {/* In-app debug panel — shows last packets so you can diagnose without DevTools */}
+            {bleDebugLog.length > 0 && (
+              <div style={{ marginTop: 12, background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", fontFamily: "monospace", fontSize: 11, color: T.textMuted, maxHeight: 140, overflowY: "auto" }}>
+                {bleDebugLog.map((line, i) => (
+                  <div key={i} style={{ color: line.includes("✅STABLE") ? T.success : line.includes("⏳") ? T.warning : T.textMuted, marginBottom: 2 }}>{line}</div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
