@@ -425,19 +425,18 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
         if (hasSavedBio) {
-            const bio = profileBio as UserBio;
-            const computed = computeAllMetrics(parsed.weight, parsed.impedance, bio);
-            setMetrics(computed);
-            const draft: Partial<Record<keyof Metrics, string>> = {};
-            for (const key of Object.keys(computed) as (keyof Metrics)[]) {
-              const v = computed[key];
-              if (v !== null) draft[key] = String(v);
-            }
-            setManualDraft(draft);
-            setShowManual(true);
-          } else {
-            setShowBioPrompt(true);
+          const bio = profileBio as UserBio;
+          const computed = computeAllMetrics(parsed.weight, parsed.impedance, bio);
+          setMetrics(computed);
+          const draft: Partial<Record<keyof Metrics, string>> = {};
+          for (const key of Object.keys(computed) as (keyof Metrics)[]) {
+            const v = computed[key];
+            if (v !== null) draft[key] = String(v);
           }
+          setManualDraft(draft);
+          setShowManual(true);
+        } else {
+          setShowBioPrompt(true);
         }
       });
     });
