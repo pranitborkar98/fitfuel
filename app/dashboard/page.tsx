@@ -4,6 +4,26 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
 
+type ActivePlan = {
+  id: string;
+  currentDay: number;
+  startDate: string;
+  endDate: string;
+  daysRemaining: number;
+  status: string;
+  calorieTarget: number | null;
+  proteinTarget: number | null;
+  mealPlan: {
+    id: string;
+    name: string;
+    slug: string;
+    tier: string;
+    category: string;
+    dietVariant: string;
+    caloriesPerDay: number;
+  } | null;
+};
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard");
@@ -36,7 +56,7 @@ export default async function DashboardPage() {
   ]);
 
   // Enrich active plan with calculated fields
-  let activePlan = null;
+  let activePlan: ActivePlan | null = null;
   if (rawActivePlan) {
     const startDate = new Date(rawActivePlan.startDate);
     const today = new Date();
