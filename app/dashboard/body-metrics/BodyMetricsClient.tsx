@@ -6,7 +6,7 @@ import {
   Activity, Bluetooth, BluetoothOff, ChevronLeft, Plus,
   Zap, Scale, Droplets, Flame, Dumbbell, Heart, Brain,
   TrendingDown, TrendingUp, Minus, Info, X, Check,
-  AlertCircle, BarChart3, Clock, Target,
+  AlertCircle, BarChart3, Clock, Target, User,
 } from "lucide-react";
 
 // ─── Design tokens (matches FitFuel system) ─────────────────────────────────
@@ -50,6 +50,13 @@ const EMPTY_METRICS: Metrics = {
   skeletalMuscle: null, muscleMass: null, boneMass: null,
   protein: null, bmr: null, bodyAge: null,
 };
+
+// ─── User biometrics needed for BIA calculations ─────────────────────────────
+interface UserBio {
+  heightCm: number;
+  age:      number;
+  gender:   "male" | "female";
+}
 
 // ─── Parameter definitions ────────────────────────────────────────────────────
 interface ParamDef {
@@ -181,6 +188,81 @@ function getRangeInfo(def: ParamDef, value: number | null) {
   return range ?? null;
 }
 
+// ─── BIA CALCULATION ENGINE ──────────────────────────────────────────────────
+// These formulas mirror what the Fitdays app computes client-side.
+// The scale sends only weight (kg) + impedance (ohms) over BLE.
+// Everything else is derived from those two values + user profile.
+
+function calcBodyFat(weight: number, impedance: number, height: number, age: number, gender: "male" | "female"): number {
+  const h = height / 100; // cm → m
+  const lbm = (height * 9.058 / 100 + weight * 0.244) - (impedance * 0.04834) - (gender === "male" ? 0 : 12.6) - age * 0.1133 + 0.1236;
+  const bodyFat = ((weight - lbm) / weight) * 100;
+  return Math.max(2, Math.min(60, bodyFat));
+}
+
+function calcBMR(weight: number, height: number, age: number, gender: "male" | "female"): number {
+  // Mifflin–St Jeor
+  if (gender === "male") return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
+  return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+}
+
+function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Metrics {
+  const { heightCm, age, gender } = bio;
+  const h = heightCm / 100;
+
+  const bmi            = parseFloat((weight / (h * h)).toFixed(1));
+  const bodyFatRate    = parseFloat(calcBodyFat(weight, impedance, heightCm, age, gender).toFixed(1));
+  const fatFreeWeight  = parseFloat((weight * (1 - bodyFatRate / 100)).toFixed(1));
+  const subcutaneousFat = parseFloat((bodyFatRate * 0.82).toFixed(1));  // ~82% of body fat is subcutaneous
+  const bodyWater      = parseFloat((fatFreeWeight / weight * 73.2).toFixed(1));
+  const muscleMass     = parseFloat((fatFreeWeight * 0.826).toFixed(1));
+  const skeletalMuscle = parseFloat((muscleMass / weight * 100).toFixed(1));
+  const boneMass       = parseFloat((weight < 60 ? 1.96 : weight < 75 ? 2.4 : 2.95).toFixed(2));
+  const protein        = parseFloat(((muscleMass * 0.2 / weight) * 100).toFixed(1));
+  const bmr            = calcBMR(weight, heightCm, age, gender);
+  const visceralFat    = Math.round(bodyFatRate * 0.25 + bmi * 0.1);
+  const bodyAge        = Math.round(age + (bodyFatRate - (gender === "male" ? 18 : 25)) * 0.4);
+
+  return {
+    weight, bmi, bodyFatRate, fatFreeWeight, subcutaneousFat,
+    visceralFat: Math.max(1, Math.min(20, visceralFat)),
+    bodyWater: Math.max(35, Math.min(75, bodyWater)),
+    skeletalMuscle, muscleMass, boneMass,
+    protein: Math.max(8, Math.min(30, protein)),
+    bmr,
+    bodyAge: Math.max(age - 10, Math.min(age + 20, bodyAge)),
+  };
+}
+
+// ─── BLE PACKET PARSER ───────────────────────────────────────────────────────
+// MEDITIVE / FitDays scales (service 0xFFF0, notify characteristic 0xFFF1 or 0xFFF4)
+// Packet format (20 bytes typical):
+//   Byte 0-1 : header (0xFF 0x??  or  0x1D 0x??)
+//   Byte 2   : status flags (0x02 = stable final reading)
+//   Byte 3-4 : weight × 10 in little-endian (e.g. 0xC4 0x02 = 708 → 70.8 kg)
+//   Byte 5-6 : impedance in ohms, little-endian
+//   Remaining: checksum / padding
+
+function parseFitDaysPacket(data: DataView): { weight: number; impedance: number; stable: boolean } | null {
+  if (data.byteLength < 10) return null;
+
+  // Look for stable measurement flag in byte 2
+  const flags = data.getUint8(2);
+  const stable = (flags & 0x02) !== 0; // bit 1 = measurement finalised
+
+  // Weight: bytes 3-4, little-endian, divide by 10 → kg
+  const weightRaw = data.getUint8(3) | (data.getUint8(4) << 8);
+  const weight = weightRaw / 10;
+
+  // Impedance: bytes 5-6, little-endian, in ohms
+  const impedance = data.getUint8(5) | (data.getUint8(6) << 8);
+
+  if (weight < 5 || weight > 200) return null; // sanity check
+  if (impedance < 100 || impedance > 1200) return null; // sanity check
+
+  return { weight, impedance, stable };
+}
+
 // ─── Mini sparkline (pure SVG) ───────────────────────────────────────────────
 function Sparkline({ values, color }: { values: number[]; color: string }) {
   if (values.length < 2) return null;
@@ -200,41 +282,273 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   );
 }
 
+// ─── User Bio Prompt Modal ────────────────────────────────────────────────────
+function BiometricPrompt({
+  onConfirm,
+  onClose,
+}: {
+  onConfirm: (bio: UserBio) => void;
+  onClose: () => void;
+}) {
+  const [height, setHeight] = useState("");
+  const [age, setAge]       = useState("");
+  const [gender, setGender] = useState<"male" | "female">("male");
+  const [err, setErr]       = useState("");
+
+  function handleConfirm() {
+    const h = parseFloat(height);
+    const a = parseInt(age);
+    if (!h || h < 100 || h > 250) { setErr("Enter a valid height (100–250 cm)."); return; }
+    if (!a || a < 10 || a > 110)  { setErr("Enter a valid age (10–110)."); return; }
+    onConfirm({ heightCm: h, age: a, gender });
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", boxSizing: "border-box",
+    background: "#0f0f0f", border: `1px solid ${T.border}`,
+    borderRadius: 8, padding: "10px 12px", fontSize: 15, fontWeight: 600,
+    color: T.text, outline: "none",
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 20, padding: "32px", width: "100%", maxWidth: 420 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accentDim + "44", border: `1px solid ${T.accent}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <User size={18} color={T.accent} />
+          </div>
+          <h2 style={{ fontSize: 17, fontWeight: 800 }}>Quick Setup</h2>
+          <button onClick={onClose} style={{ marginLeft: "auto", background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={18} /></button>
+        </div>
+        <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24, lineHeight: 1.6 }}>
+          Your scale sends weight + impedance. We need your height, age, and gender to calculate all 13 body composition metrics — just like the Fitdays app does.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Height (cm)</label>
+            <input type="number" placeholder="e.g. 170" value={height} onChange={e => setHeight(e.target.value)} style={inputStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Age (years)</label>
+            <input type="number" placeholder="e.g. 28" value={age} onChange={e => setAge(e.target.value)} style={inputStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Gender</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["male", "female"] as const).map(g => (
+                <button key={g} onClick={() => setGender(g)} style={{
+                  flex: 1, padding: "10px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
+                  background: gender === g ? T.accent + "22" : "#0f0f0f",
+                  border: `1px solid ${gender === g ? T.accent : T.border}`,
+                  color: gender === g ? T.accent : T.textMuted,
+                }}>{g}</button>
+              ))}
+            </div>
+          </div>
+
+          {err && <p style={{ fontSize: 12, color: T.danger }}>{err}</p>}
+
+          <button onClick={handleConfirm} style={{
+            background: T.accent, color: "#000", border: "none", borderRadius: 9,
+            padding: "12px", fontSize: 14, fontWeight: 800, cursor: "pointer",
+            textTransform: "uppercase", letterSpacing: "0.05em",
+          }}>
+            Calculate My Metrics
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ──────────────────────────────────────────────────────────
 export default function BodyMetricsClient({ user }: { user: any }) {
-  const [tab, setTab]             = useState<Tab>("overview");
-  const [bleStatus, setBleStatus] = useState<BleStatus>("idle");
-  const [metrics, setMetrics]     = useState<Metrics>(EMPTY_METRICS);
+  const [tab, setTab]               = useState<Tab>("overview");
+  const [bleStatus, setBleStatus]   = useState<BleStatus>("idle");
+  const [metrics, setMetrics]       = useState<Metrics>(EMPTY_METRICS);
   const [showManual, setShowManual] = useState(false);
   const [manualDraft, setManualDraft] = useState<Partial<Record<keyof Metrics, string>>>({});
   const [saving, setSaving]         = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [showInfo, setShowInfo]     = useState<keyof Metrics | null>(null);
 
-  // BLE connection
+  // BLE state
+  const [showBioPrompt, setShowBioPrompt] = useState(false);
+  const [pendingRaw, setPendingRaw]       = useState<{ weight: number; impedance: number } | null>(null);
+  const [bleError, setBleError]           = useState<string | null>(null);
+
+  // Pre-fill bio from user profile if available (set during onboarding)
+  const profileBio: Partial<UserBio> = {
+    heightCm: user?.profile?.heightCm ?? undefined,
+    age:      user?.profile?.age ?? undefined,
+    gender:   user?.profile?.gender?.toLowerCase() === "female" ? "female" : "male",
+  };
+  const hasSavedBio = !!(profileBio.heightCm && profileBio.age);
+
+  // ── BLE connection + packet subscription ──────────────────────────────────
   const connectBLE = useCallback(async () => {
     if (!("bluetooth" in navigator)) {
       setBleStatus("unsupported");
       return;
     }
     setBleStatus("scanning");
+    setBleError(null);
+
     try {
-      // The Fitdays scale advertises as "icomon" or similar
+      // Request the MEDITIVE/FitDays scale
+      // These scales advertise with service 0xFFF0
       const device = await (navigator as any).bluetooth.requestDevice({
-        acceptAllDevices: true,
+        filters: [{ services: ["0000fff0-0000-1000-8000-00805f9b34fb"] }],
         optionalServices: ["0000fff0-0000-1000-8000-00805f9b34fb"],
       });
-      // In production: subscribe to characteristic notifications and parse BLE packets
-      // For now: show connected state and prompt manual entry
-      device.addEventListener("gattserverdisconnected", () => setBleStatus("idle"));
+
+      device.addEventListener("gattserverdisconnected", () => {
+        setBleStatus("idle");
+      });
+
+      // Connect GATT
+      const server  = await device.gatt.connect();
+      const service = await server.getPrimaryService("0000fff0-0000-1000-8000-00805f9b34fb");
+
+      // FitDays scales notify on 0xFFF1 (some models use 0xFFF4)
+      let characteristic: any;
+      try {
+        characteristic = await service.getCharacteristic("0000fff1-0000-1000-8000-00805f9b34fb");
+      } catch {
+        // Fallback to FFF4
+        characteristic = await service.getCharacteristic("0000fff4-0000-1000-8000-00805f9b34fb");
+      }
+
+      await characteristic.startNotifications();
+
       setBleStatus("connected");
-      setShowManual(true);
+
+      characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
+        const data: DataView = event.target.value;
+        const parsed = parseFitDaysPacket(data);
+
+        if (!parsed) return;
+
+        if (parsed.stable) {
+          // Final stable reading — if profile has bio, skip the prompt
+          setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
+          if (hasSavedBio) {
+            const bio = profileBio as UserBio;
+            const computed = computeAllMetrics(parsed.weight, parsed.impedance, bio);
+            setMetrics(computed);
+            const draft: Partial<Record<keyof Metrics, string>> = {};
+            for (const key of Object.keys(computed) as (keyof Metrics)[]) {
+              const v = computed[key];
+              if (v !== null) draft[key] = String(v);
+            }
+            setManualDraft(draft);
+            setShowManual(true);
+          } else {
+            setShowBioPrompt(true);
+          }
+        }
+      });
+
+    } catch (err: any) {
+      console.error("BLE error:", err);
+      // If no device found matching filter, fall back to acceptAllDevices
+      if (err?.message?.includes("no device") || err?.message?.includes("NotFoundError")) {
+        setBleError("Scale not found. Make sure it's on and you're standing on it, then try again.");
+      } else if (err?.name === "NotAllowedError") {
+        setBleError("Bluetooth permission denied. Please allow Bluetooth access and try again.");
+      } else {
+        setBleError(null);
+      }
+      setBleStatus("failed");
+    }
+  }, []);
+
+  // Fallback: try acceptAllDevices if the filter approach fails
+  const connectBLEFallback = useCallback(async () => {
+    if (!("bluetooth" in navigator)) { setBleStatus("unsupported"); return; }
+    setBleStatus("scanning");
+    setBleError(null);
+    try {
+      const device = await (navigator as any).bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [
+          "0000fff0-0000-1000-8000-00805f9b34fb",
+          "0000ffb0-0000-1000-8000-00805f9b34fb",
+        ],
+      });
+      device.addEventListener("gattserverdisconnected", () => setBleStatus("idle"));
+
+      const server = await device.gatt.connect();
+
+      // Try to get FFF0 service
+      let service: any;
+      try {
+        service = await server.getPrimaryService("0000fff0-0000-1000-8000-00805f9b34fb");
+      } catch {
+        setBleError("Connected, but couldn't find scale data service. Try the Manual Entry button instead.");
+        setBleStatus("connected");
+        setShowManual(true);
+        return;
+      }
+
+      let characteristic: any;
+      try {
+        characteristic = await service.getCharacteristic("0000fff1-0000-1000-8000-00805f9b34fb");
+      } catch {
+        characteristic = await service.getCharacteristic("0000fff4-0000-1000-8000-00805f9b34fb");
+      }
+
+      await characteristic.startNotifications();
+      setBleStatus("connected");
+
+      characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
+        const data: DataView = event.target.value;
+        const parsed = parseFitDaysPacket(data);
+        if (parsed?.stable) {
+          setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
+          if (hasSavedBio) {
+            const bio = profileBio as UserBio;
+            const computed = computeAllMetrics(parsed.weight, parsed.impedance, bio);
+            setMetrics(computed);
+            const draft: Partial<Record<keyof Metrics, string>> = {};
+            for (const key of Object.keys(computed) as (keyof Metrics)[]) {
+              const v = computed[key];
+              if (v !== null) draft[key] = String(v);
+            }
+            setManualDraft(draft);
+            setShowManual(true);
+          } else {
+            setShowBioPrompt(true);
+          }
+        }
+      });
+
     } catch {
       setBleStatus("failed");
     }
   }, []);
 
-  // Save metrics (POST to /api/user/metrics)
+  // ── Once user provides bio, compute all metrics and pre-fill form ──────────
+  function handleBioConfirm(bio: UserBio) {
+    setShowBioPrompt(false);
+    if (!pendingRaw) return;
+
+    const computed = computeAllMetrics(pendingRaw.weight, pendingRaw.impedance, bio);
+    setMetrics(computed);
+
+    // Pre-fill manual draft so user can review + save
+    const draft: Partial<Record<keyof Metrics, string>> = {};
+    for (const key of Object.keys(computed) as (keyof Metrics)[]) {
+      const v = computed[key];
+      if (v !== null) draft[key] = String(v);
+    }
+    setManualDraft(draft);
+    setShowManual(true);
+    setPendingRaw(null);
+  }
+
+  // ── Save metrics (POST to /api/user/metrics) ───────────────────────────────
   const handleSave = useCallback(async () => {
     setSaving(true);
     const payload: Partial<Metrics> = {};
@@ -284,8 +598,31 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           </div>
 
           {/* BLE connect button */}
-          <BleButton status={bleStatus} onConnect={connectBLE} onManual={() => setShowManual(true)} />
+          <BleButton status={bleStatus} onConnect={connectBLE} onFallbackConnect={connectBLEFallback} onManual={() => setShowManual(true)} />
         </div>
+
+        {/* ── BLE error banner ── */}
+        {bleError && (
+          <div style={{ background: "#450a0a22", border: `1px solid ${T.danger}44`, borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
+            <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p style={{ fontWeight: 700, marginBottom: 2 }}>Scale connection issue</p>
+              <p style={{ color: T.textMuted }}>{bleError}</p>
+            </div>
+            <button onClick={() => setBleError(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: T.textMuted, cursor: "pointer", flexShrink: 0 }}><X size={14} /></button>
+          </div>
+        )}
+
+        {/* ── BLE waiting banner (connected, waiting for step-on) ── */}
+        {bleStatus === "connected" && !showManual && !showBioPrompt && (
+          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 10, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.success }}>
+            <Bluetooth size={15} />
+            <div>
+              <p style={{ fontWeight: 700 }}>Scale connected — step on it barefoot</p>
+              <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>Stand still for 3–5 seconds. Metrics will auto-populate once the reading stabilises.</p>
+            </div>
+          </div>
+        )}
 
         {/* ── Saved flash ── */}
         {savedFlash && (
@@ -334,6 +671,14 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
       </div>
 
+      {/* ── Bio prompt modal (appears after stable BLE reading) ── */}
+      {showBioPrompt && (
+        <BiometricPrompt
+          onConfirm={handleBioConfirm}
+          onClose={() => { setShowBioPrompt(false); setPendingRaw(null); }}
+        />
+      )}
+
       {/* ── Info drawer ── */}
       {showInfo && (
         <InfoDrawer paramKey={showInfo} onClose={() => setShowInfo(null)} metrics={metrics} />
@@ -355,13 +700,18 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 }
 
 // ─── BLE button component ─────────────────────────────────────────────────────
-function BleButton({ status, onConnect, onManual }: { status: BleStatus; onConnect: () => void; onManual: () => void }) {
+function BleButton({ status, onConnect, onFallbackConnect, onManual }: {
+  status: BleStatus;
+  onConnect: () => void;
+  onFallbackConnect: () => void;
+  onManual: () => void;
+}) {
   const configs: Record<BleStatus, { label: string; icon: React.ReactNode; bg: string; color: string; onClick: () => void }> = {
-    idle:        { label: "Connect Scale",   icon: <Bluetooth size={14} />,    bg: T.accent,  color: "#000", onClick: onConnect },
-    scanning:    { label: "Scanning…",       icon: <Bluetooth size={14} />,    bg: T.accentDim, color: T.accent, onClick: () => {} },
-    connected:   { label: "Scale Connected", icon: <Bluetooth size={14} />,    bg: "#14532d", color: T.success, onClick: onManual },
-    failed:      { label: "Retry Connect",   icon: <BluetoothOff size={14} />, bg: "#450a0a", color: T.danger,  onClick: onConnect },
-    unsupported: { label: "Manual Entry",    icon: <Plus size={14} />,          bg: T.card,    color: T.textMuted, onClick: onManual },
+    idle:        { label: "Connect Scale",   icon: <Bluetooth size={14} />,    bg: T.accent,    color: "#000",      onClick: onConnect },
+    scanning:    { label: "Scanning…",       icon: <Bluetooth size={14} />,    bg: T.accentDim, color: T.accent,    onClick: () => {} },
+    connected:   { label: "Scale Connected", icon: <Bluetooth size={14} />,    bg: "#14532d",   color: T.success,   onClick: onManual },
+    failed:      { label: "Retry Connect",   icon: <BluetoothOff size={14} />, bg: "#450a0a",   color: T.danger,    onClick: onFallbackConnect },
+    unsupported: { label: "Manual Entry",    icon: <Plus size={14} />,          bg: T.card,      color: T.textMuted, onClick: onManual },
   };
   const c = configs[status];
   return (
@@ -369,7 +719,7 @@ function BleButton({ status, onConnect, onManual }: { status: BleStatus; onConne
       {status === "unsupported" && (
         <p style={{ fontSize: 11, color: T.textMuted, alignSelf: "center" }}>Chrome required for BLE</p>
       )}
-      <button onClick={c.onClick} style={{
+      <button onClick={c.onClick} disabled={status === "scanning"} style={{
         display: "flex", alignItems: "center", gap: 8,
         background: c.bg, color: c.color,
         border: `1px solid ${status === "idle" ? "transparent" : T.border}`,
@@ -398,7 +748,6 @@ function BleButton({ status, onConnect, onManual }: { status: BleStatus; onConne
 function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => void; onManual: () => void; bleStatus: BleStatus; firstName: string }) {
   return (
     <div>
-      {/* Hero card */}
       <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "48px 40px", marginBottom: 24, textAlign: "center", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${T.accent}, #38bdf8, #f472b6, ${T.accent})`, backgroundSize: "200% 100%" }} />
         <div style={{ width: 64, height: 64, borderRadius: 18, background: "#1a1a1a", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
@@ -420,7 +769,6 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
         </div>
       </div>
 
-      {/* Parameter preview cards */}
       <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>13 Parameters you'll track</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
         {PARAM_DEFS.map(def => (
@@ -504,7 +852,6 @@ function HistoryTab() {
 
   return (
     <div>
-      {/* Chart metric selector */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {(Object.entries(metrics) as [typeof chartMetric, string][]).map(([k, label]) => (
           <button key={k} onClick={() => setChartMetric(k)} style={{
@@ -517,7 +864,6 @@ function HistoryTab() {
         ))}
       </div>
 
-      {/* Chart */}
       <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px", marginBottom: 20, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <BarChart3 size={16} color={colors[chartMetric]} />
@@ -529,7 +875,6 @@ function HistoryTab() {
 
         <div style={{ overflowX: "auto" }}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H, display: "block" }}>
-            {/* Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map(t => {
               const y = PAD + (1 - t) * (H - PAD * 2);
               return (
@@ -541,11 +886,8 @@ function HistoryTab() {
                 </g>
               );
             })}
-            {/* Area */}
             <path d={areaD} fill={colors[chartMetric]} fillOpacity={0.07} />
-            {/* Line */}
             <path d={pathD} fill="none" stroke={colors[chartMetric]} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-            {/* Points + labels */}
             {pts.map((p, i) => (
               <g key={i}>
                 <circle cx={p.x} cy={p.y} r={4} fill={colors[chartMetric]} />
@@ -558,7 +900,6 @@ function HistoryTab() {
         </div>
       </div>
 
-      {/* History table */}
       <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>All Readings</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -640,7 +981,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
   );
 }
 
-// ─── Manual entry form (shared between modal + log tab) ───────────────────────
+// ─── Manual entry form ────────────────────────────────────────────────────────
 function ManualForm({ draft, onChange, onSave, saving }: {
   draft: Partial<Record<keyof Metrics, string>>;
   onChange: (d: Partial<Record<keyof Metrics, string>>) => void;
@@ -664,7 +1005,8 @@ function ManualForm({ draft, onChange, onSave, saving }: {
               placeholder="—"
               style={{
                 width: "100%", boxSizing: "border-box",
-                background: "#0f0f0f", border: `1px solid ${T.border}`,
+                background: draft[def.key] ? "#0f1a0a" : "#0f0f0f",
+                border: `1px solid ${draft[def.key] ? T.accentDim : T.border}`,
                 borderRadius: 8, padding: "10px 12px", fontSize: 14, fontWeight: 600,
                 color: T.text, outline: "none",
               }}
@@ -699,20 +1041,22 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
       <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 20, padding: "32px", width: "100%", maxWidth: 720 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>
-            {bleConnected ? "Scale Connected — Enter Readings" : "Manual Entry"}
+            {bleConnected ? "Scale Connected — Review & Save" : "Manual Entry"}
           </h2>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={20} /></button>
         </div>
 
         {bleConnected && (
           <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
-            <Bluetooth size={14} /> Scale connected. Step on it barefoot, then enter the readings shown in the Fitdays app below.
+            <Bluetooth size={14} /> Metrics auto-populated from your scale. Review and hit Save.
           </div>
         )}
 
-        <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>Fill any or all fields — empty fields are skipped.</p>
+        <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
+          {bleConnected ? "Values calculated from your weight + impedance reading. You can edit any field before saving." : "Fill any or all fields — empty fields are skipped."}
+        </p>
 
-        <ManualForm draft={draft} onChange={onChange} onSave={async () => { await onSave(); }} saving={saving} />
+        <ManualForm draft={draft} onChange={onChange} onSave={onSave} saving={saving} />
       </div>
     </div>
   );

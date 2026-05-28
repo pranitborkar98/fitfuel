@@ -12,13 +12,25 @@ export default async function BodyMetricsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard/body-metrics");
 
-  // Fetch user profile
+  // Fetch user + their profile (height, age, gender for BIA calculations)
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, email: true, image: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      profile: {
+        select: {
+          heightCm: true,
+          age: true,
+          gender: true,
+        },
+      },
+    },
   });
 
-  // Fetch latest body metric reading (if model exists)
+  // Fetch latest body metric reading
   // const latest = await prisma.bodyMetric.findFirst({
   //   where: { userId: session.user.id },
   //   orderBy: { recordedAt: "desc" },
