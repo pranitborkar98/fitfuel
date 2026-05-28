@@ -244,23 +244,41 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
 //   Remaining: checksum / padding
 
 function parseFitDaysPacket(data: DataView): { weight: number; impedance: number; stable: boolean } | null {
-  if (data.byteLength < 10) return null;
+  if (data.byteLength < 6) return null;
 
-  // Look for stable measurement flag in byte 2
-  const flags = data.getUint8(2);
-  const stable = (flags & 0x02) !== 0; // bit 1 = measurement finalised
+  const bytes = Array.from({ length: data.byteLength }, (_, i) => data.getUint8(i));
 
-  // Weight: bytes 3-4, little-endian, divide by 10 → kg
-  const weightRaw = data.getUint8(3) | (data.getUint8(4) << 8);
-  const weight = weightRaw / 10;
+  // ── Format A: MEDITIVE FFB2 protocol (confirmed via nRF Connect) ──────────
+  // Byte 2 = status, Bytes 3-4 = weight, Bytes 5-6 = impedance
+  if (data.byteLength >= 10) {
+    const status = bytes[2];
+    const stable = status === 0x01 || status === 0x02 || status === 0x03;
 
-  // Impedance: bytes 5-6, little-endian, in ohms
-  const impedance = data.getUint8(5) | (data.getUint8(6) << 8);
+    // Try big-endian first (MEDITIVE style)
+    const weightBE = ((bytes[3] << 8) | bytes[4]) / 10;
+    const impedanceBE = (bytes[5] << 8) | bytes[6];
+    if (weightBE >= 5 && weightBE <= 300 && impedanceBE >= 100 && impedanceBE <= 1200) {
+      return { weight: weightBE, impedance: impedanceBE, stable };
+    }
 
-  if (weight < 5 || weight > 200) return null; // sanity check
-  if (impedance < 100 || impedance > 1200) return null; // sanity check
+    // Try little-endian (FitDays style)
+    const weightLE = (bytes[3] | (bytes[4] << 8)) / 10;
+    const impedanceLE = bytes[5] | (bytes[6] << 8);
+    if (weightLE >= 5 && weightLE <= 300 && impedanceLE >= 100 && impedanceLE <= 1200) {
+      return { weight: weightLE, impedance: impedanceLE, stable };
+    }
+  }
 
-  return { weight, impedance, stable };
+  // ── Format B: short packet — weight only, estimate impedance ─────────────
+  if (data.byteLength >= 6) {
+    const stable = (bytes[0] & 0x02) !== 0 || bytes[0] === 0x01 || bytes[2] === 0x01;
+    const wBE = ((bytes[1] << 8) | bytes[2]) / 10;
+    if (wBE >= 5 && wBE <= 300) return { weight: wBE, impedance: 500, stable };
+    const wLE = (bytes[1] | (bytes[2] << 8)) / 10;
+    if (wLE >= 5 && wLE <= 300) return { weight: wLE, impedance: 500, stable };
+  }
+
+  return null;
 }
 
 // ─── Mini sparkline (pure SVG) ───────────────────────────────────────────────
@@ -448,11 +466,11 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
       const server = await device.gatt.connect();
 
-      // Probe services in priority order
+      // FFB0 confirmed as MEDITIVE data service via nRF Connect
       const serviceUuids = [
-        "0000fff0-0000-1000-8000-00805f9b34fb",
-        "0000ffb0-0000-1000-8000-00805f9b34fb",
-        "0000fee0-0000-1000-8000-00805f9b34fb",
+        "0000ffb0-0000-1000-8000-00805f9b34fb", // MEDITIVE confirmed ✓
+        "0000fff0-0000-1000-8000-00805f9b34fb", // FitDays fallback
+        "0000fee0-0000-1000-8000-00805f9b34fb", // other variants
       ];
       let service: any = null;
       for (const uuid of serviceUuids) {
@@ -465,11 +483,11 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         return;
       }
 
-      // Probe characteristics in priority order
+      // FFB2 = NOTIFY confirmed, FFB1 = WRITE for triggering measurement
       const charUuids = [
-        "0000fff1-0000-1000-8000-00805f9b34fb",
-        "0000fff4-0000-1000-8000-00805f9b34fb",
-        "0000ffb2-0000-1000-8000-00805f9b34fb",
+        "0000ffb2-0000-1000-8000-00805f9b34fb", // MEDITIVE notify ✓
+        "0000fff1-0000-1000-8000-00805f9b34fb", // FitDays fallback
+        "0000fff4-0000-1000-8000-00805f9b34fb", // FitDays fallback 2
       ];
       let characteristic: any = null;
       for (const uuid of charUuids) {
@@ -483,7 +501,14 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         return;
       }
 
+      // Subscribe to notifications first
       subscribeToScale(characteristic);
+
+      // Send trigger command to FFB1 so scale starts streaming immediately
+      try {
+        const writeChar = await service.getCharacteristic("0000ffb1-0000-1000-8000-00805f9b34fb");
+        await writeChar.writeValue(new Uint8Array([0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe]));
+      } catch { /* write not required — scale may push data automatically */ }
 
     } catch (err: any) {
       console.error("BLE error:", err);
@@ -529,14 +554,22 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         return;
       }
 
-      let characteristic: any;
-      try {
-        characteristic = await service.getCharacteristic("0000fff1-0000-1000-8000-00805f9b34fb");
-      } catch {
-        characteristic = await service.getCharacteristic("0000fff4-0000-1000-8000-00805f9b34fb");
+      let characteristic: any = null;
+      for (const uuid of [
+        "0000ffb2-0000-1000-8000-00805f9b34fb",
+        "0000fff1-0000-1000-8000-00805f9b34fb",
+        "0000fff4-0000-1000-8000-00805f9b34fb",
+      ]) {
+        try { characteristic = await service.getCharacteristic(uuid); break; } catch { /* try next */ }
       }
+      if (!characteristic) throw new Error("No notify characteristic found");
 
       subscribeToScale(characteristic);
+
+      try {
+        const writeChar = await service.getCharacteristic("0000ffb1-0000-1000-8000-00805f9b34fb");
+        await writeChar.writeValue(new Uint8Array([0xfd, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe]));
+      } catch { /* optional */ }
 
     } catch (err: any) {
       console.error("BLE fallback error:", err);
