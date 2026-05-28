@@ -800,13 +800,70 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* ══════════════════ TAB: LOG ══════════════════ */}
         {tab === "log" && (
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px" }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Log Entry</h2>
-            <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
-              Manually enter any or all parameters. Only filled fields are saved.
-            </p>
-            <ManualForm draft={manualDraft} onChange={setManualDraft} onSave={handleSave} saving={saving} />
-          </div>
+          <>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Log Entry</h2>
+              <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
+                Manually enter any or all parameters. Only filled fields are saved.
+              </p>
+              <ManualForm draft={manualDraft} onChange={setManualDraft} onSave={handleSave} saving={saving} />
+            </div>
+
+            {/* ── BLE Raw Packet Debug Panel — always visible in Log tab ── */}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>BLE Raw Packet Log</h3>
+                  <p style={{ fontSize: 12, color: T.textMuted }}>
+                    Connect your scale and step on it — raw bytes appear here. Copy and paste to diagnose weight mismatch.
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {bleDebugLog.length > 0 && (
+                    <>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(bleDebugLog.join("\n")).then(() => alert("Copied!"))}
+                        style={{ background: T.accent, color: "#000", border: "none", borderRadius: 7, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                      >
+                        Copy Log
+                      </button>
+                      <button
+                        onClick={() => setBleDebugLog([])}
+                        style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 7, padding: "8px 14px", fontSize: 12, cursor: "pointer" }}
+                      >
+                        Clear
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div style={{
+                background: "#050505", border: `1px solid ${T.border}`, borderRadius: 10,
+                padding: "14px 16px", fontFamily: "monospace", fontSize: 11,
+                minHeight: 80, maxHeight: 320, overflowY: "auto",
+              }}>
+                {bleDebugLog.length === 0 ? (
+                  <p style={{ color: T.textMuted, margin: 0 }}>No packets yet. Connect scale and step on it.</p>
+                ) : (
+                  bleDebugLog.map((line, i) => (
+                    <div key={i} style={{
+                      color: line.includes("✅STABLE") ? T.success : line.includes("⏳") ? T.warning : T.textMuted,
+                      marginBottom: 4, lineHeight: 1.5,
+                    }}>
+                      {line}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {bleDebugLog.length > 0 && (
+                <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10 }}>
+                  ✅ = stable reading used for BIA · ⏳ = streaming preview · Copy this and share to diagnose wrong weight.
+                </p>
+              )}
+            </div>
+          </>
         )}
 
       </div>
