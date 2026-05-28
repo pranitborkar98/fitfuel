@@ -76,7 +76,7 @@ type ActivePlan = {
     slug: string;
     tier: string;
     category: string;
-    dietVariant: string;
+    dietaryVariant: string;
     caloriesPerDay: number;
   } | null;
 };
@@ -182,7 +182,7 @@ export default function DashboardClient({
                     {activePlan.mealPlan?.tier}
                   </span>
                   <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.mealPlan?.dietVariant}</span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.mealPlan?.dietaryVariant}</span>
                   <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
                   <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.daysRemaining} days remaining</span>
                 </div>
