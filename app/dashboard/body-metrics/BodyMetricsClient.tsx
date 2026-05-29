@@ -72,7 +72,7 @@ interface ParamDef {
 
 const PARAM_DEFS: ParamDef[] = [
   {
-    key: "weight", label: "Weight", unit: "kg", icon: <Scale size={16} />, color: T.accent, decimals: 1,
+    key: "weight", label: "Weight", unit: "kg", icon: <Scale size={16} />, color: T.accent, decimals: 2,
     description: "Total body weight measured in kilograms.",
     ranges: [{ label: "Normal", color: T.success, min: 0, max: 999 }],
   },
@@ -348,23 +348,27 @@ function parseFitDaysPacket(
   }
 
   // ── MEDITIVE 0xAC packet — adaptive length handler ────────────────────────
-  const rawWeight = (bytes[3] << 8) | bytes[4];
-
-  // CALIBRATED TWO-POINT FORMULA (May 2026):
-  // The scale raw does NOT start at 0 for 0 kg — it has a fixed offset of ~25454.
-  // Confirmed from two simultaneous scale+app readings:
-  //   raw=26980 → 91.3 kg  (photo proof)
-  //   raw=26624 → 70.0 kg  (app wrongly showed 90.1 with old divisor-only formula)
-  // Formula: weight = (raw - 25454) * (21.3 / 356)
-  // DO NOT revert to rawWeight/295.5 — that gives ~90 kg for any person regardless of real weight.
-  // CORRECT FORMULA — two-point calibration from real confirmed measurements (May 2026):
-  //   Person 1: raw 0x6913 (26899) → 70.60 kg on physical scale ✓ (photo proof)
-  //   Person 2: raw 0x6967 (26983) → 92.10 kg on physical scale ✓ (photo proof)
-  // Solved: weight = (raw - 26623.1674) * 0.255952
-  // Both points verify exactly with these constants.
-  const WEIGHT_OFFSET = 26623.1674;
-  const WEIGHT_SCALE  = 0.255952;
-  const weight = parseFloat(((rawWeight - WEIGHT_OFFSET) * WEIGHT_SCALE).toFixed(1));
+  //
+  // CONFIRMED 3-BYTE WEIGHT ENCODING (May 2026, photo-verified):
+  // Weight is encoded as a 3-byte big-endian integer across bytes[3], [4], [5].
+  // The LSB (byte[5]) carries gram-level resolution — the old 2-byte formula
+  // truncated it, causing rounding errors of up to ±0.15 kg.
+  //
+  // Two photo-verified calibration points (scale display vs BLE raw):
+  //   bytes = 69 67 38  →  raw3 = 6907704  →  91.95 kg  ✓
+  //   bytes = 69 67 9c  →  raw3 = 6907804  →  92.05 kg  ✓
+  //
+  // Formula:  weight_kg = (raw3 - 6815754) / 1000
+  //   • Offset 6815754 derived from two-point calibration
+  //   • Divisor 1000 = each LSB is 1 gram (0.001 kg)
+  //   • Display resolution matches scale hardware: 0.05 kg steps
+  //   • Use toFixed(2) — toFixed(1) rounds 92.05 → 92.1 (the old visible bug)
+  //
+  // DO NOT revert to 2-byte (bytes[3]<<8|bytes[4]) — that loses byte[5] precision.
+  if (data.byteLength < 6) return null;
+  const rawWeight = (bytes[3] << 16) | (bytes[4] << 8) | bytes[5];
+  const WEIGHT_OFFSET = 6815754;
+  const weight = parseFloat(((rawWeight - WEIGHT_OFFSET) / 1000).toFixed(2));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
@@ -388,18 +392,15 @@ function parseFitDaysPacket(
 
   // ── STABILITY: tare-baseline guard ──────────────────────────────────────────
   // ROOT CAUSE (confirmed from logs, May 2026):
-  //   Idle packets have byte[5] noise causing ±0.8kg fluctuation. The old
-  //   ">0.5kg change" fix still fired because noise triggered "weightChanged",
-  //   then idle values reconverged and hit STABLE_THRESHOLD.
-  //
-  // REAL FIX: learn idle tare from first 5 packets. Only allow stability
-  //   counter to run if weight > tare + 3kg (a real human standing on it).
-  //   tareWeight is computed and passed in by the caller.
+  //   Idle packets have byte[5] noise causing ±0.5kg fluctuation in 3-byte mode.
+  //   Only allow stability counter to run if weight > tare + 3kg (a real human
+  //   standing on it). tareWeight is computed and passed in by the caller.
+  //   weightConverged tolerance: ≤0.05 kg (50g) — matches scale display resolution.
   //
   const TARE_MARGIN = 3.0;
   const isFirstPacket = prevWeight === undefined;
   const aboveTare = tareWeight !== undefined && weight > tareWeight + TARE_MARGIN;
-  const weightConverged = !isFirstPacket && Math.abs(weight - prevWeight!) <= 0.1;
+  const weightConverged = !isFirstPacket && Math.abs(weight - prevWeight!) <= 0.05;
 
   const count = (!aboveTare)      ? 0
               : isFirstPacket     ? 0
