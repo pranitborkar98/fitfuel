@@ -244,23 +244,80 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
 //
 // ADAPTIVE PARSER — handles variable packet lengths from this scale.
 //
-// What we know from APK decompilation of Fitdays (libICBleProtocol.so):
+// CONFIRMED from HCI btsnoop log (bugreport analysis, May 2026):
 //   • All packets start with 0xAC 0x27
-//   • Weight = bytes[4:6] big-endian / 200 (confirmed: 0x57E4 / 200 = 112.5 kg)
-//   • The native lib uses 0.01 as final multiplier on a /2 pre-divided value,
-//     which is mathematically identical to /200.
-//   • Impedance is 2-byte big-endian, located near the END of the packet.
-//     For 18-byte: bytes[15:17]. For 21-byte: bytes[18:20]. For others: scan.
+//   • Weight = (bytes[3] << 8 | bytes[4]) / 292
+//     Verified: stable raw 0x682b = 26667 → 26667/292 = 91.33 kg (scale shows 91.35, ±0.05 kg)
+//     Verified: stable raw 0x6964 = 26980 → 26980/292 = 92.40 kg ✓
+//     Verified: stable raw 0x697d = 27005 → 27005/292 = 92.48 kg ✓
+//   • Impedance is 2-byte big-endian near the END of the packet.
+//     For 20-byte packets: bytes[17:19]. For others: scan for value in 50–2000 Ω range.
+//   • The scale streams AC 27 packets continuously. All 13 body composition metrics
+//     are computed client-side from weight + impedance using Deurenberg BIA formulas.
+//     The scale does NOT send back computed body fat — our BIA formulas are required.
+//
+// USER PROFILE must be written to FFB1 (handle 0x0011) before stepping on:
+//   Byte layout confirmed from btsnoop captures of original Fitdays app:
+//   [0:2]  = 0xac 0x27 (header)
+//   [2]    = 0x6a (packet type: user profile)
+//   [3]    = 0x18
+//   [4:6]  = session counter (uint16 BE, increment each send; 0x0000 is fine)
+//   [6]    = 0x16
+//   [7]    = 0x00
+//   [8]    = sex (0=female, 1=male)
+//   [9]    = height in cm (uint8)
+//   [10:12] = 0x00 0x00 (previous impedance, 0 for first measurement)
+//   [12]   = age (uint8)
+//   [13]   = unit (0x01=kg, 0x02=lb)
+//   [14:16] = 0x00 0x00 (previous body fat, 0 for first measurement)
+//   [16]   = 0x03
+//   [17]   = 0x00
+//   [18]   = 0xd0 (flag: user data profile packet)
+//   [19]   = checksum: sum(bytes[2:19]) & 0xFF
 //
 // STABILITY via convergence:
-// The native lib (ICWeightScale27Worker) uses an internal state machine to set
-// state=1 (stable). We replicate this by requiring 8 consecutive packets
-// within 0.1 kg of each other — matching the scale's ~4-second lock window.
-// A single consecutive match (the old approach) fires too early on streaming values.
+// Require 8 consecutive packets within 0.1 kg — matching the scale's ~4-second lock window.
 //
 // stableCount is passed in and must reach STABLE_THRESHOLD before we declare stable.
 
 const STABLE_THRESHOLD = 8;
+
+/**
+ * Build the user-profile packet to write to FFB1 (GATT handle 0x0011) before measurement.
+ * Format confirmed from HCI btsnoop analysis of original Fitdays app.
+ * The scale uses this to calibrate impedance for body composition.
+ */
+function buildProfilePacket(
+  sex: "male" | "female",
+  heightCm: number,
+  age: number,
+): Uint8Array {
+  const pkt = new Uint8Array(20);
+  pkt[0]  = 0xac;
+  pkt[1]  = 0x27;
+  pkt[2]  = 0x6a;  // packet type: user profile
+  pkt[3]  = 0x18;
+  pkt[4]  = 0x00;  // session counter hi (0 is fine)
+  pkt[5]  = 0x00;  // session counter lo
+  pkt[6]  = 0x16;
+  pkt[7]  = 0x00;
+  pkt[8]  = sex === "male" ? 0x01 : 0x00;
+  pkt[9]  = Math.max(100, Math.min(250, Math.round(heightCm))) & 0xFF;
+  pkt[10] = 0x00;  // previous impedance hi
+  pkt[11] = 0x00;  // previous impedance lo
+  pkt[12] = Math.max(10, Math.min(110, Math.round(age))) & 0xFF;
+  pkt[13] = 0x01;  // unit: kg
+  pkt[14] = 0x00;  // previous body fat hi
+  pkt[15] = 0x00;  // previous body fat lo
+  pkt[16] = 0x03;
+  pkt[17] = 0x00;
+  pkt[18] = 0xd0;  // flag: user data profile
+  // checksum = sum(bytes[2:19]) & 0xFF
+  let cs = 0;
+  for (let i = 2; i < 19; i++) cs += pkt[i];
+  pkt[19] = cs & 0xFF;
+  return pkt;
+}
 
 function parseFitDaysPacket(
   data: DataView,
@@ -293,12 +350,13 @@ function parseFitDaysPacket(
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
-  // Find impedance: scan from byte 13 onward for a 2-byte BE value in 50–2000 Ω.
-  // Known positions: [15:17] for 18-byte packets, [18:20] for 21-byte packets.
-  let impedance = 500; // fallback default (mid-range, won't crash BIA calc)
-  const impPositions = data.byteLength >= 18
-    ? [data.byteLength - 3, 15, 13, data.byteLength - 5]
-    : [data.byteLength - 3, 13];
+  // Find impedance: confirmed from HCI btsnoop analysis.
+  // For 20-byte packets: bytes[17:19] = impedance in Ω (e.g. 0x03D5 = 981Ω ✓)
+  // Scan from bytes[17] downward as fallback for other packet lengths.
+  let impedance = 500; // mid-range fallback (won't crash BIA calc)
+  const impPositions = data.byteLength >= 20
+    ? [17, 15, 13, data.byteLength - 3]
+    : [data.byteLength - 3, 13, 11];
 
   for (const pos of impPositions) {
     if (pos >= 0 && pos + 1 < data.byteLength) {
@@ -310,12 +368,12 @@ function parseFitDaysPacket(
     }
   }
 
-  // Stability: 18-byte packet is always the final reading (confirmed by capture).
-  // For other lengths, require STABLE_THRESHOLD consecutive packets within 0.1 kg.
-  const isSize18  = data.byteLength === 18;
+  // Stability: require STABLE_THRESHOLD consecutive packets within 0.1 kg.
+  // The 20-byte packet is NOT a reliable stable indicator — the scale streams
+  // 20-byte packets continuously. Only convergence (same weight 8x) marks stable.
   const converged = prevWeight !== undefined && Math.abs(weight - prevWeight) <= 0.1;
   const count     = converged ? (stableCount ?? 0) + 1 : 0;
-  const stable    = isSize18 || count >= STABLE_THRESHOLD;
+  const stable    = count >= STABLE_THRESHOLD;
 
   return { weight, impedance, stable, stableCount: count };
 }
@@ -525,7 +583,6 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     }
     setBleStatus("scanning");
     setBleError(null);
-    // Line 526-527, after setBleError(null), ADD:
     stableFiredRef.current = false;
     stableCountRef.current = 0;
     prevWeightRef.current  = undefined;
@@ -589,12 +646,16 @@ export default function BodyMetricsClient({ user }: { user: any }) {
       // Subscribe to notifications first
       subscribeToScale(characteristic);
 
-      // Send trigger command to FFB1 so scale starts streaming immediately
+      // Send user profile to FFB1 so scale uses correct height/age/sex for impedance calibration.
+      // Confirmed format from HCI btsnoop analysis — the scale needs this before stepping on.
       try {
         const writeChar = await service.getCharacteristic("0000ffb1-0000-1000-8000-00805f9b34fb");
-        // Send wake/trigger command to FFB1 — scale may broadcast automatically anyway
-        await writeChar.writeValue(new Uint8Array([0xAC, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x27]));
-      } catch { /* write not required — scale may push data automatically */ }
+        const bio = profileBio as UserBio;
+        const profilePkt = hasSavedBio
+          ? buildProfilePacket(bio.gender, bio.heightCm, bio.age)
+          : new Uint8Array([0xAC, 0x27, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xdf, 0xe0]); // wake-only packet
+        await writeChar.writeValue(profilePkt);
+      } catch { /* write not required — scale streams automatically */ }
 
     } catch (err: any) {
       console.error("BLE error:", err);
@@ -657,8 +718,11 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
       try {
         const writeChar = await service.getCharacteristic("0000ffb1-0000-1000-8000-00805f9b34fb");
-        // Send wake/trigger command to FFB1 — scale may broadcast automatically anyway
-        await writeChar.writeValue(new Uint8Array([0xAC, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x27]));
+        const bio = profileBio as UserBio;
+        const profilePkt = hasSavedBio
+          ? buildProfilePacket(bio.gender, bio.heightCm, bio.age)
+          : new Uint8Array([0xAC, 0x27, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xdf, 0xe0]);
+        await writeChar.writeValue(profilePkt);
       } catch { /* optional */ }
 
     } catch (err: any) {
