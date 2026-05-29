@@ -325,6 +325,7 @@ function parseFitDaysPacket(
   data: DataView,
   prevWeight?: number,
   stableCount?: number,
+  tareWeight?: number,   // the scale's idle baseline — set from first N packets before anyone steps on
 ): { weight: number; impedance: number; stable: boolean; stableCount: number } | null {
   if (data.byteLength < 6) return null;
 
@@ -385,31 +386,31 @@ function parseFitDaysPacket(
     }
   }
 
-  // ── STABILITY: only start counting AFTER weight has changed ─────────────────
-  // Root cause of "fires on connect" bug:
-  //   The scale sends the same idle/tare raw value the moment BLE pairs.
-  //   Those packets are all identical → converge in 8 packets → fires STABLE
-  //   before anyone is on the scale.
+  // ── STABILITY: tare-baseline guard ──────────────────────────────────────────
+  // ROOT CAUSE (confirmed from logs, May 2026):
+  //   The scale streams its idle/tare weight the moment BLE pairs.
+  //   The idle stream has slight packet-to-packet noise (bytes[5] varies),
+  //   which makes the weight fluctuate by ~0.3–0.8 kg. The old ">0.5 kg change"
+  //   fix STILL fires stable on idle because: the noise triggers "weightChanged",
+  //   then the idle values reconverge and hit STABLE_THRESHOLD = 8.
   //
-  // Fix: require the weight to have CHANGED by >0.5kg from the first packet
-  //   before we start the convergence counter.
-  //   - prevWeight === undefined = very first packet → never stable, just record it
-  //   - weight changed >0.5kg from prev = someone stepping on → start/reset counter
-  //   - weight stable within 0.1kg AND counter already started → increment
-  //   - weight identical to prev AND counter is 0 → still idle, don't count
+  // REAL FIX: Learn the idle tare baseline from the first 5 packets, then ONLY
+  //   allow the stability counter to run if the current weight is >3 kg ABOVE
+  //   the tare baseline. The scale platform + internals weigh ~71 kg in raw units
+  //   (confirmed: idle raw ~26904 → 71.59 kg). A real human adds ≥3 kg on top.
   //
+  //   tareWeight = average of first 5 packets, computed and passed in by the caller.
+  //   If tareWeight is not yet known (first few packets), never count as stable.
+  //
+  const TARE_MARGIN = 3.0; // kg above idle tare required before counting stability
   const isFirstPacket = prevWeight === undefined;
-  const weightChanged = !isFirstPacket && Math.abs(weight - prevWeight!) > 0.5;
+  const aboveTare = tareWeight !== undefined && weight > tareWeight + TARE_MARGIN;
   const weightConverged = !isFirstPacket && Math.abs(weight - prevWeight!) <= 0.1;
-  
-  // Only count toward stable if we've already seen movement (stableCount > 0 means
-  // movement was seen in a prior packet) OR weight just changed now
-  const alreadyMoving = (stableCount ?? 0) > 0;
-  const converged = weightConverged && alreadyMoving;
-  const count = isFirstPacket ? 0
-              : weightChanged ? 1          // movement seen — start counter at 1
-              : converged     ? (stableCount ?? 0) + 1
-              :                 0;         // identical packets, counter not started yet = idle
+
+  const count = (!aboveTare)                   ? 0   // below tare+3kg → idle, never count
+              : isFirstPacket                  ? 0   // first packet → just record
+              : weightConverged                ? (stableCount ?? 0) + 1
+              :                                  0;  // weight jumped → reset
   const stable = count >= STABLE_THRESHOLD;
 
   return { weight, impedance, stable, stableCount: count };
@@ -531,9 +532,13 @@ export default function BodyMetricsClient({ user }: { user: any }) {
   const [bleError, setBleError]           = useState<string | null>(null);
   const [liveWeight, setLiveWeight]       = useState<number | null>(null); // streaming preview
   const [bleDebugLog, setBleDebugLog]     = useState<string[]>([]);        // raw packet log for debugging
-  const prevWeightRef   = useRef<number | undefined>(undefined);
-  const stableCountRef  = useRef<number>(0);
-  const stableFiredRef  = useRef<boolean>(false);
+  const prevWeightRef      = useRef<number | undefined>(undefined);
+  const stableCountRef     = useRef<number>(0);
+  const stableFiredRef     = useRef<boolean>(false);
+  // Tare baseline: collect first 5 parsed weights to learn the idle scale reading.
+  // Only after 5 packets do we have a reliable tare. Until then, stable never fires.
+  const tareBufferRef      = useRef<number[]>([]);    // accumulates first 5 weights
+  const tareWeightRef      = useRef<number | undefined>(undefined); // avg of first 5
 
   // Pre-fill bio from user profile if available (set during onboarding)
   const profileBio: Partial<UserBio> = {
@@ -557,13 +562,25 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         const rawStr = raw.join(" ");
         console.log("[MEDITIVE BLE] raw:", rawStr, `(${data.byteLength}b)`);
 
-        const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current);
+        const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current, tareWeightRef.current);
+
+        // Learn tare baseline from first 5 packets (scale idles immediately on connect).
+        // We accumulate 5 raw weights, average them → that's the empty-scale tare.
+        // Only after tare is known does stable detection activate.
+        if (parsed && tareWeightRef.current === undefined) {
+          tareBufferRef.current.push(parsed.weight);
+          if (tareBufferRef.current.length >= 5) {
+            const sum = tareBufferRef.current.reduce((a, b) => a + b, 0);
+            tareWeightRef.current = sum / tareBufferRef.current.length;
+            console.log(`[MEDITIVE BLE] tare baseline learned: ${tareWeightRef.current.toFixed(1)}kg`);
+          }
+        }
         console.log("[MEDITIVE BLE] parsed:", parsed);
 
         // Always append to debug log (last 20 packets)
         setBleDebugLog(prev => [
           ...prev.slice(-19),
-          `[${data.byteLength}b] ${rawStr}${parsed ? ` → ${parsed.weight}kg imp=${parsed.impedance}Ω ${parsed.stable ? "✅STABLE" : `⏳${parsed.stableCount}/${STABLE_THRESHOLD}`}` : " → null"}`,
+          `[${data.byteLength}b] ${rawStr}${parsed ? ` → ${parsed.weight}kg imp=${parsed.impedance}Ω ${parsed.stable ? "✅STABLE" : `⏳${parsed.stableCount}/${STABLE_THRESHOLD}`}${tareWeightRef.current !== undefined ? ` tare=${tareWeightRef.current.toFixed(1)}` : " [learning tare]"}` : " → null"}`,
         ]);
 
         if (!parsed) return;
@@ -623,6 +640,8 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     stableFiredRef.current = false;
     stableCountRef.current = 0;
     prevWeightRef.current  = undefined;
+    tareBufferRef.current  = [];
+    tareWeightRef.current  = undefined;
 
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
@@ -716,6 +735,8 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     stableFiredRef.current = false;
     stableCountRef.current = 0;
     prevWeightRef.current  = undefined;
+    tareBufferRef.current  = [];
+    tareWeightRef.current  = undefined;
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
