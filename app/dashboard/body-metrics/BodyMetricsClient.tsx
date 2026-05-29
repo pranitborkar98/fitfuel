@@ -289,7 +289,7 @@ function parseFitDaysPacket(
 
   // ── MEDITIVE 0xAC packet — adaptive length handler ────────────────────────
   const rawWeight = (bytes[4] << 8) | bytes[5];
-  const weight    = parseFloat((rawWeight / 200).toFixed(1));
+  const weight    = parseFloat((rawWeight / 288).toFixed(1));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
@@ -525,6 +525,10 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     }
     setBleStatus("scanning");
     setBleError(null);
+    // Line 526-527, after setBleError(null), ADD:
+    stableFiredRef.current = false;
+    stableCountRef.current = 0;
+    prevWeightRef.current  = undefined;
 
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
