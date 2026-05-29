@@ -356,10 +356,14 @@ function parseFitDaysPacket(
   //   raw=26624 → 70.0 kg  (app wrongly showed 90.1 with old divisor-only formula)
   // Formula: weight = (raw - 25454) * (21.3 / 356)
   // DO NOT revert to rawWeight/295.5 — that gives ~90 kg for any person regardless of real weight.
-  // CORRECT FORMULA — calibrated from real log (May 2026):
-  // raw 0x6918 (26904) → 71.59 kg confirmed on physical scale
-  // Formula: raw / 375.81
-  const weight = parseFloat((rawWeight / 375.81).toFixed(1));
+  // CORRECT FORMULA — two-point calibration from real confirmed measurements (May 2026):
+  //   Person 1: raw 0x6918 (26904) → 71.59 kg on physical scale ✓
+  //   Person 2: raw 0x6967 (26983) → 92.10 kg on physical scale ✓
+  // Solved: weight = (raw - 26628.25) * 0.25962
+  // DO NOT use raw/divisor (single-point) — it only works for one person, wrong for all others.
+  const WEIGHT_OFFSET = 26628.25;
+  const WEIGHT_SCALE  = 0.25962;
+  const weight = parseFloat(((rawWeight - WEIGHT_OFFSET) * WEIGHT_SCALE).toFixed(1));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
