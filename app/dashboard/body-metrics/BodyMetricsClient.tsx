@@ -288,8 +288,8 @@ function parseFitDaysPacket(
   }
 
   // ── MEDITIVE 0xAC packet — adaptive length handler ────────────────────────
-  const rawWeight = (bytes[4] << 8) | bytes[5];
-  const weight    = parseFloat((rawWeight / 288).toFixed(1));
+  const rawWeight = (bytes[3] << 8) | bytes[4];
+  const weight    = parseFloat((rawWeight / 292).toFixed(1));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
