@@ -246,10 +246,12 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
 //
 // CONFIRMED from HCI btsnoop log (bugreport analysis, May 2026):
 //   • All packets start with 0xAC 0x27
-//   • Weight = (bytes[3] << 8 | bytes[4]) / 295.5
-//     Verified: stable raw 0x6964 = 26980 → 26980/295.5 = 91.30 kg ✓ (scale confirmed same moment)
-//     Cross-check: raw 0x682b = 26667 → 26667/295.5 = 90.24 kg
-//     Note: divisor 295.5 confirmed from simultaneous scale+app photo, May 2026
+//   • Weight = (bytes[3]<<8 | bytes[4] - 25454) * (21.3/356)
+//     The raw value has a fixed offset (~25454) and does NOT start at 0 for 0 kg.
+//     Two-point calibration:
+//       raw=26980 (0x6964) → 91.3 kg  ✓ (simultaneous scale+app photo, May 2026)
+//       raw=26624 (0x6800) → 70.0 kg  ✓ (confirmed 70kg person, app wrongly showed 90.1 with old formula)
+//     OLD WRONG FORMULA: raw/295.5 — gives ~90 kg for everyone regardless of actual weight. DO NOT USE.
 //   • Impedance is 2-byte big-endian near the END of the packet.
 //     For 20-byte packets: bytes[17:19]. For others: scan for value in 50–2000 Ω range.
 //   • The scale streams AC 27 packets continuously. All 13 body composition metrics
@@ -346,7 +348,17 @@ function parseFitDaysPacket(
 
   // ── MEDITIVE 0xAC packet — adaptive length handler ────────────────────────
   const rawWeight = (bytes[3] << 8) | bytes[4];
-  const weight    = parseFloat((rawWeight / 295.5).toFixed(1));
+
+  // CALIBRATED TWO-POINT FORMULA (May 2026):
+  // The scale raw does NOT start at 0 for 0 kg — it has a fixed offset of ~25454.
+  // Confirmed from two simultaneous scale+app readings:
+  //   raw=26980 → 91.3 kg  (photo proof)
+  //   raw=26624 → 70.0 kg  (app wrongly showed 90.1 with old divisor-only formula)
+  // Formula: weight = (raw - 25454) * (21.3 / 356)
+  // DO NOT revert to rawWeight/295.5 — that gives ~90 kg for any person regardless of real weight.
+  const WEIGHT_OFFSET = 25454;
+  const WEIGHT_SCALE  = 21.3 / 356; // ≈ 0.05983 kg per raw unit
+  const weight = parseFloat(((rawWeight - WEIGHT_OFFSET) * WEIGHT_SCALE).toFixed(1));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
