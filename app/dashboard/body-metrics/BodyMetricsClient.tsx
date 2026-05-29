@@ -246,10 +246,10 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
 //
 // CONFIRMED from HCI btsnoop log (bugreport analysis, May 2026):
 //   • All packets start with 0xAC 0x27
-//   • Weight = (bytes[3] << 8 | bytes[4]) / 292
-//     Verified: stable raw 0x682b = 26667 → 26667/292 = 91.33 kg (scale shows 91.35, ±0.05 kg)
-//     Verified: stable raw 0x6964 = 26980 → 26980/292 = 92.40 kg ✓
-//     Verified: stable raw 0x697d = 27005 → 27005/292 = 92.48 kg ✓
+//   • Weight = (bytes[3] << 8 | bytes[4]) / 295.5
+//     Verified: stable raw 0x6964 = 26980 → 26980/295.5 = 91.30 kg ✓ (scale confirmed same moment)
+//     Cross-check: raw 0x682b = 26667 → 26667/295.5 = 90.24 kg
+//     Note: divisor 295.5 confirmed from simultaneous scale+app photo, May 2026
 //   • Impedance is 2-byte big-endian near the END of the packet.
 //     For 20-byte packets: bytes[17:19]. For others: scan for value in 50–2000 Ω range.
 //   • The scale streams AC 27 packets continuously. All 13 body composition metrics
@@ -346,7 +346,7 @@ function parseFitDaysPacket(
 
   // ── MEDITIVE 0xAC packet — adaptive length handler ────────────────────────
   const rawWeight = (bytes[3] << 8) | bytes[4];
-  const weight    = parseFloat((rawWeight / 292).toFixed(1));
+  const weight    = parseFloat((rawWeight / 295.5).toFixed(1));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
