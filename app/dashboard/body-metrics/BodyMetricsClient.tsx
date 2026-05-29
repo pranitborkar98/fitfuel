@@ -356,16 +356,17 @@ function parseFitDaysPacket(
   //   raw=26624 → 70.0 kg  (app wrongly showed 90.1 with old divisor-only formula)
   // Formula: weight = (raw - 25454) * (21.3 / 356)
   // DO NOT revert to rawWeight/295.5 — that gives ~90 kg for any person regardless of real weight.
-  const WEIGHT_OFFSET = 25454;
-  const WEIGHT_SCALE  = 21.3 / 356; // ≈ 0.05983 kg per raw unit
-  const weight = parseFloat(((rawWeight - WEIGHT_OFFSET) * WEIGHT_SCALE).toFixed(1));
+  // CORRECT FORMULA — calibrated from real log (May 2026):
+  // raw 0x6918 (26904) → 71.59 kg confirmed on physical scale
+  // Formula: raw / 375.81
+  const weight = parseFloat((rawWeight / 375.81).toFixed(1));
 
   if (weight < 20 || weight > 300) return null;  // out of human range
 
   // Find impedance: confirmed from HCI btsnoop analysis.
   // For 20-byte packets: bytes[17:19] = impedance in Ω (e.g. 0x03D5 = 981Ω ✓)
   // Scan from bytes[17] downward as fallback for other packet lengths.
-  let impedance = -1; // sentinel: -1 means no valid impedance found in packet
+  let impedance = 500; // mid-range fallback (won't crash BIA calc)
   const impPositions = data.byteLength >= 20
     ? [17, 15, 13, data.byteLength - 3]
     : [data.byteLength - 3, 13, 11];
@@ -380,35 +381,34 @@ function parseFitDaysPacket(
     }
   }
 
-  // Stability guard — THREE conditions must ALL be true before we count toward stable:
+  // ── STABILITY: only start counting AFTER weight has changed ─────────────────
+  // Root cause of "fires on connect" bug:
+  //   The scale sends the same idle/tare raw value the moment BLE pairs.
+  //   Those packets are all identical → converge in 8 packets → fires STABLE
+  //   before anyone is on the scale.
   //
-  // 1. Valid impedance (impedance !== -1):
-  //    An empty/idle scale sends packets with no real impedance signal.
-  //    The scan above returns -1 when nothing in 50–2000Ω range is found.
-  //    A person standing on the scale always produces measurable impedance.
-  //    This alone blocks idle-scale false positives.
+  // Fix: require the weight to have CHANGED by >0.5kg from the first packet
+  //   before we start the convergence counter.
+  //   - prevWeight === undefined = very first packet → never stable, just record it
+  //   - weight changed >0.5kg from prev = someone stepping on → start/reset counter
+  //   - weight stable within 0.1kg AND counter already started → increment
+  //   - weight identical to prev AND counter is 0 → still idle, don't count
   //
-  // 2. Convergence (weight within 0.1 kg of previous packet):
-  //    The scale must have locked onto a stable value.
-  //
-  // 3. prevWeight must exist (at least one prior packet seen):
-  //    Prevents triggering on the very first packet.
-  //
-  // RESULT: idle scale packets (no valid impedance) will NEVER reach stable.
-  // Only a real person standing still on the scale long enough will fire the
-  // BIA flow — which is exactly what we want.
-  const hasValidImpedance = impedance !== -1;
-  const converged = hasValidImpedance
-    && prevWeight !== undefined
-    && Math.abs(weight - prevWeight) <= 0.1;
-  const count  = converged ? (stableCount ?? 0) + 1 : 0;
+  const isFirstPacket = prevWeight === undefined;
+  const weightChanged = !isFirstPacket && Math.abs(weight - prevWeight!) > 0.5;
+  const weightConverged = !isFirstPacket && Math.abs(weight - prevWeight!) <= 0.1;
+  
+  // Only count toward stable if we've already seen movement (stableCount > 0 means
+  // movement was seen in a prior packet) OR weight just changed now
+  const alreadyMoving = (stableCount ?? 0) > 0;
+  const converged = weightConverged && alreadyMoving;
+  const count = isFirstPacket ? 0
+              : weightChanged ? 1          // movement seen — start counter at 1
+              : converged     ? (stableCount ?? 0) + 1
+              :                 0;         // identical packets, counter not started yet = idle
   const stable = count >= STABLE_THRESHOLD;
 
-  // If impedance is still -1 after the scan, use 500 as the BIA fallback
-  // (only reached if stable fires, meaning we already confirmed a person is on the scale)
-  const safeImpedance = impedance === -1 ? 500 : impedance;
-
-  return { weight, impedance: safeImpedance, stable, stableCount: count };
+  return { weight, impedance, stable, stableCount: count };
 }
 
 // ─── Mini sparkline (pure SVG) ───────────────────────────────────────────────
