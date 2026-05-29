@@ -554,7 +554,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         const rawStr = raw.join(" ");
         console.log("[MEDITIVE BLE] raw:", rawStr, `(${data.byteLength}b)`);
 
-        const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current);
+        const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current, tareWeightRef.current);
         console.log("[MEDITIVE BLE] parsed:", parsed);
 
         // Always append to debug log (last 20 packets)
@@ -564,6 +564,24 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         ]);
 
         if (!parsed) return;
+
+        // ── Accumulate tare baseline from first 5 idle packets ──────────────
+        // The scale streams packets immediately when powered on, before anyone
+        // steps on it. We collect the first 5 parsed weights to learn the idle
+        // baseline (tare). Only after tare is established does the stability
+        // counter start — this prevents idle noise from ever triggering "stable".
+        if (tareWeightRef.current === undefined) {
+          tareBufferRef.current.push(parsed.weight);
+          if (tareBufferRef.current.length >= 5) {
+            const avg = tareBufferRef.current.reduce((a, b) => a + b, 0) / tareBufferRef.current.length;
+            tareWeightRef.current = parseFloat(avg.toFixed(1));
+            console.log(`[MEDITIVE BLE] tare established: ${tareWeightRef.current} kg`);
+          }
+          // Don't start stability tracking until tare is established
+          setLiveWeight(parsed.weight);
+          prevWeightRef.current = parsed.weight;
+          return;
+        }
 
         // Update live weight preview and convergence counters
         setLiveWeight(parsed.weight);
@@ -620,6 +638,8 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     stableFiredRef.current = false;
     stableCountRef.current = 0;
     prevWeightRef.current  = undefined;
+    tareBufferRef.current  = [];
+    tareWeightRef.current  = undefined;
 
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
@@ -713,6 +733,8 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     stableFiredRef.current = false;
     stableCountRef.current = 0;
     prevWeightRef.current  = undefined;
+    tareBufferRef.current  = [];
+    tareWeightRef.current  = undefined;
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
@@ -862,12 +884,16 @@ export default function BodyMetricsClient({ user }: { user: any }) {
               <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: 700 }}>
                   Scale connected —{" "}
-                  {liveWeight !== null
+                  {liveWeight !== null && tareWeightRef.current === undefined
+                    ? <span style={{ color: T.textMuted }}>calibrating baseline…</span>
+                    : liveWeight !== null
                     ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising {stableCountRef.current}/{STABLE_THRESHOLD}…)</span>
                     : "step on it barefoot"}
                 </p>
                 <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>
-                  {liveWeight !== null
+                  {liveWeight !== null && tareWeightRef.current === undefined
+                    ? "Learning idle baseline — stay off the scale for a moment."
+                    : liveWeight !== null
                     ? "Stay still — waiting for the stable final reading."
                     : "Stand still for 3–5 seconds. Metrics will auto-populate once the reading stabilises."}
                 </p>
