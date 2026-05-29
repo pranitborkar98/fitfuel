@@ -194,10 +194,15 @@ function getRangeInfo(def: ParamDef, value: number | null) {
 // Everything else is derived from those two values + user profile.
 
 function calcBodyFat(weight: number, impedance: number, height: number, age: number, gender: "male" | "female"): number {
-  const h = height / 100; // cm → m
-  const lbm = (height * 9.058 / 100 + weight * 0.244) - (impedance * 0.04834) - (gender === "male" ? 0 : 12.6) - age * 0.1133 + 0.1236;
-  const bodyFat = ((weight - lbm) / weight) * 100;
-  return Math.max(2, Math.min(60, bodyFat));
+  // Deurenberg (1991) BMI-based formula — validated across populations, gives
+  // 20-30% for typical adult male (avoids the broken impedance coefficient issue).
+  // Males: BF% = 1.2*BMI + 0.23*age - 16.2
+  // Females: BF% = 1.2*BMI + 0.23*age - 5.4
+  const h   = height / 100;
+  const bmi = weight / (h * h);
+  const base = 1.2 * bmi + 0.23 * age;
+  const bf   = gender === "male" ? base - 16.2 : base - 5.4;
+  return Math.max(5, Math.min(50, bf));
 }
 
 function calcBMR(weight: number, height: number, age: number, gender: "male" | "female"): number {
@@ -247,15 +252,21 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
 //   • Impedance is 2-byte big-endian, located near the END of the packet.
 //     For 18-byte: bytes[15:17]. For 21-byte: bytes[18:20]. For others: scan.
 //
-// STABILITY via convergence: instead of relying solely on packet length,
-// we track the last two readings. If weight is the same (within 0.2 kg)
-// twice in a row AND impedance is non-zero, we declare it stable.
-// This works regardless of whether the scale sends 18 or 21 byte finals.
+// STABILITY via convergence:
+// The native lib (ICWeightScale27Worker) uses an internal state machine to set
+// state=1 (stable). We replicate this by requiring 8 consecutive packets
+// within 0.1 kg of each other — matching the scale's ~4-second lock window.
+// A single consecutive match (the old approach) fires too early on streaming values.
+//
+// stableCount is passed in and must reach STABLE_THRESHOLD before we declare stable.
+
+const STABLE_THRESHOLD = 8;
 
 function parseFitDaysPacket(
   data: DataView,
   prevWeight?: number,
-): { weight: number; impedance: number; stable: boolean } | null {
+  stableCount?: number,
+): { weight: number; impedance: number; stable: boolean; stableCount: number } | null {
   if (data.byteLength < 6) return null;
 
   const bytes = Array.from({ length: data.byteLength }, (_, i) => data.getUint8(i));
@@ -266,12 +277,12 @@ function parseFitDaysPacket(
       const wBE = ((bytes[3] << 8) | bytes[4]) / 10;
       const impBE = (bytes[5] << 8) | bytes[6];
       if (wBE >= 20 && wBE <= 300 && impBE >= 50 && impBE <= 2000)
-        return { weight: wBE, impedance: impBE, stable: (bytes[2] & 0x03) !== 0 };
+        return { weight: wBE, impedance: impBE, stable: (bytes[2] & 0x03) !== 0, stableCount: 0 };
 
       const wLE = (bytes[3] | (bytes[4] << 8)) / 10;
       const impLE = bytes[5] | (bytes[6] << 8);
       if (wLE >= 20 && wLE <= 300 && impLE >= 50 && impLE <= 2000)
-        return { weight: wLE, impedance: impLE, stable: (bytes[2] & 0x03) !== 0 };
+        return { weight: wLE, impedance: impLE, stable: (bytes[2] & 0x03) !== 0, stableCount: 0 };
     }
     return null;
   }
@@ -300,12 +311,13 @@ function parseFitDaysPacket(
   }
 
   // Stability: 18-byte packet is always the final reading (confirmed by capture).
-  // For other lengths, declare stable if weight converged (within 0.2 kg of prev).
-  const isSize18 = data.byteLength === 18;
-  const converged = prevWeight !== undefined && Math.abs(weight - prevWeight) <= 0.2;
-  const stable    = isSize18 || converged;
+  // For other lengths, require STABLE_THRESHOLD consecutive packets within 0.1 kg.
+  const isSize18  = data.byteLength === 18;
+  const converged = prevWeight !== undefined && Math.abs(weight - prevWeight) <= 0.1;
+  const count     = converged ? (stableCount ?? 0) + 1 : 0;
+  const stable    = isSize18 || count >= STABLE_THRESHOLD;
 
-  return { weight, impedance, stable };
+  return { weight, impedance, stable, stableCount: count };
 }
 
 // ─── Mini sparkline (pure SVG) ───────────────────────────────────────────────
@@ -424,7 +436,9 @@ export default function BodyMetricsClient({ user }: { user: any }) {
   const [bleError, setBleError]           = useState<string | null>(null);
   const [liveWeight, setLiveWeight]       = useState<number | null>(null); // streaming preview
   const [bleDebugLog, setBleDebugLog]     = useState<string[]>([]);        // raw packet log for debugging
-  const prevWeightRef                     = useRef<number | undefined>(undefined);
+  const prevWeightRef   = useRef<number | undefined>(undefined);
+  const stableCountRef  = useRef<number>(0);
+  const stableFiredRef  = useRef<boolean>(false);
 
   // Pre-fill bio from user profile if available (set during onboarding)
   const profileBio: Partial<UserBio> = {
@@ -448,29 +462,38 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         const rawStr = raw.join(" ");
         console.log("[MEDITIVE BLE] raw:", rawStr, `(${data.byteLength}b)`);
 
-        const parsed = parseFitDaysPacket(data, prevWeightRef.current);
+        const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current);
         console.log("[MEDITIVE BLE] parsed:", parsed);
 
         // Always append to debug log (last 20 packets)
         setBleDebugLog(prev => [
           ...prev.slice(-19),
-          `[${data.byteLength}b] ${rawStr}${parsed ? ` → ${parsed.weight}kg imp=${parsed.impedance}Ω ${parsed.stable ? "✅STABLE" : "⏳stream"}` : " → null"}`,
+          `[${data.byteLength}b] ${rawStr}${parsed ? ` → ${parsed.weight}kg imp=${parsed.impedance}Ω ${parsed.stable ? "✅STABLE" : `⏳${parsed.stableCount}/${STABLE_THRESHOLD}`}` : " → null"}`,
         ]);
 
         if (!parsed) return;
 
-        // Update live weight preview
+        // Update live weight preview and convergence counters
         setLiveWeight(parsed.weight);
-        prevWeightRef.current = parsed.weight;
+        prevWeightRef.current  = parsed.weight;
+        stableCountRef.current = parsed.stableCount;
 
         if (!parsed.stable) {
-          console.log("[MEDITIVE BLE] streaming weight preview:", parsed.weight, "kg — waiting for stable…");
+          console.log(`[MEDITIVE BLE] streaming ${parsed.weight}kg (${parsed.stableCount}/${STABLE_THRESHOLD} consecutive)`);
           return;
         }
 
+        // Guard: only fire stable flow ONCE per connection session
+        if (stableFiredRef.current) {
+          console.log("[MEDITIVE BLE] stable already fired — ignoring repeat");
+          return;
+        }
+        stableFiredRef.current = true;
+
         // Stable packet received — clear live preview and trigger BIA flow
         setLiveWeight(null);
-        prevWeightRef.current = undefined;
+        prevWeightRef.current  = undefined;
+        stableCountRef.current = 0;
 
         setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
         if (hasSavedBio) {
@@ -588,6 +611,9 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     if (!("bluetooth" in navigator)) { setBleStatus("unsupported"); return; }
     setBleStatus("scanning");
     setBleError(null);
+    stableFiredRef.current = false;
+    stableCountRef.current = 0;
+    prevWeightRef.current  = undefined;
     try {
       const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
@@ -735,7 +761,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
                 <p style={{ fontWeight: 700 }}>
                   Scale connected —{" "}
                   {liveWeight !== null
-                    ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising…)</span>
+                    ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising {stableCountRef.current}/{STABLE_THRESHOLD}…)</span>
                     : "step on it barefoot"}
                 </p>
                 <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>
