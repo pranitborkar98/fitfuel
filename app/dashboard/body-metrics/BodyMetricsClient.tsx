@@ -365,7 +365,7 @@ function parseFitDaysPacket(
   // Find impedance: confirmed from HCI btsnoop analysis.
   // For 20-byte packets: bytes[17:19] = impedance in Ω (e.g. 0x03D5 = 981Ω ✓)
   // Scan from bytes[17] downward as fallback for other packet lengths.
-  let impedance = 500; // mid-range fallback (won't crash BIA calc)
+  let impedance = -1; // sentinel: -1 means no valid impedance found in packet
   const impPositions = data.byteLength >= 20
     ? [17, 15, 13, data.byteLength - 3]
     : [data.byteLength - 3, 13, 11];
@@ -380,14 +380,35 @@ function parseFitDaysPacket(
     }
   }
 
-  // Stability: require STABLE_THRESHOLD consecutive packets within 0.1 kg.
-  // The 20-byte packet is NOT a reliable stable indicator — the scale streams
-  // 20-byte packets continuously. Only convergence (same weight 8x) marks stable.
-  const converged = prevWeight !== undefined && Math.abs(weight - prevWeight) <= 0.1;
-  const count     = converged ? (stableCount ?? 0) + 1 : 0;
-  const stable    = count >= STABLE_THRESHOLD;
+  // Stability guard — THREE conditions must ALL be true before we count toward stable:
+  //
+  // 1. Valid impedance (impedance !== -1):
+  //    An empty/idle scale sends packets with no real impedance signal.
+  //    The scan above returns -1 when nothing in 50–2000Ω range is found.
+  //    A person standing on the scale always produces measurable impedance.
+  //    This alone blocks idle-scale false positives.
+  //
+  // 2. Convergence (weight within 0.1 kg of previous packet):
+  //    The scale must have locked onto a stable value.
+  //
+  // 3. prevWeight must exist (at least one prior packet seen):
+  //    Prevents triggering on the very first packet.
+  //
+  // RESULT: idle scale packets (no valid impedance) will NEVER reach stable.
+  // Only a real person standing still on the scale long enough will fire the
+  // BIA flow — which is exactly what we want.
+  const hasValidImpedance = impedance !== -1;
+  const converged = hasValidImpedance
+    && prevWeight !== undefined
+    && Math.abs(weight - prevWeight) <= 0.1;
+  const count  = converged ? (stableCount ?? 0) + 1 : 0;
+  const stable = count >= STABLE_THRESHOLD;
 
-  return { weight, impedance, stable, stableCount: count };
+  // If impedance is still -1 after the scan, use 500 as the BIA fallback
+  // (only reached if stable fires, meaning we already confirmed a person is on the scale)
+  const safeImpedance = impedance === -1 ? 500 : impedance;
+
+  return { weight, impedance: safeImpedance, stable, stableCount: count };
 }
 
 // ─── Mini sparkline (pure SVG) ───────────────────────────────────────────────
