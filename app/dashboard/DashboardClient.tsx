@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
-  Calendar, Target, CheckCircle2, Circle,
+  Calendar, Target, CheckCircle2, Circle, X, Clock, ChefHat, Flame,
 } from "lucide-react";
 
 const T = {
@@ -36,13 +36,6 @@ const STATUS_COLOR: Record<string, string> = {
   PROCESSING:      "#60a5fa",
 };
 
-const SLOT_EMOJI: Record<string, string> = {
-  BREAKFAST: "🌅",
-  LUNCH: "☀️",
-  SNACK: "🍎",
-  DINNER: "🌙",
-};
-
 type Meal = {
   slotId: string;
   mealSlot: string;
@@ -50,14 +43,19 @@ type Meal = {
   time: string;
   emoji: string;
   isLogged: boolean;
+  isSkipped: boolean;
   dayNumber: number;
   recipe: {
     id: string;
     name: string;
+    slug?: string;
     caloriesPerServing: number;
-    proteinPerServing: number;
-    carbsPerServing: number;
-    fatPerServing: number;
+    proteinGrams: number;
+    carbsGrams: number;
+    fatGrams: number;
+    prepTimeMins?: number;
+    cookTimeMins?: number;
+    cuisineType?: string;
   };
 };
 
@@ -81,6 +79,124 @@ type ActivePlan = {
   } | null;
 };
 
+// ── Meal Detail Drawer ──────────────────────────────────────────
+function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
+  meal: Meal;
+  onClose: () => void;
+  isLogged: boolean;
+  isLogging: boolean;
+  onLog: () => void;
+}) {
+  const totalTime = (meal.recipe.prepTimeMins ?? 0) + (meal.recipe.cookTimeMins ?? 0);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+          zIndex: 1000, backdropFilter: "blur(4px)",
+        }}
+      />
+      {/* Sheet */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "#141414", borderRadius: "20px 20px 0 0",
+        border: `1px solid ${T.border}`, borderBottom: "none",
+        zIndex: 1001, padding: "28px 24px 40px",
+        maxHeight: "85vh", overflowY: "auto",
+        maxWidth: 640, margin: "0 auto",
+      }}>
+        {/* Handle */}
+        <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 24px" }} />
+
+        {/* Close */}
+        <button onClick={onClose} style={{
+          position: "absolute", top: 20, right: 20,
+          background: "#1a1a1a", border: `1px solid ${T.border}`,
+          borderRadius: 8, padding: 6, cursor: "pointer", color: T.textMuted,
+          display: "flex", alignItems: "center",
+        }}>
+          <X size={16} />
+        </button>
+
+        {/* Slot badge + emoji */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <span style={{ fontSize: 28 }}>{meal.emoji}</span>
+          <div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 8px", textTransform: "uppercase" }}>
+              {meal.label}
+            </span>
+            <p style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{meal.time}</p>
+          </div>
+        </div>
+
+        {/* Recipe name */}
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: T.text, lineHeight: 1.3, marginBottom: 20 }}>
+          {meal.recipe.name}
+        </h2>
+
+        {/* Macro grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
+          {[
+            { label: "Calories", value: meal.recipe.caloriesPerServing, unit: "kcal", color: "#f97316" },
+            { label: "Protein",  value: Number(meal.recipe.proteinGrams).toFixed(1), unit: "g", color: "#60a5fa" },
+            { label: "Carbs",    value: Number(meal.recipe.carbsGrams).toFixed(1),   unit: "g", color: "#facc15" },
+            { label: "Fat",      value: Number(meal.recipe.fatGrams).toFixed(1),     unit: "g", color: "#a78bfa" },
+          ].map(m => (
+            <div key={m.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
+              <p style={{ fontSize: 18, fontWeight: 800, color: m.color, lineHeight: 1 }}>{m.value}</p>
+              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{m.unit}</p>
+              <p style={{ fontSize: 10, color: T.textMuted }}>{m.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Meta row */}
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
+          {totalTime > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.textMuted }}>
+              <Clock size={13} /> {totalTime} min prep
+            </div>
+          )}
+          {meal.recipe.cuisineType && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.textMuted }}>
+              <ChefHat size={13} /> {meal.recipe.cuisineType.replace(/_/g, " ")}
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.textMuted }}>
+            <Flame size={13} /> Day {meal.dayNumber} of 30
+          </div>
+        </div>
+
+        {/* Log button */}
+        <button
+          onClick={() => { onLog(); onClose(); }}
+          disabled={isLogged || isLogging}
+          style={{
+            width: "100%", padding: "15px 0", borderRadius: 12,
+            background: isLogged ? "#1a2e05" : T.accent,
+            border: `1px solid ${isLogged ? "#365314" : T.accent}`,
+            color: isLogged ? T.accent : "#000",
+            fontSize: 14, fontWeight: 800, cursor: isLogged ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            textTransform: "uppercase", letterSpacing: "0.06em",
+          }}
+        >
+          {isLogged
+            ? <><CheckCircle2 size={16} /> Logged</>
+            : isLogging
+            ? "Logging..."
+            : <><Circle size={16} /> I ate this</>
+          }
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ── Main Dashboard ──────────────────────────────────────────────
 export default function DashboardClient({
   session, orders, user, activePlan,
 }: {
@@ -94,6 +210,7 @@ export default function DashboardClient({
   const [mealsLoading, setMealsLoading] = useState(false);
   const [loggingSlot, setLoggingSlot] = useState<string | null>(null);
   const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set());
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
     if (!activePlan) return;
@@ -142,7 +259,19 @@ export default function DashboardClient({
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", paddingTop: 88, paddingBottom: 80, color: T.text }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
+
+      {/* Meal Detail Drawer */}
+      {selectedMeal && (
+        <MealDrawer
+          meal={selectedMeal}
+          onClose={() => setSelectedMeal(null)}
+          isLogged={loggedSlots.has(selectedMeal.slotId)}
+          isLogging={loggingSlot === selectedMeal.slotId}
+          onLog={() => handleLogMeal(selectedMeal)}
+        />
+      )}
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 40 }}>
@@ -169,34 +298,34 @@ export default function DashboardClient({
 
         {/* Active Plan Card */}
         {activePlan ? (
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
 
             {/* Plan header */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
-              <div>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 20 }}>
+              <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active Plan</p>
-                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{activePlan.mealPlan?.name}</h2>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 8px", fontWeight: 700 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{activePlan.mealPlan?.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 7px", fontWeight: 700 }}>
                     {activePlan.mealPlan?.tier}
                   </span>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.mealPlan?.dietaryVariant}</span>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>{activePlan.daysRemaining} days remaining</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{activePlan.mealPlan?.dietaryVariant}</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{activePlan.daysRemaining} days remaining</span>
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: 28, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: T.accent, lineHeight: 1 }}>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <p style={{ fontSize: 26, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: T.accent, lineHeight: 1 }}>
                   Day {activePlan.currentDay}
                 </p>
-                <p style={{ fontSize: 12, color: T.textMuted }}>of 30</p>
+                <p style={{ fontSize: 11, color: T.textMuted }}>of 30</p>
               </div>
             </div>
 
             {/* Day progress bar */}
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: T.textMuted }}>Plan progress</span>
                 <span style={{ fontSize: 12, color: T.textMuted }}>{dayProgress}%</span>
@@ -208,7 +337,7 @@ export default function DashboardClient({
 
             {/* Today's Meals */}
             <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Today's Meals</p>
                 {calorieTarget && (
                   <p style={{ fontSize: 12, color: T.textMuted }}>
@@ -223,7 +352,7 @@ export default function DashboardClient({
               {mealsLoading ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[1, 2, 3, 4].map(i => (
-                    <div key={i} style={{ height: 56, background: "#0f0f0f", borderRadius: 10, border: `1px solid ${T.border}`, animation: "pulse 1.5s infinite" }} />
+                    <div key={i} style={{ height: 56, background: "#0f0f0f", borderRadius: 10, border: `1px solid ${T.border}` }} />
                   ))}
                 </div>
               ) : meals.length === 0 ? (
@@ -231,47 +360,66 @@ export default function DashboardClient({
                   <p style={{ fontSize: 13, color: T.textMuted }}>No meals scheduled for today. Your plan may not have a schedule set up yet.</p>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {meals.map(meal => {
                     const isLogged = loggedSlots.has(meal.slotId);
                     const isLogging = loggingSlot === meal.slotId;
                     return (
-                      <div key={meal.slotId} style={{
-                        background: "#0f0f0f",
-                        border: `1px solid ${isLogged ? "#365314" : T.border}`,
-                        borderRadius: 10,
-                        padding: "14px 16px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        transition: "border-color 0.2s",
-                      }}>
-                        <span style={{ fontSize: 20, flexShrink: 0 }}>{meal.emoji}</span>
+                      <div
+                        key={meal.slotId}
+                        onClick={() => setSelectedMeal(meal)}
+                        style={{
+                          background: "#0f0f0f",
+                          border: `1px solid ${isLogged ? "#365314" : T.border}`,
+                          borderRadius: 10,
+                          padding: "12px 14px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          cursor: "pointer",
+                          transition: "border-color 0.2s, background 0.15s",
+                        }}
+                        onMouseEnter={e => { if (!isLogged) e.currentTarget.style.borderColor = "#333"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = isLogged ? "#365314" : T.border; }}
+                      >
+                        <span style={{ fontSize: 18, flexShrink: 0 }}>{meal.emoji}</span>
+
+                        {/* Name + macros — flex col, truncates on mobile */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: isLogged ? T.accent : T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {meal.recipe?.name ?? meal.label}
-                            </p>
-                            <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0 }}>{meal.time}</span>
-                          </div>
-                          {meal.recipe && (
-                            <p style={{ fontSize: 11, color: T.textMuted }}>
-                              {meal.recipe.proteinPerServing}g P · {meal.recipe.fatPerServing}g F · {meal.recipe.carbsPerServing}g C · {meal.recipe.caloriesPerServing} kcal
-                            </p>
-                          )}
+                          <p style={{
+                            fontSize: 13, fontWeight: 700,
+                            color: isLogged ? T.accent : T.text,
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                            marginBottom: 2,
+                          }}>
+                            {meal.recipe?.name ?? meal.label}
+                          </p>
+                          <p style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {Number(meal.recipe?.proteinGrams ?? 0).toFixed(0)}g P
+                            {" · "}{Number(meal.recipe?.fatGrams ?? 0).toFixed(0)}g F
+                            {" · "}{Number(meal.recipe?.carbsGrams ?? 0).toFixed(0)}g C
+                            {" · "}{meal.recipe?.caloriesPerServing} kcal
+                          </p>
                         </div>
+
+                        {/* Time — hidden on very small screens via explicit min-width check */}
+                        <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0, display: "none" }}
+                          className="meal-time"
+                        >{meal.time}</span>
+
+                        {/* Log button — stops propagation so card click doesn't double-fire */}
                         <button
-                          onClick={() => handleLogMeal(meal)}
+                          onClick={e => { e.stopPropagation(); handleLogMeal(meal); }}
                           disabled={isLogged || isLogging}
                           style={{
                             flexShrink: 0,
                             display: "flex",
                             alignItems: "center",
-                            gap: 6,
+                            gap: 5,
                             background: isLogged ? "#1a2e05" : "transparent",
                             border: `1px solid ${isLogged ? "#365314" : T.border}`,
                             borderRadius: 6,
-                            padding: "6px 12px",
+                            padding: "6px 10px",
                             fontSize: 11,
                             fontWeight: 700,
                             color: isLogged ? T.accent : T.textMuted,
@@ -280,10 +428,10 @@ export default function DashboardClient({
                           }}
                         >
                           {isLogged
-                            ? <><CheckCircle2 size={12} /> Logged</>
+                            ? <><CheckCircle2 size={11} /> Logged</>
                             : isLogging
-                            ? "Logging..."
-                            : <><Circle size={12} /> I ate this</>
+                            ? "..."
+                            : <><Circle size={11} /> I ate this</>
                           }
                         </button>
                       </div>
@@ -292,9 +440,9 @@ export default function DashboardClient({
                 </div>
               )}
 
-              {/* Calorie bar */}
+              {/* Calorie progress bar */}
               {loggedCalories > 0 && (
-                <div style={{ marginTop: 14 }}>
+                <div style={{ marginTop: 12 }}>
                   <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${progressPct}%`, background: progressPct >= 100 ? "#ef4444" : T.accent, borderRadius: 2, transition: "width 0.4s ease" }} />
                   </div>
@@ -304,7 +452,7 @@ export default function DashboardClient({
           </div>
         ) : (
           /* No active plan */
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div>
@@ -329,7 +477,7 @@ export default function DashboardClient({
         )}
 
         {/* Recent Orders */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 20px", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
             <ShoppingBag size={18} color={T.accent} />
             <h2 style={{ fontSize: 16, fontWeight: 700 }}>Recent Orders</h2>
@@ -346,7 +494,7 @@ export default function DashboardClient({
               {orders.map((order: any) => {
                 const item = order.items?.[0];
                 return (
-                  <div key={order.id} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 12, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                  <div key={order.id} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{order.orderNumber}</p>
                       <p style={{ fontSize: 12, color: T.textMuted }}>
@@ -371,60 +519,60 @@ export default function DashboardClient({
 
         {/* Features */}
         <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Features</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14, marginBottom: 32 }}>
 
           <Link href="/dashboard/body-metrics" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Activity size={20} />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Body Metrics</p>
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
-                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>Track 13 body composition parameters — connect your FitDays BLE scale or log manually.</p>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Track 18 body composition parameters — connect your FitDays BLE scale or log manually.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
           </Link>
 
           <Link href="/dashboard/nutrition" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Utensils size={20} />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Nutrition Tracker</p>
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
-                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>Log meals, track calories, macros and water daily.</p>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Log meals, track calories, macros and water daily.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
           </Link>
 
           <Link href="/dashboard/exercises" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Dumbbell size={20} />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Exercise Library</p>
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
-                <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>873 exercises — browse, log workouts, track sets and burned kcal.</p>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>873 exercises — browse, log workouts, track sets and burned kcal.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
@@ -433,7 +581,7 @@ export default function DashboardClient({
         </div>
 
         {/* Account */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 32px" }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700 }}>Account</h2>
             <Link href="/dashboard/profile" style={{ fontSize: 13, fontWeight: 600, color: T.accent, textDecoration: "none" }}>
