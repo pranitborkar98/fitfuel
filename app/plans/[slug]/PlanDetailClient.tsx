@@ -35,8 +35,8 @@ interface Plan {
   slug: string
   description?: string
   dietaryVariant: string
-  planTier: string
-  planCategory: string
+  tier: string
+  category: string
   targetCalories: number
   proteinTarget?: number
   carbTarget?: number
