@@ -362,7 +362,7 @@ const PARAM_DEFS: ParamDef[] = [
 ];
 
 type BleStatus = "idle" | "scanning" | "connected" | "failed" | "unsupported";
-type Tab = "overview" | "history" | "log";
+type Tab = "overview" | "history";
 
 // ─── Helper: get range label ──────────────────────────────────────────────────
 function getRangeInfo(def: ParamDef, value: number | null) {
@@ -905,7 +905,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginBottom: 28, background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 4, width: "fit-content" }}>
-          {(["overview", "history", "log"] as Tab[]).map(t => (
+          {(["overview", "history"] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               background: tab === t ? T.accent : "transparent",
               color:      tab === t ? "#000" : T.textMuted,
@@ -935,16 +935,6 @@ export default function BodyMetricsClient({ user }: { user: any }) {
             history={history}
             loading={loadingHistory}
           />
-        )}
-
-        {tab === "log" && (
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Log Entry</h2>
-            <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
-              Manually enter any or all of the 18 parameters. Only filled fields are saved.
-            </p>
-            <ManualForm draft={manualDraft} onChange={setManualDraft} onSave={handleSave} saving={saving} />
-          </div>
         )}
       </div>
 
@@ -1081,11 +1071,31 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
   );
 }
 
-// ─── History Tab — FIXED: real DB data, no mock ────────────────────────────────
+// ─── History Tab ──────────────────────────────────────────────────────────────
+type ChartKey = "weight" | "bodyFatRate" | "muscleMass" | "bmi" | "visceralFat" | "bodyWater" | "bmr";
+
 function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: boolean }) {
-  const [chartMetric, setChartMetric] = useState<"weight" | "bodyFatRate" | "muscleMass" | "bmi">("weight");
-  const metricLabels = { weight: "Weight (kg)", bodyFatRate: "Body Fat %", muscleMass: "Muscle Mass (kg)", bmi: "BMI" };
-  const colors = { weight: T.accent, bodyFatRate: "#f97316", muscleMass: "#34d399", bmi: "#60a5fa" };
+  const [chartMetric, setChartMetric] = useState<ChartKey>("weight");
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const metricLabels: Record<ChartKey, string> = {
+    weight:      "Weight (kg)",
+    bodyFatRate: "Body Fat %",
+    muscleMass:  "Muscle (kg)",
+    bmi:         "BMI",
+    visceralFat: "Visceral Fat",
+    bodyWater:   "Body Water %",
+    bmr:         "BMR (kcal)",
+  };
+  const chartColors: Record<ChartKey, string> = {
+    weight:      T.accent,
+    bodyFatRate: "#f97316",
+    muscleMass:  "#34d399",
+    bmi:         "#60a5fa",
+    visceralFat: "#f43f5e",
+    bodyWater:   "#38bdf8",
+    bmr:         "#a78bfa",
+  };
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -1110,7 +1120,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
     );
   }
 
-  const values = history.map(h => (h[chartMetric] as number) ?? 0).filter(Boolean);
+  const values = history.map(h => (h[chartMetric] as number | undefined) ?? 0).filter(Boolean);
   const min = Math.min(...values); const max = Math.max(...values);
   const range = max - min || 0.1;
   const W = 600; const H = 180; const PAD = 40;
@@ -1120,8 +1130,12 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
     return { x, y, v, label: formatDate(history[i].recordedAt) };
   });
 
+  const color = chartColors[chartMetric];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* ── Chart ── */}
       <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1129,12 +1143,12 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
             <h3 style={{ fontSize: 14, fontWeight: 700 }}>{metricLabels[chartMetric]} — Last {history.length} readings</h3>
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {(Object.entries(metricLabels) as [typeof chartMetric, string][]).map(([k, label]) => (
+            {(Object.entries(metricLabels) as [ChartKey, string][]).map(([k, label]) => (
               <button key={k} onClick={() => setChartMetric(k)} style={{
                 fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 6, cursor: "pointer",
-                background: chartMetric === k ? colors[k] + "22" : "transparent",
-                color: chartMetric === k ? colors[k] : T.textMuted,
-                border: `1px solid ${chartMetric === k ? colors[k] : T.border}`,
+                background: chartMetric === k ? chartColors[k] + "22" : "transparent",
+                color: chartMetric === k ? chartColors[k] : T.textMuted,
+                border: `1px solid ${chartMetric === k ? chartColors[k] : T.border}`,
               }}>{label}</button>
             ))}
           </div>
@@ -1143,8 +1157,8 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ minWidth: 300 }}>
             <defs>
               <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={colors[chartMetric]} stopOpacity={0.25} />
-                <stop offset="100%" stopColor={colors[chartMetric]} stopOpacity={0} />
+                <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
             {[0, 0.25, 0.5, 0.75, 1].map(t => {
@@ -1161,19 +1175,19 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
             {pts.length > 1 && (
               <>
                 <polygon
-                  points={`${pts[0].x},${H - PAD} ${pts.map(p => `${p.x},${p.y}`).join(" ")} ${pts[pts.length-1].x},${H - PAD}`}
+                  points={`${pts[0].x},${H - PAD} ${pts.map(p => `${p.x},${p.y}`).join(" ")} ${pts[pts.length - 1].x},${H - PAD}`}
                   fill="url(#chartGrad)"
                 />
                 <polyline
                   points={pts.map(p => `${p.x},${p.y}`).join(" ")}
-                  fill="none" stroke={colors[chartMetric]} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"
+                  fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"
                 />
               </>
             )}
             {pts.map((p, i) => (
               <g key={i}>
-                <circle cx={p.x} cy={p.y} r={4} fill={colors[chartMetric]} />
-                <text x={p.x} y={p.y - 10} fontSize={9} fill={colors[chartMetric]} textAnchor="middle" fontWeight="700">{p.v.toFixed(1)}</text>
+                <circle cx={p.x} cy={p.y} r={4} fill={color} />
+                <text x={p.x} y={p.y - 10} fontSize={9} fill={color} textAnchor="middle" fontWeight="700">{p.v.toFixed(1)}</text>
                 <text x={p.x} y={H - PAD + 14} fontSize={9} fill={T.textMuted} textAnchor="middle">{p.label}</text>
               </g>
             ))}
@@ -1181,36 +1195,85 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
         </div>
       </div>
 
+      {/* ── All Readings (clickable, expandable) ── */}
       <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>All Readings</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {[...history].reverse().map((row, i) => (
-            <div key={i} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Scale size={14} color={T.accent} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700 }}>{formatDate(row.recordedAt)}, {new Date(row.recordedAt).getFullYear()}</p>
-                  <p style={{ fontSize: 11, color: T.textMuted }}>{new Date(row.recordedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · MEDITIVE BLE Scale</p>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                {[
-                  { label: "Weight",   value: `${row.weight} kg`,      color: T.accent },
-                  { label: "Body Fat", value: `${row.bodyFatRate}%`,   color: "#f97316" },
-                  { label: "Muscle",   value: `${row.muscleMass} kg`,  color: "#34d399" },
-                  { label: "BMI",      value: `${row.bmi}`,            color: "#60a5fa" },
-                  ...(row.visceralFat ? [{ label: "Visceral", value: `${row.visceralFat}`, color: "#f43f5e" }] : []),
-                ].map(stat => (
-                  <div key={stat.label} style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: stat.color }}>{stat.value}</p>
-                    <p style={{ fontSize: 10, color: T.textMuted }}>{stat.label}</p>
+          {[...history].reverse().map((row) => {
+            const isOpen = expandedRow === row.id;
+            const summaryStats = [
+              { label: "Weight",   value: `${row.weight} kg`,     color: T.accent },
+              { label: "Body Fat", value: `${row.bodyFatRate}%`,  color: "#f97316" },
+              { label: "Muscle",   value: `${row.muscleMass} kg`, color: "#34d399" },
+              { label: "BMI",      value: `${row.bmi}`,           color: "#60a5fa" },
+              ...(row.visceralFat != null ? [{ label: "Visceral", value: `${row.visceralFat}`, color: "#f43f5e" }] : []),
+            ];
+            const expandedStats = [
+              { label: "Weight",      value: row.weight,      unit: "kg",   color: T.accent },
+              { label: "BMI",         value: row.bmi,         unit: "",     color: "#60a5fa" },
+              { label: "Body Fat",    value: row.bodyFatRate, unit: "%",    color: "#f97316" },
+              { label: "Muscle Mass", value: row.muscleMass,  unit: "kg",   color: "#34d399" },
+              { label: "Body Water",  value: row.bodyWater,   unit: "%",    color: "#38bdf8" },
+              { label: "Visceral Fat",value: row.visceralFat, unit: "lvl",  color: "#f43f5e" },
+              { label: "BMR",         value: row.bmr,         unit: "kcal", color: "#a78bfa" },
+            ].filter(s => s.value != null);
+
+            return (
+              <div key={row.id} style={{
+                background: isOpen ? "#141414" : "#0f0f0f",
+                border: `1px solid ${isOpen ? T.borderHover : T.border}`,
+                borderRadius: 10, overflow: "hidden",
+                transition: "border-color 0.15s",
+              }}>
+                {/* Summary row — always visible, click to expand */}
+                <div
+                  onClick={() => setExpandedRow(isOpen ? null : row.id)}
+                  style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, cursor: "pointer" }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Scale size={14} color={T.accent} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 700 }}>{formatDate(row.recordedAt)}, {new Date(row.recordedAt).getFullYear()}</p>
+                      <p style={{ fontSize: 11, color: T.textMuted }}>{new Date(row.recordedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · MEDITIVE BLE Scale</p>
+                    </div>
                   </div>
-                ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                      {summaryStats.map(stat => (
+                        <div key={stat.label} style={{ textAlign: "right" }}>
+                          <p style={{ fontSize: 14, fontWeight: 800, color: stat.color }}>{stat.value}</p>
+                          <p style={{ fontSize: 10, color: T.textMuted }}>{stat.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ color: T.textMuted, transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>
+                      <TrendingDown size={14} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded detail panel */}
+                {isOpen && (
+                  <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: "#0c0c0c" }}>
+                    <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>All recorded metrics</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                      {expandedStats.map(s => (
+                        <div key={s.label} style={{ background: "#111", border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
+                          <p style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
+                          <p style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: s.color, lineHeight: 1 }}>
+                            {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "—"}
+                            <span style={{ fontSize: 11, fontWeight: 500, color: T.textMuted, marginLeft: 3 }}>{s.unit}</span>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

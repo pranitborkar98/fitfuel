@@ -40,29 +40,56 @@ export async function GET(_req: NextRequest) {
     try { extras = JSON.parse(row.notes) as Record<string, number>; } catch { /* skip */ }
   }
 
-  // Remap schema field names → client Metrics field names.
-  // The 5 new computed fields (fatMass, waterWeight, muscleRate, proteinMass,
-  // idealWeight) are derived client-side inside computeAllMetrics — we don't
-  // store them separately, so they come back as null and get recomputed on save.
+  // Derive computed fields from stored values so the Overview never shows blanks.
+  // These mirror the formulas in computeAllMetrics on the client.
+  const weight      = row.weightKg;
+  const bodyFatPct  = row.bodyFatPct;
+  const muscleMassKg = row.muscleMassKg;
+
+  const fatMass     = weight != null && bodyFatPct != null
+    ? parseFloat((weight * bodyFatPct / 100).toFixed(1)) : null;
+  const fatFreeWeight = extras.fatFreeWeight ?? (
+    weight != null && fatMass != null
+      ? parseFloat((weight - fatMass).toFixed(1)) : null
+  );
+  const bodyWater   = row.waterPct;
+  const waterWeight = weight != null && bodyWater != null
+    ? parseFloat((weight * bodyWater / 100).toFixed(1)) : null;
+  const muscleRate  = muscleMassKg != null && weight != null
+    ? parseFloat((muscleMassKg / weight * 100).toFixed(1)) : null;
+  const proteinPct  = row.proteinPct;
+  const proteinMass = weight != null && proteinPct != null
+    ? parseFloat((weight * proteinPct / 100).toFixed(1)) : null;
+  // idealWeight uses BMI=22 × height². We don't store height here, so derive
+  // from bmi and weight: height² = weight/bmi → idealWeight = 22 × weight/bmi
+  const bmi         = row.bmi;
+  const idealWeight = weight != null && bmi != null && bmi > 0
+    ? parseFloat((22 * weight / bmi).toFixed(1)) : null;
+
   const metrics = {
-    weight:          row.weightKg,
-    bmi:             row.bmi,
-    bodyFatRate:     row.bodyFatPct,
-    fatMass:         null,                    // derived client-side
-    fatFreeWeight:   extras.fatFreeWeight  ?? null,
-    subcutaneousFat: extras.subcutaneousFat ?? null,
+    weight,
+    bmi,
+    bodyFatRate:     bodyFatPct,
+    fatMass,
+    fatFreeWeight,
+    subcutaneousFat: extras.subcutaneousFat ?? (
+      bodyFatPct != null ? parseFloat((bodyFatPct * 0.82).toFixed(1)) : null
+    ),
     visceralFat:     row.visceralFat,
-    bodyWater:       row.waterPct,
-    waterWeight:     null,                    // derived client-side
-    skeletalMuscle:  extras.skeletalMuscle ?? null,
-    muscleMass:      row.muscleMassKg,
-    muscleRate:      null,                    // derived client-side
+    bodyWater,
+    waterWeight,
+    skeletalMuscle:  extras.skeletalMuscle ?? (
+      muscleMassKg != null && weight != null
+        ? parseFloat((muscleMassKg / weight * 100 * 0.73).toFixed(1)) : null
+    ),
+    muscleMass:      muscleMassKg,
+    muscleRate,
     boneMass:        row.boneMassKg,
-    protein:         row.proteinPct,
-    proteinMass:     null,                    // derived client-side
-    bmr:             extras.bmr            ?? null,
+    protein:         proteinPct,
+    proteinMass,
+    bmr:             extras.bmr ?? null,
     bodyAge:         row.metabolicAge,
-    idealWeight:     null,                    // derived client-side
+    idealWeight,
   };
 
   return NextResponse.json(metrics);
