@@ -807,7 +807,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                 },
                 {
                   title: 'Consistency score',
-                  desc: 'Your weekly 0–100 score tracks meals logged, workouts done, and weigh-ins. It's the number your AI trainer watches.',
+                  desc: "Your weekly 0–100 score tracks meals logged, workouts done, and weigh-ins. It's the number your AI trainer watches.",
                 },
               ].map((item) => (
                 <div key={item.title} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -983,7 +983,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
               name: 'Priya M.',
               location: 'Kharadi, Pune',
               result: '-6.2 kg in 30 days',
-              text: 'I've tried every diet. This is the first time I didn't have to think. The food just showed up, I logged it, and the numbers moved.',
+              text: "I've tried every diet. This is the first time I didn't have to think. The food just showed up, I logged it, and the numbers moved.",
               stars: 5,
             },
             {
