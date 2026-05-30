@@ -60,8 +60,7 @@ export async function GET() {
   });
 
   // Check which meals have been logged today
-  // MealLog uses logDate (@db.Date) + mealSlot — no planScheduleSlotId
-  const todayDate = new Date(todayIST); // IST date-only for logDate comparison
+  const todayDate = new Date(todayIST);
 
   const mealLogs = await (prisma as any).mealLog.findMany({
     where: {
@@ -72,8 +71,8 @@ export async function GET() {
     select: { mealSlot: true, skipped: true },
   });
 
-  // Key by mealSlot since that's what links log → slot
-  const loggedSlots = new Map(
+  // Key by mealSlot — typed as any to avoid TS complaints on Map values
+  const loggedSlots = new Map<string, any>(
     mealLogs.map((l: any) => [l.mealSlot, l])
   );
 
@@ -89,15 +88,18 @@ export async function GET() {
   };
 
   const meals = slots
-    .map((slot: any) => ({
-      slotId: slot.id,
-      mealSlot: slot.mealSlot,
-      ...SLOT_CONFIG[slot.mealSlot],
-      recipe: slot.recipe,
-      isLogged: loggedSlots.has(slot.mealSlot) && !loggedSlots.get(slot.mealSlot)?.skipped,
-      isSkipped: loggedSlots.get(slot.mealSlot)?.skipped ?? false,
-      dayNumber: currentDay,
-    }))
+    .map((slot: any) => {
+      const log = loggedSlots.get(slot.mealSlot);
+      return {
+        slotId: slot.id,
+        mealSlot: slot.mealSlot,
+        ...SLOT_CONFIG[slot.mealSlot],
+        recipe: slot.recipe,
+        isLogged: !!log && !log.skipped,
+        isSkipped: log?.skipped ?? false,
+        dayNumber: currentDay,
+      };
+    })
     .sort((a: any, b: any) => a.order - b.order);
 
   return NextResponse.json({ meals, currentDay });
