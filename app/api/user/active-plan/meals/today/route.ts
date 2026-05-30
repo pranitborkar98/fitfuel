@@ -20,11 +20,20 @@ export async function GET() {
     return NextResponse.json({ meals: [] });
   }
 
-  // Calculate current day (1-30, cycling)
-  const startDate = new Date(activePlan.startDate);
-  const today = new Date();
-  const diffMs = today.getTime() - startDate.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  // Calculate current day (1-30, cycling) — using IST date-only comparison
+  // startDate is stored as UTC midnight in DB; today() is also UTC — both must be
+  // normalised to IST date-only so the diff is always whole days regardless of time-of-day
+  const toISTDateOnly = (date: Date) => {
+    const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000); // shift to IST
+    ist.setUTCHours(0, 0, 0, 0); // strip time component
+    return ist;
+  };
+
+  const startIST = toISTDateOnly(new Date(activePlan.startDate));
+  const todayIST = toISTDateOnly(new Date());
+  const diffDays = Math.floor(
+    (todayIST.getTime() - startIST.getTime()) / (1000 * 60 * 60 * 24)
+  );
   const currentDay = (diffDays % 30) + 1;
 
   // Get today's schedule slots with recipe details
@@ -72,11 +81,14 @@ export async function GET() {
   const loggedSlotIds = new Set(mealLogs.map((l: any) => l.planScheduleSlotId));
 
   // Meal slot display config
-  const SLOT_CONFIG: Record<string, { label: string; time: string; emoji: string; order: number }> = {
-    BREAKFAST: { label: "Breakfast", time: "7:00 – 9:00 am", emoji: "🌅", order: 1 },
-    LUNCH:     { label: "Lunch",     time: "12:30 – 2:00 pm", emoji: "☀️", order: 2 },
-    SNACK:     { label: "Snack",     time: "4:00 – 5:00 pm", emoji: "🍎", order: 3 },
-    DINNER:    { label: "Dinner",    time: "7:00 – 8:30 pm", emoji: "🌙", order: 4 },
+  const SLOT_CONFIG: Record<
+    string,
+    { label: string; time: string; emoji: string; order: number }
+  > = {
+    BREAKFAST: { label: "Breakfast", time: "7:00 – 9:00 am",   emoji: "🌅", order: 1 },
+    LUNCH:     { label: "Lunch",     time: "12:30 – 2:00 pm",  emoji: "☀️", order: 2 },
+    SNACK:     { label: "Snack",     time: "4:00 – 5:00 pm",   emoji: "🍎", order: 3 },
+    DINNER:    { label: "Dinner",    time: "7:00 – 8:30 pm",   emoji: "🌙", order: 4 },
   };
 
   const meals = slots
