@@ -997,7 +997,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
               name: 'Sneha K.',
               location: 'Koregaon Park, Pune',
               result: '30 days completed',
-              text: 'I was skeptical about tiffin food. But these aren\'t tiffin portions — they're full meals with proper macros. Rajma and dal are genuinely good.',
+              text: "I was skeptical about tiffin food. But these aren't tiffin portions — they're full meals with proper macros. Rajma and dal are genuinely good.",
               stars: 5,
             },
           ].map((t) => (
