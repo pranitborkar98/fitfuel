@@ -606,7 +606,6 @@ export default function BodyMetricsClient({ user }: { user: any }) {
   const [pendingRaw, setPendingRaw]   = useState<{ weight: number; impedance: number } | null>(null);
   const [bleError, setBleError]       = useState<string | null>(null);
   const [liveWeight, setLiveWeight]   = useState<number | null>(null);
-  const [bleDebugLog, setBleDebugLog] = useState<string[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [history, setHistory]         = useState<HistoryRow[]>([]);
   const [loadingLatest, setLoadingLatest]   = useState(true);
@@ -661,17 +660,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
       setBleStatus("connected");
       characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
         const data: DataView = event.target.value;
-        const raw = Array.from({ length: data.byteLength }, (_: any, i: number) =>
-          data.getUint8(i).toString(16).padStart(2, "0")
-        );
-        const rawStr = raw.join(" ");
-        console.log("[MEDITIVE BLE] raw:", rawStr, `(${data.byteLength}b)`);
         const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current, tareWeightRef.current);
-        console.log("[MEDITIVE BLE] parsed:", parsed);
-        setBleDebugLog(prev => [
-          ...prev.slice(-19),
-          `[${data.byteLength}b] ${rawStr}${parsed ? ` → ${parsed.weight}kg imp=${parsed.impedance}Ω ${parsed.stable ? "✅STABLE" : `⏳${parsed.stableCount}/${STABLE_THRESHOLD}`}` : " → null"}`,
-        ]);
         if (!parsed) return;
         if (tareWeightRef.current === undefined) {
           tareBufferRef.current.push(parsed.weight);
@@ -903,19 +892,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
                   {liveWeight !== null ? "Stay still — waiting for stable reading." : "Stand still for 3–5 seconds."}
                 </p>
               </div>
-              {bleDebugLog.length > 0 && (
-                <button onClick={() => navigator.clipboard.writeText(bleDebugLog.join("\n"))} style={{ background: "#1a2a1a", border: `1px solid ${T.border}`, borderRadius: 7, padding: "6px 12px", fontSize: 11, color: T.textMuted, cursor: "pointer", flexShrink: 0 }}>
-                  Copy Raw Log
-                </button>
-              )}
             </div>
-            {bleDebugLog.length > 0 && (
-              <div style={{ marginTop: 12, background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", fontFamily: "monospace", fontSize: 11, color: T.textMuted, maxHeight: 140, overflowY: "auto" }}>
-                {bleDebugLog.map((line, i) => (
-                  <div key={i} style={{ color: line.includes("✅STABLE") ? T.success : line.includes("⏳") ? T.warning : T.textMuted, marginBottom: 2 }}>{line}</div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -960,42 +937,14 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           />
         )}
 
-        {/* ══ LOG ══ */}
         {tab === "log" && (
-          <>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Log Entry</h2>
-              <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
-                Manually enter any or all of the 18 parameters. Only filled fields are saved.
-              </p>
-              <ManualForm draft={manualDraft} onChange={setManualDraft} onSave={handleSave} saving={saving} />
-            </div>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <div>
-                  <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>BLE Raw Packet Log</h3>
-                  <p style={{ fontSize: 12, color: T.textMuted }}>Connect scale and step on — raw bytes appear here for diagnostics.</p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {bleDebugLog.length > 0 && (
-                    <>
-                      <button onClick={() => navigator.clipboard.writeText(bleDebugLog.join("\n")).then(() => alert("Copied!"))} style={{ background: T.accent, color: "#000", border: "none", borderRadius: 7, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Copy Log</button>
-                      <button onClick={() => setBleDebugLog([])} style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 7, padding: "8px 14px", fontSize: 12, cursor: "pointer" }}>Clear</button>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div style={{ background: "#050505", border: `1px solid ${T.border}`, borderRadius: 10, padding: "14px 16px", fontFamily: "monospace", fontSize: 11, minHeight: 80, maxHeight: 320, overflowY: "auto" }}>
-                {bleDebugLog.length === 0 ? (
-                  <p style={{ color: T.textMuted, margin: 0 }}>No packets yet.</p>
-                ) : (
-                  bleDebugLog.map((line, i) => (
-                    <div key={i} style={{ color: line.includes("✅STABLE") ? T.success : line.includes("⏳") ? T.warning : T.textMuted, marginBottom: 4, lineHeight: 1.5 }}>{line}</div>
-                  ))
-                )}
-              </div>
-            </div>
-          </>
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Log Entry</h2>
+            <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
+              Manually enter any or all of the 18 parameters. Only filled fields are saved.
+            </p>
+            <ManualForm draft={manualDraft} onChange={setManualDraft} onSave={handleSave} saving={saving} />
+          </div>
         )}
       </div>
 
