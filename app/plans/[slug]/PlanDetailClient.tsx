@@ -158,12 +158,33 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
+      <style>{`
+        .pd-hero-grid { display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: start; }
+        .pd-hero-sidecard { display: flex; flex-direction: column; gap: 16px; background: #101010; border: 1px solid #1e1e1e; border-radius: 16px; padding: 28px 24px; min-width: 220px; }
+        .pd-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+        .pd-two-col-top { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+        .pd-section { padding: 64px 24px; }
+        .pd-hero-section { padding: 80px 24px 64px; }
+        .pd-day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        .pd-macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        @media (max-width: 768px) {
+          .pd-hero-grid { grid-template-columns: 1fr; gap: 32px; }
+          .pd-hero-sidecard { display: none; }
+          .pd-two-col { grid-template-columns: 1fr; gap: 40px; }
+          .pd-two-col-top { grid-template-columns: 1fr; gap: 40px; }
+          .pd-section { padding: 48px 16px; }
+          .pd-hero-section { padding: 48px 16px 40px; }
+          .pd-day-grid { grid-template-columns: 1fr; }
+          .pd-macro-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+      `}</style>
+
       {/* ── Section 1: Hero ─────────────────────────────────────────────── */}
       <section
+        className="pd-hero-section"
         style={{
           maxWidth: 1120,
           margin: '0 auto',
-          padding: '80px 24px 64px',
           borderBottom: '1px solid #1a1a1a',
         }}
       >
@@ -176,7 +197,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
           <span style={{ color: '#a3e635' }}>{plan.name}</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 48, alignItems: 'start' }}>
+        <div className="pd-hero-grid">
           <div>
             {/* Tag */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -290,18 +311,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
           </div>
 
           {/* Side card */}
-          <div
-            style={{
-              background: '#101010',
-              border: '1px solid #1e1e1e',
-              borderRadius: 16,
-              padding: '28px 24px',
-              minWidth: 220,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}
-          >
+          <div className="pd-hero-sidecard">
             {[
               { icon: '🥗', text: 'No dish repeats in 30 days' },
               { icon: '📦', text: 'Delivered by 8am daily' },
@@ -320,8 +330,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       </section>
 
       {/* ── Section 2: Who Is This For ──────────────────────────────────── */}
-      <section style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+      <section className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
+        <div className="pd-two-col">
           <div>
             <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
               Who Is This For
@@ -364,7 +374,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       </section>
 
       {/* ── Section 3: What You Get ─────────────────────────────────────── */}
-      <section style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
+      <section className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
         <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
           What You Get
         </p>
@@ -421,7 +431,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       </section>
 
       {/* ── Section 4 + 5: 30-Day Menu ──────────────────────────────────── */}
-      <section id="menu" style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
+      <section id="menu" className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
         <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
           The Full Menu
         </p>
@@ -509,7 +519,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                     </span>
                   </div>
                   {/* Meals grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                  <div className="pd-day-grid">
                     {daySlots.map((slot, i) => (
                       <div
                         key={slot.id}
@@ -564,7 +574,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                       {daySlots.reduce((sum, s) => sum + s.recipe.caloriesPerServing, 0)} kcal
                     </span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                  <div className="pd-day-grid">
                     {daySlots.map((slot, i) => (
                       <div
                         key={slot.id}
@@ -594,7 +604,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
 
       {/* ── Section 5b: Day 1 full recipe ───────────────────────────────── */}
       {day1Slots.length > 0 && (
-        <section style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
+        <section className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
           <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
             Day 1 Preview
           </p>
@@ -631,7 +641,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                   </div>
                 )}
                 {/* Macros */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+                <div className="pd-macro-grid">
                   {[
                     { label: 'kcal', value: slot.recipe.caloriesPerServing, color: '#a3e635' },
                     { label: 'Protein', value: `${slot.recipe.proteinGrams}g`, color: '#f59e0b' },
@@ -665,8 +675,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       )}
 
       {/* ── Section 6: Nutritional Principles ───────────────────────────── */}
-      <section style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64 }}>
+      <section className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
+        <div className="pd-two-col-top">
           <div>
             <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
               Nutritional Principles
@@ -721,14 +731,14 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
 
       {/* ── Section 7: Per-Gram Tracking ─────────────────────────────────── */}
       <section
+        className="pd-section"
         style={{
           maxWidth: 1120,
           margin: '0 auto',
-          padding: '64px 24px',
           borderBottom: '1px solid #1a1a1a',
         }}
       >
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+        <div className="pd-two-col">
           {/* Dashboard mockup */}
           <div
             style={{
@@ -827,7 +837,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       </section>
 
       {/* ── Section 8: Pricing ──────────────────────────────────────────── */}
-      <section id="pricing" style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
+      <section id="pricing" className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
         <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
           Pricing
         </p>
@@ -938,10 +948,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
 
       {/* ── Section 9: Meal Feedback Loop ───────────────────────────────── */}
       <section
+        className="pd-section"
         style={{
           maxWidth: 1120,
           margin: '0 auto',
-          padding: '64px 24px',
           borderBottom: '1px solid #1a1a1a',
           textAlign: 'center',
         }}
@@ -971,7 +981,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       </section>
 
       {/* ── Section 10: Testimonials ─────────────────────────────────────── */}
-      <section style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
+      <section className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
         <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
           Results
         </p>
@@ -1032,7 +1042,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
       </section>
 
       {/* ── Section 11: FAQ ──────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1120, margin: '0 auto', padding: '64px 24px', borderBottom: '1px solid #1a1a1a' }}>
+      <section className="pd-section" style={{ maxWidth: 1120, margin: '0 auto', borderBottom: '1px solid #1a1a1a' }}>
         <p style={{ color: '#a3e635', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
           FAQ
         </p>
@@ -1085,10 +1095,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
 
       {/* ── Section 12: Final CTA ────────────────────────────────────────── */}
       <section
+        className="pd-section"
         style={{
           maxWidth: 1120,
           margin: '0 auto',
-          padding: '80px 24px 100px',
           textAlign: 'center',
         }}
       >
