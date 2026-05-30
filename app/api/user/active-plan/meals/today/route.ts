@@ -20,12 +20,10 @@ export async function GET() {
     return NextResponse.json({ meals: [] });
   }
 
-  // Calculate current day (1-30, cycling) — using IST date-only comparison
-  // startDate is stored as UTC midnight in DB; today() is also UTC — both must be
-  // normalised to IST date-only so the diff is always whole days regardless of time-of-day
+  // Calculate current day (1-30, cycling) — IST date-only comparison
   const toISTDateOnly = (date: Date) => {
-    const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000); // shift to IST
-    ist.setUTCHours(0, 0, 0, 0); // strip time component
+    const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+    ist.setUTCHours(0, 0, 0, 0);
     return ist;
   };
 
@@ -49,11 +47,11 @@ export async function GET() {
           name: true,
           slug: true,
           caloriesPerServing: true,
-          proteinPerServing: true,
-          carbsPerServing: true,
-          fatPerServing: true,
-          prepTimeMinutes: true,
-          cookTimeMinutes: true,
+          proteinGrams: true,
+          carbsGrams: true,
+          fatGrams: true,
+          prepTimeMins: true,
+          cookTimeMins: true,
           cuisineType: true,
         },
       },
@@ -62,33 +60,32 @@ export async function GET() {
   });
 
   // Check which meals have been logged today
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
+  // MealLog uses logDate (@db.Date) + mealSlot — no planScheduleSlotId
+  const todayDate = new Date(todayIST); // IST date-only for logDate comparison
 
   const mealLogs = await (prisma as any).mealLog.findMany({
     where: {
       userId: session.user.id,
-      scheduledDate: {
-        gte: todayStart,
-        lte: todayEnd,
-      },
+      userActivePlanId: activePlan.id,
+      logDate: todayDate,
     },
-    select: { planScheduleSlotId: true, status: true },
+    select: { mealSlot: true, skipped: true },
   });
 
-  const loggedSlotIds = new Set(mealLogs.map((l: any) => l.planScheduleSlotId));
+  // Key by mealSlot since that's what links log → slot
+  const loggedSlots = new Map(
+    mealLogs.map((l: any) => [l.mealSlot, l])
+  );
 
   // Meal slot display config
   const SLOT_CONFIG: Record<
     string,
     { label: string; time: string; emoji: string; order: number }
   > = {
-    BREAKFAST: { label: "Breakfast", time: "7:00 – 9:00 am",   emoji: "🌅", order: 1 },
-    LUNCH:     { label: "Lunch",     time: "12:30 – 2:00 pm",  emoji: "☀️", order: 2 },
-    SNACK:     { label: "Snack",     time: "4:00 – 5:00 pm",   emoji: "🍎", order: 3 },
-    DINNER:    { label: "Dinner",    time: "7:00 – 8:30 pm",   emoji: "🌙", order: 4 },
+    BREAKFAST: { label: "Breakfast", time: "7:00 – 9:00 am",  emoji: "🌅", order: 1 },
+    LUNCH:     { label: "Lunch",     time: "12:30 – 2:00 pm", emoji: "☀️", order: 2 },
+    SNACK:     { label: "Snack",     time: "4:00 – 5:00 pm",  emoji: "🍎", order: 3 },
+    DINNER:    { label: "Dinner",    time: "7:00 – 8:30 pm",  emoji: "🌙", order: 4 },
   };
 
   const meals = slots
@@ -97,7 +94,8 @@ export async function GET() {
       mealSlot: slot.mealSlot,
       ...SLOT_CONFIG[slot.mealSlot],
       recipe: slot.recipe,
-      isLogged: loggedSlotIds.has(slot.id),
+      isLogged: loggedSlots.has(slot.mealSlot) && !loggedSlots.get(slot.mealSlot)?.skipped,
+      isSkipped: loggedSlots.get(slot.mealSlot)?.skipped ?? false,
       dayNumber: currentDay,
     }))
     .sort((a: any, b: any) => a.order - b.order);
