@@ -14,12 +14,12 @@ interface Recipe {
   proteinGrams: number
   carbsGrams: number
   fatGrams: number
-  fiberGrams?: number
+  fibreGrams?: number
   cuisineType?: string
   prepTimeMins?: number
   cookTimeMins?: number
   servingSizeGrams?: number
-  difficultyLevel?: string
+  difficulty?: string
 }
 
 interface Slot {
@@ -37,11 +37,12 @@ interface Plan {
   dietaryVariant: string
   tier: string
   category: string
-  targetCalories: number
-  proteinTarget?: number
-  carbTarget?: number
-  fatTarget?: number
-  durationDays: number
+  avgCaloriesPerDay: number
+  avgProteinGrams: number
+  avgCarbsGrams: number
+  avgFatGrams: number
+  cycleLengthDays: number
+  mealsPerDay: number
 }
 
 interface Props {
@@ -235,8 +236,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
             {/* Key stats */}
             <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 40 }}>
               {[
-                { label: 'Calories/day', value: `${plan.targetCalories} kcal` },
-                { label: 'Protein target', value: `${plan.proteinTarget ?? Math.round(plan.targetCalories * 0.3 / 4)}g` },
+                { label: 'Calories/day', value: `${plan.avgCaloriesPerDay} kcal` },
+                { label: 'Protein target', value: `${plan.avgProteinGrams}g` },
                 { label: 'Meals/day', value: '4 meals' },
                 { label: 'Duration', value: '30 days' },
               ].map((s) => (
@@ -674,7 +675,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
               What goes into every meal
             </h2>
             <p style={{ color: '#777', lineHeight: 1.8, fontSize: 14, marginBottom: 24 }}>
-              {plan.targetCalories} kcal/day is a science-backed deficit for sustainable fat loss — aggressive enough to produce results, conservative enough to preserve muscle and energy.
+              {plan.avgCaloriesPerDay} kcal/day is a science-backed deficit for sustainable fat loss — aggressive enough to produce results, conservative enough to preserve muscle and energy.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[

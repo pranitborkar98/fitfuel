@@ -15,15 +15,21 @@ export async function GET(
         name: true,
         slug: true,
         description: true,
+        tagline: true,
+        whoIsItFor: true,
+        keyPrinciples: true,
+        whatIsAvoided: true,
         dietaryVariant: true,
         tier: true,
         category: true,
-        targetCalories: true,
-        proteinTarget: true,
-        carbTarget: true,
-        fatTarget: true,
+        avgCaloriesPerDay: true,
+        avgProteinGrams: true,
+        avgCarbsGrams: true,
+        avgFatGrams: true,
+        cycleLengthDays: true,
+        mealsPerDay: true,
+        accentColor: true,
         isActive: true,
-        durationDays: true,
       },
     })
 
@@ -31,7 +37,6 @@ export async function GET(
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 
-    // Fetch all 120 slots with recipe details
     const slots = await prisma.planScheduleSlot.findMany({
       where: { mealPlanId: plan.id },
       orderBy: [{ dayNumber: 'asc' }, { mealSlot: 'asc' }],
@@ -46,26 +51,23 @@ export async function GET(
             proteinGrams: true,
             carbsGrams: true,
             fatGrams: true,
-            fiberGrams: true,
+            fibreGrams: true,
             cuisineType: true,
             prepTimeMins: true,
             cookTimeMins: true,
             servingSizeGrams: true,
-            difficultyLevel: true,
+            difficulty: true,
           },
         },
       },
     })
 
-    // Group by day number
+    const SLOT_ORDER = { BREAKFAST: 0, LUNCH: 1, SNACK: 2, DINNER: 3 }
     const schedule: Record<number, typeof slots> = {}
     for (const slot of slots) {
       if (!schedule[slot.dayNumber]) schedule[slot.dayNumber] = []
       schedule[slot.dayNumber].push(slot)
     }
-
-    // Sort each day's meals in display order
-    const SLOT_ORDER = { BREAKFAST: 0, LUNCH: 1, SNACK: 2, DINNER: 3 }
     for (const day of Object.keys(schedule)) {
       schedule[Number(day)].sort(
         (a, b) =>

@@ -36,15 +36,21 @@ export default async function PlanPage({ params }: Props) {
       name: true,
       slug: true,
       description: true,
+      tagline: true,
+      whoIsItFor: true,
+      keyPrinciples: true,
+      whatIsAvoided: true,
       dietaryVariant: true,
       tier: true,
       category: true,
-      targetCalories: true,
-      proteinTarget: true,
-      carbTarget: true,
-      fatTarget: true,
+      avgCaloriesPerDay: true,
+      avgProteinGrams: true,
+      avgCarbsGrams: true,
+      avgFatGrams: true,
+      cycleLengthDays: true,
+      mealsPerDay: true,
+      accentColor: true,
       isActive: true,
-      durationDays: true,
     },
   })
 
@@ -64,18 +70,17 @@ export default async function PlanPage({ params }: Props) {
           proteinGrams: true,
           carbsGrams: true,
           fatGrams: true,
-          fiberGrams: true,
+          fibreGrams: true,
           cuisineType: true,
           prepTimeMins: true,
           cookTimeMins: true,
           servingSizeGrams: true,
-          difficultyLevel: true,
+          difficulty: true,
         },
       },
     },
   })
 
-  // Group slots by day
   const schedule: Record<number, typeof slots> = {}
   for (const slot of slots) {
     if (!schedule[slot.dayNumber]) schedule[slot.dayNumber] = []
@@ -88,7 +93,6 @@ export default async function PlanPage({ params }: Props) {
     )
   }
 
-  // Day 1 full recipe detail (first build: Day 1 breakfast gets ingredients)
   const day1Slots = schedule[1] ?? []
 
   return (
