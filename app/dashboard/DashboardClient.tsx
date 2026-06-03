@@ -197,6 +197,105 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
 }
 
 
+// ── Calorie Ring (9L) ──────────────────────────────────────────
+function CalorieRing({ balance }: {
+  balance: {
+    caloriesIn: number; caloriesOut: number; net: number;
+    target: number; remaining: number; status: string;
+    mealsLogged: number; mealsTotal: number;
+    proteinIn: number; proteinTarget: number;
+  };
+}) {
+  const SIZE = 120;
+  const STROKE = 10;
+  const R = (SIZE - STROKE) / 2;
+  const CIRC = 2 * Math.PI * R;
+
+  const inPct  = Math.min(1, balance.caloriesIn  / balance.target);
+  const outPct = Math.min(1, balance.caloriesOut / balance.target);
+
+  const inDash  = inPct  * CIRC;
+  const outDash = outPct * CIRC;
+
+  const isOver = balance.net > balance.target;
+  const ringColor = isOver ? "#ef4444" : T.accent;
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      {/* Ring */}
+      <div style={{ position: "relative", width: SIZE, height: SIZE, flexShrink: 0 }}>
+        <svg width={SIZE} height={SIZE} style={{ transform: "rotate(-90deg)" }}>
+          {/* Track */}
+          <circle cx={SIZE/2} cy={SIZE/2} r={R}
+            fill="none" stroke="#1a1a1a" strokeWidth={STROKE} />
+          {/* Calories OUT (workout) — grey-green inner arc */}
+          {balance.caloriesOut > 0 && (
+            <circle cx={SIZE/2} cy={SIZE/2} r={R}
+              fill="none" stroke="#22c55e44" strokeWidth={STROKE}
+              strokeDasharray={`${outDash} ${CIRC - outDash}`}
+              strokeLinecap="round" />
+          )}
+          {/* Calories IN — main arc */}
+          <circle cx={SIZE/2} cy={SIZE/2} r={R}
+            fill="none" stroke={ringColor} strokeWidth={STROKE}
+            strokeDasharray={`${inDash} ${CIRC - inDash}`}
+            strokeLinecap="round"
+            style={{ transition: "stroke-dasharray 0.6s ease" }} />
+        </svg>
+        {/* Centre text */}
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+        }}>
+          <p style={{ fontSize: 18, fontWeight: 900, color: isOver ? "#ef4444" : T.text, lineHeight: 1 }}>
+            {balance.net}
+          </p>
+          <p style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>NET kcal</p>
+        </div>
+      </div>
+
+      {/* Stats column */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* In / Out / Target row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {[
+            { label: "Eaten",   value: balance.caloriesIn,  color: T.accent },
+            { label: "Burned",  value: balance.caloriesOut, color: "#22c55e" },
+            { label: "Target",  value: balance.target,      color: T.textMuted },
+          ].map(s => (
+            <div key={s.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 6px", textAlign: "center" }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</p>
+              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Remaining + protein */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px" }}>
+            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>
+              {balance.remaining >= 0 ? "Remaining" : "Over by"}
+            </p>
+            <p style={{ fontSize: 13, fontWeight: 800, color: balance.remaining >= 0 ? T.text : "#ef4444" }}>
+              {Math.abs(balance.remaining)} kcal
+            </p>
+          </div>
+          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px" }}>
+            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Protein</p>
+            <p style={{ fontSize: 13, fontWeight: 800, color: "#60a5fa" }}>
+              {balance.proteinIn}
+              <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>
+                {" "}/ {balance.proteinTarget}g
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Star Rating Modal ───────────────────────────────────────────
 function StarRatingModal({ meal, onClose, onSubmit }: {
   meal: Meal;
@@ -375,6 +474,12 @@ export default function DashboardClient({
   const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set());
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [ratingMeal, setRatingMeal] = useState<Meal | null>(null);
+  const [balance, setBalance] = useState<{
+    caloriesIn: number; caloriesOut: number; net: number;
+    target: number; remaining: number; status: string;
+    mealsLogged: number; mealsTotal: number;
+    proteinIn: number; proteinTarget: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!activePlan) return;
@@ -391,6 +496,11 @@ export default function DashboardClient({
         }
       })
       .finally(() => setMealsLoading(false));
+
+    // 9L: fetch calorie balance
+    fetch("/api/user/active-plan/calorie-balance")
+      .then(r => r.json())
+      .then(data => { if (data.target) setBalance(data); });
   }, [activePlan]);
 
   async function handleLogMeal(meal: Meal) {
@@ -407,6 +517,10 @@ export default function DashboardClient({
       });
       if (res.ok || res.status === 409) {
         setLoggedSlots(prev => new Set([...prev, meal.slotId]));
+        // refresh calorie balance ring
+        fetch("/api/user/active-plan/calorie-balance")
+          .then(r => r.json())
+          .then(data => { if (data.target) setBalance(data); });
         // 9K: close drawer then show star rating prompt
         setSelectedMeal(null);
         setRatingMeal(meal);
@@ -527,6 +641,13 @@ export default function DashboardClient({
                 <div style={{ height: "100%", width: `${dayProgress}%`, background: T.accent, borderRadius: 2, transition: "width 0.6s ease" }} />
               </div>
             </div>
+
+            {/* 9L — Net Calorie Ring */}
+            {balance && (
+              <div style={{ marginBottom: 20 }}>
+                <CalorieRing balance={balance} />
+              </div>
+            )}
 
             {/* Today's Meals */}
             <div>
