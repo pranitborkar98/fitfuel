@@ -105,6 +105,14 @@ type WorkoutToday = {
   exercises?: WorkoutExerciseView[];
 };
 
+// 9R — weekly consistency score (from /api/user/active-plan/consistency)
+type ConsistencyBreakdown = {
+  score: number;
+  label: string;
+  meals: { logged: number; delivered: number };
+  workouts: { completed: number; scheduled: number };
+};
+
 // ── Meal Detail Drawer ──────────────────────────────────────────
 function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
   meal: Meal;
@@ -427,6 +435,34 @@ function WorkoutCard({ workout, completing, onComplete }: {
   );
 }
 
+// ── 9R Consistency Score Card ───────────────────────────────────
+function ConsistencyCard({ data }: { data: ConsistencyBreakdown }) {
+  const pct = Math.max(0, Math.min(100, data.score));
+  const barColor =
+    pct >= 80 ? "#22c55e" : pct >= 60 ? T.accent : pct >= 40 ? "#facc15" : "#f97316";
+
+  return (
+    <div style={{
+      marginBottom: 20, background: T.card, border: `1px solid ${T.border}`,
+      borderRadius: 14, padding: "16px 18px",
+    }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Consistency this week</p>
+        <p style={{ fontSize: 12, color: T.textMuted }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: barColor }}>{pct}</span> / 100 · {data.label}
+        </p>
+      </div>
+      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 4, transition: "width 0.6s ease" }} />
+      </div>
+      <p style={{ fontSize: 12, color: T.textSecond }}>
+        You logged {data.meals.logged}/{data.meals.delivered} meals
+        {data.workouts.scheduled > 0 && ` and ${data.workouts.completed}/${data.workouts.scheduled} workouts`} this week.
+      </p>
+    </div>
+  );
+}
+
 // ── Star Rating Modal ───────────────────────────────────────────
 function StarRatingModal({ meal, onClose, onSubmit }: {
   meal: Meal;
@@ -614,6 +650,7 @@ export default function DashboardClient({
   } | null>(null);
   const [workout, setWorkout] = useState<WorkoutToday | null>(null);
   const [completingWorkout, setCompletingWorkout] = useState(false);
+  const [consistency, setConsistency] = useState<ConsistencyBreakdown | null>(null);
 
   useEffect(() => {
     if (!activePlan) return;
@@ -640,6 +677,11 @@ export default function DashboardClient({
     fetch("/api/user/active-plan/workout-today")
       .then(r => r.json())
       .then(data => { if (data.hasWorkout) setWorkout(data); });
+
+    // 9R: fetch this week's consistency score
+    fetch("/api/user/active-plan/consistency")
+      .then(r => r.json())
+      .then(data => { if (typeof data.score === "number") setConsistency(data); });
   }, [activePlan]);
 
   async function handleLogMeal(meal: Meal) {
@@ -797,6 +839,9 @@ export default function DashboardClient({
                 <div style={{ height: "100%", width: `${dayProgress}%`, background: T.accent, borderRadius: 2, transition: "width 0.6s ease" }} />
               </div>
             </div>
+
+            {/* 9R — Consistency Score (weekly) */}
+            {consistency && <ConsistencyCard data={consistency} />}
 
             {/* 9L — Net Calorie Ring */}
             {balance && (
