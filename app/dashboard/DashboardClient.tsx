@@ -201,10 +201,11 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
 function StarRatingModal({ meal, onClose, onSubmit }: {
   meal: Meal;
   onClose: () => void;
-  onSubmit: (rating: number) => Promise<void>;
+  onSubmit: (rating: number, note: string) => Promise<void>;
 }) {
   const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
+  const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const LABELS = ["", "Didn't like it", "It was okay", "Pretty good", "Really liked it", "Loved it!"];
@@ -213,7 +214,14 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
     if (submitting) return;
     setSelected(star);
     setSubmitting(true);
-    await onSubmit(star);
+    await onSubmit(star, note);
+    onClose();
+  }
+
+  async function handleSubmitWithNote() {
+    if (!selected || submitting) return;
+    setSubmitting(true);
+    await onSubmit(selected, note);
     onClose();
   }
 
@@ -227,84 +235,124 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
           zIndex: 1100, backdropFilter: "blur(6px)",
         }}
       />
-      {/* Sheet */}
+      {/* Centering wrapper */}
       <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "#141414", borderRadius: "20px 20px 0 0",
-        border: `1px solid ${T.border}`, borderBottom: "none",
-        zIndex: 1101, padding: "32px 28px 48px",
-        maxWidth: 480, margin: "0 auto",
-        textAlign: "center",
+        position: "fixed", inset: 0,
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+        zIndex: 1101, pointerEvents: "none",
       }}>
-        {/* Handle */}
-        <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 28px" }} />
-
-        {/* Skip */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute", top: 20, right: 20,
-            background: "transparent", border: "none",
-            fontSize: 12, color: T.textMuted, cursor: "pointer",
-            padding: "4px 8px",
-          }}
-        >
-          Skip
-        </button>
-
-        {/* Emoji */}
-        <div style={{ fontSize: 36, marginBottom: 12 }}>{meal.emoji}</div>
-
-        {/* Heading */}
-        <h3 style={{ fontSize: 17, fontWeight: 800, color: T.text, marginBottom: 4 }}>
-          How was it?
-        </h3>
-        <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 28, lineHeight: 1.5 }}>
-          {meal.recipe.name}
-        </p>
-
-        {/* Stars */}
-        <div
-          style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 16 }}
-          onMouseLeave={() => setHovered(0)}
-        >
-          {[1, 2, 3, 4, 5].map(star => {
-            const active = star <= (hovered || selected);
-            return (
-              <button
-                key={star}
-                disabled={submitting}
-                onMouseEnter={() => setHovered(star)}
-                onClick={() => handleSubmit(star)}
-                style={{
-                  background: "transparent", border: "none", cursor: "pointer",
-                  padding: 4, transition: "transform 0.12s",
-                  transform: active ? "scale(1.18)" : "scale(1)",
-                }}
-              >
-                <Star
-                  size={36}
-                  fill={active ? T.accent : "transparent"}
-                  color={active ? T.accent : "#404040"}
-                  strokeWidth={1.5}
-                />
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Dynamic label */}
-        <p style={{
-          fontSize: 13, fontWeight: 600,
-          color: (hovered || selected) ? T.accent : T.textMuted,
-          minHeight: 20, transition: "color 0.15s",
+        {/* Sheet */}
+        <div style={{
+          width: "100%", maxWidth: 480,
+          background: "#141414", borderRadius: "20px 20px 0 0",
+          border: `1px solid ${T.border}`, borderBottom: "none",
+          padding: "28px 28px 44px",
+          textAlign: "center",
+          pointerEvents: "all",
         }}>
-          {LABELS[hovered || selected] ?? ""}
-        </p>
+          {/* Handle */}
+          <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 24px" }} />
 
-        {submitting && (
-          <p style={{ fontSize: 11, color: T.textMuted, marginTop: 12 }}>Saving…</p>
-        )}
+          {/* Skip */}
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute", top: 20, right: 20,
+              background: "transparent", border: "none",
+              fontSize: 12, color: T.textMuted, cursor: "pointer",
+              padding: "4px 8px",
+            }}
+          >
+            Skip
+          </button>
+
+          {/* Emoji */}
+          <div style={{ fontSize: 34, marginBottom: 10 }}>{meal.emoji}</div>
+
+          {/* Heading */}
+          <h3 style={{ fontSize: 17, fontWeight: 800, color: T.text, marginBottom: 4 }}>
+            How was it?
+          </h3>
+          <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 24, lineHeight: 1.5 }}>
+            {meal.recipe.name}
+          </p>
+
+          {/* Stars */}
+          <div
+            style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 12 }}
+            onMouseLeave={() => setHovered(0)}
+          >
+            {[1, 2, 3, 4, 5].map(star => {
+              const active = star <= (hovered || selected);
+              return (
+                <button
+                  key={star}
+                  disabled={submitting}
+                  onMouseEnter={() => setHovered(star)}
+                  onClick={() => setSelected(star)}
+                  style={{
+                    background: "transparent", border: "none", cursor: "pointer",
+                    padding: 4, transition: "transform 0.12s",
+                    transform: active ? "scale(1.18)" : "scale(1)",
+                  }}
+                >
+                  <Star
+                    size={34}
+                    fill={active ? T.accent : "transparent"}
+                    color={active ? T.accent : "#404040"}
+                    strokeWidth={1.5}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dynamic label */}
+          <p style={{
+            fontSize: 13, fontWeight: 600,
+            color: (hovered || selected) ? T.accent : T.textMuted,
+            minHeight: 20, marginBottom: 20, transition: "color 0.15s",
+          }}>
+            {LABELS[hovered || selected] ?? ""}
+          </p>
+
+          {/* Note input */}
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Add a note (optional) — too spicy, loved the texture..."
+            maxLength={200}
+            rows={2}
+            style={{
+              width: "100%", background: "#0f0f0f",
+              border: `1px solid ${note ? T.accent + "55" : T.border}`,
+              borderRadius: 10, padding: "10px 12px",
+              fontSize: 13, color: T.text, resize: "none",
+              outline: "none", marginBottom: 16,
+              fontFamily: "inherit", lineHeight: 1.5,
+              boxSizing: "border-box",
+              transition: "border-color 0.2s",
+            }}
+          />
+
+          {/* Submit button — shown once a star is selected */}
+          {selected > 0 && (
+            <button
+              onClick={handleSubmitWithNote}
+              disabled={submitting}
+              style={{
+                width: "100%", padding: "13px 0", borderRadius: 10,
+                background: T.accent, border: "none",
+                color: "#000", fontSize: 14, fontWeight: 800,
+                cursor: submitting ? "default" : "pointer",
+                textTransform: "uppercase", letterSpacing: "0.06em",
+                opacity: submitting ? 0.7 : 1,
+              }}
+            >
+              {submitting ? "Saving…" : "Submit Rating"}
+            </button>
+          )}
+        </div>
       </div>
     </>
   );
@@ -367,15 +415,16 @@ export default function DashboardClient({
     }
   }
 
-  async function handleRateMeal(meal: Meal, rating: number) {
+  async function handleRateMeal(meal: Meal, rating: number, note: string) {
     try {
       await fetch("/api/user/active-plan/meals/rate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          planScheduleSlotId: meal.slotId,
-          dayNumber: meal.dayNumber,
+          mealSlot: meal.mealSlot,
+          logDate: new Date().toISOString(),
           rating,
+          note: note.trim() || undefined,
         }),
       });
     } catch {
@@ -410,7 +459,7 @@ export default function DashboardClient({
         <StarRatingModal
           meal={ratingMeal}
           onClose={() => setRatingMeal(null)}
-          onSubmit={(rating) => handleRateMeal(ratingMeal, rating)}
+          onSubmit={(rating, note) => handleRateMeal(ratingMeal, rating, note)}
         />
       )}
 

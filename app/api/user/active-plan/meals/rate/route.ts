@@ -15,14 +15,14 @@ export async function POST(req: NextRequest) {
   }
   const userId = session.user.id;
 
-  let body: { mealSlot?: string; logDate?: string; rating?: number };
+  let body: { mealSlot?: string; logDate?: string; rating?: number; note?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { mealSlot, logDate, rating } = body;
+  const { mealSlot, logDate, rating, note } = body;
 
   if (!mealSlot || !logDate) {
     return NextResponse.json(
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   // Update rating
   await prisma.mealLog.update({
     where: { id: mealLog.id },
-    data: { rating: rating as number },
+    data: { rating: rating as number, ratingNote: note ?? null },
   });
 
   // Recompute Recipe.avgRating from all rated logs for this recipe
