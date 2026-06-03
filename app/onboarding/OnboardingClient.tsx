@@ -123,7 +123,7 @@ export default function OnboardingClient({ userName }: Props) {
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [result, setResult] = useState<{ tdee: number; calorieTarget: number; planName: string } | null>(null)
+  const [result, setResult] = useState<{ tdee: number; calorieTarget: number; planName: string; requiresOrder: boolean } | null>(null)
 
   const [form, setForm] = useState<FormData>({
     weightKg: '', heightCm: '', age: '', gender: '',
@@ -201,10 +201,17 @@ export default function OnboardingClient({ userName }: Props) {
         tdee: data.tdee,
         calorieTarget: data.calorieTarget,
         planName: data.plan.displayName,
+        requiresOrder: data.requiresOrder ?? false,
       })
 
-      // Redirect after short delay
-      setTimeout(() => router.push('/dashboard'), 2000)
+      // requiresOrder = true  → profile saved, but no confirmed order found
+      //                          send to plans so they can purchase
+      // requiresOrder = false → confirmed order existed, plan is live now
+      //                          send to dashboard
+      setTimeout(
+        () => router.push(data.requiresOrder ? '/plans' : '/dashboard'),
+        2000
+      )
     } catch (err: any) {
       setError(err.message)
       setLoading(false)
@@ -728,13 +735,18 @@ export default function OnboardingClient({ userName }: Props) {
                           }} />
                           Setting up your plan...
                         </>
+                      ) : result?.requiresOrder ? (
+                        <>Choose Your Plan &amp; Order <ChevronRight size={18} /></>
                       ) : (
                         <>Start My FitFuel Plan <ChevronRight size={18} /></>
                       )}
                     </button>
 
                     <p style={{ fontSize: 12, color: '#444', textAlign: 'center' as const, margin: 0 }}>
-                      You can update these details anytime from your profile.
+                      {result?.requiresOrder
+                        ? 'Your targets are saved. Complete your order to activate meals.'
+                        : 'You can update these details anytime from your profile.'
+                      }
                     </p>
                   </div>
                 )}

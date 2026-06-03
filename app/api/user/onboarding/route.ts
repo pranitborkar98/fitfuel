@@ -8,7 +8,6 @@ import { addDays } from 'date-fns'
 
 // ── Plan selection logic ──────────────────────────────────────
 // Maps goal + diet + condition → meal plan slug
-// Falls back to weight-loss-veg if target plan is not isActive
 function getPlanSlug(goal: string, diet: string, condition: string): string {
   const d = diet // veg | egg | non-veg | jain | vegan
 
@@ -21,12 +20,12 @@ function getPlanSlug(goal: string, diet: string, condition: string): string {
   if (condition === 'gut')      return `gut-health-${d}`
 
   // Goal-based
-  if (goal === 'weight_loss')         return `weight-loss-${d}`
+  if (goal === 'weight_loss')            return `weight-loss-${d}`
   if (goal === 'aggressive_weight_loss') return `weight-loss-${d}`
-  if (goal === 'muscle_gain')         return `muscle-gain-${d}`
-  if (goal === 'lean_bulk')           return `muscle-gain-${d}`
-  if (goal === 'performance')         return `strength-hypertrophy-${d}`
-  if (goal === 'maintenance')         return `balanced-${d}`
+  if (goal === 'muscle_gain')            return `muscle-gain-${d}`
+  if (goal === 'lean_bulk')              return `muscle-gain-${d}`
+  if (goal === 'performance')            return `strength-hypertrophy-${d}`
+  if (goal === 'maintenance')            return `balanced-${d}`
 
   return `balanced-${d}` // safe default
 }
@@ -38,7 +37,7 @@ function dietToSlug(diet: string): string {
     eggetarian:     'egg',
     non_vegetarian: 'non-veg',
     jain:           'jain',
-    vegan:          'veg', // vegan-muscle is only vegan plan; fallback to veg
+    vegan:          'veg',
   }
   return map[diet] ?? 'veg'
 }
@@ -61,8 +60,8 @@ export async function POST(req: NextRequest) {
       activityLevel,
       goal,
       dietaryPreference,
-      healthConditions = [],  // string[]
-      allergies = [],          // string[]
+      healthConditions = [],
+      allergies = [],
     } = body
 
     // ── Validate required fields ──────────────────────────────
@@ -80,20 +79,26 @@ export async function POST(req: NextRequest) {
     const dietSlug = dietToSlug(dietaryPreference)
     const targetSlug = getPlanSlug(goal, dietSlug, primaryCondition)
 
-    // ── Find the plan (fallback to weight-loss-veg if inactive) ──
-    let plan = await prisma.mealPlan.findUnique({
+    // ── Find the plan ─────────────────────────────────────────
+    // FIX 1: Never silently fall back to weight-loss-veg — that assigns the
+    // wrong diet to the user. If the target plan isn't seeded/active yet,
+    // tell the client explicitly so it doesn't serve wrong meals.
+    const plan = await prisma.mealPlan.findUnique({
       where: { slug: targetSlug },
     })
 
-    if (!plan || !plan.isActive) {
-      // Fallback — only verified active plan
-      plan = await prisma.mealPlan.findUnique({
-        where: { slug: 'weight-loss-veg' },
-      })
+    if (!plan) {
+      return NextResponse.json(
+        { error: `Plan not found: ${targetSlug}. Please seed this plan first.` },
+        { status: 500 }
+      )
     }
 
-    if (!plan) {
-      return NextResponse.json({ error: 'No active meal plan found' }, { status: 500 })
+    if (!plan.isActive) {
+      return NextResponse.json(
+        { error: `Plan ${targetSlug} exists but is not active yet. Set isActive = true to enable it.` },
+        { status: 503 }
+      )
     }
 
     // ── Check if already onboarded (prevent duplicate UserActivePlan) ──
@@ -105,9 +110,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Already onboarded' }, { status: 400 })
     }
 
+    // ── FIX 2: Check for a confirmed order before creating UserActivePlan ──
+    // Onboarding saves the profile + targets but only creates the plan
+    // if the user has a CONFIRMED order. Without an order, we return the
+    // calculated targets so the Step 5 screen can display them — but the
+    // user must complete checkout to activate the plan.
+    const confirmedOrder = await prisma.order.findFirst({
+      where: {
+        userId,
+        status: 'CONFIRMED',
+        userActivePlans: { none: {} }, // order not already linked to a plan
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
     // ── Write to DB (transaction) ─────────────────────────────
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Update UserProfile
+      // 1. Always save UserProfile — targets are calculated regardless of order
       const profile = await tx.userProfile.upsert({
         where: { userId },
         create: {
@@ -143,24 +162,28 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // 2. Create UserActivePlan
-      const startDate = new Date()
-      const endDate = addDays(startDate, 30)
+      // 2. Only create UserActivePlan if there is a confirmed unpaired order
+      let activePlan = null
+      if (confirmedOrder) {
+        const startDate = new Date()
+        const endDate = addDays(startDate, 30)
 
-      const activePlan = await tx.userActivePlan.create({
-        data: {
-          userId,
-          mealPlanId: plan!.id,
-          startDate,
-          endDate,
-          currentDay: 1,
-          status: 'active',
-          calorieTarget,
-          proteinTarget: macros.proteinG,
-          carbTarget: macros.carbsG,
-          fatTarget: macros.fatG,
-        },
-      })
+        activePlan = await tx.userActivePlan.create({
+          data: {
+            userId,
+            mealPlanId: plan.id,
+            orderId: confirmedOrder.id,  // link to the order that paid for this
+            startDate,
+            endDate,
+            currentDay: 1,
+            status: 'active',
+            calorieTarget,
+            proteinTarget: macros.proteinG,
+            carbTarget: macros.carbsG,
+            fatTarget: macros.fatG,
+          },
+        })
+      }
 
       return { profile, activePlan, plan }
     })
@@ -175,7 +198,9 @@ export async function POST(req: NextRequest) {
         displayName: result.plan.displayName,
         avgCaloriesPerDay: result.plan.avgCaloriesPerDay,
       },
-      activePlanId: result.activePlan.id,
+      // null if no confirmed order — frontend should redirect to checkout
+      activePlanId: result.activePlan?.id ?? null,
+      requiresOrder: !confirmedOrder,
     })
   } catch (err) {
     console.error('[onboarding] error:', err)
