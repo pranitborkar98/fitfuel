@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
-  Calendar, Target, CheckCircle2, Circle, X, Clock, ChefHat, Flame,
+  Calendar, Target, CheckCircle2, Circle, X, Clock, ChefHat, Flame, Star,
 } from "lucide-react";
 
 const T = {
@@ -196,6 +196,120 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
   );
 }
 
+
+// ── Star Rating Modal ───────────────────────────────────────────
+function StarRatingModal({ meal, onClose, onSubmit }: {
+  meal: Meal;
+  onClose: () => void;
+  onSubmit: (rating: number) => Promise<void>;
+}) {
+  const [hovered, setHovered] = useState(0);
+  const [selected, setSelected] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  const LABELS = ["", "Didn't like it", "It was okay", "Pretty good", "Really liked it", "Loved it!"];
+
+  async function handleSubmit(star: number) {
+    if (submitting) return;
+    setSelected(star);
+    setSubmitting(true);
+    await onSubmit(star);
+    onClose();
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
+          zIndex: 1100, backdropFilter: "blur(6px)",
+        }}
+      />
+      {/* Sheet */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "#141414", borderRadius: "20px 20px 0 0",
+        border: `1px solid ${T.border}`, borderBottom: "none",
+        zIndex: 1101, padding: "32px 28px 48px",
+        maxWidth: 480, margin: "0 auto",
+        textAlign: "center",
+      }}>
+        {/* Handle */}
+        <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 28px" }} />
+
+        {/* Skip */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: 20, right: 20,
+            background: "transparent", border: "none",
+            fontSize: 12, color: T.textMuted, cursor: "pointer",
+            padding: "4px 8px",
+          }}
+        >
+          Skip
+        </button>
+
+        {/* Emoji */}
+        <div style={{ fontSize: 36, marginBottom: 12 }}>{meal.emoji}</div>
+
+        {/* Heading */}
+        <h3 style={{ fontSize: 17, fontWeight: 800, color: T.text, marginBottom: 4 }}>
+          How was it?
+        </h3>
+        <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 28, lineHeight: 1.5 }}>
+          {meal.recipe.name}
+        </p>
+
+        {/* Stars */}
+        <div
+          style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 16 }}
+          onMouseLeave={() => setHovered(0)}
+        >
+          {[1, 2, 3, 4, 5].map(star => {
+            const active = star <= (hovered || selected);
+            return (
+              <button
+                key={star}
+                disabled={submitting}
+                onMouseEnter={() => setHovered(star)}
+                onClick={() => handleSubmit(star)}
+                style={{
+                  background: "transparent", border: "none", cursor: "pointer",
+                  padding: 4, transition: "transform 0.12s",
+                  transform: active ? "scale(1.18)" : "scale(1)",
+                }}
+              >
+                <Star
+                  size={36}
+                  fill={active ? T.accent : "transparent"}
+                  color={active ? T.accent : "#404040"}
+                  strokeWidth={1.5}
+                />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dynamic label */}
+        <p style={{
+          fontSize: 13, fontWeight: 600,
+          color: (hovered || selected) ? T.accent : T.textMuted,
+          minHeight: 20, transition: "color 0.15s",
+        }}>
+          {LABELS[hovered || selected] ?? ""}
+        </p>
+
+        {submitting && (
+          <p style={{ fontSize: 11, color: T.textMuted, marginTop: 12 }}>Saving…</p>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── Main Dashboard ──────────────────────────────────────────────
 export default function DashboardClient({
   session, orders, user, activePlan,
@@ -211,6 +325,7 @@ export default function DashboardClient({
   const [loggingSlot, setLoggingSlot] = useState<string | null>(null);
   const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set());
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [ratingMeal, setRatingMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
     if (!activePlan) return;
@@ -243,9 +358,28 @@ export default function DashboardClient({
       });
       if (res.ok || res.status === 409) {
         setLoggedSlots(prev => new Set([...prev, meal.slotId]));
+        // 9K: close drawer then show star rating prompt
+        setSelectedMeal(null);
+        setRatingMeal(meal);
       }
     } finally {
       setLoggingSlot(null);
+    }
+  }
+
+  async function handleRateMeal(meal: Meal, rating: number) {
+    try {
+      await fetch("/api/user/active-plan/meals/rate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planScheduleSlotId: meal.slotId,
+          dayNumber: meal.dayNumber,
+          rating,
+        }),
+      });
+    } catch {
+      // Rating is non-blocking — silently ignore network errors
     }
   }
 
@@ -268,6 +402,15 @@ export default function DashboardClient({
           isLogged={loggedSlots.has(selectedMeal.slotId)}
           isLogging={loggingSlot === selectedMeal.slotId}
           onLog={() => handleLogMeal(selectedMeal)}
+        />
+      )}
+
+      {/* 9K: Star rating prompt shown after "I ate this" */}
+      {ratingMeal && (
+        <StarRatingModal
+          meal={ratingMeal}
+          onClose={() => setRatingMeal(null)}
+          onSubmit={(rating) => handleRateMeal(ratingMeal, rating)}
         />
       )}
 
