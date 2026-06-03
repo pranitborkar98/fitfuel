@@ -238,20 +238,21 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
       {/* Centering wrapper */}
       <div style={{
         position: "fixed", inset: 0,
-        display: "flex", alignItems: "flex-end", justifyContent: "center",
+        display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 1101, pointerEvents: "none",
+        padding: "0 16px",
       }}>
         {/* Sheet */}
         <div style={{
-          width: "100%", maxWidth: 480,
-          background: "#141414", borderRadius: "20px 20px 0 0",
-          border: `1px solid ${T.border}`, borderBottom: "none",
-          padding: "28px 28px 44px",
+          width: "100%", maxWidth: 460,
+          background: "#141414", borderRadius: 20,
+          border: `1px solid ${T.border}`,
+          padding: "28px 28px 36px",
           textAlign: "center",
           pointerEvents: "all",
+          position: "relative",
         }}>
-          {/* Handle */}
-          <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 24px" }} />
+          {/* Close X instead of handle for centered modal */}
 
           {/* Skip */}
           <button
