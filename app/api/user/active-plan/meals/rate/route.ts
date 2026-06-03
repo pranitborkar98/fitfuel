@@ -3,12 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/user/active-plan/meals/rate
-// Body: { planScheduleSlotId: string, dayNumber: number, rating: 1|2|3|4|5 }
+// Body: { mealSlot: string, logDate: string (ISO), rating: 1|2|3|4|5 }
 //
-// 1. Finds the existing MealLog for this user + slot + day
-// 2. Updates MealLog.rating
-// 3. Recomputes Recipe.avgRating from all non-null ratings for that recipe
-//    (uses prisma aggregate — no raw SQL, safe for serverless)
+// Finds the MealLog by userId + activePlan + mealSlot + logDate
+// Updates MealLog.rating, then recomputes Recipe.avgRating
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -17,19 +15,18 @@ export async function POST(req: NextRequest) {
   }
   const userId = session.user.id;
 
-  let body: { planScheduleSlotId?: string; dayNumber?: number; rating?: number };
+  let body: { mealSlot?: string; logDate?: string; rating?: number };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { planScheduleSlotId, dayNumber, rating } = body;
+  const { mealSlot, logDate, rating } = body;
 
-  // Validate
-  if (!planScheduleSlotId || typeof dayNumber !== "number") {
+  if (!mealSlot || !logDate) {
     return NextResponse.json(
-      { error: "planScheduleSlotId and dayNumber are required" },
+      { error: "mealSlot and logDate are required" },
       { status: 400 }
     );
   }
@@ -40,49 +37,46 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Normalise logDate to midnight UTC so it matches @db.Date storage
+  const dateOnly = new Date(logDate);
+  dateOnly.setUTCHours(0, 0, 0, 0);
+
   // Find the MealLog — must belong to this user
   const mealLog = await prisma.mealLog.findFirst({
     where: {
       userId,
-      planScheduleSlotId,
-      dayNumber,
+      mealSlot: mealSlot as any,
+      logDate: dateOnly,
     },
     select: { id: true, recipeId: true },
   });
 
   if (!mealLog) {
-    // Guard: can only rate a meal that has been logged
     return NextResponse.json(
       { error: "Meal not logged yet. Log the meal before rating it." },
       { status: 404 }
     );
   }
 
-  // Update the rating on the MealLog
+  // Update rating
   await prisma.mealLog.update({
     where: { id: mealLog.id },
     data: { rating: rating as number },
   });
 
-  // Recompute avgRating on the Recipe from all rated logs
-  // Uses Prisma aggregate — atomic enough for our scale (no race condition risk at ~100s of users)
-  if (mealLog.recipeId) {
-    const agg = await prisma.mealLog.aggregate({
-      where: {
-        recipeId: mealLog.recipeId,
-        rating: { not: null },
-      },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
+  // Recompute Recipe.avgRating from all rated logs for this recipe
+  const agg = await prisma.mealLog.aggregate({
+    where: {
+      recipeId: mealLog.recipeId,
+      rating: { not: null },
+    },
+    _avg: { rating: true },
+  });
 
-    const newAvg = agg._avg.rating ?? 0;
-
-    await prisma.recipe.update({
-      where: { id: mealLog.recipeId },
-      data: { avgRating: newAvg },
-    });
-  }
+  await prisma.recipe.update({
+    where: { id: mealLog.recipeId },
+    data: { avgRating: agg._avg.rating ?? 0 },
+  });
 
   return NextResponse.json({ success: true, rating });
 }
