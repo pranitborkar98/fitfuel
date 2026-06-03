@@ -197,7 +197,7 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
 }
 
 
-// ── Calorie Ring (9L) ──────────────────────────────────────────
+// ── Meal Progress Ring (9L) ────────────────────────────────────
 function CalorieRing({ balance }: {
   balance: {
     caloriesIn: number; caloriesOut: number; net: number;
@@ -211,83 +211,67 @@ function CalorieRing({ balance }: {
   const R = (SIZE - STROKE) / 2;
   const CIRC = 2 * Math.PI * R;
 
-  const inPct  = Math.min(1, balance.caloriesIn  / balance.target);
-  const outPct = Math.min(1, balance.caloriesOut / balance.target);
-
-  const inDash  = inPct  * CIRC;
-  const outDash = outPct * CIRC;
-
-  const isOver = balance.net > balance.target;
-  const ringColor = isOver ? "#ef4444" : T.accent;
+  const logged = balance.mealsLogged;
+  const total  = balance.mealsTotal || 4;
+  const pct    = Math.min(1, logged / total);
+  const dash   = pct * CIRC;
+  const allDone = logged >= total;
+  const ringColor = allDone ? T.accent : T.accent;
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
       {/* Ring */}
       <div style={{ position: "relative", width: SIZE, height: SIZE, flexShrink: 0 }}>
         <svg width={SIZE} height={SIZE} style={{ transform: "rotate(-90deg)" }}>
-          {/* Track */}
           <circle cx={SIZE/2} cy={SIZE/2} r={R}
             fill="none" stroke="#1a1a1a" strokeWidth={STROKE} />
-          {/* Calories OUT (workout) — grey-green inner arc */}
-          {balance.caloriesOut > 0 && (
-            <circle cx={SIZE/2} cy={SIZE/2} r={R}
-              fill="none" stroke="#22c55e44" strokeWidth={STROKE}
-              strokeDasharray={`${outDash} ${CIRC - outDash}`}
-              strokeLinecap="round" />
-          )}
-          {/* Calories IN — main arc */}
           <circle cx={SIZE/2} cy={SIZE/2} r={R}
             fill="none" stroke={ringColor} strokeWidth={STROKE}
-            strokeDasharray={`${inDash} ${CIRC - inDash}`}
+            strokeDasharray={`${dash} ${CIRC - dash}`}
             strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 0.6s ease" }} />
+            style={{ transition: "stroke-dasharray 0.5s ease" }} />
         </svg>
-        {/* Centre text */}
         <div style={{
           position: "absolute", inset: 0,
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
         }}>
-          <p style={{ fontSize: 18, fontWeight: 900, color: isOver ? "#ef4444" : T.text, lineHeight: 1 }}>
-            {balance.net}
+          <p style={{ fontSize: 22, fontWeight: 900, color: T.text, lineHeight: 1 }}>
+            {logged}<span style={{ fontSize: 12, color: T.textMuted, fontWeight: 400 }}>/{total}</span>
           </p>
-          <p style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>NET kcal</p>
+          <p style={{ fontSize: 9, color: T.textMuted, marginTop: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            {allDone ? "✓ done" : "meals"}
+          </p>
         </div>
       </div>
 
-      {/* Stats column */}
+      {/* Stats */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-        {/* In / Out / Target row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           {[
-            { label: "Eaten",   value: balance.caloriesIn,  color: T.accent },
-            { label: "Burned",  value: balance.caloriesOut, color: "#22c55e" },
-            { label: "Target",  value: balance.target,      color: T.textMuted },
+            { label: "Eaten",  value: `${balance.caloriesIn}`, unit: "kcal", color: T.accent },
+            { label: "Burned", value: `${balance.caloriesOut}`, unit: "kcal", color: "#22c55e" },
+            { label: "Target", value: `${balance.target}`, unit: "kcal", color: T.textMuted },
           ].map(s => (
             <div key={s.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 6px", textAlign: "center" }}>
-              <p style={{ fontSize: 14, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.label}</p>
+              <p style={{ fontSize: 13, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</p>
+              <p style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{s.unit}</p>
+              <p style={{ fontSize: 9, color: T.textMuted }}>{s.label}</p>
             </div>
           ))}
         </div>
-
-        {/* Remaining + protein */}
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px" }}>
-            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>
-              {balance.remaining >= 0 ? "Remaining" : "Over by"}
-            </p>
-            <p style={{ fontSize: 13, fontWeight: 800, color: balance.remaining >= 0 ? T.text : "#ef4444" }}>
-              {Math.abs(balance.remaining)} kcal
+            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Protein today</p>
+            <p style={{ fontSize: 13, fontWeight: 800, color: "#60a5fa" }}>
+              {balance.proteinIn}g
+              <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}> / {balance.proteinTarget}g</span>
             </p>
           </div>
           <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px" }}>
-            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Protein</p>
-            <p style={{ fontSize: 13, fontWeight: 800, color: "#60a5fa" }}>
-              {balance.proteinIn}
-              <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>
-                {" "}/ {balance.proteinTarget}g
-              </span>
+            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Remaining</p>
+            <p style={{ fontSize: 13, fontWeight: 800, color: T.text }}>
+              {total - logged} meal{total - logged !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
