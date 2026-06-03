@@ -79,6 +79,32 @@ type ActivePlan = {
   } | null;
 };
 
+// 9D — today's plan-linked workout (from /api/user/active-plan/workout-today)
+type WorkoutExerciseView = {
+  exerciseId: string;
+  name: string;
+  sets: number;
+  reps: number | null;
+  durationSecs: number | null;
+  restSecs: number;
+  notes: string | null;
+  category: string | null;
+  equipment: string | null;
+  primaryMuscles: string[];
+  image: string | null;
+};
+type WorkoutToday = {
+  hasWorkout: boolean;
+  isRestDay: boolean;
+  scheduleName: string;
+  focusArea: string;
+  estimatedCalories: number;
+  durationMins?: number;
+  completedToday?: boolean;
+  completedCaloriesBurned?: number | null;
+  exercises?: WorkoutExerciseView[];
+};
+
 // ── Meal Detail Drawer ──────────────────────────────────────────
 function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
   meal: Meal;
@@ -280,6 +306,127 @@ function CalorieRing({ balance }: {
   );
 }
 
+// ── 9D Today's Workout Card ─────────────────────────────────────
+function WorkoutCard({ workout, completing, onComplete }: {
+  workout: WorkoutToday;
+  completing: boolean;
+  onComplete: () => void;
+}) {
+  const done = !!workout.completedToday;
+
+  // Rest day — calm, no CTA
+  if (workout.isRestDay) {
+    return (
+      <div style={{
+        marginBottom: 20, background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 14, padding: "16px 18px",
+        display: "flex", alignItems: "center", gap: 12,
+      }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 10, background: "#0f0f0f",
+          border: `1px solid ${T.border}`, display: "flex",
+          alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <Activity size={18} color={T.textSecond} />
+        </div>
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Rest Day</p>
+          <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+            {workout.focusArea} · recovery keeps fat loss going
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const fmtSet = (e: WorkoutExerciseView) =>
+    e.durationSecs != null
+      ? `${e.sets} × ${e.durationSecs >= 60 ? `${Math.round(e.durationSecs / 60)} min` : `${e.durationSecs}s`}`
+      : `${e.sets} × ${e.reps ?? "—"}`;
+
+  return (
+    <div style={{
+      marginBottom: 20, background: T.card,
+      border: `1px solid ${done ? "#365314" : T.border}`,
+      borderRadius: 14, padding: "16px 18px",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 9, background: "#1a2e05",
+            border: "1px solid #365314", display: "flex",
+            alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <Dumbbell size={17} color={T.accent} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.2 }}>
+              Today's Workout
+            </p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{workout.focusArea}</p>
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <p style={{ fontSize: 13, fontWeight: 800, color: "#22c55e", lineHeight: 1 }}>
+            ~{workout.estimatedCalories}
+          </p>
+          <p style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>kcal burn</p>
+        </div>
+      </div>
+
+      {/* Exercise list */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+        {(workout.exercises ?? []).map((e) => (
+          <div key={e.exerciseId} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "#0f0f0f", border: `1px solid ${T.border}`,
+            borderRadius: 9, padding: "9px 12px",
+          }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 12.5, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {e.name}
+              </p>
+              {e.notes && (
+                <p style={{ fontSize: 10.5, color: T.textMuted, marginTop: 1 }}>{e.notes}</p>
+              )}
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: T.accent, flexShrink: 0, marginLeft: 10 }}>
+              {fmtSet(e)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* CTA */}
+      {done ? (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          background: "#1a2e05", border: "1px solid #365314", borderRadius: 10,
+          padding: "11px", color: T.accent, fontSize: 13, fontWeight: 700,
+        }}>
+          <CheckCircle2 size={16} /> Workout complete · {workout.estimatedCalories} kcal logged
+        </div>
+      ) : (
+        <button
+          onClick={onComplete}
+          disabled={completing}
+          style={{
+            width: "100%", background: completing ? "#1a1a1a" : T.accent,
+            color: completing ? T.textMuted : "#0a0a0a",
+            border: "none", borderRadius: 10, padding: "11px",
+            fontSize: 13, fontWeight: 800, cursor: completing ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            transition: "background 0.2s ease",
+          }}
+        >
+          <Flame size={16} /> {completing ? "Logging…" : "Mark Workout Complete"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Star Rating Modal ───────────────────────────────────────────
 function StarRatingModal({ meal, onClose, onSubmit }: {
   meal: Meal;
@@ -465,6 +612,8 @@ export default function DashboardClient({
     mealsLogged: number; mealsTotal: number;
     proteinIn: number; proteinTarget: number;
   } | null>(null);
+  const [workout, setWorkout] = useState<WorkoutToday | null>(null);
+  const [completingWorkout, setCompletingWorkout] = useState(false);
 
   useEffect(() => {
     if (!activePlan) return;
@@ -486,6 +635,11 @@ export default function DashboardClient({
     fetch("/api/user/active-plan/calorie-balance")
       .then(r => r.json())
       .then(data => { if (data.target) setBalance(data); });
+
+    // 9D: fetch today's plan-linked workout
+    fetch("/api/user/active-plan/workout-today")
+      .then(r => r.json())
+      .then(data => { if (data.hasWorkout) setWorkout(data); });
   }, [activePlan]);
 
   async function handleLogMeal(meal: Meal) {
@@ -529,6 +683,23 @@ export default function DashboardClient({
       });
     } catch {
       // Rating is non-blocking — silently ignore network errors
+    }
+  }
+
+  async function handleCompleteWorkout() {
+    if (completingWorkout || workout?.completedToday || workout?.isRestDay) return;
+    setCompletingWorkout(true);
+    try {
+      const res = await fetch("/api/user/active-plan/workout/complete", { method: "POST" });
+      if (res.ok || res.status === 409) {
+        setWorkout(prev => (prev ? { ...prev, completedToday: true } : prev));
+        // refresh ring so Burned reflects the logged session
+        fetch("/api/user/active-plan/calorie-balance")
+          .then(r => r.json())
+          .then(data => { if (data.target) setBalance(data); });
+      }
+    } finally {
+      setCompletingWorkout(false);
     }
   }
 
@@ -632,6 +803,15 @@ export default function DashboardClient({
               <div style={{ marginBottom: 20 }}>
                 <CalorieRing balance={balance} />
               </div>
+            )}
+
+            {/* 9D — Today's Workout */}
+            {workout?.hasWorkout && (
+              <WorkoutCard
+                workout={workout}
+                completing={completingWorkout}
+                onComplete={handleCompleteWorkout}
+              />
             )}
 
             {/* Today's Meals */}
