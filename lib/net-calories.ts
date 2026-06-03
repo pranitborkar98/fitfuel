@@ -26,6 +26,8 @@ export async function getDailyCalorieBalance(
   day.setUTCHours(0, 0, 0, 0);
 
   // 1. Get active plan for targets
+  // UserActivePlan.calorieTarget + proteinTarget are personalised overrides
+  // (written by onboarding). Fall back to mealPlan averages if null.
   const activePlan = await prisma.userActivePlan.findFirst({
     where: { userId, status: "active" },
     select: {
@@ -51,6 +53,8 @@ export async function getDailyCalorieBalance(
     120;
 
   // 2. Calories IN — confirmed MealLogs for today
+  // MealLog has confirmedAt + skipped fields (schema confirmed).
+  // Only count rows where confirmedAt is set AND skipped is false.
   const mealLogs = await prisma.mealLog.findMany({
     where: {
       userId,
@@ -79,8 +83,13 @@ export async function getDailyCalorieBalance(
   );
 
   // 3. Calories OUT — workout sessions today
+  // WorkoutSession uses `date` (@db.Date) — same pattern as MealLog.logDate.
+  // The index @@index([userId, date]) confirms this is the correct query field.
   const workouts = await prisma.workoutSession.findMany({
-    where: { userId, date: day },
+    where: {
+      userId,
+      date: day,
+    },
     select: { caloriesBurned: true },
   });
 
