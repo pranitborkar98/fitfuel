@@ -444,12 +444,13 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
 
 // ── Main Dashboard ──────────────────────────────────────────────
 export default function DashboardClient({
-  session, orders, user, activePlan,
+  session, orders, user, activePlan, hasPendingOrder,
 }: {
   session: any;
   orders: any[];
   user: any;
   activePlan: ActivePlan | null;
+  hasPendingOrder?: boolean;
 }) {
   const firstName = user?.name?.split(" ")[0] ?? "there";
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -748,8 +749,27 @@ export default function DashboardClient({
               )}
             </div>
           </div>
+        ) : hasPendingOrder ? (
+          /* Confirmed order exists but no active plan — needs onboarding */
+          <div style={{ background: T.card, border: `1px solid #365314`, borderRadius: 16, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <p style={{ fontSize: 12, color: T.accent, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Order Confirmed ✓</p>
+                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>One step left — personalise your plan</h2>
+                <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.6 }}>
+                  Your order is confirmed. Complete the 2-minute setup so we know your calorie target, diet, and goals before your meals start.
+                </p>
+              </div>
+              <div>
+                <Link href="/onboarding" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "13px 28px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                  <Zap size={14} fill="currentColor" /> Set Up My Plan
+                </Link>
+              </div>
+            </div>
+          </div>
         ) : (
-          /* No active plan */
+          /* No active plan, no confirmed order */
           <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
@@ -757,15 +777,10 @@ export default function DashboardClient({
                 <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Active Plan</p>
                 <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>No active plan yet</h2>
                 <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.6 }}>
-                  Complete your{" "}
-                  <Link href="/onboarding" style={{ color: T.accent, textDecoration: "none", fontWeight: 700 }}>setup</Link>
-                  {" "}or start with a trial day for just ₹400.
+                  Start with a trial day for just ₹399 — 4 meals, fully personalised.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link href="/onboarding" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", color: T.accent, fontWeight: 700, fontSize: 13, textDecoration: "none", padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.accent}`, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
-                  Set Up Plan
-                </Link>
                 <Link href="/plans" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "11px 22px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
                   <Zap size={14} fill="currentColor" /> Order Now
                 </Link>

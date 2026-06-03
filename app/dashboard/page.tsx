@@ -79,12 +79,19 @@ export default async function DashboardPage() {
     };
   }
 
+  // User has a confirmed order but no active plan — they need to complete onboarding
+  // to personalise targets and activate their meals.
+  const hasPendingOrder = !activePlan && orders.some(
+    (o: any) => o.status === "CONFIRMED"
+  );
+
   return (
     <DashboardClient
       session={session}
       orders={orders}
       user={user}
       activePlan={activePlan}
+      hasPendingOrder={hasPendingOrder}
     />
   );
 }
