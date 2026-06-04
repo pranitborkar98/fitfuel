@@ -1,5 +1,5 @@
 // app/api/admin/deliveries/route.ts
-// Phase 10 â€” admin view + control of today's deliveries.
+// Phase 10 Ã¢â‚¬â€ admin view + control of today's deliveries.
 //   GET            -> today's deliveries (all drivers)
 //   POST assign    -> { action:"assign", deliveryId, driverId|null }
 //   POST dispatch  -> { action:"dispatch", deliveryIds:[...] }  (PREPARING/PACKED -> OUT_FOR_DELIVERY)
@@ -11,8 +11,9 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 function todayWindow() {
-  const start = new Date();
-  start.setUTCHours(0, 0, 0, 0);
+  // Use IST (UTC+5:30) as the business day boundary
+  const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+  const start = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate()));
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
   return { start, end };
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     deliveryIds?: string[];
   };
 
-  // â”€â”€ assign a driver to a delivery (driverId null = unassign) â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ assign a driver to a delivery (driverId null = unassign) Ã¢â€â‚¬Ã¢â€â‚¬
   if (body.action === "assign") {
     if (!body.deliveryId) {
       return NextResponse.json({ error: "deliveryId required" }, { status: 400 });
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // â”€â”€ dispatch: flip assigned, not-yet-out deliveries to OUT_FOR_DELIVERY â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ dispatch: flip assigned, not-yet-out deliveries to OUT_FOR_DELIVERY Ã¢â€â‚¬Ã¢â€â‚¬
   if (body.action === "dispatch") {
     const ids = body.deliveryIds ?? [];
     if (ids.length === 0) {
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
     });
     if (result.count === 0) {
       return NextResponse.json(
-        { error: "Nothing dispatched â€” assign a driver first" },
+        { error: "Nothing dispatched Ã¢â‚¬â€ assign a driver first" },
         { status: 400 }
       );
     }
