@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
         deliveryDate: date,
         status: "PREPARING",
         mealsIncluded: mealsFor(plan.mealsPerDay),
-        deliveryWindow: plan.deliveryWindow, // MORNING / EVENING
+        deliveryWindow: plan.deliveryWindow ?? "MORNING", // MORNING / EVENING
       },
     });
     created++;
