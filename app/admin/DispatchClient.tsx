@@ -1,7 +1,7 @@
 "use client";
 
 // app/admin/DispatchClient.tsx
-// Phase 10 â€” the daily dispatch board (the manager's command center).
+// Phase 10 -- the daily dispatch board (the manager's command center).
 // Flow: today's deliveries -> assign each to a driver -> dispatch (OUT_FOR_DELIVERY)
 // -> watch status flip back live as drivers mark Delivered / Couldn't deliver.
 
@@ -41,7 +41,7 @@ const STATUS_STYLE: Record<Status, { label: string; color: string }> = {
   PREPARING: { label: "Preparing", color: T.textMuted },
   PACKED: { label: "Packed", color: T.textSecond },
   OUT_FOR_DELIVERY: { label: "Out for delivery", color: T.amber },
-  DELIVERED: { label: "Delivered âœ“", color: T.accent },
+  DELIVERED: { label: "Delivered \u2713", color: T.accent },
   FAILED_DELIVERY: { label: "Not delivered", color: T.red },
 };
 
@@ -62,7 +62,7 @@ export default function DispatchClient({
     [drivers]
   );
 
-  // â”€â”€ per-driver COD expected (cash drivers will collect today) â”€â”€
+  // -- per-driver COD expected (cash drivers will collect today) --
   const codByDriver = useMemo(() => {
     const map: Record<string, number> = {};
     for (const d of deliveries) {
@@ -99,7 +99,7 @@ export default function DispatchClient({
           prev.map(d => (d.id === deliveryId ? { ...d, assignedDriverId: driverId } : d))
         );
       } else {
-        alert("Couldn't assign â€” try again.");
+        alert("Couldn't assign -- try again.");
       }
     } finally {
       setBusyId(null);
@@ -146,22 +146,22 @@ export default function DispatchClient({
 
   return (
     <div>
-      {/* â”€â”€ Header + summary â”€â”€ */}
+      {/* -- Header + summary -- */}
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800 }}>Today&apos;s dispatch</h1>
         <p style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>
-          {counts.total} stops Â· {counts.unassigned} unassigned Â· {counts.out} out Â· {counts.done} delivered
-          {counts.failed > 0 ? ` Â· ${counts.failed} failed` : ""}
+          {counts.total} stops &middot; {counts.unassigned} unassigned &middot; {counts.out} out &middot; {counts.done} delivered
+          {counts.failed > 0 ? ` \u00B7 ${counts.failed} failed` : ""}
         </p>
       </div>
 
-      {/* â”€â”€ Driver COD strip â”€â”€ */}
+      {/* -- Driver COD strip -- */}
       {drivers.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
           {drivers.map(dr => (
             <div key={dr.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", fontSize: 12 }}>
               <span style={{ fontWeight: 700 }}>{dr.name}</span>
-              <span style={{ color: T.textMuted }}> Â· COD â‚¹{(codByDriver[dr.id] ?? 0).toLocaleString("en-IN")}</span>
+              <span style={{ color: T.textMuted }}> &middot; COD &#8377;{(codByDriver[dr.id] ?? 0).toLocaleString("en-IN")}</span>
             </div>
           ))}
           <button
@@ -179,7 +179,7 @@ export default function DispatchClient({
         </div>
       )}
 
-      {/* â”€â”€ Delivery rows â”€â”€ */}
+      {/* -- Delivery rows -- */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {deliveries.map(d => {
           const st = STATUS_STYLE[d.status];
@@ -195,7 +195,7 @@ export default function DispatchClient({
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   {cod && (
                     <span style={{ fontSize: 12, fontWeight: 700, color: T.amber }}>
-                      COD â‚¹{d.order.totalRs.toLocaleString("en-IN")}
+                      COD &#8377;{d.order.totalRs.toLocaleString("en-IN")}
                     </span>
                   )}
                   <span style={{ fontSize: 12, fontWeight: 700, color: st.color }}>{st.label}</span>
@@ -206,11 +206,11 @@ export default function DispatchClient({
               {a && (
                 <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.45 }}>
                   {a.line1}{a.line2 ? `, ${a.line2}` : ""}, {a.area}, {a.city} {a.pincode}
-                  {a.landmark ? ` Â· near ${a.landmark}` : ""}
+                  {a.landmark ? ` \u00B7 near ${a.landmark}` : ""}
                 </p>
               )}
               {d.mealsIncluded?.length > 0 && (
-                <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{d.mealsIncluded.join(" Â· ")}</p>
+                <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{d.mealsIncluded.join(" \u00B7 ")}</p>
               )}
               {d.order.user.phone && (
                 <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{d.order.user.phone}</p>
@@ -225,7 +225,7 @@ export default function DispatchClient({
                     disabled={busyId === d.id}
                     style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 13, minWidth: 160 }}
                   >
-                    <option value="">â€” Assign driver â€”</option>
+                    <option value="">-- Assign driver --</option>
                     {drivers.map(dr => (
                       <option key={dr.id} value={dr.id}>{dr.name}</option>
                     ))}
@@ -237,19 +237,19 @@ export default function DispatchClient({
                       disabled={busyId === d.id}
                       style={{ background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
                     >
-                      {busyId === d.id ? "â€¦" : "Dispatch â†’"}
+                      {busyId === d.id ? "..." : "Dispatch \u2192"}
                     </button>
                   )}
                   {d.status === "OUT_FOR_DELIVERY" && (
                     <span style={{ fontSize: 12, color: T.textMuted }}>
-                      With {d.assignedDriverId ? driverById[d.assignedDriverId]?.name ?? "driver" : "driver"} Â· awaiting completion
+                      With {d.assignedDriverId ? driverById[d.assignedDriverId]?.name ?? "driver" : "driver"} &middot; awaiting completion
                     </span>
                   )}
                 </div>
               )}
 
               {d.status === "DELIVERED" && d.customerConfirmedAt && (
-                <p style={{ fontSize: 12, color: T.accent, marginTop: 10 }}>Customer confirmed receipt âœ“</p>
+                <p style={{ fontSize: 12, color: T.accent, marginTop: 10 }}>Customer confirmed receipt &#10003;</p>
               )}
               {d.status === "FAILED_DELIVERY" && d.trackingNotes && (
                 <p style={{ fontSize: 12, color: T.textMuted, marginTop: 10 }}>Note: {d.trackingNotes}</p>
