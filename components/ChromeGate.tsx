@@ -3,14 +3,14 @@
 // components/ChromeGate.tsx
 // Hides the marketing navbar/footer on standalone surfaces (driver view, etc.)
 // so they don't bleed into full-screen app pages. Navbar/Footer are still
-// created by the server layout and passed in as props — this only decides
+// created by the server layout and passed in as props â€” this only decides
 // whether to render them based on the current path.
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 // Path prefixes that render WITHOUT the marketing nav/footer.
-const BARE_PREFIXES = ["/driver"];
+const BARE_PREFIXES = ["/driver", "/admin"];
 
 export default function ChromeGate({
   navbar,
