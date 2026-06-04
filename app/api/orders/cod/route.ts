@@ -14,6 +14,13 @@ const MEAL_MAP: Record<string, string> = {
   bl: "BREAKFAST_LUNCH", sd: "SNACK_DINNER", all: "ALL_FOUR",
 };
 
+// How many delivery days each duration gives
+const DUR_DAYS: Record<string, number> = {
+  TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14,
+  MONTHLY_EXCL_WEEKENDS: 26, ONE_MONTH: 30,
+  TWO_MONTH: 60, THREE_MONTH: 90,
+};
+
 function genOrderNumber(): string {
   const d = new Date();
   const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
@@ -23,7 +30,7 @@ function genOrderNumber(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price } = body;
+    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price, deliveryWindow } = body;
 
     if (!firstname || !email || !phone || !address || !pincode || !diet || !dur || !meal || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -41,21 +48,20 @@ export async function POST(req: NextRequest) {
     const gst      = Math.round(subtotal * 0.05);
     const total    = subtotal + gst;
 
-   // 1. Upsert user — if auth user already exists (has Account), use them directly.
-//    Otherwise upsert a guest row (will be merged on first Google sign-in).
-const existingUser = await (prisma as any).user.findFirst({
-  where:   { email },
-  include: { accounts: true },
-});
-
-const user = existingUser
-  ? await (prisma as any).user.update({
-      where:  { id: existingUser.id },
-      data:   { phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
-    })
-  : await (prisma as any).user.create({
-      data: { email, phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+    // 1. Upsert user
+    const existingUser = await (prisma as any).user.findFirst({
+      where:   { email },
+      include: { accounts: true },
     });
+
+    const user = existingUser
+      ? await (prisma as any).user.update({
+          where:  { id: existingUser.id },
+          data:   { phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+        })
+      : await (prisma as any).user.create({
+          data: { email, phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+        });
 
     // 2. Create address
     const addr = await (prisma as any).address.create({
@@ -87,6 +93,30 @@ const user = existingUser
       data: {
         orderId: order.id, method: "CASH_ON_DELIVERY",
         status: "PENDING", amountRs: total,
+      },
+    });
+
+    // 6. Create UserActivePlan so delivery generator picks this customer up
+    const startDate = new Date();
+    const days = DUR_DAYS[durEnum] ?? 30;
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + days);
+
+    const mealPlan = await (prisma as any).mealPlan.findFirst();
+
+    await (prisma as any).userActivePlan.create({
+      data: {
+        userId: user.id,
+        mealPlanId: mealPlan?.id ?? null,
+        orderId: order.id,
+        startDate,
+        endDate,
+        currentDay: 1,
+        status: "active",
+        mealsPerDay: mealEnum as any,
+        duration: durEnum as any,
+        deliveryWindow: (deliveryWindow === "EVENING" ? "EVENING" : "MORNING") as any,
+        skipDates: [],
       },
     });
 
