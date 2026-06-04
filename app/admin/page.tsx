@@ -1,5 +1,5 @@
 // app/admin/page.tsx
-// Phase 10 â€” the dispatch board. Loads today's deliveries + drivers server-side.
+// Phase 10 -- the dispatch board. Loads today's deliveries + drivers server-side.
 
 import { prisma } from "@/lib/prisma";
 import DispatchClient from "./DispatchClient";
@@ -29,6 +29,7 @@ export default async function DispatchPage() {
         assignedDriverId: true,
         trackingNotes: true,
         customerConfirmedAt: true,
+        deliveryWindow: true,
         order: {
           select: {
             orderNumber: true,

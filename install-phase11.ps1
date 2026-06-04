@@ -1,3 +1,13 @@
+# Phase 11 installer -- delivery generator + window grouping + checkout toggle.
+$RepoRoot = "C:\Users\VCOM\fitfuel"
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+# create folders (literal paths)
+[System.IO.Directory]::CreateDirectory((Join-Path $RepoRoot "app/admin")) | Out-Null
+[System.IO.Directory]::CreateDirectory((Join-Path $RepoRoot "app/api/cron/generate-deliveries")) | Out-Null
+[System.IO.Directory]::CreateDirectory((Join-Path $RepoRoot "components")) | Out-Null
+
+$c = @'
 "use client";
 
 // app/admin/DispatchClient.tsx
@@ -284,3 +294,248 @@ export default function DispatchClient({
     </div>
   );
 }
+'@
+[System.IO.File]::WriteAllText((Join-Path $RepoRoot "app/admin/DispatchClient.tsx"), $c, $Utf8NoBom)
+Write-Host "  wrote app/admin/DispatchClient.tsx" -ForegroundColor Green
+
+$c = @'
+// app/admin/page.tsx
+// Phase 10 -- the dispatch board. Loads today's deliveries + drivers server-side.
+
+import { prisma } from "@/lib/prisma";
+import DispatchClient from "./DispatchClient";
+
+export const dynamic = "force-dynamic";
+
+function todayWindow() {
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0); // matches the driver route's date convention
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
+export default async function DispatchPage() {
+  const { start, end } = todayWindow();
+
+  const [deliveries, drivers] = await Promise.all([
+    prisma.delivery.findMany({
+      where: { deliveryDate: { gte: start, lt: end } },
+      orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        status: true,
+        mealsIncluded: true,
+        deliveredAt: true,
+        assignedDriverId: true,
+        trackingNotes: true,
+        customerConfirmedAt: true,
+        deliveryWindow: true,
+        order: {
+          select: {
+            orderNumber: true,
+            totalRs: true,
+            paymentMethod: true,
+            user: { select: { name: true, phone: true } },
+            address: {
+              select: { line1: true, line2: true, area: true, city: true, pincode: true, landmark: true },
+            },
+          },
+        },
+      },
+    }),
+    prisma.driver.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, phone: true },
+    }),
+  ]);
+
+  return <DispatchClient initialDeliveries={deliveries} drivers={drivers} />;
+}
+'@
+[System.IO.File]::WriteAllText((Join-Path $RepoRoot "app/admin/page.tsx"), $c, $Utf8NoBom)
+Write-Host "  wrote app/admin/page.tsx" -ForegroundColor Green
+
+$c = @'
+// app/api/cron/generate-deliveries/route.ts
+// Phase 11 -- the delivery generator. Runs nightly (Vercel Cron, 11 PM IST).
+// For every ACTIVE subscriber whose plan covers tomorrow (and didn't skip it),
+// it creates ONE delivery -- all their meals together -- stamped with the
+// customer's chosen window (MORNING / EVENING). Idempotent: re-running won't
+// create duplicates.
+//
+// Manual test (with your CRON_SECRET):
+//   curl -H "Authorization: Bearer <CRON_SECRET>" \
+//     "https://fitfuel-eosin.vercel.app/api/cron/generate-deliveries?date=2026-06-05"
+
+import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+// which meals go in the (single) drop, based on what they subscribed to
+function mealsFor(m: string | null | undefined): string[] {
+  switch (m) {
+    case "BREAKFAST_LUNCH": return ["Breakfast", "Lunch"];
+    case "SNACK_DINNER": return ["Snack", "Dinner"];
+    case "ALL_FOUR": return ["Breakfast", "Lunch", "Snack", "Dinner"];
+    default: return ["Breakfast", "Lunch", "Snack", "Dinner"];
+  }
+}
+
+// target = tomorrow at UTC midnight (matches the board/driver "today" query convention).
+// ?date=YYYY-MM-DD overrides, for testing.
+function targetDay(override: string | null): Date {
+  if (override) return new Date(`${override}T00:00:00.000Z`);
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+function sameUTCDate(a: Date, b: Date): boolean {
+  return a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
+}
+
+export async function GET(req: NextRequest) {
+  // Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" automatically.
+  const expected = process.env.CRON_SECRET;
+  if (expected && req.headers.get("authorization") !== `Bearer ${expected}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const date = targetDay(req.nextUrl.searchParams.get("date"));
+
+  const plans = await prisma.userActivePlan.findMany({
+    where: {
+      status: "active",
+      startDate: { lte: date },
+      endDate: { gte: date },
+      orderId: { not: null },
+    },
+    select: {
+      id: true,
+      orderId: true,
+      mealsPerDay: true,
+      deliveryWindow: true,
+      skipDates: true,
+    },
+  });
+
+  let created = 0;
+  let skipped = 0;
+  let already = 0;
+
+  for (const plan of plans) {
+    // customer skipped this date?
+    if (plan.skipDates?.some(sd => sameUTCDate(new Date(sd), date))) {
+      skipped++;
+      continue;
+    }
+    // already generated (idempotent re-run)?
+    const exists = await prisma.delivery.findFirst({
+      where: { orderId: plan.orderId!, deliveryDate: date },
+      select: { id: true },
+    });
+    if (exists) {
+      already++;
+      continue;
+    }
+
+    await prisma.delivery.create({
+      data: {
+        orderId: plan.orderId!,
+        deliveryDate: date,
+        status: "PREPARING",
+        mealsIncluded: mealsFor(plan.mealsPerDay),
+        deliveryWindow: plan.deliveryWindow, // MORNING / EVENING
+      },
+    });
+    created++;
+  }
+
+  return NextResponse.json({
+    date: date.toISOString().slice(0, 10),
+    activePlans: plans.length,
+    created,
+    alreadyExisted: already,
+    skipped,
+  });
+}
+'@
+[System.IO.File]::WriteAllText((Join-Path $RepoRoot "app/api/cron/generate-deliveries/route.ts"), $c, $Utf8NoBom)
+Write-Host "  wrote app/api/cron/generate-deliveries/route.ts" -ForegroundColor Green
+
+$c = @'
+"use client";
+
+// components/DeliveryWindowToggle.tsx
+// Phase 11 -- customer picks their delivery run at checkout. Controlled component:
+// pass value + onChange, then include `value` in your order/subscription POST so it
+// lands on the UserActivePlan.deliveryWindow field.
+//
+// Usage in checkout:
+//   const [deliveryWindow, setDeliveryWindow] = useState<"MORNING" | "EVENING">("MORNING");
+//   <DeliveryWindowToggle value={deliveryWindow} onChange={setDeliveryWindow} />
+//   // ...then send deliveryWindow in the body when you create the order.
+
+const T = {
+  card: "#101010", border: "#222", text: "#ffffff",
+  textMuted: "#888888", accent: "#84cc16",
+};
+
+type Window = "MORNING" | "EVENING";
+
+const OPTIONS: { value: Window; label: string; time: string }[] = [
+  { value: "MORNING", label: "Morning", time: "7-9 AM" },
+  { value: "EVENING", label: "Evening", time: "6-8 PM" },
+];
+
+export default function DeliveryWindowToggle({
+  value,
+  onChange,
+}: {
+  value: Window;
+  onChange: (v: Window) => void;
+}) {
+  return (
+    <div>
+      <p style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 8 }}>
+        When should we deliver?
+      </p>
+      <div style={{ display: "flex", gap: 10 }}>
+        {OPTIONS.map(opt => {
+          const active = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              style={{
+                flex: 1,
+                background: active ? T.accent : T.card,
+                color: active ? "#0a0a0a" : T.text,
+                border: `1px solid ${active ? T.accent : T.border}`,
+                borderRadius: 12,
+                padding: "14px 12px",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ display: "block", fontSize: 15, fontWeight: 800 }}>{opt.label}</span>
+              <span style={{ display: "block", fontSize: 12, fontWeight: 600, color: active ? "#0a0a0a" : T.textMuted, marginTop: 2 }}>
+                {opt.time}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+'@
+[System.IO.File]::WriteAllText((Join-Path $RepoRoot "components/DeliveryWindowToggle.tsx"), $c, $Utf8NoBom)
+Write-Host "  wrote components/DeliveryWindowToggle.tsx" -ForegroundColor Green
+
+Write-Host "Done. Remember: edit schema.prisma, db push, add CRON_SECRET, vercel.json." -ForegroundColor Cyan
