@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ChromeGate from "@/components/ChromeGate";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/lib/auth";
 
@@ -30,7 +31,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // ✅ Fetch session server-side so SessionProvider hydrates correctly on first paint
-  // This avoids the flash of "unauthenticated" state on page load
   const session = await auth();
 
   return (
@@ -44,11 +44,12 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
-        {/* ✅ SessionProvider wraps everything so useSession() works in any client component */}
+        {/* SessionProvider wraps everything so useSession() works in any client component */}
         <SessionProvider session={session}>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          {/* ChromeGate hides Navbar/Footer on standalone routes like /driver */}
+          <ChromeGate navbar={<Navbar />} footer={<Footer />}>
+            {children}
+          </ChromeGate>
         </SessionProvider>
       </body>
     </html>
