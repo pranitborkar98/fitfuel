@@ -335,7 +335,7 @@ Every phase before this was a feature. Phase 9 is the **business itself in code 
 | 9H | Tier Comparison + Pricing Page | ❌ Not started |
 | 9I | Public Trust Pages | ❌ Not started |
 | 9J | Dashboard — Today's Meals Card | ✅ COMPLETE — verified May 30 (4 meals render, buttons work, progress bar, mobile responsive, drawer) |
-| 9K | Dashboard — Plan Progress Card | ❌ Not started |
+| 9K | Dashboard — Meal Rating (1–5 stars + note after "I ate this") | ✅ COMPLETE — Jun 3, 2026 |
 | 9L | Net Calorie Engine (meals in - workout out vs target) | ❌ Not started |
 | 9M | Lightweight Recipe Admin | ❌ Not started |
 | 9N | Onboarding Flow | ✅ COMPLETE — all 3 files verified May 27 |
@@ -840,7 +840,7 @@ app/dashboard/DashboardClient.tsx                  ✅ renders Today's Meals car
 
 ### Remaining for 9J
 ```
-app/api/user/active-plan/meals/rate/route.ts       ❌ POST rate meal 1-5 stars
+app/api/user/active-plan/meals/rate/route.ts       ✅ POST rate meal 1–5 stars + note — Jun 3 (9K)
 app/api/user/active-plan/pause/route.ts            ❌ POST pause plan
 app/api/user/active-plan/skip/route.ts             ❌ POST skip a date
 ```
@@ -895,18 +895,64 @@ app/plans/[slug]/PlanDetailClient.tsx ← fixed Plan/Recipe interfaces + JSX apo
 
 ---
 
-## 9K — PLAN PROGRESS CARD
+## 9K — MEAL RATING ✅ COMPLETE — Jun 3, 2026
 
+### What It Does
+After tapping "I ate this", a star rating modal slides up. User rates 1–5 stars and optionally adds a note (max 200 chars). Rating is saved to `MealLog.rating` + `MealLog.ratingNote`. `Recipe.avgRating` is recomputed from all rated logs for that recipe on every submission — feeds directly into 9S menu evolution flagging (< 3.0 avg after 20+ ratings → auto-flag for replacement).
+
+### Files Built
 ```
-┌─────────────────────────────────────┐
-│ Your Plan                           │
-│ Weight Loss Veg · Standard         │
-│ Day 14 of 30 · ██████░░░░  47%    │
-│ Started: May 26 · Ends: Jun 25     │
-│ [Renew now — 5 days left warning]  │
-│ [Upgrade to Premium]               │
-└─────────────────────────────────────┘
+app/api/user/active-plan/meals/rate/route.ts   ✅ POST rate meal 1–5 stars + note
+app/dashboard/DashboardClient.tsx              ✅ StarRatingModal component + handleRateMeal
 ```
+
+### API
+```
+POST /api/user/active-plan/meals/rate
+Body: { mealSlot: string, logDate: ISO string, rating: 1–5, note?: string }
+Guard: MealLog must exist (meal must be logged before rating)
+Side-effect: Recipe.avgRating recomputed via prisma.mealLog.aggregate
+```
+
+### UX Flow
+1. User taps "I ate this" → MealLog created → drawer closes
+2. StarRatingModal appears (centered, blurred backdrop)
+3. Tap a star → label appears ("Loved it!", "Didn't like it", etc.)
+4. Optional note textarea (placeholder: "too spicy, loved the texture...")
+5. "Submit Rating" button appears after star selected
+6. Submit → POST to rate API → modal closes
+7. Skip button available — rating is always optional, never blocks
+
+### Bugs Fixed During Build — Jun 3
+```
+1. NextAuth v5: getServerSession(authOptions) → auth()
+   Root cause: generated v4 pattern, project uses v5 (Auth.js)
+
+2. MealLog schema mismatch: planScheduleSlotId / dayNumber / scheduledDate / status
+   Root cause: assumed fields, didn't read schema first
+   Fix: MealLog lookup is userId + mealSlot + logDate (@db.Date)
+
+3. meals/log route: proteinPerServing / carbsPerServing / fatPerServing
+   Root cause: guessed field names
+   Fix: proteinGrams / carbsGrams / fatGrams (as per schema)
+
+4. meals/log route: FoodEntry auto-creation failed
+   Root cause: FoodEntry uses foodItemId FK + mealTypeId FK — not auto-populatable from slot
+   Fix: stripped FoodEntry creation entirely — nutrition diary is manually driven
+   Note: FoodEntry ← MealLog wiring is a known gap (Decision #32 in tracker)
+
+5. StarRatingModal centering: stuck bottom-left on desktop
+   Fix: flexbox wrapper with alignItems center + justifyContent center + borderRadius 20
+```
+
+### Meal Timing — Deferred to Delivery Section
+`PlanScheduleSlot` has no `deliveryTime` field. Meal times shown in the dashboard
+("8:00 AM", "1:00 PM" etc.) are currently hardcoded per slot type in the today API.
+Real delivery time wiring requires:
+- A `deliveryWindow` or `dispatchTime` field on `UserActivePlan` or a new `DeliverySlot` model
+- Admin sets delivery windows per area/tier
+- Dashboard reads user's window and shows actual ETA
+**This is scoped to the Delivery Section build (Phase 10 or dedicated 9U sub-phase — TBD).**
 
 ---
 
@@ -1577,7 +1623,7 @@ This is the top-of-funnel entry point. Someone Googling "how many calories shoul
 | Meal Plans in DB | 119 | 119 | 100% |
 | Recipe Seeds (DB verified) | 1 | 119 | 1% |
 | Schedule Seeds (DB verified) | 1 | 119 | 1% |
-| Phase 9 App Features | 6 (9N + 9J complete + 9E complete) | ~20 | 30% |
+| Phase 9 App Features | 7 (9N + 9J + 9K complete + 9E complete) | ~20 | 35% |
 | Launch Gates Cleared | 7 | 7 | 100% (G8 FSSAI check pending) |
 | Phases 0–8 | ✅ | ✅ | 100% |
 
