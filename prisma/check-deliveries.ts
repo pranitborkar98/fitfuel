@@ -1,0 +1,1 @@
+import { prisma } from "../lib/prisma"; prisma.delivery.findMany({ where: { deliveryDate: { gte: new Date("2026-06-05T00:00:00.000Z"), lt: new Date("2026-06-06T00:00:00.000Z") } }, select: { id: true, orderId: true, order: { select: { orderNumber: true, addressId: true, userId: true } } } }).then(d => { d.forEach(x => console.log(JSON.stringify(x))); prisma.$disconnect(); });

@@ -1,6 +1,6 @@
 # FITFUEL — MASTER PROJECT TRACKER (DEFINITIVE)
-> **Last Updated: May 30, 2026**
-> **Reconciles: Master tracker (May 19) + Phase 9 tracker v1 (May 20) + Phase 9 tracker v2 + Phase 9 tracker v3 (May 26) + Vision Realignment (May 26) + Session update (May 27) + Day 2 build complete (May 27) + Day 3 build complete (May 30)**
+> **Last Updated: June 4, 2026**
+> **Reconciles: Master tracker (May 19) + Phase 9 tracker v1 (May 20) + Phase 9 tracker v2 + Phase 9 tracker v3 (May 26) + Vision Realignment (May 26) + Session update (May 27) + Day 2 build complete (May 27) + Day 3 build complete (May 30) + Phase 10 Delivery System core live (Jun 4)**
 > **DB verified via SQL on May 26: 119 plans | 1 active (weight-loss-veg) | 30 recipes | 120 slots | 1 active_plan (Pranit) | 2499 price rows**
 > **Platform:** Next.js + Node.js + PostgreSQL (Neon)
 > **Deployment:** Vercel — fitfuel-eosin.vercel.app → fitfuel.in after launch
@@ -140,7 +140,7 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | 7 | Exercise Library + Workout Logger | ✅ Complete — pushed to main |
 | 8 | Supplement Guide | ✅ Complete — pushed to main |
 | **9** | **Lifestyle Meal Plans + Dashboard Wiring** | **🔄 IN PROGRESS** |
-| 10 | Live Delivery Tracking | ⏸️ Pending |
+| 10 | Live Delivery Tracking | 🔄 Core LIVE (Jun 4) — 3 items pending |
 | 11 | Progress Tracking + Charts + Consistency Score | ⏸️ Pending |
 | 12 | AI Personal Trainer + Chatbot | ⏸️ Pending |
 | 13 | Digital Meal Plans (PDF/downloadable) | ⏸️ Pending |
@@ -1594,11 +1594,66 @@ This is the top-of-funnel entry point. Someone Googling "how many calories shoul
 
 ---
 
+## PHASE 10 — LIVE DELIVERY TRACKING
+
+> **Status: CORE COMPLETE & LIVE (June 4, 2026).** Built the full delivery ops layer that Phase 9's `UserActivePlan` made possible. 3 items pending (listed at the end).
+
+### What It Is
+The operational layer that turns active subscriptions into a daily delivery run. A nightly engine reads every active plan and writes that day's delivery list; an admin command center assigns and dispatches; drivers complete stops from a phone link; COD is tracked per driver. This is the bridge between "subscription in DB" and "food at the door."
+
+### What Was Built (deployed to main — live on fitfuel-eosin.vercel.app)
+
+**Admin command center — `/admin`** (gated to OWNER/ADMIN via Auth.js v5 `auth()`, role read fresh from DB each request)
+- **Dispatch board:** today's deliveries grouped into **Morning run (7-9 AM)** and **Evening run (6-8 PM)**; assign driver per delivery → Dispatch (→ OUT_FOR_DELIVERY) → live status flips back as drivers complete; per-driver COD-expected strip; "Dispatch all assigned".
+- **Driver roster `/admin/drivers`:** create driver (name + phone) → auto-generated unique token link; Copy link / Send-on-WhatsApp; activate/deactivate; today's stop count.
+
+**Driver app — `/driver/[token]`** (token IS the auth, no login)
+- "Hi {driver}, N stops today"; each stop shows customer, address, meals, tap-to-call, COD; Delivered / Couldn't-deliver buttons; status flows back to the board.
+
+**Delivery generator — `/api/cron/generate-deliveries`** (Vercel Cron `30 17 * * *` = 11 PM IST)
+- Reads every active `UserActivePlan` covering the next day (status active, in date range, not in skipDates).
+- Creates ONE delivery per customer per day — all meals bundled, never split — stamped with their window. Idempotent. Protected by `CRON_SECRET`.
+
+**COD order route — `/api/orders/cod`**
+- Now auto-creates a `UserActivePlan` on every new order. This was THE missing link: orders existed (10 in DB) but never fed the generator. Backfilled `UserActivePlan` for all 10 existing COD orders.
+
+**Storefront chrome hidden on `/admin`** via ChromeGate (`BARE_PREFIXES += "/admin"`).
+
+### Schema additions
+```
+enum DeliveryWindow { MORNING EVENING }
+UserActivePlan.deliveryWindow  DeliveryWindow @default(MORNING)
+Delivery.deliveryWindow        DeliveryWindow?
+```
+`Driver.franchiseId` was already reserved in schema — no churn needed when the Franchise phase lands.
+
+### Decisions logged
+- **Decision #62 (Jun 4):** Pricing HQ-fixed / absolute for launch. Franchise price-flexibility within HQ bands = future (Franchise phase).
+- **Decision #63 (Jun 4):** Delivery confirmation = **physical signed slip** (driver carries printed slip, customer signs, driver marks Delivered). No digital OTP / customer tap-confirm for now.
+- **Decision #64 (Jun 4):** **One delivery per customer per day** — all subscribed meals bundled into a single drop, never split into per-meal trips (sustainability). Customer chooses Morning OR Evening window at subscription.
+
+### Connects to (the data loop)
+- `UserActivePlan` (Phase 9) → generator → daily `Delivery` rows → dispatch board.
+- `mealsPerDay` (Phase 9) → which meals are bundled in the drop.
+- Order / Address / User → delivery card (customer, address, phone, COD).
+- `Driver.franchiseId` → future Franchise phase (outlet-scoped dispatch board).
+
+### Env / infra added
+- `CRON_SECRET` (Vercel + .env.local) · `vercel.json` cron entry.
+- One-time helper scripts in `/prisma` (backfill-plans, check-*) — safe to delete.
+
+### PENDING (to fully close Phase 10)
+1. **Checkout window toggle** — `DeliveryWindowToggle` component built but NOT wired into checkout; every customer currently defaults to MORNING, so the Evening run stays empty until this ships. (COD route already accepts `deliveryWindow`.)
+2. **Printable signed delivery slip** — the chosen proof mechanism (Decision #63). **Will be DESIGNED in Claude Design** (not hand-coded), then wired to print today's run per driver with customer name / address / meals / COD amount / signature line. [Jun 4]
+3. **Driver notification on dispatch** — auto WhatsApp/SMS via MSG91 on dispatch; NOT wired (links shared manually for now). Overlaps Phase 16.
+
+---
+
 ## UPCOMING PHASES
 
 | Phase | Name | How Phase 9 Enables It |
 |-------|------|------------------------|
-| 10 | Live Delivery Tracking | UserActivePlan.currentDay tells kitchen exactly what to pack per customer |
+| 10 | Live Delivery Tracking | ✅ DONE (Jun 4) — nightly generator + dispatch board + driver app live. See Phase 10 section above. |
 | 11 | Progress Tracking + Charts + Consistency Score | MealLog + WorkoutSession + BodyMetrics + ConsistencyScore exist — just visualise the transformation |
 | 12 | AI Personal Trainer + Chatbot | Recipe DB + UserActivePlan + MealLogs + WorkoutSessions + BodyMetrics + ConsistencyScore = full context. AI knows everything. |
 | 13 | Digital Meal Plans (PDF) | Pull MealPlan + schedule + Recipe from DB → generate PDF with macros, recipes, grocery list |
@@ -1626,6 +1681,7 @@ This is the top-of-funnel entry point. Someone Googling "how many calories shoul
 | Phase 9 App Features | 7 (9N + 9J + 9K complete + 9E complete) | ~20 | 35% |
 | Launch Gates Cleared | 7 | 7 | 100% (G8 FSSAI check pending) |
 | Phases 0–8 | ✅ | ✅ | 100% |
+| Phase 10 Delivery (core) | ✅ | ✅ | 100% (3 items pending) |
 
 **Current focus: Finish Phase 9 completely. Do not touch Phases 0-8.**
 **Next action: Check FSSAI in footer (G8) → WhatsApp number in PlanDetailClient → full end-to-end test → go live**
@@ -1642,3 +1698,8 @@ This is the top-of-funnel entry point. Someone Googling "how many calories shoul
 > **9E /plans/[slug] built May 30 — 3 files, 12 sections, all DB field names verified against schema.prisma.**
 > **Decision #61 May 30 — always read schema.prisma before writing any Prisma select. Never guess field names.**
 > **Next: G8 FSSAI footer check → WhatsApp number in PlanDetailClient → end-to-end test → go live.**
+> **Jun 4 — PHASE 10 DELIVERY CORE LIVE: /admin command center (dispatch board Morning/Evening + driver roster), /driver/[token] app, nightly generator cron (11 PM IST), COD order now auto-creates UserActivePlan, 10 orders backfilled, storefront nav hidden on /admin. Schema: DeliveryWindow enum + deliveryWindow on UserActivePlan & Delivery.**
+> **Decisions #62-64 (Jun 4): pricing HQ-fixed for launch; confirmation = physical signed slip (no OTP); 1 delivery/customer/day, Morning OR Evening window.**
+> **Phase 10 PENDING: checkout window toggle (all default MORNING), printable signed slip, driver WhatsApp notify (MSG91).**
+> **Decision #65 (Jun 4): stack confirmed Auth.js v5 (next-auth 5.0.0-beta) — read session via auth(), never hand-read cookies. Prisma 7, Neon. Always read schema.prisma before any Prisma select (reaffirms #61).**
+> **Decision #66 (Jun 4): printable signed delivery slip will be built in Claude Design (visual), not hand-coded. Checkout window toggle + driver dispatch notification to be built next to close Phase 10.**

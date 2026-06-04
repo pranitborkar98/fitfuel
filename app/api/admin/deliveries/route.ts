@@ -1,19 +1,21 @@
 // app/api/admin/deliveries/route.ts
-// Phase 10 Ã¢â‚¬â€ admin view + control of today's deliveries.
+// Phase 10 -- admin view + control of today's deliveries.
 //   GET            -> today's deliveries (all drivers)
 //   POST assign    -> { action:"assign", deliveryId, driverId|null }
-//   POST dispatch  -> { action:"dispatch", deliveryIds:[...] }  (PREPARING/PACKED -> OUT_FOR_DELIVERY)
+//   POST dispatch  -> { action:"dispatch", deliveryIds:[...] }
 
 import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/lib/admin-auth";
+import { notifyDriverWhatsApp } from "@/lib/notify-driver";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 function todayWindow() {
-  // Use IST (UTC+5:30) as the business day boundary
   const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
-  const start = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate()));
+  const start = new Date(
+    Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate())
+  );
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
   return { start, end };
@@ -28,13 +30,30 @@ export async function GET() {
     where: { deliveryDate: { gte: start, lt: end } },
     orderBy: [{ status: "asc" }, { createdAt: "asc" }],
     select: {
-      id: true, status: true, mealsIncluded: true, deliveredAt: true,
-      assignedDriverId: true, trackingNotes: true, customerConfirmedAt: true,
+      id: true,
+      status: true,
+      mealsIncluded: true,
+      deliveredAt: true,
+      assignedDriverId: true,
+      trackingNotes: true,
+      customerConfirmedAt: true,
+      deliveryWindow: true,
       order: {
         select: {
-          orderNumber: true, totalRs: true, paymentMethod: true,
+          orderNumber: true,
+          totalRs: true,
+          paymentMethod: true,
           user: { select: { name: true, phone: true } },
-          address: { select: { line1: true, line2: true, area: true, city: true, pincode: true, landmark: true } },
+          address: {
+            select: {
+              line1: true,
+              line2: true,
+              area: true,
+              city: true,
+              pincode: true,
+              landmark: true,
+            },
+          },
         },
       },
     },
@@ -53,7 +72,6 @@ export async function POST(req: NextRequest) {
     deliveryIds?: string[];
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ assign a driver to a delivery (driverId null = unassign) Ã¢â€â‚¬Ã¢â€â‚¬
   if (body.action === "assign") {
     if (!body.deliveryId) {
       return NextResponse.json({ error: "deliveryId required" }, { status: 400 });
@@ -66,10 +84,13 @@ export async function POST(req: NextRequest) {
       if (!driver || !driver.isActive) {
         return NextResponse.json({ error: "Driver not found or inactive" }, { status: 400 });
       }
-      // also denormalise driverName/driverPhone (the Delivery model carries them)
       const updated = await prisma.delivery.update({
         where: { id: body.deliveryId },
-        data: { assignedDriverId: driver.id, driverName: driver.name, driverPhone: driver.phone },
+        data: {
+          assignedDriverId: driver.id,
+          driverName: driver.name,
+          driverPhone: driver.phone,
+        },
         select: { id: true, assignedDriverId: true },
       });
       return NextResponse.json({ delivery: updated });
@@ -83,27 +104,73 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ dispatch: flip assigned, not-yet-out deliveries to OUT_FOR_DELIVERY Ã¢â€â‚¬Ã¢â€â‚¬
   if (body.action === "dispatch") {
     const ids = body.deliveryIds ?? [];
     if (ids.length === 0) {
       return NextResponse.json({ error: "deliveryIds required" }, { status: 400 });
     }
-    const result = await prisma.delivery.updateMany({
+
+    const toDispatch = await prisma.delivery.findMany({
       where: {
         id: { in: ids },
-        assignedDriverId: { not: null }, // can't dispatch what isn't assigned
+        assignedDriverId: { not: null },
         status: { in: ["PREPARING", "PACKED"] },
       },
-      data: { status: "OUT_FOR_DELIVERY" },
+      select: {
+        id: true,
+        assignedDriverId: true,
+        driverName: true,
+        driverPhone: true,
+      },
     });
-    if (result.count === 0) {
+
+    if (toDispatch.length === 0) {
       return NextResponse.json(
-        { error: "Nothing dispatched Ã¢â‚¬â€ assign a driver first" },
+        { error: "Nothing to dispatch -- assign a driver first" },
         { status: 400 }
       );
     }
-    return NextResponse.json({ dispatched: result.count });
+
+    await prisma.delivery.updateMany({
+      where: { id: { in: toDispatch.map((d) => d.id) } },
+      data: { status: "OUT_FOR_DELIVERY" },
+    });
+
+    const driverStops: Record<string, { name: string; phone: string; count: number }> = {};
+    for (const d of toDispatch) {
+      if (!d.assignedDriverId || !d.driverPhone) continue;
+      if (!driverStops[d.assignedDriverId]) {
+        driverStops[d.assignedDriverId] = {
+          name: d.driverName ?? "Driver",
+          phone: d.driverPhone,
+          count: 0,
+        };
+      }
+      driverStops[d.assignedDriverId].count += 1;
+    }
+
+    const driverIds = Object.keys(driverStops);
+    const drivers = await prisma.driver.findMany({
+      where: { id: { in: driverIds } },
+      select: { id: true, accessToken: true },
+    });
+    const tokenMap: Record<string, string> = {};
+    for (const dr of drivers) tokenMap[dr.id] = dr.accessToken;
+
+    const notifyPromises = driverIds.map((dId) => {
+      const info = driverStops[dId];
+      const token = tokenMap[dId];
+      if (!token) return Promise.resolve();
+      return notifyDriverWhatsApp({
+        driverName: info.name,
+        driverPhone: info.phone,
+        driverToken: token,
+        stopCount: info.count,
+      });
+    });
+    Promise.allSettled(notifyPromises).catch(() => {});
+
+    return NextResponse.json({ dispatched: toDispatch.length });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

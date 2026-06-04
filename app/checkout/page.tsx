@@ -8,8 +8,9 @@ import {
   ArrowRight, ShieldCheck, MessageCircle, AlertCircle,
   Banknote, CreditCard, FlaskConical, MapPin, Plus, Pencil,
 } from "lucide-react";
+import DeliveryWindowToggle from "@/components/DeliveryWindowToggle";
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Design tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const T = {
   bg:          "#0a0a0a",
   card:        "#111111",
@@ -23,7 +24,7 @@ const T = {
 
 const WA_NUMBER = "919579738811";
 
-// ─── Plan labels ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Plan labels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DIET_LABELS: Record<string, string> = {
   veg: "Vegetarian", egg: "Eggetarian", nonveg: "Non-Vegetarian", jain: "Jain",
 };
@@ -36,9 +37,9 @@ const MEAL_LABELS: Record<string, string> = {
   bl: "Breakfast + Lunch", sd: "Snack + Dinner", all: "All 4 meals",
 };
 
-function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
+function fmt(n: number) { return "â‚¹" + n.toLocaleString("en-IN"); }
 
-// ─── Saved address type ───────────────────────────────────────────────────────
+// â”€â”€â”€ Saved address type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type SavedAddress = {
   id: string;
   label?: string;
@@ -50,7 +51,7 @@ type SavedAddress = {
   landmark?: string;
 };
 
-// ─── Input component ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Input component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Field({
   label, name, type = "text", value, onChange, placeholder, required = true, maxLength,
 }: {
@@ -80,7 +81,7 @@ function Field({
   );
 }
 
-// ─── Payment method toggle ────────────────────────────────────────────────────
+// â”€â”€â”€ Payment method toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type PayMethod = "online" | "cod";
 
 function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMethod) => void }) {
@@ -119,7 +120,7 @@ function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMet
   );
 }
 
-// ─── Saved address card ───────────────────────────────────────────────────────
+// â”€â”€â”€ Saved address card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AddressCard({
   address, selected, onSelect,
 }: { address: SavedAddress; selected: boolean; onSelect: () => void }) {
@@ -151,7 +152,7 @@ function AddressCard({
         )}
         <div style={{ fontSize: 13, fontWeight: 600, color: T.textPrimary, marginBottom: 2 }}>{address.line1}</div>
         {address.line2 && <div style={{ fontSize: 12, color: T.textSecond }}>{address.line2}</div>}
-        <div style={{ fontSize: 12, color: T.textMuted }}>{address.area}, {address.city} – {address.pincode}</div>
+        <div style={{ fontSize: 12, color: T.textMuted }}>{address.area}, {address.city} â€“ {address.pincode}</div>
         {address.landmark && <div style={{ fontSize: 12, color: T.textMuted }}>Near: {address.landmark}</div>}
       </div>
       {selected && (
@@ -163,7 +164,7 @@ function AddressCard({
   );
 }
 
-// ─── Checkout inner ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Checkout inner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CheckoutInner() {
   const params     = useSearchParams();
   const router     = useRouter();
@@ -181,8 +182,8 @@ function CheckoutInner() {
   const priceGST = isTest ? 1 : Math.round(rawPrice * 1.05);
 
   const productinfo = isTest
-    ? "FitFuel TEST TRANSACTION — ignore"
-    : `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
+    ? "FitFuel TEST TRANSACTION â€” ignore"
+    : `FitFuel ${DUR_LABELS[dur] || dur} Â· ${MEAL_LABELS[meal] || meal} Â· ${DIET_LABELS[diet] || diet}`;
 
   // Saved addresses state
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -196,6 +197,7 @@ function CheckoutInner() {
     address: "", city: "Pune", pincode: "",
   });
   const [payMethod, setPayMethod] = useState<PayMethod>("online");
+  const [deliveryWindow, setDeliveryWindow] = useState<"MORNING" | "EVENING">("MORNING");
   const [loading, setLoading]     = useState(false);
   const [payuData, setPayuData]   = useState<Record<string, string> | null>(null);
 
@@ -280,7 +282,7 @@ function CheckoutInner() {
           firstname: form.firstname, lastname: form.lastname,
           email: form.email, phone: form.phone,
           address: deliveryAddress, city, pincode,
-          diet, dur, meal, price: rawPrice,
+          diet, dur, meal, price: rawPrice, deliveryWindow,
         }),
       });
       const data = await res.json();
@@ -362,9 +364,9 @@ function CheckoutInner() {
           >
             <FlaskConical size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 2 }}>Test mode — ₹1 charge</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 2 }}>Test mode â€” â‚¹1 charge</div>
               <div style={{ fontSize: 13, color: T.textSecond }}>
-                Live ₹1 test transaction. Remove <code style={{ color: "#fbbf24" }}>?test=1</code> for production.
+                Live â‚¹1 test transaction. Remove <code style={{ color: "#fbbf24" }}>?test=1</code> for production.
               </div>
             </div>
           </motion.div>
@@ -391,7 +393,7 @@ function CheckoutInner() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }} className="checkout-grid">
 
-          {/* Left — form */}
+          {/* Left â€” form */}
           <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "28px 24px" }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, marginBottom: 24 }}>Your details</h2>
 
@@ -449,7 +451,7 @@ function CheckoutInner() {
                   </div>
                 )}
 
-                {/* New address form — shown when no saved addresses or user wants new one */}
+                {/* New address form â€” shown when no saved addresses or user wants new one */}
                 <AnimatePresence>
                   {showAddressForm && (
                     <motion.div
@@ -476,6 +478,9 @@ function CheckoutInner() {
                 </AnimatePresence>
               </div>
 
+              {/* Delivery window */}
+              <div style={{ marginBottom: 28 }}><DeliveryWindowToggle value={deliveryWindow} onChange={setDeliveryWindow} /></div>
+
               {/* Payment method */}
               <PayToggle value={payMethod} onChange={setPayMethod} />
 
@@ -493,7 +498,7 @@ function CheckoutInner() {
                       borderRadius: 10, padding: "12px 16px",
                       fontSize: 13, color: T.textSecond, lineHeight: 1.6,
                     }}>
-                      💵 Keep <strong style={{ color: T.textPrimary }}>{fmt(rawPrice)}</strong> ready at delivery.
+                      ðŸ’µ Keep <strong style={{ color: T.textPrimary }}>{fmt(rawPrice)}</strong> ready at delivery.
                       Our delivery partner will collect cash when your meals arrive.
                     </div>
                   </motion.div>
@@ -516,7 +521,7 @@ function CheckoutInner() {
                 {loading
                   ? (payMethod === "cod" ? "Placing order..." : "Redirecting to PayU...")
                   : payMethod === "cod"
-                    ? <><Banknote size={15} /> Place COD Order — {fmt(rawPrice)}</>
+                    ? <><Banknote size={15} /> Place COD Order â€” {fmt(rawPrice)}</>
                     : <>Pay {fmt(priceGST)} securely <ArrowRight size={15} /></>
                 }
               </button>
@@ -525,15 +530,15 @@ function CheckoutInner() {
                 <ShieldCheck size={13} color={T.textMuted} />
                 <span style={{ fontSize: 12, color: T.textMuted }}>
                   {payMethod === "cod"
-                    ? "No payment now · Pay cash at delivery"
-                    : "Secured by PayU · 256-bit SSL encryption"}
+                    ? "No payment now Â· Pay cash at delivery"
+                    : "Secured by PayU Â· 256-bit SSL encryption"}
                 </span>
               </div>
 
             </form>
           </div>
 
-          {/* Right — order summary */}
+          {/* Right â€” order summary */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
@@ -556,7 +561,7 @@ function CheckoutInner() {
                 {isTest ? (
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>Test charge</span>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24" }}>₹1</span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24" }}>â‚¹1</span>
                   </div>
                 ) : (
                   <>
@@ -584,7 +589,7 @@ function CheckoutInner() {
               background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
               borderRadius: 12, padding: "14px 18px", fontSize: 13, color: T.textSecond, lineHeight: 1.6,
             }}>
-              🚚 <strong style={{ color: T.textPrimary }}>Free delivery</strong> — 7am–10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
+              ðŸšš <strong style={{ color: T.textPrimary }}>Free delivery</strong> â€” 7amâ€“10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
             </div>
 
             <a
