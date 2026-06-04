@@ -1,6 +1,6 @@
 // ============================================================
-// FITFUEL â€” PRISMA SCHEMA v6.1 (Phase 9 â€” Recipe + Plan System)
-// UPDATED: May 20, 2026 â€” Fixes 4 critical gaps from v6.0
+// FITFUEL — PRISMA SCHEMA v6.1 (Phase 9 — Recipe + Plan System)
+// UPDATED: May 20, 2026 — Fixes 4 critical gaps from v6.0
 //
 // CHANGES IN THIS VERSION:
 // 1. FoodEntry + MealLog: bidirectional relation (mealLogId back-ref)
@@ -38,13 +38,13 @@ enum DietType {
 }
 
 enum MealPlanType {
-  // â”€â”€ Phase 3 â€” Core (live at launch) â”€â”€
+  // ── Phase 3 — Core (live at launch) ──
   MUSCLE_GAIN
   WEIGHT_LOSS
   BALANCED_DIET
   OFFICE_EMPLOYEE
   JAIN_DIET
-  // â”€â”€ Phase 9 â€” Lifestyle & Medical (coming soon) â”€â”€
+  // ── Phase 9 — Lifestyle & Medical (coming soon) ──
   HEALTHY_SEX_LIFESTYLE
   ALCOHOL_RECOVERY
   SMOKING_RECOVERY
@@ -128,7 +128,7 @@ enum FitnessGoal {
   MANAGE_CONDITION
 }
 
-// â”€â”€ Phase 9 â€” New Enums â”€â”€
+// ── Phase 9 — New Enums ──
 
 enum MealSlot {
   BREAKFAST
@@ -159,6 +159,11 @@ enum DietVariant {
   VEGAN
 }
 
+enum DeliveryWindow {
+  MORNING
+  EVENING
+}
+
 // ============================================================
 // USER
 // ============================================================
@@ -173,37 +178,39 @@ model User {
   avatarUrl     String?
   role          Role      @default(CUSTOMER)
   isActive      Boolean   @default(true)
-  referralCode            String?    @unique  // generated on signup
+  referralCode  String?   @unique // generated on signup
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  profile         UserProfile?
-  addresses       Address[]
-  orders          Order[]
-  bodyMetrics     BodyMetric[]
-  activePlans     ActivePlan[]
-  accounts        Account[]
-  sessions        Session[]
+  profile     UserProfile?
+  addresses   Address[]
+  orders      Order[]
+  bodyMetrics BodyMetric[]
+  activePlans ActivePlan[]
+  accounts    Account[]
+  sessions    Session[]
 
-  // â”€â”€ Phase 6 â€” Nutrition Tracker â”€â”€
-  foodItems       FoodItem[]
-  foodEntries     FoodEntry[]
-  nutritionGoal   NutritionGoal?
-  waterLogs       WaterLog[]
+  // ── Phase 6 — Nutrition Tracker ──
+  foodItems     FoodItem[]
+  foodEntries   FoodEntry[]
+  nutritionGoal NutritionGoal?
+  waterLogs     WaterLog[]
 
-  // â”€â”€ Phase 7 â€” Exercise Library â”€â”€
+  // ── Phase 7 — Exercise Library ──
   workoutSessions WorkoutSession[]
 
-  // â”€â”€ Phase 9 â€” Plan System â”€â”€
+  // ── Phase 9 — Plan System ──
   userActivePlans UserActivePlan[]
   mealLogs        MealLog[]
+
+  consistencySnapshots ConsistencySnapshot[]
 
   @@map("users")
 }
 
 model UserProfile {
-  id             String        @id @default(cuid())
-  userId         String        @unique
+  id             String         @id @default(cuid())
+  userId         String         @unique
   dateOfBirth    DateTime?
   gender         Gender?
   heightCm       Float?
@@ -212,25 +219,25 @@ model UserProfile {
   fitnessGoal    FitnessGoal?
   dietPreference DietType?
   medicalNotes   String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  // â”€â”€ Phase 9 â€” Onboarding + Personalisation fields â”€â”€
+  // ── Phase 9 — Onboarding + Personalisation fields ──
   targetWeightKg      Float?
   age                 Int?
-  healthConditions    String[]   // pcos, diabetic, thyroid, heart, etc.
-  dietaryRestrictions String[]   // no_pork, no_beef, nut_allergy, etc.
-  allergies           String[]   // nuts, dairy, gluten, shellfish
-  tdee                Int?       // computed + stored after onboarding
-  calorieTarget       Int?       // personalised target (= TDEE Â± goal adjustment)
-  onboardingComplete  Boolean    @default(false)
+  healthConditions    String[] // pcos, diabetic, thyroid, heart, etc.
+  dietaryRestrictions String[] // no_pork, no_beef, nut_allergy, etc.
+  allergies           String[] // nuts, dairy, gluten, shellfish
+  tdee                Int? // computed + stored after onboarding
+  calorieTarget       Int? // personalised target (= TDEE ± goal adjustment)
+  onboardingComplete  Boolean  @default(false)
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  weeklyConsistencyScore Int? // 0-100, recomputed every Sunday — feeds AI trainer
+  referredBy             String? // userId of referrer
 
   @@map("user_profiles")
-
-  weeklyConsistencyScore  Int?       // 0-100, recomputed every Sunday â€” feeds AI trainer
-  referredBy              String?    // userId of referrer
 }
 
 // ============================================================
@@ -251,14 +258,14 @@ model Address {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders    Order[]
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
 
   @@map("addresses")
 }
 
 // ============================================================
-// MEAL PLAN PRODUCT (catalogue â€” Phase 3, preserved)
+// MEAL PLAN PRODUCT (catalogue — Phase 3, preserved)
 // DEPRECATED: Migrate checkout to MealPlan + PlanPrice directly.
 // Kept for backward compatibility during transition.
 // ============================================================
@@ -280,7 +287,7 @@ model MealPlanProduct {
   pricing     PlanPrice[]
   orderItems  OrderItem[]
   activePlans ActivePlan[]
-  mealPlans   MealPlan[]   // â† NEW: bridge to Phase 9 MealPlan
+  mealPlans   MealPlan[] // ← NEW: bridge to Phase 9 MealPlan
 
   @@map("meal_plan_products")
 }
@@ -293,15 +300,15 @@ model MealPlanProduct {
 // ============================================================
 
 model PlanPrice {
-  id          String       @id @default(cuid())
+  id String @id @default(cuid())
 
-  // Legacy link â€” MealPlanProduct (Phase 3)
-  productId   String?
-  product     MealPlanProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Legacy link — MealPlanProduct (Phase 3)
+  productId String?
+  product   MealPlanProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  // New link â€” MealPlan (Phase 9, 103 variants)
-  mealPlanId  String?
-  mealPlan    MealPlan?        @relation(fields: [mealPlanId], references: [id])
+  // New link — MealPlan (Phase 9, 103 variants)
+  mealPlanId String?
+  mealPlan   MealPlan? @relation(fields: [mealPlanId], references: [id])
 
   diet        DietType
   duration    PlanDuration
@@ -311,7 +318,7 @@ model PlanPrice {
   isActive    Boolean      @default(true)
 
   @@unique([productId, diet, duration, mealsPerDay])
-  @@unique([mealPlanId, duration, mealsPerDay])  // â† NEW: unique for new plan pricing
+  @@unique([mealPlanId, duration, mealsPerDay]) // ← NEW: unique for new plan pricing
   @@map("plan_prices")
 }
 
@@ -338,12 +345,12 @@ model Order {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  user            User          @relation(fields: [userId], references: [id])
-  address         Address?      @relation(fields: [addressId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
+  address         Address?         @relation(fields: [addressId], references: [id])
   items           OrderItem[]
   deliveries      Delivery[]
   payment         Payment?
-  userActivePlans UserActivePlan[]  // â† NEW: link to active plan record
+  userActivePlans UserActivePlan[] // ← NEW: link to active plan record
 
   @@index([userId])
   @@index([status])
@@ -363,8 +370,8 @@ model OrderItem {
   totalRs     Int
   quantity    Int          @default(1)
 
-  order       Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     MealPlanProduct? @relation(fields: [productId], references: [id])
+  order   Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product MealPlanProduct? @relation(fields: [productId], references: [id])
 
   @@map("order_items")
 }
@@ -388,7 +395,7 @@ model Payment {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
@@ -398,27 +405,27 @@ model Payment {
 // ============================================================
 
 model Delivery {
+  id             String          @id @default(cuid())
+  orderId        String
+  deliveryDate   DateTime
+  status         DeliveryStatus  @default(PREPARING)
+  mealsIncluded  String[]
+  driverName     String?
+  driverPhone    String?
+  trackingNotes  String?
+  deliveredAt    DateTime?
   deliveryWindow DeliveryWindow?
-  id            String         @id @default(cuid())
-  orderId       String
-  deliveryDate  DateTime
-  status        DeliveryStatus @default(PREPARING)
-  mealsIncluded String[]
-  driverName    String?
-  driverPhone   String?
-  trackingNotes String?
-  deliveredAt   DateTime?
 
-  // â”€â”€ Phase 10 â€” driver assignment + customer confirmation â”€â”€
+  // ── Phase 10 — driver assignment + customer confirmation ──
   assignedDriverId    String?
-  customerConfirmedAt DateTime?     // customer tapped "Yes, received"
-  customerIssueNote   String?       // set when customer reports a problem
+  customerConfirmedAt DateTime? // customer tapped "Yes, received"
+  customerIssueNote   String? // set when customer reports a problem
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  driver        Driver?        @relation(fields: [assignedDriverId], references: [id])
+  order  Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver Driver? @relation(fields: [assignedDriverId], references: [id])
 
   @@index([orderId])
   @@index([deliveryDate])
@@ -426,18 +433,38 @@ model Delivery {
   @@map("deliveries")
 }
 
-// â”€â”€ Phase 10 â€” delivery drivers (tokenized-link access; franchiseId reserved for franchise model) â”€â”€
+model ConsistencySnapshot {
+  id             String   @id @default(cuid())
+  userId         String
+  weekStart      DateTime @db.Date
+  score          Int
+  label          String
+  mealsPoints    Int      @default(0)
+  workoutsPoints Int      @default(0)
+  waterPoints    Int      @default(0)
+  weighInPoints  Int      @default(0)
+  noSkipPoints   Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([userId])
+  @@map("consistency_snapshots")
+}
+
+// ── Phase 10 — delivery drivers (tokenized-link access; franchiseId reserved for franchise model) ──
 model Driver {
   id          String   @id @default(cuid())
   name        String
   phone       String
-  accessToken String   @unique          // tokenized-link auth â€” opens /driver/[accessToken]
+  accessToken String   @unique // tokenized-link auth — opens /driver/[accessToken]
   isActive    Boolean  @default(true)
-  franchiseId String?                    // null = main Pune kitchen; set per-franchise later
+  franchiseId String? // null = main Pune kitchen; set per-franchise later
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  deliveries  Delivery[]
+  deliveries Delivery[]
 
   @@index([accessToken])
   @@index([franchiseId])
@@ -445,7 +472,7 @@ model Driver {
 }
 
 // ============================================================
-// ACTIVE PLAN (Phase 3 â€” DEPRECATED)
+// ACTIVE PLAN (Phase 3 — DEPRECATED)
 // ============================================================
 // Kept for backward compatibility. Migrate existing rows to
 // UserActivePlan, then drop this table in a future migration.
@@ -465,8 +492,8 @@ model ActivePlan {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  user        User            @relation(fields: [userId], references: [id])
-  product     MealPlanProduct @relation(fields: [productId], references: [id])
+  user    User            @relation(fields: [userId], references: [id])
+  product MealPlanProduct @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@index([endDate])
@@ -494,7 +521,7 @@ model BodyMetric {
   notes        String?
   createdAt    DateTime @default(now())
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([measuredAt])
@@ -502,7 +529,7 @@ model BodyMetric {
 }
 
 // ============================================================
-// PHASE 7 â€” EXERCISE LIBRARY
+// PHASE 7 — EXERCISE LIBRARY
 // ============================================================
 
 model Exercise {
@@ -518,7 +545,7 @@ model Exercise {
   instructions     String[]
   images           String[]
 
-  workoutExercises  WorkoutExercise[]
+  workoutExercises WorkoutExercise[]
 
   @@index([category])
   @@index([level])
@@ -539,39 +566,39 @@ model WorkoutSession {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exercises      WorkoutExercise[]
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
 
   @@index([userId, date])
   @@map("workout_sessions")
 }
 
 model WorkoutExercise {
-  id               String   @id @default(cuid())
+  id               String  @id @default(cuid())
   workoutSessionId String
   exerciseId       String
   orderInSession   Int
   notes            String?
 
-  workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
-  exercise         Exercise       @relation(fields: [exerciseId], references: [id])
-  sets             WorkoutSet[]
+  workoutSession WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  exercise       Exercise       @relation(fields: [exerciseId], references: [id])
+  sets           WorkoutSet[]
 
   @@map("workout_exercises")
 }
 
 model WorkoutSet {
-  id                String   @id @default(cuid())
+  id                String  @id @default(cuid())
   workoutExerciseId String
   setNumber         Int
   reps              Int?
   weightKg          Float?
   durationSecs      Int?
   distanceM         Float?
-  completed         Boolean  @default(false)
+  completed         Boolean @default(false)
   notes             String?
 
-  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
 
   @@map("workout_sets")
 }
@@ -610,7 +637,7 @@ model Account {
   id_token          String?
   session_state     String?
 
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -636,7 +663,7 @@ model Session {
 }
 
 // ============================================================
-// PHASE 6 â€” NUTRITION TRACKER
+// PHASE 6 — NUTRITION TRACKER
 // ============================================================
 
 model MealType {
@@ -650,52 +677,52 @@ model MealType {
 }
 
 model FoodItem {
-  id             String      @id @default(cuid())
+  id             String   @id @default(cuid())
   name           String
   brand          String?
   category       String?
   per100Calories Float
-  per100Protein  Float       @default(0)
-  per100Carbs    Float       @default(0)
-  per100Fat      Float       @default(0)
-  per100Fiber    Float       @default(0)
-  isCustom       Boolean     @default(false)
+  per100Protein  Float    @default(0)
+  per100Carbs    Float    @default(0)
+  per100Fat      Float    @default(0)
+  per100Fiber    Float    @default(0)
+  isCustom       Boolean  @default(false)
   userId         String?
-  createdAt      DateTime    @default(now())
+  createdAt      DateTime @default(now())
 
-  entries             FoodEntry[]
-  user                User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries FoodEntry[]
+  user    User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // â”€â”€ Phase 9 â€” Recipe system back-relation â”€â”€
-  recipeIngredients   RecipeIngredient[]
+  // ── Phase 9 — Recipe system back-relation ──
+  recipeIngredients RecipeIngredient[]
 
   @@index([name])
   @@map("food_items")
 }
 
 model FoodEntry {
-  id         String    @id @default(cuid())
+  id         String   @id @default(cuid())
   userId     String
   foodItemId String
   mealTypeId String
-  entryDate  DateTime  @db.Date
+  entryDate  DateTime @db.Date
   quantity   Float
   calories   Float
   protein    Float
   carbs      Float
   fat        Float
-  fiber      Float     @default(0)
+  fiber      Float    @default(0)
   notes      String?
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime @default(now())
 
-  // â”€â”€ Phase 9 FIX: back-reference to MealLog â”€â”€
+  // ── Phase 9 FIX: back-reference to MealLog ──
   // null = manually logged entry; set = auto-created from MealLog confirmation
-  mealLogId  String?   @unique
-  mealLog    MealLog?  @relation(fields: [mealLogId], references: [id])
+  mealLogId String?  @unique
+  mealLog   MealLog? @relation(fields: [mealLogId], references: [id])
 
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  foodItem   FoodItem  @relation(fields: [foodItemId], references: [id])
-  mealType   MealType  @relation(fields: [mealTypeId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItem FoodItem @relation(fields: [foodItemId], references: [id])
+  mealType MealType @relation(fields: [mealTypeId], references: [id])
 
   @@index([userId, entryDate])
   @@map("food_entries")
@@ -712,7 +739,7 @@ model NutritionGoal {
   waterMl   Int      @default(2500)
   updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("nutrition_goals")
 }
@@ -724,14 +751,14 @@ model WaterLog {
   amountMl  Int
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, entryDate])
   @@map("water_logs")
 }
 
 // ============================================================
-// PHASE 9A â€” RECIPE DATABASE
+// PHASE 9A — RECIPE DATABASE
 // ============================================================
 
 // Core unit of the platform. Every meal, every plan, every PDF, every SOP.
@@ -740,67 +767,67 @@ model Recipe {
   name             String
   slug             String     @unique
   description      String
-  shortDescription String     // one-line tagline for cards
-  cuisineType      String     // NorthIndian, SouthIndian, Continental, etc.
-  mealType         MealSlot   // BREAKFAST, LUNCH, DINNER, SNACK
-  dietaryTags      String[]   // VEG, EGG, NON_VEG, JAIN, VEGAN
-  planCategories   String[]   // weight_loss, pcos, diabetic, sports_strength, etc.
+  shortDescription String // one-line tagline for cards
+  cuisineType      String // NorthIndian, SouthIndian, Continental, etc.
+  mealType         MealSlot // BREAKFAST, LUNCH, DINNER, SNACK
+  dietaryTags      String[] // VEG, EGG, NON_VEG, JAIN, VEGAN
+  planCategories   String[] // weight_loss, pcos, diabetic, sports_strength, etc.
   tierAvailability PlanTier[] // STANDARD, PREMIUM, LUXURY
-  servingSizeGrams Int        // canonical serving size in grams
+  servingSizeGrams Int // canonical serving size in grams
   prepTimeMins     Int
   cookTimeMins     Int
-  difficulty       String     // easy, medium, hard
+  difficulty       String // easy, medium, hard
   equipmentNeeded  String[]
   allergens        String[]
-  shelfLifeHours   Int        // how long after cooking
-  packagingType    String     // box, container, pouch
-  kitchenStation   String     // hot_kitchen, cold_prep, assembly
-  costPerServing   Decimal?   // ingredient cost â€” for margin tracking
-  seasonTags       String[]   // monsoon, summer, winter, all_year
-  rotationGroup    Int        // 1-60 â€” ensures no repeat in 60-day cycle
+  shelfLifeHours   Int // how long after cooking
+  packagingType    String // box, container, pouch
+  kitchenStation   String // hot_kitchen, cold_prep, assembly
+  costPerServing   Decimal? // ingredient cost — for margin tracking
+  seasonTags       String[] // monsoon, summer, winter, all_year
+  rotationGroup    Int // 1-60 — ensures no repeat in 60-day cycle
   imageUrl         String?
   videoUrl         String?
   isActive         Boolean    @default(true)
   isFeatured       Boolean    @default(false)
-  swapAwayCount           Int        @default(0)  // incremented on meal swap request
-  avgRating               Float?                  // recomputed from MealLog ratings
+  swapAwayCount    Int        @default(0) // incremented on meal swap request
+  avgRating        Float? // recomputed from MealLog ratings
 
-  // Macros â€” per canonical serving
+  // Macros — per canonical serving
   caloriesPerServing Int
   proteinGrams       Decimal
   carbsGrams         Decimal
   fatGrams           Decimal
   fibreGrams         Decimal
 
-  // Macros â€” per 100g (computed + stored for fast lookup)
-  caloriesPer100g    Int
-  proteinPer100g     Decimal
-  carbsPer100g       Decimal
-  fatPer100g         Decimal
-  fibrePer100g       Decimal
+  // Macros — per 100g (computed + stored for fast lookup)
+  caloriesPer100g Int
+  proteinPer100g  Decimal
+  carbsPer100g    Decimal
+  fatPer100g      Decimal
+  fibrePer100g    Decimal
 
-  // Micronutrients per serving â€” key ones for medical plans
-  ironMg           Decimal?
-  calciumMg        Decimal?
-  vitaminDMcg      Decimal?
-  vitaminCMg       Decimal?
-  vitaminB12Mcg    Decimal?
-  folateMcg        Decimal?
-  sodiumMg         Decimal?
-  potassiumMg      Decimal?
-  omegaThreeGrams  Decimal?
-  zincMg           Decimal?
-  magnesiumMg      Decimal?
-  seleniumMcg      Decimal?
-  glycaemicIndex   Int?       // critical for diabetic + PCOS plans
+  // Micronutrients per serving — key ones for medical plans
+  ironMg          Decimal?
+  calciumMg       Decimal?
+  vitaminDMcg     Decimal?
+  vitaminCMg      Decimal?
+  vitaminB12Mcg   Decimal?
+  folateMcg       Decimal?
+  sodiumMg        Decimal?
+  potassiumMg     Decimal?
+  omegaThreeGrams Decimal?
+  zincMg          Decimal?
+  magnesiumMg     Decimal?
+  seleniumMcg     Decimal?
+  glycaemicIndex  Int? // critical for diabetic + PCOS plans
 
-  ingredients    RecipeIngredient[]
-  steps          RecipeStep[]
-  scheduleSlots  PlanScheduleSlot[]
-  mealLogs       MealLog[]
+  ingredients   RecipeIngredient[]
+  steps         RecipeStep[]
+  scheduleSlots PlanScheduleSlot[]
+  mealLogs      MealLog[]
 
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([mealType])
   @@index([rotationGroup])
@@ -809,103 +836,103 @@ model Recipe {
 
 // Links a recipe to a food_item. Quantities in raw grams.
 model RecipeIngredient {
-  id                 String   @id @default(cuid())
+  id                 String  @id @default(cuid())
   recipeId           String
   foodItemId         String
-  quantityGrams      Decimal  // raw weight before cooking
-  cookedWeightFactor Decimal  @default(1.0) // cooked/raw ratio â€” rice: 2.5, chicken: 0.75
-  prepNote           String?  // "soaked overnight", "finely chopped", "boiled"
-  isOptional         Boolean  @default(false)
-  substituteFor      String?  // ingredient id this can replace
+  quantityGrams      Decimal // raw weight before cooking
+  cookedWeightFactor Decimal @default(1.0) // cooked/raw ratio — rice: 2.5, chicken: 0.75
+  prepNote           String? // "soaked overnight", "finely chopped", "boiled"
+  isOptional         Boolean @default(false)
+  substituteFor      String? // ingredient id this can replace
   orderInRecipe      Int
 
-  recipe             Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  foodItem           FoodItem @relation(fields: [foodItemId], references: [id])
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  foodItem FoodItem @relation(fields: [foodItemId], references: [id])
 
   @@map("recipe_ingredients")
 }
 
-// Step-by-step SOP â€” scales to franchise kitchen.
+// Step-by-step SOP — scales to franchise kitchen.
 model RecipeStep {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   recipeId     String
   stepNumber   Int
-  title        String   // "Marinate the chicken"
-  instruction  String   // full instruction text
+  title        String // "Marinate the chicken"
+  instruction  String // full instruction text
   durationMins Int?
-  temperatureC Int?     // for baking/cooking temp
-  technique    String?  // "saute", "steam", "grill", "blend"
-  kitchenNote  String?  // note for kitchen staff only
+  temperatureC Int? // for baking/cooking temp
+  technique    String? // "saute", "steam", "grill", "blend"
+  kitchenNote  String? // note for kitchen staff only
   imageUrl     String?
 
-  recipe       Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@map("recipe_steps")
 }
 
 // ============================================================
-// PHASE 9A â€” MEAL PLAN SYSTEM
+// PHASE 9A — MEAL PLAN SYSTEM
 // ============================================================
 
-// Plan definition â€” the full catalogue of FitFuel plans.
+// Plan definition — the full catalogue of FitFuel plans.
 model MealPlan {
-  id               String       @id @default(cuid())
-  name             String
-  slug             String       @unique
-  category         PlanCategory // STANDARD, LIFESTYLE_MEDICAL, SPORTS
-  subCategory      String       // weight_loss, pcos, diabetic, strength, etc.
-  displayName      String       // "Weight Loss â€” Non Vegetarian"
-  tagline          String
-  description      String
-  longDescription  String       // full sales page description
-  whoIsItFor       String       // target customer description
-  keyPrinciples    String[]     // nutritional principles bullet points
-  whatIsAvoided    String[]     // excluded ingredients / foods
-  dietaryVariant   DietVariant  // VEG, EGG, NON_VEG, JAIN, VEGAN
-  tier             PlanTier     // STANDARD, PREMIUM, LUXURY
-  avgCaloriesPerDay   Int
-  avgProteinGrams     Int
-  avgCarbsGrams       Int
-  avgFatGrams         Int
-  cycleLengthDays     Int        @default(30) // 30-day no-repeat
-  mealsPerDay         Int        @default(4)  // B+L+D+S
-  nutritionistName    String?
-  nutritionistCred    String?    // "MSc Nutrition, RD"
-  nutritionistBio     String?
-  medicalDisclaimer   String?    // for lifestyle / medical plans
-  isActive            Boolean    @default(false) // flip to true when ready to sell
-  isFeatured          Boolean    @default(false)
-  sortOrder           Int        @default(0)
-  imageUrl            String?
-  accentColor         String?    // hex â€” for plan page theming
+  id                String       @id @default(cuid())
+  name              String
+  slug              String       @unique
+  category          PlanCategory // STANDARD, LIFESTYLE_MEDICAL, SPORTS
+  subCategory       String // weight_loss, pcos, diabetic, strength, etc.
+  displayName       String // "Weight Loss — Non Vegetarian"
+  tagline           String
+  description       String
+  longDescription   String // full sales page description
+  whoIsItFor        String // target customer description
+  keyPrinciples     String[] // nutritional principles bullet points
+  whatIsAvoided     String[] // excluded ingredients / foods
+  dietaryVariant    DietVariant // VEG, EGG, NON_VEG, JAIN, VEGAN
+  tier              PlanTier // STANDARD, PREMIUM, LUXURY
+  avgCaloriesPerDay Int
+  avgProteinGrams   Int
+  avgCarbsGrams     Int
+  avgFatGrams       Int
+  cycleLengthDays   Int          @default(30) // 30-day no-repeat
+  mealsPerDay       Int          @default(4) // B+L+D+S
+  nutritionistName  String?
+  nutritionistCred  String? // "MSc Nutrition, RD"
+  nutritionistBio   String?
+  medicalDisclaimer String? // for lifestyle / medical plans
+  isActive          Boolean      @default(false) // flip to true when ready to sell
+  isFeatured        Boolean      @default(false)
+  sortOrder         Int          @default(0)
+  imageUrl          String?
+  accentColor       String? // hex — for plan page theming
 
   // Links to legacy pricing (MealPlanProduct) for checkout compatibility
-  productId           String?
-  product             MealPlanProduct? @relation(fields: [productId], references: [id])
+  productId String?
+  product   MealPlanProduct? @relation(fields: [productId], references: [id])
 
-  scheduleSlots       PlanScheduleSlot[]
-  userActivePlans     UserActivePlan[]
-  planPrices          PlanPrice[]        // â† NEW: direct pricing links
+  scheduleSlots   PlanScheduleSlot[]
+  userActivePlans UserActivePlan[]
+  planPrices      PlanPrice[] // ← NEW: direct pricing links
 
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([category])
   @@index([subCategory])
   @@map("meal_plans")
 }
 
-// 30-day rotating schedule. Day â†’ Meal Slot â†’ Recipe.
+// 30-day rotating schedule. Day → Meal Slot → Recipe.
 model PlanScheduleSlot {
   id                String   @id @default(cuid())
   mealPlanId        String
-  dayNumber         Int      // 1â€“60
+  dayNumber         Int // 1–60
   mealSlot          MealSlot // BREAKFAST, LUNCH, DINNER, SNACK
   recipeId          String
   servingMultiplier Decimal  @default(1.0) // adjust portion for this slot
 
-  mealPlan          MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
-  recipe            Recipe   @relation(fields: [recipeId], references: [id])
+  mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  recipe   Recipe   @relation(fields: [recipeId], references: [id])
 
   @@unique([mealPlanId, dayNumber, mealSlot])
   @@index([mealPlanId, dayNumber])
@@ -914,65 +941,65 @@ model PlanScheduleSlot {
 
 // Tracks which plan a user is on and which day they're currently on.
 model UserActivePlan {
+  id             String         @id @default(cuid())
+  userId         String
+  mealPlanId     String
+  orderId        String?
+  startDate      DateTime
+  endDate        DateTime
+  currentDay     Int            @default(1) // auto-increments daily
+  status         String         @default("active") // active, paused, completed, cancelled
+  pausedUntil    DateTime?
+  skipDates      DateTime[] // dates user skipped delivery
+  calorieTarget  Int? // personalised — overrides plan default
+  proteinTarget  Int?
+  carbTarget     Int?
+  fatTarget      Int?
   deliveryWindow DeliveryWindow @default(MORNING)
-  id            String     @id @default(cuid())
-  userId        String
-  mealPlanId    String
-  orderId       String?
-  startDate     DateTime
-  endDate       DateTime
-  currentDay    Int        @default(1) // auto-increments daily
-  status        String     @default("active") // active, paused, completed, cancelled
-  pausedUntil   DateTime?
-  skipDates     DateTime[] // dates user skipped delivery
-  calorieTarget Int?       // personalised â€” overrides plan default
-  proteinTarget Int?
-  carbTarget    Int?
-  fatTarget     Int?
 
-  // â”€â”€ NEW: denormalised from Order for fast dashboard queries â”€â”€
-  duration      PlanDuration?
-  mealsPerDay   MealsPerDay?
+  // ── NEW: denormalised from Order for fast dashboard queries ──
+  duration    PlanDuration?
+  mealsPerDay MealsPerDay?
 
-  // â”€â”€ NEW: proper relation to Order â”€â”€
-  order         Order?     @relation(fields: [orderId], references: [id])
+  // ── NEW: proper relation to Order ──
+  order Order? @relation(fields: [orderId], references: [id])
 
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mealPlan      MealPlan   @relation(fields: [mealPlanId], references: [id])
-  mealLogs      MealLog[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan MealPlan  @relation(fields: [mealPlanId], references: [id])
+  mealLogs MealLog[]
 
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, status])
   @@index([endDate])
   @@map("user_active_plans")
 }
 
-// Did the user eat today's planned meal? Links plan â†’ nutrition tracker.
+// Did the user eat today's planned meal? Links plan → nutrition tracker.
 model MealLog {
-  id               String         @id @default(cuid())
+  id               String    @id @default(cuid())
   userId           String
   userActivePlanId String
   recipeId         String
   mealSlot         MealSlot
-  logDate          DateTime       @db.Date
-  plannedGrams     Int            // what the plan prescribed
-  actualGrams      Int?           // what user actually ate (adjusted)
-  confirmedAt      DateTime?      // when user tapped "I ate this"
-  skipped          Boolean        @default(false)
-  rating           Int?           // 1-5 meal feedback
+  logDate          DateTime  @db.Date
+  plannedGrams     Int // what the plan prescribed
+  actualGrams      Int? // what user actually ate (adjusted)
+  confirmedAt      DateTime? // when user tapped "I ate this"
+  skipped          Boolean   @default(false)
+  rating           Int? // 1-5 meal feedback
   ratingNote       String?
 
-  // â”€â”€ Phase 9 FIX: bidirectional relation to FoodEntry â”€â”€
-  // MealLog creates FoodEntry â†’ FoodEntry stores mealLogId as back-reference
-  foodEntry        FoodEntry?
+  // ── Phase 9 FIX: bidirectional relation to FoodEntry ──
+  // MealLog creates FoodEntry → FoodEntry stores mealLogId as back-reference
+  foodEntry FoodEntry?
 
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  activePlan       UserActivePlan @relation(fields: [userActivePlanId], references: [id])
-  recipe           Recipe         @relation(fields: [recipeId], references: [id])
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activePlan UserActivePlan @relation(fields: [userActivePlanId], references: [id])
+  recipe     Recipe         @relation(fields: [recipeId], references: [id])
 
-  createdAt        DateTime       @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, logDate])
   @@index([userActivePlanId])
@@ -980,44 +1007,39 @@ model MealLog {
 }
 
 // ============================================================
-// PHASE 9D â€” EXERCISE SCHEDULE (linked to plan categories)
+// PHASE 9D — EXERCISE SCHEDULE (linked to plan categories)
 // ============================================================
 
 // Workout program linked to a meal plan type / category.
 model ExerciseSchedule {
   id                  String   @id @default(cuid())
-  mealPlanCategory    String   // weight_loss, muscle_gain, pcos, etc.
+  mealPlanCategory    String // weight_loss, muscle_gain, pcos, etc.
   tier                PlanTier
-  name                String   // "Weight Loss 5-Day Program"
+  name                String // "Weight Loss 5-Day Program"
   description         String
-  weeklyStructure     Json     // { mon: ["chest", "triceps"], tue: ["cardio"], ... }
+  weeklyStructure     Json // { mon: ["chest", "triceps"], tue: ["cardio"], ... }
   daysPerWeek         Int
   sessionDurationMins Int
 
-  workoutDays         ExerciseScheduleDay[]
+  workoutDays ExerciseScheduleDay[]
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([mealPlanCategory])
   @@map("exercise_schedules")
 }
 
 model ExerciseScheduleDay {
-  id                String           @id @default(cuid())
+  id                String  @id @default(cuid())
   scheduleId        String
-  dayOfWeek         String           // monday, tuesday, ... or rest
-  focusArea         String           // "Upper body strength", "LISS Cardio", "Rest + Mobility"
-  exercises         Json             // [{ exerciseId, sets, reps, restSecs, notes }]
+  dayOfWeek         String // monday, tuesday, ... or rest
+  focusArea         String // "Upper body strength", "LISS Cardio", "Rest + Mobility"
+  exercises         Json // [{ exerciseId, sets, reps, restSecs, notes }]
   estimatedCalories Int
-  isRestDay         Boolean          @default(false)
+  isRestDay         Boolean @default(false)
 
-  schedule          ExerciseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  schedule ExerciseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@map("exercise_schedule_days")
-}
-
-enum DeliveryWindow {
-  MORNING
-  EVENING
 }
