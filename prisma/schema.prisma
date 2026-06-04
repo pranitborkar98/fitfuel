@@ -407,14 +407,40 @@ model Delivery {
   driverPhone   String?
   trackingNotes String?
   deliveredAt   DateTime?
+
+  // ── Phase 10 — driver assignment + customer confirmation ──
+  assignedDriverId    String?
+  customerConfirmedAt DateTime?     // customer tapped "Yes, received"
+  customerIssueNote   String?       // set when customer reports a problem
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver        Driver?        @relation(fields: [assignedDriverId], references: [id])
 
   @@index([orderId])
   @@index([deliveryDate])
+  @@index([assignedDriverId])
   @@map("deliveries")
+}
+
+// ── Phase 10 — delivery drivers (tokenized-link access; franchiseId reserved for franchise model) ──
+model Driver {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  accessToken String   @unique          // tokenized-link auth — opens /driver/[accessToken]
+  isActive    Boolean  @default(true)
+  franchiseId String?                    // null = main Pune kitchen; set per-franchise later
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  deliveries  Delivery[]
+
+  @@index([accessToken])
+  @@index([franchiseId])
+  @@map("drivers")
 }
 
 // ============================================================
