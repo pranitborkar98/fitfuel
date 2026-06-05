@@ -30,6 +30,25 @@ function genOrderNumber(): string {
   return `FF-PAYU-${ymd}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
+
+// Safe customer upsert — phone is @unique, so never assign a phone that
+// already belongs to a different user (that caused P2002 on update).
+async function upsertCustomer(email: string, phone: string, name: string) {
+  let user = await (prisma as any).user.findFirst({ where: { email } });
+  if (!user && phone) user = await (prisma as any).user.findFirst({ where: { phone } });
+
+  const phoneOwner = phone ? await (prisma as any).user.findFirst({ where: { phone } }) : null;
+
+  if (user) {
+    const data: any = { name };
+    if (phone && (!phoneOwner || phoneOwner.id === user.id)) data.phone = phone;
+    return (prisma as any).user.update({ where: { id: user.id }, data });
+  }
+  const data: any = { email, name };
+  if (phone && !phoneOwner) data.phone = phone;
+  return (prisma as any).user.create({ data });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -63,16 +82,8 @@ export async function POST(req: NextRequest) {
       const gst      = total - subtotal;
       const window   = deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
 
-      // upsert user by email
-      const existingUser = await (prisma as any).user.findFirst({ where: { email } });
-      const user = existingUser
-        ? await (prisma as any).user.update({
-            where: { id: existingUser.id },
-            data:  { phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
-          })
-        : await (prisma as any).user.create({
-            data: { email, phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
-          });
+      // upsert user (phone-collision safe)
+      const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
 
       // address
       const addr = await (prisma as any).address.create({
