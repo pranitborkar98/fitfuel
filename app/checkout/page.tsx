@@ -296,27 +296,29 @@ function CheckoutInner() {
   }
 
   async function handlePayU() {
-    setLoading(true);
-    const { address: deliveryAddress, city, pincode } = getDeliveryAddress();
-    try {
-      const res = await fetch("/api/payments/payu", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstname: form.firstname, email: form.email, phone: form.phone,
-          amount: priceGST.toFixed(2), productinfo,
-          address: `${deliveryAddress}, ${city} - ${pincode}`,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to initiate payment");
-      const data = await res.json();
-      setPayuData(data);
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong. Please try WhatsApp ordering instead.");
-      setLoading(false);
-    }
+  setLoading(true);
+  const { address: deliveryAddress, city, pincode } = getDeliveryAddress();
+  try {
+    const res = await fetch("/api/payments/payu", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstname: form.firstname, lastname: form.lastname,
+        email: form.email, phone: form.phone,
+        address: deliveryAddress, city, pincode,
+        diet, dur, meal, price: rawPrice, deliveryWindow,
+        amount: priceGST.toFixed(2), productinfo,
+      }),
+    });
+    if (!res.ok) throw new Error("Failed to initiate payment");
+    const data = await res.json();
+    setPayuData(data);
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong. Please try WhatsApp ordering instead.");
+    setLoading(false);
   }
+}
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

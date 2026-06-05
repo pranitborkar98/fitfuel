@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/orders/cod/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
         userId: user.id, addressId: addr.id, orderNumber,
         status: "CONFIRMED", subtotalRs: subtotal, gstRs: gst, totalRs: total,
         paymentMethod: "CASH_ON_DELIVERY", paymentStatus: "PENDING",
-        notes: JSON.stringify({ diet, dur, meal, isJain: diet === "jain" }),
+        notes: JSON.stringify({ diet, dur, meal, deliveryWindow: deliveryWindow === "EVENING" ? "EVENING" : "MORNING", isJain: diet === "jain" }),
       },
     });
 
@@ -102,23 +103,32 @@ export async function POST(req: NextRequest) {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + days);
 
-    const mealPlan = await (prisma as any).mealPlan.findFirst();
+    // ── FIX (Decision: always attach to weight-loss-veg, the only active plan) ──
+    // Previously: prisma.mealPlan.findFirst() → returned an ARBITRARY plan.
+    const mealPlan =
+      (await (prisma as any).mealPlan.findUnique({ where: { slug: "weight-loss-veg" } })) ??
+      (await (prisma as any).mealPlan.findFirst({ where: { isActive: true } })) ??
+      (await (prisma as any).mealPlan.findFirst());
 
-    await (prisma as any).userActivePlan.create({
-      data: {
-        userId: user.id,
-        mealPlanId: mealPlan?.id ?? null,
-        orderId: order.id,
-        startDate,
-        endDate,
-        currentDay: 1,
-        status: "active",
-        mealsPerDay: mealEnum as any,
-        duration: durEnum as any,
-        deliveryWindow: (deliveryWindow === "EVENING" ? "EVENING" : "MORNING") as any,
-        skipDates: [],
-      },
-    });
+    if (mealPlan) {
+      await (prisma as any).userActivePlan.create({
+        data: {
+          userId: user.id,
+          mealPlanId: mealPlan.id,
+          orderId: order.id,
+          startDate,
+          endDate,
+          currentDay: 1,
+          status: "active",
+          mealsPerDay: mealEnum as any,
+          duration: durEnum as any,
+          deliveryWindow: (deliveryWindow === "EVENING" ? "EVENING" : "MORNING") as any,
+          skipDates: [],
+        },
+      });
+    } else {
+      console.error("[COD] No meal plan found to attach — manual fix needed", { orderNumber });
+    }
 
     console.log("[COD Order saved]", { orderNumber, userId: user.id, total });
 

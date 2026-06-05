@@ -1,43 +1,108 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/payments/payu/route.ts
+// PayU initiation — builds the signed hash AND creates a PENDING_PAYMENT order
+// keyed by txnid so the success callback can complete it after the redirect.
+// Hash formula unchanged (udf fields empty) — success-route verification still matches.
+
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-
-// ─── PayU hash — MUST be server-side only, never expose SALT to browser ───────
-// Formula: key|txnid|amount|productinfo|firstname|email|||||||||||salt
-// Then SHA512 of that string
+import { prisma } from "@/lib/prisma";
 
 const PAYU_KEY  = process.env.PAYU_MERCHANT_KEY!;
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const PAYU_URL  = "https://secure.payu.in/_payment"; // production
 
+const DIET_MAP: Record<string, string> = {
+  veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
+};
+const DUR_MAP: Record<string, string> = {
+  trial: "TRIAL_DAY", weekly: "WEEKLY", biweekly: "BI_WEEKLY",
+  monthly_ex: "MONTHLY_EXCL_WEEKENDS", monthly: "ONE_MONTH",
+  two_month: "TWO_MONTH", three_month: "THREE_MONTH",
+};
+const MEAL_MAP: Record<string, string> = {
+  bl: "BREAKFAST_LUNCH", sd: "SNACK_DINNER", all: "ALL_FOUR",
+};
+
+function genOrderNumber(): string {
+  const d = new Date();
+  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  return `FF-PAYU-${ymd}-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
     const {
-      firstname,
-      email,
-      phone,
-      amount,       // in INR, string e.g. "7560.00"
-      productinfo,  // e.g. "Monthly excl. weekends · Snack + Dinner · Vegetarian"
-      address,
+      firstname, lastname, email, phone,
+      address, city, pincode,
+      diet, dur, meal, price, deliveryWindow,
+      amount,       // string e.g. "7938.00" — total incl GST, what PayU charges
+      productinfo,
     } = body;
 
-    // Validate required fields
     if (!firstname || !email || !phone || !amount || !productinfo) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Generate unique transaction ID
     const txnid = `FF${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-    // Build hash string — PayU formula exactly
+    // ── Hash (unchanged formula — all udf empty) ──
     const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${PAYU_SALT}`;
     const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
-    // Return all params needed for the PayU form POST
+    // ── Create the PENDING order now, keyed by txnid ──
+    // Only if we have real plan params (skip for test mode / partial payloads).
+    const dietEnum = DIET_MAP[diet];
+    const durEnum  = DUR_MAP[dur];
+    const mealEnum = MEAL_MAP[meal];
+
+    if (dietEnum && durEnum && mealEnum && price) {
+      const total    = Math.round(Number(amount));   // == what PayU charges
+      const subtotal = Math.round(Number(price));     // pre-GST
+      const gst      = total - subtotal;
+      const window   = deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
+
+      // upsert user by email
+      const existingUser = await (prisma as any).user.findFirst({ where: { email } });
+      const user = existingUser
+        ? await (prisma as any).user.update({
+            where: { id: existingUser.id },
+            data:  { phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+          })
+        : await (prisma as any).user.create({
+            data: { email, phone, name: `${firstname}${lastname ? " " + lastname : ""}` },
+          });
+
+      // address
+      const addr = await (prisma as any).address.create({
+        data: { userId: user.id, line1: address ?? "", area: city ?? "Pune", city: city ?? "Pune", pincode: pincode ?? "" },
+      });
+
+      // order (PENDING_PAYMENT) + item + payment, all tagged with txnid.
+      // Plan params + chosen delivery window are stashed in notes for the success callback.
+      await (prisma as any).order.create({
+        data: {
+          userId: user.id, addressId: addr.id, orderNumber: genOrderNumber(),
+          status: "PENDING_PAYMENT", subtotalRs: subtotal, gstRs: gst, totalRs: total,
+          paymentMethod: "PAYU", paymentStatus: "PENDING", payuTxnId: txnid,
+          notes: JSON.stringify({ diet, dur, meal, deliveryWindow: window, isJain: diet === "jain" }),
+          items: {
+            create: {
+              productId: null, diet: dietEnum, duration: durEnum, mealsPerDay: mealEnum,
+              priceRs: subtotal, gstRs: gst, totalRs: total, quantity: 1,
+            },
+          },
+          payment: {
+            create: { method: "PAYU", status: "PENDING", amountRs: total, payuTxnId: txnid },
+          },
+        },
+      });
+    }
+
     return NextResponse.json({
-      payuUrl:     PAYU_URL,
-      key:         PAYU_KEY,
+      payuUrl:          PAYU_URL,
+      key:              PAYU_KEY,
       txnid,
       amount,
       productinfo,
@@ -45,12 +110,12 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       hash,
-      surl:        `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`,
-      furl:        `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`,
+      surl:             `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`,
+      furl:             `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`,
       service_provider: "payu_paisa",
     });
   } catch (err) {
-    console.error("[PayU hash error]", err);
+    console.error("[PayU init error]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

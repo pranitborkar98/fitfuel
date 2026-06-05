@@ -1,11 +1,28 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/payments/payu/success/route.ts
+// PayU posts here after payment. Verify hash, then COMPLETE the pending order
+// that the init route created (keyed by txnid): mark paid + create UserActivePlan
+// so the delivery generator and dashboard pick the customer up.
+
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { prisma } from "@/lib/prisma";
 
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
 
-// PayU POSTs to this URL after successful payment
-// Verify hash BEFORE trusting anything
+const DUR_DAYS: Record<string, number> = {
+  TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14,
+  MONTHLY_EXCL_WEEKENDS: 26, ONE_MONTH: 30, TWO_MONTH: 60, THREE_MONTH: 90,
+};
+const DUR_MAP: Record<string, string> = {
+  trial: "TRIAL_DAY", weekly: "WEEKLY", biweekly: "BI_WEEKLY",
+  monthly_ex: "MONTHLY_EXCL_WEEKENDS", monthly: "ONE_MONTH",
+  two_month: "TWO_MONTH", three_month: "THREE_MONTH",
+};
+const MEAL_MAP: Record<string, string> = {
+  bl: "BREAKFAST_LUNCH", sd: "SNACK_DINNER", all: "ALL_FOUR",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,8 +37,7 @@ export async function POST(req: NextRequest) {
     const hash        = formData.get("hash")        as string;
     const mihpayid    = formData.get("mihpayid")    as string;
 
-    // ── Verify hash — PayU reverse formula ──────────────────────────────────
-    // Reverse: salt|status|||||||||||email|firstname|productinfo|amount|txnid|key
+    // ── Verify hash — PayU reverse formula (udf empty, unchanged) ──
     const reverseHash  = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${process.env.PAYU_MERCHANT_KEY}`;
     const expectedHash = crypto.createHash("sha512").update(reverseHash).digest("hex");
 
@@ -29,22 +45,71 @@ export async function POST(req: NextRequest) {
       console.error("[PayU] Hash mismatch — possible tampering", { txnid });
       return NextResponse.redirect(`${BASE_URL}/checkout?error=invalid_hash`, 303);
     }
-
     if (status !== "success") {
       return NextResponse.redirect(`${BASE_URL}/checkout?error=payment_failed&txnid=${txnid}`, 303);
     }
 
-    // ── Payment verified — TODO Phase 3: save order to DB ───────────────────
-    // import { prisma } from "@/lib/prisma"
-    // await prisma.orders.create({ ... })
-    // await prisma.payments.create({ txnid, mihpayid, amount, status: "paid" })
+    // ── Find the pending order created at init ──
+    const order = await (prisma as any).order.findFirst({ where: { payuTxnId: txnid } });
 
-    console.log("[PayU] Payment SUCCESS", { txnid, mihpayid, amount, email });
+    if (!order) {
+      // Payment is valid but no pending order (e.g. test txn or legacy flow).
+      console.warn("[PayU] success but no pending order for txnid", txnid);
+      return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`, 303);
+    }
 
-    // 303 = See Other — forces browser to GET the confirmation page (not POST)
+    // ── Idempotency: PayU can hit surl more than once ──
+    if (order.status === "CONFIRMED") {
+      return NextResponse.redirect(
+        `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`, 303
+      );
+    }
+
+    const meta = (() => { try { return JSON.parse(order.notes ?? "{}"); } catch { return {}; } })();
+    const durEnum  = DUR_MAP[meta.dur]  ?? "ONE_MONTH";
+    const mealEnum = MEAL_MAP[meta.meal] ?? "ALL_FOUR";
+    const window   = meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
+
+    // mark order + payment as paid
+    await (prisma as any).order.update({
+      where: { id: order.id },
+      data:  { status: "CONFIRMED", paymentStatus: "SUCCESS", payuPaymentId: mihpayid },
+    });
+    await (prisma as any).payment.update({
+      where: { orderId: order.id },
+      data:  { status: "SUCCESS", payuPaymentId: mihpayid, paidAt: new Date() },
+    });
+
+    // ── Resolve plan — always weight-loss-veg (only active plan at launch) ──
+    const mealPlan =
+      (await (prisma as any).mealPlan.findUnique({ where: { slug: "weight-loss-veg" } })) ??
+      (await (prisma as any).mealPlan.findFirst({ where: { isActive: true } })) ??
+      (await (prisma as any).mealPlan.findFirst());
+
+    if (mealPlan) {
+      const startDate = new Date();
+      const days = DUR_DAYS[durEnum] ?? 30;
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + days);
+
+      await (prisma as any).userActivePlan.create({
+        data: {
+          userId: order.userId,
+          mealPlanId: mealPlan.id,
+          orderId: order.id,
+          startDate, endDate, currentDay: 1, status: "active",
+          mealsPerDay: mealEnum, duration: durEnum,
+          deliveryWindow: window, skipDates: [],
+        },
+      });
+    } else {
+      console.error("[PayU] Paid but NO meal plan found to attach — manual fix needed", { txnid, order: order.orderNumber });
+    }
+
+    console.log("[PayU] SUCCESS + plan created", { txnid, mihpayid, order: order.orderNumber });
+
     return NextResponse.redirect(
-      `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`,
-      303
+      `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`, 303
     );
   } catch (err) {
     console.error("[PayU success handler error]", err);
