@@ -20,9 +20,11 @@ const companyLinks = [
 ];
 
 const legalLinks = [
-  { label: "Privacy Policy",     href: "/privacy" },
-  { label: "Terms & Conditions", href: "/terms"   },
-  { label: "Refund Policy",      href: "/refunds" },
+  { label: "Privacy Policy",     href: "/privacy"            },
+  { label: "Terms & Conditions", href: "/terms"              },
+  { label: "Refund Policy",      href: "/refund-policy"      },
+  { label: "Medical Disclaimer", href: "/medical-disclaimer" },
+  { label: "Allergen Policy",    href: "/allergen-policy"    },
 ];
 
 function InstagramIcon() {
