@@ -48,12 +48,13 @@ export async function GET(req: NextRequest) {
   const date = targetDay(req.nextUrl.searchParams.get("date"));
 
   const plans = await prisma.userActivePlan.findMany({
-    where: {
-      status: "active",
-      startDate: { lte: date },
-      endDate: { gte: date },
-      orderId: { not: null },
-    },
+   where: {
+  status: "active",
+  isDigital: false,           // Phase 13D: exclude cook-at-home digital buyers
+  startDate: { lte: date },
+  endDate: { gte: date },
+  orderId: { not: null },
+},
     select: {
       id: true,
       orderId: true,
