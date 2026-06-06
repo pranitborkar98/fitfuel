@@ -321,8 +321,11 @@ model PlanPrice {
   priceIsTaxInclusive Boolean @default(false)
   isDigital           Boolean @default(false)
 
+  bundle DigitalBundle @default(STARTER)
+
   @@unique([productId, diet, duration, mealsPerDay])
-  @@unique([mealPlanId, duration, mealsPerDay]) // ← NEW: unique for new plan pricing
+
+  @@unique([mealPlanId, duration, mealsPerDay, bundle])
   @@map("plan_prices")
 }
 
@@ -988,6 +991,8 @@ model UserActivePlan {
   @@index([endDate])
   isDigital Boolean @default(false)
 
+  bundle DigitalBundle @default(STARTER)
+
   @@map("user_active_plans")
 }
 
@@ -1105,4 +1110,9 @@ model CouponRedemption {
 
   @@index([couponId, userId])
   @@map("coupon_redemptions")
+}
+ 
+enum DigitalBundle {
+  STARTER
+  PRO
 }

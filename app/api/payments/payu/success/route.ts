@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     if (meta.isDigital) {
       const plan = await (prisma as any).mealPlan.findUnique({ where: { slug: meta.planSlug } });
       if (plan) {
-        await activateDigitalPlan({ orderId: order.id, mealPlanId: plan.id, durEnum: meta.durEnum ?? "ONE_MONTH" });
+        await activateDigitalPlan({ orderId: order.id, mealPlanId: plan.id, durEnum: meta.durEnum ?? "ONE_MONTH", bundle: meta.bundle ?? "STARTER" });
         console.log("[PayU] DIGITAL plan activated", { txnid, order: order.orderNumber });
       } else {
         console.error("[PayU] Digital paid but plan not found", { txnid, planSlug: meta.planSlug });
