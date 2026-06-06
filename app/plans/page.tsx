@@ -524,7 +524,29 @@ export default function PlansPage() {
             Start trial <ArrowRight size={14} />
           </button>
         </div>
-
+{/* ══ DIGITAL / COOK-AT-HOME BANNER ══ */}
+        <Link href="/plans/digital" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+          maxWidth: 900, margin: "0 auto 64px", padding: "20px 26px",
+          background: "linear-gradient(145deg,#111,#0e0e0e)", border: "1px solid rgba(132,204,22,0.22)",
+          borderRadius: 16, textDecoration: "none",
+        }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#f9fafb", marginBottom: 4 }}>
+              Not in Pune? Cook it yourself.
+            </div>
+            <div style={{ fontSize: 13.5, color: "#9ca3af" }}>
+              The full 30-day plan as a PDF — recipes, macros &amp; grocery list. From ₹299, anywhere in India.
+            </div>
+          </div>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 7, color: "#000", background: "#84cc16",
+            fontSize: 13, fontWeight: 900, padding: "11px 20px", borderRadius: 9, whiteSpace: "nowrap",
+            textTransform: "uppercase", letterSpacing: "0.05em",
+          }}>
+            View Digital Plans <ArrowRight size={14} />
+          </span>
+        </Link>
         {/* ══════════════════════════════════════════════════════════════════
             STANDARD TIER
         ══════════════════════════════════════════════════════════════════ */}

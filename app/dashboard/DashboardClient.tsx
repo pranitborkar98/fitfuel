@@ -61,6 +61,7 @@ type Meal = {
 
 type ActivePlan = {
   id: string;
+  isDigital?: boolean;
   currentDay: number;
   startDate: string;
   endDate: string;
@@ -828,6 +829,34 @@ export default function DashboardClient({
                 <p style={{ fontSize: 11, color: T.textMuted }}>of 30</p>
               </div>
             </div>
+
+            {activePlan.isDigital && activePlan.mealPlan?.slug && (
+              <a
+              href={`/api/digital-plan/${activePlan.mealPlan.slug}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  background: T.accent,
+                  color: "#0a0a0a",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  padding: "12px 0",
+                  borderRadius: 10,
+                  textDecoration: "none",
+                  marginBottom: 20,
+                }}
+              >
+                ⬇ Download my plan (PDF)
+              </a>
+            )}
+            
+
+
+            
 
             {/* Day progress bar */}
             <div style={{ marginBottom: 20 }}>

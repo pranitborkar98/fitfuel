@@ -802,6 +802,47 @@ export default function HomePage() {
         </div>
       </section>
 
+
+      {/* ══ COOK AT HOME / DIGITAL PLANS ══ */}
+      <section style={{ padding: "110px 0", background: "#060606" }}>
+        <div style={WRAP}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
+            <motion.div variants={fadeUp}><SectionLabel>Cook At Home</SectionLabel></motion.div>
+            <motion.h2 variants={fadeUp} className="ff-section-title" style={{ marginBottom: 16 }}>
+              Not in Pune? Get the plan as a PDF.
+            </motion.h2>
+            <motion.p variants={fadeUp} style={{ color: "#9ca3af", fontSize: 16, lineHeight: 1.7, maxWidth: 560, marginBottom: 40 }}>
+              The full 30-day plan — every recipe, macros, and a complete grocery list — delivered
+              as a downloadable PDF. Cook it yourself, anywhere in India. Log your meals and stay on track.
+            </motion.p>
+
+            <motion.div variants={fadeUp} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24,
+              background: "linear-gradient(145deg,#111,#0e0e0e)", border: "1px solid rgba(132,204,22,0.22)",
+              borderRadius: 20, padding: "32px 36px",
+            }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 6 }}>
+                  <span style={{ fontSize: 38, fontWeight: 900, color: "#a3e635" }}>₹299</span>
+                  <span style={{ fontSize: 18, color: "#6b7280", textDecoration: "line-through" }}>₹999</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: "#84cc16", padding: "3px 9px", borderRadius: 999 }}>70% OFF</span>
+                </div>
+                <p style={{ color: "#9ca3af", fontSize: 14 }}>1-month digital plan · all meals · instant download</p>
+              </div>
+              <Link href="/plans/digital" style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "#84cc16", color: "#000", fontSize: 14, fontWeight: 900,
+                padding: "14px 26px", borderRadius: 10, textDecoration: "none",
+                letterSpacing: "0.05em", textTransform: "uppercase",
+                boxShadow: "0 4px 20px rgba(132,204,22,0.35)",
+              }}>
+                Browse Digital Plans <ArrowRight size={15} />
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ══ HOW IT WORKS ══ */}
       <section id="how-it-works" style={{ padding: "110px 0" }}>
         <div style={WRAP}>

@@ -10,6 +10,9 @@ type ActivePlan = {
   startDate: string;
   endDate: string;
   daysRemaining: number;
+
+  isDigital: boolean;
+
   status: string;
   calorieTarget: number | null;
   proteinTarget: number | null;
@@ -76,6 +79,9 @@ export default async function DashboardPage() {
       calorieTarget: rawActivePlan.calorieTarget,
       proteinTarget: rawActivePlan.proteinTarget,
       mealPlan: rawActivePlan.mealPlan,
+
+
+      isDigital: rawActivePlan.isDigital,
     };
   }
 

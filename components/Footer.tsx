@@ -7,6 +7,7 @@ const planLinks = [
   { label: "Muscle Gain",     href: "/plans/muscle-gain"     },
   { label: "Weight Loss",     href: "/plans/weight-loss"     },
   { label: "Balanced Diet",   href: "/plans/balanced-diet"   },
+  { label: "Digital Plans (PDF)", href: "/plans/digital" },   // ← ADD THIS LINE
   { label: "Office Employee", href: "/plans/office-employee" },
   { label: "Jain Diet",       href: "/plans/jain-diet"       },
 ];
