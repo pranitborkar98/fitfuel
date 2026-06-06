@@ -1,11 +1,12 @@
-// app/api/digital-plan/[slug]/pdf/route.tsx — designed PDF; PRO appends the training plan.
-// OWNER/ADMIN can preview any plan as PRO. Workout is matched by subCategory (e.g. "weight_loss"), not the enum.
+// app/api/digital-plan/[slug]/pdf/route.tsx — designed, personalised PDF. PRO appends training.
+// OWNER/ADMIN preview any plan as PRO. Workout matched by subCategory. Personalisation from the buyer's profile.
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { DigitalPlanDocument } from "@/lib/digital-plan-pdf";
 import { getDigitalPlanData } from "@/lib/digital-plan";
 import { getWorkoutPlanData } from "@/lib/workout-plan";
+import { getPersonalization } from "@/lib/personalization";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -29,14 +30,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const data = await getDigitalPlanData(slug);
   if (!data) return new Response("Plan not found", { status: 404 });
 
-  // PRO gets the workout plan. Match ExerciseSchedule by the plan's subCategory ("weight_loss"), not the enum.
+  // Personalise from the signed-in user's profile + latest scale reading (falls back to plan defaults).
+  const person = await getPersonalization(data, { userId: session.user.id });
+
   let workout = null;
   if (bundle === "PRO") {
     const plan = await (prisma as any).mealPlan.findUnique({ where: { slug }, select: { subCategory: true, tier: true } });
     if (plan) workout = await getWorkoutPlanData(String(plan.subCategory), String(plan.tier));
   }
 
-  const buffer = await renderToBuffer(<DigitalPlanDocument data={data} workout={workout} bundle={bundle} />);
+  const buffer = await renderToBuffer(<DigitalPlanDocument data={data} workout={workout} bundle={bundle} person={person} />);
   return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",

@@ -145,7 +145,7 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | 10 | Live Delivery Tracking | 🔄 Core LIVE (Jun 4) — 3 items pending |
 | 11 | Progress Tracking + Charts + Consistency Score | ✅ Core LIVE (Jun 5) — charts deployed; snapshot cron LIVE (trend line renders once weeks accrue) |
 | 12 | AI Personal Trainer + Customer-Service Assistant (unified) | ⏸️ PARKED Jun 5 — scope FINALIZED (tight v1 + captured v2–v4 backlog, see scope doc) — build DEFERRED until data loop is fuller / later phases ship (Decision #85) |
-| 13 | Digital Meal Plans (PDF/downloadable) | ⏸️ Pending |
+| 13 | Digital Meal Plans (PDF/downloadable) | ✅ Core LIVE (Jun 6) — Starter ₹299 / Pro ₹699 tiers, designed PDF (cover→meals→grocery→Pro training→back cover), digital PayU checkout, coupon engine, owner/admin PDF preview. PDF rendered on-the-fly (Blob caching = TODO before scaling). Build green, pushed. |
 | 14 | Blog, FAQ, Testimonials | ⏸️ Pending |
 | 15 | Admin Panel + Kitchen Production Dashboard | ⏸️ Pending |
 | 16 | Notifications — n8n (WhatsApp Weekly Digest + Email) | ⏸️ Pending |
@@ -1529,6 +1529,12 @@ middleware.ts                                 ← admin route protection
 | 83 | **Proactive ≠ manipulative (NEW Jun 5)** | **Mood / churn intelligence is for genuine care and value-based retention, NOT engagement dark-patterns. Sustained low mood / distress routes toward a human + supportive resources — never exploited as a re-engagement hook.** |
 | 84 | **Reassignments out of Phase 12 (NEW Jun 5)** | **Exercise form-video library → Phase 7 (content; AI just links to it). Data export / DPDP Act / privacy / right-to-delete → Phase 20 launch compliance pass (audit trail of AI recs stays in 12-SAFE). Community / accountability / challenges → NEW Phase 22 (Social & Community). Keeps Phase 12 shippable.** |
 | 85 | **Phase 12 build PARKED (NEW Jun 5)** | **Scope finalised + fully captured; build intentionally DEFERRED until the data loop is fuller (more users, more logged meals/workouts/weight, v2-class surfaces) and the later phases ship. Rationale: AI quality is bounded by data depth (1 user, sparse logs today), the field moves monthly (build against newer/cheaper models later), and operational + revenue phases come first. Keep §8 forward-compatible hooks (receiving-API pattern, app-shell nav) in mind during intervening phases so the eventual build is a slot-in, not a retrofit. Re-confirm the v1 cut at build time. In-session workout mode pulled into v1 as the "best version" (Decision #80).** |
+| 86 | **Digital plan = a PlanPrice row, not a new product (NEW Jun 6)** | **No `Product` table. A digital SKU is a `PlanPrice` row with `isDigital = true` on the existing weight-loss-veg `MealPlan`, reusing `Order`/`OrderItem`/`Payment`. Fulfilment is a property of the price/active-plan (`isDigital`), NOT the plan type — the nightly delivery cron filters `isDigital: false` so digital buyers never generate phantom deliveries. `PlanCategory.DIGITAL` is now redundant.** |
+| 87 | **Digital tiers via a `bundle` dimension; Pro adds a REAL workout, not vapor (NEW Jun 6)** | **`DigitalBundle` enum (STARTER/PRO) on `PlanPrice` + `UserActivePlan`; unique key extended to `[mealPlanId, duration, mealsPerDay, bundle]`. Starter ₹299 = meal-plan PDF. Pro ₹699 = meals + a real 30-day training plan sourced from `ExerciseSchedule`/`ExerciseScheduleDay`. AI coach is EXCLUDED from Pro until Phase 12 actually ships — never list a feature that isn't built.** |
+| 88 | **Digital PDFs are rendered on-the-fly, not stored (NEW Jun 6)** | **`renderToBuffer` → streamed `Response` (inline); nothing is saved server-side — the customer's own download is the only persisted copy. Browser caches 1h. Re-rendering a ~90-page doc per request is wasteful: **Vercel Blob caching keyed by slug+bundle (regenerate only on recipe/schedule change) is the perf TODO before scaling traffic.**** |
+| 89 | **Digital PayU mirrors the physical guest flow (NEW Jun 6)** | **Guest checkout (no session required), empty-UDF hash preserved both ways, plan/bundle/coupon params carried in `order.notes` JSON keyed by `payuTxnId`. Success route branches on `notes.isDigital` → `activateDigitalPlan` (idempotent). No address, no delivery window — online-pay only.** |
+| 90 | **PDF design self-contained; owner/admin can preview (NEW Jun 6)** | **The PDF uses the built-in Helvetica family (no remote fonts) so generation can never fail on a font fetch in production; brand fonts (Syne/DM Sans) deferred. Design carried by colour/scale/layout + dark brand pages. OWNER/ADMIN bypass the ownership gate to preview any digital PDF (testing + customer support) — they get the full Pro document.** |
+| 91 | **Workout match by subCategory, not the enum (NEW Jun 6)** | **`getWorkoutPlanData` matches `ExerciseSchedule.mealPlanCategory` against the plan's `subCategory` (`"weight_loss"`), NOT the `PlanCategory` enum (`STANDARD`). The earlier route passed the enum, so the workout always came back null and Pro shipped no training section. Exercise names are stored inline in the schedule JSON so the section renders regardless of `Exercise` table contents.** |
 
 ---
 
@@ -1819,6 +1825,70 @@ The AI Trainer monetises delivery subs, digital plans (Phase 13), AND converted 
 
 ---
 
+## PHASE 13 — DIGITAL MEAL PLANS (PDF / DOWNLOADABLE) ✅ CORE LIVE — Jun 6, 2026
+
+### What It Is
+The 30-day plan sold as a downloadable PDF the customer **cooks themselves** — no delivery, national reach beyond Pune. A low-ticket **tripwire** that pulls customers into the logging loop and is monetisable later by the Phase 12 AI Trainer (Decision #78). Two value tiers: **Starter ₹299** (meal plan PDF) and **Pro ₹699** (meal plan **+ a real training plan baked into the same PDF**). AI coach deliberately **excluded** until Phase 12 ships — no vapor (Decision #87).
+
+### Core Architecture Decisions (Jun 6)
+- **No new `Product` table.** A digital SKU is a `PlanPrice` row (`isDigital = true`) on the existing `weight-loss-veg` `MealPlan`. Reuses `MealPlan` + `PlanPrice` + `Order`/`OrderItem`/`Payment`. (Decision #86)
+- **Digital ≠ a separate plan.** Fulfilment is a property of the price / active-plan (`isDigital`), not the plan type. The nightly delivery cron filters `isDigital: false` so digital buyers never spawn phantom deliveries. (Decision #86)
+- **Tier = a `bundle` dimension.** `DigitalBundle` enum (STARTER / PRO) on `PlanPrice` **and** `UserActivePlan`; `PlanPrice` unique key extended to `[mealPlanId, duration, mealsPerDay, bundle]`. Pro = meals + workout (from `ExerciseSchedule`/`ExerciseScheduleDay`). (Decision #87)
+- **PDF is rendered on-the-fly and streamed** (`renderToBuffer` → `Response`, `Content-Disposition: inline`). **Nothing is stored server-side** — the customer's own download is the only saved copy. Browser caches 1h (`Cache-Control: private, max-age=3600`). **Vercel Blob caching keyed by slug+bundle = the perf TODO** before pushing traffic (re-rendering a 90-page doc per request is wasteful). (Decision #88)
+- **Digital PayU = guest checkout, empty-UDF hash preserved.** Plan/bundle params carried in `order.notes` JSON keyed by `payuTxnId` (mirrors the physical flow). Success route branches on `notes.isDigital` → `activateDigitalPlan` (idempotent). (Decision #89)
+- **PDF design is self-contained** (built-in Helvetica family, no remote fonts) so generation can never fail on a font fetch; brand fonts (Syne/DM Sans) deferred. **OWNER/ADMIN can preview any digital PDF** (testing + support). (Decision #90)
+- **Workout matched by `subCategory`** (`"weight_loss"`), NOT the `PlanCategory` enum (`STANDARD`) — an earlier bug passed the enum and always returned a null workout. (Decision #91)
+
+### GST / Commerce
+- Digital = **18% GST-inclusive**, SAC ~9983 (confirm with CA). Physical food stays 5% no-ITC. `taxRatePercent` is per-row config, never hardcoded.
+- Coupons apply **pre-tax** (Section 15, CGST Act); GST charged on post-coupon value.
+- Place-of-supply: intra-state CGST+SGST, inter-state IGST (digital ships nationally). Money in whole rupees (Int).
+- Full strategy: `FITFUEL-PRICING-PROMOTIONS-STRATEGY.md` (D-PRICE-1..7).
+
+### Files Built — ENGINE / LIB
+- `lib/pricing.ts` — `computePrice()` canonical order-math (subtotal → discount → taxable → GST split, inclusive/exclusive, CGST/SGST/IGST by buyer state).
+- `lib/coupons.ts` — `applyCoupon()` validation + discount (active → date → product match → min-order → first-order → usage limits → compute → cap).
+- `lib/digital-plan-types.ts` — `DigitalPlanData` / `WorkoutPlanData` contract (stable shape between data layer and PDF).
+- `lib/digital-plan.ts` — `getDigitalPlanData(slug)`: `MealPlan → scheduleSlots → recipe → ingredients/steps`, scales macros + grams by `servingMultiplier`, groups by day, aggregates grocery (also satisfies 9Q). Decimals coerced with `Number()`.
+- `lib/digital-plan-pdf.tsx` — **designed** `@react-pdf/renderer` document: dark branded cover (bundle badge + metric chips) → "How to use this plan" → meals (day ribbons, slot pills, macro chips, 2-col ingredients, numbered method) → grocery by aisle → **Pro Training Plan** (day cards) → dark back-cover CTA. Bundle-aware; uses real `days.length` (fixed the bogus "60-day" label).
+- `lib/workout-plan.ts` — `getWorkoutPlanData(subCategory, tier)` from `ExerciseSchedule` + `ExerciseScheduleDay`; reads exercise names inline from the schedule JSON (no dependency on `Exercise` table contents), graceful null if no match.
+- `lib/activate-digital-plan.ts` — `activateDigitalPlan({ orderId, mealPlanId, durEnum, bundle })`: creates `isDigital` `UserActivePlan` (+ bundle), records `CouponRedemption`, idempotent.
+
+### Files Built — ROUTES / PAGES
+- `app/api/digital-plan/[slug]/pdf/route.tsx` — gated PDF download; OWNER/ADMIN bypass = Pro preview; Pro appends training; `new Uint8Array(buffer)` response.
+- `app/api/payments/payu/digital/route.ts` — bundle-aware PayU init, server-computed price, `notes = { isDigital, planSlug, durEnum, bundle, couponCode }`. No address / no delivery window.
+- `app/api/payments/payu/success/route.ts` — added digital branch → `activateDigitalPlan` (full file replaced; physical path unchanged).
+- `app/api/coupon/validate/route.ts` — guest-friendly coupon preview (session OR email fallback).
+- `app/plans/digital/page.tsx` — Starter / Pro cards (bundle-driven copy map, "MOST POPULAR" on Pro).
+- `app/checkout/digital/page.tsx` — coupon field, carries bundle/tier, online-pay only, PayU auto-submit.
+
+### Files Built — SEEDS / SCRIPTS
+- `prisma/seed-products.ts` — seeds STARTER ₹299 + PRO ₹699 `PlanPrice` rows (ONE_MONTH / ALL_FOUR, weight-loss-veg, 18% inclusive) + `FITFUEL50` coupon.
+- `prisma/seed-exercise-schedule.ts` — seeds the **Weight-Loss 5-Day Program** (`weight_loss` / `STANDARD`) so Pro always ships a real training plan (3 strength + HIIT + LISS + 2 recovery; exercise names baked into the schedule JSON).
+- `prisma/render-pdf.tsx` — local no-auth PDF preview (renders to a file on disk; bypasses auth/payment/deploy for QA).
+- `prisma/grant-test-plan.ts` — grants an account a digital plan for testing (now superseded by the owner-bypass route).
+
+### Schema Additions (via `prisma db push` — Decision #71)
+- `PlanPrice`: `+ mrpRs`, `+ priceIsTaxInclusive`, `+ isDigital`, `+ bundle (DigitalBundle @default(STARTER))`; unique key → `[mealPlanId, duration, mealsPerDay, bundle]`.
+- `UserActivePlan`: `+ isDigital`, `+ bundle (DigitalBundle)`.
+- `Order`: `+ mrpSubtotalRs, discountRs, couponCode, cgstRs, sgstRs, igstRs, buyerStateCode, hsnSacCode`.
+- New models: `Coupon`, `CouponRedemption`. New enums: `DiscountType`, `CouponSource`, `DigitalBundle`.
+
+### Site Integrations
+- Navbar (Digital Plans link), Footer (planLinks), homepage digital section, `/plans` "Not in Pune?" banner, dashboard + `DashboardClient` "⬇ Download my plan (PDF)" button on the active-plan card.
+
+### PENDING (to fully close Phase 13)
+- **Vercel Blob caching** for generated PDFs (render once, store by slug+bundle, regenerate on recipe/schedule change) — before scaling traffic.
+- **Brand fonts** (Syne / DM Sans) registered in the PDF — currently Helvetica.
+- **Finalise prices** — ₹299 / ₹699 are placeholders.
+- **Owner download** failed in testing — verify the bundle-aware `route.tsx` is deployed AND the account `role = OWNER` in DB (local `prisma/render-pdf.tsx` sidesteps this for QA).
+- `PlanDuration` has no annual value — add `TWELVE_MONTH` if selling an annual digital tier.
+- `PlanCategory.DIGITAL` now redundant (fulfilment lives on `isDigital`) — keep dormant or retire.
+- `weight-loss-veg.cycleLengthDays = 60` but only 30 days seeded — PDF now uses `days.length`; consider correcting the plan field.
+- Confirm with CA: SAC 9983 + GST registration timing (esp. before Phase 21 Zomato/Swiggy).
+
+---
+
 ## PHASE 21 — AGGREGATOR / MARKETPLACE CHANNEL (ZOMATO + SWIGGY)
 
 > **Status: ⏸️ Pending — post-launch growth channel. Added Jun 5, 2026. NOT core to the model. See Decision #77.**
@@ -1958,4 +2028,5 @@ Community is a whole product with its own matching, moderation, and abuse surfac
 > **Jun 5 — PHASE 12 SCOPE LOCKED: AI Personal Trainer = UNIFIED assistant (COACH for Luxury + SUPPORT for all subscribers). Full scope doc FITFUEL-PHASE-12-AI-TRAINER-SCOPE.md (12A–12K + 12-SAFE + 12-SUPPORT). Positioning = own the plate, don't out-AI Healthify. Recipe seeds do NOT gate it. Decisions #74–#76, #78. Build starts at 12A Context Engine.**
 > **Jun 5 — PHASE 21 ADDED: Aggregator / Marketplace Channel (Zomato + Swiggy) — post-launch growth channel, NOT core (breaks the data loop). Feeds funnel via QR → TDEE → onboarding. Light ops/marketing integration. Pending Input #8 (merchant accounts). Decision #77. Digital Meal Plans remain Phase 13 (already in roadmap). Decision #78 = AI Trainer monetises across ALL channels.**
 > **Jun 5 — PHASE 12 FINALISED + PARKED: scope doc upgraded to FINALIZED version (full universe captured + tight v1 committed). v1 = 12A + 12-SAFE + 12B + 12-SUPPORT + 12C + 12D + 12E + 12-WORKOUT-MODE + 12H + 12I (web-only, data already in system; in-session workout mode pulled into v1 as best version). Build DEFERRED until data loop fuller / later phases ship — AI quality is bounded by data depth, field moves monthly, ops+revenue first. PWA-first, Expo deferred. Three hard safety lines (medical / body-image / proactive-≠-manipulative). Reassignments: form-video → Phase 7, DPDP/export → Phase 20, community → NEW Phase 22. Decisions #79–#85.**
+> **Jun 6 — PHASE 13 DIGITAL MEAL PLANS CORE LIVE: Starter ₹299 / Pro ₹699 tiers (DigitalBundle), designed react-pdf document (dark cover → how-to-use → meals → grocery → Pro training plan → back cover), digital PayU guest checkout + coupon engine (FITFUEL50), owner/admin PDF preview, delivery cron excludes isDigital. Built: pricing.ts, coupons.ts, digital-plan(-types/-pdf).ts(x), workout-plan.ts, activate-digital-plan.ts, digital + success + coupon-validate routes, /plans/digital + /checkout/digital pages, seed-products.ts + seed-exercise-schedule.ts + render-pdf.tsx. Schema: PlanPrice/UserActivePlan/Order extensions + Coupon/CouponRedemption + DigitalBundle/DiscountType/CouponSource enums. PDF rendered on-the-fly (NOT stored — Blob caching is the perf TODO). Decisions #86–#91. Pending: Blob cache, brand fonts, final prices, verify owner-route deploy + account role.**
 > **Jun 5 — 9I COMPLETE: All 13 public trust + legal pages built, parse-checked, and deployed. Routes live: /terms · /privacy · /refund-policy · /medical-disclaimer · /allergen-policy · /how-it-works · /our-kitchen · /our-ingredients · /our-team · /results · /faq · /corporate · /contact. Footer wired with all 5 legal links (fixed /refunds → /refund-policy). Committed as 13 files, 1154 insertions (components/Footer.tsx + 12 new pages). Placeholders remaining: registered entity name, full address, grievance officer name, WhatsApp number, nutritionist credentials (Pending Input #7).**
