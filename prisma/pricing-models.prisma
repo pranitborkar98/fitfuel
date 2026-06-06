@@ -1,0 +1,85 @@
+// prisma/pricing-models.prisma  (CORRECTED against real schema.prisma — rupees, not paise)
+// MERGE into prisma/schema.prisma, then: npx prisma db push   (Decision #71 — never migrate dev)
+// Money = RUPEES (Int), matching Order.subtotalRs / PlanPrice.priceRs. No new Product table.
+
+// ── 1. EXTEND existing PlanPrice (add these 3 fields) ──────────────────────
+//   model PlanPrice {
+//     ... existing fields ...
+//     mrpRs               Int?      // MRP / strike price (sale price stays = priceRs)
+//     priceIsTaxInclusive Boolean   @default(false)  // physical=false (gst on top), digital=true
+//     isDigital           Boolean   @default(false)  // true = PDF SKU, no delivery
+//   }
+//   NOTE: gstPercent already exists (default 5). Digital PlanPrice rows set gstPercent = 18.
+
+// ── 2. EXTEND existing UserActivePlan (add 1 field) ────────────────────────
+//   model UserActivePlan {
+//     ... existing fields ...
+//     isDigital  Boolean  @default(false)  // delivery cron MUST filter `where: { isDigital: false }`
+//   }
+
+// ── 3. EXTEND existing Order (add these fields) ────────────────────────────
+//   model Order {
+//     ... existing fields (subtotalRs, gstRs, totalRs already present) ...
+//     mrpSubtotalRs  Int?            // sum of strike prices (for "you saved ₹X")
+//     discountRs     Int    @default(0)
+//     couponCode     String?
+//     cgstRs         Int    @default(0)
+//     sgstRs         Int    @default(0)
+//     igstRs         Int    @default(0)   // gstRs stays = cgst+sgst+igst
+//     buyerStateCode String?
+//     hsnSacCode     String?
+//   }
+
+// ── 4. NEW models — coupons (no conflict with existing schema) ─────────────
+model Coupon {
+  id                String             @id @default(cuid())
+  code              String             @unique
+  discountType      DiscountType
+  value             Int                // PERCENT: whole % | FLAT: rupees
+  maxDiscountRs     Int?               // cap for PERCENT
+  minOrderRs        Int?
+  appliesTo         String             @default("ALL") // ALL | DIGITAL | PHYSICAL | plan slug
+  firstOrderOnly    Boolean            @default(false)
+  usageLimitGlobal  Int?
+  usageLimitPerUser Int?               @default(1)
+  validFrom         DateTime?
+  validUntil        DateTime?
+  stackable         Boolean            @default(false)
+  source            CouponSource       @default(MANUAL)
+  isActive          Boolean            @default(true)
+  redemptions       CouponRedemption[]
+  createdAt         DateTime           @default(now())
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id        String   @id @default(cuid())
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId    String   // scalar (no back-relation needed on User)
+  orderId   String
+  amountRs  Int
+  createdAt DateTime @default(now())
+
+  @@index([couponId, userId])
+  @@map("coupon_redemptions")
+}
+
+enum DiscountType {
+  PERCENT
+  FLAT
+  FREE_DELIVERY
+}
+
+enum CouponSource {
+  MANUAL
+  REFERRAL
+  CART_RECOVERY
+  LOYALTY
+}
+
+// ── 5. PlanDuration GAP ────────────────────────────────────────────────────
+// Your PlanDuration enum has ONE_MONTH, TWO_MONTH, THREE_MONTH — but NO annual value.
+// For an annual digital tier, either add `TWELVE_MONTH` to the enum, or launch digital
+// with ONE_MONTH + THREE_MONTH only. Your call (Decision needed).

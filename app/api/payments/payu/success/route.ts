@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/payments/payu/success/route.ts
-// PayU posts here after payment. Verify hash, then COMPLETE the pending order
-// that the init route created (keyed by txnid): mark paid + create UserActivePlan
-// so the delivery generator and dashboard pick the customer up.
+// PayU posts here after payment. Verify hash, complete the pending order (keyed by txnid).
+// Phase 13D: branches on notes.isDigital — digital plans skip delivery (isDigital UserActivePlan).
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { activateDigitalPlan } from "@/lib/activate-digital-plan";
 
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
@@ -49,28 +49,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.redirect(`${BASE_URL}/checkout?error=payment_failed&txnid=${txnid}`, 303);
     }
 
-    // ── Find the pending order created at init ──
     const order = await (prisma as any).order.findFirst({ where: { payuTxnId: txnid } });
-
     if (!order) {
-      // Payment is valid but no pending order (e.g. test txn or legacy flow).
       console.warn("[PayU] success but no pending order for txnid", txnid);
       return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`, 303);
     }
 
+    const meta = (() => { try { return JSON.parse(order.notes ?? "{}"); } catch { return {}; } })();
+
     // ── Idempotency: PayU can hit surl more than once ──
     if (order.status === "CONFIRMED") {
-      return NextResponse.redirect(
-        `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`, 303
-      );
+      const done = meta.isDigital
+        ? `${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`
+        : `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`;
+      return NextResponse.redirect(done, 303);
     }
 
-    const meta = (() => { try { return JSON.parse(order.notes ?? "{}"); } catch { return {}; } })();
-    const durEnum  = DUR_MAP[meta.dur]  ?? "ONE_MONTH";
-    const mealEnum = MEAL_MAP[meta.meal] ?? "ALL_FOUR";
-    const window   = meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
-
-    // mark order + payment as paid
+    // ── Mark order + payment paid (both paths need this) ──
     await (prisma as any).order.update({
       where: { id: order.id },
       data:  { status: "CONFIRMED", paymentStatus: "SUCCESS", payuPaymentId: mihpayid },
@@ -80,7 +75,24 @@ export async function POST(req: NextRequest) {
       data:  { status: "SUCCESS", payuPaymentId: mihpayid, paidAt: new Date() },
     });
 
-    // ── Resolve plan — always weight-loss-veg (only active plan at launch) ──
+    // ════════════════════ DIGITAL PATH (Phase 13D) ════════════════════
+    if (meta.isDigital) {
+      const plan = await (prisma as any).mealPlan.findUnique({ where: { slug: meta.planSlug } });
+      if (plan) {
+        await activateDigitalPlan({ orderId: order.id, mealPlanId: plan.id, durEnum: meta.durEnum ?? "ONE_MONTH" });
+        console.log("[PayU] DIGITAL plan activated", { txnid, order: order.orderNumber });
+      } else {
+        console.error("[PayU] Digital paid but plan not found", { txnid, planSlug: meta.planSlug });
+      }
+      // Digital customers go to the dashboard where the PDF download lives.
+      return NextResponse.redirect(`${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`, 303);
+    }
+
+    // ════════════════════ PHYSICAL PATH (unchanged) ════════════════════
+    const durEnum  = DUR_MAP[meta.dur]  ?? "ONE_MONTH";
+    const mealEnum = MEAL_MAP[meta.meal] ?? "ALL_FOUR";
+    const window   = meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
+
     const mealPlan =
       (await (prisma as any).mealPlan.findUnique({ where: { slug: "weight-loss-veg" } })) ??
       (await (prisma as any).mealPlan.findFirst({ where: { isActive: true } })) ??
@@ -94,12 +106,11 @@ export async function POST(req: NextRequest) {
 
       await (prisma as any).userActivePlan.create({
         data: {
-          userId: order.userId,
-          mealPlanId: mealPlan.id,
-          orderId: order.id,
+          userId: order.userId, mealPlanId: mealPlan.id, orderId: order.id,
           startDate, endDate, currentDay: 1, status: "active",
           mealsPerDay: mealEnum, duration: durEnum,
           deliveryWindow: window, skipDates: [],
+          // isDigital defaults false — physical plans appear on the dispatch board.
         },
       });
     } else {
@@ -107,7 +118,6 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("[PayU] SUCCESS + plan created", { txnid, mihpayid, order: order.orderNumber });
-
     return NextResponse.redirect(
       `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`, 303
     );
@@ -117,7 +127,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PayU also sends GET in some flows
 export async function GET() {
   return NextResponse.redirect(`${BASE_URL}/plans`, 303);
 }

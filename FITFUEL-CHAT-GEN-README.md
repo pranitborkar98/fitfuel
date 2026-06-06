@@ -1,6 +1,7 @@
-# FitFuel Chat Generator — How To Use
+# FitFuel Chat Generator — Master Reference v3.0
 
 ## The Idea
+
 Instead of running `generate-fitfuel-seeds.ts` (which calls Claude API and costs tokens),
 you command Claude directly in this chat. Claude writes the seed file. You download and run it.
 
@@ -18,19 +19,17 @@ generate seed-recipes-<plan-slug>
 
 **Examples:**
 ```
-generate seed-recipes-weight-loss-egg
-generate seed-recipes-muscle-gain-veg
-generate seed-recipes-diabetic-veg
-generate seed-recipes-pcos-non-veg
+generate seed-recipes-heart-health-veg
+generate seed-recipes-senior-veg
+generate seed-recipes-thyroid-non-veg
+generate seed-recipes-swimming-veg
 ```
 
-Claude will produce a complete `seed-recipes-<plan-slug>.ts` file:
-- 30 recipes (correct meal slot split: 8B + 10L + 5S + 7D)
-- India-first cuisine (80% regional, 20% Indian fusion)
-- Pune cloud kitchen ingredients only
-- MISSING_FOOD_ITEMS block (upsert pattern — safe to re-run)
-- 30-day schedule built automatically
-- Same format as verified `seed-recipes-weight-loss-veg.ts`
+Claude will produce a complete `seed-recipes-<plan-slug>.ts` file. Every file must pass
+the gate checks below before being considered correct.
+
+> **Gold standard:** `seed-recipes-weight-loss-veg.ts` — but note it has 4 known issues
+> (listed in the Known Issues section below). Match its structure, not its bugs.
 
 ---
 
@@ -42,98 +41,1007 @@ npx tsx prisma/seed-recipes-<plan-slug>.ts
 ```
 
 ### Gate checks before running:
+
 ```bash
-# Must return 0
+# Must return 0 — no placeholder IDs left in the file
 grep -c "NEW_ID_" prisma/seed-recipes-<plan-slug>.ts
 
-# Spot check cuisine types — should be Indian
-grep "cuisineType" prisma/seed-recipes-<plan-slug>.ts | head -10
+# Must return 30 — correct recipe count
+grep "slug: '" prisma/seed-recipes-<plan-slug>.ts | grep -v "PLAN_SLUG\|def.recipe" | wc -l
+
+# Slot counts — must be exactly 8 / 9 / 5 / 7 (+ 1 extra in any slot = 30 total)
+grep -c "MealSlot.BREAKFAST" prisma/seed-recipes-<plan-slug>.ts
+grep -c "MealSlot.LUNCH"     prisma/seed-recipes-<plan-slug>.ts
+grep -c "MealSlot.SNACK"     prisma/seed-recipes-<plan-slug>.ts
+grep -c "MealSlot.DINNER"    prisma/seed-recipes-<plan-slug>.ts
+
+# Cuisine types — all must be from the approved regional list (not "INDIAN")
+grep "cuisineType:" prisma/seed-recipes-<plan-slug>.ts | grep -v "string"
+
+# All 5 macro fields present on every MISSING_FOOD_ITEMS entry
+grep "per100Protein" prisma/seed-recipes-<plan-slug>.ts | wc -l
+
+# Salt must be in MISSING_FOOD_ITEMS
+grep "name: 'Salt'" prisma/seed-recipes-<plan-slug>.ts
 ```
 
 ### Verify after running:
+
 ```bash
 npx prisma studio
-# recipes table: 30 new rows, all Indian cuisineType
-# plan_schedule_slots: 120 new rows for the plan
-# recipe_ingredients: zero null foodItemId
+# recipes table        : 30 new rows, all cuisineType from approved regional list
+# plan_schedule_slots  : 120 new rows for the plan (30 days × 4 slots)
+# recipe_ingredients   : zero null foodItemId rows
+# recipe_steps         : 4–6 steps per recipe (never zero, never 3)
 ```
 
 ---
 
-## Plan Priority Queue (what to generate next)
+## Known Issues — Patch These Files Before Using as Reference
 
-### P0 — Generate these first (launch blockers)
+### `seed-recipes-weight-loss-veg.ts` (gold standard — 4 bugs)
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | 29 recipes instead of 30 | Add 1 more recipe (any slot that is under its target count) |
+| 2 | 6 recipes have only 3 steps | Add a 4th step to: Dalma, Makhana Chaat, Kala Chana, Hung Curd, Oats Idli, Dal Khichdi |
+| 3 | 4 non-approved cuisineTypes used | Replace `SouthIndian` → `Tamil` or `Karnataka`, `NorthIndian` → `Punjabi` or `Rajasthani`, `MumbaiStreet` → `Maharashtrian`, `Awadhi` → `Kashmiri` or `Bihari` |
+| 4 | Salt missing from MISSING_FOOD_ITEMS | Add Salt entry (see Rule 3 shape) |
+
+### `seed-recipes-weight-loss-egg.ts` (needs rewrite — 2 bugs)
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | 28 recipes instead of 30; wrong slot split (10B/8L/4S/6D) | Add 1 LUNCH + 1 SNACK + 1 DINNER recipe; convert 2 BREAKFASTs to LUNCH/DINNER to reach 8B/9L/5S/7D |
+| 2 | 6 recipes have only 3 steps | Add a 4th step to: Hyderabadi Sheer Oats, Maharashtrian Egg White Chilla, Punjabi Egg White Raita, Tamil Egg White Sundal, Kerala Egg Thoran, IndianFusion Smoothie Bowl |
+
+### `seed-recipes-weight-loss-non-veg.ts` (partial — needs patch)
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | 28 recipes | Add 2 recipes |
+| 2 | Salt/spice items missing from MISSING_FOOD_ITEMS | Add Salt + spice entries with all 5 macro fields |
+
+---
+
+# ══════════════════════════════════════════════════════════
+# STRUCTURAL RULES — EVERY GENERATED FILE MUST FOLLOW THESE
+# ══════════════════════════════════════════════════════════
+
+Failure to follow any rule below produces a file that will either crash at runtime
+or silently write bad data. Read all 17 rules before writing a single line.
+
+---
+
+## RULE 1 — Exact File Header (copy verbatim, change slug/diet/plan only)
+
+```typescript
+// prisma/seed-recipes-<plan-slug>.ts
+// Run: npx tsx prisma/seed-recipes-<plan-slug>.ts
+// Seeds: 30 commercial-grade <DIET> recipes for <plan_category> plan
+// Generated by Claude directly in chat — India-first, Pune cloud kitchen
+// Depends on: 9A schema migration complete, seed-meal-plans.ts run
+
+import 'dotenv/config'
+import { PrismaClient, MealSlot, PlanTier } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
+```
+
+**Why:** Bare `new PrismaClient()` fails on Vercel/Neon Postgres. The `PrismaPg` adapter
+is mandatory. `dotenv/config` is mandatory — without it `DATABASE_URL` is undefined and
+the pool throws immediately.
+
+```typescript
+// ❌ WRONG — will fail on Vercel
+import { PrismaClient } from "@prisma/client"
+const prisma = new PrismaClient()
+```
+
+---
+
+## RULE 2 — FI Block (verified DB IDs — never change these)
+
+```typescript
+const FI = {
+  BASMATI_RICE_COOKED:    'cmpa7mnoq000420ugxi69878u',
+  ROTI:                   'cmpa7mo3p000520ug80thl0j1',
+  POHA:                   'cmpa7mowz000720ugt8luwuwl',
+  UPMA:                   'cmpa7mpbl000820ug0fkxm9hi',
+  IDLI:                   'cmpa7mpq7000920ugn8criyqu',
+  OATS_DRY:               'cmpa7mrcl000d20ug44sudfy1',
+  TOOR_DAL:               'cmpa7mrr5000e20ugylkmb052',
+  MASOOR_DAL:             'cmpa7ms5z000f20ugxi4zujc7',
+  RAJMA:                  'cmpa7msz1000h20ugho8x65z4',
+  CHICKPEAS:              'cmpa7mtdr000i20ugbveydv96',
+  MOONG_DAL:              'cmpa7mts7000j20ugwrxdvixk',
+  SPINACH:                'cmpa7mul3000l20ugu6394ti0',
+  TOMATO:                 'cmpa7mve4000n20ugo3xfeg9c',
+  ONION:                  'cmpa7mvsm000o20ugl9gw7jsg',
+  CAULIFLOWER:            'cmpa7mw74000p20ugbom3l88u',
+  CARROT:                 'cmpa7mwlm000q20ug4y1k1x9h',
+  CURD_LOWFAT:            'cmpa7mxt5000t20ugxr5f2cwd',
+  GHEE:                   'cmpa7mz0i000w20ug62y9fvdi',
+  EGG_WHOLE:              'cmpa7mztp000y20ugwqtde2oy',
+  EGG_WHITE:              'cmpa7n088000z20ug4m7mrhol',
+  CHICKEN_BREAST:         'cmpa7n0ms001020ugudjs4vcu',
+  CHICKEN_THIGH:          'cmpa7n1fw001220ugyx5p9ias',
+  ROHU_FISH:              'cmpa7n28z001420ugk1606cpz',
+  SALMON:                 'cmpa7n1ue001320ug9jm92i8w',
+  ALMONDS:                'cmpa7n2np001520ugwzq8nd8t',
+  PEANUTS:                'cmpa7n3gl001720ug266ps0ie',
+  CHIA_SEEDS:             'cmpa7n3v3001820ugx6y99v73',
+  BANANA:                 'cmpa7n49q001920ugxfm9uzdh',
+  PANEER:                 'cmpa7mx03000r20ug1ccnyy5o',
+  CURD_FULLFAT:           'cmpa7mxeo000s20ugrqe6zkvr',
+}
+
+const NEW_FI: Record<string, string> = {}
+```
+
+These IDs are hard-coded from the production DB. Never modify them. Never add new IDs
+here — new food items go in `MISSING_FOOD_ITEMS` instead.
+
+---
+
+## RULE 3 — MISSING_FOOD_ITEMS (exact shape, all 5 macros required)
+
+Every item that is not in the `FI` block above must go here — including Salt.
+
+```typescript
+const MISSING_FOOD_ITEMS = [
+  {
+    name: 'Garlic',
+    category: 'Aromatics',
+    per100Calories: 149,
+    per100Protein: 6.4,
+    per100Carbs: 33.1,
+    per100Fat: 0.5,
+    per100Fiber: 2.1,
+  },
+  {
+    name: 'Salt',
+    category: 'Condiments',
+    per100Calories: 0,
+    per100Protein: 0.0,
+    per100Carbs: 0.0,
+    per100Fat: 0.0,
+    per100Fiber: 0.0,
+  },
+  // ... all other items used by recipes in this file
+]
+```
+
+**Required fields on every item:** `name`, `category`, `per100Calories`, `per100Protein`,
+`per100Carbs`, `per100Fat`, `per100Fiber`
+
+```typescript
+// ❌ WRONG — creates food items with null macros, seed will silently corrupt data
+{ name: 'Garlic Cloves', unit: 'g', caloriesPer100g: 149 }
+```
+
+**Salt rule:** Salt must always appear in `MISSING_FOOD_ITEMS`. Never hardcode its ID.
+The upsert finds the existing DB row by name and maps it automatically.
+
+**Name consistency:** The upsert matches by exact name. Use the canonical names below
+or you will silently create duplicate food items in the DB.
+
+| Correct name | Never use |
+|---|---|
+| `Garlic` | `Garlic Cloves`, `Garlic (Lehsun)` |
+| `Ginger` | `Ginger Root`, `Adrak` |
+| `Salt` | `Rock Salt`, `Namak`, `Table Salt` |
+| `Mustard Oil` | `Oil (Mustard)` |
+| `Groundnut Oil` | `Oil (Sunflower)`, `Sunflower Oil` |
+| `Olive Oil` | `Oil (Olive)` |
+| `Fresh Coriander` | `Coriander Leaves` |
+| `Green Chilli` | `Green Chilly` |
+| `Eggplant` | `Brinjal`, `Brinjal (Baingan)` |
+| `Lauki` | `Bottle Gourd (Lauki)` |
+| `Ridge Gourd` | `Ridge Gourd (Turai)` |
+| `Fennel Seeds` | `Fennel Seeds (Saunf)` |
+| `Fenugreek Seeds` | `Fenugreek Seeds (Methi Dana)` |
+| `Sesame Seeds` | `Sesame Seeds (Til)` |
+| `Chickpea Flour` | `Besan (Gram Flour)`, `Besan` |
+| `Dalia` | `Semolina (Sooji)`, `Sooji` — Dalia is cracked wheat, not sooji |
+
+---
+
+## RULE 4 — TypeScript Type Definitions (copy exactly)
+
+These types must appear in every file, before the `RECIPES` array.
+
+```typescript
+type RecipeData = {
+  name: string; slug: string; description: string; shortDescription: string
+  cuisineType: string; mealType: MealSlot; dietaryTags: string[]
+  planCategories: string[]; tierAvailability: PlanTier[]
+  servingSizeGrams: number; prepTimeMins: number; cookTimeMins: number
+  difficulty: 'easy' | 'medium' | 'hard'; equipmentNeeded: string[]; allergens: string[]
+  shelfLifeHours: number; packagingType: string; kitchenStation: string
+  seasonTags: string[]; rotationGroup: number
+  caloriesPerServing: number; proteinGrams: number; carbsGrams: number
+  fatGrams: number; fibreGrams: number
+  caloriesPer100g: number; proteinPer100g: number; carbsPer100g: number
+  fatPer100g: number; fibrePer100g: number
+  glycaemicIndex?: number; isActive: boolean; isFeatured: boolean
+}
+type IngredientRef = {
+  foodItemKey: string; quantityGrams: number; cookedWeightFactor: number
+  prepNote?: string; isOptional: boolean; orderInRecipe: number
+}
+type StepData = {
+  stepNumber: number; title: string; instruction: string
+  durationMins?: number; temperatureC?: number; technique?: string; kitchenNote?: string
+}
+type RecipeDef = { recipe: RecipeData; ingredients: IngredientRef[]; steps: StepData[] }
+```
+
+---
+
+## RULE 5 — Recipe Field Names (exact schema field names)
+
+These are the most common source of crashes. Wrong names are silently accepted by
+TypeScript `as any` casts but then fail at the Prisma layer with no helpful error.
+
+| ❌ Wrong | ✅ Correct (schema field) |
+|---|---|
+| `mealSlot` | `mealType` |
+| `prepTime` | `prepTimeMins` |
+| `cookTime` | `cookTimeMins` |
+| `servings` | `servingSizeGrams` |
+| `calories` | `caloriesPerServing` |
+| `protein` | `proteinGrams` |
+| `carbs` | `carbsGrams` |
+| `fat` | `fatGrams` |
+| `fiber` | `fibreGrams` ← British spelling, not `fiberGrams` |
+| `instructions` (string) | `steps` (separate `RecipeStep` rows) |
+
+**MealSlot enum — always use the import, never a raw string:**
+
+```typescript
+mealType: MealSlot.BREAKFAST   // ✅
+mealType: "BREAKFAST"          // ❌
+```
+
+---
+
+## RULE 6 — dietaryTags per plan type
+
+| Plan diet | `dietaryTags` value |
+|---|---|
+| VEG | `['VEGETARIAN']` |
+| EGG | `['EGG']` |
+| NON_VEG | `['NON_VEGETARIAN']` |
+| JAIN | `['JAIN']` |
+| VEGAN | `['VEGAN']` |
+
+---
+
+## RULE 7 — planCategories per plan type
+
+Use snake_case strings. The filter in Step 3 of the seed function relies on exact matches.
+
+| Plan slug prefix | `planCategories` value |
+|---|---|
+| `weight-loss-*` | `['weight_loss']` |
+| `obesity-*` | `['weight_loss']` |
+| `muscle-gain-*` | `['muscle_gain']` |
+| `lean-bulk-*` | `['muscle_gain']` |
+| `body-recomp-*` | `['muscle_gain']` |
+| `cutting-*` | `['weight_loss']` |
+| `strength-hypertrophy-*` | `['muscle_gain']` |
+| `pcos-*` | `['pcos']` |
+| `diabetic-*` | `['diabetic']` |
+| `pre-diabetic-*` | `['diabetic']` |
+| `heart-health-*` | `['heart_health']` |
+| `hypertension-*` | `['heart_health']` |
+| `balanced-*` | `['balanced']` |
+| `balanced-diet-*` | `['balanced']` |
+| `keto-*` | `['keto']` |
+
+---
+
+## RULE 8 — Ingredients shape (IngredientRef)
+
+```typescript
+// ✅ CORRECT — FI block item
+{ foodItemKey: 'MOONG_DAL', quantityGrams: 80, cookedWeightFactor: 1.0, prepNote: 'soaked 4 hours', isOptional: false, orderInRecipe: 1 }
+
+// ✅ CORRECT — MISSING_FOOD_ITEMS item, key derived from name
+{ foodItemKey: 'GARLIC', quantityGrams: 10, cookedWeightFactor: 1.0, prepNote: '5 cloves', isOptional: false, orderInRecipe: 2 }
+
+// ✅ CORRECT — Salt
+{ foodItemKey: 'SALT', quantityGrams: 3, cookedWeightFactor: 1.0, prepNote: '', isOptional: false, orderInRecipe: 10 }
+```
+
+```typescript
+// ❌ WRONG — old pattern, will crash at Prisma layer
+{ foodItemId: FI.MOONG_DAL, quantity: 80, unit: 'g' }
+{ name: 'Garlic', quantity: 10, unit: 'g' }
+```
+
+**foodItemKey derivation for MISSING_FOOD_ITEMS items:**
+Uppercase the name, replace every non-alphanumeric character with `_`, collapse runs.
+
+```
+'Garlic'           → 'GARLIC'
+'Mustard Oil'      → 'MUSTARD_OIL'
+'Red Chilli Powder'→ 'RED_CHILLI_POWDER'
+'Chickpea Flour'   → 'CHICKPEA_FLOUR'
+'Salt'             → 'SALT'
+```
+
+---
+
+## RULE 9 — Steps (4–6 per recipe, cloud kitchen detail required)
+
+Every recipe must have between 4 and 6 `StepData` entries. A single-sentence `instructions`
+string is not acceptable — it does not populate the `recipe_steps` table.
+
+**Minimum quality bar per step:**
+- `instruction`: a full paragraph with technique, timing, and visual cues
+- `durationMins`: set on any step that involves waiting or active cooking
+- `technique`: required on cooking steps (see allowed values below)
+- `kitchenNote`: required on at least 2 steps per recipe with cloud kitchen operational detail (batch size, hold time, packing guidance)
+
+```typescript
+steps: [
+  {
+    stepNumber: 1,
+    title: 'Prepare the batter',
+    instruction: 'Grind soaked moong dal with ginger and green chilli to a coarse batter — do not over-blend; small dal bits give the chilla texture. Add salt and mix well. Rest for 5 minutes.',
+    durationMins: 10,
+    technique: 'blend',
+    kitchenNote: 'Batch: grind 2 kg dal at a time. Batter holds refrigerated for 8 hours. Label containers with time.',
+  },
+  // 3–5 more steps — minimum 4 total
+]
+```
+
+**Allowed `technique` values:**
+`'blend'`, `'saute'`, `'pressure_cook'`, `'roast'`, `'temper'`, `'assemble'`,
+`'steam'`, `'grill'`, `'boil'`, `'marinate'`
+
+---
+
+## RULE 10 — cuisineType (regional, not generic)
+
+Every recipe must have a specific Indian regional cuisine type. Generic strings are not allowed.
+
+**Approved cuisine types (use only these):**
+
+| Type | Use for |
+|---|---|
+| `Maharashtrian` | Pune / Mumbai / Vidarbha dishes |
+| `Punjabi` | North Indian dhaba-style |
+| `Gujarati` | Steamed, fermented, light |
+| `Bengali` | Mustard-heavy, fish-friendly |
+| `Rajasthani` | Dal baati, bajra, ker sangri |
+| `Andhra` | Spicy, tamarind-forward, gongura |
+| `Tamil` | Idli, dosa, chettinad spice |
+| `Kerala` | Coconut, curry leaf, appam |
+| `MalabarCoast` | Coastal Kerala / Mangalore |
+| `Chettinad` | Deep spice blends, South TN |
+| `Konkan` | Goan-adjacent coastal Maharashtra |
+| `Odia` | Dalma, pakhala, light legumes |
+| `Bihari` | Sattu, litti, chokha |
+| `Sindhi` | Sai bhaji, dal pakwan |
+| `Kashmiri` | Yakhni, haak saag, dum-cooked |
+| `Hyderabadi` | Dum, haleem, biryani traditions |
+| `Goan` | Xacuti, vindaloo, coconut |
+| `Karnataka` | Bisi bele bath, ragi, udupi |
+| `IndianFusion` | Deliberate hybrid — max 6 per file |
+
+**Never use:** `INDIAN`, `SouthIndian`, `NorthIndian`, `MumbaiStreet`, `Awadhi`,
+or any other string not in the table above.
+
+**80/20 rule:** At least 24 of 30 recipes must be pure regional types. Maximum 6 can
+be `IndianFusion`. Zero generic strings allowed.
+
+---
+
+## RULE 11 — Slot distribution (exactly 30 recipes)
+
+```
+BREAKFAST × 8 recipes    (or 9 if BREAKFAST gets the +1)
+LUNCH     × 9 recipes    (or 10 if LUNCH gets the +1)
+SNACK     × 5 recipes    (or 6 if SNACK gets the +1)
+DINNER    × 7 recipes    (or 8 if DINNER gets the +1)
+─────────────────────────
+TOTAL       30 recipes
+```
+
+**The +1 rule:** Exactly one slot gets one extra recipe beyond its base count, bringing
+the total to 30. LUNCH is the most common choice (adds rotation variety to the longest
+meal). Choose whichever slot benefits most from an extra option for the plan type.
+
+**How to count:** After writing all recipes, run:
+```bash
+grep -c "MealSlot.BREAKFAST" seed-recipes-<plan-slug>.ts  # must be 8 or 9
+grep -c "MealSlot.LUNCH"     seed-recipes-<plan-slug>.ts  # must be 9 or 10
+grep -c "MealSlot.SNACK"     seed-recipes-<plan-slug>.ts  # must be 5 or 6
+grep -c "MealSlot.DINNER"    seed-recipes-<plan-slug>.ts  # must be 7 or 8
+# sum must equal 30
+```
+
+---
+
+## RULE 12 — Seed function structure (copy boilerplate exactly, change 4 values)
+
+The seed function body is identical across all 126 files. The only 4 things that change
+per file are marked with `⚠️ CHANGE` comments below.
+
+```typescript
+// ─── getFoodItemId helper ───────────────────────────────────────────────────
+function getFoodItemId(key: string): string | null {
+  const staticMap: Record<string, string> = {
+    BASMATI_RICE_COOKED:    FI.BASMATI_RICE_COOKED,
+    ROTI:                   FI.ROTI,
+    POHA:                   FI.POHA,
+    UPMA:                   FI.UPMA,
+    IDLI:                   FI.IDLI,
+    OATS_DRY:               FI.OATS_DRY,
+    TOOR_DAL:               FI.TOOR_DAL,
+    MASOOR_DAL:             FI.MASOOR_DAL,
+    RAJMA:                  FI.RAJMA,
+    CHICKPEAS:              FI.CHICKPEAS,
+    MOONG_DAL:              FI.MOONG_DAL,
+    SPINACH:                FI.SPINACH,
+    TOMATO:                 FI.TOMATO,
+    ONION:                  FI.ONION,
+    CAULIFLOWER:            FI.CAULIFLOWER,
+    CARROT:                 FI.CARROT,
+    CURD_LOWFAT:            FI.CURD_LOWFAT,
+    GHEE:                   FI.GHEE,
+    EGG_WHOLE:              FI.EGG_WHOLE,
+    EGG_WHITE:              FI.EGG_WHITE,
+    CHICKEN_BREAST:         FI.CHICKEN_BREAST,
+    CHICKEN_THIGH:          FI.CHICKEN_THIGH,
+    ROHU_FISH:              FI.ROHU_FISH,
+    SALMON:                 FI.SALMON,
+    ALMONDS:                FI.ALMONDS,
+    PEANUTS:                FI.PEANUTS,
+    CHIA_SEEDS:             FI.CHIA_SEEDS,
+    BANANA:                 FI.BANANA,
+    PANEER:                 FI.PANEER,
+    CURD_FULLFAT:           FI.CURD_FULLFAT,
+  }
+  if (staticMap[key] !== undefined) return staticMap[key]
+  if (NEW_FI[key]    !== undefined) return NEW_FI[key]
+  return null
+}
+
+// ─── Main seed function ─────────────────────────────────────────────────────
+async function seedRecipes() {
+  // ⚠️ CHANGE 1: update plan slug in this log line
+  console.log('\n🌱 Starting <plan-slug> recipe seed (v5.0, India-first)...')
+  console.log('📦 Step 1: Creating missing food items...\n')
+
+  const nameToKey = (s: string) =>
+    s.toUpperCase().replace(/[^A-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '')
+
+  for (const item of MISSING_FOOD_ITEMS) {
+    const key = nameToKey(item.name)
+    if (!key) { console.log(`⚠️  No key for: ${item.name}`); continue }
+    const existing = await prisma.foodItem.findFirst({ where: { name: item.name } })
+    if (existing) {
+      NEW_FI[key] = existing.id
+      console.log(`⏭️  Exists: ${item.name} → ${existing.id}`)
+      continue
+    }
+    const created = await prisma.foodItem.create({
+      data: {
+        name: item.name, category: item.category,
+        per100Calories: item.per100Calories, per100Protein: item.per100Protein,
+        per100Carbs: item.per100Carbs, per100Fat: item.per100Fat,
+        per100Fiber: item.per100Fiber, isCustom: false,
+      },
+    })
+    NEW_FI[key] = created.id
+    console.log(`✅ Created: ${item.name} → ${created.id}`)
+  }
+
+  console.log(`\n📋 Step 2: Seeding ${RECIPES.length} recipes...\n`)
+  let created = 0, skipped = 0
+
+  for (const def of RECIPES) {
+    const existing = await prisma.recipe.findUnique({
+      where: { slug: def.recipe.slug },
+      include: { ingredients: true },
+    })
+
+    let recipe: { id: string }
+
+    if (existing) {
+      if (existing.ingredients.length > 0) {
+        console.log(`⏭️  Exists: ${def.recipe.name}`); skipped++; continue
+      }
+      console.log(`♻️  Re-seeding orphaned recipe: ${def.recipe.name}`)
+      recipe = existing
+    } else {
+      const { glycaemicIndex: _g, ...recipeData } = def.recipe as any
+      recipe = await prisma.recipe.create({ data: recipeData })
+    }
+
+    let errs = 0
+
+    for (const ing of def.ingredients) {
+      const id = getFoodItemId(ing.foodItemKey)
+      if (!id) { console.log(`  ⚠️  Missing key: ${ing.foodItemKey}`); errs++; continue }
+      await prisma.recipeIngredient.create({
+        data: {
+          recipeId: recipe.id, foodItemId: id,
+          quantityGrams: ing.quantityGrams, cookedWeightFactor: ing.cookedWeightFactor,
+          prepNote: ing.prepNote ?? null, isOptional: ing.isOptional, orderInRecipe: ing.orderInRecipe,
+        },
+      })
+    }
+
+    for (const step of def.steps) {
+      await prisma.recipeStep.create({
+        data: {
+          recipeId: recipe.id, stepNumber: step.stepNumber,
+          title: step.title, instruction: step.instruction,
+          durationMins: step.durationMins ?? null,
+          temperatureC: step.temperatureC ?? null,
+          technique: step.technique ?? null,
+          kitchenNote: step.kitchenNote ?? null,
+          imageUrl: null,
+        },
+      })
+    }
+
+    const status = errs > 0 ? `⚠️  (${errs} missing keys)` : '✅'
+    console.log(`${status} ${def.recipe.cuisineType} | ${def.recipe.mealType} | ${def.recipe.name}`)
+    created++
+  }
+
+  // ─── Step 3: Wire to meal plan ──────────────────────────────────────────────
+  console.log('\n📅 Step 3: Building 30-day schedule...\n')
+
+  // ⚠️ CHANGE 2 / 3 / 4: set these 3 values for this specific plan file
+  const PLAN_SLUG     = '<plan-slug>'       // e.g. 'weight-loss-egg'
+  const PLAN_CATEGORY = '<plan_category>'   // e.g. 'weight_loss'   (see Rule 7)
+  const DIETARY_TAG   = '<DIETARY_TAG>'     // e.g. 'EGG'           (see Rule 6)
+
+  const mealPlan = await prisma.mealPlan.findUnique({ where: { slug: PLAN_SLUG } })
+  if (!mealPlan) {
+    console.log(`⚠️  MealPlan "${PLAN_SLUG}" not found — run seed-meal-plans.ts first.`)
+  } else {
+    const deleted = await prisma.planScheduleSlot.deleteMany({ where: { mealPlanId: mealPlan.id } })
+    if (deleted.count > 0) console.log(`🗑️  Cleared ${deleted.count} existing schedule slots`)
+
+    const recipes = await prisma.recipe.findMany({
+      where: { planCategories: { has: PLAN_CATEGORY }, dietaryTags: { has: DIETARY_TAG } },
+    })
+
+    if (recipes.length === 0) {
+      console.log(`⚠️  No ${PLAN_CATEGORY} ${DIETARY_TAG} recipes found.`)
+    } else {
+      const bySlot: Record<string, typeof recipes> = {
+        BREAKFAST: recipes.filter(r => r.mealType === 'BREAKFAST'),
+        LUNCH:     recipes.filter(r => r.mealType === 'LUNCH'),
+        SNACK:     recipes.filter(r => r.mealType === 'SNACK'),
+        DINNER:    recipes.filter(r => r.mealType === 'DINNER'),
+      }
+
+      let slotsCreated = 0
+      const SLOTS = ['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as const
+
+      for (let day = 1; day <= 30; day++) {
+        for (const slot of SLOTS) {
+          const slotRecipes = bySlot[slot]
+          if (!slotRecipes || slotRecipes.length === 0) continue
+          const recipe = slotRecipes[(day - 1) % slotRecipes.length]
+          await prisma.planScheduleSlot.create({
+            data: {
+              mealPlanId: mealPlan.id,
+              dayNumber: day,
+              mealSlot: slot as any,
+              recipeId: recipe.id,
+              servingMultiplier: 1.0,
+            },
+          })
+          slotsCreated++
+        }
+      }
+
+      console.log(`✅ Schedule built: ${slotsCreated} slots across 30 days`)
+    }
+
+    await prisma.mealPlan.update({
+      where: { id: mealPlan.id },
+      data: { isActive: true },
+    })
+    console.log(`\n✅ MealPlan "${PLAN_SLUG}" → isActive: true`)
+  }
+
+  console.log('\n─────────────────────────────────────────────────')
+  console.log(`✅ Recipes created : ${created}`)
+  console.log(`⏭️  Recipes skipped : ${skipped}`)
+  console.log(`📋 Total           : ${RECIPES.length}`)
+  console.log('─────────────────────────────────────────────────')
+  console.log(`🎉 ${PLAN_SLUG} seed complete! (FitFuel Seed Generator v5.0)`)
+}
+
+seedRecipes()
+  .catch(e => { console.error('💥 Seed failed:', e); process.exit(1) })
+  .finally(async () => { await prisma.$disconnect(); pool.end() })
+```
+
+---
+
+## RULE 13 — planScheduleSlot field names (schema names)
+
+| ❌ Wrong | ✅ Correct (schema) |
+|---|---|
+| `planId` | `mealPlanId` |
+| `day` | `dayNumber` |
+| composite key `planId_day_mealSlot` | `mealPlanId_dayNumber_mealSlot` |
+
+---
+
+## RULE 14 — Calorie targets per slot
+
+| Slot | Target range | Hard limit |
+|---|---|---|
+| BREAKFAST | 340–450 kcal | nothing below 320 or above 470 |
+| LUNCH | 450–560 kcal | nothing below 430 or above 580 |
+| SNACK | 130–200 kcal | nothing below 120 or above 210 |
+| DINNER | 380–500 kcal | nothing below 360 or above 520 |
+
+Every `caloriesPerServing` must fall within the target range. Values outside the hard
+limit indicate an error in the recipe's macros, not a deliberate choice.
+
+---
+
+## RULE 15 — Plan mandate rules
+
+These override everything else for specific plan types. Apply them to every recipe
+in the file, not just some.
+
+| Plan type | Mandatory constraints |
+|---|---|
+| `diabetic-*`, `pre-diabetic-*` | GI <55 for all carb sources. No refined sugar, white rice, maida. Brown rice or millets only. |
+| `pcos-*`, `hormonal-acne-*`, `pms-*` | Anti-inflammatory. No refined carbs. Omega-3 rich ingredients (flaxseed, chia, fish for non-veg). |
+| `keto-*` | Total carbs <50g per serving. No rice, roti, potato, sugar, banana. |
+| `jain-*` | No onion, garlic, potato, carrot, beetroot, radish, or any root vegetable. |
+| `heart-health-*`, `hypertension-*` | No coconut oil. Low saturated fat. No pickle, papad. For hypertension: max 1.5g sodium per serving. |
+| `kidney-health-*` | Low potassium and phosphorus. Tomato max 30g per serving. No spinach in large quantity. |
+| `intermittent-fasting-*` | Higher satiety per calorie. Prioritise protein + fibre. No snacks that encourage grazing. |
+| `senior-*`, `knee-health-*` | Easy to chew. Anti-inflammatory (turmeric, omega-3). High calcium. Avoid very spicy. |
+| `kids-teen-*` | No very spicy. Higher calcium and iron. Familiar textures. Finger-food friendly for snacks. |
+
+---
+
+## RULE 16 — Forbidden ingredients (all plans, no exceptions)
+
+Never use these regardless of plan type or diet. They are not available in a Pune cloud
+kitchen and break the India-first rule.
+
+```
+tahini, miso, gochujang, kimchi, couscous, avocado, edamame,
+rice noodles, chipotle, sriracha, pita, tortilla, quinoa, feta,
+parmesan, hummus, balsamic vinegar, caesar dressing
+```
+
+---
+
+## RULE 17 — Recipe slug format
+
+Pattern: `<regional-descriptor>-<main-ingredient(s)>-<plan-suffix>`
+
+```
+maharashtrian-moong-dal-chilla-wl-veg      ✅
+andhra-egg-curry-brown-rice-wl-egg         ✅
+bihari-egg-sattu-roti-bowl-wl-egg          ✅
+eggCurryRice                               ❌  camelCase not allowed
+egg_curry_rice                             ❌  underscores not allowed
+egg-curry                                  ❌  no regional prefix, too generic
+```
+
+Slugs must be globally unique across all 126 plan files. The plan suffix guarantees
+this — never omit it.
+
+**Suffix reference:**
+
+| Plan | Suffix |
+|---|---|
+| `weight-loss-veg` | `-wl-veg` |
+| `weight-loss-egg` | `-wl-egg` |
+| `weight-loss-non-veg` | `-wl-nv` |
+| `weight-loss-jain` | `-wl-jain` |
+| `weight-loss-vegan` | `-wl-vegan` |
+| `muscle-gain-veg` | `-mg-veg` |
+| `muscle-gain-non-veg` | `-mg-nv` |
+| `muscle-gain-egg` | `-mg-egg` |
+| `body-recomp-veg` | `-recomp-veg` |
+| `body-recomp-non-veg` | `-recomp-nv` |
+| `lean-bulk-veg` | `-lb-veg` |
+| `cutting-veg` | `-cut-veg` |
+| `pcos-veg` | `-pcos-veg` |
+| `pcos-non-veg` | `-pcos-nv` |
+| `diabetic-veg` | `-diab-veg` |
+| `diabetic-non-veg` | `-diab-nv` |
+| `heart-health-veg` | `-hh-veg` |
+| `heart-health-non-veg` | `-hh-nv` |
+| `hypertension-veg` | `-htn-veg` |
+| `keto-indian-veg` | `-keto-veg` |
+| `senior-veg` | `-sr-veg` |
+| `senior-non-veg` | `-sr-nv` |
+| `kids-teen-veg` | `-kt-veg` |
+| (all others follow the same pattern) | abbreviate plan slug, append diet |
+
+---
+
+# ══════════════════════════════════════════════
+# PLAN PRIORITY QUEUE
+# ══════════════════════════════════════════════
+
+**Total plans in DB: 126 | Correctly seeded: 0 | Needs patch: 3 | Remaining: 123**
+
+### Needs patch ⚠️ (seeded but broken — fix before using)
+
+| Slug | Issues | Action |
+|------|--------|--------|
+| `weight-loss-veg` | 29 recipes, 6 short-step recipes, 4 bad cuisineTypes, no Salt in MISSING_FI | Patch per Known Issues section |
+| `weight-loss-egg` | 28 recipes, wrong slot split, 6 short-step recipes | Rewrite per Known Issues section |
+| `weight-loss-non-veg` | 28 recipes, missing Salt/spice MISSING_FI entries | Patch |
+
+---
+
+### P0 — Weight Loss
+
 | Command | Diet | Status |
 |---------|------|--------|
-| `generate seed-recipes-weight-loss-egg` | EGG | ❌ |
+| `generate seed-recipes-weight-loss-egg` | EGG | ⚠️ needs rewrite |
+| `generate seed-recipes-weight-loss-jain` | JAIN | ❌ |
+| `generate seed-recipes-weight-loss-vegan` | VEGAN | ❌ |
+| `generate seed-recipes-obesity-veg` | VEG | ❌ |
+| `generate seed-recipes-obesity-non-veg` | NON_VEG | ❌ |
+
+### P0 — Muscle Gain
+
+| Command | Diet | Status |
+|---------|------|--------|
 | `generate seed-recipes-muscle-gain-veg` | VEG | ❌ |
 | `generate seed-recipes-muscle-gain-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-muscle-gain-egg` | EGG | ❌ |
+| `generate seed-recipes-muscle-gain-jain` | JAIN | ❌ |
+| `generate seed-recipes-muscle-gain-vegan` | VEGAN | ❌ |
+
+### P0 — PCOS / Hormonal
+
+| Command | Diet | Status |
+|---------|------|--------|
 | `generate seed-recipes-pcos-veg` | VEG | ❌ |
 | `generate seed-recipes-pcos-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-hormonal-acne-veg` | VEG | ❌ |
+| `generate seed-recipes-hormonal-acne-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-pms-veg` | VEG | ❌ |
+| `generate seed-recipes-pms-non-veg` | NON_VEG | ❌ |
+
+### P0 — Diabetic / Metabolic
+
+| Command | Diet | Status |
+|---------|------|--------|
 | `generate seed-recipes-diabetic-veg` | VEG | ❌ |
 | `generate seed-recipes-diabetic-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-pre-diabetic-veg` | VEG | ❌ |
+| `generate seed-recipes-pre-diabetic-non-veg` | NON_VEG | ❌ |
+
+### P0 — Strength & Body Recomp
+
+| Command | Diet | Status |
+|---------|------|--------|
 | `generate seed-recipes-strength-hypertrophy-veg` | VEG | ❌ |
 | `generate seed-recipes-strength-hypertrophy-non-veg` | NON_VEG | ❌ |
-
-### Already Done ✅
-| Plan | Status |
-|------|--------|
-| `weight-loss-veg` | ✅ In DB, verified, 30 recipes, 120 slots |
-| `weight-loss-non-veg` | ✅ In DB (28 recipes — needs SALT/spice patch still) |
-
----
-
-## Food Item IDs Reference (verified DB IDs)
-
-These are hardcoded in every generated file. Do not change.
-
-```
-BASMATI_RICE_COOKED  → cmpa7mnoq000420ugxi69878u
-ROTI                 → cmpa7mo3p000520ug80thl0j1
-POHA                 → cmpa7mowz000720ugt8luwuwl
-UPMA                 → cmpa7mpbl000820ug0fkxm9hi
-IDLI                 → cmpa7mpq7000920ugn8criyqu
-OATS_DRY             → cmpa7mrcl000d20ug44sudfy1
-TOOR_DAL             → cmpa7mrr5000e20ugylkmb052
-MASOOR_DAL           → cmpa7ms5z000f20ugxi4zujc7
-RAJMA                → cmpa7msz1000h20ugho8x65z4
-CHICKPEAS            → cmpa7mtdr000i20ugbveydv96
-MOONG_DAL            → cmpa7mts7000j20ugwrxdvixk
-SPINACH              → cmpa7mul3000l20ugu6394ti0
-TOMATO               → cmpa7mve4000n20ugo3xfeg9c
-ONION                → cmpa7mvsm000o20ugl9gw7jsg
-CAULIFLOWER          → cmpa7mw74000p20ugbom3l88u
-CARROT               → cmpa7mwlm000q20ug4y1k1x9h
-CURD_LOWFAT          → cmpa7mxt5000t20ugxr5f2cwd
-GHEE                 → cmpa7mz0i000w20ug62y9fvdi
-EGG_WHOLE            → cmpa7mztp000y20ugwqtde2oy
-EGG_WHITE            → cmpa7n088000z20ug4m7mrhol
-CHICKEN_BREAST       → cmpa7n0ms001020ugudjs4vcu
-CHICKEN_THIGH        → cmpa7n1fw001220ugyx5p9ias
-ROHU_FISH            → cmpa7n28z001420ugk1606cpz
-SALMON               → cmpa7n1ue001320ug9jm92i8w
-ALMONDS              → cmpa7n2np001520ugwzq8nd8t
-PEANUTS              → cmpa7n3gl001720ug266ps0ie
-CHIA_SEEDS           → cmpa7n3v3001820ugx6y99v73
-BANANA               → cmpa7n49q001920ugxfm9uzdh
-PANEER               → cmpa7mx03000r20ug1ccnyy5o
-CURD_FULLFAT         → cmpa7mxeo000s20ugrqe6zkvr
-SALT                 → cmpmcgp590000asugacrl4mb7   ← created by patch-wl-veg
-JAGGERY              → cmpmcgpia0001asugdokpvn20   ← created by patch-wl-veg
-```
-
-All other ingredients (garlic, ginger, spices, oils, vegetables etc.) go in
-`MISSING_FOOD_ITEMS` — the seed script creates them via `upsert` at runtime.
+| `generate seed-recipes-body-recomp-veg` | VEG | ❌ |
+| `generate seed-recipes-body-recomp-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-body-recomp-egg` | EGG | ❌ |
+| `generate seed-recipes-lean-bulk-veg` | VEG | ❌ |
+| `generate seed-recipes-lean-bulk-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-lean-bulk-egg` | EGG | ❌ |
+| `generate seed-recipes-cutting-veg` | VEG | ❌ |
+| `generate seed-recipes-cutting-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-cutting-egg` | EGG | ❌ |
 
 ---
 
-## Rules Claude Follows For Every Generated File
+### P1 — Balanced / General Health
 
-1. **Cuisine split**: 80% Indian regional, 20% Indian fusion. Zero international-only.
-2. **No forbidden ingredients**: no tahini, miso, gochujang, kimchi, couscous, avocado, edamame, rice noodles, chipotle
-3. **Meal slot counts**: BREAKFAST×8, LUNCH×10, SNACK×5, DINNER×7 = 30 total
-4. **No NEW_ID_ anywhere** — all unknowns go in MISSING_FOOD_ITEMS
-5. **SALT always in MISSING_FOOD_ITEMS** (learned from WL-Veg patch)
-6. **Plan mandates respected**: diabetic = low GI, PCOS = anti-inflammatory, keto = <50g carb, Jain = no onion/garlic/root veg
-7. **Macros verified**: calories per serving within ±50kcal of plan target
-8. **Slug format**: `kebab-case-recipe-name-plan-slug` — unique, no collisions
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-balanced-veg` | VEG | ❌ |
+| `generate seed-recipes-balanced-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-balanced-egg` | EGG | ❌ |
+| `generate seed-recipes-balanced-jain` | JAIN | ❌ |
+| `generate seed-recipes-balanced-diet-veg` | VEG | ❌ |
+| `generate seed-recipes-balanced-diet-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-balanced-diet-egg` | EGG | ❌ |
+| `generate seed-recipes-balanced-diet-jain` | JAIN | ❌ |
+| `generate seed-recipes-balanced-diet-vegan` | VEGAN | ❌ |
+
+### P1 — Heart & Organ Health
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-heart-health-veg` | VEG | ❌ |
+| `generate seed-recipes-heart-health-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-hypertension-veg` | VEG | ❌ |
+| `generate seed-recipes-hypertension-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-fatty-liver-veg` | VEG | ❌ |
+| `generate seed-recipes-fatty-liver-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-kidney-health-veg` | VEG | ❌ |
+| `generate seed-recipes-kidney-health-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-liver-detox` | VEG | ❌ |
+| `generate seed-recipes-gut-health-veg` | VEG | ❌ |
+| `generate seed-recipes-gut-health-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-gout-veg` | VEG | ❌ |
+| `generate seed-recipes-gout-non-veg` | NON_VEG | ❌ |
+
+### P1 — Women's Health
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-fertility-veg` | VEG | ❌ |
+| `generate seed-recipes-fertility-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-post-pregnancy-veg` | VEG | ❌ |
+| `generate seed-recipes-post-pregnancy-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-menopause-veg` | VEG | ❌ |
+| `generate seed-recipes-menopause-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-female-athlete-veg` | VEG | ❌ |
+| `generate seed-recipes-female-athlete-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-female-athlete-sports-veg` | VEG | ❌ |
+| `generate seed-recipes-female-athlete-sports-non-veg` | NON_VEG | ❌ |
+
+---
+
+### P2 — Sports & Athletic Performance
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-endurance-veg` | VEG | ❌ |
+| `generate seed-recipes-endurance-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-sports-recovery-veg` | VEG | ❌ |
+| `generate seed-recipes-sports-recovery-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-competition-prep-veg` | VEG | ❌ |
+| `generate seed-recipes-competition-prep-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-cricket-veg` | VEG | ❌ |
+| `generate seed-recipes-cricket-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-football-veg` | VEG | ❌ |
+| `generate seed-recipes-football-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-swimming-veg` | VEG | ❌ |
+| `generate seed-recipes-swimming-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-martial-arts-veg` | VEG | ❌ |
+| `generate seed-recipes-martial-arts-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-youth-athlete-veg` | VEG | ❌ |
+| `generate seed-recipes-youth-athlete-non-veg` | NON_VEG | ❌ |
+
+### P2 — Deficiency & Recovery
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-anaemia-veg` | VEG | ❌ |
+| `generate seed-recipes-anaemia-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-b12-deficiency-veg` | VEG | ❌ |
+| `generate seed-recipes-b12-deficiency-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-vitamin-d-veg` | VEG | ❌ |
+| `generate seed-recipes-vitamin-d-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-post-covid-veg` | VEG | ❌ |
+| `generate seed-recipes-post-covid-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-post-surgery-veg` | VEG | ❌ |
+| `generate seed-recipes-post-surgery-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-cancer-recovery-veg` | VEG | ❌ |
+| `generate seed-recipes-cancer-recovery-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-alcohol-recovery-veg` | VEG | ❌ |
+| `generate seed-recipes-alcohol-recovery-non-veg` | NON_VEG | ❌ |
+
+### P2 — Skin, Hair & Anti-Aging
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-skin-glow-veg` | VEG | ❌ |
+| `generate seed-recipes-skin-glow-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-hair-health-veg` | VEG | ❌ |
+| `generate seed-recipes-hair-health-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-acne-skin-veg` | VEG | ❌ |
+| `generate seed-recipes-acne-skin-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-anti-aging-veg` | VEG | ❌ |
+| `generate seed-recipes-anti-aging-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-eczema-veg` | VEG | ❌ |
+| `generate seed-recipes-eczema-non-veg` | NON_VEG | ❌ |
+
+### P2 — Age & Life Stage
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-kids-teen-veg` | VEG | ❌ |
+| `generate seed-recipes-kids-teen-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-senior-veg` | VEG | ❌ |
+| `generate seed-recipes-senior-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-knee-health-veg` | VEG | ❌ |
+| `generate seed-recipes-knee-health-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-thyroid-veg` | VEG | ❌ |
+| `generate seed-recipes-thyroid-non-veg` | NON_VEG | ❌ |
+
+---
+
+### P3 — Special Diets & Lifestyle
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-keto-indian-veg` | VEG | ❌ |
+| `generate seed-recipes-keto-indian-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-intermittent-fasting-veg` | VEG | ❌ |
+| `generate seed-recipes-intermittent-fasting-non-veg` | NON_VEG | ❌ |
+| `generate seed-recipes-intermittent-fasting-egg` | EGG | ❌ |
+| `generate seed-recipes-vegan-muscle` | VEGAN | ❌ |
+| `generate seed-recipes-quit-smoking-veg` | VEG | ❌ |
+| `generate seed-recipes-quit-smoking-non-veg` | NON_VEG | ❌ |
+
+### P3 — Cultural / Seasonal / Fasting
+
+| Command | Diet | Status |
+|---------|------|--------|
+| `generate seed-recipes-detox-reset` | VEG | ❌ |
+| `generate seed-recipes-diwali-detox` | VEG | ❌ |
+| `generate seed-recipes-navratri` | VEG | ❌ |
+| `generate seed-recipes-shravan` | VEG | ❌ |
+| `generate seed-recipes-ramadan` | NON_VEG | ❌ |
+
+---
+
+# ══════════════════════════════════════════════════════════
+# QUICK SELF-CHECK — Run mentally before finalising any file
+# ══════════════════════════════════════════════════════════
+
+Tick every box. A single unchecked box means the file will either crash or write bad data.
+
+**Header & setup**
+- [ ] `import 'dotenv/config'` present?
+- [ ] `PrismaPg` adapter used (NOT bare `new PrismaClient()`)?
+- [ ] `pool.end()` in `.finally()`?
+
+**Food items**
+- [ ] Salt in `MISSING_FOOD_ITEMS` (never in `FI`)?
+- [ ] Every `MISSING_FOOD_ITEMS` entry has all 5 macro fields: `per100Calories`, `per100Protein`, `per100Carbs`, `per100Fat`, `per100Fiber`?
+- [ ] All ingredient names match the canonical name table in Rule 3?
+- [ ] No `NEW_ID_` strings anywhere in the file?
+
+**Recipe fields**
+- [ ] `mealType` used (not `mealSlot`)?
+- [ ] `fibreGrams` spelled with British 're' (not `fiberGrams`)?
+- [ ] `prepTimeMins` / `cookTimeMins` (not `prepTime` / `cookTime`)?
+- [ ] `caloriesPerServing` (not `calories`)?
+- [ ] `proteinGrams`, `carbsGrams`, `fatGrams` (not `protein`, `carbs`, `fat`)?
+- [ ] All `RecipeData` fields present on every recipe?
+
+**Ingredients**
+- [ ] Every ingredient uses `foodItemKey` + `quantityGrams` (not `foodItemId` + `quantity`)?
+- [ ] Every ingredient has `cookedWeightFactor`, `isOptional`, `orderInRecipe`?
+
+**Steps**
+- [ ] Every recipe has 4–6 steps (count `stepNumber:` occurrences per recipe)?
+- [ ] At least 2 steps per recipe have a `kitchenNote`?
+
+**Recipe quality**
+- [ ] Exactly 30 recipes total?
+- [ ] Slot split is 8B / 9L / 5S / 7D (+ 1 extra in one slot = 30)?
+- [ ] No forbidden ingredients (tahini, avocado, quinoa, etc.)?
+- [ ] `cuisineType` on every recipe is from the approved regional list (not `"INDIAN"`, `SouthIndian`, `NorthIndian`, etc.)?
+- [ ] Max 6 recipes use `IndianFusion`?
+- [ ] `caloriesPerServing` within target range for its slot (Rule 14)?
+- [ ] Plan mandate rules applied where relevant (Rule 15)?
+
+**Seed function**
+- [ ] `mealPlanId` in `planScheduleSlot` (not `planId`)?
+- [ ] `dayNumber` in `planScheduleSlot` (not `day`)?
+- [ ] `servingMultiplier: 1.0` on every slot creation?
+- [ ] `PLAN_SLUG`, `PLAN_CATEGORY`, `DIETARY_TAG` all set correctly for this file?
+- [ ] Recipe slug format is kebab-case with regional prefix and plan suffix (Rule 17)?

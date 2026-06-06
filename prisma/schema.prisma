@@ -317,6 +317,10 @@ model PlanPrice {
   gstPercent  Int          @default(5)
   isActive    Boolean      @default(true)
 
+  mrpRs               Int?
+  priceIsTaxInclusive Boolean @default(false)
+  isDigital           Boolean @default(false)
+
   @@unique([productId, diet, duration, mealsPerDay])
   @@unique([mealPlanId, duration, mealsPerDay]) // ← NEW: unique for new plan pricing
   @@map("plan_prices")
@@ -355,6 +359,15 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  mrpSubtotalRs  Int?
+  discountRs     Int     @default(0)
+  couponCode     String?
+  cgstRs         Int     @default(0)
+  sgstRs         Int     @default(0)
+  igstRs         Int     @default(0)
+  buyerStateCode String?
+  hsnSacCode     String?
+
   @@map("orders")
 }
 
@@ -973,6 +986,8 @@ model UserActivePlan {
 
   @@index([userId, status])
   @@index([endDate])
+  isDigital Boolean @default(false)
+
   @@map("user_active_plans")
 }
 
@@ -1042,4 +1057,52 @@ model ExerciseScheduleDay {
   schedule ExerciseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@map("exercise_schedule_days")
+}
+
+enum DiscountType {
+  PERCENT
+  FLAT
+  FREE_DELIVERY
+}
+
+enum CouponSource {
+  MANUAL
+  REFERRAL
+  CART_RECOVERY
+  LOYALTY
+}
+
+model Coupon {
+  id                String             @id @default(cuid())
+  code              String             @unique
+  discountType      DiscountType
+  value             Int
+  maxDiscountRs     Int?
+  minOrderRs        Int?
+  appliesTo         String             @default("ALL")
+  firstOrderOnly    Boolean            @default(false)
+  usageLimitGlobal  Int?
+  usageLimitPerUser Int?               @default(1)
+  validFrom         DateTime?
+  validUntil        DateTime?
+  stackable         Boolean            @default(false)
+  source            CouponSource       @default(MANUAL)
+  isActive          Boolean            @default(true)
+  redemptions       CouponRedemption[]
+  createdAt         DateTime           @default(now())
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id        String   @id @default(cuid())
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId    String
+  orderId   String
+  amountRs  Int
+  createdAt DateTime @default(now())
+
+  @@index([couponId, userId])
+  @@map("coupon_redemptions")
 }

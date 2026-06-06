@@ -1,6 +1,6 @@
 # FITFUEL — MASTER PROJECT TRACKER (DEFINITIVE)
-> **Last Updated: June 4, 2026**
-> **Reconciles: Master tracker (May 19) + Phase 9 tracker v1 (May 20) + Phase 9 tracker v2 + Phase 9 tracker v3 (May 26) + Vision Realignment (May 26) + Session update (May 27) + Day 2 build complete (May 27) + Day 3 build complete (May 30) + Phase 10 Delivery System core live (Jun 4)**
+> **Last Updated: June 5, 2026**
+> **Reconciles: Master tracker (May 19) + Phase 9 tracker v1 (May 20) + Phase 9 tracker v2 + Phase 9 tracker v3 (May 26) + Vision Realignment (May 26) + Session update (May 27) + Day 2 build complete (May 27) + Day 3 build complete (May 30) + Phase 10 Delivery System core live (Jun 4) + Phase 11 Progress Charts + 9R/9D verified live + checkout encoding fix (Jun 5)**
 > **DB verified via SQL on May 26: 119 plans | 1 active (weight-loss-veg) | 30 recipes | 120 slots | 1 active_plan (Pranit) | 2499 price rows**
 > **Platform:** Next.js + Node.js + PostgreSQL (Neon)
 > **Deployment:** Vercel — fitfuel-eosin.vercel.app → fitfuel.in after launch
@@ -108,6 +108,8 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | Workout Logger | → kcal burned → Net Calories → Consistency Score → AI Trainer |
 | TDEE Engine (9B) | → Onboarding → UserActivePlan → Adaptive recalibration loop |
 | Plan Schedule (9C) | → Today's meals → Smart grocery list → Kitchen production → Franchise SOP |
+| Consistency Score (9R) | → Progress page (Phase 11) → Weekly snapshot trend → AI Trainer primary signal (12) |
+| Progress Charts (Phase 11) | → Weight/calorie/macro/consistency visualisation → Plateau detection (18) → Quarterly report (Luxury) |
 
 ### Systems Not Yet In Tracker (Adding Now)
 
@@ -141,8 +143,8 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | 8 | Supplement Guide | ✅ Complete — pushed to main |
 | **9** | **Lifestyle Meal Plans + Dashboard Wiring** | **🔄 IN PROGRESS** |
 | 10 | Live Delivery Tracking | 🔄 Core LIVE (Jun 4) — 3 items pending |
-| 11 | Progress Tracking + Charts + Consistency Score | ⏸️ Pending |
-| 12 | AI Personal Trainer + Chatbot | ⏸️ Pending |
+| 11 | Progress Tracking + Charts + Consistency Score | ✅ Core LIVE (Jun 5) — charts deployed; snapshot cron LIVE (trend line renders once weeks accrue) |
+| 12 | AI Personal Trainer + Customer-Service Assistant (unified) | ⏸️ PARKED Jun 5 — scope FINALIZED (tight v1 + captured v2–v4 backlog, see scope doc) — build DEFERRED until data loop is fuller / later phases ship (Decision #85) |
 | 13 | Digital Meal Plans (PDF/downloadable) | ⏸️ Pending |
 | 14 | Blog, FAQ, Testimonials | ⏸️ Pending |
 | 15 | Admin Panel + Kitchen Production Dashboard | ⏸️ Pending |
@@ -151,6 +153,8 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | 18 | Plan Progression Engine + Adaptive Recalibration | ⏸️ Pending |
 | 19 | Referral System + Public TDEE Tool | ⏸️ Pending |
 | 20 | QA, Performance, DNS cutover, Launch | ⏸️ Pending |
+| 21 | Aggregator / Marketplace Channel (Zomato + Swiggy) | ⏸️ Pending — post-launch growth channel (added Jun 5, Decision #77) |
+| 22 | Social & Community (accountability, challenges, coach handoff) | ⏸️ Pending — split out of Phase 12 (added Jun 5, Decision #84) |
 
 ---
 
@@ -190,6 +194,8 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | Sports accent | #c084fc (purple) |
 | Tier accents | Standard: #a3e635 · Premium: #f59e0b · Luxury: #e879f9 |
 | Seasonal accent | #f97316 (orange) |
+
+> **Checkout / shared component token set (verified Jun 5 from app/checkout/page.tsx):** bg #0a0a0a · card #111111 · cardBorder #1f1f1f · accent #84cc16 · accentLight #a3e635 · text #ffffff · textSecond #a3a3a3 · textMuted #737373. Progress page (Phase 11) reuses this exact set + chart colors good #22c55e / warn #f97316 / fat #38bdf8 / muscle #f59e0b.
 
 ### Per-Condition Color System
 | Condition | Accent |
@@ -268,6 +274,7 @@ USER JOINS → ONBOARDING (body + goal + diet + condition)
 | **plan_schedule_slots** | 30-day rotating schedule | **120 ✅ (WL-Veg only)** |
 | **user_active_plans** | User plan subscriptions | **1 ✅ (Pranit — weight-loss-veg, Day 1)** |
 | **meal_logs** | Did user eat today's meal | 0 — API built, ready to receive logs |
+| **consistency_snapshots** | Weekly consistency history (Phase 11) | LIVE — table created via db push Jun 5; populated weekly by Saturday cron (+ on-demand curl) |
 
 ---
 
@@ -328,21 +335,21 @@ Every phase before this was a feature. Phase 9 is the **business itself in code 
 | 9A | Recipe Database Schema | ✅ COMPLETE — migrated May 20 |
 | 9B | Personalisation Engine (TDEE + meal-plans-data) | ✅ COMPLETE |
 | 9C | Plan Schedule System (seed files) | 🔄 IN PROGRESS — 1/119 done |
-| 9D | Exercise Schedule Wiring (plan-linked, not standalone) | ❌ Not started |
+| 9D | Exercise Schedule Wiring (plan-linked, not standalone) | ✅ COMPLETE — Jun 4 (verified live Jun 5; Wed=rest restored Jun 5 — schedule cmq0ehixv00009gugf0lbg0lv) |
 | 9E | Individual Standard Plan Pages (public, full 30-day menu visible, Day 1 full recipe) | ✅ COMPLETE — May 30 (weight-loss-veg built, all 3 files verified) |
 | 9F | Lifestyle / Medical Plan Pages | ❌ Not started |
 | 9G | Sports Nutrition Plan Pages | ❌ Not started |
 | 9H | Tier Comparison + Pricing Page | ❌ Not started |
-| 9I | Public Trust Pages | ❌ Not started |
+| 9I | Public Trust Pages | ✅ COMPLETE — Jun 5, 2026 (all 13 pages built + deployed: 5 legal + 8 trust; footer wired) |
 | 9J | Dashboard — Today's Meals Card | ✅ COMPLETE — verified May 30 (4 meals render, buttons work, progress bar, mobile responsive, drawer) |
 | 9K | Dashboard — Meal Rating (1–5 stars + note after "I ate this") | ✅ COMPLETE — Jun 3, 2026 |
-| 9L | Net Calorie Engine (meals in - workout out vs target) | ❌ Not started |
+| 9L | Net Calorie Engine (meals in - workout out vs target) | ❌ Not started (NOTE Jun 5: daily net ring renders on dashboard; lib/net-calories.ts file itself still unbuilt — Phase 11 progress page computes calorie history directly from raw tables instead) |
 | 9M | Lightweight Recipe Admin | ❌ Not started |
 | 9N | Onboarding Flow | ✅ COMPLETE — all 3 files verified May 27 |
 | 9O | Homepage Sections Update | ❌ Not started |
 | 9P | Meal Swap Request System | ❌ Not started |
 | 9Q | Smart Weekly Grocery List | ❌ Not started |
-| 9R | Consistency Score Engine | ❌ Not started |
+| 9R | Consistency Score Engine | ✅ COMPLETE — Jun 4 (verified live Jun 5 — card renders 5-component score on dashboard) |
 | 9S | Meal Feedback → Menu Evolution (admin flagging) | ❌ Not started |
 | 9T | Public TDEE Calculator (/tools/tdee-calculator) | ❌ Not started |
 
@@ -953,6 +960,7 @@ Real delivery time wiring requires:
 - Admin sets delivery windows per area/tier
 - Dashboard reads user's window and shows actual ETA
 **This is scoped to the Delivery Section build (Phase 10 or dedicated 9U sub-phase — TBD).**
+> **Jun 4 update:** `deliveryWindow` (MORNING/EVENING enum) now exists on UserActivePlan + Delivery (Phase 10). Dashboard meal times still hardcoded per slot — window→ETA wiring still open.
 
 ---
 
@@ -987,9 +995,11 @@ async function getDailyCalorieBalance(userId: string, date: Date) {
 }
 ```
 
+> **Jun 5 NOTE:** A daily net-calorie *ring* renders on the dashboard, but the dedicated `lib/net-calories.ts` engine file is NOT confirmed built (tracker still marks 9L Not started). Phase 11's progress page computes calorie HISTORY directly from raw tables (MealLog + FoodEntry + WorkoutSession), so it does not depend on 9L. When 9L is formalised, unify both surfaces and close the `MealLog → FoodEntry` gap (Decision #32) so the dashboard ring and progress chart count the same calories.
+
 ---
 
-## 9D — EXERCISE SCHEDULE WIRING (Plan-Linked, Not Standalone)
+## 9D — EXERCISE SCHEDULE WIRING (Plan-Linked, Not Standalone) ✅ COMPLETE — Jun 4 (verified live Jun 5)
 
 ### The Point
 The exercise library is NOT a random gym app feature. It is the movement arm of the user's meal plan. When someone subscribes to weight-loss-veg, they don't just get food — they get a HIIT + Strength program auto-assigned. The system tells them what to do today, they log it, calories burned feeds the Net Calorie Engine. The scale measures the result. The AI uses it all. THIS is what makes FitFuel different from every tiffin service in Pune.
@@ -1018,6 +1028,11 @@ UserActivePlan → mealPlan.subCategory → ExerciseSchedule
 → Click → opens ExercisesClient with today's exercises pre-loaded
 → Complete → logs to WorkoutSession → kcal burned feeds Net Calorie Engine
 ```
+
+### Status — Jun 4/5
+- ExerciseSchedule + ExerciseScheduleDay models live in schema (weeklyStructure Json, daysPerWeek, sessionDurationMins, estimatedCalories, isRestDay).
+- "Today's Workout" card renders on the dashboard (verified live Jun 5 — shows e.g. "Full Body Strength + Core ~260 kcal burn").
+- **Loose end RESOLVED (Jun 5):** Wednesday = rest day restored. A `-VERIFY` copy of the seed had temporarily flipped Wed to a 200-kcal workout (to test the burn path) and overwrote the file; re-ran the clean original `prisma/seed-exercise-schedule-weight-loss.ts` (idempotent — deletes + recreates). New schedule cmq0ehixv00009gugf0lbg0lv: Mon strength / Tue cardio / **Wed REST** / Thu strength+core / Fri HIIT / Sat cardio / Sun REST (5 active days). The `-VERIFY` file was deleted to prevent accidental re-runs.
 
 ---
 
@@ -1147,22 +1162,25 @@ Featured plans grid, athlete testimonials
 
 ---
 
-## 9I — PUBLIC TRUST PAGES
+## 9I — PUBLIC TRUST PAGES ✅ COMPLETE — Jun 5, 2026
 
-| Page | Route | Priority |
-|------|-------|----------|
-| How It Works | `/how-it-works` | Critical |
-| Our Kitchen | `/our-kitchen` | High |
-| Our Ingredients | `/our-ingredients` | High |
-| Our Nutritionists | `/our-team` | Critical for medical plans |
-| Testimonials / Results | `/results` | High |
-| FAQ | `/faq` | High |
-| Corporate Plans | `/corporate` | Medium |
-| Refund & Cancellation | `/refund-policy` | Required |
-| Terms & Conditions | `/terms` | Required |
-| Privacy Policy | `/privacy` | Required |
-| Medical Disclaimer | `/medical-disclaimer` | Required for medical plans |
-| Allergen Policy | `/allergen-policy` | Required |
+| Page | Route | Priority | Status |
+|------|-------|----------|--------|
+| How It Works | `/how-it-works` | Critical | ✅ Built + deployed Jun 5 |
+| Our Kitchen | `/our-kitchen` | High | ✅ Built + deployed Jun 5 |
+| Our Ingredients | `/our-ingredients` | High | ✅ Built + deployed Jun 5 |
+| Our Nutritionists | `/our-team` | Critical for medical plans | ✅ Built + deployed Jun 5 (nutritionist placeholder — fill before medical plans launch) |
+| Testimonials / Results | `/results` | High | ✅ Built + deployed Jun 5 (real story slots — no fake testimonials) |
+| FAQ | `/faq` | High | ✅ Built + deployed Jun 5 |
+| Corporate Plans | `/corporate` | Medium | ✅ Built + deployed Jun 5 |
+| Contact | `/contact` | High | ✅ Built + deployed Jun 5 |
+| Refund & Cancellation | `/refund-policy` | Required | ✅ Built + deployed Jun 5 |
+| Terms & Conditions | `/terms` | Required | ✅ Built + deployed Jun 5 |
+| Privacy Policy | `/privacy` | Required | ✅ Built + deployed Jun 5 |
+| Medical Disclaimer | `/medical-disclaimer` | Required for medical plans | ✅ Built + deployed Jun 5 |
+| Allergen Policy | `/allergen-policy` | Required | ✅ Built + deployed Jun 5 |
+
+> All 13 pages are server components, parse-checked clean, styled with locked design tokens (#080808, lime #a3e635, Barlow Condensed/Syne/DM Sans). Footer wired with all 5 legal links (fixed /refunds → /refund-policy). Placeholders remaining: [Registered Entity Name], [Full Registered Address], [Grievance Officer Name], WhatsApp number (91XXXXXXXXXX), nutritionist name + credentials (Pending Input #7).
 
 ### How It Works — 6 Steps
 ```
@@ -1240,10 +1258,10 @@ Launch with `weight-loss-veg` only. All other plans `isActive: false`. Add plans
 | G5 | GET /api/user/active-plan/meals/today works | ✅ Built + pushed — May 27 |
 | G6 | Today's Meals dashboard card shows 4 meals | ✅ VERIFIED May 30 — 4 meals render, buttons work, mobile responsive |
 | G7 | /plans/weight-loss-veg page renders | ✅ COMPLETE May 30 — built + deployed, all 12 sections |
-| G8 | FSSAI license 21523035002815 in footer | ❓ Check |
+| G8 | FSSAI license 21523035002815 in footer | ✅ Done — confirmed in footer Jun 5 |
 | G9 | Medical disclaimer on medical plan pages | Not needed for WL-Veg |
 
-**7/7 gates cleared (G1–G7 all ✅). G8 FSSAI footer check is the only remaining pre-launch item.**
+**ALL gates cleared (G1–G8 ✅) as of Jun 5. WL-Veg is launch-ready. G8 FSSAI confirmed in footer.**
 
 ---
 
@@ -1273,7 +1291,7 @@ DAY 3 ✅ DONE — May 30:
   Pushed: all 3 files to main → Vercel deployed ← G7 ✅
   Root cause note: always read schema.prisma before writing any Prisma select block
 
-DAY 4 ← NOW:
+DAY 4:
   Check: FSSAI license 21523035002815 in footer ← G8
   Update: WhatsApp number in PlanDetailClient CTA (replace 91XXXXXXXXXX with real number)
   Test: full end-to-end — new user → onboarding → dashboard shows meals → /plans/weight-loss-veg loads
@@ -1305,10 +1323,12 @@ app/api/user/active-plan/route.ts                       ← 9J GET active plan �
 app/api/user/active-plan/meals/today/route.ts           ← 9J GET today's meals ✅ pushed May 27
 app/api/user/active-plan/meals/log/route.ts             ← 9J POST meal log ✅ pushed May 27
 app/dashboard/page.tsx                                  ← 9J server fetch ✅ pushed May 27
-app/dashboard/DashboardClient.tsx                       ← 9J meals card ✅ pushed May 27 + fixed May 30
+app/dashboard/DashboardClient.tsx                       ← 9J meals card ✅ pushed May 27 + fixed May 30 + 9D workout card + 9R consistency card (Jun 4)
 app/plans/[slug]/page.tsx                               ← 9E server component ✅ built May 30
 app/plans/[slug]/PlanDetailClient.tsx                   ← 9E full sales page ✅ built May 30
 app/api/plans/[slug]/schedule/route.ts                  ← 9E public API ✅ built May 30
+lib/consistency-score.ts                                ← 9R engine ✅ built Jun 4 (5-component weekly score, caches UserProfile.weeklyConsistencyScore)
+app/api/user/active-plan/consistency/route.ts           ← 9R GET route ✅ built Jun 4
 ```
 
 ### ❌ To Build — App Features
@@ -1333,17 +1353,19 @@ app/pricing/
   page.tsx                                          ← 9H
   PricingClient.tsx
 
-app/how-it-works/page.tsx                           ← 9I
-app/our-kitchen/page.tsx                            ← 9I
-app/our-team/page.tsx                               ← 9I
-app/results/page.tsx                                ← 9I
-app/faq/page.tsx                                    ← 9I
-app/corporate/page.tsx                              ← 9I
-app/refund-policy/page.tsx                          ← 9I
-app/terms/page.tsx                                  ← 9I
-app/privacy/page.tsx                                ← 9I
-app/medical-disclaimer/page.tsx                     ← 9I
-app/allergen-policy/page.tsx                        ← 9I
+app/how-it-works/page.tsx                           ← 9I ✅ built Jun 5
+app/our-kitchen/page.tsx                            ← 9I ✅ built Jun 5
+app/our-ingredients/page.tsx                        ← 9I ✅ built Jun 5
+app/our-team/page.tsx                               ← 9I ✅ built Jun 5
+app/results/page.tsx                                ← 9I ✅ built Jun 5
+app/faq/page.tsx                                    ← 9I ✅ built Jun 5
+app/corporate/page.tsx                              ← 9I ✅ built Jun 5
+app/contact/page.tsx                                ← 9I ✅ built Jun 5 (folder pre-existed)
+app/refund-policy/page.tsx                          ← 9I ✅ built Jun 5
+app/terms/page.tsx                                  ← 9I ✅ built Jun 5
+app/privacy/page.tsx                                ← 9I ✅ built Jun 5
+app/medical-disclaimer/page.tsx                     ← 9I ✅ built Jun 5
+app/allergen-policy/page.tsx                        ← 9I ✅ built Jun 5
 
 app/dashboard/admin/
   recipes/page.tsx                                  ← 9M
@@ -1384,14 +1406,14 @@ middleware.ts                                 ← admin route protection
 
 | Requirement | Where | Status |
 |-------------|-------|--------|
-| FSSAI license 21523035002815 | Footer + /our-kitchen | ❓ Check footer |
-| Medical disclaimer | All medical plan pages + /medical-disclaimer | ❌ |
-| Allergen policy | /allergen-policy + checkout | ❌ |
-| Nutritionist credentials | All medical plan pages | ❌ (placeholder OK until medical plans launch) |
+| FSSAI license 21523035002815 | Footer + /our-kitchen | ✅ Confirmed in footer Jun 5 |
+| Medical disclaimer | All medical plan pages + /medical-disclaimer | ✅ /medical-disclaimer page built Jun 5 — still needed on individual medical plan pages (9F/9G) |
+| Allergen policy | /allergen-policy + checkout | ✅ /allergen-policy page built Jun 5 — checkout link still pending |
+| Nutritionist credentials | All medical plan pages | ❌ (placeholder OK until medical plans launch — Pending Input #7) |
 | "Not a substitute for medical advice" | Medical plans + checkout | ❌ |
-| Privacy policy | /privacy | ❌ |
-| Terms & conditions | /terms | ❌ |
-| Refund & cancellation | /refund-policy | ❌ |
+| Privacy policy | /privacy | ✅ Built Jun 5 |
+| Terms & conditions | /terms | ✅ Built Jun 5 |
+| Refund & cancellation | /refund-policy | ✅ Built Jun 5 |
 
 ---
 
@@ -1403,13 +1425,16 @@ middleware.ts                                 ← admin route protection
 | `/api/user/active-plan` | GET | Required | Get user's current active plan | ✅ Live |
 | `/api/user/active-plan/meals/today` | GET | Required | Today's 4 meals with macros | ✅ Live |
 | `/api/user/active-plan/meals/log` | POST | Required | Confirm meal eaten → creates MealLog | ✅ Live |
-| `/api/user/active-plan/meals/rate` | POST | Required | Rate meal 1-5 + note | ❌ |
+| `/api/user/active-plan/meals/rate` | POST | Required | Rate meal 1-5 + note | ✅ Live — Jun 3 |
+| `/api/user/active-plan/consistency` | GET | Required | This week's consistency score + breakdown (9R) | ✅ Live — Jun 4 |
 | `/api/user/active-plan/pause` | POST | Required | Pause plan | ❌ |
 | `/api/user/active-plan/skip` | POST | Required | Skip a date | ❌ |
 | `/api/plans` | GET | Public | All active plans | ❌ |
 | `/api/plans/[slug]` | GET | Public | Plan detail + full 30-day menu | ❌ |
 | `/api/plans/[slug]/schedule` | GET | Public | Full 30-day schedule (public, no auth) | ✅ Live — May 30 |
 | `/api/plans/[slug]/schedule/[day]` | GET | Public | Single day meals | ❌ |
+| `/api/cron/generate-deliveries` | GET | CRON_SECRET | Nightly delivery list generator (Phase 10) | ✅ Live — Jun 4 |
+| `/api/cron/snapshot-consistency` | GET | CRON_SECRET | Weekly consistency snapshot (Phase 11) | ✅ LIVE — Jun 5 (deployed, 401-guard verified, registered as Vercel cron #2) |
 | `/api/admin/recipes` | GET + POST | Admin | Recipe list + create | ❌ |
 | `/api/admin/recipes/[id]` | GET + PATCH + DELETE | Admin | Recipe CRUD | ❌ |
 | `/api/admin/plans/[id]/schedule` | GET + POST | Admin | Schedule builder | ❌ |
@@ -1482,6 +1507,28 @@ middleware.ts                                 ← admin route protection
 | 61 | **Schema field naming rule (NEW May 30)** | **ALWAYS read schema.prisma before writing any Prisma select block. Never guess field names. Applies to all files that query DB. Violating this caused 5 consecutive Vercel build failures on May 30 (targetCalories, proteinTarget, carbTarget, fatTarget, durationDays — all wrong).** |
 | 62 | **Recipe field names (NEW May 30)** | **Recipe model uses British spelling: `fibreGrams` (not fiberGrams). Difficulty field is `difficulty` (not difficultyLevel). Both confirmed from schema.prisma. Use in all future recipe selects.** |
 | 63 | **PlanDetailClient WhatsApp number** | **WhatsApp CTA link in PlanDetailClient.tsx uses placeholder 91XXXXXXXXXX. Must be replaced with actual business WhatsApp number before go-live.** |
+| 64 (Phase 10) | Pricing model | HQ-fixed / absolute for launch. Franchise price-flexibility within HQ bands = future (Franchise phase). |
+| 65 (Phase 10) | Delivery confirmation | **Physical signed slip** (driver carries printed slip, customer signs, driver marks Delivered). No digital OTP / customer tap-confirm for now. |
+| 66 (Phase 10) | Delivery batching | **One delivery per customer per day** — all subscribed meals bundled into a single drop, never split into per-meal trips (sustainability). Customer chooses Morning OR Evening window at subscription. |
+| 67 | **Checkout encoding fix (NEW Jun 5)** | **app/checkout/page.tsx had double-encoded mojibake frozen into source (₹ shown as "Â‚¹", middots as "Â·", em-dashes, emojis) — caused by a UTF-8 file being read as Windows-1252 and re-saved. Repaired via cp1252→utf-8 round-trip; rupee hardened to `\u20B9` in the fmt() JS string + `&#8377;` in JSX text. ROOT CAUSE = Windows editor saving as ANSI. Prevention: set VS Code files.encoding=utf8 + files.autoGuessEncoding=false, add .editorconfig charset=utf-8, avoid PowerShell `>` redirects (UTF-16/ANSI default). Audit other files with: grep -rP '[\x80-\xFF]' app/ lib/ components/** |
+| 68 | **Consistency Score verified live (NEW Jun 5)** | **9R was built Jun 4 (lib/consistency-score.ts + /api/user/active-plan/consistency + DashboardClient card) but tracker still said Not started. Verified live Jun 5 — card renders 5-component score (~26 for Pranit). 9R = DONE. 9D "Today's Workout" card also verified live. Tracker corrected.** |
+| 69 | **Phase 11 Progress page (NEW Jun 5)** | **Built /dashboard/progress — server page (lib/progress.ts aggregates weight/calorie/macro/adherence + reuses getWeeklyConsistency) + ProgressClient.tsx (inline-SVG charts in checkout token set). Calorie history = MealLog (plan meals eaten) + manual FoodEntry − WorkoutSession burn. Verified live Jun 5. Page not yet linked from dashboard (deferred to global rewire pass). All files esbuild-parse-checked before handoff.** |
+| 70 | **Consistency trend = snapshot table (NEW Jun 5)** | **Week-over-week consistency trend was not possible (only current week persisted on UserProfile.weeklyConsistencyScore). Solution: ConsistencySnapshot model (one row/user/week, unique [userId, weekStart]) + weekly Vercel Cron /api/cron/snapshot-consistency (Sat 18:00 UTC = 23:30 IST, CRON_SECRET-protected). This is Vercel cron #2 (delivery is #1) — at Hobby's 2-cron limit. Trend line added to progress page once data accrues.** |
+| 71 | **DB workflow = db push, NOT migrate dev (NEW Jun 5)** | **`prisma migrate dev` hit DRIFT — Phase 10's DeliveryWindow enum + deliveryWindow columns were applied via `db push` (no migration file), so migrate history ≠ actual DB. migrate dev wanted to RESET (wipe orders, active plan, metrics, logs). REFUSED. Resolved with `npx prisma db push` — adds the new consistency_snapshots table only, no reset, no data loss. STANDING RULE: this project uses `prisma db push` for all schema changes (NEVER `migrate dev` — it threatens data via reset on drift). Squash into one clean baseline migration only right before fitfuel.in launch. Always read schema.prisma before any select (reaffirms #61/#65).** |
+| 72 | **PayU order flow completed (NEW Jun 5)** | **PayU success route was a TODO stub — online payments created NO order/plan (customer paid, got nothing). Rebuilt with the pending-order pattern: init route (`app/api/payments/payu/route.ts`) creates a PENDING_PAYMENT order keyed by txnid with diet/dur/meal/deliveryWindow stashed in order.notes; success route (`/success/route.ts`) verifies hash, finds order by txnid, flips to CONFIRMED + SUCCESS, creates UserActivePlan (window from notes). Idempotent (PayU can hit surl twice). Hash formula unchanged (udf empty). Checkout handlePayU now sends full details. Verified live ₹1 order Jun 5. Abandoned attempts leave PENDING_PAYMENT orders (clean up later). Both COD + PayU now attach to weight-loss-veg (was arbitrary findFirst()). HARDENING TODO: compute price server-side from PlanPrice (currently trusts client price/amount).** |
+| 73 | **Phone-collision-safe upsert (NEW Jun 5)** | **User.phone is @unique. Both order routes did findFirst(email) → update phone, which threw P2002 when that phone already belonged to a different user row. Fixed with upsertCustomer(): find by email then phone; only set phone if free or already that user's; on create, attach phone only if free. Applied to both cod/route.ts and payu/route.ts.** |
+| 74 | **Recipe seeds do NOT gate Phase 12 (NEW Jun 5)** | **The AI Trainer coaches on LOGGED behaviour (MealLog, WorkoutSession, BodyMetric, ConsistencySnapshot) — all present regardless of seed count. Only weight-loss-veg is isActive and only 1 user is subscribed, so the meal content the AI needs for actual users is already seeded. 1/119 limits what the AI can say about OTHER plans' menus, but nobody is on those plans. Build Phase 12 now; recipe seeding stays a PARALLEL commercial/catalogue track, never a Phase 12 blocker.** |
+| 75 | **Phase 12 = unified AI assistant, two tier-scoped layers (NEW Jun 5)** | **Do NOT build two bots. ONE conversational surface on the Phase 12 infrastructure. (a) SUPPORT layer — ALL subscribers (Standard+): order status, delivery ETA, pause/skip, address, billing Qs. Bounded + read-mostly; sensitive actions (refunds/billing changes) escalate to owner, never autonomous. Huge solo-founder win — absorbs routine support. (b) COACH layer — Luxury only: full data context + coaching depth + proactive nudges + recalibration. Same models + tool plumbing; system-prompt scope and tool access differ by tier. Captured as sub-phase 12-SUPPORT in the Phase 12 scope doc.** |
+| 76 | **Phase 12 positioning — own the plate, don't out-AI Healthify (NEW Jun 5)** | **Verified Jun 5 landscape: Healthify/Ria Voice (OpenAI Realtime, 50+ languages, 40M users, profitable, US expansion, Novo Nordisk GLP-1) + giants (ChatGPT Health, Copilot Health, Perplexity Health, Amazon Health AI, Apple Health+, Google Fitbit Air + Gemini, Whoop $10.1B). The whole field reads data and ADVISES; the differentiation is "what happens next." NONE of them cook + deliver the food. FitFuel's moat: the ONLY AI coach that controls what lands on the plate — verified intake, not self-reported. Do NOT position as "a better Ria." Moat is operational + hyperlocal (owned Pune kitchen), not model sophistication. 12-SAFE (medical + disordered-eating guardrails) is also a differentiator AND a liability shield — some competitor apps were flagged by researchers for reinforcing unhealthy behaviour.** |
+| 77 | **Zomato/Swiggy = Phase 21, post-launch growth channel, NOT core (NEW Jun 5)** | **Aggregator listing BREAKS the data loop (anonymous customer, no onboarding/body data/UserActivePlan, ~20–30% commission, platform owns the relationship). It is a commodity food sale — the opposite of the health-OS thesis. Therefore: layered on AFTER the owned platform launches (Phase 20), used purely for kitchen-fill + cold-traffic acquisition. The ONLY reason to do it = the conversion mechanic: every aggregator box ships a QR card → free TDEE (9T) → onboarding → owned, tracked subscriber. Measure by conversion rate, not aggregator GMV. Light integration (curated à-la-carte menu, order ingestion into Phase 15 kitchen dashboard), not deep platform work.** |
+| 78 | **AI Trainer monetises across ALL channels (NEW Jun 5)** | **The AI Trainer is NOT a delivery-only feature — it is the stickiness layer for every channel. A digital-plan customer (Phase 13, cooks themselves, no delivery, anywhere in India) still logs meals/workouts/weight → coachable by the AI. An aggregator-acquired customer who converts enters the same loop. This is the argument for building Phase 12 BEFORE scaling distribution: it makes delivery subs, digital plans, and converted aggregator customers all monetisable and sticky.** |
+| 79 | **PWA-first; Expo native DEFERRED (NEW Jun 5)** | **Phase 12 v1 ships web-only. ~85% of the AI-trainer surface is web-buildable; the ~15% needing native = passive wearable sync (Apple HealthKit, Google Fit background sync, Garmin/Whoop SDKs — Apple blocks HealthKit from any browser, hard policy wall). Native (Expo) enters the roadmap only on real Luxury wearable demand (target trigger ~200 Luxury users or explicit at-scale requests). Full webapp/PWA redesign is a post-build pass (owner's call — not mid-phase).** |
+| 80 | **Phase 12 finalised = tight v1 + captured backlog. Capture ≠ commit (NEW Jun 5)** | **The full AI-trainer universe (food vision, sleep, mood, memory, multilingual, cycle, bloodwork, retention, import, voice, community…) is CAPTURED in the scope doc so nothing is forgotten — but only a tight v1 is committed: 12A + 12-SAFE + 12B + 12-SUPPORT + 12C + 12D + 12E + 12-WORKOUT-MODE + 12H + 12I, on data already in the system. Rest sequenced v2/v3/v4. Locking 25 sub-phases before coding = never shipping.** |
+| 81 | **AI medical boundary — HARD LINE (NEW Jun 5)** | **The AI is a coach, not a clinician. For condition users and blood-report data it SURFACES + CONTEXTUALISES only — never diagnoses, prescribes, titrates meds, or alters medical management. Medical questions route to the Luxury nutritionist consult. Reinforces #30.** |
+| 82 | **Body-image guardrail — HARD LINE (NEW Jun 5)** | **No AI body-fat % verdicts from progress photos (inaccurate + harmful). Photos = storage + side-by-side comparison only. AI never endorses sub-floor calorie targets or restriction; suggestRecalibration can never propose below a configurable safe floor. Governed by 12-SAFE disordered-eating guards.** |
+| 83 | **Proactive ≠ manipulative (NEW Jun 5)** | **Mood / churn intelligence is for genuine care and value-based retention, NOT engagement dark-patterns. Sustained low mood / distress routes toward a human + supportive resources — never exploited as a re-engagement hook.** |
+| 84 | **Reassignments out of Phase 12 (NEW Jun 5)** | **Exercise form-video library → Phase 7 (content; AI just links to it). Data export / DPDP Act / privacy / right-to-delete → Phase 20 launch compliance pass (audit trail of AI recs stays in 12-SAFE). Community / accountability / challenges → NEW Phase 22 (Social & Community). Keeps Phase 12 shippable.** |
+| 85 | **Phase 12 build PARKED (NEW Jun 5)** | **Scope finalised + fully captured; build intentionally DEFERRED until the data loop is fuller (more users, more logged meals/workouts/weight, v2-class surfaces) and the later phases ship. Rationale: AI quality is bounded by data depth (1 user, sparse logs today), the field moves monthly (build against newer/cheaper models later), and operational + revenue phases come first. Keep §8 forward-compatible hooks (receiving-API pattern, app-shell nav) in mind during intervening phases so the eventual build is a slot-in, not a retrofit. Re-confirm the v1 cut at build time. In-session workout mode pulled into v1 as the "best version" (Decision #80).** |
 
 ---
 
@@ -1496,6 +1543,7 @@ middleware.ts                                 ← admin route protection
 | 5 | Supplement supplier / source | 9+ | Pending |
 | 6 | Wellness partner tie-ups (massage/spa) | 12+ | Pending |
 | 7 | Nutritionist name + credentials | 9F | Pending — required before medical plans go live |
+| 8 | Zomato + Swiggy merchant/restaurant partner accounts | 21 | Pending — needed before aggregator channel build (FSSAI 21523035002815 already in hand) |
 
 ---
 
@@ -1506,7 +1554,7 @@ User doesn't want today's assigned meal. They can request a swap. The system sho
 
 ### Flow
 ```
-User: "I don't want Palak Paneer today"
+User: "I don't want today's Palak Paneer"
   ↓
 System: Shows 3 alternative lunches from same plan, same day range, ±100 kcal
   ↓
@@ -1539,7 +1587,7 @@ Dairy: Curd 400g · Ghee 50g
 
 ---
 
-## 9R — CONSISTENCY SCORE ENGINE
+## 9R — CONSISTENCY SCORE ENGINE ✅ COMPLETE — Jun 4 (verified live Jun 5)
 
 ### What It Is
 A single 0-100 score per user per week, shown on dashboard. Not a gamification gimmick — it is the primary input signal for the AI Trainer in Phase 12. High consistency (80+) means the AI can make bold recommendations. Low consistency (< 50) means the AI asks what's blocking the user, not push harder.
@@ -1561,6 +1609,27 @@ Consistency Score: 78 / 100  ████████░░  Good
 ```
 
 ### DB: Compute weekly from existing tables. No new schema needed. Cache in UserProfile.weeklyConsistencyScore (add in next migration).
+
+### Files Built — Jun 4 ✅
+```
+lib/consistency-score.ts                          ← weekly compute, caches UserProfile.weeklyConsistencyScore
+app/api/user/active-plan/consistency/route.ts     ← GET this week's breakdown
+app/dashboard/DashboardClient.tsx                 ← ConsistencyCard added (score bar + 5 components + "X/Y meals" line)
+```
+
+### Return shape (getWeeklyConsistency)
+```
+{ score, label, weekStart,
+  meals:   { logged, delivered, points, max:40 },
+  workouts:{ completed, scheduled, points, max:30 },
+  water:   { days, points, max:10 },
+  weighIn: { done, points, max:10 },
+  noSkips: { skipped, points, max:10 } }
+```
+
+### Verified Jun 5
+- Dashboard card renders score (~26 for Pranit), label "Needs work", colored bar, "You logged 4/20 meals and 1/4 workouts this week."
+- Score reflects all 5 components even though the dashboard text line only surfaces meals + workouts (by design).
 
 ---
 
@@ -1643,9 +1712,166 @@ Delivery.deliveryWindow        DeliveryWindow?
 - One-time helper scripts in `/prisma` (backfill-plans, check-*) — safe to delete.
 
 ### PENDING (to fully close Phase 10)
-1. **Checkout window toggle** — `DeliveryWindowToggle` component built but NOT wired into checkout; every customer currently defaults to MORNING, so the Evening run stays empty until this ships. (COD route already accepts `deliveryWindow`.)
+1. **Checkout window toggle — ✅ CLOSED Jun 5.** Toggle wired into checkout; window now persists to UserActivePlan for BOTH COD and PayU. Verified live via a real ₹1 PayU order (FF-PAYU-20260605-5719) → order CONFIRMED + UserActivePlan created with EVENING window. NOTE: order/confirmation page still shows hardcoded "7am–10am" text regardless of chosen window — cosmetic, fix in global rewire. See Decisions #72–73.
+   > **Jun 5 update:** `DeliveryWindowToggle` IS now rendered in checkout (Morning/Evening selectable on the live checkout page — confirmed in screenshot). Verify the selected window persists through both COD and PayU order creation, then mark this item closed.
 2. **Printable signed delivery slip** — the chosen proof mechanism (Decision #63). **Will be DESIGNED in Claude Design** (not hand-coded), then wired to print today's run per driver with customer name / address / meals / COD amount / signature line. [Jun 4]
 3. **Driver notification on dispatch** — auto WhatsApp/SMS via MSG91 on dispatch; NOT wired (links shared manually for now). Overlaps Phase 16.
+
+---
+
+## PHASE 11 — PROGRESS TRACKING + CHARTS + CONSISTENCY SCORE
+
+> **Status: CORE LIVE (June 5, 2026).** Consistency Score (9R) was already done (Jun 4). Phase 11 added the visualisation layer: a dedicated progress page turning the data loop into a transformation story the user can see over time. One piece (week-over-week consistency trend) is a fast-follow that needs the snapshot table to accrue data.
+
+### What It Is
+`/dashboard/progress` — "The Transformation" page. Reads everything the user has logged and renders it as charts, server-side, in one pass. No new schema for the core page; all field names verified against schema.prisma (Decision #61 honoured — built against the real schema, not guessed).
+
+### What Was Built (Jun 5 — verified live)
+```
+lib/progress.ts                              ← server data aggregation (one getProgressData(userId) call)
+app/dashboard/progress/page.tsx              ← server component, auth guard, force-dynamic
+app/dashboard/progress/ProgressClient.tsx    ← inline-SVG charts, checkout token set, Syne/DM Sans
+```
+
+### Charts / sections on the page
+1. **Top stat tiles** — weight change (kg), avg net kcal/day, workouts done, current streak.
+2. **Weight trend** — line chart from BodyMetric (measuredAt, weightKg) + target line (UserProfile.targetWeightKg) + toggle for body fat / muscle. Empty-state if < 2 weigh-ins.
+3. **Daily net calories** — bar chart, 30-day window, target dashed line. Green = at/under target, orange = over.
+4. **Macro adherence** — avg protein/carbs/fat per tracked day vs target (UserActivePlan targets → mealPlan averages fallback).
+5. **Consistency this week** — reuses getWeeklyConsistency (9R); renders score + all 5 component bars.
+6. **Adherence summary** — meals eaten / scheduled, workouts completed, logging streak, active days.
+
+### Data definitions (documented to avoid surprises)
+- **Calorie IN** = confirmed MealLog calories (recipe.caloriesPerServing scaled by actualGrams/plannedGrams ÷ servingSizeGrams) + manual FoodEntry calories (mealLogId null).
+- **Calorie OUT** = WorkoutSession.caloriesBurned (completedAt not null).
+- **Target** = UserActivePlan.calorieTarget → mealPlan.avgCaloriesPerDay → UserProfile.calorieTarget → tdee → 2000.
+- ⚠️ This may read HIGHER than the dashboard calorie ring, which likely counts only FoodEntry. Root: tapping "I ate this" does NOT write a FoodEntry (the MealLog→FoodEntry gap, Decision #32). Close that gap to unify both surfaces.
+
+### Verified Jun 5
+- Page renders live at `/dashboard/progress`: header, 4 stat tiles, weight trend curve (test data: 136.9 → 91.64 → flat, reading real BodyMetric rows), consistency card matching dashboard (~26).
+- All 4 files esbuild-parse-checked before handoff (catches the JSX/apostrophe class that caused May 30 failures).
+
+### Consistency TREND (fast-follow — needs schema)
+Only the CURRENT week's score is persisted (UserProfile.weeklyConsistencyScore). A real week-over-week line needs history. Solution built Jun 5:
+```
+model ConsistencySnapshot {            ← one row per user per week
+  id, userId, weekStart @db.Date, score, label,
+  mealsPoints, workoutsPoints, waterPoints, weighInPoints, noSkipPoints,
+  createdAt
+  @@unique([userId, weekStart])
+}
++ User.consistencySnapshots relation
+app/api/cron/snapshot-consistency/route.ts   ← weekly Vercel Cron (Sat 18:00 UTC = 23:30 IST), CRON_SECRET
+vercel.json cron entry: { "path": "/api/cron/snapshot-consistency", "schedule": "0 18 * * 6" }
+```
+Migration: `npx prisma migrate dev --name phase11_consistency_snapshot`. This is Vercel cron #2 (delivery is #1) — at Hobby's 2-cron limit. Trend line added to the progress page once snapshots accrue (first run = next Saturday).
+
+> **Jun 5 DEPLOYED:** `migrate dev` hit DRIFT (DeliveryWindow enum + deliveryWindow columns existed in DB but not in migration history — applied via db push in Phase 10). `migrate dev` wanted to RESET (wipe all data) — refused. Resolved safely with `npx prisma db push` instead: created `consistency_snapshots` table, no data loss, no reset. Cron route + vercel.json pushed; endpoint returns 401 on unauth (guard verified live). consistency_snapshots table confirmed in DB. See Decision #71.
+
+### Not yet done (Phase 11)
+- Link to `/dashboard/progress` from the dashboard (deferred — part of the planned global nav rewire pass).
+- Consistency trend line on the page (waiting on snapshot data).
+- Body-composition (body fat / muscle) dedicated series view beyond the toggle.
+
+---
+
+## PHASE 12 — AI PERSONAL TRAINER + CUSTOMER-SERVICE ASSISTANT (UNIFIED)
+
+> **Status: ⏸️ PARKED Jun 5, 2026 — scope FINALIZED, build DEFERRED (Decision #85). Full detail in companion doc FITFUEL-PHASE-12-AI-TRAINER-SCOPE.md (now the FINALIZED version: full universe captured + tight v1 committed). Build the data-generating later phases first; un-park Phase 12 when the data loop is fuller and against newer/cheaper models. This section is the tracker-level summary; the scope doc is authoritative.**
+
+> **Finalised v1 cut (when un-parked):** 12A Context Engine + 12-SAFE + 12B Chat + 12-SUPPORT + 12C memory + 12D tools + 12E proactive + **12-WORKOUT-MODE (in-session screen — pulled into v1 as "best version")** + 12H cost + 12I evals. Runs web-only on data already in the system (+ a small set/RPE schema for workout mode). Everything else (food-vision, sleep, mood, long-term memory, Hinglish/Marathi, cycle, bloodwork, retention, wearable import, voice) is captured + sequenced v2/v3/v4. Three hard safety lines: medical boundary, body-image guardrail, proactive-≠-manipulative (Decisions #81–#83).
+
+### What It Is
+The conversational front-end to the entire FitFuel health OS. ONE assistant, two tier-scoped layers (Decision #75):
+- **SUPPORT layer (all subscribers, Standard+):** order status, delivery ETA, pause/skip, address, billing questions. Bounded + read-mostly; sensitive actions escalate to owner. Absorbs routine solo-founder support load.
+- **COACH layer (Luxury):** full data context + coaching depth + proactive nudges + recalibration. The headline Luxury entitlement (flips Premium/Luxury waitlist live — Decision #39).
+
+It is NOT a chatbot — it knows everything the user logged (meals, workouts, weight, consistency), it can take actions (log a meal, request a swap, draft a recalibration), and it remembers the user across sessions.
+
+### Why It's Unblocked Now
+All four signals are live: MealLog, WorkoutSession, BodyMetric, ConsistencySnapshot + UserProfile.weeklyConsistencyScore. Recipe seeds (1/119) do NOT gate it (Decision #74).
+
+### Positioning (Decision #76)
+The moat is NOT "a better Ria." Healthify/Ria + the giants (ChatGPT Health, Apple Health+, Google/Fitbit, Whoop) all READ data and advise. NONE cook + deliver the food. FitFuel is the only AI coach that controls the plate — verified intake, not self-reported. Moat = operational + hyperlocal, not model sophistication.
+
+### Sub-Phases (full detail in scope doc)
+| Sub | Name | Priority |
+|-----|------|----------|
+| 12A | Context Engine + Trainer Brief (the foundation) | P0 |
+| 12-SAFE | Persona & Safety Layer (medical + disordered-eating guards) — ships WITH 12B | P0 |
+| 12B | Reactive Chat (MVP shippable moat) — streaming, persisted, Luxury gate | P0 |
+| 12-SUPPORT | Support layer for all subscribers (order/delivery/account, bounded) | P0/P1 |
+| 12C | Conversation persistence + memory wiring | P0 |
+| 12D | Tool use / actions (logMeal, requestSwap, suggestRecalibration…) | P1 |
+| 12E | Proactive engine (plateau, missed workouts, milestones → coach messages) | P1 |
+| 12F | Durable memory / insight extraction ("knows you") | P2 |
+| 12G | WhatsApp surface (overlaps Phase 16) | P2 |
+| 12H | Cost & usage controls (prompt caching, two-model split, rate limits) | P1 |
+| 12I | Eval harness (golden + safety red-team set) | P1 |
+| 12J | Admin / quality dashboard | P2 |
+| 12K | Premium "AI Insights" lite feed (IF approved — Open Decision) | P3 |
+
+### Proposed Schema (via db push — Decision #71; verify schema.prisma first — #61)
+AiConversation, AiMessage (+ AiRole enum), TrainerInsight, TrainerEvent, AiUsageLog. Detail in scope doc.
+
+### Cross-channel note (Decision #78)
+The AI Trainer monetises delivery subs, digital plans (Phase 13), AND converted aggregator customers (Phase 21) — it is the stickiness layer for every channel, not a delivery-only feature.
+
+---
+
+## PHASE 21 — AGGREGATOR / MARKETPLACE CHANNEL (ZOMATO + SWIGGY)
+
+> **Status: ⏸️ Pending — post-launch growth channel. Added Jun 5, 2026. NOT core to the model. See Decision #77.**
+
+### What It Is
+Listing FitFuel's kitchen on Zomato and Swiggy as a cloud-kitchen brand for à-la-carte, no-subscription ordering. This is a DISTRIBUTION + ACQUISITION channel layered on top of the owned platform — it is not the business model. It fills spare kitchen capacity and puts FitFuel in front of cold discovery traffic.
+
+### Why It Comes AFTER Launch (and why it's NOT core)
+Aggregator orders BREAK the data loop that is FitFuel's entire moat:
+- The customer is anonymous to us — no onboarding, no body data, no UserActivePlan, no tracking.
+- The platform owns the relationship and takes ~20–30% commission.
+- It is a commodity food sale, the opposite of a personal health OS.
+So this channel exists to FEED the funnel, never to replace it. Sequenced after Phase 20 (owned-platform launch).
+
+### The Conversion Mechanic (the only reason to do this)
+Every aggregator box ships with a QR card → "Scan for your free TDEE + personalised plan" → lands on the public TDEE tool (9T) → onboarding → tracked subscriber. The aggregator pays to acquire the eater; FitFuel converts the eater into an owned, tracked customer. **Measure success by conversion rate, not aggregator GMV.**
+
+### Scope (light — this is ops + marketing, not deep platform work)
+| Item | Notes |
+|------|-------|
+| Merchant onboarding | Zomato + Swiggy restaurant partner accounts (FSSAI 21523035002815 already in hand — Pending Input #8) |
+| Menu curation | A focused à-la-carte menu (NOT the 119-plan catalogue) — best-selling, travel-stable dishes |
+| Menu sync | Manual at first; API/POS sync later only if volume justifies |
+| Order ingestion | Aggregator orders flow into the Phase 15 Kitchen Production Dashboard so the kitchen sees ALL demand (subscription + aggregator) in one view |
+| QR conversion card | Printed insert in every aggregator box → /tools/tdee-calculator (9T) → onboarding |
+| Reconciliation | Commission + payout tracking (aggregators settle separately from PayU/COD) |
+
+### Connects To
+- 9T Public TDEE Calculator → the landing page for the QR conversion funnel.
+- Phase 15 Kitchen Production Dashboard → unified demand view (subscription + aggregator).
+- Phase 12 AI Trainer → an aggregator-converted customer enters the same data loop and becomes monetisable by the coach (Decision #78).
+
+### Open Questions (resolve before build)
+- Same brand "FitFuel" on aggregators, or a separate à-la-carte sub-brand to protect the premium health-OS positioning?
+- Which dishes travel well via aggregator riders (longer transit than own delivery)?
+- Does aggregator visibility cannibalise direct subscription, or feed it? (Track conversion vs cannibalisation explicitly.)
+
+---
+
+## PHASE 22 — SOCIAL & COMMUNITY
+
+> **Status: ⏸️ Pending — split out of Phase 12 (added Jun 5, Decision #84). NOT part of the AI trainer core.**
+
+### What It Is
+The social layer that was surfaced during Phase 12 scoping but does not belong inside the AI trainer: accountability-partner matching (users on similar plans/goals/city), cohort leaderboards, community challenges ("7/7 workout days this week — 43 users in"), and the AI→human nutritionist handoff protocol (seamless escalation with full data context already shared, so the user never repeats themselves).
+
+### Why It's Its Own Phase
+Community is a whole product with its own matching, moderation, and abuse surface. Bolting it onto "AI trainer" would have bloated Phase 12 and delayed the moat. It rides on the same data the rest of the system already produces (plans, consistency scores, progress) and is a retention/virality layer best built once there's an actual user base to connect.
+
+### Connects To
+- Consistency Score (9R) + Progress (Phase 11) → leaderboards + challenge scoring.
+- Phase 12 AI Trainer → coach→human handoff protocol (escalation when the AI hits medical/emotional limits — overlaps the Luxury nutritionist consult).
+- Referral System (Phase 19) → social graph overlap.
 
 ---
 
@@ -1654,24 +1880,29 @@ Delivery.deliveryWindow        DeliveryWindow?
 | Phase | Name | How Phase 9 Enables It |
 |-------|------|------------------------|
 | 10 | Live Delivery Tracking | ✅ DONE (Jun 4) — nightly generator + dispatch board + driver app live. See Phase 10 section above. |
-| 11 | Progress Tracking + Charts + Consistency Score | MealLog + WorkoutSession + BodyMetrics + ConsistencyScore exist — just visualise the transformation |
-| 12 | AI Personal Trainer + Chatbot | Recipe DB + UserActivePlan + MealLogs + WorkoutSessions + BodyMetrics + ConsistencyScore = full context. AI knows everything. |
-| 13 | Digital Meal Plans (PDF) | Pull MealPlan + schedule + Recipe from DB → generate PDF with macros, recipes, grocery list |
+| 11 | Progress Tracking + Charts + Consistency Score | ✅ Core LIVE (Jun 5) — /dashboard/progress with weight/calorie/macro/consistency charts. Snapshot trend = fast-follow. See Phase 11 section above. |
+| 12 | AI Personal Trainer + Customer-Service Assistant (unified) | ⏸️ PARKED Jun 5 — scope FINALISED (tight v1 + captured v2–v4 backlog), build DEFERRED until data loop is fuller / later phases ship. COACH (Luxury) + SUPPORT (all subscribers). See Phase 12 section + scope doc. Decisions #74–#85. |
+| 13 | Digital Meal Plans (PDF) | Pull MealPlan + schedule + Recipe from DB → generate PDF with macros, recipes, grocery list. Cross-channel: digital-plan users (cook themselves, no delivery, anywhere in India) still log meals/workouts → monetisable by the Phase 12 AI Trainer. National reach beyond Pune delivery. Decision #78. |
 | 14 | Blog, FAQ, Testimonials | FAQ page in 9I — blog extends it. Testimonials with real user results from Phase 11 data |
-| 15 | Admin Panel + Kitchen Production Dashboard | Recipe admin in 9M extended. Kitchen sees: tomorrow's 47 portions of Rajma, 23 Moong Chilla. Franchise SOP. |
+| 15 | Admin Panel + Kitchen Production Dashboard | Recipe admin in 9M extended. Kitchen sees: tomorrow's 47 portions of Rajma, 23 Moong Chilla. Franchise SOP. Also ingests Phase 21 aggregator orders into one unified demand view. |
 | 16 | n8n WhatsApp Notifications + Weekly Digest | "Today's meal" push uses MealLog + PlanScheduleSlot. Weekly Digest = 9R Consistency Score + weight delta + best dish |
 | 17 | Personalised Supplement Stack + Delivery | plan_category + health_condition → curated stack with doses. Premium gets stack recommendation. Luxury gets AI-refined. |
 | 18 | Plan Progression Engine + Adaptive Recalibration | Weight trend flat 2 weeks → detect plateau → suggest calorie adjustment. Goal hit → suggest next plan. |
 | 19 | Referral System + Public TDEE Tool | referredBy on User table. TDEE tool = top-of-funnel SEO entry point → onboarding conversion |
 | 20 | QA, Performance, DNS cutover, Launch | fitfuel.in goes live |
+| 21 | Aggregator Channel (Zomato + Swiggy) | Post-launch distribution + acquisition + kitchen-fill. Feeds funnel via QR → TDEE (9T) → onboarding. NOT core — breaks the data loop. Light integration (curated menu + order ingestion into Phase 15). Decision #77. See Phase 21 section above. |
+| 22 | Social & Community | Split out of Phase 12 (Decision #84). Accountability matching, cohort leaderboards, challenges, AI→human nutritionist handoff. Rides on consistency + progress data. Retention/virality layer — build once there's a user base. See Phase 22 section above. |
 | Online Consulting | Nutrition consulting | Nutritionist sees UserActivePlan + MealLog + BodyMetrics + ConsistencyScore — full picture |
 | Franchise | Franchise portal | RecipeStep SOP + batch scaling + Kitchen Production Dashboard already built — franchise gets access |
 | Corporate | B2B plans | MealPlan with corporate pricing — schema supports it. Company health benefit program. |
 
 ---
 
-## PROGRESS SUMMARY (May 30, 2026 — End of Day 3)
+## PROGRESS SUMMARY (Jun 5, 2026)
 
+> Previous (May 30 — End of Day 3) snapshot preserved below; Jun 5 figures added.
+
+### May 30 — End of Day 3
 | Category | Done | Total | % |
 |----------|------|-------|---|
 | Schema + Migrations | ✅ | ✅ | 100% |
@@ -1683,8 +1914,20 @@ Delivery.deliveryWindow        DeliveryWindow?
 | Phases 0–8 | ✅ | ✅ | 100% |
 | Phase 10 Delivery (core) | ✅ | ✅ | 100% (3 items pending) |
 
-**Current focus: Finish Phase 9 completely. Do not touch Phases 0-8.**
-**Next action: Check FSSAI in footer (G8) → WhatsApp number in PlanDetailClient → full end-to-end test → go live**
+### Jun 5 — current
+| Category | Done | Total | % |
+|----------|------|-------|---|
+| Schema + Migrations | ✅ (+ ConsistencySnapshot pending migrate) | ✅ | 100% |
+| Meal Plans in DB | 119 | 119 | 100% |
+| Recipe Seeds (DB verified) | 1 | 119 | 1% |
+| Schedule Seeds (DB verified) | 1 | 119 | 1% |
+| Phase 9 App Features | 9 (9N+9J+9K+9E+9R+9D done) | ~20 | 45% |
+| Phase 10 Delivery (core) | ✅ | ✅ | 100% (checkout toggle now in UI — verify persistence; slip + driver-notify pending) |
+| Phase 11 Progress Charts (core) | ✅ | ✅ | 100% (snapshot cron LIVE Jun 5 — trend line renders once weeks accrue) |
+| Phases 0–8 | ✅ | ✅ | 100% |
+
+**Current focus: PHASE 11 COMPLETE. Phase 12 scope FINALISED + PARKED (build deferred — Decision #85). Next track = build the data-generating phases first: (a) P0 recipe seeds (unlock more live plans → more users → more data), (b) remaining Phase 9 app features (9F/9G/9H/9I pages, 9L net-calorie engine, 9M recipe admin), then Phases 13–19. Un-park Phase 12 once the data loop is fuller.**
+**Next action: pick the next build track among the data-generating phases. Phase 12 (AI Trainer) is parked-with-finalised-scope. Phase 21 (Zomato/Swiggy) + Phase 22 (Social/Community) added as later phases. While building intervening phases, keep the §8 forward-compatible hooks in mind (receiving-API pattern, app-shell nav) so Phase 12 slots in later instead of needing a retrofit.**
 
 ---
 
@@ -1700,6 +1943,19 @@ Delivery.deliveryWindow        DeliveryWindow?
 > **Next: G8 FSSAI footer check → WhatsApp number in PlanDetailClient → end-to-end test → go live.**
 > **Jun 4 — PHASE 10 DELIVERY CORE LIVE: /admin command center (dispatch board Morning/Evening + driver roster), /driver/[token] app, nightly generator cron (11 PM IST), COD order now auto-creates UserActivePlan, 10 orders backfilled, storefront nav hidden on /admin. Schema: DeliveryWindow enum + deliveryWindow on UserActivePlan & Delivery.**
 > **Decisions #62-64 (Jun 4): pricing HQ-fixed for launch; confirmation = physical signed slip (no OTP); 1 delivery/customer/day, Morning OR Evening window.**
-> **Phase 10 PENDING: checkout window toggle (all default MORNING), printable signed slip, driver WhatsApp notify (MSG91).**
+> **Phase 10 PENDING: checkout window toggle (now in UI Jun 5 — verify persistence), printable signed slip, driver WhatsApp notify (MSG91).**
 > **Decision #65 (Jun 4): stack confirmed Auth.js v5 (next-auth 5.0.0-beta) — read session via auth(), never hand-read cookies. Prisma 7, Neon. Always read schema.prisma before any Prisma select (reaffirms #61).**
 > **Decision #66 (Jun 4): printable signed delivery slip will be built in Claude Design (visual), not hand-coded. Checkout window toggle + driver dispatch notification to be built next to close Phase 10.**
+> **Jun 5 — G8 FSSAI confirmed in footer → all launch gates cleared, WL-Veg launch-ready.**
+> **Jun 5 — PHASE 10 #1 CLOSED: delivery window persists for COD + PayU (verified live ₹1 order). PayU order flow COMPLETED (was a no-op stub) — online payments now create Order + Payment + UserActivePlan. Plan assignment fixed to weight-loss-veg. P2002 phone-collision fixed. Decisions #72–73. Phase 10 remaining: printable signed slip (Claude Design), driver dispatch WhatsApp notify (MSG91).**
+> **Jun 5 — KNOWN cosmetic: order/confirmation page hardcodes "7am–10am" regardless of chosen window — fix in global rewire.**
+> **Jun 5 — 9D Wednesday=rest RESTORED: re-ran clean exercise-schedule seed (schedule cmq0ehixv00009gugf0lbg0lv), deleted the temporary -VERIFY seed. TRACK A COMPLETE (9D Wed-rest ✅ + FSSAI G8 ✅ + Phase 10 #1 ✅). WL-Veg is launch-ready.**
+> **Jun 5 — CHECKOUT ENCODING FIXED: app/checkout/page.tsx mojibake repaired (₹/middots/dashes/emojis), rupee hardened to \u20B9 + &#8377;. Root cause = Windows ANSI save. Decision #67.**
+> **Jun 5 — 9R Consistency + 9D Workout card VERIFIED LIVE (built Jun 4, tracker was stale). Both = DONE. Decision #68.**
+> **Jun 5 — PHASE 11 PROGRESS PAGE CORE LIVE: lib/progress.ts + /dashboard/progress (page.tsx + ProgressClient.tsx). Weight/calorie/macro/consistency charts. Decision #69.**
+> **Jun 5 — CONSISTENCY SNAPSHOT engine built (ConsistencySnapshot model + /api/cron/snapshot-consistency weekly cron + vercel.json). Needs migrate + push. Vercel cron #2 of 2 (Hobby limit). Decision #70.**
+> **Jun 5 — SNAPSHOT DEPLOYED: schema synced via `prisma db push` (migrate dev hit drift from Phase 10 db-push changes — refused reset to protect data). consistency_snapshots table live. Cron route + vercel.json pushed; 401-guard verified at /api/cron/snapshot-consistency. PHASE 11 COMPLETE. Decision #71 = standardise on db push, never migrate dev (reset risk).**
+> **Jun 5 — PHASE 12 SCOPE LOCKED: AI Personal Trainer = UNIFIED assistant (COACH for Luxury + SUPPORT for all subscribers). Full scope doc FITFUEL-PHASE-12-AI-TRAINER-SCOPE.md (12A–12K + 12-SAFE + 12-SUPPORT). Positioning = own the plate, don't out-AI Healthify. Recipe seeds do NOT gate it. Decisions #74–#76, #78. Build starts at 12A Context Engine.**
+> **Jun 5 — PHASE 21 ADDED: Aggregator / Marketplace Channel (Zomato + Swiggy) — post-launch growth channel, NOT core (breaks the data loop). Feeds funnel via QR → TDEE → onboarding. Light ops/marketing integration. Pending Input #8 (merchant accounts). Decision #77. Digital Meal Plans remain Phase 13 (already in roadmap). Decision #78 = AI Trainer monetises across ALL channels.**
+> **Jun 5 — PHASE 12 FINALISED + PARKED: scope doc upgraded to FINALIZED version (full universe captured + tight v1 committed). v1 = 12A + 12-SAFE + 12B + 12-SUPPORT + 12C + 12D + 12E + 12-WORKOUT-MODE + 12H + 12I (web-only, data already in system; in-session workout mode pulled into v1 as best version). Build DEFERRED until data loop fuller / later phases ship — AI quality is bounded by data depth, field moves monthly, ops+revenue first. PWA-first, Expo deferred. Three hard safety lines (medical / body-image / proactive-≠-manipulative). Reassignments: form-video → Phase 7, DPDP/export → Phase 20, community → NEW Phase 22. Decisions #79–#85.**
+> **Jun 5 — 9I COMPLETE: All 13 public trust + legal pages built, parse-checked, and deployed. Routes live: /terms · /privacy · /refund-policy · /medical-disclaimer · /allergen-policy · /how-it-works · /our-kitchen · /our-ingredients · /our-team · /results · /faq · /corporate · /contact. Footer wired with all 5 legal links (fixed /refunds → /refund-policy). Committed as 13 files, 1154 insertions (components/Footer.tsx + 12 new pages). Placeholders remaining: registered entity name, full address, grievance officer name, WhatsApp number, nutritionist credentials (Pending Input #7).**
