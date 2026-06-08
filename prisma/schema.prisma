@@ -1116,3 +1116,69 @@ enum DigitalBundle {
   STARTER
   PRO
 }
+
+// ============================================================
+// PHASE 14 — BLOG / FAQ / TESTIMONIALS (added Jun 8, 2026)
+// Public content surfaces. Managed by Phase 15 Admin Panel later.
+// Added via `npx prisma db push` (NEVER migrate dev — Decision #71).
+// ============================================================
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogPost {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  excerpt       String // card teaser + meta description
+  contentHtml   String // owner-authored HTML body (Phase 15 admin → rich text)
+  coverImageUrl String?
+  category      String // Nutrition, Training, Recipes, FitFuel News, Guides
+  tags          String[]
+  authorName    String     @default("Team FitFuel")
+  readMinutes   Int        @default(5)
+  status        BlogStatus @default(PUBLISHED)
+  isFeatured    Boolean    @default(false)
+  publishedAt   DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([category])
+  @@map("blog_posts")
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  category  String // Delivery & Areas, Plans & Menu, Tracking, Dietary & Allergens, Pricing & Payment, Account
+  question  String
+  answerHtml String // light HTML — allows inline links to legal pages
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, sortOrder])
+  @@map("faqs")
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  name        String
+  location    String // Kharadi, Viman Nagar, Kalyani Nagar...
+  planLabel   String // "Weight Loss · 1 Month"
+  goal        String? // weight_loss, muscle_gain, balanced, office
+  resultLabel String // "-4kg in 15 days"
+  rating      Int      @default(5)
+  quote       String
+  avatarUrl   String?
+  isFeatured  Boolean  @default(false) // surfaced on homepage / featured row
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+  @@map("testimonials")
+}

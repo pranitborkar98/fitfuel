@@ -17,6 +17,8 @@ const companyLinks = [
   { label: "How It Works",       href: "/#how-it-works"  },
   { label: "Delivery Locations", href: "/locations"      },
   { label: "Blog",               href: "/blog"           },
+  { label: "Reviews",            href: "/testimonials"   },
+  { label: "FAQ",                href: "/faq"            },
   { label: "Contact",            href: "/contact"        },
 ];
 
