@@ -41,6 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </span>
           <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
             <Link href="/admin" style={{ color: T.text, textDecoration: "none", fontWeight: 600 }}>Dispatch</Link>
+            <Link href="/admin/production" style={{ color: T.textMuted, textDecoration: "none", fontWeight: 600 }}>Production</Link>
             <Link href="/admin/drivers" style={{ color: T.textMuted, textDecoration: "none", fontWeight: 600 }}>Drivers</Link>
           </nav>
         </div>

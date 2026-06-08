@@ -1,15 +1,20 @@
 // app/api/cron/generate-deliveries/route.ts
-// Phase 11 -- the delivery generator. Runs nightly (Vercel Cron, 11 PM IST).
+// Phase 11 -- the delivery generator. Runs nightly (Vercel Cron, 17:30 UTC).
 // For every ACTIVE subscriber whose plan covers tomorrow (and didn't skip it),
 // it creates ONE delivery -- all their meals together -- stamped with the
 // customer's chosen window (MORNING / EVENING). Idempotent: re-running won't
 // create duplicates.
+//
+// Phase 15B: subscriber selection + skip filtering now come from the SHARED
+// resolver in lib/production.ts, so this cron and the Kitchen Production
+// Dashboard can never disagree about who eats tomorrow (Decision P15-1).
 //
 // Manual test (with your CRON_SECRET):
 //   curl -H "Authorization: Bearer <CRON_SECRET>" \
 //     "https://fitfuel-eosin.vercel.app/api/cron/generate-deliveries?date=2026-06-05"
 
 import { prisma } from "@/lib/prisma";
+import { getActiveSubscribersForDate, targetDayUTC, ymd } from "@/lib/production";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -24,20 +29,6 @@ function mealsFor(m: string | null | undefined): string[] {
   }
 }
 
-// target = tomorrow at UTC midnight (matches the board/driver "today" query convention).
-// ?date=YYYY-MM-DD overrides, for testing.
-function targetDay(override: string | null): Date {
-  if (override) return new Date(`${override}T00:00:00.000Z`);
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + 1);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
-
-function sameUTCDate(a: Date, b: Date): boolean {
-  return a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
-}
-
 export async function GET(req: NextRequest) {
   // Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" automatically.
   const expected = process.env.CRON_SECRET;
@@ -45,35 +36,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const date = targetDay(req.nextUrl.searchParams.get("date"));
+  const date = targetDayUTC(req.nextUrl.searchParams.get("date"));
 
-  const plans = await prisma.userActivePlan.findMany({
-   where: {
-  status: "active",
-  isDigital: false,           // Phase 13D: exclude cook-at-home digital buyers
-  startDate: { lte: date },
-  endDate: { gte: date },
-  orderId: { not: null },
-},
-    select: {
-      id: true,
-      orderId: true,
-      mealsPerDay: true,
-      deliveryWindow: true,
-      skipDates: true,
-    },
-  });
+  // Shared predicate: active, physical, in-range, has order, skip-filtered.
+  const { total, served, skipped } = await getActiveSubscribersForDate(date);
 
   let created = 0;
-  let skipped = 0;
   let already = 0;
 
-  for (const plan of plans) {
-    // customer skipped this date?
-    if (plan.skipDates?.some(sd => sameUTCDate(new Date(sd), date))) {
-      skipped++;
-      continue;
-    }
+  for (const plan of served) {
     // already generated (idempotent re-run)?
     const exists = await prisma.delivery.findFirst({
       where: { orderId: plan.orderId!, deliveryDate: date },
@@ -97,8 +68,8 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    date: date.toISOString().slice(0, 10),
-    activePlans: plans.length,
+    date: ymd(date),
+    activePlans: total,
     created,
     alreadyExisted: already,
     skipped,
