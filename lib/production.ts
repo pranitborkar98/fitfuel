@@ -1,15 +1,17 @@
 // lib/production.ts
-// Phase 15B — the SINGLE SOURCE OF TRUTH for "who eats what on a given date".
+// Phase 15B — the SINGLE SOURCE OF TRUTH for "who eats what on a given date",
+// AND the kitchen SOP: scaled ingredients + cooking steps per recipe.
 //
 // Two consumers share this file so they can never disagree (Decision P15-1):
-//   1) the nightly delivery cron (api/cron/generate-deliveries) — uses the
-//      subscriber selection + skip filtering.
-//   2) the Kitchen Production Dashboard (app/admin/production) — uses the full
-//      report (portions per recipe, by window + meal slot).
+//   1) the nightly delivery cron (api/cron/generate-deliveries) — subscriber
+//      selection + skip filtering only.
+//   2) the Kitchen Production Dashboard (app/admin/production) — the full cook
+//      sheet: portions per recipe (by window + slot), scaled ingredient roll-up,
+//      step-by-step SOP, and a consolidated prep/shopping list.
 //
-// Menu day-number is CALENDAR-BASED (Decision P15-2/Q1b): day 1 = startDate,
-// advancing one menu-day per calendar day, wrapping at cycleLengthDays. Skipped
-// days do NOT shift the menu — they only suppress that day's delivery.
+// Menu day-number is CALENDAR-BASED (Q1b): day 1 = startDate, advancing one
+// menu-day per calendar day, wrapping at cycleLengthDays. Skipped days do NOT
+// shift the menu — they only suppress that day's delivery.
 
 import { prisma } from "@/lib/prisma";
 
@@ -23,8 +25,6 @@ export const SLOT_ORDER: Record<MealSlotValue, number> = {
   DINNER: 3,
 };
 
-// What the cron stamps as `mealsIncluded` maps 1:1 to which menu slots a
-// subscriber actually receives. Keep this in lockstep with the cron's mealsFor().
 export function mealSlotsForMealsPerDay(m: string | null | undefined): MealSlotValue[] {
   switch (m) {
     case "BREAKFAST_LUNCH":
@@ -38,9 +38,6 @@ export function mealSlotsForMealsPerDay(m: string | null | undefined): MealSlotV
   }
 }
 
-// target = a UTC-midnight Date. Default = tomorrow (matches the cron exactly so
-// the production sheet reflects the deliveries that WILL be generated).
-// ?date=YYYY-MM-DD overrides.
 export function targetDayUTC(override?: string | null): Date {
   if (override) return new Date(`${override}T00:00:00.000Z`);
   const d = new Date();
@@ -61,11 +58,9 @@ function utcMidnight(d: Date): number {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
-// Calendar-based menu day. Day 1 = startDate. Wraps at cycleLengthDays.
 export function menuDayNumber(startDate: Date, target: Date, cycleLengthDays: number): number {
   const days = Math.floor((utcMidnight(target) - utcMidnight(startDate)) / 86_400_000);
   const cycle = cycleLengthDays && cycleLengthDays > 0 ? cycleLengthDays : 30;
-  // ((days % cycle) + cycle) % cycle handles dates before startDate safely
   return (((days % cycle) + cycle) % cycle) + 1;
 }
 
@@ -81,17 +76,13 @@ export type ActiveSubscriber = {
 };
 
 export type ActiveSubscribersResult = {
-  /** total active physical plans covering the date, BEFORE skip filtering */
   total: number;
-  /** subscribers actually being served (skip-filtered) */
   served: ActiveSubscriber[];
-  /** count of subscribers who skipped this date */
   skipped: number;
 };
 
-// THE predicate. Active, physical (non-digital), date within range, has an order.
-// Returns served list (skip-filtered) + counts. The cron and the dashboard both
-// call this so the subscriber set is defined in exactly one place.
+// THE predicate. Shared by the cron and the dashboard so the subscriber set is
+// defined in exactly one place.
 export async function getActiveSubscribersForDate(date: Date): Promise<ActiveSubscribersResult> {
   const subs = (await prisma.userActivePlan.findMany({
     where: {
@@ -125,6 +116,24 @@ export async function getActiveSubscribersForDate(date: Date): Promise<ActiveSub
   return { total: subs.length, served, skipped };
 }
 
+export type IngredientNeed = {
+  name: string;
+  category: string | null;
+  gramsPerServing: number;
+  totalGrams: number;
+  prepNote: string | null;
+  isOptional: boolean;
+};
+
+export type RecipeStepLine = {
+  stepNumber: number;
+  title: string;
+  instruction: string;
+  technique: string | null;
+  kitchenNote: string | null;
+  durationMins: number | null;
+};
+
 export type ProductionRecipeLine = {
   recipeId: string;
   recipeName: string;
@@ -136,6 +145,14 @@ export type ProductionRecipeLine = {
   totalPortions: number;
   byWindow: Record<DeliveryWindowValue, number>;
   bySlot: Record<MealSlotValue, number>;
+  ingredients: IngredientNeed[];
+  steps: RecipeStepLine[];
+};
+
+export type ShoppingListItem = {
+  name: string;
+  category: string | null;
+  totalGrams: number;
 };
 
 export type ProductionReport = {
@@ -143,13 +160,17 @@ export type ProductionReport = {
   headcount: { total: number; MORNING: number; EVENING: number };
   totalPortions: number;
   lines: ProductionRecipeLine[];
+  shoppingList: ShoppingListItem[];
   warnings: string[];
 };
 
-// Build the full cook sheet for a date: portions per recipe, split by delivery
-// window and meal slot, plus headcount. Reuses the schedule join shape from
-// api/plans/[slug]/schedule.
-export async function buildProductionReport(date: Date): Promise<ProductionReport> {
+// Build the full cook sheet for a date. When `detailed` (default), also fetches
+// scaled ingredients + cooking steps and the consolidated shopping list.
+export async function buildProductionReport(
+  date: Date,
+  opts: { detailed?: boolean } = {}
+): Promise<ProductionReport> {
+  const detailed = opts.detailed ?? true;
   const { served } = await getActiveSubscribersForDate(date);
 
   const report: ProductionReport = {
@@ -157,11 +178,11 @@ export async function buildProductionReport(date: Date): Promise<ProductionRepor
     headcount: { total: 0, MORNING: 0, EVENING: 0 },
     totalPortions: 0,
     lines: [],
+    shoppingList: [],
     warnings: [],
   };
   if (served.length === 0) return report;
 
-  // Resolve each subscriber's menu day, collect distinct (plan, day) pairs.
   type Resolved = ActiveSubscriber & { dayNumber: number; window: DeliveryWindowValue };
   const resolved: Resolved[] = served.map((s) => ({
     ...s,
@@ -193,7 +214,6 @@ export async function buildProductionReport(date: Date): Promise<ProductionRepor
     },
   });
 
-  // index: planId|day|slot -> slot
   const slotIndex = new Map<string, (typeof slots)[number]>();
   for (const sl of slots) slotIndex.set(`${sl.mealPlanId}|${sl.dayNumber}|${sl.mealSlot}`, sl);
 
@@ -229,6 +249,8 @@ export async function buildProductionReport(date: Date): Promise<ProductionRepor
           totalPortions: 0,
           byWindow: { MORNING: 0, EVENING: 0 },
           bySlot: { BREAKFAST: 0, LUNCH: 0, SNACK: 0, DINNER: 0 },
+          ingredients: [],
+          steps: [],
         };
         lineMap.set(rid, line);
       }
@@ -239,7 +261,6 @@ export async function buildProductionReport(date: Date): Promise<ProductionRepor
     }
   }
 
-  // primarySlot = the slot contributing the most portions for that recipe
   for (const line of lineMap.values()) {
     let best: MealSlotValue = "BREAKFAST";
     let bestN = -1;
@@ -250,6 +271,91 @@ export async function buildProductionReport(date: Date): Promise<ProductionRepor
       }
     });
     line.primarySlot = best;
+  }
+
+  // ── SOP detail: scaled ingredients + steps + consolidated shopping list ──
+  if (detailed && lineMap.size > 0) {
+    const recipeIds = Array.from(lineMap.keys());
+
+    const [ings, steps] = await Promise.all([
+      prisma.recipeIngredient.findMany({
+        where: { recipeId: { in: recipeIds } },
+        orderBy: { orderInRecipe: "asc" },
+        select: {
+          recipeId: true,
+          quantityGrams: true,
+          prepNote: true,
+          isOptional: true,
+          foodItem: { select: { name: true, category: true } },
+        },
+      }),
+      prisma.recipeStep.findMany({
+        where: { recipeId: { in: recipeIds } },
+        orderBy: { stepNumber: "asc" },
+        select: {
+          recipeId: true,
+          stepNumber: true,
+          title: true,
+          instruction: true,
+          technique: true,
+          kitchenNote: true,
+          durationMins: true,
+        },
+      }),
+    ]);
+
+    const shop = new Map<string, ShoppingListItem>();
+
+    for (const ing of ings) {
+      const line = lineMap.get(ing.recipeId);
+      if (!line) continue;
+      const perServing = Number(ing.quantityGrams ?? 0);
+      const total = perServing * line.totalPortions;
+      const name = ing.foodItem?.name ?? "Unknown item";
+      const category = ing.foodItem?.category ?? null;
+
+      line.ingredients.push({
+        name,
+        category,
+        gramsPerServing: perServing,
+        totalGrams: total,
+        prepNote: ing.prepNote ?? null,
+        isOptional: ing.isOptional,
+      });
+
+      // consolidated procurement (skip optional items so we don't over-order)
+      if (!ing.isOptional) {
+        const key = `${name}|${category ?? ""}`;
+        const existing = shop.get(key);
+        if (existing) existing.totalGrams += total;
+        else shop.set(key, { name, category, totalGrams: total });
+      }
+    }
+
+    for (const st of steps) {
+      const line = lineMap.get(st.recipeId);
+      if (!line) continue;
+      line.steps.push({
+        stepNumber: st.stepNumber,
+        title: st.title,
+        instruction: st.instruction,
+        technique: st.technique ?? null,
+        kitchenNote: st.kitchenNote ?? null,
+        durationMins: st.durationMins ?? null,
+      });
+    }
+
+    report.shoppingList = Array.from(shop.values()).sort((a, b) => {
+      const ca = (a.category ?? "~").localeCompare(b.category ?? "~");
+      return ca !== 0 ? ca : a.name.localeCompare(b.name);
+    });
+
+    // flag recipes missing an SOP so the kitchen knows the data is incomplete
+    for (const line of lineMap.values()) {
+      if (line.ingredients.length === 0) {
+        report.warnings.push(`No ingredients defined for recipe "${line.recipeName}" — cannot generate prep list.`);
+      }
+    }
   }
 
   report.lines = Array.from(lineMap.values()).sort((a, b) => {
