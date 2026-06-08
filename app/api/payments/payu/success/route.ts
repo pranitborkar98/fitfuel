@@ -2,6 +2,7 @@
 // app/api/payments/payu/success/route.ts
 // PayU posts here after payment. Verify hash, complete the pending order (keyed by txnid).
 // Phase 13D: branches on notes.isDigital — digital plans skip delivery (isDigital UserActivePlan).
+// Phase 13D (capture): forwards notes.profile to activateDigitalPlan so body stats land on UserProfile.
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     if (meta.isDigital) {
       const plan = await (prisma as any).mealPlan.findUnique({ where: { slug: meta.planSlug } });
       if (plan) {
-        await activateDigitalPlan({ orderId: order.id, mealPlanId: plan.id, durEnum: meta.durEnum ?? "ONE_MONTH", bundle: meta.bundle ?? "STARTER" });
+        await activateDigitalPlan({ orderId: order.id, mealPlanId: plan.id, durEnum: meta.durEnum ?? "ONE_MONTH", bundle: meta.bundle ?? "STARTER", profile: meta.profile });
         console.log("[PayU] DIGITAL plan activated", { txnid, order: order.orderNumber });
       } else {
         console.error("[PayU] Digital paid but plan not found", { txnid, planSlug: meta.planSlug });

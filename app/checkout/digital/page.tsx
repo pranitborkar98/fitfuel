@@ -1,4 +1,6 @@
 // app/checkout/digital/page.tsx — digital checkout, bundle-aware, coupon, online-only.
+// Phase 13D (capture): optional body stats collected here -> stashed in order.notes ->
+// persisted to UserProfile on payment success (seeds dashboard + personalises the PDF).
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -29,6 +31,9 @@ function DigitalCheckout() {
 
   const [firstname, setFirst] = useState(""); const [lastname, setLast] = useState("");
   const [email, setEmail] = useState(""); const [phone, setPhone] = useState("");
+  // ── Optional personalisation capture ──
+  const [heightCm, setHeight] = useState(""); const [weightKg, setWeight] = useState("");
+  const [targetWeightKg, setTargetWeight] = useState(""); const [age, setAge] = useState("");
   const [coupon, setCoupon] = useState(""); const [discount, setDiscount] = useState(0);
   const [total, setTotal] = useState(sale);
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -48,7 +53,12 @@ function DigitalCheckout() {
   async function pay() {
     if (!firstname || !email || !phone) { alert("Please fill name, email and phone."); return; }
     setBusy(true);
-    const res = await fetch("/api/payments/payu/digital", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ firstname, lastname, email, phone, planSlug, dur, bundle, couponCode: discount > 0 ? coupon.trim().toUpperCase() : undefined }) });
+    const res = await fetch("/api/payments/payu/digital", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      firstname, lastname, email, phone, planSlug, dur, bundle,
+      couponCode: discount > 0 ? coupon.trim().toUpperCase() : undefined,
+      // optional — server validates & ignores blanks/out-of-range
+      heightCm, weightKg, targetWeightKg, age,
+    }) });
     const data = await res.json();
     if (data.hash) setPayuData(data); else { alert(data.error || "Could not start payment"); setBusy(false); }
   }
@@ -90,6 +100,24 @@ function DigitalCheckout() {
           <Field label="Phone" value={phone} onChange={setPhone} placeholder="98765 43210" />
           <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}>No address needed — digital download. After payment, log in with this email to download from your dashboard.</p>
         </div>
+
+        {/* ── Optional personalisation capture ── */}
+        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700 }}>Personalise my plan</h3>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#0a0a0a", background: T.accent, padding: "2px 8px", borderRadius: 999 }}>OPTIONAL</span>
+          </div>
+          <p style={{ color: T.textMuted, fontSize: 12.5, marginBottom: 16 }}>
+            Add your stats and your PDF opens with your own numbers — BMI, calorie target, deficit and a weight-projection chart. Skip it and you&apos;ll get the standard plan; you can add these later in your dashboard.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Field label="Height (cm)" type="number" value={heightCm} onChange={setHeight} placeholder="175" />
+            <Field label="Age" type="number" value={age} onChange={setAge} placeholder="28" />
+            <Field label="Current weight (kg)" type="number" value={weightKg} onChange={setWeight} placeholder="82" />
+            <Field label="Goal weight (kg)" type="number" value={targetWeightKg} onChange={setTargetWeight} placeholder="74" />
+          </div>
+        </div>
+
         <button onClick={pay} disabled={busy} style={{ background: T.accent, color: "#0a0a0a", fontWeight: 800, fontSize: 16, padding: "15px 0", borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
           {busy ? "Redirecting to PayU..." : `Pay ${fmt(total)} securely`}
         </button>
