@@ -3,6 +3,7 @@
 
 import { prisma } from "@/lib/prisma";
 import DispatchClient from "./DispatchClient";
+import { requireSurface } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ function todayWindow() {
 }
 
 export default async function DispatchPage() {
+  await requireSurface("dispatch");
+
   const { start, end } = todayWindow();
 
   const [deliveries, drivers] = await Promise.all([

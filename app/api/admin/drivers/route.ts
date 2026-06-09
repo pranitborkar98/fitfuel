@@ -1,17 +1,17 @@
 // app/api/admin/drivers/route.ts
-// Phase 10 â€” list + create drivers. Admin-gated. Creating a driver mints a
-// unique accessToken => their /driver/<token> link works immediately.
+// Phase 10 + 15-RBAC — list + create drivers. Dispatch surface only.
+// Creating a driver mints a unique accessToken => their /driver/<token> link works.
 
 import { prisma } from "@/lib/prisma";
-import { getAdminUser } from "@/lib/admin-auth";
+import { requireApiRole } from "@/lib/admin-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const admin = await getAdminUser();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await requireApiRole("dispatch");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const drivers = await prisma.driver.findMany({
     orderBy: [{ isActive: "desc" }, { name: "asc" }],
@@ -21,8 +21,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await getAdminUser();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await requireApiRole("dispatch");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = (await req.json().catch(() => ({}))) as { name?: string; phone?: string };
   const name = body.name?.trim();
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "name and phone are required" }, { status: 400 });
   }
 
-  // high-entropy, URL-safe token â€” the token IS the auth for the driver link
+  // high-entropy, URL-safe token — the token IS the auth for the driver link
   const accessToken = randomBytes(16).toString("hex");
 
   const driver = await prisma.driver.create({

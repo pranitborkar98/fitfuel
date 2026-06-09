@@ -1,11 +1,13 @@
 // app/api/admin/deliveries/route.ts
-// Phase 10 -- admin view + control of today's deliveries.
+// Phase 10 + 15-RBAC -- admin view + control of today's deliveries.
 //   GET            -> today's deliveries (all drivers)
 //   POST assign    -> { action:"assign", deliveryId, driverId|null }
 //   POST dispatch  -> { action:"dispatch", deliveryIds:[...] }
+// Dispatch surface only (OWNER/ADMIN/DISPATCH). Returns customer PII, so a
+// KITCHEN role is rejected with 403.
 
 import { prisma } from "@/lib/prisma";
-import { getAdminUser } from "@/lib/admin-auth";
+import { requireApiRole } from "@/lib/admin-auth";
 import { notifyDriverWhatsApp } from "@/lib/notify-driver";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -22,8 +24,8 @@ function todayWindow() {
 }
 
 export async function GET() {
-  const admin = await getAdminUser();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await requireApiRole("dispatch");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { start, end } = todayWindow();
   const deliveries = await prisma.delivery.findMany({
@@ -62,8 +64,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await getAdminUser();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await requireApiRole("dispatch");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = (await req.json().catch(() => ({}))) as {
     action?: "assign" | "dispatch";

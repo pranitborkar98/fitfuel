@@ -15,6 +15,8 @@ import {
   type MealSlotValue,
 } from "@/lib/production";
 
+import { requireSurface } from "@/lib/admin-auth";
+
 export const dynamic = "force-dynamic";
 
 const SLOT_LABEL: Record<MealSlotValue, string> = {
@@ -46,6 +48,7 @@ export default async function ProductionPage({
 }: {
   searchParams: Promise<{ date?: string; print?: string }>;
 }) {
+  await requireSurface("production");
   const sp = await searchParams;
   const printMode = sp.print === "1";
   const date = targetDayUTC(sp.date ?? null);

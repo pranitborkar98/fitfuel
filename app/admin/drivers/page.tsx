@@ -3,10 +3,13 @@
 
 import { prisma } from "@/lib/prisma";
 import DriversClient from "./DriversClient";
+import { requireSurface } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function DriversPage() {
+  await requireSurface("dispatch");
+
   const start = new Date();
   start.setUTCHours(0, 0, 0, 0);
   const end = new Date(start);

@@ -1,7 +1,9 @@
 // app/admin/layout.tsx
-// Phase 10 -- command center shell. Every /admin/* page is gated here.
+// Phase 10 + 15-RBAC -- command center shell. Every /admin/* page is gated here
+// (any staff role) AND each page enforces its own surface. The nav shows only
+// the surfaces this role can reach, so a KITCHEN user never sees Dispatch, etc.
 
-import { getAdminUser } from "@/lib/admin-auth";
+import { getAdminUser, canAccess, type Surface } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -16,9 +18,18 @@ const T = {
   accent: "#84cc16",
 };
 
+const NAV: { label: string; href: string; surface: Surface }[] = [
+  { label: "Dispatch", href: "/admin", surface: "dispatch" },
+  { label: "Production", href: "/admin/production", surface: "production" },
+  { label: "Drivers", href: "/admin/drivers", surface: "drivers" },
+  { label: "Staff", href: "/admin/staff", surface: "staff" },
+];
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await getAdminUser();
-  if (!admin) redirect("/"); // not logged in, or not ADMIN/OWNER
+  if (!admin) redirect("/"); // not logged in, or not a staff role
+
+  const links = NAV.filter((n) => canAccess(admin.role, n.surface));
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "system-ui, sans-serif" }}>
@@ -40,9 +51,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             FitFuel &middot; Ops
           </span>
           <nav style={{ display: "flex", gap: 16, fontSize: 14 }}>
-            <Link href="/admin" style={{ color: T.text, textDecoration: "none", fontWeight: 600 }}>Dispatch</Link>
-            <Link href="/admin/production" style={{ color: T.textMuted, textDecoration: "none", fontWeight: 600 }}>Production</Link>
-            <Link href="/admin/drivers" style={{ color: T.textMuted, textDecoration: "none", fontWeight: 600 }}>Drivers</Link>
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} style={{ color: T.textMuted, textDecoration: "none", fontWeight: 600 }}>
+                {l.label}
+              </Link>
+            ))}
           </nav>
         </div>
         <span style={{ fontSize: 12, color: T.textMuted }}>

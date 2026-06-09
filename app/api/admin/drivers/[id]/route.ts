@@ -1,16 +1,17 @@
 // app/api/admin/drivers/[id]/route.ts
-// Phase 10 â€” update a driver (activate/deactivate, edit name/phone). Admin-gated.
+// Phase 10 + 15-RBAC — update a driver (activate/deactivate, edit name/phone).
+// Dispatch surface only.
 
 import { prisma } from "@/lib/prisma";
-import { getAdminUser } from "@/lib/admin-auth";
+import { requireApiRole } from "@/lib/admin-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await getAdminUser();
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await requireApiRole("dispatch");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
   const body = (await req.json().catch(() => ({}))) as {
