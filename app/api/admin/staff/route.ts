@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
 
   if (q) {
-    const results = await prisma.user.findMany({
+    const results = await (prisma as any).user.findMany({
       where: {
         OR: [
           { email: { contains: q, mode: "insensitive" } },
@@ -34,8 +34,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ users: results });
   }
 
-  const staff = await prisma.user.findMany({
-    where: { role: { in: STAFF as unknown as string[] } },
+  const staff = await (prisma as any).user.findMany({
+    where: { role: { in: STAFF } },
     orderBy: [{ role: "asc" }, { email: "asc" }],
     select: { id: true, name: true, email: true, image: true, role: true },
   });
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const updated = await prisma.user.update({
+  const updated = await (prisma as any).user.update({
     where: { id: userId },
     data: { role: role as any },
     select: { id: true, name: true, email: true, image: true, role: true },

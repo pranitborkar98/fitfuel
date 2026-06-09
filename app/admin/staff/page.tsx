@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function StaffPage() {
   const me = await requireSurface("staff"); // OWNER only
 
-  const staff = await prisma.user.findMany({
+  const staff = await (prisma as any).user.findMany({
     where: { role: { in: ["OWNER", "ADMIN", "KITCHEN", "DISPATCH"] } },
     orderBy: [{ role: "asc" }, { email: "asc" }],
     select: { id: true, name: true, email: true, image: true, role: true },
