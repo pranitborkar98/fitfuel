@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import DeliveryConfirmCard from "./DeliveryConfirmCard";
 import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
@@ -801,6 +802,9 @@ export default function DashboardClient({
             <LogOut size={14} /> Sign Out
           </button>
         </div>
+
+        {/* 15C-CONFIRM — recent deliveries: confirm receipt / report issue */}
+        <DeliveryConfirmCard />
 
         {/* Active Plan Card */}
         {activePlan ? (
