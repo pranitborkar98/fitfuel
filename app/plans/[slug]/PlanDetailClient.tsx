@@ -10,6 +10,7 @@ interface Recipe {
   name: string
   slug: string
   description?: string
+  imageUrl?: string | null
   caloriesPerServing: number
   proteinGrams: number
   carbsGrams: number
@@ -614,6 +615,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                       <div key={sk} className="ledger-cell">
                         {s ? (
                           <>
+                            {s.recipe.imageUrl && <img src={s.recipe.imageUrl} alt="" loading="lazy" style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 4, marginBottom: 8, display: 'block' }} />}
                             <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}</div>
                             <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
                               <span style={{ color: 'var(--lime)' }}>{s.recipe.caloriesPerServing}</span> kcal · {s.recipe.proteinGrams}P {s.recipe.carbsGrams}C {s.recipe.fatGrams}F
@@ -646,6 +648,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                   <div key={slot.id} className={`reveal d${Math.min(i + 1, 4)}`} style={{ ...card({ padding: 26, transition: 'border-color .3s' }) }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#2f3a18' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)' }}>
+                    {r.imageUrl && <div style={{ margin: '-26px -26px 18px', height: 160, overflow: 'hidden', borderRadius: '3px 3px 0 0' }}><img src={r.imageUrl} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, paddingBottom: 16, borderBottom: '1px solid var(--line)' }}>
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <span style={{ color: 'var(--lime)' }}><Icon size={22} /></span>

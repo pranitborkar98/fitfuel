@@ -66,6 +66,7 @@ export default async function PlanPage({ params }: Props) {
           name: true,
           slug: true,
           description: true,
+          imageUrl: true,
           caloriesPerServing: true,
           proteinGrams: true,
           carbsGrams: true,
