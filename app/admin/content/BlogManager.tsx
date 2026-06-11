@@ -3,6 +3,7 @@
 // app/admin/content/BlogManager.tsx
 import { useState } from "react";
 import { UI, Label, Text, Area, Select, Check, btn, contentApi } from "./ContentClient";
+import ImageUpload from "@/components/ImageUpload";
 
 const CATEGORIES = ["Nutrition", "Training", "Recipes", "FitFuel News", "Guides"];
 
@@ -111,7 +112,7 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
           <div><Label>Author</Label><Text value={form.authorName} onChange={(e) => set("authorName", e.target.value)} /></div>
         </div>
 
-        <div style={{ marginBottom: 14 }}><Label>Cover image URL (optional)</Label><Text value={form.coverImageUrl} onChange={(e) => set("coverImageUrl", e.target.value)} placeholder="https://…" /></div>
+        <div style={{ marginBottom: 14 }}><ImageUpload label="Cover image (optional)" value={form.coverImageUrl} onChange={(url) => set("coverImageUrl", url)} folder="blog" /></div>
 
         <div style={{ marginBottom: 8 }}><Check checked={form.isFeatured} onChange={(v) => set("isFeatured", v)} label="Feature this post (hero on /blog)" /></div>
 

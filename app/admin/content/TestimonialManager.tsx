@@ -3,6 +3,7 @@
 // app/admin/content/TestimonialManager.tsx
 import { useState } from "react";
 import { UI, Label, Text, Area, Select, Check, btn, contentApi } from "./ContentClient";
+import ImageUpload from "@/components/ImageUpload";
 
 type Tst = any;
 
@@ -88,7 +89,7 @@ export default function TestimonialManager({ initial }: { initial: Tst[] }) {
           <div><Label>Sort order</Label><Text type="number" value={form.sortOrder} onChange={(e) => set("sortOrder", e.target.value)} /></div>
         </div>
         <div style={{ marginBottom: 14 }}><Label>Quote</Label><Area rows={4} value={form.quote} onChange={(e) => set("quote", e.target.value)} /></div>
-        <div style={{ marginBottom: 14 }}><Label>Avatar URL (optional)</Label><Text value={form.avatarUrl} onChange={(e) => set("avatarUrl", e.target.value)} placeholder="https://…" /></div>
+        <div style={{ marginBottom: 14 }}><ImageUpload label="Avatar (optional)" value={form.avatarUrl} onChange={(url) => set("avatarUrl", url)} folder="testimonials" /></div>
         <div style={{ display: "flex", gap: 18, marginBottom: 16 }}>
           <Check checked={form.isFeatured} onChange={(v) => set("isFeatured", v)} label="Featured (homepage candidate)" />
           <Check checked={form.isActive} onChange={(v) => set("isActive", v)} label="Active (visible on /testimonials)" />

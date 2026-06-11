@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { T, Text, Area, Select, Check, Label, btn } from "./ui";
+import ImageUpload from "@/components/ImageUpload";
 
 async function api(payload: any) {
   const res = await fetch("/api/admin/recipes", {
@@ -116,7 +117,7 @@ function RecipeFields({ recipe, setRecipe, onSummary }: any) {
         <div><Label>Fat</Label><Text type="number" value={f.fatGrams} onChange={(e) => set("fatGrams", e.target.value)} /></div>
         <div><Label>Fibre</Label><Text type="number" value={f.fibreGrams} onChange={(e) => set("fibreGrams", e.target.value)} /></div>
       </div>
-      <div style={{ marginBottom: 14 }}><Label>Image URL</Label><Text value={f.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="https://…" /></div>
+      <div style={{ marginBottom: 14 }}><ImageUpload label="Image" value={f.imageUrl} onChange={(url) => set("imageUrl", url)} folder="recipes" /></div>
       <div style={{ display: "flex", gap: 20, alignItems: "center", marginBottom: 14 }}>
         <Check checked={f.isActive} onChange={(v) => set("isActive", v)} label="Active" />
         <Check checked={f.isFeatured} onChange={(v) => set("isFeatured", v)} label="Featured" />

@@ -4,6 +4,7 @@
 // Phase 15E-1 — plans + pricing manager.
 
 import { useState } from "react";
+import ImageUpload from "@/components/ImageUpload";
 
 const T = {
   card: "#101010", border: "#222", text: "#ffffff", muted: "#888888",
@@ -138,7 +139,7 @@ export default function PlansClient({ initial }: { initial: Plan[] }) {
             <div><Label>What&rsquo;s avoided (one per line)</Label><Area rows={5} value={form.whatIsAvoided} onChange={(e) => set("whatIsAvoided", e.target.value)} /></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div><Label>Image URL</Label><Text value={form.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="https://…" /></div>
+            <div><ImageUpload label="Image" value={form.imageUrl} onChange={(url) => set("imageUrl", url)} folder="plans" /></div>
             <div><Label>Accent color (hex)</Label><Text value={form.accentColor} onChange={(e) => set("accentColor", e.target.value)} placeholder="#84cc16" /></div>
           </div>
         </Section>
