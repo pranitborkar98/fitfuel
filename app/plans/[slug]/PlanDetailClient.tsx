@@ -274,6 +274,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [pick, setPick] = useState(3)
   const [loaded, setLoaded] = useState(false)
+  const [sel, setSel] = useState<Recipe | null>(null)
 
   useScrollReveal()
   useEffect(() => { setLoaded(true) }, [])
@@ -612,11 +613,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                   {(['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as MealSlotKey[]).map((sk) => {
                     const s = byKey[sk]
                     return (
-                      <div key={sk} className="ledger-cell">
+                      <div key={sk} className="ledger-cell" onClick={s ? () => setSel(s.recipe) : undefined} onMouseEnter={(e) => { if (s) e.currentTarget.style.background = '#0c0c0c' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }} style={s ? { cursor: 'pointer' } : undefined}>
                         {s ? (
                           <>
-                            {s.recipe.imageUrl && <img src={s.recipe.imageUrl} alt="" loading="lazy" style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 4, marginBottom: 8, display: 'block' }} />}
-                            <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}</div>
+                            <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}{s.recipe.imageUrl && <span style={{ color: 'var(--lime)', fontSize: 10, marginLeft: 6 }}>\u25C9</span>}</div>
                             <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
                               <span style={{ color: 'var(--lime)' }}>{s.recipe.caloriesPerServing}</span> kcal · {s.recipe.proteinGrams}P {s.recipe.carbsGrams}C {s.recipe.fatGrams}F
                             </div>
@@ -972,6 +972,39 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
           </div>
         </div>
       </section>
+
+      {sel && (
+        <div onClick={() => setSel(null)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.78)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: 14, maxWidth: 480, width: '100%', maxHeight: '88vh', overflow: 'auto' }}>
+            {sel.imageUrl && <img src={sel.imageUrl} alt={sel.name} style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block', borderRadius: '14px 14px 0 0' }} />}
+            <div style={{ padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <h3 className="syne" style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2, margin: 0 }}>{sel.name}</h3>
+                <button onClick={() => setSel(null)} style={{ background: 'transparent', border: '1px solid #222', color: 'var(--dim)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>\u00D7</button>
+              </div>
+              <div className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                {sel.cuisineType && <span>{sel.cuisineType}</span>}
+                {(sel.prepTimeMins || sel.cookTimeMins) && <span>{(sel.prepTimeMins ?? 0) + (sel.cookTimeMins ?? 0)} MIN</span>}
+                {sel.servingSizeGrams && <span>{sel.servingSizeGrams}G SERVE</span>}
+              </div>
+              {sel.description && <p style={{ fontSize: 14, color: 'var(--dim)', lineHeight: 1.65, marginTop: 14 }}>{sel.description}</p>}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 18 }}>
+                {[
+                  { l: 'Kcal', v: String(sel.caloriesPerServing), c: 'var(--lime)' },
+                  { l: 'Protein', v: `${sel.proteinGrams}g`, c: '#a3e635' },
+                  { l: 'Carbs', v: `${sel.carbsGrams}g`, c: '#c9c3ac' },
+                  { l: 'Fat', v: `${sel.fatGrams}g`, c: '#8d8d87' },
+                ].map((m) => (
+                  <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 6, padding: '12px 8px', textAlign: 'center' }}>
+                    <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>
+                    <div className="mono" style={{ fontSize: 8.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
