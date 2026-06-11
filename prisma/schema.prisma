@@ -433,6 +433,7 @@ model Delivery {
   driverPhone    String?
   trackingNotes  String?
   deliveredAt    DateTime?
+  dispatchNotifiedAt   DateTime?
   deliveryWindow DeliveryWindow?
 
   // ── Phase 10 — driver assignment + customer confirmation ──

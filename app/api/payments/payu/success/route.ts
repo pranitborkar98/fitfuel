@@ -3,11 +3,13 @@
 // PayU posts here after payment. Verify hash, complete the pending order (keyed by txnid).
 // Phase 13D: branches on notes.isDigital — digital plans skip delivery (isDigital UserActivePlan).
 // Phase 13D (capture): forwards notes.profile to activateDigitalPlan so body stats land on UserProfile.
+// Phase 16A: fires order_confirmed (customer) + staff_new_order (OWNER/ADMIN) after order is marked CONFIRMED.
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { activateDigitalPlan } from "@/lib/activate-digital-plan";
+import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
@@ -75,6 +77,44 @@ export async function POST(req: NextRequest) {
       where: { orderId: order.id },
       data:  { status: "SUCCESS", payuPaymentId: mihpayid, paidAt: new Date() },
     });
+
+    // ════════════════════ NOTIFICATIONS (Phase 16A) ════════════════════
+    // Fires for BOTH digital + physical. Fire-and-forget — never block the redirect.
+    try {
+      const userForNotif = await (prisma as any).user.findUnique({
+        where: { id: order.userId },
+        select: { name: true, email: true, phone: true },
+      });
+      const planLookupSlug = meta.isDigital ? (meta.planSlug || "") : "weight-loss-veg";
+      const planForNotif = planLookupSlug
+        ? await (prisma as any).mealPlan.findUnique({
+            where: { slug: planLookupSlug },
+            select: { displayName: true, slug: true },
+          })
+        : null;
+      const planName = planForNotif?.displayName || planForNotif?.slug || (meta.isDigital ? "Digital Plan" : "Meal Plan");
+
+      fireNotification({
+        userId: order.userId,
+        toEmail: userForNotif?.email || email,
+        toPhone: userForNotif?.phone || undefined,
+        toName: userForNotif?.name || firstname,
+        templateKey: "order_confirmed",
+        vars: {
+          orderNumber: order.orderNumber,
+          planName,
+          amount: String(order.totalRs),
+        },
+      });
+      notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_order", {
+        orderNumber: order.orderNumber,
+        customerName: userForNotif?.name || firstname,
+        planName,
+        amount: String(order.totalRs),
+      });
+    } catch (e) {
+      console.error("[PayU] notification dispatch failed (non-blocking)", e);
+    }
 
     // ════════════════════ DIGITAL PATH (Phase 13D) ════════════════════
     if (meta.isDigital) {

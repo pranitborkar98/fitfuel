@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/orders/cod/route.ts
+// Phase 16A: fires order_confirmed (customer) + staff_new_order (OWNER/ADMIN) after order creation.
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 
 const DIET_MAP: Record<string, string> = {
   veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
@@ -134,10 +137,36 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
-      console.error("[COD] No meal plan found to attach — manual fix needed", { orderNumber });
+      console.error("[COD] No meal plan found to attach \u2014 manual fix needed", { orderNumber });
     }
 
     console.log("[COD Order saved]", { orderNumber, userId: user.id, total });
+
+    // ════════════════════ NOTIFICATIONS (Phase 16A) ════════════════════
+    // Fire-and-forget — never block the response.
+    try {
+      const planName = (mealPlan as any)?.displayName || (mealPlan as any)?.slug || "Meal Plan";
+      fireNotification({
+        userId: user.id,
+        toEmail: user.email,
+        toPhone: user.phone || undefined,
+        toName: user.name,
+        templateKey: "order_confirmed",
+        vars: {
+          orderNumber: order.orderNumber,
+          planName,
+          amount: String(total),
+        },
+      });
+      notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_order", {
+        orderNumber: order.orderNumber,
+        customerName: user.name,
+        planName,
+        amount: String(total),
+      });
+    } catch (e) {
+      console.error("[COD] notification dispatch failed (non-blocking)", e);
+    }
 
     return NextResponse.json({ success: true, orderNumber: order.orderNumber, orderId: order.id, total });
 

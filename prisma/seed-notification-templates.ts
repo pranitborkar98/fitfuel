@@ -1,6 +1,9 @@
 // prisma/seed-notification-templates.ts
 // Seeds default notification templates. Idempotent (upsert by key).
-// Run: npx tsx prisma/seed-notification-templates.ts
+// Run: npx tsx --env-file=.env.local prisma/seed-notification-templates.ts
+//
+// Phase 16A wiring update: delivery_dispatched, staff_new_order, staff_delivery_issue
+// changed from WHATSAPP-only to BOTH (so they work via email until WAHA is wired).
 
 import { prisma } from "../lib/prisma";
 
@@ -34,6 +37,23 @@ const EMAIL_SHELL = (
   <p style="color:#555;margin-top:40px;font-size:12px;border-top:1px solid #1a1a1a;padding-top:16px">FitFuel \u00B7 Pune \u00B7 Questions? Reply to this email or WhatsApp us.</p>
 </div>`;
 
+const STAFF_SHELL = (
+  heading: string,
+  rows: Array<[string, string]>
+) => `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#080808;color:#eaeaea;line-height:1.55">
+  <div style="font-size:11px;color:#84cc16;font-weight:700;letter-spacing:1px;text-transform:uppercase">FITFUEL \u00B7 STAFF ALERT</div>
+  <h1 style="font-size:20px;margin:14px 0 16px;color:#fff;font-weight:700">${heading}</h1>
+  <table style="width:100%;border-collapse:collapse">
+    ${rows
+      .map(
+        ([k, v]) =>
+          `<tr><td style="padding:8px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">${k}</td><td style="padding:8px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">${v}</td></tr>`
+      )
+      .join("")}
+  </table>
+  <p style="color:#555;margin-top:32px;font-size:12px">Sent automatically by FitFuel.</p>
+</div>`;
+
 const TEMPLATES: SeedTpl[] = [
   {
     key: "order_confirmed",
@@ -52,7 +72,7 @@ const TEMPLATES: SeedTpl[] = [
          <tr><td style="padding:8px 0;color:#888;border-top:1px solid #1a1a1a">Plan</td><td style="padding:8px 0;text-align:right;color:#eee;border-top:1px solid #1a1a1a">{{planName}}</td></tr>
          <tr><td style="padding:8px 0;color:#888;border-top:1px solid #1a1a1a">Amount</td><td style="padding:8px 0;text-align:right;color:#84cc16;font-weight:700;border-top:1px solid #1a1a1a">&#8377;{{amount}}</td></tr>
        </table>
-       <p style="color:#888;font-size:13px">Deliveries start as scheduled. You'll get a WhatsApp ping when your meal is on the way.</p>`,
+       <p style="color:#888;font-size:13px">Deliveries start as scheduled. You'll get a ping when your meal is on the way.</p>`,
       "Go to dashboard",
       "https://fitfuel.in/dashboard"
     ),
@@ -60,11 +80,23 @@ const TEMPLATES: SeedTpl[] = [
   {
     key: "delivery_dispatched",
     name: "Delivery on the way (customer)",
-    description: "Fires when driver marks the delivery DISPATCHED",
-    channel: "WHATSAPP",
+    description: "Fires on first GET to driver app for the day (per-delivery, idempotent)",
+    channel: "BOTH",
     category: "deliveryUpdates",
     whatsappTemplateName: "ff_delivery_dispatched",
     whatsappVariables: ["name", "windowLabel", "driverName", "driverPhone"],
+    emailSubject: "Your FitFuel meal is on the way",
+    emailBody: EMAIL_SHELL(
+      "Hi {{name}}, your meal is on the way",
+      `<p>Today's delivery is out for {{windowLabel}}.</p>
+       <table style="width:100%;margin:20px 0;border-collapse:collapse">
+         <tr><td style="padding:8px 0;color:#888">Driver</td><td style="padding:8px 0;text-align:right;color:#eee">{{driverName}}</td></tr>
+         <tr><td style="padding:8px 0;color:#888;border-top:1px solid #1a1a1a">Contact</td><td style="padding:8px 0;text-align:right;color:#84cc16;border-top:1px solid #1a1a1a">{{driverPhone}}</td></tr>
+       </table>
+       <p style="color:#888;font-size:13px">Please confirm receipt on your dashboard once it arrives.</p>`,
+      "Open dashboard",
+      "https://fitfuel.in/dashboard"
+    ),
   },
   {
     key: "delivery_issue_ack",
@@ -85,21 +117,34 @@ const TEMPLATES: SeedTpl[] = [
     key: "staff_new_order",
     name: "New order alert (staff)",
     description: "Fires to OWNER/ADMIN when an order is placed",
-    channel: "WHATSAPP",
+    channel: "BOTH",
     category: "staff",
     isStaff: true,
     whatsappTemplateName: "ff_staff_new_order",
     whatsappVariables: ["orderNumber", "customerName", "planName", "amount"],
+    emailSubject: "[FitFuel] New order {{orderNumber}}",
+    emailBody: STAFF_SHELL("New order placed", [
+      ["Order #", "{{orderNumber}}"],
+      ["Customer", "{{customerName}}"],
+      ["Plan", "{{planName}}"],
+      ["Amount", "&#8377;{{amount}}"],
+    ]),
   },
   {
     key: "staff_delivery_issue",
     name: "Delivery issue alert (staff)",
     description: "Fires to OWNER/DISPATCH when a customer reports a delivery issue",
-    channel: "WHATSAPP",
+    channel: "BOTH",
     category: "staff",
     isStaff: true,
     whatsappTemplateName: "ff_staff_delivery_issue",
     whatsappVariables: ["customerName", "orderNumber", "issue"],
+    emailSubject: "[FitFuel] Delivery issue \u2014 order {{orderNumber}}",
+    emailBody: STAFF_SHELL("Delivery issue reported", [
+      ["Customer", "{{customerName}}"],
+      ["Order #", "{{orderNumber}}"],
+      ["Issue", "{{issue}}"],
+    ]),
   },
 ];
 
