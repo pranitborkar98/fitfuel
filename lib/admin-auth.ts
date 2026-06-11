@@ -29,7 +29,8 @@ export type Surface =
   | "content"
   | "plans"
   | "orders"
-  | "subscribers";
+  | "subscribers"
+  | "notifications";
 
 // Which roles may access each surface. OWNER/ADMIN are full-access.
 export const SURFACE_ROLES: Record<Surface, StaffRole[]> = {
@@ -41,6 +42,7 @@ export const SURFACE_ROLES: Record<Surface, StaffRole[]> = {
   content: ["OWNER", "ADMIN"],
   plans: ["OWNER", "ADMIN"],
   orders: ["OWNER", "ADMIN"],
+  notifications: ["OWNER", "ADMIN"],
   subscribers: ["OWNER", "ADMIN"],
 };
 

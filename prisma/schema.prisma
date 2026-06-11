@@ -183,6 +183,7 @@ model User {
   referralCode  String?   @unique // generated on signup
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  notificationPreference NotificationPreference?
 
   profile     UserProfile?
   addresses   Address[]
@@ -1183,4 +1184,77 @@ model Testimonial {
 
   @@index([isActive, sortOrder])
   @@map("testimonials")
+}
+enum NotificationChannel {
+  WHATSAPP
+  EMAIL
+  BOTH
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model NotificationTemplate {
+  id                   String              @id @default(cuid())
+  key                  String              @unique
+  name                 String
+  description          String?
+  channel              NotificationChannel
+  category             String
+
+  whatsappTemplateName String?
+  whatsappLanguage     String?             @default("en")
+  whatsappVariables    String?
+
+  emailSubject         String?
+  emailBody            String?
+
+  active               Boolean             @default(true)
+  isStaff              Boolean             @default(false)
+
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@map("notification_templates")
+}
+
+model NotificationLog {
+  id           String              @id @default(cuid())
+  userId       String?
+  userEmail    String?
+  userPhone    String?
+  templateKey  String
+  channel      NotificationChannel
+  status       NotificationStatus
+  provider     String?
+  providerRef  String?
+  payload      Json?
+  error        String?
+  createdAt    DateTime            @default(now())
+
+  @@index([userId, createdAt])
+  @@index([templateKey, createdAt])
+  @@map("notification_logs")
+}
+
+model NotificationPreference {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderUpdates     Boolean  @default(true)
+  deliveryUpdates  Boolean  @default(true)
+  weeklyDigest     Boolean  @default(true)
+  morningPush      Boolean  @default(true)
+  nudges           Boolean  @default(true)
+  marketing        Boolean  @default(false)
+  whatsappEnabled  Boolean  @default(true)
+  emailEnabled     Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("notification_preferences")
 }
