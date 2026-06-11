@@ -10,24 +10,37 @@ const T = {
 const R = "\u20B9";
 const pretty = (e: string) => (e || "").replace(/_/g, " ").toLowerCase();
 const inputStyle: React.CSSProperties = { background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, boxSizing: "border-box" };
+const btn = (primary = false): React.CSSProperties => ({ background: primary ? T.accent : "transparent", color: primary ? "#080808" : T.text, border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" });
 
 function payColor(s: string) {
-  if (s === "SUCCESS" || s === "PAID") return T.accent;
+  if (s === "SUCCESS") return T.accent;
   if (s === "PENDING") return T.amber;
   if (s === "FAILED" || s === "REFUNDED") return T.red;
   return T.muted;
 }
 
+async function api(payload: any) {
+  const res = await fetch("/api/admin/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(j?.error || "Failed");
+  return j;
+}
+
 type Order = any;
 
 export default function OrdersView({ orders }: { orders: Order[] }) {
+  const [list, setList] = useState<Order[]>(orders);
   const [q, setQ] = useState("");
   const [pay, setPay] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const payStatuses = useMemo(() => Array.from(new Set(orders.map((o) => o.paymentStatus))).filter(Boolean), [orders]);
+  const payStatuses = useMemo(() => Array.from(new Set(list.map((o) => o.paymentStatus))).filter(Boolean), [list]);
 
-  const filtered = orders.filter((o) => {
+  function applyUpdate(updated: { id: string; paymentStatus: string; status: string }) {
+    setList((prev) => prev.map((o) => (o.id === updated.id ? { ...o, paymentStatus: updated.paymentStatus, status: updated.status } : o)));
+  }
+
+  const filtered = list.filter((o) => {
     if (pay && o.paymentStatus !== pay) return false;
     if (q) {
       const hay = `${o.orderNumber} ${o.user?.name ?? ""} ${o.user?.email ?? ""} ${o.user?.phone ?? ""}`.toLowerCase();
@@ -36,13 +49,13 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
     return true;
   });
 
-  const revenue = filtered.filter((o) => o.paymentStatus === "SUCCESS" || o.paymentStatus === "PAID").reduce((a, o) => a + (o.totalRs || 0), 0);
+  const revenue = filtered.filter((o) => o.paymentStatus === "SUCCESS").reduce((a, o) => a + (o.totalRs || 0), 0);
 
   return (
     <div>
       <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>Orders</h1>
       <p style={{ color: T.muted, fontSize: 13.5, marginBottom: 18 }}>
-        Last {orders.length} orders · {filtered.length} shown · paid revenue (filtered): <span style={{ color: T.accent }}>{R}{revenue.toLocaleString("en-IN")}</span>
+        Last {list.length} orders · {filtered.length} shown · paid revenue (filtered): <span style={{ color: T.accent }}>{R}{revenue.toLocaleString("en-IN")}</span>
       </p>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
@@ -98,7 +111,8 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
                     <Row k="Total" v={`${R}${(o.totalRs || 0).toLocaleString("en-IN")}`} strong />
                     <Cap>Payment ref</Cap>
                     <div style={{ color: T.muted, fontFamily: "ui-monospace, monospace", fontSize: 12 }}>{o.payuTxnId ?? "—"}</div>
-                    {(o.startDate || o.endDate) && <><Cap>Plan window</Cap><div style={{ color: T.muted }}>{o.startDate ? new Date(o.startDate).toLocaleDateString("en-IN") : "?"} → {o.endDate ? new Date(o.endDate).toLocaleDateString("en-IN") : "?"}</div></>}
+                    <Cap>Mark payment</Cap>
+                    <PaymentControl order={o} onUpdated={applyUpdate} />
                   </div>
                 </div>
               </div>
@@ -106,6 +120,47 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function PaymentControl({ order, onUpdated }: { order: Order; onUpdated: (u: any) => void }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const options: { v: string; label: string }[] = [
+    { v: "SUCCESS", label: "Paid" },
+    { v: "PENDING", label: "Pending" },
+    { v: "FAILED", label: "Failed" },
+    { v: "REFUNDED", label: "Refunded" },
+  ];
+
+  async function setStatus(v: string) {
+    if (v === order.paymentStatus) return;
+    const confirmMsg = v === "SUCCESS" ? "Mark this order as PAID? (also confirms it if unpaid)" : `Set payment to ${v}?`;
+    if (!confirm(confirmMsg)) return;
+    setBusy(v); setErr(null);
+    try {
+      const { order: updated } = await api({ action: "setPaymentStatus", id: order.id, paymentStatus: v });
+      onUpdated(updated);
+    } catch (e: any) { setErr(e?.message || "Failed"); }
+    finally { setBusy(null); }
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {options.map((o) => {
+          const active = order.paymentStatus === o.v;
+          return (
+            <button key={o.v} onClick={() => setStatus(o.v)} disabled={active || busy !== null}
+              style={{ ...btn(active && o.v === "SUCCESS"), opacity: active ? 1 : busy ? 0.6 : 1, borderColor: active ? T.accent : T.border, color: active ? (o.v === "SUCCESS" ? "#080808" : T.accent) : T.text, cursor: active ? "default" : "pointer" }}>
+              {busy === o.v ? "…" : active ? `✓ ${o.label}` : o.label}
+            </button>
+          );
+        })}
+      </div>
+      {err && <div style={{ color: T.red, fontSize: 12, marginTop: 6 }}>{err}</div>}
+      <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>Records payment for reconciliation. Doesn&rsquo;t re-run checkout automation.</div>
     </div>
   );
 }

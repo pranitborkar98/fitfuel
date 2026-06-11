@@ -4,7 +4,7 @@
 // Phase 15E-2 — edit one recipe: fields + cooking steps (the SOP) + ingredients.
 
 import { useEffect, useState } from "react";
-import { T, Text, Area, Select, Check, Label, btn } from "./RecipesClient";
+import { T, Text, Area, Select, Check, Label, btn } from "./ui";
 
 async function api(payload: any) {
   const res = await fetch("/api/admin/recipes", {
