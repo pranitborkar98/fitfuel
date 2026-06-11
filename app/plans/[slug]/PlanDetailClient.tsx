@@ -616,7 +616,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                       <div key={sk} className="ledger-cell" onClick={s ? () => setSel(s.recipe) : undefined} onMouseEnter={(e) => { if (s) e.currentTarget.style.background = '#0c0c0c' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }} style={s ? { cursor: 'pointer' } : undefined}>
                         {s ? (
                           <>
-                            <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}{s.recipe.imageUrl && <span style={{ color: 'var(--lime)', fontSize: 10, marginLeft: 6 }}>\u25C9</span>}</div>
+                            <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}{s.recipe.imageUrl && <span style={{ color: 'var(--lime)', fontSize: 10, marginLeft: 6 }}>{'\u25C9'}</span>}</div>
                             <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
                               <span style={{ color: 'var(--lime)' }}>{s.recipe.caloriesPerServing}</span> kcal · {s.recipe.proteinGrams}P {s.recipe.carbsGrams}C {s.recipe.fatGrams}F
                             </div>
@@ -980,7 +980,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
             <div style={{ padding: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                 <h3 className="syne" style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2, margin: 0 }}>{sel.name}</h3>
-                <button onClick={() => setSel(null)} style={{ background: 'transparent', border: '1px solid #222', color: 'var(--dim)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>\u00D7</button>
+                <button onClick={() => setSel(null)} style={{ background: 'transparent', border: '1px solid #222', color: 'var(--dim)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{'\u00D7'}</button>
               </div>
               <div className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 {sel.cuisineType && <span>{sel.cuisineType}</span>}
