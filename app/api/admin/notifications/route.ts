@@ -1,4 +1,6 @@
 // app/api/admin/notifications/route.ts
+// Phase 16A: admin surface API. OWNER/ADMIN only.
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/admin-auth";
@@ -8,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const gate = await requireApiRole("notifications");
-  if (gate instanceof NextResponse) return gate;
+  if (!gate) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const db = prisma as any;
   const { searchParams } = new URL(req.url);
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const gate = await requireApiRole("notifications");
-  if (gate instanceof NextResponse) return gate;
+  if (!gate) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const { action, data } = body;
@@ -56,7 +58,6 @@ export async function POST(req: NextRequest) {
     if (!data?.id) {
       return NextResponse.json({ error: "id required" }, { status: 400 });
     }
-    // whatsappVariables must be a JSON array string
     let waVars = data.whatsappVariables;
     if (Array.isArray(waVars)) waVars = JSON.stringify(waVars);
     if (typeof waVars === "string" && waVars.trim() === "") waVars = null;
