@@ -612,11 +612,17 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
                   </div>
                   {(['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as MealSlotKey[]).map((sk) => {
                     const s = byKey[sk]
+                    const CellIcon = SLOT_ICON[sk]
                     return (
                       <div key={sk} className="ledger-cell" onClick={s ? () => setSel(s.recipe) : undefined} onMouseEnter={(e) => { if (s) e.currentTarget.style.background = '#0c0c0c' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }} style={s ? { cursor: 'pointer' } : undefined}>
                         {s ? (
                           <>
-                            <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}{s.recipe.imageUrl && <span style={{ color: 'var(--lime)', fontSize: 10, marginLeft: 6 }}>{'\u25C9'}</span>}</div>
+                            <div style={{ width: '100%', height: 84, borderRadius: 5, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,#161616,#0b0b0b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {s.recipe.imageUrl
+                                ? <img src={s.recipe.imageUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                : <span style={{ color: '#262626' }}><CellIcon size={22} /></span>}
+                            </div>
+                            <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}</div>
                             <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
                               <span style={{ color: 'var(--lime)' }}>{s.recipe.caloriesPerServing}</span> kcal · {s.recipe.proteinGrams}P {s.recipe.carbsGrams}C {s.recipe.fatGrams}F
                             </div>
