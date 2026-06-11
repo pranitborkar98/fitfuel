@@ -24,6 +24,7 @@ export type Surface =
   | "dispatch"
   | "drivers"
   | "production"
+  | "recipes"
   | "staff"
   | "content"
   | "plans"
@@ -35,6 +36,7 @@ export const SURFACE_ROLES: Record<Surface, StaffRole[]> = {
   dispatch: ["OWNER", "ADMIN", "DISPATCH"],
   drivers: ["OWNER", "ADMIN", "DISPATCH"],
   production: ["OWNER", "ADMIN", "KITCHEN"],
+  recipes: ["OWNER", "ADMIN", "KITCHEN"],
   staff: ["OWNER"], // only the owner manages staff + roles
   content: ["OWNER", "ADMIN"],
   plans: ["OWNER", "ADMIN"],

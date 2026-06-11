@@ -23,6 +23,7 @@ const NAV: { label: string; href: string; surface: Surface }[] = [
   { label: "Production", href: "/admin/production", surface: "production" },
   { label: "Drivers", href: "/admin/drivers", surface: "drivers" },
   { label: "Plans", href: "/admin/plans", surface: "plans" },
+  { label: "Recipes", href: "/admin/recipes", surface: "recipes" },
   { label: "Content", href: "/admin/content", surface: "content" },
   { label: "Staff", href: "/admin/staff", surface: "staff" },
 ];
