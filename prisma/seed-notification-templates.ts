@@ -1,9 +1,6 @@
 // prisma/seed-notification-templates.ts
-// Seeds default notification templates. Idempotent (upsert by key).
+// Phase 16A + 16B templates. Idempotent (upsert by key).
 // Run: npx tsx --env-file=.env.local prisma/seed-notification-templates.ts
-//
-// Phase 16A wiring update: delivery_dispatched, staff_new_order, staff_delivery_issue
-// changed from WHATSAPP-only to BOTH (so they work via email until WAHA is wired).
 
 import { prisma } from "../lib/prisma";
 
@@ -55,6 +52,7 @@ const STAFF_SHELL = (
 </div>`;
 
 const TEMPLATES: SeedTpl[] = [
+  // ─────────────── 16A: transactional ───────────────
   {
     key: "order_confirmed",
     name: "Order confirmed (customer)",
@@ -145,6 +143,83 @@ const TEMPLATES: SeedTpl[] = [
       ["Order #", "{{orderNumber}}"],
       ["Issue", "{{issue}}"],
     ]),
+  },
+
+  // ─────────────── 16B: scheduled ───────────────
+  {
+    key: "weekly_digest",
+    name: "Weekly Digest (customer)",
+    description: "Sunday — last 7 days summary, piggyback on snapshot-consistency cron",
+    channel: "BOTH",
+    category: "weeklyDigest",
+    whatsappTemplateName: "ff_weekly_digest",
+    whatsappVariables: ["name", "score", "label"],
+    emailSubject: "Your FitFuel week \u2014 score {{score}}",
+    emailBody: EMAIL_SHELL(
+      "Hi {{name}}, here's your week",
+      `<p>You finished the week with a consistency score of:</p>
+       <div style="text-align:center;margin:24px 0">
+         <div style="font-size:64px;color:#84cc16;font-weight:800;letter-spacing:-2px;line-height:1">{{score}}</div>
+         <div style="font-size:13px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:4px">{{label}}</div>
+       </div>
+       <p style="color:#aaa;font-size:14px;margin-bottom:8px">Breakdown by habit:</p>
+       <table style="width:100%;border-collapse:collapse;margin-top:8px">
+         <tr><td style="padding:10px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">Meals logged</td><td style="padding:10px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">{{mealsPoints}}</td></tr>
+         <tr><td style="padding:10px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">Workouts</td><td style="padding:10px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">{{workoutsPoints}}</td></tr>
+         <tr><td style="padding:10px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">Hydration</td><td style="padding:10px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">{{waterPoints}}</td></tr>
+         <tr><td style="padding:10px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">Weigh-ins</td><td style="padding:10px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">{{weighInPoints}}</td></tr>
+         <tr><td style="padding:10px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">No-skips</td><td style="padding:10px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">{{noSkipPoints}}</td></tr>
+       </table>
+       <p style="color:#888;font-size:13px;margin-top:24px">Keep it going \u2014 small wins compound.</p>`,
+      "See your full progress",
+      "https://fitfuel.in/dashboard"
+    ),
+  },
+  {
+    key: "morning_meal_preview",
+    name: "Morning meal preview (customer)",
+    description: "Daily 7 AM IST \u2014 today's meals + log nudge",
+    channel: "BOTH",
+    category: "morningPush",
+    whatsappTemplateName: "ff_morning_preview",
+    whatsappVariables: ["name", "totalCalories"],
+    emailSubject: "Today's plate \u2014 {{totalCalories}} cal",
+    emailBody: EMAIL_SHELL(
+      "Good morning, {{name}}",
+      `<p>Here's what's on your plate today:</p>
+       <table style="width:100%;border-collapse:collapse;margin:20px 0">
+         {{mealsList}}
+       </table>
+       <p style="color:#84cc16;font-size:13px;font-weight:600">Total: {{totalCalories}} calories</p>
+       <p style="color:#888;font-size:13px;margin-top:20px">Don't forget to log yesterday's workouts and weigh-in.</p>`,
+      "Log on dashboard",
+      "https://fitfuel.in/dashboard"
+    ),
+  },
+  {
+    key: "evening_recap",
+    name: "Evening recap (customer)",
+    description: "Daily 9 PM IST \u2014 tomorrow preview + log reminder",
+    channel: "BOTH",
+    category: "eveningRecap",
+    whatsappTemplateName: "ff_evening_recap",
+    whatsappVariables: ["name"],
+    emailSubject: "How was today? Quick log + tomorrow preview",
+    emailBody: EMAIL_SHELL(
+      "Closing out the day, {{name}}",
+      `<p>Two quick things before bed:</p>
+       <ol style="color:#bbb;font-size:14px;padding-left:20px;margin:16px 0">
+         <li style="margin-bottom:8px">Log today's meals and weigh-in if you haven't already.</li>
+         <li>Here's tomorrow's plate so you can plan ahead:</li>
+       </ol>
+       <table style="width:100%;border-collapse:collapse;margin:16px 0">
+         {{mealsList}}
+       </table>
+       <p style="color:#84cc16;font-size:13px;font-weight:600">Tomorrow's total: {{totalCalories}} calories</p>
+       <p style="color:#888;font-size:13px;margin-top:20px">Consistency compounds. See you tomorrow.</p>`,
+      "Log today",
+      "https://fitfuel.in/dashboard"
+    ),
   },
 ];
 

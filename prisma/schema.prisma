@@ -1256,6 +1256,7 @@ model NotificationPreference {
   emailEnabled     Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  eveningRecap     Boolean  @default(true)
 
   @@map("notification_preferences")
 }
