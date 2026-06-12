@@ -1,6 +1,7 @@
 // lib/notify.ts
-// Unified notification sender — WhatsApp (MSG91) + Email (Resend).
+// Unified notification sender \u2014 WhatsApp (MSG91) + Email (Resend).
 // Reads templates from DB. Respects per-user prefs. Logs every send.
+// Phase 16C: added `wasRecentlySent` helper for nudge idempotency.
 
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
@@ -14,15 +15,11 @@ const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL || "FitFuel <hello@fitfuel.in>";
 
 export interface SendNotificationInput {
-  /** When set, recipient + prefs come from the User row. */
   userId?: string | null;
-  /** Overrides (or use these directly for staff sends). */
   toPhone?: string;
   toEmail?: string;
   toName?: string;
-  /** Template key (e.g. "order_confirmed"). */
   templateKey: string;
-  /** Variables for interpolation. `name` is auto-filled when userId is set. */
   vars?: Record<string, string | number>;
 }
 
@@ -38,7 +35,6 @@ export async function sendNotification(
   const result: SendResult = { errors: [] };
   const db = prisma as any;
 
-  // 1. Template
   const tpl = await db.notificationTemplate.findUnique({
     where: { key: input.templateKey },
   });
@@ -51,7 +47,6 @@ export async function sendNotification(
     return result;
   }
 
-  // 2. Resolve recipient + prefs
   let phone = input.toPhone;
   let email = input.toEmail;
   let name = input.toName || "there";
@@ -77,7 +72,6 @@ export async function sendNotification(
   const wantsWhatsApp = tpl.channel === "WHATSAPP" || tpl.channel === "BOTH";
   const wantsEmail = tpl.channel === "EMAIL" || tpl.channel === "BOTH";
 
-  // 3. Category opt-out (skip for staff templates)
   if (!tpl.isStaff && prefs && tpl.category) {
     if (prefs[tpl.category] === false) {
       await logSend({
@@ -96,7 +90,6 @@ export async function sendNotification(
     }
   }
 
-  // 4. Send WhatsApp
   if (wantsWhatsApp) {
     const channelEnabled =
       tpl.isStaff || !prefs || prefs.whatsappEnabled !== false;
@@ -150,7 +143,6 @@ export async function sendNotification(
     }
   }
 
-  // 5. Send Email
   if (wantsEmail) {
     const channelEnabled =
       tpl.isStaff || !prefs || prefs.emailEnabled !== false;
@@ -213,19 +205,12 @@ export async function sendNotification(
   return result;
 }
 
-/**
- * Fire-and-forget — use inside API routes so notifications never block the response.
- */
 export function fireNotification(input: SendNotificationInput): void {
   sendNotification(input).catch((e) => {
     console.error("[notify] fire failed", input.templateKey, e);
   });
 }
 
-/**
- * Fan out a notification to all users with a given role.
- * Used for staff alerts (new order → OWNER/ADMIN, delivery issue → OWNER/DISPATCH).
- */
 export async function notifyStaffByRoles(
   roles: string[],
   templateKey: string,
@@ -246,6 +231,29 @@ export async function notifyStaffByRoles(
       vars,
     });
   }
+}
+
+/**
+ * Phase 16C: nudge idempotency gate.
+ * Returns true if a SENT row exists for this (userId, templateKey) within
+ * the given window. Used to avoid sending the same nudge twice in a row.
+ */
+export async function wasRecentlySent(
+  userId: string,
+  templateKey: string,
+  withinHours: number
+): Promise<boolean> {
+  const cutoff = new Date(Date.now() - withinHours * 3600_000);
+  const recent = await (prisma as any).notificationLog.findFirst({
+    where: {
+      userId,
+      templateKey,
+      status: "SENT",
+      createdAt: { gt: cutoff },
+    },
+    select: { id: true },
+  });
+  return !!recent;
 }
 
 function renderTemplate(tpl: string, vars: Record<string, any>): string {

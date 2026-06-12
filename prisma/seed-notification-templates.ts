@@ -1,5 +1,5 @@
 // prisma/seed-notification-templates.ts
-// Phase 16A + 16B templates. Idempotent (upsert by key).
+// Phase 16A + 16B + 16C templates. Idempotent (upsert by key).
 // Run: npx tsx --env-file=.env.local prisma/seed-notification-templates.ts
 
 import { prisma } from "../lib/prisma";
@@ -17,6 +17,7 @@ interface SeedTpl {
   emailBody?: string;
 }
 
+// 16C: added "Manage notifications" footer link.
 const EMAIL_SHELL = (
   heading: string,
   bodyHtml: string,
@@ -31,7 +32,7 @@ const EMAIL_SHELL = (
       ? `<a href="${ctaHref}" style="display:inline-block;background:#84cc16;color:#000;padding:12px 24px;text-decoration:none;font-weight:700;border-radius:4px;margin-top:24px">${ctaText}</a>`
       : ""
   }
-  <p style="color:#555;margin-top:40px;font-size:12px;border-top:1px solid #1a1a1a;padding-top:16px">FitFuel \u00B7 Pune \u00B7 Questions? Reply to this email or WhatsApp us.</p>
+  <p style="color:#555;margin-top:40px;font-size:12px;border-top:1px solid #1a1a1a;padding-top:16px">FitFuel \u00B7 Pune \u00B7 <a href="https://fitfuel.in/dashboard/notification-settings" style="color:#666;text-decoration:underline">Manage notifications</a></p>
 </div>`;
 
 const STAFF_SHELL = (
@@ -41,12 +42,7 @@ const STAFF_SHELL = (
   <div style="font-size:11px;color:#84cc16;font-weight:700;letter-spacing:1px;text-transform:uppercase">FITFUEL \u00B7 STAFF ALERT</div>
   <h1 style="font-size:20px;margin:14px 0 16px;color:#fff;font-weight:700">${heading}</h1>
   <table style="width:100%;border-collapse:collapse">
-    ${rows
-      .map(
-        ([k, v]) =>
-          `<tr><td style="padding:8px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">${k}</td><td style="padding:8px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">${v}</td></tr>`
-      )
-      .join("")}
+    ${rows.map(([k, v]) => `<tr><td style="padding:8px 0;color:#888;font-size:13px;border-top:1px solid #1a1a1a">${k}</td><td style="padding:8px 0;text-align:right;color:#eee;font-size:13px;border-top:1px solid #1a1a1a">${v}</td></tr>`).join("")}
   </table>
   <p style="color:#555;margin-top:32px;font-size:12px">Sent automatically by FitFuel.</p>
 </div>`;
@@ -70,7 +66,7 @@ const TEMPLATES: SeedTpl[] = [
          <tr><td style="padding:8px 0;color:#888;border-top:1px solid #1a1a1a">Plan</td><td style="padding:8px 0;text-align:right;color:#eee;border-top:1px solid #1a1a1a">{{planName}}</td></tr>
          <tr><td style="padding:8px 0;color:#888;border-top:1px solid #1a1a1a">Amount</td><td style="padding:8px 0;text-align:right;color:#84cc16;font-weight:700;border-top:1px solid #1a1a1a">&#8377;{{amount}}</td></tr>
        </table>
-       <p style="color:#888;font-size:13px">Deliveries start as scheduled. You'll get a ping when your meal is on the way.</p>`,
+       <p style="color:#888;font-size:13px">Deliveries start as scheduled.</p>`,
       "Go to dashboard",
       "https://fitfuel.in/dashboard"
     ),
@@ -149,7 +145,7 @@ const TEMPLATES: SeedTpl[] = [
   {
     key: "weekly_digest",
     name: "Weekly Digest (customer)",
-    description: "Sunday — last 7 days summary, piggyback on snapshot-consistency cron",
+    description: "Sunday \u2014 last 7 days summary, piggyback on snapshot-consistency cron",
     channel: "BOTH",
     category: "weeklyDigest",
     whatsappTemplateName: "ff_weekly_digest",
@@ -187,9 +183,7 @@ const TEMPLATES: SeedTpl[] = [
     emailBody: EMAIL_SHELL(
       "Good morning, {{name}}",
       `<p>Here's what's on your plate today:</p>
-       <table style="width:100%;border-collapse:collapse;margin:20px 0">
-         {{mealsList}}
-       </table>
+       <table style="width:100%;border-collapse:collapse;margin:20px 0">{{mealsList}}</table>
        <p style="color:#84cc16;font-size:13px;font-weight:600">Total: {{totalCalories}} calories</p>
        <p style="color:#888;font-size:13px;margin-top:20px">Don't forget to log yesterday's workouts and weigh-in.</p>`,
       "Log on dashboard",
@@ -212,12 +206,64 @@ const TEMPLATES: SeedTpl[] = [
          <li style="margin-bottom:8px">Log today's meals and weigh-in if you haven't already.</li>
          <li>Here's tomorrow's plate so you can plan ahead:</li>
        </ol>
-       <table style="width:100%;border-collapse:collapse;margin:16px 0">
-         {{mealsList}}
-       </table>
+       <table style="width:100%;border-collapse:collapse;margin:16px 0">{{mealsList}}</table>
        <p style="color:#84cc16;font-size:13px;font-weight:600">Tomorrow's total: {{totalCalories}} calories</p>
        <p style="color:#888;font-size:13px;margin-top:20px">Consistency compounds. See you tomorrow.</p>`,
       "Log today",
+      "https://fitfuel.in/dashboard"
+    ),
+  },
+
+  // ─────────────── 16C: lifecycle nudges ───────────────
+  {
+    key: "payment_pending",
+    name: "Payment pending (customer)",
+    description: "Fires 24h after order placed if payment still pending (non-COD)",
+    channel: "BOTH",
+    category: "nudges",
+    whatsappTemplateName: "ff_payment_pending",
+    whatsappVariables: ["name", "orderNumber", "amount"],
+    emailSubject: "Complete your FitFuel order \u2014 {{orderNumber}}",
+    emailBody: EMAIL_SHELL(
+      "Hi {{name}}, your order is waiting",
+      `<p>Your order <strong style="color:#eee">{{orderNumber}}</strong> for <strong style="color:#84cc16">&#8377;{{amount}}</strong> is still pending payment.</p>
+       <p>Complete payment now to start your meals on schedule \u2014 we hold your slot for 48 hours after which the order is automatically cancelled.</p>`,
+      "Complete payment",
+      "https://fitfuel.in/dashboard"
+    ),
+  },
+  {
+    key: "plan_ending",
+    name: "Plan ending soon (customer)",
+    description: "Fires 2\u20133 days before UserActivePlan.endDate",
+    channel: "BOTH",
+    category: "nudges",
+    whatsappTemplateName: "ff_plan_ending",
+    whatsappVariables: ["name", "planName", "daysLeft"],
+    emailSubject: "Your FitFuel plan ends in {{daysLeft}} days",
+    emailBody: EMAIL_SHELL(
+      "Hi {{name}}, time to renew",
+      `<p>Your <strong style="color:#eee">{{planName}}</strong> ends in <strong style="color:#84cc16">{{daysLeft}} days</strong>.</p>
+       <p>Renew now to keep your streak going without a break in deliveries. Don't let the consistency you've built reset.</p>`,
+      "Renew now",
+      "https://fitfuel.in/plans"
+    ),
+  },
+  {
+    key: "re_engagement",
+    name: "Re-engagement (customer)",
+    description: "Fires max 1x/week to active subscribers with no meal logs in 3+ days",
+    channel: "BOTH",
+    category: "nudges",
+    whatsappTemplateName: "ff_re_engagement",
+    whatsappVariables: ["name"],
+    emailSubject: "Quick check-in from FitFuel",
+    emailBody: EMAIL_SHELL(
+      "Hi {{name}}, how's it going?",
+      `<p>We noticed you haven't logged any meals in the last few days.</p>
+       <p>Quick reminder: logging takes 30 seconds and is where your consistency score comes from. Even rough estimates count.</p>
+       <p style="color:#888;font-size:13px">The data also makes our weekly insights actually useful for you.</p>`,
+      "Log meals",
       "https://fitfuel.in/dashboard"
     ),
   },
@@ -233,9 +279,7 @@ async function main() {
       category: t.category,
       isStaff: t.isStaff || false,
       whatsappTemplateName: t.whatsappTemplateName || null,
-      whatsappVariables: t.whatsappVariables
-        ? JSON.stringify(t.whatsappVariables)
-        : null,
+      whatsappVariables: t.whatsappVariables ? JSON.stringify(t.whatsappVariables) : null,
       emailSubject: t.emailSubject || null,
       emailBody: t.emailBody || null,
     };
@@ -250,8 +294,5 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
+  .catch((e) => { console.error(e); process.exit(1); })
   .finally(() => prisma.$disconnect());
