@@ -209,6 +209,14 @@ model User {
   consistencySnapshots ConsistencySnapshot[]
 
   @@map("users")
+
+// Phase 17A — partner system
+  referredByPartnerCode    String?            @db.VarChar(64)
+  creditsBalanceRs         Int                @default(0)
+  ownedPartner             Partner?           @relation("PartnerOwner")
+  referralsAsReferee       PartnerReferral[]  @relation("ReferralReferee")
+  creditLedger             CreditLedger[]     @relation("UserCredits")
+
 }
 
 model UserProfile {
@@ -375,6 +383,11 @@ model Order {
   hsnSacCode     String?
 
   @@map("orders")
+
+  // Phase 17A — referral attribution snapshot
+  referralAttribution      String?
+  creditAppliedRs          Int                @default(0)
+  referralUsage            PartnerReferral[]  @relation("ReferralOrder")
 }
 
 model OrderItem {
@@ -1259,4 +1272,178 @@ model NotificationPreference {
   eveningRecap     Boolean  @default(true)
 
   @@map("notification_preferences")
+}
+enum PartnerType {
+  CUSTOMER
+  GYM
+  TRAINER
+  INFLUENCER
+  DIETICIAN
+  DOCTOR
+  CORPORATE
+  RESIDENCE
+}
+
+enum PartnerStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  REJECTED
+  TERMINATED
+}
+
+enum PartnerRewardType {
+  CREDIT
+  CASH
+  MEAL_VOUCHER
+  DISCOUNT_ONLY
+  HYBRID
+}
+
+enum ReferralStatus {
+  CLICKED
+  SIGNED_UP
+  FIRST_ORDER
+  REWARD_PAID
+  CANCELLED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+model Partner {
+  id                 String              @id @default(cuid())
+  type               PartnerType
+  status             PartnerStatus       @default(PENDING)
+
+  name               String
+  contactEmail       String?
+  contactPhone       String?
+
+  // The user that "owns" this partner (logs in to see their dashboard).
+  // For CUSTOMER: same as the customer user. For others: their FitFuel account.
+  ownerUserId        String?             @unique
+  ownerUser          User?               @relation("PartnerOwner", fields: [ownerUserId], references: [id])
+
+  // Tracking
+  code               String              @unique
+  customLandingSlug  String?             @unique
+
+  // Reward config (per-partner, set by admin)
+  rewardType         PartnerRewardType
+  rewardValueRs      Int                 @default(0)
+  refereeDiscountRs  Int                 @default(0)
+
+  // Type-specific fields (nullable, only set when relevant)
+  // GYM
+  gymAddress         String?
+  gymManagerName     String?
+  // TRAINER / INFLUENCER
+  bio                String?
+  specialty          String?
+  profilePhotoUrl    String?
+  socialHandle       String?
+  followerCount      Int?
+  // DIETICIAN / DOCTOR
+  qualification      String?
+  registrationNumber String?
+  clinicName         String?
+  credentialDocUrl   String?
+  hospitalAffiliation String?
+  // CORPORATE
+  companyLogoUrl     String?
+  allowedEmailDomain String?
+  hrContactName      String?
+  // RESIDENCE
+  treasurerContact   String?
+  societyAddress     String?
+
+  // Tax/payout (schema only \u2014 admin UI deferred to 17C)
+  panNumber          String?
+  gstNumber          String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  bankIfsc           String?
+
+  // Admin
+  adminNotes         String?
+  internalLabel      String?
+  createdById        String?
+  approvedAt         DateTime?
+  approvedById       String?
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  referrals          PartnerReferral[]
+  payouts            PartnerPayout[]
+
+  @@index([type, status])
+  @@index([code])
+  @@map("partners")
+}
+
+model PartnerReferral {
+  id              String              @id @default(cuid())
+  partnerId       String
+  partner         Partner             @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  refereeUserId   String?
+  refereeUser     User?               @relation("ReferralReferee", fields: [refereeUserId], references: [id])
+  refereeOrderId  String?
+  refereeOrder    Order?              @relation("ReferralOrder", fields: [refereeOrderId], references: [id])
+
+  status          ReferralStatus      @default(SIGNED_UP)
+
+  // Snapshot of reward at time of trigger
+  rewardType      PartnerRewardType
+  rewardAmountRs  Int                 @default(0)
+
+  payoutId        String?
+
+  createdAt       DateTime            @default(now())
+  rewardEarnedAt  DateTime?
+
+  @@index([partnerId, status])
+  @@index([refereeUserId])
+  @@map("partner_referrals")
+}
+
+model PartnerPayout {
+  id                String         @id @default(cuid())
+  partnerId         String
+  partner           Partner        @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  periodYearMonth   String
+  amountRs          Int
+  referralCount     Int            @default(0)
+
+  status            PayoutStatus   @default(PENDING)
+  paidAt            DateTime?
+  paymentRef        String?
+
+  createdAt         DateTime       @default(now())
+
+  @@unique([partnerId, periodYearMonth])
+  @@map("partner_payouts")
+}
+
+model CreditLedger {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation("UserCredits", fields: [userId], references: [id], onDelete: Cascade)
+
+  deltaRs         Int
+  reason          String
+  refReferralId   String?
+  refOrderId      String?
+
+  createdAt       DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@map("credit_ledger")
 }

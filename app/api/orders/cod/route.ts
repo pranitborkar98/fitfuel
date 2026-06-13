@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/orders/cod/route.ts
-// Phase 16A: fires order_confirmed (customer) + staff_new_order (OWNER/ADMIN) after order creation.
+// 16A: order_confirmed + staff_new_order notifications
+// 17A: capture ?ref cookie -> Order.referralAttribution + processReferralReward
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
+import { processReferralReward } from "@/lib/partners";
 
 const DIET_MAP: Record<string, string> = {
   veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
@@ -17,8 +19,6 @@ const DUR_MAP: Record<string, string> = {
 const MEAL_MAP: Record<string, string> = {
   bl: "BREAKFAST_LUNCH", sd: "SNACK_DINNER", all: "ALL_FOUR",
 };
-
-// How many delivery days each duration gives
 const DUR_DAYS: Record<string, number> = {
   TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14,
   MONTHLY_EXCL_WEEKENDS: 26, ONE_MONTH: 30,
@@ -31,15 +31,10 @@ function genOrderNumber(): string {
   return `FF-COD-${ymd}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-
-// Safe customer upsert — phone is @unique, so never assign a phone that
-// already belongs to a different user (that caused P2002 on update).
 async function upsertCustomer(email: string, phone: string, name: string) {
   let user = await (prisma as any).user.findFirst({ where: { email } });
   if (!user && phone) user = await (prisma as any).user.findFirst({ where: { phone } });
-
   const phoneOwner = phone ? await (prisma as any).user.findFirst({ where: { phone } }) : null;
-
   if (user) {
     const data: any = { name };
     if (phone && (!phoneOwner || phoneOwner.id === user.id)) data.phone = phone;
@@ -62,7 +57,6 @@ export async function POST(req: NextRequest) {
     const dietEnum = DIET_MAP[diet];
     const durEnum  = DUR_MAP[dur];
     const mealEnum = MEAL_MAP[meal];
-
     if (!dietEnum || !durEnum || !mealEnum) {
       return NextResponse.json({ error: "Invalid plan parameters" }, { status: 400 });
     }
@@ -71,26 +65,42 @@ export async function POST(req: NextRequest) {
     const gst      = Math.round(subtotal * 0.05);
     const total    = subtotal + gst;
 
-    // 1. Upsert user (phone-collision safe)
     const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
 
-    // 2. Create address
+    // ── Phase 17A: capture ref from cookie OR body, snapshot on Order ──
+    const refFromBody: string | undefined = body.refCode;
+    const refFromCookie = req.cookies.get("ff_ref")?.value;
+    const refSnapshot = (refFromBody || refFromCookie || "").slice(0, 64) || null;
+
+    // Also stamp the user's referredByPartnerCode if not yet set (first-touch)
+    if (refSnapshot) {
+      const existingAttribution = await (prisma as any).user.findUnique({
+        where: { id: user.id },
+        select: { referredByPartnerCode: true },
+      });
+      if (!existingAttribution?.referredByPartnerCode) {
+        await (prisma as any).user.update({
+          where: { id: user.id },
+          data: { referredByPartnerCode: refSnapshot },
+        });
+      }
+    }
+
     const addr = await (prisma as any).address.create({
       data: { userId: user.id, line1: address, area: city, city, pincode },
     });
 
-    // 3. Create order
     const orderNumber = genOrderNumber();
     const order = await (prisma as any).order.create({
       data: {
         userId: user.id, addressId: addr.id, orderNumber,
         status: "CONFIRMED", subtotalRs: subtotal, gstRs: gst, totalRs: total,
         paymentMethod: "CASH_ON_DELIVERY", paymentStatus: "PENDING",
+        referralAttribution: refSnapshot,
         notes: JSON.stringify({ diet, dur, meal, deliveryWindow: deliveryWindow === "EVENING" ? "EVENING" : "MORNING", isJain: diet === "jain" }),
       },
     });
 
-    // 4. Create order item
     await (prisma as any).orderItem.create({
       data: {
         orderId: order.id, productId: null,
@@ -99,22 +109,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 5. Create payment record
     await (prisma as any).payment.create({
-      data: {
-        orderId: order.id, method: "CASH_ON_DELIVERY",
-        status: "PENDING", amountRs: total,
-      },
+      data: { orderId: order.id, method: "CASH_ON_DELIVERY", status: "PENDING", amountRs: total },
     });
 
-    // 6. Create UserActivePlan so delivery generator picks this customer up
     const startDate = new Date();
     const days = DUR_DAYS[durEnum] ?? 30;
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + days);
 
-    // ── FIX (Decision: always attach to weight-loss-veg, the only active plan) ──
-    // Previously: prisma.mealPlan.findFirst() → returned an ARBITRARY plan.
     const mealPlan =
       (await (prisma as any).mealPlan.findUnique({ where: { slug: "weight-loss-veg" } })) ??
       (await (prisma as any).mealPlan.findFirst({ where: { isActive: true } })) ??
@@ -126,10 +129,7 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           mealPlanId: mealPlan.id,
           orderId: order.id,
-          startDate,
-          endDate,
-          currentDay: 1,
-          status: "active",
+          startDate, endDate, currentDay: 1, status: "active",
           mealsPerDay: mealEnum as any,
           duration: durEnum as any,
           deliveryWindow: (deliveryWindow === "EVENING" ? "EVENING" : "MORNING") as any,
@@ -137,13 +137,12 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
-      console.error("[COD] No meal plan found to attach \u2014 manual fix needed", { orderNumber });
+      console.error("[COD] No meal plan to attach", { orderNumber });
     }
 
     console.log("[COD Order saved]", { orderNumber, userId: user.id, total });
 
-    // ════════════════════ NOTIFICATIONS (Phase 16A) ════════════════════
-    // Fire-and-forget — never block the response.
+    // ════════════════════ NOTIFICATIONS (16A) ════════════════════
     try {
       const planName = (mealPlan as any)?.displayName || (mealPlan as any)?.slug || "Meal Plan";
       fireNotification({
@@ -152,11 +151,7 @@ export async function POST(req: NextRequest) {
         toPhone: user.phone || undefined,
         toName: user.name,
         templateKey: "order_confirmed",
-        vars: {
-          orderNumber: order.orderNumber,
-          planName,
-          amount: String(total),
-        },
+        vars: { orderNumber: order.orderNumber, planName, amount: String(total) },
       });
       notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_order", {
         orderNumber: order.orderNumber,
@@ -165,7 +160,14 @@ export async function POST(req: NextRequest) {
         amount: String(total),
       });
     } catch (e) {
-      console.error("[COD] notification dispatch failed (non-blocking)", e);
+      console.error("[COD] notification dispatch failed", e);
+    }
+
+    // ════════════════════ REFERRAL REWARD (17A) ════════════════════
+    try {
+      await processReferralReward(order.id);
+    } catch (e) {
+      console.error("[COD] referral reward processing failed", e);
     }
 
     return NextResponse.json({ success: true, orderNumber: order.orderNumber, orderId: order.id, total });

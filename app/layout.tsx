@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ChromeGate from "@/components/ChromeGate";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/lib/auth";
+import ReferralCapture from "@/components/ReferralCapture";
 
 const inter = Inter({ subsets: ["latin"] });
 
