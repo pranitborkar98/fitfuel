@@ -186,8 +186,23 @@ function PartnerDetailView({ id, onChanged }: { id: string; onChanged: () => voi
         <button onClick={() => setEditing((e) => !e)} style={BTN_GHOST}>{editing ? "Close edit" : "Edit"}</button>
       </div>
 
-      {editing && <EditForm detail={detail} onSaved={() => { setEditing(false); load(); onChanged(); }} />}
+      {/* Phase 17B — landing + QR poster */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <a href={`/p/${detail.code}`} target="_blank" rel="noopener" style={{ ...BTN_GHOST, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+          Open landing /p/{detail.code}
+        </a>
+        <a href={`/api/admin/partners/qr?code=${encodeURIComponent(detail.code)}&download=1`} style={{ ...BTN_GHOST, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+          Download QR (PNG)
+        </a>
+        <a href={`/api/admin/partners/qr?code=${encodeURIComponent(detail.code)}&format=svg&download=1`} style={{ ...BTN_GHOST, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+          Download QR (SVG)
+        </a>
+        <a href={`/api/admin/partners/qr?code=${encodeURIComponent(detail.code)}`} target="_blank" rel="noopener" style={{ ...BTN_GHOST, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+          Preview QR
+        </a>
+      </div>
 
+      {editing && <EditForm detail={detail} onSaved={() => { setEditing(false); load(); onChanged(); }} />}
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
         <Stat label="Total referrals" value={String(detail.referrals.length)} />

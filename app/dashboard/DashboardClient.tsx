@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
   Calendar, Target, CheckCircle2, Circle, X, Clock, ChefHat, Flame, Star,
+  Gift, Briefcase,
 } from "lucide-react";
 
 const T = {
@@ -629,13 +630,14 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
 
 // ── Main Dashboard ──────────────────────────────────────────────
 export default function DashboardClient({
-  session, orders, user, activePlan, hasPendingOrder,
+  session, orders, user, activePlan, hasPendingOrder, isPartnerOwner,
 }: {
   session: any;
   orders: any[];
   user: any;
   activePlan: ActivePlan | null;
   hasPendingOrder?: boolean;
+  isPartnerOwner?: boolean;
 }) {
   const firstName = user?.name?.split(" ")[0] ?? "there";
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -1143,11 +1145,53 @@ export default function DashboardClient({
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Exercise Library</p>
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>873 exercises — browse, log workouts, track sets and burned kcal.</p>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>873 exercises {'\u2014'} browse, log workouts, track sets and burned kcal.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
           </Link>
+
+          {/* Phase 17B {'\u2014'} Customer P2P referrals (always visible) */}
+          <Link href="/dashboard/referrals" style={{ textDecoration: "none" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                <Gift size={20} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Refer + Earn</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>NEW</span>
+                </div>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Share your code. Friends get {'\u20B9'}200 off, you earn {'\u20B9'}500 credit per signup.</p>
+              </div>
+              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+          </Link>
+
+          {/* Phase 17B {'\u2014'} Partner dashboard (only if user owns a non-CUSTOMER Partner) */}
+          {isPartnerOwner && (
+            <Link href="/dashboard/partners" style={{ textDecoration: "none" }}>
+              <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                  <Briefcase size={20} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Partner Dashboard</p>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>PARTNER</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Conversions, payouts, and your tracking code.</p>
+                </div>
+                <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+              </div>
+            </Link>
+          )}
 
         </div>
 

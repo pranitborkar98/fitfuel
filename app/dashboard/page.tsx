@@ -33,7 +33,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [orders, user, rawActivePlan] = await Promise.all([
+  const [orders, user, rawActivePlan, partnerOwnership] = await Promise.all([
     (prisma as any).order.findMany({
       where:   { userId },
       orderBy: { createdAt: "desc" },
@@ -56,7 +56,14 @@ export default async function DashboardPage() {
         },
       },
     }),
+    // Phase 17B — partner dashboard tile visibility (hide for non-partners and P2P customers)
+    (prisma as any).partner.findUnique({
+      where: { ownerUserId: userId },
+      select: { type: true },
+    }),
   ]);
+
+  const isPartnerOwner = !!partnerOwnership && partnerOwnership.type !== "CUSTOMER";
 
   // Enrich active plan with calculated fields
   let activePlan: ActivePlan | null = null;
@@ -98,6 +105,7 @@ export default async function DashboardPage() {
       user={user}
       activePlan={activePlan}
       hasPendingOrder={hasPendingOrder}
+      isPartnerOwner={isPartnerOwner}
     />
   );
 }
