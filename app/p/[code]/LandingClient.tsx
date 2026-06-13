@@ -1,10 +1,28 @@
 "use client";
 
 // app/p/[code]/LandingClient.tsx
-// Phase 17B — branded landing for any partner type.
-// Type-specific hero + shared CTA → /plans?ref=CODE (cookie also set server-side).
+// Phase 17B (FIX) — branded landing for any partner type.
+// Type-specific hero + shared CTA → /plans?ref=CODE.
+// Sets ff_ref cookie CLIENT-SIDE on mount (first-touch — only if not already set).
+// Server Components in Next 16 cannot write cookies, so this is the cookie path.
 
 import Link from "next/link";
+import { useEffect } from "react";
+
+const COOKIE_NAME = "ff_ref";
+const COOKIE_DAYS = 30;
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)"));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function writeCookie(name: string, value: string, days: number) {
+  if (typeof document === "undefined") return;
+  const maxAge = days * 24 * 60 * 60;
+  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+}
 
 type View = {
   kind: "PARTNER" | "P2P";
@@ -39,6 +57,14 @@ const T = {
 const RUPEE = "\u20B9";
 
 export default function LandingClient({ view }: { view: View }) {
+  // First-touch attribution: only write if not already set.
+  useEffect(() => {
+    const existing = readCookie(COOKIE_NAME);
+    if (!existing && view?.code) {
+      writeCookie(COOKIE_NAME, view.code, COOKIE_DAYS);
+    }
+  }, [view?.code]);
+
   const headline = headlineFor(view);
   const sub = subFor(view);
   const offer = view.refereeDiscountRs > 0

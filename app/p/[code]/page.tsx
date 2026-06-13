@@ -1,20 +1,16 @@
 // app/p/[code]/page.tsx
-// Phase 17B — Polymorphic branded landing page.
-// /p/<CODE> → looks up Partner by code (or User.referralCode for P2P),
-// sets ff_ref cookie (first-touch, 30 days), renders branded UI per type.
-// Inactive/unknown codes → fall through to /plans with no attribution.
+// Phase 17B (FIX) — Polymorphic branded landing page.
+// /p/<CODE> → looks up Partner by code (or User.referralCode for P2P).
+// Cookie is set CLIENT-SIDE from LandingClient (Server Components in Next 16
+// cannot write cookies). Inactive/unknown codes → fall through to /plans.
 
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import LandingClient from "./LandingClient";
 
 const db = prisma as any;
 
 export const dynamic = "force-dynamic";
-
-const COOKIE_NAME = "ff_ref";
-const COOKIE_DAYS = 30;
 
 type Props = { params: Promise<{ code: string }> };
 
@@ -61,20 +57,6 @@ export default async function PartnerLandingPage({ params }: Props) {
     redirect("/plans");
   }
 
-  // First-touch attribution: only set cookie if not already present.
-  const jar = await cookies();
-  const existing = jar.get(COOKIE_NAME)?.value;
-  if (!existing) {
-    jar.set({
-      name: COOKIE_NAME,
-      value: code,
-      httpOnly: false, // readable client-side too (debugging, manual override)
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * COOKIE_DAYS,
-    });
-  }
-
   // Build view model for client
   const view = partner && partner.status === "ACTIVE"
     ? {
@@ -110,7 +92,7 @@ export default async function PartnerLandingPage({ params }: Props) {
 export async function generateMetadata({ params }: Props) {
   const { code } = await params;
   return {
-    title: `Welcome via ${code} — FitFuel`,
+    title: `Welcome via ${code} \u2014 FitFuel`,
     description: "Get a special welcome offer on your first FitFuel plan.",
   };
 }
