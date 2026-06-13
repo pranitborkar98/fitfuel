@@ -46,7 +46,7 @@ const TYPE_DEFAULTS: Record<string, { rewardType: string; rewardValueRs: number;
 };
 
 export default function PartnersClient() {
-  const [tab, setTab] = useState<"list" | "create">("list");
+  const [tab, setTab] = useState<"list" | "create" | "payouts">("list");
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
@@ -59,12 +59,16 @@ export default function PartnersClient() {
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <button onClick={() => setTab("list")} style={{ ...BTN_GHOST, background: tab === "list" ? "#84cc16" : "transparent", color: tab === "list" ? "#000" : "#bbb", border: tab === "list" ? "1px solid #84cc16" : "1px solid #2a2a2a", fontWeight: tab === "list" ? 700 : 500 }}>All partners</button>
         <button onClick={() => setTab("create")} style={{ ...BTN_GHOST, background: tab === "create" ? "#84cc16" : "transparent", color: tab === "create" ? "#000" : "#bbb", border: tab === "create" ? "1px solid #84cc16" : "1px solid #2a2a2a", fontWeight: tab === "create" ? 700 : 500 }}>+ Create partner</button>
+        <button onClick={() => setTab("payouts")} style={{ ...BTN_GHOST, background: tab === "payouts" ? "#84cc16" : "transparent", color: tab === "payouts" ? "#000" : "#bbb", border: tab === "payouts" ? "1px solid #84cc16" : "1px solid #2a2a2a", fontWeight: tab === "payouts" ? 700 : 500 }}>Payouts</button>
       </div>
 
-      {tab === "list" ? <ListTab openId={openId} setOpenId={setOpenId} /> : <CreateTab onCreated={() => setTab("list")} />}
+      {tab === "list" && <ListTab openId={openId} setOpenId={setOpenId} />}
+      {tab === "create" && <CreateTab onCreated={() => setTab("list")} />}
+      {tab === "payouts" && <PayoutsTab />}
     </div>
   );
 }
+
 
 /* ---------------- LIST ---------------- */
 
@@ -483,3 +487,174 @@ function statusColor(status: string): string | undefined {
   if (status === "REJECTED" || status === "TERMINATED") return "#ef4444";
   return undefined;
 }
+/* ---------------- PAYOUTS (Phase 17C-1) ---------------- */
+
+type PayoutRow = {
+  id: string;
+  partnerId: string;
+  partnerName: string;
+  partnerCode: string;
+  partnerType: string;
+  rewardType: string;
+  periodYearMonth: string;
+  amountRs: number;
+  referralCount: number;
+  status: string;
+  paidAt: string | null;
+  paymentRef: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  bankAccountName: string | null;
+  bankAccountNumber: string | null;
+  bankIfsc: string | null;
+  panNumber: string | null;
+};
+
+function PayoutsTab() {
+  const [rows, setRows] = useState<PayoutRow[] | null>(null);
+  const [status, setStatus] = useState<string>("PENDING");
+  const [period, setPeriod] = useState<string>(""); // YYYY-MM
+
+  async function load() {
+    setRows(null);
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (period) params.set("period", period);
+    const r = await fetch("/api/admin/partners/payouts?" + params.toString());
+    const j = await r.json();
+    setRows(j.payouts || []);
+  }
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status, period]);
+
+  function downloadCSV() {
+    const params = new URLSearchParams();
+    params.set("format", "csv");
+    if (status) params.set("status", status);
+    if (period) params.set("period", period);
+    window.location.href = "/api/admin/partners/payouts?" + params.toString();
+  }
+
+  async function setPayoutStatus(id: string, action: "markPaid" | "markProcessing" | "markFailed", paymentRef?: string) {
+    const r = await fetch("/api/admin/partners/payouts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, id, paymentRef }),
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      alert("Failed: " + (j?.error || "unknown"));
+      return;
+    }
+    await load();
+  }
+
+  const total = (rows || []).reduce((s, r) => s + (r.amountRs || 0), 0);
+
+  return (
+    <div>
+      {/* Filter row */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
+        <label style={{ color: "#888", fontSize: 12 }}>Status</label>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ background: "#0a0a0a", color: "#eee", border: "1px solid #2a2a2a", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}>
+          <option value="">All</option>
+          <option value="PENDING">Pending</option>
+          <option value="PROCESSING">Processing</option>
+          <option value="PAID">Paid</option>
+          <option value="FAILED">Failed</option>
+        </select>
+
+        <label style={{ color: "#888", fontSize: 12, marginLeft: 8 }}>Period</label>
+        <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ background: "#0a0a0a", color: "#eee", border: "1px solid #2a2a2a", borderRadius: 6, padding: "8px 10px", fontSize: 13 }} />
+
+        <button onClick={load} style={BTN_GHOST}>Refresh</button>
+        <button onClick={downloadCSV} style={{ ...BTN, marginLeft: "auto" }}>Download CSV</button>
+      </div>
+
+      {/* Summary */}
+      <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10, padding: "12px 16px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ color: "#888", fontSize: 12 }}>
+          {rows ? rows.length : 0} payout{rows && rows.length === 1 ? "" : "s"} {status ? `(${status})` : "(all)"} {period ? `· ${period}` : ""}
+        </div>
+        <div style={{ color: "#a3e635", fontWeight: 700, fontSize: 14 }}>Total: {'\u20B9'}{total.toLocaleString("en-IN")}</div>
+      </div>
+
+      {/* Table */}
+      {rows === null ? (
+        <div style={{ color: "#666" }}>Loading{'\u2026'}</div>
+      ) : rows.length === 0 ? (
+        <div style={{ color: "#888", padding: 24, textAlign: "center", background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10 }}>No payouts in this filter.</div>
+      ) : (
+        <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: "#101010", color: "#888" }}>
+                <th style={CELL}>Period</th>
+                <th style={CELL}>Partner</th>
+                <th style={CELL}>Type</th>
+                <th style={CELL}>Refs</th>
+                <th style={CELL}>Amount</th>
+                <th style={CELL}>Status</th>
+                <th style={CELL}>Bank</th>
+                <th style={CELL}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr key={p.id} style={{ borderTop: "1px solid #1a1a1a" }}>
+                  <td style={CELL}>{p.periodYearMonth}</td>
+                  <td style={CELL}>
+                    <div style={{ color: "#eee", fontWeight: 600 }}>{p.partnerName}</div>
+                    <div style={{ color: "#666", fontSize: 11, fontFamily: "ui-monospace, monospace" }}>{p.partnerCode}</div>
+                  </td>
+                  <td style={CELL}>{p.partnerType}</td>
+                  <td style={CELL}>{p.referralCount}</td>
+                  <td style={{ ...CELL, color: "#a3e635", fontWeight: 700 }}>{'\u20B9'}{p.amountRs.toLocaleString("en-IN")}</td>
+                  <td style={CELL}>
+                    <span style={{
+                      color: p.status === "PAID" ? "#22c55e" : p.status === "FAILED" ? "#ef4444" : p.status === "PROCESSING" ? "#3b82f6" : "#f59e0b",
+                      fontSize: 11, fontWeight: 700, letterSpacing: 0.6,
+                    }}>{p.status}</span>
+                    {p.paidAt && <div style={{ fontSize: 10, color: "#666" }}>{new Date(p.paidAt).toLocaleDateString()}</div>}
+                    {p.paymentRef && <div style={{ fontSize: 10, color: "#666" }}>Ref: {p.paymentRef}</div>}
+                  </td>
+                  <td style={{ ...CELL, fontSize: 11, color: "#888" }}>
+                    {p.bankAccountNumber ? (
+                      <>
+                        <div>{p.bankAccountName}</div>
+                        <div style={{ fontFamily: "ui-monospace, monospace" }}>{p.bankAccountNumber}</div>
+                        <div style={{ fontFamily: "ui-monospace, monospace" }}>{p.bankIfsc}</div>
+                      </>
+                    ) : <span style={{ color: "#444" }}>{'\u2014'}</span>}
+                  </td>
+                  <td style={CELL}>
+                    {p.status === "PENDING" && (
+                      <>
+                        <button onClick={() => setPayoutStatus(p.id, "markProcessing")} style={{ ...BTN_GHOST, padding: "4px 10px", fontSize: 11 }}>Mark processing</button>
+                        <button onClick={() => {
+                          const ref = prompt("Payment reference (UTR / UPI ref):") || "";
+                          setPayoutStatus(p.id, "markPaid", ref);
+                        }} style={{ ...BTN, padding: "4px 10px", fontSize: 11, marginLeft: 4 }}>Mark paid</button>
+                      </>
+                    )}
+                    {p.status === "PROCESSING" && (
+                      <>
+                        <button onClick={() => {
+                          const ref = prompt("Payment reference (UTR / UPI ref):") || "";
+                          setPayoutStatus(p.id, "markPaid", ref);
+                        }} style={{ ...BTN, padding: "4px 10px", fontSize: 11 }}>Mark paid</button>
+                        <button onClick={() => setPayoutStatus(p.id, "markFailed")} style={{ ...BTN_GHOST, padding: "4px 10px", fontSize: 11, marginLeft: 4, color: "#ef4444" }}>Failed</button>
+                      </>
+                    )}
+                    {(p.status === "PAID" || p.status === "FAILED") && <span style={{ color: "#666", fontSize: 11 }}>{'\u2014'}</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const CELL: any = { padding: "10px 12px", textAlign: "left", verticalAlign: "top" };
