@@ -320,7 +320,13 @@ function Field({ label, required, children }: { label: string; required?: boolea
 function Row({ children }: { children: any }) {
   return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>{children}</div>;
 }
-function Input({ value, onChange, type = "text", placeholder, maxLength }: any) {
+function Input({ value, onChange, type = "text", placeholder, maxLength }: {
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  maxLength?: number;
+}) {
   return (
     <input
       type={type} value={value || ""} onChange={(e) => onChange(e.target.value)}
@@ -336,7 +342,11 @@ function Input({ value, onChange, type = "text", placeholder, maxLength }: any) 
     />
   );
 }
-function Textarea({ value, onChange, placeholder }: any) {
+function Textarea({ value, onChange, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
   return (
     <textarea
       value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
