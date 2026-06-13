@@ -212,8 +212,43 @@ function PartnerDetailView({ id, onChanged }: { id: string; onChanged: () => voi
         <Stat label="Total referrals" value={String(detail.referrals.length)} />
         <Stat label="First orders" value={String(detail.referrals.filter((r) => r.status === "FIRST_ORDER" || r.status === "REWARD_PAID").length)} />
         <Stat label="Reward type" value={detail.rewardType} />
-        <Stat label="Reward / referral" value={`₹${detail.rewardValueRs}`} />
+        <Stat label="Reward / referral" value={`\u20B9${detail.rewardValueRs}`} />
       </div>
+
+      {/* Payment info (Phase 17C-1) — only renders when any tax/bank field is populated */}
+      {(detail.panNumber || detail.bankAccountName || detail.bankAccountNumber || detail.bankIfsc) && (
+        <div>
+          <div style={{ fontSize: 11, color: "#84cc16", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>
+            Payment info
+          </div>
+          <div style={{ ...PANEL, padding: 14, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14, fontSize: 13 }}>
+            {detail.panNumber && (
+              <div>
+                <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>PAN</div>
+                <div style={{ fontFamily: "ui-monospace, monospace", color: "#eee", fontSize: 13 }}>{detail.panNumber}</div>
+              </div>
+            )}
+            {detail.bankAccountName && (
+              <div>
+                <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Account holder</div>
+                <div style={{ color: "#eee", fontSize: 13 }}>{detail.bankAccountName}</div>
+              </div>
+            )}
+            {detail.bankAccountNumber && (
+              <div>
+                <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Account number</div>
+                <div style={{ fontFamily: "ui-monospace, monospace", color: "#eee", fontSize: 13 }}>{detail.bankAccountNumber}</div>
+              </div>
+            )}
+            {detail.bankIfsc && (
+              <div>
+                <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>IFSC</div>
+                <div style={{ fontFamily: "ui-monospace, monospace", color: "#eee", fontSize: 13 }}>{detail.bankIfsc}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Referrals */}
       <div>
