@@ -53,7 +53,7 @@ export default function PartnersClient() {
     <div style={{ padding: 24, color: "#eee" }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>Partners</h1>
-        <p style={{ color: "#777", margin: "6px 0 0", fontSize: 13 }}>Manage all referral channels \u2014 customers, gyms, trainers, dieticians, doctors, corporate, residence, influencers.</p>
+        <p style={{ color: "#777", margin: "6px 0 0", fontSize: 13 }}>Manage all referral channels — customers, gyms, trainers, dieticians, doctors, corporate, residence, influencers.</p>
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -85,7 +85,7 @@ function ListTab({ openId, setOpenId }: { openId: string | null; setOpenId: (id:
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
-  if (!items) return <div style={{ color: "#666" }}>Loading\u2026</div>;
+  if (!items) return <div style={{ color: "#666" }}>Loading…</div>;
 
   return (
     <div>
@@ -128,7 +128,7 @@ function PartnerRow({ p, open, onToggleOpen, onChanged }: { p: Partner; open: bo
           </div>
           <div style={{ color: "#888", fontSize: 12, marginTop: 6, display: "flex", gap: 16, flexWrap: "wrap" }}>
             <span>{p._count?.referrals ?? 0} referrals</span>
-            <span>{p.rewardType} \u00B7 \u20B9{p.rewardValueRs}</span>
+            <span>{p.rewardType} · ₹{p.rewardValueRs}</span>
             {p.contactEmail && <span>{p.contactEmail}</span>}
             {p.contactPhone && <span>{p.contactPhone}</span>}
           </div>
@@ -162,7 +162,7 @@ function PartnerDetailView({ id, onChanged }: { id: string; onChanged: () => voi
     onChanged();
   }
 
-  if (!detail) return <div style={{ color: "#666", marginTop: 16 }}>Loading\u2026</div>;
+  if (!detail) return <div style={{ color: "#666", marginTop: 16 }}>Loading…</div>;
 
   return (
     <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #1f1f1f", display: "flex", flexDirection: "column", gap: 14 }}>
@@ -193,7 +193,7 @@ function PartnerDetailView({ id, onChanged }: { id: string; onChanged: () => voi
         <Stat label="Total referrals" value={String(detail.referrals.length)} />
         <Stat label="First orders" value={String(detail.referrals.filter((r) => r.status === "FIRST_ORDER" || r.status === "REWARD_PAID").length)} />
         <Stat label="Reward type" value={detail.rewardType} />
-        <Stat label="Reward / referral" value={`\u20B9${detail.rewardValueRs}`} />
+        <Stat label="Reward / referral" value={`₹${detail.rewardValueRs}`} />
       </div>
 
       {/* Referrals */}
@@ -213,10 +213,10 @@ function PartnerDetailView({ id, onChanged }: { id: string; onChanged: () => voi
                 {detail.referrals.map((r: any) => (
                   <tr key={r.id} style={{ borderTop: "1px solid #1a1a1a" }}>
                     <Td>{new Date(r.createdAt).toLocaleString()}</Td>
-                    <Td>{r.refereeUser?.name || r.refereeUser?.email || "\u2014"}</Td>
-                    <Td>{r.refereeOrder?.orderNumber || "\u2014"}</Td>
+                    <Td>{r.refereeUser?.name || r.refereeUser?.email || "—"}</Td>
+                    <Td>{r.refereeOrder?.orderNumber || "—"}</Td>
                     <Td><span style={{ color: r.status === "FIRST_ORDER" || r.status === "REWARD_PAID" ? "#84cc16" : "#888" }}>{r.status}</span></Td>
-                    <Td>\u20B9{r.rewardAmountRs}</Td>
+                    <Td>₹{r.rewardAmountRs}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -236,10 +236,10 @@ function PartnerDetailView({ id, onChanged }: { id: string; onChanged: () => voi
                 {detail.payouts.map((py: any) => (
                   <tr key={py.id} style={{ borderTop: "1px solid #1a1a1a" }}>
                     <Td>{py.periodYearMonth}</Td>
-                    <Td>\u20B9{py.amountRs}</Td>
+                    <Td>₹{py.amountRs}</Td>
                     <Td>{py.referralCount}</Td>
                     <Td><span style={{ color: py.status === "PAID" ? "#84cc16" : "#888" }}>{py.status}</span></Td>
-                    <Td>{py.paidAt ? new Date(py.paidAt).toLocaleDateString() : "\u2014"}</Td>
+                    <Td>{py.paidAt ? new Date(py.paidAt).toLocaleDateString() : "—"}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -342,7 +342,7 @@ function PartnerForm({ initial, onSaved, isEdit }: { initial?: any; onSaved: () 
 
       {!isEdit && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Custom code (optional \u2014 auto-generated if empty)" value={form.code || ""} onChange={(v) => up("code", v)} />
+          <Field label="Custom code (optional — auto-generated if empty)" value={form.code || ""} onChange={(v) => up("code", v)} />
           <Field label="Link to existing user (email)" value={form.ownerUserEmail || ""} onChange={(v) => up("ownerUserEmail", v)} />
         </div>
       )}
@@ -354,8 +354,8 @@ function PartnerForm({ initial, onSaved, isEdit }: { initial?: any; onSaved: () 
             {REWARD_TYPES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <Field label="Reward value (\u20B9 or count)" value={String(form.rewardValueRs || 0)} onChange={(v) => up("rewardValueRs", Number(v))} type="number" />
-        <Field label="Referee discount (\u20B9)" value={String(form.refereeDiscountRs || 0)} onChange={(v) => up("refereeDiscountRs", Number(v))} type="number" />
+        <Field label="Reward value (₹ or count)" value={String(form.rewardValueRs || 0)} onChange={(v) => up("rewardValueRs", Number(v))} type="number" />
+        <Field label="Referee discount (₹)" value={String(form.refereeDiscountRs || 0)} onChange={(v) => up("refereeDiscountRs", Number(v))} type="number" />
       </div>
 
       {/* Type-specific fields */}
@@ -367,7 +367,7 @@ function PartnerForm({ initial, onSaved, isEdit }: { initial?: any; onSaved: () 
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} style={BTN} disabled={busy}>{busy ? "Saving\u2026" : isEdit ? "Save changes" : "Create partner"}</button>
+        <button onClick={save} style={BTN} disabled={busy}>{busy ? "Saving…" : isEdit ? "Save changes" : "Create partner"}</button>
         {error && <span style={{ color: "#ef4444", fontSize: 13, alignSelf: "center" }}>{error}</span>}
       </div>
     </div>
