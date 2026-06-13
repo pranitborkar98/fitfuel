@@ -72,11 +72,11 @@ export default function LandingClient({ view }: { view: View }) {
     : `Special welcome via ${view.name}`;
 
   return (
-    <div style={{ background: T.bg, minHeight: "calc(100vh - 80px)", color: T.text, padding: "32px 16px 64px" }}>
+    <div style={{ background: T.bg, minHeight: "calc(100vh - 80px)", color: T.text, padding: "72px 16px 80px" }}>
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
 
         {/* Ribbon */}
-        <div style={{ display: "inline-block", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 16 }}>
+        <div style={{ display: "inline-block", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 20, padding: "6px 12px", border: `1px solid ${T.accent2}`, borderRadius: 99, background: "rgba(132,204,22,0.08)" }}>
           You're invited
         </div>
 
@@ -170,18 +170,31 @@ function Hero({ view }: { view: View }) {
         <div style={{ color: T.dim, fontSize: 15, marginTop: 12, lineHeight: 1.5 }}>{sub}</div>
 
         {/* Type-specific meta */}
-        <div style={{ marginTop: 12, fontSize: 12, color: T.dim, display: "flex", flexWrap: "wrap", gap: 14 }}>
-          {view.specialty && <span>{view.specialty}</span>}
-          {view.qualification && <span>{view.qualification}</span>}
-          {view.clinicName && <span>{view.clinicName}</span>}
-          {view.hospitalAffiliation && <span>{view.hospitalAffiliation}</span>}
-          {view.gymAddress && <span>{view.gymAddress}</span>}
-          {view.societyAddress && <span>{view.societyAddress}</span>}
-          {view.socialHandle && <span>{view.socialHandle}</span>}
+        <div style={{ marginTop: 14, fontSize: 12, color: T.dim, display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {view.specialty && <MetaChip>{view.specialty}</MetaChip>}
+          {view.qualification && <MetaChip>{view.qualification}</MetaChip>}
+          {view.clinicName && <MetaChip>{view.clinicName}</MetaChip>}
+          {view.hospitalAffiliation && <MetaChip>{view.hospitalAffiliation}</MetaChip>}
+          {view.gymAddress && <MetaChip>{capitalize(view.gymAddress)}</MetaChip>}
+          {view.societyAddress && <MetaChip>{capitalize(view.societyAddress)}</MetaChip>}
+          {view.socialHandle && <MetaChip>{view.socialHandle}</MetaChip>}
         </div>
       </div>
     </div>
   );
+}
+
+function MetaChip({ children }: { children: any }) {
+  return (
+    <span style={{ background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 99, padding: "4px 10px", fontSize: 11, color: T.dim, letterSpacing: "0.02em" }}>
+      {children}
+    </span>
+  );
+}
+
+function capitalize(s: string) {
+  if (!s) return s;
+  return s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 }
 
 function Mini({ title, body }: { title: string; body: string }) {
