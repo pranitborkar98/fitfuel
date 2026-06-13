@@ -2,11 +2,14 @@
 // app/api/payments/payu/route.ts
 // PayU initiation — builds the signed hash AND creates a PENDING_PAYMENT order
 // keyed by txnid so the success callback can complete it after the redirect.
-// Hash formula unchanged (udf fields empty) — success-route verification still matches.
+// 17C-2: apply credit balance if signed in & opted in; stamp Order.creditAppliedRs.
+//        Credit is committed (recordCreditChange) only after CONFIRMED in success route.
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { applyCreditAtCheckout } from "@/lib/partners";
 
 const PAYU_KEY  = process.env.PAYU_MERCHANT_KEY!;
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
@@ -30,9 +33,6 @@ function genOrderNumber(): string {
   return `FF-PAYU-${ymd}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-
-// Safe customer upsert — phone is @unique, so never assign a phone that
-// already belongs to a different user (that caused P2002 on update).
 async function upsertCustomer(email: string, phone: string, name: string) {
   let user = await (prisma as any).user.findFirst({ where: { email } });
   if (!user && phone) user = await (prisma as any).user.findFirst({ where: { phone } });
@@ -56,56 +56,74 @@ export async function POST(req: NextRequest) {
       firstname, lastname, email, phone,
       address, city, pincode,
       diet, dur, meal, price, deliveryWindow,
-      amount,       // string e.g. "7938.00" — total incl GST, what PayU charges
+      amount,       // string e.g. "7938.00" — total incl GST, what PayU charges (pre-credit)
       productinfo,
+      useCredit,    // 17C-2
     } = body;
 
     if (!firstname || !email || !phone || !amount || !productinfo) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const txnid = `FF${Date.now()}${Math.floor(Math.random() * 1000)}`;
-
-    // ── Hash (unchanged formula — all udf empty) ──
-    const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${PAYU_SALT}`;
-    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
-
-    // ── Create the PENDING order now, keyed by txnid ──
-    // Only if we have real plan params (skip for test mode / partial payloads).
     const dietEnum = DIET_MAP[diet];
     const durEnum  = DUR_MAP[dur];
     const mealEnum = MEAL_MAP[meal];
 
+    let creditAppliedRs = 0;
+    let user: any = null;
+    let chargeAmountRs = Math.round(Number(amount)); // what PayU will charge
+
+    // We need user.id BEFORE credit lookup. Upsert now (this is the order owner).
     if (dietEnum && durEnum && mealEnum && price) {
-      const total    = Math.round(Number(amount));   // == what PayU charges
+      user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
+
+      // 17C-2: apply credit only if signed in AND opted in AND owns this account
+      if (useCredit) {
+        const session = await auth();
+        if (session?.user?.id && session.user.id === user.id) {
+          const applied = await applyCreditAtCheckout(user.id, chargeAmountRs);
+          // Keep at least ₹1 for PayU (zero-amount orders rejected)
+          creditAppliedRs = Math.min(applied.creditAppliedRs, Math.max(0, chargeAmountRs - 1));
+          chargeAmountRs = chargeAmountRs - creditAppliedRs;
+        }
+      }
+    }
+
+    // PayU requires the amount field as a string with 2 decimals. Hash uses the exact same string.
+    const payuAmount = chargeAmountRs.toFixed(2);
+
+    const txnid = `FF${Date.now()}${Math.floor(Math.random() * 1000)}`;
+
+    // ── Hash (unchanged formula — all udf empty) ──
+    const hashString = `${PAYU_KEY}|${txnid}|${payuAmount}|${productinfo}|${firstname}|${email}|||||||||||${PAYU_SALT}`;
+    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+
+    // ── Create the PENDING order now, keyed by txnid ──
+    if (user && dietEnum && durEnum && mealEnum && price) {
       const subtotal = Math.round(Number(price));     // pre-GST
-      const gst      = total - subtotal;
+      const gst      = Math.round(Number(amount)) - subtotal; // original gst (before credit)
       const window   = deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
 
-      // upsert user (phone-collision safe)
-      const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
-
-      // address
       const addr = await (prisma as any).address.create({
         data: { userId: user.id, line1: address ?? "", area: city ?? "Pune", city: city ?? "Pune", pincode: pincode ?? "" },
       });
 
-      // order (PENDING_PAYMENT) + item + payment, all tagged with txnid.
-      // Plan params + chosen delivery window are stashed in notes for the success callback.
       await (prisma as any).order.create({
         data: {
           userId: user.id, addressId: addr.id, orderNumber: genOrderNumber(),
-          status: "PENDING_PAYMENT", subtotalRs: subtotal, gstRs: gst, totalRs: total,
+          status: "PENDING_PAYMENT",
+          subtotalRs: subtotal, gstRs: gst, totalRs: chargeAmountRs,
+          creditAppliedRs,
           paymentMethod: "PAYU", paymentStatus: "PENDING", payuTxnId: txnid,
           notes: JSON.stringify({ diet, dur, meal, deliveryWindow: window, isJain: diet === "jain" }),
           items: {
             create: {
               productId: null, diet: dietEnum, duration: durEnum, mealsPerDay: mealEnum,
-              priceRs: subtotal, gstRs: gst, totalRs: total, quantity: 1,
+              priceRs: subtotal, gstRs: gst, totalRs: chargeAmountRs, quantity: 1,
             },
           },
           payment: {
-            create: { method: "PAYU", status: "PENDING", amountRs: total, payuTxnId: txnid },
+            create: { method: "PAYU", status: "PENDING", amountRs: chargeAmountRs, payuTxnId: txnid },
           },
         },
       });
@@ -115,7 +133,7 @@ export async function POST(req: NextRequest) {
       payuUrl:          PAYU_URL,
       key:              PAYU_KEY,
       txnid,
-      amount,
+      amount:           payuAmount,    // post-credit, what PayU will charge
       productinfo,
       firstname,
       email,
@@ -124,6 +142,7 @@ export async function POST(req: NextRequest) {
       surl:             `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`,
       furl:             `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`,
       service_provider: "payu_paisa",
+      creditAppliedRs,
     });
   } catch (err) {
     console.error("[PayU init error]", err);

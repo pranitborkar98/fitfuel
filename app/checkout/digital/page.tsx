@@ -1,6 +1,7 @@
 // app/checkout/digital/page.tsx — digital checkout, bundle-aware, coupon, online-only.
 // Phase 13D (capture): optional body stats collected here -> stashed in order.notes ->
 // persisted to UserProfile on payment success (seeds dashboard + personalises the PDF).
+// Phase 17C-2: credit-balance toggle for signed-in users (auto-applies max available).
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -31,7 +32,7 @@ function DigitalCheckout() {
 
   const [firstname, setFirst] = useState(""); const [lastname, setLast] = useState("");
   const [email, setEmail] = useState(""); const [phone, setPhone] = useState("");
-  // ── Optional personalisation capture ──
+  // Optional personalisation capture
   const [heightCm, setHeight] = useState(""); const [weightKg, setWeight] = useState("");
   const [targetWeightKg, setTargetWeight] = useState(""); const [age, setAge] = useState("");
   const [coupon, setCoupon] = useState(""); const [discount, setDiscount] = useState(0);
@@ -40,10 +41,36 @@ function DigitalCheckout() {
   const [busy, setBusy] = useState(false);
   const [payuData, setPayuData] = useState<Record<string, string> | null>(null);
 
+  // 17C-2: credit preview
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [creditApplicable, setCreditApplicable] = useState(0);
+  const [useCredit, setUseCredit] = useState(true);
+
   useEffect(() => { setTotal(sale - discount); }, [sale, discount]);
   useEffect(() => { if (payuData) (document.getElementById("payu-form") as HTMLFormElement)?.submit(); }, [payuData]);
 
-  async function applyCoupon() {
+  // Fetch credit preview when total changes
+  useEffect(() => {
+    const subtotal = sale - discount;
+    if (subtotal <= 0) return;
+    fetch(`/api/checkout/credit-preview?subtotal=${subtotal}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.signedIn && d.balanceRs > 0) {
+          setCreditBalance(d.balanceRs);
+          setCreditApplicable(d.applicableRs);
+          if (d.email && !email) setEmail(d.email);
+        } else {
+          setCreditBalance(0); setCreditApplicable(0);
+        }
+      })
+      .catch(() => { setCreditBalance(0); setCreditApplicable(0); });
+  }, [sale, discount]); // eslint-disable-line
+
+  const effectiveCredit = useCredit ? creditApplicable : 0;
+  const payableTotal = Math.max(0, total - effectiveCredit);
+
+  async function applyCouponFn() {
     setCouponMsg(null);
     const res = await fetch("/api/coupon/validate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: coupon.trim().toUpperCase(), planSlug, dur, email }) });
     const data = await res.json();
@@ -56,8 +83,8 @@ function DigitalCheckout() {
     const res = await fetch("/api/payments/payu/digital", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
       firstname, lastname, email, phone, planSlug, dur, bundle,
       couponCode: discount > 0 ? coupon.trim().toUpperCase() : undefined,
-      // optional — server validates & ignores blanks/out-of-range
       heightCm, weightKg, targetWeightKg, age,
+      useCredit: useCredit && creditApplicable > 0,
     }) });
     const data = await res.json();
     if (data.hash) setPayuData(data); else { alert(data.error || "Could not start payment"); setBusy(false); }
@@ -79,14 +106,28 @@ function DigitalCheckout() {
           <p style={{ color: T.textMuted, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Your plan</p>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 14 }}>{tier} · {planName}</h2>
           <div style={{ display: "flex", justifyContent: "space-between", color: T.textSecond, fontSize: 14, marginBottom: 6 }}><span>Plan price</span><span>{fmt(sale)}</span></div>
-          {discount > 0 && <div style={{ display: "flex", justifyContent: "space-between", color: T.accentLight, fontSize: 14, marginBottom: 6 }}><span>Coupon discount</span><span>− {fmt(discount)}</span></div>}
-          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 18, marginTop: 10, paddingTop: 12, borderTop: `1px solid ${T.cardBorder}` }}><span>Total (incl. 18% GST)</span><span style={{ color: T.accentLight }}>{fmt(total)}</span></div>
+          {discount > 0 && <div style={{ display: "flex", justifyContent: "space-between", color: T.accentLight, fontSize: 14, marginBottom: 6 }}><span>Coupon discount</span><span>{'\u2212'} {fmt(discount)}</span></div>}
+          {effectiveCredit > 0 && <div style={{ display: "flex", justifyContent: "space-between", color: T.accentLight, fontSize: 14, marginBottom: 6 }}><span>FitFuel credit applied</span><span>{'\u2212'} {fmt(effectiveCredit)}</span></div>}
+          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 18, marginTop: 10, paddingTop: 12, borderTop: `1px solid ${T.cardBorder}` }}><span>Total (incl. 18% GST)</span><span style={{ color: T.accentLight }}>{fmt(payableTotal)}</span></div>
         </div>
+
+        {creditApplicable > 0 && (
+          <div style={{ background: T.card, border: `1px solid ${useCredit ? T.accent : T.cardBorder}`, borderRadius: 16, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", flex: 1 }}>
+              <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} style={{ width: 18, height: 18, accentColor: T.accent }} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Apply {fmt(creditApplicable)} credit</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Available balance: {fmt(creditBalance)}</div>
+              </div>
+            </label>
+          </div>
+        )}
+
         <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>Coupon code</label>
           <div style={{ display: "flex", gap: 10 }}>
             <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. FITFUEL50" style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: T.textPrimary, outline: "none", textTransform: "uppercase" }} />
-            <button onClick={applyCoupon} style={{ background: "transparent", color: T.accent, border: `1px solid ${T.accent}`, borderRadius: 10, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Apply</button>
+            <button onClick={applyCouponFn} style={{ background: "transparent", color: T.accent, border: `1px solid ${T.accent}`, borderRadius: 10, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Apply</button>
           </div>
           {couponMsg && <p style={{ marginTop: 8, fontSize: 13, color: couponMsg.ok ? T.accentLight : "#f87171" }}>{couponMsg.text}</p>}
         </div>
@@ -98,17 +139,16 @@ function DigitalCheckout() {
           </div>
           <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@email.com" />
           <Field label="Phone" value={phone} onChange={setPhone} placeholder="98765 43210" />
-          <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}>No address needed — digital download. After payment, log in with this email to download from your dashboard.</p>
+          <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}>No address needed {'\u2014'} digital download. After payment, log in with this email to download from your dashboard.</p>
         </div>
 
-        {/* ── Optional personalisation capture ── */}
         <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700 }}>Personalise my plan</h3>
             <span style={{ fontSize: 11, fontWeight: 700, color: "#0a0a0a", background: T.accent, padding: "2px 8px", borderRadius: 999 }}>OPTIONAL</span>
           </div>
           <p style={{ color: T.textMuted, fontSize: 12.5, marginBottom: 16 }}>
-            Add your stats and your PDF opens with your own numbers — BMI, calorie target, deficit and a weight-projection chart. Skip it and you&apos;ll get the standard plan; you can add these later in your dashboard.
+            Add your stats and your PDF opens with your own numbers {'\u2014'} BMI, calorie target, deficit and a weight-projection chart. Skip it and you{'\u2019'}ll get the standard plan; you can add these later in your dashboard.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Height (cm)" type="number" value={heightCm} onChange={setHeight} placeholder="175" />
@@ -119,7 +159,7 @@ function DigitalCheckout() {
         </div>
 
         <button onClick={pay} disabled={busy} style={{ background: T.accent, color: "#0a0a0a", fontWeight: 800, fontSize: 16, padding: "15px 0", borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
-          {busy ? "Redirecting to PayU..." : `Pay ${fmt(total)} securely`}
+          {busy ? "Redirecting to PayU..." : `Pay ${fmt(payableTotal)} securely`}
         </button>
       </div>
     </main>

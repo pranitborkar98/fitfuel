@@ -2,11 +2,13 @@
 // app/api/orders/cod/route.ts
 // 16A: order_confirmed + staff_new_order notifications
 // 17A: capture ?ref cookie -> Order.referralAttribution + processReferralReward
+// 17C-2: apply credit balance if signed in & opted in; commit spend after order CONFIRMED.
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
-import { processReferralReward } from "@/lib/partners";
+import { processReferralReward, applyCreditAtCheckout, recordCreditChange } from "@/lib/partners";
 
 const DIET_MAP: Record<string, string> = {
   veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
@@ -48,7 +50,7 @@ async function upsertCustomer(email: string, phone: string, name: string) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price, deliveryWindow } = body;
+    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price, deliveryWindow, useCredit } = body;
 
     if (!firstname || !email || !phone || !address || !pincode || !diet || !dur || !meal || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -63,16 +65,28 @@ export async function POST(req: NextRequest) {
 
     const subtotal = Math.round(Number(price));
     const gst      = Math.round(subtotal * 0.05);
-    const total    = subtotal + gst;
+    const baseTotal = subtotal + gst;
 
     const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
+
+    // ── 17C-2: apply credit if signed in AND opted in AND owns this account ──
+    let creditAppliedRs = 0;
+    let total = baseTotal;
+    if (useCredit) {
+      const session = await auth();
+      if (session?.user?.id && session.user.id === user.id) {
+        const applied = await applyCreditAtCheckout(user.id, baseTotal);
+        // Cap to ensure non-zero total (PayU rule; we keep it consistent for COD too).
+        creditAppliedRs = Math.min(applied.creditAppliedRs, Math.max(0, baseTotal - 1));
+        total = baseTotal - creditAppliedRs;
+      }
+    }
 
     // ── Phase 17A: capture ref from cookie OR body, snapshot on Order ──
     const refFromBody: string | undefined = body.refCode;
     const refFromCookie = req.cookies.get("ff_ref")?.value;
     const refSnapshot = (refFromBody || refFromCookie || "").slice(0, 64) || null;
 
-    // Also stamp the user's referredByPartnerCode if not yet set (first-touch)
     if (refSnapshot) {
       const existingAttribution = await (prisma as any).user.findUnique({
         where: { id: user.id },
@@ -95,6 +109,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id, addressId: addr.id, orderNumber,
         status: "CONFIRMED", subtotalRs: subtotal, gstRs: gst, totalRs: total,
+        creditAppliedRs,
         paymentMethod: "CASH_ON_DELIVERY", paymentStatus: "PENDING",
         referralAttribution: refSnapshot,
         notes: JSON.stringify({ diet, dur, meal, deliveryWindow: deliveryWindow === "EVENING" ? "EVENING" : "MORNING", isJain: diet === "jain" }),
@@ -140,7 +155,16 @@ export async function POST(req: NextRequest) {
       console.error("[COD] No meal plan to attach", { orderNumber });
     }
 
-    console.log("[COD Order saved]", { orderNumber, userId: user.id, total });
+    // ── 17C-2: commit the credit spend now (order is already CONFIRMED) ──
+    if (creditAppliedRs > 0) {
+      try {
+        await recordCreditChange(user.id, -creditAppliedRs, "order_payment", { refOrderId: order.id });
+      } catch (e) {
+        console.error("[COD] credit commit failed", e);
+      }
+    }
+
+    console.log("[COD Order saved]", { orderNumber, userId: user.id, total, creditAppliedRs });
 
     // ════════════════════ NOTIFICATIONS (16A) ════════════════════
     try {
@@ -170,7 +194,7 @@ export async function POST(req: NextRequest) {
       console.error("[COD] referral reward processing failed", e);
     }
 
-    return NextResponse.json({ success: true, orderNumber: order.orderNumber, orderId: order.id, total });
+    return NextResponse.json({ success: true, orderNumber: order.orderNumber, orderId: order.id, total, creditAppliedRs });
 
   } catch (err) {
     console.error("[COD order error]", err);

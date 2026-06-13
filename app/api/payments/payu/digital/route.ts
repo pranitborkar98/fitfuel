@@ -2,11 +2,14 @@
 // app/api/payments/payu/digital/route.ts — bundle-aware (STARTER/PRO). Hash formula unchanged.
 // Phase 13D (capture): optional body stats validated here and stashed in order.notes.profile;
 // persisted to UserProfile on payment success (see lib/activate-digital-plan.ts).
+// 17C-2: apply credit balance if signed in & opted in; stamp Order.creditAppliedRs.
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { computePrice } from "@/lib/pricing";
 import { applyCoupon, type CouponLike } from "@/lib/coupons";
+import { applyCreditAtCheckout } from "@/lib/partners";
 
 const PAYU_KEY = process.env.PAYU_MERCHANT_KEY!;
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
@@ -14,7 +17,6 @@ const PAYU_URL = "https://secure.payu.in/_payment";
 const SELLER_STATE = "MH";
 const DUR_MAP: Record<string, string> = { trial: "TRIAL_DAY", weekly: "WEEKLY", biweekly: "BI_WEEKLY", monthly_ex: "MONTHLY_EXCL_WEEKENDS", monthly: "ONE_MONTH", two_month: "TWO_MONTH", three_month: "THREE_MONTH" };
 
-// ── Optional body stats: parse, sanity-check, drop blanks/out-of-range ──
 function num(v: unknown, min: number, max: number, integer = false): number | undefined {
   if (v === undefined || v === null || v === "") return undefined;
   let n = Number(v);
@@ -48,7 +50,7 @@ async function upsertCustomer(email: string, phone: string, name: string) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { firstname, lastname, email, phone, planSlug, dur, bundle = "STARTER", couponCode, buyerStateCode } = body;
+    const { firstname, lastname, email, phone, planSlug, dur, bundle = "STARTER", couponCode, buyerStateCode, useCredit } = body;
     if (!firstname || !email || !phone || !planSlug || !dur) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     const durEnum = DUR_MAP[dur];
     if (!durEnum) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
@@ -77,24 +79,38 @@ export async function POST(req: NextRequest) {
 
     const p = computePrice({ items: [{ mrpRs: price.mrpRs ?? price.priceRs, saleRs: price.priceRs, qty: 1 }], discountRs, gstPercent: price.gstPercent, priceIsTaxInclusive: price.priceIsTaxInclusive, buyerStateCode: buyerStateCode || SELLER_STATE, sellerStateCode: SELLER_STATE });
 
-    const amount = p.totalRs.toFixed(2);
+    const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
+
+    // ── 17C-2: apply credit if signed in AND opted in AND owns this account ──
+    let creditAppliedRs = 0;
+    let chargeAmountRs = p.totalRs;
+    if (useCredit) {
+      const session = await auth();
+      if (session?.user?.id && session.user.id === user.id) {
+        const applied = await applyCreditAtCheckout(user.id, chargeAmountRs);
+        creditAppliedRs = Math.min(applied.creditAppliedRs, Math.max(0, chargeAmountRs - 1));
+        chargeAmountRs = chargeAmountRs - creditAppliedRs;
+      }
+    }
+
+    const amount = chargeAmountRs.toFixed(2);
     const productinfo = `digital_${bundle.toLowerCase()}_${planSlug}`;
     const txnid = `FFD${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const hashString = `${PAYU_KEY}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${PAYU_SALT}`;
     const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
-    const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
     await (prisma as any).order.create({
       data: {
         userId: user.id, orderNumber: genOrderNumber(), status: "PENDING_PAYMENT", paymentMethod: "PAYU", paymentStatus: "PENDING", payuTxnId: txnid,
-        subtotalRs: p.subtotalRs, gstRs: p.gstRs, totalRs: p.totalRs, mrpSubtotalRs: p.mrpSubtotalRs, discountRs: p.discountRs, couponCode: appliedCode,
+        subtotalRs: p.subtotalRs, gstRs: p.gstRs, totalRs: chargeAmountRs, mrpSubtotalRs: p.mrpSubtotalRs, discountRs: p.discountRs, couponCode: appliedCode,
+        creditAppliedRs,
         cgstRs: p.cgstRs, sgstRs: p.sgstRs, igstRs: p.igstRs, buyerStateCode: buyerStateCode || SELLER_STATE, hsnSacCode: "9983",
         notes: JSON.stringify({ isDigital: true, planSlug, durEnum, bundle, couponCode: appliedCode ?? null, ...(profile ? { profile } : {}) }),
-        items: { create: { productId: null, diet: "VEGETARIAN", duration: durEnum, mealsPerDay: "ALL_FOUR", priceRs: p.subtotalRs, gstRs: p.gstRs, totalRs: p.totalRs, quantity: 1 } },
-        payment: { create: { method: "PAYU", status: "PENDING", amountRs: p.totalRs, payuTxnId: txnid } },
+        items: { create: { productId: null, diet: "VEGETARIAN", duration: durEnum, mealsPerDay: "ALL_FOUR", priceRs: p.subtotalRs, gstRs: p.gstRs, totalRs: chargeAmountRs, quantity: 1 } },
+        payment: { create: { method: "PAYU", status: "PENDING", amountRs: chargeAmountRs, payuTxnId: txnid } },
       },
     });
 
-    return NextResponse.json({ payuUrl: PAYU_URL, key: PAYU_KEY, txnid, amount, productinfo, firstname, email, phone, hash, surl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`, furl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`, service_provider: "payu_paisa" });
+    return NextResponse.json({ payuUrl: PAYU_URL, key: PAYU_KEY, txnid, amount, productinfo, firstname, email, phone, hash, surl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`, furl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`, service_provider: "payu_paisa", creditAppliedRs });
   } catch (err) { console.error("[PayU digital init error]", err); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 }

@@ -201,6 +201,11 @@ function CheckoutInner() {
   const [loading, setLoading]     = useState(false);
   const [payuData, setPayuData]   = useState<Record<string, string> | null>(null);
 
+  // 17C-2 — credit preview
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [creditApplicable, setCreditApplicable] = useState(0);
+  const [useCredit, setUseCredit] = useState(true);
+
   // Pre-fill name + email from session
   useEffect(() => {
     if (session?.user) {
@@ -283,6 +288,7 @@ function CheckoutInner() {
           email: form.email, phone: form.phone,
           address: deliveryAddress, city, pincode,
           diet, dur, meal, price: rawPrice, deliveryWindow,
+          useCredit: useCredit && creditApplicable > 0,
         }),
       });
       const data = await res.json();
@@ -308,6 +314,7 @@ function CheckoutInner() {
         address: deliveryAddress, city, pincode,
         diet, dur, meal, price: rawPrice, deliveryWindow,
         amount: priceGST.toFixed(2), productinfo,
+        useCredit: useCredit && creditApplicable > 0,
       }),
     });
     if (!res.ok) throw new Error("Failed to initiate payment");
@@ -325,6 +332,23 @@ function CheckoutInner() {
     if (payMethod === "cod") await handleCOD();
     else await handlePayU();
   }
+
+  // 17C-2 — fetch credit preview when total changes
+  useEffect(() => {
+    const sub = payMethod === "cod" ? rawPrice : priceGST;
+    if (sub <= 0) return;
+    fetch(`/api/checkout/credit-preview?subtotal=${sub}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.signedIn && d.balanceRs > 0) {
+          setCreditBalance(d.balanceRs);
+          setCreditApplicable(d.applicableRs);
+        } else {
+          setCreditBalance(0); setCreditApplicable(0);
+        }
+      })
+      .catch(() => { setCreditBalance(0); setCreditApplicable(0); });
+  }, [rawPrice, priceGST, payMethod]);
 
   const showAddressForm = useNewAddress || savedAddresses.length === 0;
 
@@ -577,14 +601,35 @@ function CheckoutInner() {
                         {payMethod === "cod" ? "collected at delivery" : fmt(priceGST - rawPrice)}
                       </span>
                     </div>
+                    {creditApplicable > 0 && useCredit && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.accent }}>FitFuel credit</span>
+                        <span style={{ fontSize: 13, color: T.accent }}>{'\u2212'} {fmt(Math.min(creditApplicable, payMethod === "cod" ? rawPrice : priceGST))}</span>
+                      </div>
+                    )}
                     <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>{payMethod === "cod" ? "Pay at door" : "Total"}</span>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>{payMethod === "cod" ? fmt(rawPrice) : fmt(priceGST)}</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>
+                        {fmt(Math.max(0, (payMethod === "cod" ? rawPrice : priceGST) - (useCredit ? creditApplicable : 0)))}
+                      </span>
                     </div>
                   </>
                 )}
               </div>
+
+              {/* 17C-2 — credit toggle (signed-in users only) */}
+              {creditApplicable > 0 && (
+                <div style={{ background: "rgba(132,204,22,0.04)", border: `1px solid ${useCredit ? T.accent : T.cardBorder}`, borderRadius: 12, padding: "12px 16px", marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", flex: 1 }}>
+                    <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} style={{ width: 18, height: 18, accentColor: T.accent }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary }}>Apply {fmt(creditApplicable)} credit</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Balance: {fmt(creditBalance)}</div>
+                    </div>
+                  </label>
+                </div>
+              )}
             </div>
 
             <div style={{

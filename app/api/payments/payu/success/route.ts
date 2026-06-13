@@ -2,13 +2,15 @@
 // app/api/payments/payu/success/route.ts
 // 16A: order_confirmed + staff_new_order notifications
 // 17A: processReferralReward after order CONFIRMED
+// 17C-2: commit credit spend after CONFIRMED (one-shot per order — protected
+//        by the existing CONFIRMED early-return guard above)
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { activateDigitalPlan } from "@/lib/activate-digital-plan";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
-import { processReferralReward } from "@/lib/partners";
+import { processReferralReward, recordCreditChange } from "@/lib/partners";
 
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
@@ -57,6 +59,8 @@ export async function POST(req: NextRequest) {
 
     const meta = (() => { try { return JSON.parse(order.notes ?? "{}"); } catch { return {}; } })();
 
+    // IMPORTANT: this early-return is what makes credit-commit idempotent.
+    // If we re-enter (PayU retry, user double-click), we skip everything below.
     if (order.status === "CONFIRMED") {
       const done = meta.isDigital
         ? `${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`
@@ -72,6 +76,17 @@ export async function POST(req: NextRequest) {
       where: { orderId: order.id },
       data:  { status: "SUCCESS", payuPaymentId: mihpayid, paidAt: new Date() },
     });
+
+    // ════════════════════ CREDIT COMMIT (17C-2) ════════════════════
+    // Now safe to deduct credit — the order is CONFIRMED and the early-return
+    // guard above prevents this from firing twice for the same order.
+    if ((order.creditAppliedRs ?? 0) > 0) {
+      try {
+        await recordCreditChange(order.userId, -order.creditAppliedRs, "order_payment", { refOrderId: order.id });
+      } catch (e) {
+        console.error("[PayU] credit commit failed", { orderId: order.id, e });
+      }
+    }
 
     // ════════════════════ NOTIFICATIONS (16A) ════════════════════
     try {
