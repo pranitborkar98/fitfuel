@@ -46,6 +46,7 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
         {/* SessionProvider wraps everything so useSession() works in any client component */}
+        <ReferralCapture />
         <SessionProvider session={session}>
           {/* ChromeGate hides Navbar/Footer on standalone routes like /driver */}
           <ChromeGate navbar={<Navbar />} footer={<Footer />}>
