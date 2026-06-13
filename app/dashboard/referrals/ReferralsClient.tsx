@@ -185,7 +185,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
 
 function Pane({ children }: { children: any }) {
   return (
-    <div style={{ background: T.bg, minHeight: "calc(100vh - 80px)", color: T.text, padding: "32px 16px 64px" }}>
+    <div style={{ background: T.bg, minHeight: "calc(100vh - 80px)", color: T.text, padding: "72px 16px 80px" }}>
       <div style={{ maxWidth: 880, margin: "0 auto" }}>{children}</div>
     </div>
   );
