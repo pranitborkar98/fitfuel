@@ -78,17 +78,30 @@ function CatalogTab() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [includeInactive, setIncludeInactive] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setItems(null);
+    setError(null);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (categoryFilter) params.set("category", categoryFilter);
     if (includeInactive) params.set("includeInactive", "1");
-    const r = await fetch("/api/admin/supplements?" + params.toString());
-    const j = await r.json();
-    setItems(j.supplements || []);
-    setCategories(j.categories || []);
+    try {
+      const r = await fetch("/api/admin/supplements?" + params.toString());
+      if (!r.ok) {
+        const text = await r.text().catch(() => "");
+        setError(`API ${r.status}: ${text.slice(0, 200) || r.statusText}`);
+        setItems([]);
+        return;
+      }
+      const j = await r.json();
+      setItems(j.supplements || []);
+      setCategories(j.categories || []);
+    } catch (e: any) {
+      setError(`Network: ${e?.message || "failed to load"}`);
+      setItems([]);
+    }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [categoryFilter, includeInactive]);
 
@@ -113,6 +126,10 @@ function CatalogTab() {
 
       {items === null ? (
         <div style={{ color: T.muted, padding: 24 }}>Loading{'\u2026'}</div>
+      ) : error ? (
+        <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 10, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>
+          {error}
+        </div>
       ) : items.length === 0 ? (
         <div style={{ color: T.dim, padding: 24, textAlign: "center", background: T.card, border: `1px solid ${T.border}`, borderRadius: 10 }}>
           No supplements match this filter.
@@ -349,15 +366,27 @@ function LinkEditRow({ link, accent, onSave, onCancel }: { link: Link; accent: s
 function AnalyticsTab() {
   const [days, setDays] = useState(7);
   const [data, setData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setData(null);
-    const r = await fetch(`/api/admin/supplements/clicks?days=${days}`);
-    const j = await r.json();
-    setData(j);
+    setError(null);
+    try {
+      const r = await fetch(`/api/admin/supplements/clicks?days=${days}`);
+      if (!r.ok) {
+        const text = await r.text().catch(() => "");
+        setError(`API ${r.status}: ${text.slice(0, 200) || r.statusText}`);
+        return;
+      }
+      const j = await r.json();
+      setData(j);
+    } catch (e: any) {
+      setError(`Network: ${e?.message || "failed to load"}`);
+    }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [days]);
 
+  if (error) return <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 10, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>{error}</div>;
   if (!data) return <div style={{ color: T.muted, padding: 24 }}>Loading{'\u2026'}</div>;
 
   const maxDaily = Math.max(1, ...data.dailyTrend.map((d: any) => d.clicks));
