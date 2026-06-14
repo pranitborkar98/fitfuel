@@ -2121,3 +2121,188 @@ Community is a whole product with its own matching, moderation, and abuse surfac
 > **Jun 11 — RECIPE PHOTOS ON PUBLIC PLAN MENU (Decision #102): recipe images now surface on `/plans/[slug]`. Added `imageUrl` to the recipe select; in `PlanDetailClient` every meal cell in the menu grid has a FIXED image area — real photo when present, a tasteful gradient + faint meal-slot icon placeholder when not — so rows stay even AND food shows UPFRONT (conversion: "if the customer doesn't see the dish, it's a red flag"). Day-1 sample cards get a banner image. Clicking any dish opens a popup with the large photo + description + cuisine/time/serving + kcal/P/C/F — MARKETING INFO ONLY, deliberately NO ingredients or cooking steps (the SOP stays a paid/internal asset, consistent with the moat). Reaffirms Decision #67 (encoding): unicode glyphs in JSX text (× `\u00D7`, ◉ `\u25C9`) must be `{'\uXXXX'}` or HTML entities — raw `\uXXXX` between tags renders literally.**
 
 > **PHASE 15 STATUS: ✅ ADMIN COMMAND CENTER CORE COMPLETE (Jun 11, 2026). Nine role-gated surfaces live: Dispatch, Production, Drivers, Plans, Recipes, Orders, Subscribers, Content, Staff. The admin is now fully self-service per Decision #94 — staff onboarding, content, plans, prices, recipes/steps/ingredients, and images are all UI-editable with no dev/DB access. Image upload (Blob) + public menu photos shipped. OPEN ITEMS: (a) cycleLengthDays 30-vs-60 moat decision; (b) confirm the 10 repointed subscribers are real vs test; (c) bulk-add remaining recipe photos; (d) optional `revalidate` on `/plans/[slug]` if future image swaps don't reflect (route caching); (e) digital out-of-band "provision access" action; (f) deferred from earlier phases unchanged (CA/GST, Blob PDF cache, brand fonts, recipe seeding across remaining ~118 plans).**
+---
+
+## ═══════════ PHASE 16 — NOTIFICATIONS (EMAIL + WHATSAPP-LATER) ═══════════
+### Session: Jun 12–13, 2026 · additions-only · Decisions #103–#122
+
+> **Jun 12 — PHASE 16A TRANSACTIONAL NOTIFICATIONS LIVE: order/dispatch/issue events now fire customer + staff emails via Resend. Built unified `lib/notify.ts` (sendNotification, fireNotification fire-and-forget, notifyStaffByRoles), WhatsApp stub `lib/msg91-whatsapp.ts` (defers gracefully — dispatcher catches "not configured" and logs SKIPPED), and admin surface `/admin/notifications` (Templates tab + Send logs tab + Test send dialog). New `notifications: [OWNER, ADMIN]` surface in SURFACE_ROLES. Schema additions (db push): 3 models (`NotificationTemplate`, `NotificationLog`, `NotificationPreference`) + 2 enums (`NotificationChannel`, `NotificationStatus`) + `Delivery.dispatchNotifiedAt DateTime?` (idempotency) + `User.notificationPreference` relation. 5 templates seeded: `order_confirmed`, `delivery_dispatched`, `delivery_issue_ack`, `staff_new_order`, `staff_delivery_issue` (all BOTH channel). 4 events wired: PayU success (digital + physical), COD success, driver `/api/driver/[token]/deliveries` GET first-time, customer `/api/user/deliveries` POST issue path. Currently sending from `onboarding@resend.dev` sandbox; will switch to `hello@fitfuel.in` on launch DNS migration.**
+
+> **Jun 12–13 — PHASE 16B SCHEDULED NOTIFICATIONS LIVE (Weekly Digest + Morning Preview + Evening Recap via QStash): hit Vercel Hobby's 2-cron cap (snapshot-consistency was #2 of 2), so moved external scheduling to **Upstash QStash** (free tier 500 msg/day, signed-request verification). Built 3 endpoints: `/api/cron/morning-preview` (sends today's 4 meals to active subscribers, 7 AM IST = 1:30 UTC), `/api/cron/evening-recap` (sends logged-vs-target macro recap, 9 PM IST = 15:30 UTC), and `/api/cron/snapshot-consistency` extended to also fire `weekly_digest` template (piggybacks the existing Saturday cron — no new schedule needed). New helper `lib/user-day-meals.ts` resolves the day's meals per active subscriber (calendar-based menuDayNumber, same logic as production resolver). 3 new templates seeded: `morning_meal_preview`, `evening_recap`, `weekly_digest`. QStash signing keys added to Vercel env (`QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY`); endpoints accept BOTH `Authorization: Bearer CRON_SECRET` (for manual curl) AND QStash signature (for production schedules). Tested live via curl — morning + evening + digest all fire with correct content; logs visible in `/admin/notifications` → Send logs.**
+
+> **PHASE 16 STATUS: ✅ EMAIL CHANNEL COMPLETE (Jun 13, 2026). 8 templates live, 7 events firing (4 transactional + 3 scheduled). WhatsApp portion deferred to post-launch (WAHA on Oracle Cloud Free Tier) — the 3 scheduled templates were toggled BOTH → EMAIL to keep logs clean; flip back to BOTH when WAHA lands. Per-user notification preferences UI on `/dashboard/settings` deferred to a later sub-phase.**
+
+### Decisions
+- **#103 — Phase 16 stack:** drop n8n. Use Vercel inline triggers + existing crons + Resend for email + WAHA-later for WhatsApp. n8n's "edit-later" promise is fulfilled by the `/admin/notifications` template editor instead. (n8n self-hosted requires 24/7 VPS, n8n Cloud costs $20/mo — neither was justified.)
+- **#104 — Email provider: Resend.** Free 3000/mo, generous DKIM/SPF setup, modern API. Verified domain (`fitfuel.in`) deferred to launch DNS migration; using `onboarding@resend.dev` sandbox for now.
+- **#105 — WhatsApp deferred to post-launch.** Stub client logs SKIPPED, dispatcher swallows error. Reactivated by setting WAHA env vars + flipping templates back to BOTH. Zero code change required at swap time.
+- **#106 — Notification dispatcher is fire-and-forget.** `fireNotification()` never blocks the request — wrapped in `Promise.resolve().then(...).catch(log)`. PayU success must NOT fail because Resend rate-limited.
+- **#107 — Templates store HTML body + plaintext fallback + variable schema.** Editable from `/admin/notifications` Templates tab — no redeploy for copy changes (force-dynamic public pages already, admin page reads live). Variables are double-curly mustache: `{{customerName}}`, `{{orderNumber}}`, `{{deliveryDate}}`, etc.
+- **#108 — Idempotency per event.** `Delivery.dispatchNotifiedAt` flags one-time dispatch ping; `NotificationLog` keyed by (templateKey, recipientUserId, externalRef) prevents duplicate sends across retries.
+- **#109 — Staff alerts route by role**, not by individual user. `notifyStaffByRoles(['DISPATCH','OWNER'], template, vars)` looks up active staff with those roles and sends to each. Adding a new dispatcher = adding the role, no notification config change.
+- **#110 — Vercel cron cap workaround = Upstash QStash.** Free 500 msg/day covers 3 schedules × 30 days × 1.5 buffer = comfortable. Signing-key verification keeps endpoints secure. Existing Vercel cron (snapshot-consistency) stays; new schedules go to QStash.
+- **#111 — Weekly digest piggybacks the consistency snapshot cron.** No separate schedule. After snapshot runs, iterate active subscribers → fire `weekly_digest` template with that week's snapshot data inline. One cron, two outputs.
+- **#112 — Cron endpoints accept BOTH auth styles** (Bearer CRON_SECRET for manual curl + QStash signature for prod). The signature path uses `@upstash/qstash/nextjs` `verifySignatureAppRouter`; the Bearer path is a manual check above it. This let me test live without waiting for QStash schedule fires.
+- **#113 — Morning preview shows today's meals, not tomorrow's.** Logic: a 7 AM IST email about meals arriving at 8–10 AM IST is "preview"; sending the night before competes with evening recap. Decision validated by founder intuition — "tell them what's coming this morning" is the energising message.
+- **#114 — Evening recap is gentle, not preachy.** Shows logged-vs-target macros for the day with a single soft nudge if a meal wasn't logged (no shame, no streak-break red). Goal is habit reinforcement, not guilt. Copy reviewed twice before locking template.
+
+---
+
+## ═══════════ PHASE 17 — PARTNER / REFERRAL SYSTEM (UNIFIED 8-TYPE) ═══════════
+### Session: Jun 13, 2026 · additions-only · Decisions #115–#128
+
+> **Jun 13 — STRATEGIC FRAME: founder said "I want all 8 partner types built now." Pushed back via Decision #66 business-viability filter (don't build dashboards for partners you haven't signed). Compromise locked = **schema handles all 8 from day one; UI ships in 3 staggered sub-phases (17A → 17B → 17C)**. This gives the founder the data model future-proofing he wants without the over-build penalty.**
+
+> **8 PARTNER TYPES (all in schema, all in admin form): CUSTOMER (P2P referrals, lazy-created), GYM (B2B, MEAL_VOUCHER reward default), TRAINER (CASH), INFLUENCER (CASH), DIETICIAN (CASH), DOCTOR (CASH), CORPORATE (DISCOUNT_ONLY for employee onboarding), RESIDENCE (HYBRID — building/society partnerships, common in Pune apartment complexes).**
+
+> **Jun 13 — PHASE 17A SCHEMA + ADMIN CRUD LIVE: schema additions (db push, reaffirms #71): new models `Partner`, `PartnerReferral`, `CreditLedger`; new enums `PartnerType`, `PartnerStatus`, `PartnerRewardType`, `ReferralStatus`, `PayoutStatus`; User additions = `referralCode String? @unique`, `referredByPartnerCode String?`, `creditsBalanceRs Int @default(0)`, ownedPartner/referralsAsReferee/creditLedger relations; Order additions = `referralAttribution String?`, `creditAppliedRs Int @default(0)`, referralUsage relation. New admin surface `/admin/partners` (gated `[OWNER, ADMIN]`) with full CRUD: create any of the 8 types via TYPE_DEFAULTS-prefilled form, list/search/filter, detail view shows conversions + total reward earned + payout status, manual approve/reject for non-CUSTOMER, manual mark-paid for CASH payouts. Attribution capture: `?ref=CODE` query param on any page sets `ff_ref` cookie (30 days, first-touch); checkout reads cookie → stamps `Order.referralAttribution`. Reward processing: on first PAID order (PayU success or COD mark-paid), `processReferralReward(order)` runs — finds the partner, creates a `PartnerReferral` row keyed by `refereeOrderId` (idempotent), credits the partner (CREDIT type increments `creditsBalanceRs` + logs in `CreditLedger`; CASH/MEAL_VOUCHER queued PENDING for admin payout). Self-referral guard at lookup time. `(prisma as any)` throughout per Decision #96.**
+
+> **Jun 13 — PHASE 17B SCOPE LOCKED + KICKED OFF (in progress): 4 surfaces — `/p/[code]` polymorphic branded landing (gym shows gym name, trainer shows photo+bio; sets attribution cookie immediately; CTA → plans with ref carried through), `/dashboard/referrals` (customer P2P code + WhatsApp share via `wa.me/?text=` deeplink + copy-link + referees list + credit balance), `/dashboard/partners` (logged-in B2B partner sees conversions/reward/payout status), `/admin/partners` detail page gets a QR-generator button (downloads printable PNG poster → `/p/[code]`). QR rendering: `qrcode` npm package, native server-side SVG/PNG (Decision #128-followup). Phase 17B build is mid-flight as of Jun 13.**
+
+> **PHASE 17 STATUS: 🔄 17A ✅ COMPLETE / 17B 🚧 IN PROGRESS / 17C ⏳ DEFERRED. 17C = `/partners/apply` self-onboarding form for Trainer/Influencer/Dietician/Doctor (manual admin approve), CSV payout export from admin + monthly payout cron (manual UPI transfer for v1 — Decision #122), tax field UI (PAN/GST/bank fields exist in schema, no UI yet — schema-only per founder direction).**
+
+### Decisions
+- **#115 — Build all 8 partner types in schema, UI ships in 3 staggered sub-phases.** Compromise between founder's "all 8 now" and Decision #66 filter. Schema doesn't lock anything in — adding a 9th type later is one enum value.
+- **#116 — One Partner model handles all 8 types, polymorphic via PartnerType + per-type reward defaults.** Avoids 8 separate tables that all do 90% of the same thing. Reward differences live in `rewardType` + `rewardAmountRs`, not in table shape.
+- **#117 — Customer P2P partners are lazy-created.** Every user gets a `referralCode` field at signup but the matching `Partner` row (type=CUSTOMER) is created only when their first referral fires. Keeps the Partner table light for the long tail.
+- **#118 — Partner ownerUserId links to a FitFuel User account.** Partners must create an account to view their dashboard (rejected the token-authed-no-login alternative — accounts give us email/phone for payout coordination + audit trail). Customer P2P: ownerUserId = the customer's own User.id.
+- **#119 — First-touch attribution with manual override.** Cookie `ff_ref` (30 days) captured from `?ref` query param. Server's `Order.referralAttribution` is set once and not overwritten — first wins. Manual entry at checkout overrides any cookie. Self-referral guard rejects at lookup.
+- **#120 — Reward processing is idempotent via PartnerReferral.refereeOrderId.** Existing row = skip and return early. Safe to retry / re-fire from any path (PayU webhook retry, admin manual re-trigger, etc.).
+- **#121 — Per-type defaults in admin form (TYPE_DEFAULTS matrix), admin can override per-partner.** Customer=CREDIT/₹500/₹200; Gym=MEAL_VOUCHER/5/₹200; Trainer=CASH/₹500/₹200; Influencer=CASH/₹750/₹200; Dietician=CASH/₹1000/₹200; Doctor=CASH/₹1500/₹200; Corporate=DISCOUNT_ONLY; Residence=HYBRID/₹200/₹200. Defaults move with the type select; admin can edit before save.
+- **#122 — Cash payouts via CSV export + manual UPI for v1.** Rejected Razorpay payouts API (₹3/payout fee, KYC overhead) for an unproven channel. CSV from `/admin/partners` → batch UPI in business banking app → mark paid in admin. Automate when volume justifies it.
+- **#123 — Trainer/Influencer/Dietician/Doctor approval is manual, not auto.** Founder explicitly chose "slower, safer" — every cash-paying partner is reviewed before activation. Self-onboarding via `/partners/apply` (17C) creates PENDING rows; admin promotes to ACTIVE.
+- **#124 — Tax fields (PAN, GST, bank) exist in Partner schema but no UI in 17A.** Founder will handle off-system for now. Schema-ready means launch-day legal compliance isn't a code rebuild.
+- **#125 — Customer P2P WhatsApp share uses the user's own WhatsApp**, not WAHA. `wa.me/?text=` deeplink opens their app with prefilled message. Zero infra cost, infinite reach, organic.
+- **#126 — QR codes rendered server-side with `qrcode` npm package.** Picked over free QR API (api.qrserver.com) for reliability + no third-party dependency on a marketing-critical surface (printed posters in gyms can't 404). Native SVG/PNG.
+- **#127 — JSX unicode rendering gotcha (reaffirms #67/#102).** Escape sequences like `\u2014` inside JSX text content are NOT processed by JSX — passed as literal characters. Fix = real Unicode characters in source (—, ·, ₹) OR `{'\u2014'}` expression form. Hit it on PartnersClient.tsx; may exist in other UIs (notifications, dispatch) — fix opportunistically when touched.
+- **#128 — Stagger Phase 17 across 3 sub-phases (17A/B/C), not one batch.** 15+ files in one drop = guaranteed bug surface and unverifiable. Schema + admin first (17A) → customer/partner-facing surfaces (17B) → payout automation + polish (17C). Each ships and verifies before the next starts.
+
+---
+
+## PROGRESS SUMMARY (Jun 13, 2026)
+
+> Previous snapshots preserved above; Jun 13 figures added.
+
+### Jun 13 — current
+| Category | Done | Total | % |
+|----------|------|-------|---|
+| Phases 0–11 | ✅ | ✅ | 100% |
+| Phase 12 (AI Trainer) | scope locked, PARKED | — | deferred |
+| Phase 13 (Digital Plans) | build-complete, not yet verified-closed | ✅ | 95% |
+| Phase 14 (Blog/FAQ/Testimonials) | ✅ | ✅ | 100% |
+| Phase 15 (Admin Command Center) | ✅ | ✅ | 100% |
+| Phase 16 (Notifications — Email) | ✅ | ✅ | 100% (WhatsApp deferred post-launch) |
+| Phase 17 (Partner/Referral) | 17A ✅ / 17B 🚧 / 17C ⏳ | 3 sub-phases | 33% |
+| Meal Plans in DB | 119 | 119 | 100% |
+| Recipe Seeds (DB verified) | 1 | 119 | 1% (parallel track) |
+| Active Subscribers | 10 (weight-loss-veg) | — | live |
+
+**Current focus: PHASE 17B in progress. Branded `/p/[code]` landing pages, customer referrals tab, partner dashboard, QR generator. After 17B verifies → 17C (self-onboarding + payout cron). Recipe seeding remains parallel.**
+
+**Open items rolling forward:**
+- `cycleLengthDays` 30-vs-60 moat decision (still open)
+- Confirm 10 repointed subscribers are real vs test
+- Bulk-add remaining recipe photos
+- Phase 13 end-to-end live purchase verification (still pending real ₹ transaction)
+- Vercel Blob PDF cache, brand fonts, CA/GST, final pricing (Phase 13 carryovers)
+- WAHA setup on Oracle Cloud Free Tier (post-launch, unblocks WhatsApp side of Phase 16)
+- Resend domain verification → switch from `onboarding@resend.dev` to `hello@fitfuel.in`
+- Per-user notification preferences UI on `/dashboard/settings`
+- Phase 18+ scope not yet detailed
+---
+
+## ═══════════ PHASE 17B — COMPLETION + BUG FIXES ═══════════
+### Session: Jun 13–14, 2026 · additions-only · Decisions #129
+
+> **Jun 13 — PHASE 17B SHIPPED + VERIFIED LIVE.** All 4 surfaces working: `/p/[code]` polymorphic branded landing (P2P + 7 partner types), `/dashboard/referrals` (WhatsApp share + credit balance + referees list), `/dashboard/partners` (B2B partner conversions + payouts), admin QR generator on partner detail. Three fixes after first deploy:
+
+> **Fix 1 — Sticky-navbar overlap on all 17B surfaces.** Pages used `padding: "32px 16px 64px"`, but the global navbar is sticky and ~80px tall. Headlines were rendering behind the nav links (e.g., "Refer friends, earn credit" overlapping "Meal Plans"). Bumped to `padding: "72px 16px 80px"` on the outer wrapper of LandingClient, ReferralsClient, and PartnerDashboardClient. Also upgraded the "YOU'RE INVITED" ribbon to a pill badge with lime border + subtle bg, and the hero meta row to chip pills with auto-capitalized addresses.
+
+> **Fix 2 — Server-Component cookie write threw 500 (CRITICAL).** Original `/p/[code]/page.tsx` called `cookies().set()` inside a Server Component to drop the `ff_ref` first-touch cookie. **Next.js 16 throws at runtime: "Cookies can only be modified in a Server Action or Route Handler."** Result: every `/p/<code>` URL returned `ERROR 2923729500` (Vercel 500). Fix = move the cookie write to the client. `LandingClient` now sets `ff_ref` via `document.cookie` in a `useEffect` on mount (first-touch logic intact: only writes if cookie absent). Bot/no-JS visits lose attribution — acceptable trade for the meal-delivery audience.
+
+> **Fix 3 — Dashboard tiles + server-side `isPartnerOwner` gate.** Initially planned as `_EDITS.md` patches to `DashboardClient.tsx` (1181 lines, too risky for blind patches). Founder requested direct edit + server-side hide. Implementation: added 2 lucide icons (Gift, Briefcase), `isPartnerOwner?: boolean` prop to `DashboardClient`, new "Refer + Earn" tile (always shows) and "Partner Dashboard" tile (conditional `{isPartnerOwner && ...}`). Server-side check in `app/dashboard/page.tsx`: 4th parallel Promise `db.partner.findUnique({ where: { ownerUserId: userId }})` → `isPartnerOwner = !!row && row.type !== "CUSTOMER"` → passed as prop. Non-partners (incl. P2P CUSTOMER partners) never see the Partner Dashboard tile.
+
+> **PHASE 17B STATUS: ✅ COMPLETE (Jun 13, 2026).**
+
+### Decisions
+- **#129 — Server Components in Next.js 16 cannot write cookies.** Calling `cookies().set()` from a Server Component throws a runtime 500 ("Cookies can only be modified in a Server Action or Route Handler"). For attribution cookies on landing pages, set client-side from `useEffect`. Server-only verification: keep cookie reads in Server Components (those are allowed), only writes are blocked. Loss = bots and no-JS visits won't be attributed; gain = correctness + zero special-casing. Pattern applies to any future landing/redirect surface that needs to drop a cookie.
+
+---
+
+## ═══════════ PHASE 17C — PARTNER ONBOARDING + PAYOUTS + CREDIT AT CHECKOUT ═══════════
+### Session: Jun 13–14, 2026 · additions-only · Decisions #130–#138
+
+> **Jun 13 — PHASE 17C SPLIT INTO 17C-1 + 17C-2.** Original 17C scope from #128: self-onboarding, credit at checkout, CSV payout export, tax UI. Credit at checkout touches 5 existing payment files (PayU init × 2, PayU success, COD, checkout UI), all in the live revenue path. Self-onboarding + payout export are pure additions. **Decision #133: split 17C — ship pure additions first (17C-1), verify, then touch payments (17C-2).** Same staggering rationale as #128.
+
+> **Jun 13 — PHASE 17C-1 LIVE (Self-onboarding + Payouts + Tax fields):**
+> - **`/partners/apply`** — auth-gated self-onboarding form. 7 types (Gym, Trainer, Influencer, Dietician, Doctor, Corporate, Residence) with type-specific fields (gym address, bio/specialty, qualification/clinic, hospital affiliation, company logo, society address, treasurer contact). Per-type reward defaults pre-applied (#121). Creates `Partner { status: "PENDING" }` → admin approves via existing 17A admin flow.
+> - **Cash-type tax fields (Trainer/Influencer/Dietician/Doctor):** PAN (regex `^[A-Z]{5}[0-9]{4}[A-Z]$`), bank holder name, account number (6–20 digits), IFSC (regex `^[A-Z]{4}0[A-Z0-9]{6}$`) — all required for cash partners (#122). Schema already had these fields per #124; 17C-1 surfaces them in apply form + admin detail view.
+> - **Staff notification:** new applicants trigger `staff_new_partner_application` template → email to OWNER + ADMIN via `notifyStaffByRoles(["OWNER","ADMIN"], ...)`.
+> - **`/admin/partners` Payouts tab** — filter by status (PENDING/PROCESSING/PAID/FAILED) + period (YYYY-MM). CSV export endpoint with full bank details (`/api/admin/partners/payouts?format=csv`). Mark-paid action with payment-reference prompt → flips status to PAID, sends `partner_payout_paid` template to partner-owner.
+> - **Admin detail "Payment Info" section** — surfaces PAN / account holder / account number / IFSC in 2-column grid when fields populated. Only renders when any tax field has a value (non-cash partners stay clean).
+
+> **Jun 13 — PHASE 17C-2 BUILT (Credit at Checkout — awaiting live verification):**
+> - **`/api/checkout/credit-preview`** (NEW GET) — returns `{ signedIn, balanceRs, applicableRs, newTotalRs }`. Caps `applicableRs` at `subtotal - 1` to keep PayU's ₹1 minimum.
+> - **`applyCreditAtCheckout` + `recordCreditChange`** already existed in `lib/partners.ts` from 17A — no new lib code needed. `applyCreditAtCheckout` is read-only (reports what will be applied); `recordCreditChange` is the atomic ledger write + balance update.
+> - **All 3 checkout paths** (COD, PayU physical, PayU digital) modified: read auth session → if signed in AND `useCredit === true` AND upserted `user.id === session.user.id` → call `applyCreditAtCheckout(user.id, total)` → reduce `chargeAmountRs` → recompute PayU hash with new amount → stamp `Order.creditAppliedRs`. Credit commit (`recordCreditChange(userId, -applied, "order_payment", { refOrderId })`) fires AFTER order CONFIRMED.
+> - **Idempotency for free.** PayU success route already had `if (order.status === "CONFIRMED") return early` guard. That same guard prevents double-commit on webhook retries / user double-clicks. COD is single-shot synchronous (no retry path). Both safe.
+> - **Checkout UI (`/checkout` + `/checkout/digital`):** "Apply ₹X credit" toggle (auto-checked, lime-bordered card), summary row shows the deduction, total updates live. Toggle only renders for signed-in users with `balanceRs > 0` (guests don't see it). Sends `useCredit: useCredit && creditApplicable > 0` in submit body.
+> - **Architecture safety nets:**
+>   - Credit applies only when `session.user.id === user.id` (upserted customer) — prevents one user's credit being applied to another's order via email mismatch.
+>   - ₹1 minimum guard (PayU rejects ₹0) — if credit ≥ total, cap so user pays at least ₹1.
+>   - Refund handling deferred to manual admin (#138).
+
+> **PHASE 17 STATUS: ✅ 17A / ✅ 17B / ✅ 17C-1 / 🔄 17C-2 awaiting verification.** Phase 17 complete on 17C-2 verification.
+
+### Decisions
+- **#130 — Prisma 7 seed scripts MUST construct the client with the PrismaPg adapter.** Bare `new PrismaClient()` throws `PrismaClientInitializationError: needs to be constructed with a non-empty, valid PrismaClientOptions`. Standalone seed pattern: `import { Pool } from "pg"; import { PrismaPg } from "@prisma/adapter-pg"; import "dotenv/config"; const pool = new Pool({ connectionString: process.env.DATABASE_URL! }); const adapter = new PrismaPg(pool); const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);` — matches `lib/prisma.ts`. Also requires `import "dotenv/config"` for tsx to pick up `.env.local`.
+- **#131 — Reaffirms #61: never write Prisma `.create()` / `.upsert()` / `.update()` without first reading the actual model in schema.prisma.** Cost real round-trip on `NotificationTemplate` (I invented `templateKey` / `subject` / `bodyHtml` / `bodyText`; actual fields are `key` / `category` (required) / `channel` / `isStaff` / `emailSubject` / `emailBody`). Would have been zero cost if schema was checked first.
+- **#132 — Staff broadcast notifications go through `notifyStaffByRoles(roles[], templateKey, vars)`, NOT `fireNotification` with a made-up `roleScope` field.** `fireNotification({ ..., roleScope })` silently does nothing — `roleScope` is not a recognized input. `notifyStaffByRoles` queries `User.findMany({ role: { in: roles } })` and fires one `fireNotification` per staff user. Pattern is one-recipient-per-call; role-fanout is the helper's job.
+- **#133 — Split 17C into 17C-1 (additions only) + 17C-2 (payment flow edits).** Same logic as #128 staggering. 17C-1 = `/partners/apply` + Payouts CSV/mark-paid + tax-field UI (zero existing-file mutations except 3 small patches to PartnersClient). 17C-2 = credit at checkout (touches 5 live payment-flow files). Ship + verify 17C-1 → then touch payments with a clean baseline.
+- **#134 — Partner ownership = unique constraint on User.** `Partner.ownerUserId` is unique — one User can own at most one Partner row. P2P customer auto-creates a CUSTOMER-type Partner on first referral conversion (#117). If a Customer-type user later applies via `/partners/apply` for a non-CUSTOMER type, the form blocks them with 409 "You already have a partner application" (existing CUSTOMER Partner blocks promotion). Future-proofing: founder may want a CUSTOMER → TRAINER upgrade path; for now, manual admin migration.
+- **#135 — Per-user notification templates carry `isStaff` flag in schema.** `NotificationTemplate.isStaff: Boolean @default(false)` separates staff broadcasts from customer-facing templates. Useful for filtering in `/admin/notifications` template editor + safety check (don't accidentally send `staff_new_order` to a customer). 17C-1 used `isStaff: true` for `staff_new_partner_application`, `isStaff: false` for `partner_payout_paid`.
+- **#136 — Tax field UI surface gating: schema-level fields hidden in detail view until populated.** `PartnerDetailView` only renders the "PAYMENT INFO" block if `panNumber OR bankAccountName OR bankAccountNumber OR bankIfsc` has a value. Non-cash partner types (GYM/CORPORATE/RESIDENCE) never collected these → block stays hidden → admin detail view stays clean. No need to gate by partner type explicitly — presence check is enough and self-heals if a non-cash partner later gets tax fields manually populated.
+- **#137 — Credit at checkout = post-GST application, not pre-GST.** Credit reduces the final amount user pays (post-GST total), not the subtotal. Math: `creditAppliedRs = min(balance, postGstTotal - 1)`, `chargeAmount = postGstTotal - creditAppliedRs`, store `Order.creditAppliedRs` for audit. Business rationale: merchant still owes full GST on the original sale value to the government; credit is paid from merchant margin. UI shows: Plan ₹X / GST ₹Y / FitFuel credit −₹Z / Total ₹(X+Y-Z). All 3 checkout paths (COD + PayU physical + PayU digital) follow the same math.
+- **#138 — Credit refund handling deferred to manual admin for v1.** If a credit-applied order gets refunded, credit is NOT auto-restored. Reasons: (a) refund volume is currently zero (pre-launch); (b) deciding partial-refund credit-restore math (fully or proportionally?) needs real cases to inform; (c) admin can manually call `recordCreditChange(userId, +amount, "refund_restore", { refOrderId })` for any case that comes up. Revisit when first real refund happens.
+
+---
+
+## ═══════════ TRACKER UPDATE PROTOCOL — JUN 14 NOTE ═══════════
+
+> Tracker file at upload time: 2210 lines. Appended Phase 17B completion (Decision #129), Phase 17C-1 (Decisions #130–#136), Phase 17C-2 (Decisions #137–#138). Lines after this append: ~2270+.
+> **Additions-only enforced.** No prior lines edited or removed.
+
+---
+
+## PROGRESS SUMMARY (Jun 14, 2026)
+
+> Previous Jun 13 snapshot preserved above; Jun 14 figures added.
+
+### Jun 14 — current
+| Category | Done | Total | % |
+|----------|------|-------|---|
+| Phases 0–11 | ✅ | ✅ | 100% |
+| Phase 12 (AI Trainer) | scope locked, PARKED | — | deferred |
+| Phase 13 (Digital Plans) | build-complete, not yet verified-closed | ✅ | 95% |
+| Phase 14 (Blog/FAQ/Testimonials) | ✅ | ✅ | 100% |
+| Phase 15 (Admin Command Center) | ✅ | ✅ | 100% |
+| Phase 16 (Notifications — Email) | ✅ | ✅ | 100% (WhatsApp deferred post-launch) |
+| Phase 17 (Partner/Referral) | ✅ 17A / ✅ 17B / ✅ 17C-1 / 🔄 17C-2 awaiting verify | 4 sub-phases | 95% |
+| Meal Plans in DB | 119 | 119 | 100% |
+| Recipe Seeds (DB verified) | 1 | 119 | 1% (parallel track) |
+| Active Subscribers | 10 (weight-loss-veg) | — | live |
+| Decisions logged | 138 | — | (next = #139) |
+
+**Current focus: PHASE 17C-2 verification live on `fitfuel-eosin.vercel.app`.** Need to seed a test user with `creditsBalanceRs > 0` (via Prisma Studio or admin) and run through COD + PayU physical + PayU digital paths with credit toggle on/off. Verify `CreditLedger` row written post-CONFIRMED and `User.creditsBalanceRs` deducted. After verification → Phase 17 fully complete → move to Phase 18+.
+
+**Open items rolling forward (refreshed Jun 14):**
+- `cycleLengthDays` 30-vs-60 moat decision (still open)
+- Confirm 10 repointed subscribers are real vs test
+- Bulk-add remaining recipe photos
+- Phase 13 end-to-end live purchase verification (still pending real ₹ transaction — could be naturally exercised during 17C-2 testing!)
+- Vercel Blob PDF cache, brand fonts, CA/GST, final pricing (Phase 13 carryovers)
+- WAHA setup on Oracle Cloud Free Tier (post-launch, unblocks WhatsApp side of Phase 16)
+- Resend domain verification → switch from `onboarding@resend.dev` to `hello@fitfuel.in`
+- Per-user notification preferences UI on `/dashboard/settings`
+- Phase 17C-2 verification (TOP PRIORITY)
+- Phase 18+ scope not yet detailed (likely candidates: launch readiness checklist, payment refund flow, automated payout cron, multi-outlet rollout)

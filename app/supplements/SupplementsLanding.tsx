@@ -11,9 +11,13 @@ import {
   X,
 } from "lucide-react";
 import {
-  SUPPLEMENTS, STACKS, GOAL_META, CATEGORY_META,
+  STACKS, GOAL_META, CATEGORY_META,
   type Supplement, type SupplementGoal, type SupplementCategory,
 } from "@/lib/supplements-data";
+import { NETWORK_LABEL, type SupplementBuyLink } from "@/lib/supplements-types";
+
+// Phase 18-1: supplement may carry buy links from DB.
+type SupplementWithLinks = Supplement & { links?: SupplementBuyLink[] };
 
 const FONT = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
@@ -27,7 +31,7 @@ const CATEGORIES: Array<"all" | SupplementCategory> = [
 ];
 
 // ── Supplement Detail Modal ───────────────────────────────────────────────────
-function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => void }) {
+function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose: () => void }) {
   const catMeta = CATEGORY_META[supp.category];
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
@@ -121,6 +125,48 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
             )}
           </div>
 
+          {/* Phase 18-1 — Where to buy (multi-network) */}
+          {supp.links && supp.links.length > 0 && (
+            <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px" }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "DM Sans, sans-serif" }}>Where to buy</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {supp.links.map((l) => (
+                  <a key={l.id} href={l.clickUrl} target="_blank" rel="noopener sponsored noreferrer"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                      background: `${supp.accent}0a`, border: `1px solid ${supp.accent}25`,
+                      borderRadius: 10, padding: "10px 14px",
+                      textDecoration: "none", color: "#fff",
+                      transition: "background 0.15s, border-color 0.15s",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${supp.accent}18`; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${supp.accent}0a`; }}
+                  >
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>
+                        {l.merchantLabel || NETWORK_LABEL[l.network] || "Buy now"}
+                      </span>
+                      {l.notes && (
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontFamily: "DM Sans, sans-serif" }}>{l.notes}</span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {l.priceRs ? (
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: supp.accent, fontFamily: "Syne, sans-serif" }}>{'\u20B9'}{l.priceRs.toLocaleString("en-IN")}</div>
+                          {l.mrpRs && l.mrpRs > l.priceRs && (
+                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textDecoration: "line-through" }}>{'\u20B9'}{l.mrpRs.toLocaleString("en-IN")}</div>
+                          )}
+                        </div>
+                      ) : null}
+                      <span style={{ fontSize: 16, color: supp.accent }}>{'\u2192'}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* India note */}
           {supp.indiaNote && (
             <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, padding: "12px 16px" }}>
@@ -196,19 +242,25 @@ function SupplementCard({ supp, onClick }: { supp: Supplement; onClick: () => vo
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
-export default function SupplementsLanding({ isLoggedIn }: { isLoggedIn: boolean }) {
+export default function SupplementsLanding({
+  isLoggedIn,
+  supplements,
+}: {
+  isLoggedIn: boolean;
+  supplements: SupplementWithLinks[];
+}) {
   const [activeGoal, setActiveGoal] = useState<SupplementGoal>("muscle_gain");
   const [catFilter, setCatFilter] = useState<"all" | SupplementCategory>("all");
-  const [selectedSupp, setSelectedSupp] = useState<Supplement | null>(null);
+  const [selectedSupp, setSelectedSupp] = useState<SupplementWithLinks | null>(null);
 
   const previewStack = STACKS[activeGoal]
-    .map((id) => SUPPLEMENTS.find((s) => s.id === id)!)
+    .map((id) => supplements.find((s) => s.id === id)!)
     .filter(Boolean);
 
   const filteredCatalogue = useMemo(() => {
-    if (catFilter === "all") return SUPPLEMENTS;
-    return SUPPLEMENTS.filter((s) => s.category === catFilter);
-  }, [catFilter]);
+    if (catFilter === "all") return supplements;
+    return supplements.filter((s) => s.category === catFilter);
+  }, [catFilter, supplements]);
 
   const goalMeta = GOAL_META[activeGoal];
 
