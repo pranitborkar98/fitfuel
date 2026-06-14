@@ -192,6 +192,7 @@ model User {
   activePlans ActivePlan[]
   accounts    Account[]
   sessions    Session[]
+  supplementClicks       SupplementClick[]
 
   // ── Phase 6 — Nutrition Tracker ──
   foodItems     FoodItem[]
@@ -1094,6 +1095,24 @@ enum CouponSource {
   LOYALTY
 }
 
+enum AffiliateNetwork {
+  NUTRABAY
+  HEALTHKART
+  MUSCLEBLAZE
+  AMAZON_IN
+  FLIPKART
+  TATA_1MG
+  WELLNESS_FOREVER
+  OTHER
+}
+
+enum SupplementGoal {
+  MUSCLE_GAIN
+  WEIGHT_LOSS
+  BALANCED
+  PERFORMANCE
+}
+
 model Coupon {
   id                String             @id @default(cuid())
   code              String             @unique
@@ -1446,4 +1465,131 @@ model CreditLedger {
 
   @@index([userId, createdAt])
   @@map("credit_ledger")
+}
+
+model SupplementCategory {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  description  String?
+  emoji        String?
+  accentColor  String?
+  sortOrder    Int          @default(0)
+  isActive     Boolean      @default(true)
+
+  supplements  Supplement[]
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("supplement_categories")
+}
+
+model Supplement {
+  id                String              @id @default(cuid())
+  slug              String              @unique
+  name              String
+  brandName         String?
+
+  // ── Educational content (preserves rich data from static file) ──
+  aka               String[]
+  tagline           String?
+  description       String?             @db.Text
+  mechanism         String?             @db.Text
+  benefits          String[]
+  dosage            String?
+  timing            String?
+  onsetTime         String?
+  halfLife          String?
+  form              String?
+  cyclingRequired   Boolean             @default(false)
+  cyclingProtocol   String?
+  stacksWith        String[]
+  avoidWith         String[]
+  warnings          String?             @db.Text
+  sideEffects       String[]
+  genderNotes       String?             @db.Text
+  ageNotes          String?             @db.Text
+
+  // ── Evidence ──
+  evidenceLevel     String?   // "very_high" | "high" | "moderate" | "low" | "preliminary"
+  studyCount        String?
+  keyStudyFindings  String[]
+
+  // ── Commercial / display ──
+  priceRange        String?   // display only — real prices live on SupplementLink rows
+  valueRating       String?   // "exceptional" | "good" | "moderate" | "expensive"
+  veganFriendly     Boolean   @default(false)
+  certificationNote String?   @db.Text
+  popular           Boolean   @default(false)
+  indiaAvailability String?
+  indiaNote         String?   @db.Text
+
+  imageUrl          String?
+  emoji             String?
+  accentColor       String?
+
+  // ── Targeting (multi-goal: a Whey Isolate serves MUSCLE_GAIN + BALANCED) ──
+  recommendedFor    SupplementGoal[]
+
+  categoryId        String
+  category          SupplementCategory  @relation(fields: [categoryId], references: [id])
+
+  sortOrder         Int                 @default(0)
+  isFeatured        Boolean             @default(false)
+  isActive          Boolean             @default(true)
+
+  links             SupplementLink[]
+  clicks            SupplementClick[]
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([categoryId, isActive])
+  @@map("supplements")
+}
+
+model SupplementLink {
+  id              String              @id @default(cuid())
+  supplementId    String
+  supplement      Supplement          @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+
+  network         AffiliateNetwork
+  merchantLabel   String?             // override label, used when network=OTHER (e.g. "iHerb")
+  affiliateUrl    String              @db.Text
+  priceRs         Int?
+  mrpRs           Int?
+  notes           String?             // "1kg pack, 30 servings"
+
+  sortOrder       Int                 @default(0)
+  isActive        Boolean             @default(true)
+
+  clicks          SupplementClick[]
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([supplementId, isActive])
+  @@map("supplement_links")
+}
+
+model SupplementClick {
+  id              String              @id @default(cuid())
+  userId          String?
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supplementId    String
+  supplement      Supplement          @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+  linkId          String
+  link            SupplementLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  network         AffiliateNetwork
+  referrer        String?             @db.Text
+  ipHash          String?             // hashed for privacy — never raw IP
+  userAgent       String?             @db.Text
+
+  createdAt       DateTime            @default(now())
+
+  @@index([supplementId, createdAt])
+  @@index([linkId, createdAt])
+  @@index([userId, createdAt])
+  @@map("supplement_clicks")
 }
