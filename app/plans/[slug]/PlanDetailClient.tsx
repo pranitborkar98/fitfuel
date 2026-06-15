@@ -84,27 +84,18 @@ const SLOT_DESC: Record<string, string> = {
   DINNER: 'Light but satisfying. Lower carb, higher protein. Palak paneer, dal tadka, grilled options.',
 }
 
-// Duration metadata — labels + day counts. Real prices come from PriceRow[] props.
-const DURATION_META: { key: string; label: string; days: number; legacy: string; popular?: boolean }[] = [
-  { key: 'TRIAL_DAY',               label: 'Trial Day', days:  1, legacy: 'trial' },
-  { key: 'WEEKLY',                  label: '1 Week',    days:  7, legacy: 'weekly' },
-  { key: 'BI_WEEKLY',               label: '2 Weeks',   days: 15, legacy: 'biweekly' },
-  { key: 'MONTHLY_EXCL_WEEKENDS',   label: 'Mon–Fri',   days: 22, legacy: 'monthly_ex' },
-  { key: 'ONE_MONTH',               label: '1 Month',   days: 30, legacy: 'monthly', popular: true },
-  { key: 'TWO_MONTH',               label: '2 Months',  days: 60, legacy: 'two_month' },
-  { key: 'THREE_MONTH',             label: '3 Months',  days: 90, legacy: 'three_month' },
-]
-
-const MEAL_COMBO_META: { key: string; label: string; sub: string; legacy: string }[] = [
-  { key: 'BREAKFAST_LUNCH', label: 'B + L',   sub: 'Morning slot', legacy: 'bl' },
-  { key: 'SNACK_DINNER',    label: 'S + D',   sub: 'Evening slot', legacy: 'sd' },
-  { key: 'ALL_FOUR',        label: 'All 4',   sub: 'Full day',     legacy: 'all' },
-]
-
-// Map MealPlan.dietaryVariant → checkout legacy diet code
-const DIET_LEGACY: Record<string, string> = {
-  VEG: 'veg', JAIN: 'jain', VEGAN: 'veg', EGG: 'egg', NON_VEG: 'nonveg',
-}
+// Duration / meal / diet metadata + tier pricing helpers now live in lib/plan-tier-pricing.ts
+import {
+  DURATIONS as DURATION_META,
+  MEALS as MEAL_COMBO_META,
+  TIERS as TIER_META,
+  dietToLegacy,
+  getTierPrice,
+  buildCheckoutUrl,
+  type Tier,
+  type MealKey,
+  type DurationKey,
+} from '@/lib/plan-tier-pricing'
 
 const FAQ = [
   { q: 'How many meals do I get per day?', a: 'Four meals daily — Breakfast, Lunch, Snack and Dinner. Every box also includes your Morning Boost (a coffee or green-tea sachet). All four are freshly prepared and delivered by 8am.' },
@@ -295,10 +286,34 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
   const [activeWeek, setActiveWeek] = useState(1)
   const [showAll, setShowAll] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
-  const [pickMeal, setPickMeal] = useState<string>('ALL_FOUR')
-  const [pickDur, setPickDur] = useState<string>('ONE_MONTH')
+  const [pickMeal, setPickMeal] = useState<MealKey>('ALL_FOUR')
+  const [pickDur, setPickDur] = useState<DurationKey>('ONE_MONTH')
   const [loaded, setLoaded] = useState(false)
   const [sel, setSel] = useState<Recipe | null>(null)
+  // Phase 19A — waitlist modal state (Premium / Luxury CTAs)
+  const [wlTier, setWlTier] = useState<Tier | null>(null)
+  const [wlEmail, setWlEmail] = useState('')
+  const [wlStatus, setWlStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+  const [wlErr, setWlErr] = useState('')
+
+  async function submitWaitlist() {
+    if (!wlTier) return
+    if (!wlEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(wlEmail)) {
+      setWlErr('Enter a valid email'); setWlStatus('error'); return
+    }
+    setWlStatus('submitting'); setWlErr('')
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: wlEmail, tier: wlTier }),
+      })
+      if (!res.ok) throw new Error('Request failed')
+      setWlStatus('success')
+    } catch {
+      setWlErr('Could not submit. Try again.'); setWlStatus('error')
+    }
+  }
 
   useScrollReveal()
   useEffect(() => { setLoaded(true) }, [])
@@ -852,19 +867,19 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         </div>
       </section>
 
-      {/* ── 08 · Pricing ────────────────────────────────────────────────── */}
+      {/* ── 08 · Pricing · Three tiers, side-by-side ────────────────────── */}
       <section id="pricing" className="sec">
         <div className="wrap">
-          <div className="reveal" style={{ marginBottom: 44 }}>
+          <div className="reveal" style={{ marginBottom: 40 }}>
             <Eyebrow index="08" label="Pricing" />
-            <h2 className="h2">Start with a trial.<br />Stay for the results.</h2>
-            <p className="mono" style={{ color: 'var(--faint)', fontSize: 12.5, marginTop: 18, letterSpacing: '0.02em' }}>4AM PREP · DELIVERED BY 8AM · NO DELIVERY CHARGE</p>
+            <h2 className="h2">Three tiers.<br />Pick yours.</h2>
+            <p className="mono" style={{ color: 'var(--faint)', fontSize: 12.5, marginTop: 18, letterSpacing: '0.02em' }}>SAME KITCHEN · UPGRADED MENUS PER TIER · 4AM PREP · DELIVERED BY 8AM</p>
           </div>
 
-          {/* Meal-combo selector */}
-          <div className="reveal d1" style={{ marginBottom: 18 }}>
-            <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>Choose your meals</p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {/* Meal-combo selector — drives all 3 tier columns */}
+          <div className="reveal d1" style={{ marginBottom: 24 }}>
+            <p className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Choose your meals</p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {MEAL_COMBO_META.map((m) => {
                 const active = pickMeal === m.key
                 return (
@@ -878,86 +893,236 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   }}
                     onMouseEnter={(e) => { if (!active) e.currentTarget.style.borderColor = '#333' }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.borderColor = 'var(--line)' }}>
-                    <div className="syne" style={{ fontSize: 18, fontWeight: 700, color: active ? 'var(--lime)' : 'var(--ink)' }}>{m.label}</div>
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 4 }}>{m.sub}</div>
+                    <div className="syne" style={{ fontSize: 18, fontWeight: 700, color: active ? 'var(--lime)' : 'var(--ink)' }}>{m.short}</div>
+                    <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 4 }}>{m.time}</div>
                   </button>
                 )
               })}
             </div>
           </div>
 
-          {/* Duration grid */}
-          <div className="reveal d2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10, marginBottom: 20 }}>
-            {DURATION_META.map((d) => {
-              const row = prices.find((p) => p.duration === d.key && p.mealsPerDay === pickMeal)
-              const active = pickDur === d.key
-              const available = !!row
-              const perDay = row ? Math.round(row.priceRs / d.days) : 0
+          {/* 3-tier grid: 1-col mobile (stacked), 3-col desktop */}
+          <div className="reveal d2" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
+            gap: 16,
+            alignItems: 'start',
+          }}>
+            {TIER_META.map((tier) => {
+              const stdPrice = getTierPrice(prices, tier.key, pickDur, pickMeal)
+              const isStandard = tier.key === 'STANDARD'
+
               return (
-                <button key={d.key} onClick={() => available && setPickDur(d.key)} disabled={!available} style={{
-                  background: active ? '#101807' : '#0a0a0a',
-                  border: active ? '1px solid var(--lime)' : '1px solid var(--line)',
-                  borderRadius: 4, padding: '18px 16px',
-                  cursor: available ? 'pointer' : 'not-allowed',
-                  opacity: available ? 1 : 0.4,
-                  textAlign: 'left', position: 'relative',
-                  transition: 'all .3s cubic-bezier(.16,1,.3,1)',
-                  boxShadow: active ? '0 0 0 1px var(--lime), 0 14px 40px -16px rgba(163,230,53,.5)' : 'none',
-                }}
-                  onMouseEnter={(e) => { if (!active && available) e.currentTarget.style.borderColor = '#333' }}
-                  onMouseLeave={(e) => { if (!active && available) e.currentTarget.style.borderColor = 'var(--line)' }}>
-                  {d.popular && available && (
-                    <span className="mono" style={{ position: 'absolute', top: -9, left: 14, background: 'var(--lime)', color: '#0a0a0a', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 2, letterSpacing: '0.1em' }}>POPULAR</span>
-                  )}
-                  <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: active ? 'var(--lime)' : 'var(--dim)', marginBottom: 10 }}>{d.label}</div>
-                  {row ? (
-                    <>
-                      <div className="cond" style={{ fontSize: 28, fontWeight: 600, color: 'var(--ink)', lineHeight: 0.9 }}>₹{row.priceRs.toLocaleString('en-IN')}</div>
-                      <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 7 }}>₹{perDay.toLocaleString('en-IN')}/day</div>
-                    </>
+                <div key={tier.key} style={{
+                  background: '#0c0c0c',
+                  border: '1px solid #1f1f1f',
+                  borderLeft: `3px solid ${tier.accent}`,
+                  borderRadius: 4,
+                  padding: 22,
+                  position: 'relative',
+                  opacity: tier.available ? 1 : 0.95,
+                }}>
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                      <div className="syne" style={{ fontSize: 22, fontWeight: 800, color: tier.accent, letterSpacing: '-0.01em' }}>
+                        {tier.label}
+                      </div>
+                      {!tier.available && (
+                        <span className="mono" style={{
+                          fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 2,
+                          background: `${tier.accent}1f`, color: tier.accent, letterSpacing: '0.08em',
+                        }}>
+                          WAITLIST
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 12.5, color: 'var(--dim)', margin: '6px 0 0', lineHeight: 1.45 }}>
+                      {tier.tagline}
+                    </p>
+                  </div>
+
+                  {/* Duration rows */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
+                    {DURATION_META.map((d) => {
+                      const price = getTierPrice(prices, tier.key, d.key, pickMeal)
+                      const isActiveDur = pickDur === d.key
+                      const available = price !== null
+                      return (
+                        <button
+                          key={d.key}
+                          onClick={() => available && setPickDur(d.key)}
+                          disabled={!available}
+                          style={{
+                            background: isActiveDur ? `${tier.accent}1a` : '#0a0a0a',
+                            border: isActiveDur ? `1px solid ${tier.accent}` : '1px solid #1a1a1a',
+                            borderRadius: 3,
+                            padding: '10px 12px',
+                            cursor: available ? 'pointer' : 'not-allowed',
+                            opacity: available ? 1 : 0.4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                            transition: 'all .2s',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={(e) => { if (!isActiveDur && available) e.currentTarget.style.borderColor = '#333' }}
+                          onMouseLeave={(e) => { if (!isActiveDur && available) e.currentTarget.style.borderColor = '#1a1a1a' }}
+                        >
+                          <div>
+                            <div className="mono" style={{ fontSize: 10.5, color: isActiveDur ? tier.accent : 'var(--dim)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700 }}>
+                              {d.label}
+                            </div>
+                            {available && (
+                              <div className="mono" style={{ fontSize: 9.5, color: 'var(--faint)', marginTop: 2, letterSpacing: '0.04em' }}>
+                                ₹{Math.round(price! / d.days).toLocaleString('en-IN')}/DAY
+                              </div>
+                            )}
+                          </div>
+                          <div className="cond" style={{ fontSize: 18, fontWeight: 600, color: available ? 'var(--ink)' : 'var(--faint)', lineHeight: 1 }}>
+                            {available ? `₹${price!.toLocaleString('en-IN')}` : '—'}
+                          </div>
+                          {d.popular && available && (
+                            <span className="mono" style={{ position: 'absolute', display: 'none' }}>POP</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* CTA */}
+                  {isStandard ? (
+                    stdPrice !== null ? (
+                      <Link
+                        href={buildCheckoutUrl({
+                          dietaryVariant: plan.dietaryVariant,
+                          duration: pickDur,
+                          mealCombo: pickMeal,
+                          priceRs: stdPrice,
+                          planSlug: plan.slug,
+                          planName: plan.name,
+                          tier: 'STANDARD',
+                        })}
+                        className="btn btn-lime"
+                        style={{ width: '100%', justifyContent: 'center' }}
+                      >
+                        Order now <IconArrow />
+                      </Link>
+                    ) : (
+                      <div className="mono" style={{ fontSize: 12, color: 'var(--faint)', textAlign: 'center', padding: '12px 0' }}>
+                        This combination is unavailable.
+                      </div>
+                    )
                   ) : (
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--faint)' }}>—</div>
+                    <button
+                      onClick={() => { setWlTier(tier.key); setWlStatus('idle'); setWlEmail(''); setWlErr('') }}
+                      className="btn btn-ghost"
+                      style={{
+                        width: '100%',
+                        justifyContent: 'center',
+                        borderColor: tier.accent,
+                        color: tier.accent,
+                      }}
+                    >
+                      Join {tier.label} waitlist
+                    </button>
                   )}
-                </button>
+                </div>
               )
             })}
           </div>
 
-          {/* Selected summary + CTA */}
-          {(() => {
-            const dur = DURATION_META.find((d) => d.key === pickDur)!
-            const meal = MEAL_COMBO_META.find((m) => m.key === pickMeal)!
-            const row = prices.find((p) => p.duration === pickDur && p.mealsPerDay === pickMeal)
-            const dietParam = DIET_LEGACY[plan.dietaryVariant] || 'veg'
-            const checkoutUrl = row
-              ? `/checkout?diet=${dietParam}&dur=${dur.legacy}&meal=${meal.legacy}&price=${row.priceRs}&planSlug=${plan.slug}&planName=${encodeURIComponent(plan.name)}`
-              : '#'
-
-            return (
-              <div className="reveal d3" style={{ ...card({ borderColor: '#222', padding: '28px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24, position: 'relative', overflow: 'hidden' }) }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: 'var(--lime)' }} />
-                <div>
-                  <div className="syne" style={{ fontWeight: 800, fontSize: 24, color: 'var(--ink)' }}>{dur.label} · {meal.label}</div>
-                  <div className="mono" style={{ color: 'var(--faint)', fontSize: 12, marginTop: 8, letterSpacing: '0.02em' }}>
-                    {dur.days} {dur.days === 1 ? 'DAY' : 'DAYS'} · {meal.sub.toUpperCase()} · {dietLabel.toUpperCase()}
-                    {row && <> · ₹{Math.round(row.priceRs / dur.days).toLocaleString('en-IN')}/DAY</>}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-                  {row ? (
-                    <>
-                      <div className="cond" style={{ fontSize: 46, fontWeight: 700, color: 'var(--lime)', lineHeight: 0.85 }}>₹{row.priceRs.toLocaleString('en-IN')}</div>
-                      <Link href={checkoutUrl} className="btn btn-lime">Order now <IconArrow /></Link>
-                    </>
-                  ) : (
-                    <div className="mono" style={{ fontSize: 13, color: 'var(--faint)' }}>This combination is unavailable. Pick a different duration.</div>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
-          <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 18, letterSpacing: '0.04em' }}>PAYU · UPI · CREDIT / DEBIT · CASH ON DELIVERY · GST 5% INCLUDED</p>
+          <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 22, letterSpacing: '0.04em', textAlign: 'center' }}>
+            PAYU · UPI · CREDIT / DEBIT · CASH ON DELIVERY · GST 5% INCLUDED · PREMIUM &amp; LUXURY PRICES ESTIMATED
+          </p>
         </div>
+
+        {/* Waitlist modal */}
+        {wlTier && (
+          <div
+            onClick={() => setWlTier(null)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 100, padding: 20, backdropFilter: 'blur(6px)',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: 460, width: '100%', background: '#0c0c0c',
+                border: '1px solid #262626',
+                borderLeft: `3px solid ${TIER_META.find((t) => t.key === wlTier)!.accent}`,
+                borderRadius: 4, padding: 28, position: 'relative',
+              }}
+            >
+              <button
+                onClick={() => setWlTier(null)}
+                style={{
+                  position: 'absolute', top: 14, right: 14, background: 'transparent',
+                  border: 'none', color: 'var(--dim)', cursor: 'pointer', fontSize: 22, lineHeight: 1,
+                }}
+                aria-label="Close"
+              >×</button>
+              <div className="mono" style={{
+                fontSize: 11, color: TIER_META.find((t) => t.key === wlTier)!.accent,
+                fontWeight: 700, letterSpacing: '0.1em', marginBottom: 10,
+              }}>
+                {wlTier} · WAITLIST
+              </div>
+              <h3 className="syne" style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+                Be first when we open seats.
+              </h3>
+              <p style={{ color: 'var(--dim)', fontSize: 13.5, lineHeight: 1.55, margin: '0 0 20px' }}>
+                {TIER_META.find((t) => t.key === wlTier)!.tagline} We&apos;ll email you the moment {wlTier === 'PREMIUM' ? 'Premium' : 'Luxury'} launches.
+              </p>
+
+              {wlStatus === 'success' ? (
+                <div style={{
+                  textAlign: 'center', padding: '14px 16px',
+                  background: `${TIER_META.find((t) => t.key === wlTier)!.accent}1a`,
+                  color: TIER_META.find((t) => t.key === wlTier)!.accent,
+                  borderRadius: 4, fontSize: 14, fontWeight: 600,
+                }}>
+                  ✓ You&apos;re on the {wlTier === 'PREMIUM' ? 'Premium' : 'Luxury'} waitlist
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={wlEmail}
+                    onChange={(e) => setWlEmail(e.target.value)}
+                    disabled={wlStatus === 'submitting'}
+                    style={{
+                      flex: '1 1 200px', padding: '12px 14px', background: '#0a0a0a',
+                      border: '1px solid #1a1a1a', borderRadius: 4,
+                      color: 'var(--ink)', fontSize: 14, outline: 'none',
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  />
+                  <button
+                    onClick={submitWaitlist}
+                    disabled={wlStatus === 'submitting'}
+                    style={{
+                      padding: '12px 22px',
+                      background: TIER_META.find((t) => t.key === wlTier)!.accent,
+                      color: '#0a0a0a', border: 'none', borderRadius: 4,
+                      fontSize: 14, fontWeight: 700,
+                      cursor: wlStatus === 'submitting' ? 'wait' : 'pointer',
+                      opacity: wlStatus === 'submitting' ? 0.7 : 1,
+                    }}
+                  >
+                    {wlStatus === 'submitting' ? '...' : 'Join waitlist'}
+                  </button>
+                </div>
+              )}
+              {wlStatus === 'error' && wlErr && (
+                <p style={{ marginTop: 10, fontSize: 12, color: '#ef4444' }}>{wlErr}</p>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── 09 · Living menu / feedback loop ────────────────────────────── */}
