@@ -70,6 +70,11 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
 
     return {
       id: r.slug,
+      // Phase 18-3 additions
+      imageUrl: r.imageUrl || null,
+      brandName: r.brandName || null,
+      isFeatured: !!r.isFeatured,
+      // Phase 18-1 base
       name: r.name,
       aka: r.aka || [],
       category: (r.category?.slug || "protein") as SupplementCategory,
@@ -103,7 +108,11 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       emoji: r.emoji || "\uD83D\uDC8A",
       indiaNote: r.indiaNote || undefined,
       indiaAvailability: (r.indiaAvailability || "available") as any,
+      // Phase 18-1 / 18-3 additions:
       links,
-    };
+      imageUrl: r.imageUrl || null,
+      brandName: r.brandName || null,
+      isFeatured: !!r.isFeatured,
+    } as DbSupplement & { imageUrl: string | null; brandName: string | null; isFeatured: boolean };
   });
 }

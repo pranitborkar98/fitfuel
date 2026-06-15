@@ -17,7 +17,13 @@ import {
 import { NETWORK_LABEL, type SupplementBuyLink } from "@/lib/supplements-types";
 
 // Phase 18-1: supplement may carry buy links from DB.
-type SupplementWithLinks = Supplement & { links?: SupplementBuyLink[] };
+// Phase 18-3: also surface DB-only fields (imageUrl, brandName, isFeatured)
+type SupplementWithLinks = Supplement & {
+  links?: SupplementBuyLink[];
+  imageUrl?: string | null;
+  brandName?: string | null;
+  isFeatured?: boolean;
+};
 
 const FONT = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
@@ -33,37 +39,107 @@ const CATEGORIES: Array<"all" | SupplementCategory> = [
 // ── Supplement Detail Modal ───────────────────────────────────────────────────
 function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose: () => void }) {
   const catMeta = CATEGORY_META[supp.category];
+
+  const primary = supp.links && supp.links.length > 0 ? supp.links[0] : null;
+  const livePrice = primary?.priceRs ?? null;
+  const liveMrp = primary?.mrpRs ?? null;
+  const discount = livePrice && liveMrp && liveMrp > livePrice
+    ? Math.round(((liveMrp - livePrice) / liveMrp) * 100) : 0;
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(10px)" }} />
       <div style={{
-        position: "relative", width: "100%", maxWidth: 520,
+        position: "relative", width: "100%", maxWidth: 560,
         background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "24px 24px 0 0", maxHeight: "90vh", overflowY: "auto",
+        borderRadius: "24px 24px 0 0", maxHeight: "92vh", overflowY: "auto",
         boxShadow: "0 -20px 60px rgba(0,0,0,0.8)",
       }}>
         {/* Accent top bar */}
         <div style={{ height: 3, background: `linear-gradient(90deg, ${supp.accent}, transparent)` }} />
 
-        {/* Hero */}
+        {/* Hero — image + meta + BUY CTA */}
         <div style={{
-          padding: "28px 24px 20px", textAlign: "center",
-          background: `linear-gradient(135deg, ${supp.accent}08 0%, transparent 60%)`,
+          padding: "24px 24px 20px",
+          background: `linear-gradient(135deg, ${supp.accent}10 0%, transparent 70%)`,
           borderBottom: "1px solid rgba(255,255,255,0.05)",
           position: "relative",
         }}>
           <button
             onClick={onClose}
-            style={{ position: "absolute", top: 16, right: 16, width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}
           >
             <X size={14} />
           </button>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>{supp.emoji}</div>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: supp.accent, background: `${supp.accent}12`, border: `1px solid ${supp.accent}25`, borderRadius: 6, padding: "3px 9px", fontFamily: "DM Sans, sans-serif" }}>
-            {catMeta.label}
-          </span>
-          <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, color: "#fff", margin: "12px 0 6px" }}>{supp.name}</h2>
-          <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>{supp.tagline}</p>
+
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: primary ? 16 : 0 }}>
+            {/* Image / emoji block */}
+            <div style={{
+              width: 96, height: 96, flexShrink: 0,
+              background: supp.imageUrl ? "#000" : `linear-gradient(135deg, ${supp.accent}25, ${supp.accent}08)`,
+              border: `1px solid ${supp.accent}30`, borderRadius: 14,
+              display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+            }}>
+              {supp.imageUrl ? (
+                <img src={supp.imageUrl} alt={supp.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8 }} />
+              ) : (
+                <div style={{ fontSize: 44 }}>{supp.emoji}</div>
+              )}
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: supp.accent, background: `${supp.accent}15`, border: `1px solid ${supp.accent}30`, borderRadius: 6, padding: "3px 9px", fontFamily: "DM Sans, sans-serif" }}>
+                {catMeta.label}
+              </span>
+              <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 700, color: "#fff", margin: "10px 0 4px", lineHeight: 1.2 }}>{supp.name}</h2>
+              <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.5 }}>{supp.tagline}</p>
+            </div>
+          </div>
+
+          {/* BUY CTA — top, big, prominent */}
+          {primary && (
+            <a
+              href={primary.clickUrl}
+              target="_blank"
+              rel="noopener sponsored noreferrer"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                background: supp.accent, color: "#000",
+                textDecoration: "none", borderRadius: 12, padding: "14px 18px",
+                fontFamily: "DM Sans, sans-serif", fontWeight: 800,
+                transition: "filter 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1)"; }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 12, opacity: 0.65, letterSpacing: "0.05em" }}>Buy on Nutrabay</span>
+                {livePrice != null ? (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                    <span style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800 }}>
+                      {'\u20B9'}{livePrice.toLocaleString("en-IN")}
+                    </span>
+                    {liveMrp && liveMrp > livePrice && (
+                      <>
+                        <span style={{ fontSize: 12, opacity: 0.5, textDecoration: "line-through" }}>
+                          {'\u20B9'}{liveMrp.toLocaleString("en-IN")}
+                        </span>
+                        <span style={{ fontSize: 10, fontWeight: 800, background: "#000", color: supp.accent, padding: "2px 6px", borderRadius: 4 }}>
+                          {discount}% OFF
+                        </span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <span style={{ fontFamily: "Syne, sans-serif", fontSize: 16 }}>View product {'\u2192'}</span>
+                )}
+                {primary.notes && (
+                  <span style={{ fontSize: 10, opacity: 0.65 }}>{primary.notes}</span>
+                )}
+              </div>
+              <span style={{ fontSize: 22 }}>{'\u2192'}</span>
+            </a>
+          )}
         </div>
 
         <div style={{ padding: "20px 24px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -111,11 +187,11 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
             </div>
           )}
 
-          {/* Price + vegan */}
+          {/* Estimated price range + vegan badge */}
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1, background: `${supp.accent}08`, border: `1px solid ${supp.accent}20`, borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>Estimated Price</p>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: supp.accent, fontFamily: "Syne, sans-serif" }}>{supp.priceRange}</p>
+              <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>Typical Range</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: supp.accent, fontFamily: "Syne, sans-serif" }}>{supp.priceRange}</p>
             </div>
             {supp.veganFriendly && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.06)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 12, padding: "12px 16px" }}>
@@ -125,46 +201,26 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
             )}
           </div>
 
-          {/* Phase 18-1 — Where to buy (multi-network) */}
-          {supp.links && supp.links.length > 0 && (
-            <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px" }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "DM Sans, sans-serif" }}>Where to buy</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {supp.links.map((l) => (
-                  <a key={l.id} href={l.clickUrl} target="_blank" rel="noopener sponsored noreferrer"
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                      background: `${supp.accent}0a`, border: `1px solid ${supp.accent}25`,
-                      borderRadius: 10, padding: "10px 14px",
-                      textDecoration: "none", color: "#fff",
-                      transition: "background 0.15s, border-color 0.15s",
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${supp.accent}18`; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${supp.accent}0a`; }}
-                  >
-                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>
-                        {l.merchantLabel || NETWORK_LABEL[l.network] || "Buy now"}
-                      </span>
-                      {l.notes && (
-                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontFamily: "DM Sans, sans-serif" }}>{l.notes}</span>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {l.priceRs ? (
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 14, fontWeight: 800, color: supp.accent, fontFamily: "Syne, sans-serif" }}>{'\u20B9'}{l.priceRs.toLocaleString("en-IN")}</div>
-                          {l.mrpRs && l.mrpRs > l.priceRs && (
-                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textDecoration: "line-through" }}>{'\u20B9'}{l.mrpRs.toLocaleString("en-IN")}</div>
-                          )}
-                        </div>
-                      ) : null}
-                      <span style={{ fontSize: 16, color: supp.accent }}>{'\u2192'}</span>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
+          {/* Bottom BUY CTA — repeat for users who scrolled */}
+          {primary && (
+            <a
+              href={primary.clickUrl}
+              target="_blank"
+              rel="noopener sponsored noreferrer"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                background: supp.accent, color: "#000",
+                textDecoration: "none", borderRadius: 12, padding: "14px 18px",
+                fontFamily: "DM Sans, sans-serif", fontWeight: 800, fontSize: 14,
+                letterSpacing: "0.04em",
+              }}
+            >
+              {livePrice != null ? (
+                <>Buy on Nutrabay {'\u2014'} {'\u20B9'}{livePrice.toLocaleString("en-IN")} {'\u2192'}</>
+              ) : (
+                <>View on Nutrabay {'\u2192'}</>
+              )}
+            </a>
           )}
 
           {/* India note */}
@@ -189,9 +245,23 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
 }
 
 // ── Supplement Card ───────────────────────────────────────────────────────────
-function SupplementCard({ supp, onClick }: { supp: Supplement; onClick: () => void }) {
+function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
   const catMeta = CATEGORY_META[supp.category];
+
+  // Phase 18-3 — surface real price from active link when available.
+  const primary = supp.links && supp.links.length > 0 ? supp.links[0] : null;
+  const livePrice = primary?.priceRs ?? null;
+  const liveMrp = primary?.mrpRs ?? null;
+  const hasBuy = !!primary;
+
+  function buyClick(e: React.MouseEvent) {
+    // Don't open the modal — go straight to checkout.
+    e.stopPropagation();
+    e.preventDefault();
+    if (!primary) return;
+    window.open(primary.clickUrl, "_blank", "noopener,sponsored");
+  }
 
   return (
     <div
@@ -199,43 +269,141 @@ function SupplementCard({ supp, onClick }: { supp: Supplement; onClick: () => vo
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
       style={{
-        background: hovered ? "#161616" : "#101010",
-        border: `1px solid ${hovered ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.055)"}`,
-        borderRadius: 16, padding: 18, cursor: "pointer",
-        transform: hovered ? "translateY(-2px)" : "none",
+        background: "#0f0f0f",
+        border: `1px solid ${hovered ? `${supp.accent}40` : "rgba(255,255,255,0.06)"}`,
+        borderRadius: 16, cursor: "pointer",
+        transform: hovered ? "translateY(-3px)" : "none",
         transition: "all 0.18s ease", position: "relative", overflow: "hidden",
-        boxShadow: hovered ? "0 10px 30px rgba(0,0,0,0.5)" : "none",
+        boxShadow: hovered ? `0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px ${supp.accent}15` : "none",
+        display: "flex", flexDirection: "column",
       }}
     >
-      {supp.popular && (
-        <div style={{
-          position: "absolute", top: 10, right: 10,
-          background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
-          borderRadius: 6, padding: "2px 7px",
-          fontSize: 9, fontWeight: 700, color: "#fbbf24",
-          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif",
-        }}>Popular</div>
-      )}
-      <div style={{ fontSize: 28, marginBottom: 10 }}>{supp.emoji}</div>
-      <span style={{
-        fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-        color: supp.accent, background: `${supp.accent}12`,
-        border: `1px solid ${supp.accent}25`,
-        borderRadius: 6, padding: "2px 7px", fontFamily: "DM Sans, sans-serif",
+      {/* Image / emoji hero block */}
+      <div style={{
+        position: "relative",
+        background: supp.imageUrl
+          ? "#000"
+          : `linear-gradient(135deg, ${supp.accent}18, ${supp.accent}05)`,
+        height: 160,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        borderBottom: `1px solid rgba(255,255,255,0.04)`,
       }}>
-        {catMeta.label}
-      </span>
-      <p style={{ margin: "10px 0 4px", fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "DM Sans, sans-serif", lineHeight: 1.3 }}>
-        {supp.name}
-      </p>
-      <p style={{ margin: "0 0 12px", fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.4 }}>
-        {supp.tagline}
-      </p>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 10, color: supp.accent, fontFamily: "DM Sans, sans-serif", fontWeight: 600 }}>
-          {supp.priceRange}
-        </span>
-        {supp.veganFriendly && <span style={{ fontSize: 11 }}>🌿</span>}
+        {supp.imageUrl ? (
+          <img
+            src={supp.imageUrl}
+            alt={supp.name}
+            style={{ width: "100%", height: "100%", objectFit: "contain", padding: 16 }}
+            onError={(e) => {
+              // Fallback to emoji if image fails to load
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+              const next = (e.currentTarget.nextSibling as HTMLElement);
+              if (next) next.style.display = "block";
+            }}
+          />
+        ) : null}
+        {!supp.imageUrl && (
+          <div style={{ fontSize: 64, opacity: 0.9 }}>{supp.emoji}</div>
+        )}
+
+        {/* Popular badge */}
+        {supp.popular && (
+          <div style={{
+            position: "absolute", top: 10, right: 10,
+            background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
+            border: "1px solid rgba(251,191,36,0.4)",
+            borderRadius: 6, padding: "3px 8px",
+            fontSize: 9, fontWeight: 800, color: "#fbbf24",
+            letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif",
+          }}>Popular</div>
+        )}
+
+        {/* Category badge (overlay on image) */}
+        <div style={{
+          position: "absolute", bottom: 10, left: 10,
+          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
+          border: `1px solid ${supp.accent}40`,
+          borderRadius: 6, padding: "3px 8px",
+          fontSize: 9, fontWeight: 700, color: supp.accent,
+          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif",
+        }}>
+          {catMeta.label}
+        </div>
+
+        {/* Vegan icon */}
+        {supp.veganFriendly && (
+          <div style={{
+            position: "absolute", bottom: 10, right: 10,
+            background: "rgba(0,0,0,0.7)", borderRadius: "50%",
+            width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 12,
+          }} title="Vegan-friendly">🌿</div>
+        )}
+      </div>
+
+      {/* Content block */}
+      <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
+        <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: "DM Sans, sans-serif", lineHeight: 1.3 }}>
+          {supp.name}
+        </p>
+        <p style={{ margin: "0 0 12px", fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.45, minHeight: 30 }}>
+          {supp.tagline}
+        </p>
+
+        {/* Price block */}
+        <div style={{ marginBottom: 12, marginTop: "auto" }}>
+          {livePrice != null ? (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: supp.accent, fontFamily: "Syne, sans-serif" }}>
+                {'\u20B9'}{livePrice.toLocaleString("en-IN")}
+              </span>
+              {liveMrp && liveMrp > livePrice && (
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textDecoration: "line-through" }}>
+                  {'\u20B9'}{liveMrp.toLocaleString("en-IN")}
+                </span>
+              )}
+              {liveMrp && liveMrp > livePrice && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, color: "#22c55e",
+                  background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+                  borderRadius: 4, padding: "1px 6px", letterSpacing: "0.05em",
+                }}>
+                  {Math.round(((liveMrp - livePrice) / liveMrp) * 100)}% OFF
+                </span>
+              )}
+            </div>
+          ) : (
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "DM Sans, sans-serif", fontWeight: 500 }}>
+              {supp.priceRange}
+            </span>
+          )}
+        </div>
+
+        {/* Buy CTA (only renders when an active link exists) */}
+        {hasBuy ? (
+          <button
+            onClick={buyClick}
+            style={{
+              width: "100%", background: supp.accent, color: "#000",
+              border: "none", borderRadius: 10, padding: "11px 14px",
+              fontSize: 13, fontWeight: 800, cursor: "pointer",
+              fontFamily: "DM Sans, sans-serif", letterSpacing: "0.04em",
+              transition: "filter 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1)"; }}
+          >
+            Buy on Nutrabay {'\u2192'}
+          </button>
+        ) : (
+          <div style={{
+            width: "100%", background: "transparent", color: "rgba(255,255,255,0.4)",
+            border: `1px dashed ${supp.accent}30`, borderRadius: 10, padding: "10px 14px",
+            fontSize: 12, fontWeight: 600, textAlign: "center",
+            fontFamily: "DM Sans, sans-serif", letterSpacing: "0.04em",
+          }}>
+            View details {'\u2192'}
+          </div>
+        )}
       </div>
     </div>
   );

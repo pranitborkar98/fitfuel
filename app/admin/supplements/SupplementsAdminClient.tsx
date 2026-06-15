@@ -187,7 +187,100 @@ function SupplementRow({ s, open, onToggle, onChanged }: {
         <div style={{ color: T.muted, fontSize: 18 }}>{open ? "\u2212" : "+"}</div>
       </div>
 
-      {open && <LinkManager supplementId={s.id} accent={s.accentColor || T.accent} onChanged={onChanged} />}
+      {open && (
+        <>
+          <SupplementSettings supplementId={s.id} accent={s.accentColor || T.accent} onChanged={onChanged} />
+          <LinkManager supplementId={s.id} accent={s.accentColor || T.accent} onChanged={onChanged} />
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────── SUPPLEMENT SETTINGS (Phase 18-3) ────────────────── */
+// Lets the admin set per-product imageUrl + brandName + featured flag.
+// Image URL is what makes the public card show a real product photo.
+
+function SupplementSettings({ supplementId, accent, onChanged }: { supplementId: string; accent: string; onChanged: () => void }) {
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+
+  async function load() {
+    try {
+      const r = await fetch(`/api/admin/supplements/${supplementId}`);
+      const j = await r.json();
+      const s = j?.supplement || {};
+      setImageUrl(s.imageUrl || "");
+      setBrandName(s.brandName || "");
+      setIsFeatured(!!s.isFeatured);
+    } catch {
+      // ignore — leave defaults
+    } finally {
+      setLoaded(true);
+    }
+  }
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const r = await fetch(`/api/admin/supplements/${supplementId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: imageUrl.trim() || null, brandName: brandName.trim() || null, isFeatured }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        alert(j.error || "Failed to save");
+        return;
+      }
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!loaded) return <div style={{ paddingTop: 14, color: T.muted, fontSize: 12 }}>Loading settings{'\u2026'}</div>;
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Product settings</div>
+
+      <div style={{ display: "grid", gridTemplateColumns: imageUrl ? "84px 1fr" : "1fr", gap: 10, marginBottom: 8 }}>
+        {imageUrl ? (
+          <div style={{ width: 84, height: 84, background: "#000", border: `1px solid ${T.border}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+          </div>
+        ) : null}
+        <input
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="Product image URL (paste from Nutrabay or any CDN)"
+          style={inputStyle()}
+        />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center" }}>
+        <input
+          value={brandName}
+          onChange={(e) => setBrandName(e.target.value)}
+          placeholder="Brand name (optional, e.g. Optimum Nutrition)"
+          style={inputStyle()}
+        />
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.dim, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+          Featured
+        </label>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+        <button onClick={save} disabled={saving} style={{ background: accent, color: "#000", border: "none", borderRadius: 6, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>
+          {saving ? "Saving\u2026" : "Save settings"}
+        </button>
+      </div>
     </div>
   );
 }
