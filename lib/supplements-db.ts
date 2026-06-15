@@ -70,11 +70,6 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
 
     return {
       id: r.slug,
-      // Phase 18-3 additions
-      imageUrl: r.imageUrl || null,
-      brandName: r.brandName || null,
-      isFeatured: !!r.isFeatured,
-      // Phase 18-1 base
       name: r.name,
       aka: r.aka || [],
       category: (r.category?.slug || "protein") as SupplementCategory,
