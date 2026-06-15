@@ -50,10 +50,20 @@ interface Plan {
   mealsPerDay: number
 }
 
+interface PriceRow {
+  id: string
+  diet: string         // VEGETARIAN | EGGETARIAN | NON_VEGETARIAN
+  duration: string     // TRIAL_DAY | WEEKLY | BI_WEEKLY | MONTHLY_EXCL_WEEKENDS | ONE_MONTH | TWO_MONTH | THREE_MONTH
+  mealsPerDay: string  // BREAKFAST_LUNCH | SNACK_DINNER | ALL_FOUR
+  priceRs: number
+  mrpRs?: number | null
+}
+
 interface Props {
   plan: Plan
   schedule: Record<number, Slot[]>
   day1Slots: Slot[]
+  prices: PriceRow[]
 }
 
 type MealSlotKey = 'BREAKFAST' | 'LUNCH' | 'SNACK' | 'DINNER'
@@ -74,14 +84,27 @@ const SLOT_DESC: Record<string, string> = {
   DINNER: 'Light but satisfying. Lower carb, higher protein. Palak paneer, dal tadka, grilled options.',
 }
 
-const PRICING = [
-  { label: 'Trial Day', days: 1, price: 750, perDay: 750 },
-  { label: '1 Week', days: 7, price: 4900, perDay: 700 },
-  { label: '2 Weeks', days: 15, price: 9720, perDay: 648 },
-  { label: '1 Month', days: 30, price: 16999, perDay: 567, popular: true },
-  { label: '2 Months', days: 60, price: 33000, perDay: 550 },
-  { label: '3 Months', days: 90, price: 47250, perDay: 525 },
+// Duration metadata — labels + day counts. Real prices come from PriceRow[] props.
+const DURATION_META: { key: string; label: string; days: number; legacy: string; popular?: boolean }[] = [
+  { key: 'TRIAL_DAY',               label: 'Trial Day', days:  1, legacy: 'trial' },
+  { key: 'WEEKLY',                  label: '1 Week',    days:  7, legacy: 'weekly' },
+  { key: 'BI_WEEKLY',               label: '2 Weeks',   days: 15, legacy: 'biweekly' },
+  { key: 'MONTHLY_EXCL_WEEKENDS',   label: 'Mon–Fri',   days: 22, legacy: 'monthly_ex' },
+  { key: 'ONE_MONTH',               label: '1 Month',   days: 30, legacy: 'monthly', popular: true },
+  { key: 'TWO_MONTH',               label: '2 Months',  days: 60, legacy: 'two_month' },
+  { key: 'THREE_MONTH',             label: '3 Months',  days: 90, legacy: 'three_month' },
 ]
+
+const MEAL_COMBO_META: { key: string; label: string; sub: string; legacy: string }[] = [
+  { key: 'BREAKFAST_LUNCH', label: 'B + L',   sub: 'Morning slot', legacy: 'bl' },
+  { key: 'SNACK_DINNER',    label: 'S + D',   sub: 'Evening slot', legacy: 'sd' },
+  { key: 'ALL_FOUR',        label: 'All 4',   sub: 'Full day',     legacy: 'all' },
+]
+
+// Map MealPlan.dietaryVariant → checkout legacy diet code
+const DIET_LEGACY: Record<string, string> = {
+  VEG: 'veg', JAIN: 'jain', VEGAN: 'veg', EGG: 'egg', NON_VEG: 'nonveg',
+}
 
 const FAQ = [
   { q: 'How many meals do I get per day?', a: 'Four meals daily — Breakfast, Lunch, Snack and Dinner. Every box also includes your Morning Boost (a coffee or green-tea sachet). All four are freshly prepared and delivered by 8am.' },
@@ -268,11 +291,12 @@ function CalorieRing({ kcal }: { kcal: number }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
+export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: Props) {
   const [activeWeek, setActiveWeek] = useState(1)
   const [showAll, setShowAll] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
-  const [pick, setPick] = useState(3)
+  const [pickMeal, setPickMeal] = useState<string>('ALL_FOUR')
+  const [pickDur, setPickDur] = useState<string>('ONE_MONTH')
   const [loaded, setLoaded] = useState(false)
   const [sel, setSel] = useState<Recipe | null>(null)
 
@@ -834,44 +858,105 @@ export default function PlanDetailClient({ plan, schedule, day1Slots }: Props) {
           <div className="reveal" style={{ marginBottom: 44 }}>
             <Eyebrow index="08" label="Pricing" />
             <h2 className="h2">Start with a trial.<br />Stay for the results.</h2>
-            <p className="mono" style={{ color: 'var(--faint)', fontSize: 12.5, marginTop: 18, letterSpacing: '0.02em' }}>ALL 4 MEALS · 4AM PREP · DELIVERED BY 8AM · NO DELIVERY CHARGE</p>
+            <p className="mono" style={{ color: 'var(--faint)', fontSize: 12.5, marginTop: 18, letterSpacing: '0.02em' }}>4AM PREP · DELIVERED BY 8AM · NO DELIVERY CHARGE</p>
           </div>
 
-          <div className="reveal d1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(168px,1fr))', gap: 12, marginBottom: 20 }}>
-            {PRICING.map((p, i) => (
-              <button key={p.label} onClick={() => setPick(i)} style={{
-                background: pick === i ? '#101807' : '#0a0a0a',
-                border: pick === i ? '1px solid var(--lime)' : '1px solid var(--line)',
-                borderRadius: 4, padding: '22px 18px', cursor: 'pointer', textAlign: 'left', position: 'relative',
-                transition: 'all .3s cubic-bezier(.16,1,.3,1)',
-                boxShadow: pick === i ? '0 0 0 1px var(--lime), 0 14px 40px -16px rgba(163,230,53,.5)' : 'none',
-              }}
-                onMouseEnter={(e) => { if (pick !== i) e.currentTarget.style.borderColor = '#333' }}
-                onMouseLeave={(e) => { if (pick !== i) e.currentTarget.style.borderColor = 'var(--line)' }}>
-                {p.popular && (
-                  <span className="mono" style={{ position: 'absolute', top: -9, left: 16, background: 'var(--lime)', color: '#0a0a0a', fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 2, letterSpacing: '0.1em' }}>POPULAR</span>
-                )}
-                <div className="mono" style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: pick === i ? 'var(--lime)' : 'var(--dim)', marginBottom: 12 }}>{p.label}</div>
-                <div className="cond" style={{ fontSize: 34, fontWeight: 600, color: 'var(--ink)', lineHeight: 0.85 }}>₹{p.price.toLocaleString('en-IN')}</div>
-                <div className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8 }}>₹{p.perDay}/day</div>
-              </button>
-            ))}
+          {/* Meal-combo selector */}
+          <div className="reveal d1" style={{ marginBottom: 18 }}>
+            <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>Choose your meals</p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {MEAL_COMBO_META.map((m) => {
+                const active = pickMeal === m.key
+                return (
+                  <button key={m.key} onClick={() => setPickMeal(m.key)} style={{
+                    flex: '1 1 140px',
+                    background: active ? '#101807' : '#0a0a0a',
+                    border: active ? '1px solid var(--lime)' : '1px solid var(--line)',
+                    borderRadius: 4, padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
+                    transition: 'all .25s cubic-bezier(.16,1,.3,1)',
+                    boxShadow: active ? '0 0 0 1px var(--lime)' : 'none',
+                  }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.borderColor = '#333' }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.borderColor = 'var(--line)' }}>
+                    <div className="syne" style={{ fontSize: 18, fontWeight: 700, color: active ? 'var(--lime)' : 'var(--ink)' }}>{m.label}</div>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 4 }}>{m.sub}</div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          <div className="reveal d2" style={{ ...card({ borderColor: '#222', padding: '28px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24, position: 'relative', overflow: 'hidden' }) }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: 'var(--lime)' }} />
-            <div>
-              <div className="syne" style={{ fontWeight: 800, fontSize: 24, color: 'var(--ink)' }}>{PRICING[pick].label} Plan</div>
-              <div className="mono" style={{ color: 'var(--faint)', fontSize: 12, marginTop: 8, letterSpacing: '0.02em' }}>
-                {PRICING[pick].days} {PRICING[pick].days === 1 ? 'DAY' : 'DAYS'} · ALL 4 MEALS · ₹{PRICING[pick].perDay}/DAY
+          {/* Duration grid */}
+          <div className="reveal d2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10, marginBottom: 20 }}>
+            {DURATION_META.map((d) => {
+              const row = prices.find((p) => p.duration === d.key && p.mealsPerDay === pickMeal)
+              const active = pickDur === d.key
+              const available = !!row
+              const perDay = row ? Math.round(row.priceRs / d.days) : 0
+              return (
+                <button key={d.key} onClick={() => available && setPickDur(d.key)} disabled={!available} style={{
+                  background: active ? '#101807' : '#0a0a0a',
+                  border: active ? '1px solid var(--lime)' : '1px solid var(--line)',
+                  borderRadius: 4, padding: '18px 16px',
+                  cursor: available ? 'pointer' : 'not-allowed',
+                  opacity: available ? 1 : 0.4,
+                  textAlign: 'left', position: 'relative',
+                  transition: 'all .3s cubic-bezier(.16,1,.3,1)',
+                  boxShadow: active ? '0 0 0 1px var(--lime), 0 14px 40px -16px rgba(163,230,53,.5)' : 'none',
+                }}
+                  onMouseEnter={(e) => { if (!active && available) e.currentTarget.style.borderColor = '#333' }}
+                  onMouseLeave={(e) => { if (!active && available) e.currentTarget.style.borderColor = 'var(--line)' }}>
+                  {d.popular && available && (
+                    <span className="mono" style={{ position: 'absolute', top: -9, left: 14, background: 'var(--lime)', color: '#0a0a0a', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 2, letterSpacing: '0.1em' }}>POPULAR</span>
+                  )}
+                  <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: active ? 'var(--lime)' : 'var(--dim)', marginBottom: 10 }}>{d.label}</div>
+                  {row ? (
+                    <>
+                      <div className="cond" style={{ fontSize: 28, fontWeight: 600, color: 'var(--ink)', lineHeight: 0.9 }}>₹{row.priceRs.toLocaleString('en-IN')}</div>
+                      <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 7 }}>₹{perDay.toLocaleString('en-IN')}/day</div>
+                    </>
+                  ) : (
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--faint)' }}>—</div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Selected summary + CTA */}
+          {(() => {
+            const dur = DURATION_META.find((d) => d.key === pickDur)!
+            const meal = MEAL_COMBO_META.find((m) => m.key === pickMeal)!
+            const row = prices.find((p) => p.duration === pickDur && p.mealsPerDay === pickMeal)
+            const dietParam = DIET_LEGACY[plan.dietaryVariant] || 'veg'
+            const checkoutUrl = row
+              ? `/checkout?diet=${dietParam}&dur=${dur.legacy}&meal=${meal.legacy}&price=${row.priceRs}&planSlug=${plan.slug}&planName=${encodeURIComponent(plan.name)}`
+              : '#'
+
+            return (
+              <div className="reveal d3" style={{ ...card({ borderColor: '#222', padding: '28px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24, position: 'relative', overflow: 'hidden' }) }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: 'var(--lime)' }} />
+                <div>
+                  <div className="syne" style={{ fontWeight: 800, fontSize: 24, color: 'var(--ink)' }}>{dur.label} · {meal.label}</div>
+                  <div className="mono" style={{ color: 'var(--faint)', fontSize: 12, marginTop: 8, letterSpacing: '0.02em' }}>
+                    {dur.days} {dur.days === 1 ? 'DAY' : 'DAYS'} · {meal.sub.toUpperCase()} · {dietLabel.toUpperCase()}
+                    {row && <> · ₹{Math.round(row.priceRs / dur.days).toLocaleString('en-IN')}/DAY</>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {row ? (
+                    <>
+                      <div className="cond" style={{ fontSize: 46, fontWeight: 700, color: 'var(--lime)', lineHeight: 0.85 }}>₹{row.priceRs.toLocaleString('en-IN')}</div>
+                      <Link href={checkoutUrl} className="btn btn-lime">Order now <IconArrow /></Link>
+                    </>
+                  ) : (
+                    <div className="mono" style={{ fontSize: 13, color: 'var(--faint)' }}>This combination is unavailable. Pick a different duration.</div>
+                  )}
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div className="cond" style={{ fontSize: 46, fontWeight: 700, color: 'var(--lime)', lineHeight: 0.85 }}>₹{PRICING[pick].price.toLocaleString('en-IN')}</div>
-              <Link href="/onboarding" className="btn btn-lime">Order now <IconArrow /></Link>
-            </div>
-          </div>
-          <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 18, letterSpacing: '0.04em' }}>PAYU · UPI · CREDIT / DEBIT · CASH ON DELIVERY</p>
+            )
+          })()}
+          <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 18, letterSpacing: '0.04em' }}>PAYU · UPI · CREDIT / DEBIT · CASH ON DELIVERY · GST 5% INCLUDED</p>
         </div>
       </section>
 

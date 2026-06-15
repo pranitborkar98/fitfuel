@@ -1,3 +1,5 @@
+// app/plans/[slug]/page.tsx — Phase 19A
+// Server fetch for plan + schedule + physical PlanPrice rows (via mealPlanId).
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import PlanDetailClient from './PlanDetailClient'
@@ -15,7 +17,7 @@ const SLOT_ORDER: Record<string, number> = {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params
-  const plan = await prisma.mealPlan.findUnique({
+  const plan = await (prisma as any).mealPlan.findUnique({
     where: { slug },
     select: { name: true, description: true },
   })
@@ -28,8 +30,9 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function PlanPage({ params }: Props) {
   const { slug } = await params
+  const db = prisma as any
 
-  const plan = await prisma.mealPlan.findUnique({
+  const plan = await db.mealPlan.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -56,7 +59,7 @@ export default async function PlanPage({ params }: Props) {
 
   if (!plan) notFound()
 
-  const slots = await prisma.planScheduleSlot.findMany({
+  const slots = await db.planScheduleSlot.findMany({
     where: { mealPlanId: plan.id },
     orderBy: [{ dayNumber: 'asc' }, { mealSlot: 'asc' }],
     include: {
@@ -82,6 +85,18 @@ export default async function PlanPage({ params }: Props) {
     },
   })
 
+  const prices = await db.planPrice.findMany({
+    where: { mealPlanId: plan.id, isDigital: false, isActive: true },
+    select: {
+      id: true,
+      diet: true,
+      duration: true,
+      mealsPerDay: true,
+      priceRs: true,
+      mrpRs: true,
+    },
+  })
+
   const schedule: Record<number, typeof slots> = {}
   for (const slot of slots) {
     if (!schedule[slot.dayNumber]) schedule[slot.dayNumber] = []
@@ -89,7 +104,7 @@ export default async function PlanPage({ params }: Props) {
   }
   for (const day of Object.keys(schedule)) {
     schedule[Number(day)].sort(
-      (a, b) =>
+      (a: any, b: any) =>
         (SLOT_ORDER[a.mealSlot] ?? 99) - (SLOT_ORDER[b.mealSlot] ?? 99)
     )
   }
@@ -101,6 +116,7 @@ export default async function PlanPage({ params }: Props) {
       plan={plan as any}
       schedule={schedule as any}
       day1Slots={day1Slots as any}
+      prices={prices as any}
     />
   )
 }
