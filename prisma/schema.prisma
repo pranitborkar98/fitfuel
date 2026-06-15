@@ -337,8 +337,22 @@ model PlanPrice {
 
   @@unique([productId, diet, duration, mealsPerDay])
 
-  @@unique([mealPlanId, duration, mealsPerDay, bundle])
+  @@unique([mealPlanId, duration, mealsPerDay, bundle, isDigital])
   @@map("plan_prices")
+}
+
+// Phase 19A — Premium/Luxury tier waitlist signups from /plans
+model WaitlistSignup {
+  id        String   @id @default(cuid())
+  email     String
+  tier      String   // "PREMIUM" | "LUXURY"
+  source    String?  // "plans_page", etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, tier])
+  @@index([tier])
+  @@map("waitlist_signups")
 }
 
 // ============================================================
