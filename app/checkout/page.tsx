@@ -173,6 +173,7 @@ function CheckoutInner() {
   const diet     = params.get("diet")    || "veg";
   const dur      = params.get("dur")     || "monthly_ex";
   const meal     = params.get("meal")    || "sd";
+  const planSlug = params.get("planSlug") || "";   // LOOP-3: carry the chosen plan to the order
   const rawPrice = Number(params.get("price") || 0);
   const error    = params.get("error");
   const errMsg   = params.get("msg");
@@ -287,7 +288,7 @@ function CheckoutInner() {
           firstname: form.firstname, lastname: form.lastname,
           email: form.email, phone: form.phone,
           address: deliveryAddress, city, pincode,
-          diet, dur, meal, price: rawPrice, deliveryWindow,
+          diet, dur, meal, price: rawPrice, deliveryWindow, planSlug,
           useCredit: useCredit && creditApplicable > 0,
         }),
       });
@@ -312,7 +313,7 @@ function CheckoutInner() {
         firstname: form.firstname, lastname: form.lastname,
         email: form.email, phone: form.phone,
         address: deliveryAddress, city, pincode,
-        diet, dur, meal, price: rawPrice, deliveryWindow,
+        diet, dur, meal, price: rawPrice, deliveryWindow, planSlug,
         amount: priceGST.toFixed(2), productinfo,
         useCredit: useCredit && creditApplicable > 0,
       }),

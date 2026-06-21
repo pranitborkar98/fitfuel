@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { activateDigitalPlan } from "@/lib/activate-digital-plan";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 import { processReferralReward, recordCreditChange } from "@/lib/partners";
+import { resolvePurchasedPlan } from "@/lib/resolve-purchased-plan";
 
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
         where: { id: order.userId },
         select: { name: true, email: true, phone: true },
       });
-      const planLookupSlug = meta.isDigital ? (meta.planSlug || "") : "weight-loss-veg";
+      const planLookupSlug = meta.planSlug || "";
       const planForNotif = planLookupSlug
         ? await (prisma as any).mealPlan.findUnique({
             where: { slug: planLookupSlug },
@@ -144,10 +145,8 @@ export async function POST(req: NextRequest) {
     const mealEnum = MEAL_MAP[meta.meal] ?? "ALL_FOUR";
     const window   = meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
 
-    const mealPlan =
-      (await (prisma as any).mealPlan.findUnique({ where: { slug: "weight-loss-veg" } })) ??
-      (await (prisma as any).mealPlan.findFirst({ where: { isActive: true } })) ??
-      (await (prisma as any).mealPlan.findFirst());
+    // LOOP-3: activate the plan the customer ACTUALLY bought (was hardcoded weight-loss-veg).
+    const mealPlan = await resolvePurchasedPlan({ planSlug: meta.planSlug, diet: meta.diet });
 
     if (mealPlan) {
       const startDate = new Date();

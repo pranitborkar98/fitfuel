@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 import { processReferralReward, applyCreditAtCheckout, recordCreditChange } from "@/lib/partners";
+import { resolvePurchasedPlan } from "@/lib/resolve-purchased-plan";
 
 const DIET_MAP: Record<string, string> = {
   veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
@@ -50,7 +51,7 @@ async function upsertCustomer(email: string, phone: string, name: string) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price, deliveryWindow, useCredit } = body;
+    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price, deliveryWindow, useCredit, planSlug } = body;
 
     if (!firstname || !email || !phone || !address || !pincode || !diet || !dur || !meal || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
         creditAppliedRs,
         paymentMethod: "CASH_ON_DELIVERY", paymentStatus: "PENDING",
         referralAttribution: refSnapshot,
-        notes: JSON.stringify({ diet, dur, meal, deliveryWindow: deliveryWindow === "EVENING" ? "EVENING" : "MORNING", isJain: diet === "jain" }),
+        notes: JSON.stringify({ diet, dur, meal, planSlug: planSlug || null, deliveryWindow: deliveryWindow === "EVENING" ? "EVENING" : "MORNING", isJain: diet === "jain" }),
       },
     });
 
@@ -133,10 +134,8 @@ export async function POST(req: NextRequest) {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + days);
 
-    const mealPlan =
-      (await (prisma as any).mealPlan.findUnique({ where: { slug: "weight-loss-veg" } })) ??
-      (await (prisma as any).mealPlan.findFirst({ where: { isActive: true } })) ??
-      (await (prisma as any).mealPlan.findFirst());
+    // LOOP-3: activate the plan the customer ACTUALLY bought (was hardcoded weight-loss-veg).
+    const mealPlan = await resolvePurchasedPlan({ planSlug, diet });
 
     if (mealPlan) {
       await (prisma as any).userActivePlan.create({

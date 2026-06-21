@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
       amount,       // string e.g. "7938.00" — total incl GST, what PayU charges (pre-credit)
       productinfo,
       useCredit,    // 17C-2
+      planSlug,     // LOOP-3: the plan the customer actually chose
     } = body;
 
     if (!firstname || !email || !phone || !amount || !productinfo) {
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
           subtotalRs: subtotal, gstRs: gst, totalRs: chargeAmountRs,
           creditAppliedRs,
           paymentMethod: "PAYU", paymentStatus: "PENDING", payuTxnId: txnid,
-          notes: JSON.stringify({ diet, dur, meal, deliveryWindow: window, isJain: diet === "jain" }),
+          notes: JSON.stringify({ diet, dur, meal, planSlug: planSlug || null, deliveryWindow: window, isJain: diet === "jain" }),
           items: {
             create: {
               productId: null, diet: dietEnum, duration: durEnum, mealsPerDay: mealEnum,
