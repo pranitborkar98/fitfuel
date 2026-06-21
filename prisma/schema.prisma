@@ -592,12 +592,18 @@ model Exercise {
   secondaryMuscles String[]
   instructions     String[]
   images           String[]
+  modality         String  @default("strength") // strength | cardio | hiit | calisthenics | mobility | sport
+  met              Float   @default(4.0)         // real metabolic equivalent
+  progressionGroup String? // skill-chain id (e.g. "pushup") for calisthenics progressions
+  progressionLevel Int?    // 1..n position within the chain
+
 
   workoutExercises WorkoutExercise[]
 
   @@index([category])
   @@index([level])
   @@index([equipment])
+  @@index([modality])
   @@map("exercises")
 }
 
