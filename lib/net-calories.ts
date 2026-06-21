@@ -52,9 +52,12 @@ export async function getDailyCalorieBalance(
     activePlan?.mealPlan?.avgProteinGrams ??
     120;
 
-  // 2. Calories IN — confirmed MealLogs for today
-  // MealLog has confirmedAt + skipped fields (schema confirmed).
-  // Only count rows where confirmedAt is set AND skipped is false.
+  // 2. Calories IN — UNIFIED LEDGER (LOOP-4)
+  //    plan meals (MealLog, scaled by grams eaten) + manual foods
+  //    (FoodEntry where mealLogId IS NULL). FoodEntries auto-created from a
+  //    MealLog carry mealLogId and are EXCLUDED here to avoid double-counting —
+  //    they exist only to surface plan meals in the nutrition diary.
+  //    Mirrors lib/progress.ts so the dashboard ring and the trend chart agree.
   const mealLogs = await prisma.mealLog.findMany({
     where: {
       userId,
@@ -63,8 +66,11 @@ export async function getDailyCalorieBalance(
       skipped: false,
     },
     select: {
+      actualGrams: true,
+      plannedGrams: true,
       recipe: {
         select: {
+          servingSizeGrams: true,
           caloriesPerServing: true,
           proteinGrams: true,
         },
@@ -72,15 +78,29 @@ export async function getDailyCalorieBalance(
     },
   });
 
-  const caloriesIn = mealLogs.reduce(
-    (sum, log) => sum + (log.recipe?.caloriesPerServing ?? 0),
-    0
-  );
+  let caloriesIn = 0;
+  let proteinIn = 0;
 
-  const proteinIn = mealLogs.reduce(
-    (sum, log) => sum + Number(log.recipe?.proteinGrams ?? 0),
-    0
-  );
+  // plan meals — scale recipe macros by grams actually eaten / serving size
+  for (const log of mealLogs) {
+    const r = log.recipe;
+    if (!r) continue;
+    const serving = r.servingSizeGrams > 0 ? r.servingSizeGrams : 1;
+    const grams = log.actualGrams ?? log.plannedGrams ?? serving;
+    const factor = grams / serving;
+    caloriesIn += (r.caloriesPerServing ?? 0) * factor;
+    proteinIn += Number(r.proteinGrams ?? 0) * factor;
+  }
+
+  // manual food entries — absolute macros; exclude plan-meal mirrors (mealLogId set)
+  const manual = await prisma.foodEntry.aggregate({
+    where: { userId, entryDate: day, mealLogId: null },
+    _sum: { calories: true, protein: true },
+  });
+  caloriesIn += manual._sum.calories ?? 0;
+  proteinIn += Number(manual._sum.protein ?? 0);
+
+  caloriesIn = Math.round(caloriesIn);
 
   // 3. Calories OUT — workout sessions today
   // WorkoutSession uses `date` (@db.Date) — same pattern as MealLog.logDate.
