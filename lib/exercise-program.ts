@@ -120,35 +120,35 @@ function planFor(arch: Archetype, tier: Tier): Plan {
         daysPerWeek: Math.min(6, 4 + bump),
         sessionMins: 40 + bump * 5,
         intensity: 1.0,
-        sequence: ["full_body", "liss", "hiit", "full_body", "liss", "core"].slice(0, Math.min(6, 4 + bump)),
+        sequence: (["full_body", "liss", "hiit", "full_body", "liss", "core"] as SlotKind[]).slice(0, Math.min(6, 4 + bump)),
       };
     case "muscle":
       return {
         daysPerWeek: Math.min(6, 4 + bump),
         sessionMins: 50 + bump * 5,
         intensity: 1.15,
-        sequence: ["push", "pull", "legs", "upper", "lower", "core"].slice(0, Math.min(6, 4 + bump)),
+        sequence: (["push", "pull", "legs", "upper", "lower", "core"] as SlotKind[]).slice(0, Math.min(6, 4 + bump)),
       };
     case "medical":
       return {
         daysPerWeek: Math.min(5, 3 + bump),
         sessionMins: 30 + bump * 5,
         intensity: 0.85,
-        sequence: ["full_body", "liss", "mobility", "full_body", "liss"].slice(0, Math.min(5, 3 + bump)),
+        sequence: (["full_body", "liss", "mobility", "full_body", "liss"] as SlotKind[]).slice(0, Math.min(5, 3 + bump)),
       };
     case "athletic":
       return {
         daysPerWeek: Math.min(6, 4 + bump),
         sessionMins: 50 + bump * 5,
         intensity: 1.15,
-        sequence: ["lower", "conditioning", "upper", "hiit", "full_body", "mobility"].slice(0, Math.min(6, 4 + bump)),
+        sequence: (["lower", "conditioning", "upper", "hiit", "full_body", "mobility"] as SlotKind[]).slice(0, Math.min(6, 4 + bump)),
       };
     default:
       return {
         daysPerWeek: Math.min(5, 3 + bump),
         sessionMins: 40 + bump * 5,
         intensity: 1.0,
-        sequence: ["full_body", "liss", "upper", "lower", "core"].slice(0, Math.min(5, 3 + bump)),
+        sequence: (["full_body", "liss", "upper", "lower", "core"] as SlotKind[]).slice(0, Math.min(5, 3 + bump)),
       };
   }
 }
