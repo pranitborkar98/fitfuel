@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import DeliveryConfirmCard from "./DeliveryConfirmCard";
+import WeeklyReviewCard from "./WeeklyReviewCard";
 import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
@@ -877,6 +878,7 @@ export default function DashboardClient({
 
             {/* 9R — Consistency Score (weekly) */}
             {consistency && <ConsistencyCard data={consistency} />}
+            <WeeklyReviewCard />
 
             {/* 9L — Net Calorie Ring */}
             {balance && (
