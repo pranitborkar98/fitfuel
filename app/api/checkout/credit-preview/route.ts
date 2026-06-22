@@ -1,4 +1,4 @@
-// app/api/checkout/credit-preview/route.ts
+// app/api/checkout/credit-preview/route.ts  · WS-3 hardened (SEC-1/2)
 // Phase 17C-2 — Returns the signed-in user's credit balance + how much
 // is applicable to the given order amount.
 //
@@ -9,12 +9,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readQuery } from "@/lib/validation/core";
+import { creditPreviewQuerySchema } from "@/lib/validation/schemas";
 
 const db = prisma as any;
 
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const subtotalRs = Math.max(0, Math.round(Number(url.searchParams.get("subtotal") || 0)));
+  // SEC-1: credit-balance enumeration guard.
+  const rl = await enforceRateLimit(req, "creditPreview");
+  if (!rl.ok) return rl.response;
+
+  // SEC-2: validate + coerce the query (subtotal → number, defaults to 0).
+  const parsed = readQuery(req, creditPreviewQuerySchema);
+  if (!parsed.ok) return parsed.response;
+  const subtotalRs = Math.max(0, Math.round(parsed.data.subtotal));
 
   const session = await auth();
   if (!session?.user?.id) {

@@ -1,4 +1,4 @@
-// app/api/partners/apply/route.ts
+// app/api/partners/apply/route.ts  · WS-3 hardened (SEC-1/2)
 // Phase 17C-1 — Self-onboarding POST endpoint.
 // Creates a PENDING Partner row owned by the signed-in user.
 // Admin manually approves via /admin/partners (Decision #123).
@@ -8,11 +8,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notifyStaffByRoles } from "@/lib/notify";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { partnerApplySchema } from "@/lib/validation/schemas";
 
 const db = prisma as any;
 
 const CASH_TYPES = new Set(["TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR"]);
-const ALL_TYPES = new Set(["GYM", "TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "CORPORATE", "RESIDENCE"]);
 
 // Per-type reward defaults (matches Decision #121 / 17A TYPE_DEFAULTS).
 const TYPE_DEFAULTS: Record<string, { rewardType: string; rewardValueRs: number; refereeDiscountRs: number }> = {
@@ -33,25 +35,22 @@ function genCode(baseName: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // SEC-1: throttle self-onboarding spam, by IP (before auth + DB work).
+    const rl = await enforceRateLimit(req, "partnerApply");
+    if (!rl.ok) return rl.response;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Sign in required" }, { status: 401 });
     }
     const userId = session.user.id;
 
-    const body = await req.json().catch(() => ({}));
-    const type = String(body?.type || "");
-    const form = body?.form || {};
-
-    if (!ALL_TYPES.has(type)) {
-      return NextResponse.json({ error: "Invalid partner type" }, { status: 400 });
-    }
-    if (!form.name || !String(form.name).trim()) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    }
-    if (!form.contactEmail || !String(form.contactEmail).trim()) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    }
+    // SEC-2: validated body. type ∈ enum, form.name + form.contactEmail required.
+    // Detailed cash-type PAN/IFSC/bank checks stay below (preserve exact messages).
+    const parsed = await readJson(req, partnerApplySchema);
+    if (!parsed.ok) return parsed.response;
+    const { type } = parsed.data;
+    const form = parsed.data.form;
 
     // Tax fields required for cash payout types
     if (CASH_TYPES.has(type)) {
@@ -140,7 +139,7 @@ export async function POST(req: NextRequest) {
       partnerType: created.type,
       partnerCode: created.code,
       adminUrl: "/admin/partners",
-    }).catch((e) => console.error("[partners/apply] staff notify failed", e));
+    }).catch((e: unknown) => console.error("[partners/apply] staff notify failed", e));
 
     return NextResponse.json({ ok: true, partner: created });
   } catch (err: any) {

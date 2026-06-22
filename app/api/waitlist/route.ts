@@ -1,24 +1,22 @@
-// app/api/waitlist/route.ts — Phase 19A
+// app/api/waitlist/route.ts — Phase 19A · WS-3 hardened (SEC-1/2/3)
 // Captures Premium/Luxury waitlist signups. One row per (email, tier).
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-const ALLOWED_TIERS = new Set(['PREMIUM', 'LUXURY'])
+import { enforceRateLimit } from '@/lib/rate-limit'
+import { readJson } from '@/lib/validation/core'
+import { waitlistSchema } from '@/lib/validation/schemas'
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => null) as { email?: string; tier?: string } | null
-    if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+    // SEC-1/3: this is the headline spam target — limit hard, by IP.
+    const rl = await enforceRateLimit(req, 'waitlist')
+    if (!rl.ok) return rl.response
 
-    const email = (body.email ?? '').trim().toLowerCase()
-    const tier  = (body.tier ?? '').trim().toUpperCase()
-
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
-    }
-    if (!ALLOWED_TIERS.has(tier)) {
-      return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
-    }
+    // SEC-2: size-capped, schema-validated body. email is lower-cased and
+    // tier is upper-cased + enum-checked by the schema.
+    const parsed = await readJson(req, waitlistSchema)
+    if (!parsed.ok) return parsed.response
+    const { email, tier } = parsed.data
 
     const db = prisma as any
     await db.waitlistSignup.upsert({

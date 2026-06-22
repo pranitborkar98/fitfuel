@@ -2306,3 +2306,583 @@ Community is a whole product with its own matching, moderation, and abuse surfac
 - Per-user notification preferences UI on `/dashboard/settings`
 - Phase 17C-2 verification (TOP PRIORITY)
 - Phase 18+ scope not yet detailed (likely candidates: launch readiness checklist, payment refund flow, automated payout cron, multi-outlet rollout)
+
+---
+
+## ═══════════ PHASE 17C-2 — VERIFIED LIVE ═══════════
+### Session: Jun 14, 2026 · additions-only
+
+> **Jun 14 — Phase 17C-2 verified working on `fitfuel-eosin.vercel.app`.** Credit balance toggle renders on `/checkout` + `/checkout/digital` for signed-in users with balance > 0. Hidden for guests. Toggle reduces total live; submit body carries `useCredit: useCredit && creditApplicable > 0`. PayU init recomputes hash with reduced amount and stamps `Order.creditAppliedRs`. Success route commits via `recordCreditChange(userId, -applied, "order_payment", { refOrderId })` AFTER status flips to CONFIRMED — protected from double-fire by the existing CONFIRMED early-return guard. ✅ COMPLETE.
+
+> **Phase 17 STATUS: ✅ FULLY COMPLETE.** 17A schema + admin → 17B branded landings + dashboards + QR → 17C-1 self-onboarding + payouts + tax fields → 17C-2 credit at checkout, all shipped, all verified.
+
+---
+
+## ═══════════ PHASE 18 — SUPPLEMENTS + AFFILIATE REVENUE ═══════════
+### Sessions: Jun 14, 2026 · additions-only · Decisions #139–#146
+
+> **Jun 14 — PHASE 18 KICKED OFF.** Strategic pivot: the existing `/supplements` page (built pre-Phase 9 during ecosystem layering) was richly designed but commercially dead — 30+ products with full educational content, zero buy CTAs, zero monetization. Founder direction locked: Direct affiliate programs (not Cuelinks aggregator), MULTIPLE buy buttons per product for price compare, expand catalog beyond current 30, no admin "sale/discount badge" features for v1. This forced full DB migration (static catalog of 30 products in `lib/supplements-data.ts` can't scale to multi-network × expanded SKU count). Split into 18-1 (foundation + click tracking), 18-2 (admin CRUD + analytics), 18-3 (visual overhaul). Later pivoted to single-network in #145.
+
+---
+
+## ═══════════ PHASE 18-1 — DB-BACKED CATALOG + CLICK TRACKING ═══════════
+
+> **Jun 14 — PHASE 18-1 SHIPPED + LIVE.** Schema additions: `SupplementCategory`, `Supplement` (full educational fidelity — mechanism, evidence, warnings, stacks, value rating, India availability — nothing dropped), `SupplementLink` (1:N for multi-network), `SupplementClick` (privacy-aware: hashed IPs, nullable userId for guests). Two enums: `AffiliateNetwork` (NUTRABAY, HEALTHKART, MUSCLEBLAZE, AMAZON_IN, FLIPKART, TATA_1MG, WELLNESS_FOREVER, OTHER) + `SupplementGoal` (MUSCLE_GAIN, WEIGHT_LOSS, BALANCED, PERFORMANCE).
+
+> **Migration script** `prisma/seed-supplements.ts` ported all 46 products (later count — 30 was an early miscount of the static array) from `lib/supplements-data.ts` to DB, upserting by slug. Idempotent. Created 12 categories. Preserves all richContent fields.
+
+> **Click redirect endpoint** `/api/supplements/click/[linkId]` — fire-and-forget logging to `SupplementClick` (non-blocking via async IIFE that DOES NOT await; if logging throws, redirect still fires); IPs SHA-256 hashed, no raw IPs in DB; 302 to `link.affiliateUrl` in <50ms.
+
+> **DB fetcher** `lib/supplements-db.ts` — `getAllSupplements()` returns DbSupplement[] shaped to match the existing `Supplement` static type for backwards-compat with `SupplementsLanding.tsx`, plus `links` array. Sorts by category.sortOrder then supplement.sortOrder.
+
+> **Public page** `/supplements` now reads from DB via server-side fetch. Was previously importing the 2,512-line static array.
+
+> **CRITICAL DEBUGGING ARC — 5 fix cycles before this would actually work:**
+> 1. **Turbopack pulled `pg` into client bundle** because `SupplementsLanding.tsx` (`"use client"`) imported `NETWORK_LABEL` from `lib/supplements-db.ts`, which imported `lib/prisma.ts` (Node-only `pg` driver). Fix: split into `lib/supplements-types.ts` (client-safe — types + NETWORK_LABEL) + `lib/supplements-db.ts` (now `import "server-only"`, re-exports types for ergonomic server-side use). Decision #142.
+> 2. **TypeScript errors in `ApplyClient`** — untyped onChange callbacks. Fixed by typing Input/Textarea primitives.
+> 3. **Migration script `PrismaClientInitializationError`** — `new PrismaClient()` bare needs adapter. Fixed via PrismaPg adapter pattern (matches `lib/prisma.ts`). Decision #130.
+> 4. **Migration script field mismatch on NotificationTemplate** — invented field names. Decision #131 reaffirmed.
+> 5. **Admin UI stuck on "Loading…"** — root cause: schema additions pasted locally + `db push` ran + `prisma generate` ran + build passed locally + migration ran successfully (46 products in DB), BUT `prisma/schema.prisma` was never `git add`'d. Vercel rebuilt with old schema → `prisma generate` produced client without Supplement model → 500 on any query touching the new models. Symptom invisible because local Prisma client was already correct. Fix: `git add prisma/schema.prisma && git commit && git push`. Decision #143.
+> 6. **Found MORE uncommitted files** — `app/supplements/page.tsx`, `SupplementsLanding.tsx`, `lib/supplements-db.ts`, `lib/supplements-types.ts`, `app/api/supplements/`, `prisma/seed-supplements.ts`. None were ever staged because they were UNTRACKED (brand new files don't show up in `git diff`). Explicit `git add` per file fixed it. Decision #144.
+
+### Decisions
+- **#139** — Supplements catalog migrates from static `lib/supplements-data.ts` to DB-backed (Prisma). Static config remains for UI metadata only (CATEGORY_META, GOAL_META, STACKS slug-list). Triggered by: founder direction "expand + multi-network", which makes static catalog infeasible.
+- **#140** — (Superseded by #145) — Initially: direct partnerships (Nutrabay/HealthKart/MuscleBlaze etc.), MULTIPLE buy buttons per product for price-compare, higher commission per click. Pivoted to single-network in #145 after seeing UI feedback.
+- **#141** — Click tracking is server-side, async, non-blocking. Redirect endpoint responds in <50ms; logging fires-and-forgets to a Prisma write. Logging failure does not block revenue path.
+- **#142** — Server-only modules must be isolated from client-bundled files. A `"use client"` component cannot transitively import anything that pulls Prisma (or any Node-native module: `pg`, `fs`, `dns`, etc.) — Turbopack follows the chain into the client bundle and fails resolution. Pattern: split into a client-safe types/constants file and a `import "server-only"` data-access file. The server-only file re-exports types so server-side imports stay clean.
+- **#143** — Schema changes via `prisma db push` require BOTH committing `prisma/schema.prisma` to git AND deploying. Easy to forget the commit because `db push` already updated the Neon DB — but Vercel re-runs `prisma generate` from `git`'s view of the schema, producing a client that doesn't know the new models. Symptom: 500 errors on any query touching new models, while local dev works fine because local node_modules has the up-to-date client. Always `git add prisma/schema.prisma` after any `db push`. Reaffirms #69 with a new failure mode.
+- **#144** — Always include explicit `git add <file-or-dir>` commands for NEW files in PowerShell drops. Modifying existing tracked files shows up under `git status` "modified" but never auto-stages — and brand-new files don't appear in `git diff` at all. The Phase 18-1 drop went through 6 verify-fix cycles before noticing four entire new files and two modified files were never pushed. Pattern from now on: PowerShell drop → `git status` check → explicit `git add` per file → commit → push.
+
+---
+
+## ═══════════ PHASE 18-2 — ADMIN CRUD + CLICK ANALYTICS ═══════════
+
+> **Jun 14 — PHASE 18-2 SHIPPED + LIVE (after #143/#144 fixes).** Two tabs at `/admin/supplements`: Catalog + Analytics. Catalog tab: search by name/tagline, filter by category, "include inactive" toggle, expandable rows for inline link management. Each row shows linkCount + clickCount in headline. Link manager: add Nutrabay/HealthKart/MuscleBlaze/Amazon/Flipkart/1mg/Wellness/Other affiliate URL with price + MRP (for strikethrough) + notes (e.g. "1kg, 30 servings") + sortOrder. Edit/soft-delete inline (soft preserves click history per #138 pattern).
+
+> **Analytics tab** — range selector 7/14/30/90 days → stat row (Total clicks · Signed-in clicks · Unique users · Top network) + daily clicks bar chart (auto-scaled) + Top networks ranked + Top 15 products by clicks. All from `/api/admin/supplements/clicks?days=N` (groupBy on supplementId + network + day buckets).
+
+> **APIs shipped (5 routes):**
+> - `GET /api/admin/supplements` (list + filter) + `POST` (create supplement)
+> - `GET/PATCH/DELETE /api/admin/supplements/[id]` (per-supplement, full detail with links + 30d clicks-by-network)
+> - `POST /api/admin/supplements/[id]/links` (add link, regex-validated http(s) URL)
+> - `PATCH/DELETE /api/admin/supplements/links/[linkId]` (per-link, soft-delete)
+> - `GET /api/admin/supplements/clicks?days=N` (analytics aggregation)
+
+> **Two surgical edits to extend admin nav:**
+> - `lib/admin-auth.ts` — added `"supplements"` to Surface type + `supplements: ["OWNER", "ADMIN"]` to SURFACE_ROLES
+> - `app/admin/layout.tsx` — added `{ label: "Supplements", href: "/admin/supplements", surface: "supplements" }` to NAV array
+
+> **Error handling regression fix mid-deploy:** initial admin client had no try/catch around fetch — if API returned non-JSON 500/403 the page hung on "Loading…" forever. Patched with try/catch + visible error banner (red box with status + body). Decision worth noting: any data-fetching client component must surface errors, not silently hang.
+
+---
+
+## ═══════════ PHASE 18-3 — VISUAL REDESIGN + SINGLE-NETWORK PIVOT ═══════════
+
+> **Jun 14 — PHASE 18-3 SHIPPED + LIVE.** Triggered by founder feedback after seeing live page: "we dont have price + image on main page also on click it says nutrabay but right now i am not liking this design at all its not even generic". Also: "we are sticking to one network only so lets procceed accordingly". Three failure modes addressed:
+> 1. Cards showed only emoji + name + tagline + priceRange text (no image, no real price, no buy CTA)
+> 2. Modal "Where to buy" was a plain pill that didn't feel like a buy CTA
+> 3. Multi-network compare strategy (#140) added UI complexity without commensurate value when only Nutrabay was approved
+
+> **Card redesign:**
+> - Image hero block (160px tall) — uses `Supplement.imageUrl` if set, falls back to large emoji with `linear-gradient(135deg, accent18, accent05)` background
+> - Category badge as pill overlay (bottom-left of image) with backdrop-blur
+> - Vegan icon circle overlay (bottom-right)
+> - Popular badge (top-right, amber accent)
+> - Content area: name (DM Sans 14/700), tagline (11/400, opacity 0.4), real price row with strikethrough MRP + green "% OFF" badge when discount exists
+> - Full-width lime `Buy on Nutrabay →` button at card bottom — `stopPropagation()` past modal-open click so card body opens detail modal but button goes straight to affiliate URL
+> - Image `onError` fallback to emoji (handles Nutrabay hotlink blocks)
+
+> **Modal redesign:**
+> - Hero section (top, with `linear-gradient(135deg, accent10, transparent 70%)`): 96×96 product image left + name/tagline/category-pill stacked right
+> - BIG lime "Buy on Nutrabay" CTA card directly below hero — price (Syne 22/800) + MRP strikethrough + black "% OFF" badge + notes (pack size)
+> - Educational content (description, benefits, dosage, evidence, warnings, India availability) stays below — preserved verbatim, this is the moat
+> - Old "Estimated Price" + "Where to buy" blocks removed (replaced by integrated hero CTA)
+> - X close button moved to top-right with rgba background pill
+
+> **Admin Product Settings panel** — new section inside expanded product row, appears ABOVE the existing Affiliate Links panel:
+> - Image URL input with 84×84 live preview thumbnail (image hides on `onError`)
+> - Brand name input (optional, e.g. "Optimum Nutrition")
+> - Featured toggle (boolean)
+> - Save button — PATCHes `/api/admin/supplements/[id]` with `{ imageUrl, brandName, isFeatured }`
+
+> **`lib/supplements-db.ts` updated to expose `imageUrl`, `brandName`, `isFeatured` in the DbSupplement mapping** so cards/modal can use them.
+
+> **TypeScript build break mid-deploy** — local file already had `imageUrl/brandName/isFeatured` from an earlier 18-3 attempt at lines 113–115 (near `links` field); my new patch added them again at lines 74–76. Duplicate object keys → `tsc` fails: `An object literal cannot have multiple properties with the same name`. Fixed by removing my duplicates. Build then passed.
+
+> **PHASE 18 STATUS: ✅ INFRASTRUCTURE COMPLETE. 🔄 Catalog population in progress (founder manually adding Nutrabay affiliate URLs + image URLs via admin — 0/46 products live with links at session end).**
+
+### Decisions
+- **#145** — Single-network commitment for launch v1. Direct Nutrabay affiliate at 10% commission (founder's referral code: `pranit1944`, sample URL format: `https://nutrabay.com/brand/nutrabay?ref=pranit1944&utm_campaign=NB&utm_medium=GoAffPro&utm_source=affiliate&utm_term=CPS`). Schema still supports multi-network (could re-enable Amazon/HealthKart later) but the public UI shows ONE primary CTA per product ("Buy on Nutrabay"), not a list of merchants. Decision reflects (a) max commission rate vs Cuelinks aggregator's 8% on Nutrabay, (b) cleaner UX, (c) simpler operational overhead during launch ramp. Supersedes #140.
+- **#146** — Cards now expose a direct buy CTA that stops modal-propagation. Standard product-listing UX: click the card body → opens detail modal; click the buy button → goes straight to purchase via click-tracking endpoint. Both paths log through the same `/api/supplements/click/[linkId]`.
+
+### Affiliate Strategy Locked
+- **Nutrabay direct**: https://nutrabay.com/affiliates — 10% commission on Nutrabay-brand products, ref code `pranit1944`. Founder approved + active.
+- **Strategy**: catalog-stays-multi-network-in-schema, UI shows Nutrabay only. Add other networks later only if Nutrabay revenue plateaus.
+- **Pending founder action**: paste actual product affiliate URLs + image URLs for priority 8 products (whey-protein, creatine-monohydrate, vitamin-d3-k2, omega-3-fish-oil, whey-isolate, magnesium-glycinate, multivitamin, ashwagandha) via admin Settings/Links panels. Each adds ~2-3 min once the workflow is established.
+- **Affiliate disclosure footer** — required by Nutrabay terms + Google SEO compliance. Not yet added to `/supplements` page (carryover for Phase 19 or quick fix).
+
+---
+
+## ═══════════ TRACKER UPDATE PROTOCOL — JUN 14 EOD NOTE ═══════════
+
+> Tracker at upload time: 2307 lines (started Jun 14 at ~2210). Appended: Phase 17C-2 verification + full Phase 18 (sub-phases 1, 2, 3) + Decisions #139–#146 + the painful debugging arcs that drove #142/#143/#144. Total tracker now ~2470 lines.
+> **Additions-only enforced.** No prior lines edited.
+
+---
+
+## PROGRESS SUMMARY (Jun 14, 2026 — EOD)
+
+> Previous Jun 14 morning snapshot preserved above; this is EOD figures.
+
+### Jun 14 EOD — current state
+| Category | Done | Total | % |
+|----------|------|-------|---|
+| Phases 0–11 | ✅ | ✅ | 100% |
+| Phase 12 (AI Trainer) | scope locked, PARKED | — | deferred |
+| Phase 13 (Digital Plans) | build-complete, not yet verified-closed | ✅ | 95% |
+| Phase 14 (Blog/FAQ/Testimonials) | ✅ | ✅ | 100% |
+| Phase 15 (Admin Command Center) | ✅ | ✅ | 100% |
+| Phase 16 (Notifications — Email) | ✅ | ✅ | 100% (WhatsApp deferred post-launch) |
+| Phase 17 (Partner/Referral) | ✅ ALL — 17A / 17B / 17C-1 / 17C-2 | ✅ | 100% |
+| Phase 18 (Supplements + Affiliate) | ✅ 18-1 / ✅ 18-2 / ✅ 18-3 — INFRASTRUCTURE 100% | infrastructure done; catalog population 0/46 | 100% code, 0% populated |
+| Meal Plans in DB | 119 | 119 | 100% |
+| Recipe Seeds (DB verified) | 1 | 119 | 1% (parallel track) |
+| Active Subscribers | 10 (weight-loss-veg) | — | live |
+| Decisions logged | 146 | — | (next = #147) |
+
+### Next phase — PHASE 19 (PROPOSED) — Plans Browse Experience + Tier Pricing Properly
+
+Triggered by founder feedback after Phase 18 wrapped: `/plans` page is the actual launch blocker, not supplements. Reasons:
+1. **Premium + Luxury tiers are hardcoded `LockedTier` components** (lines 851–873 of `app/plans/page.tsx`) — both show a waitlist modal instead of a buy button. These should be open per #ongoing strategic call.
+2. **Zero connection to the 119 MealPlan rows in DB** — page shows only Standard/Premium/Luxury tier names, never plan names. Customer cannot find a plan tailored to their goal.
+3. **Hardcoded STANDARD/PREMIUM/LUXURY pricing objects in TS** — ignores `PlanPrice` table which already has per-plan-per-tier pricing.
+4. **No coupon input on browse experience** — coupons exist in `/api/coupon/validate` but invisible until checkout.
+5. **No filter/search across 119 plans** (Weight Loss, PCOS, Diabetic, Cricket Recovery, Senior Care, etc.).
+
+Phase 19 split proposed:
+- **19-1** (next session) — Browse experience + tier unlock + coupon banner: server-rendered `/plans` page fetching all 119 active MealPlan rows from DB; group cards by category (Weight Loss, Muscle Gain, Medical, Female, Sports, Senior, Recovery); filter chips (diet + goal); each card shows emoji + name + tagline + "Starting at ₹X" (cheapest tier × cheapest duration from PlanPrice); active coupon banner pulled from DB; retire the hardcoded LockedTier section.
+- **19-2** (session after) — Plan detail + tier selector + checkout integration: rebuild `/plans/[slug]` with Standard/Premium/Luxury cards using real PlanPrice data; duration + meal-frequency selector with live price; coupon code input with preview discount; "Add to plan" → checkout with full selection.
+
+Open questions to resolve before 19-1 build:
+- Does MealPlan have a `category`/`goalType` field for grouping, or must I derive from slug patterns?
+- Tier comparison UX — side-by-side or toggle?
+- Does PlanPrice have coverage for Standard × Premium × Luxury for all 119 plans, or is Premium/Luxury sparse (since kitchen runs Standard only currently)?
+- Current state of `/plans/[slug]` — full rebuild needed or surgical additions?
+
+**Open items rolling forward (refreshed Jun 14 EOD):**
+- `cycleLengthDays` 30-vs-60 moat decision (still open)
+- Confirm 10 repointed subscribers are real vs test
+- Bulk-add remaining recipe photos
+- Phase 13 end-to-end live purchase verification (still pending real ₹ transaction)
+- Vercel Blob PDF cache, brand fonts, CA/GST, final pricing (Phase 13 carryovers)
+- WAHA setup on Oracle Cloud Free Tier (post-launch, unblocks WhatsApp side of Phase 16)
+- Resend domain verification → switch from `onboarding@resend.dev` to `hello@fitfuel.in`
+- Per-user notification preferences UI on `/dashboard/settings`
+- Phase 18 catalog population — paste affiliate URLs + image URLs for the 8 priority Nutrabay products (then expand to 46)
+- Affiliate disclosure footer on `/supplements`
+- **PHASE 19 — TOP PRIORITY, REVENUE BLOCKER (existing /plans page is the actual customer-facing launch surface and is broken UX)**
+---
+
+## ═══════════ PHASE 19A — PLANS CATALOG + TIER PRICING (BUILT) ═══════════
+### Session: Jun 15, 2026 · additions-only · Decisions #147–#154
+
+> Phase 19 (proposed Jun 14 EOD) split executed. This session delivered **19A** = catalog rebuild + tier-aware pricing across `/plans` and `/plans/[slug]`, backed by real `PlanPrice` data. 19B/19C (Premium/Luxury menu seeding) deferred — see open items.
+
+### Pre-build investigation (the four open questions, answered)
+1. **Categorization field?** — `MealPlan.category` (enum `PlanCategory`: STANDARD / LIFESTYLE_MEDICAL / SPORTS / CORPORATE / DIGITAL) **and** `MealPlan.subCategory` (String) both exist and are indexed. No slug-pattern derivation needed. Top-level group by `category`, sub-group by `subCategory`.
+2. **Tier comparison UX?** — Resolved to: **side-by-side 3 columns on desktop, stacked on mobile** (Premium/Luxury → waitlist, not buy).
+3. **PlanPrice coverage?** — Coverage SQL run twice (first via `productId` join = misleading 0; corrected via `mealPlanId`). **Actual DB state: 126 MealPlans** (not 119 — tracker count was stale), all `tier=STANDARD`: 34 STANDARD-cat + 70 LIFESTYLE_MEDICAL + 22 SPORTS. **Zero had `productId` set.** Physical `PlanPrice` rows existed via `mealPlanId` but were unreachable from the productId-based query. Backfilled cleanly (below).
+4. **`/plans/[slug]` state?** — Server page solid for single-tier display; needed PlanPrice fetch added + client pricing section rebuilt. **`/plans` page** was 992-line `"use client"` with hardcoded STANDARD/PREMIUM/LUXURY matrices, `LockedTier` waitlist gates, and ZERO links to the 126 plans — full rebuild.
+
+### Schema changes (db push, additive)
+- **`PlanPrice` `@@unique`** extended: `[mealPlanId, duration, mealsPerDay, bundle]` → `[mealPlanId, duration, mealsPerDay, bundle, isDigital]`. Root cause: digital Phase-13 STARTER rows (`isDigital:true`) collided with new physical STARTER rows (`isDigital:false`) on the same plan/duration/meals tuple. Dupe-check ran first (0 dupes on new key), then `db push --accept-data-loss` (no actual loss — pure constraint add) + `prisma generate`.
+- **New model `WaitlistSignup`**: `{ id, email, tier (String "PREMIUM"|"LUXURY"), source, createdAt, updatedAt }`, `@@unique([email, tier])`, `@@index([tier])`, `@@map("waitlist_signups")`. Captures Premium/Luxury demand before those tiers are built.
+
+### Data backfill — physical PlanPrice rows
+- Script `prisma/seed-plan-prices.ts` — seeded **2,646 physical PlanPrice rows** (21 per plan × 126 plans). Each plan gets only its own `dietaryVariant`'s slice of the matrix (Jain & Vegan map to VEGETARIAN pricing, matching legacy treatment).
+- Matrix mirrors the authoritative `prisma/seed.ts` `PRICE_MATRIX` exactly (incl. nonveg `monthly_ex` ₹7600 override). GST stored as 5%.
+- Verified post-seed: STANDARD-cat 714 rows / LIFESTYLE_MEDICAL 1470 / SPORTS 462 = 2,646.
+- Legacy `productId`-linked PlanPrice rows now redundant for the 126 MealPlan variants (the `mealPlanId` link added in Phase 9 is now the live path).
+
+### New shared lib — `lib/plan-tier-pricing.ts`
+Single source of truth for the whole matrix:
+- `TIERS` (Standard available=true / Premium / Luxury available=false, each with accent + tagline)
+- `DURATIONS` (7: TRIAL_DAY, WEEKLY, BI_WEEKLY, MONTHLY_EXCL_WEEKENDS, ONE_MONTH [popular], TWO_MONTH, THREE_MONTH — with day counts + legacy checkout codes)
+- `MEALS` (3: BREAKFAST_LUNCH, SNACK_DINNER, ALL_FOUR — with legacy codes)
+- `DIETS` (5: VEG, EGG, NON_VEG, JAIN, VEGAN — Jain first-class, with checkout legacy codes + dot colors)
+- `TIER_MULTIPLIER` — **Premium = Standard × 1.25, Luxury = Standard × 1.5** (matches the vetted hardcoded matrices from the original /plans page). Premium/Luxury prices are ESTIMATES until those MealPlan rows are seeded.
+- Helpers: `getStandardPrice`, `getTierPrice`, `dietToLegacy`, `dietToLabel`, `buildCheckoutUrl`.
+- **Multiplier lives in ONE place** (line ~84) for easy retune when real Premium/Luxury pricing is set.
+
+### Files shipped
+- `lib/plan-tier-pricing.ts` — NEW shared pricing module (~127 lines).
+- `app/plans/page.tsx` — REWRITTEN as server component. Fetches all 126 MealPlans + full physical PlanPrice rows, groups prices by `mealPlanId`, passes `pricesByPlan` to client. (was 992-line client w/ hardcoded matrices.)
+- `app/plans/PlansCatalog.tsx` — NEW client component. **Configurator UX**: Step 1 diet (5) → Step 2 duration (all 7 visible) → Step 3 meals (3) → live 3-tier pricing matrix for the selected combo → browseable grid of all plans matching the selected diet, grouped by category, each card priced for the Step-2×Step-3 combo. Search + category filter. Waitlist modal for Premium/Luxury.
+- `app/plans/[slug]/page.tsx` — added physical PlanPrice fetch (`where: { mealPlanId, isDigital:false, isActive:true }`), passes `prices` to client.
+- `app/plans/[slug]/PlanDetailClient.tsx` — Section 08 (Pricing) rebuilt: meal-combo selector + 3-column tier comparison (Standard buyable → checkout, Premium/Luxury → waitlist modal), driven by real PlanPrice rows. Imports metadata from the new lib (removed local duplicate constants).
+- `app/api/waitlist/route.ts` — NEW. POST `{email, tier}`, email validation + tier whitelist (PREMIUM/LUXURY only), upsert on `(email, tier)`.
+
+### Design iteration arc (logged so it isn't repeated)
+- v1 (rejected): generic card-grid catalog — collapsed meal variations into one "from ₹X" anchor, hid Premium/Luxury entirely. **Wrong** — destroyed the configurator UX and the visible duration/variation/tier matrix the business runs on.
+- v2/v3 (rejected): restored the configurator + full matrix, but over-designed — Syne + Space Mono + Barlow Condensed (3 font families), numbered step-circles, mono eyebrow labels, 3–4px brutalist corners, glow shadows. Read as a foreign site vs the rest of FitFuel.
+- **v4 (shipped)**: pulled `app/page.tsx` + `globals.css` FIRST, then matched the house design system — Inter only, `--bg-card`/`--border` tokens, 12–16px rounded corners, `.heading-*` + `.btn-secondary` utility classes, lime-as-accent restraint. Dropped 676→524 lines. Configurator function identical; skin quiet and on-brand.
+- **Process lesson**: read the existing homepage + globals.css BEFORE designing a new page, not after. (Decision #154.)
+
+### Decisions
+- **#147** — Premium/Luxury are GENUINELY DIFFERENT MENUS per tier (founder-confirmed), not the same food with services bundled. Therefore `tier` correctly stays on `MealPlan`; Premium/Luxury require their own MealPlan rows + recipes (deferred to 19B/19C).
+- **#148** — Every one of the 126 plans surfaces all three tiers up-front. Premium/Luxury show estimated price + waitlist CTA. Rationale: the whole point of Phase 19 was to FULLY EXPAND the tier offering, not hide it; waitlists capture demand signal that tells us which subCategories to seed Premium/Luxury for first.
+- **#149** — Premium = Standard × 1.25, Luxury = Standard × 1.5 (mirrors the founder-vetted hardcoded matrices). Single multiplier constant; retune when real Premium/Luxury pricing is finalized.
+- **#150** — `PlanPrice` unique key must include `isDigital` so physical + digital rows coexist on the same plan/duration/meals/bundle tuple.
+- **#151** — Physical pricing links via `mealPlanId` (Phase 9 path), NOT the legacy `productId` → MealPlanProduct path. Backfill writes mealPlanId directly.
+- **#152** — `/plans` is a step configurator (diet → duration → meals → tier matrix), NOT a plain card grid. All 7 durations and all 3 meal variations must be visible/selectable — this is the core purchase UX.
+- **#153** — Catalog shows all 126 plans regardless of `isActive`; pricing/checkout wired for Standard. (No isActive gating on visibility at this stage.)
+- **#154** — When building/redesigning any page, read the existing site's homepage + `globals.css` design tokens FIRST and match them; do not invent a new visual language.
+
+### Verified this session
+- Coverage SQL (corrected mealPlanId join): 126 plans, 2,646 physical price rows, full per-category coverage.
+- Dupe-check on new unique key: 0 conflicts before push.
+- All shipped files esbuild parse-checked clean before handoff (per standing rule).
+
+### NOT yet verified (carry forward)
+- Live visual smoke test of v4 catalog on Vercel (founder to confirm tone is right post-deploy).
+- End-to-end Standard checkout from `/plans/[slug]` Section 08 (URL builder verified by construction; no real ₹ transaction yet).
+- Waitlist write path (`/api/waitlist` → `waitlist_signups` table) — needs one live submit to confirm row lands.
+
+### Phase 19B / 19C — deferred (blocked on recipe seeding)
+- **19B** — Seed Premium MealPlan rows + recipes for top ~10–15 subCategories (weight_loss, muscle_gain, PCOS, diabetic, athletic). Add Premium to live checkout. Retune #149 multiplier with real pricing.
+- **19C** — Luxury MealPlan rows + recipes for top ~5 subCategories. (AI trainer / concierge tooling — Phase 12 — needed before Luxury is sellable anyway.)
+- Sibling-tier lookup on `/plans/[slug]` once Premium/Luxury rows exist (compare real menus side-by-side, not estimates).
+- `/checkout` does not yet capture `planSlug` → Order attribution (param is passed but unused server-side); fix when extending the Order model.
+
+**Open items rolling forward (refreshed Jun 15):**
+- All prior Jun 14 EOD open items still stand (cycleLengthDays 30-vs-60, Phase 13 live purchase, Resend domain, Phase 18 catalog population, WAHA, etc.)
+- Phase 19A live smoke test (catalog tone, Standard checkout, waitlist write) — founder verifying post-deploy
+- Phase 19B/19C recipe seeding for Premium/Luxury (multi-month parallel track)
+- Retune Premium/Luxury pricing multiplier (#149) when real numbers set
+---
+
+## ═══════════ COMPLETE AUDIT + WORKSTREAM RESTRUCTURE ═══════════
+### Session: Jun 16–17, 2026 · additions-only · Decisions #155–#162
+### Source of truth: `FITFUEL-COMPLETE-AUDIT.md` (supersedes the 4 partial audit files)
+
+> Why this exists: four earlier partial audits (CODEBASE / DEEP / HEALTH-OS / SOURCE-OF-TRUTH) each covered only some of {vision, security, design, code} and never at equal depth — design was essentially unaudited beyond "fonts are wrong," and security never covered input-validation / rate-limiting / uploads. This session produced ONE consolidated audit covering all four dimensions, verified against actual source on `main`, and replaced phase-number chaos with permanent workstreams.
+
+### PART 1 — VISION: does the health-OS loop close? (7 of 16 links)
+| Loop link | Closes? | ID |
+|---|---|---|
+| Onboarding → TDEE | ✅ | |
+| Onboarding → meal plan assigned | ⚠️ via purchase only | |
+| Onboarding → exercise program assigned | 🔴 | LOOP-2 |
+| Purchase → correct plan activated | 🔴 hardcoded weight-loss-veg | LOOP-3 |
+| Eat → MealLog | ✅ | |
+| MealLog → FoodEntry (one ledger) | 🔴 | LOOP-4 |
+| Workout → session → kcal | ✅ | |
+| Plan-linked workout | 🔴 1/126 schedules | LOOP-5 |
+| Net-calorie engine | ✅ (split-ledger taint) | |
+| Weigh-in → trend | ✅ (verify BLE) | |
+| Plateau → recalibrate | 🔴 no engine | LOOP-6 |
+| Consistency score | 🔴 workout component broken (dl LOOP-5) | |
+| Weekly digest | ⚠️ verify it SENDS | |
+| Supplements → personalised stack | 🔴 catalog only | LOOP-7 |
+| AI trainer | ⏸️ parked (Phase 12) | |
+| Plan progression | 🔴 no engine | LOOP-8 |
+
+**The loop is the product, and it's half-wired. Every red is connective tissue, not a missing platform.**
+
+### PART 2 — SECURITY
+**✅ Verified SECURE (do not touch):** PayU reverse-hash SHA512 (rejects spoofed success); payment idempotency (CONFIRMED early-return prevents double-charge/double-activation); credit is server-authoritative (DB balance, commit only post-CONFIRMED); admin RBAC on every page (`requireSurface`) AND every route method (`requireApiRole`) across ~9 admin routes; upload endpoint restricts `allowedContentTypes` to image/* only; no server secrets in any `"use client"` file.
+
+**🔴 FINDINGS:**
+- **SEC-1 · NO rate limiting anywhere.** Zero — not login, waitlist, checkout, COD create, credit-preview. `@upstash/ratelimit` not installed though Upstash/QStash already a dep. Surface: credential stuffing, waitlist/contact spam, COD flooding, credit enumeration. **Launch-blocking.**
+- **SEC-2 · No input validation layer.** No zod/yup/valibot. 14 routes read `req.json()` and use fields raw → type-confusion, oversized-payload DoS. **Launch-blocking.**
+- **SEC-3 · Waitlist route is an open spam target** (Claude's own Phase 19A gap) — no captcha, no rate limit.
+- **SEC-4 · Destructive guest-merge** hard-deletes Users with incomplete FK migration.
+- **SEC-5 · `allowDangerousEmailAccountLinking`** set — tie to OTP-or-drop decision (#156).
+- **SEC-6 · No `middleware.ts`** — no edge-level auth/throttle.
+- **SEC-7/8 · Cron-auth + prod-env verification** not confirmed.
+
+### PART 3 — DESIGN (first real design audit, not "fonts are wrong")
+- **DES-1** — design system split across 11 pages (inconsistent buttons/cards/inputs/modals).
+- **DES-2** — accessibility effectively absent (only ~4 aria attributes site-wide; contrast/focus/keyboard/alt unaudited). **Net-new gap (Decision #160).**
+- **DES-3** — no shared breakpoints; per-page mobile behaviour unaudited (only the 19A catalog was checked).
+- **DES-4** — no branded 404 / error / loading / empty states.
+- **DES-5** — no sitemap/robots; homepage hardcoded with wrong stats; `/supplements` not in nav; some 404 slugs; placeholder contact.
+- **DES-6** — no extracted shared component primitives.
+- **DES-7** — no photography strategy. **Net-new gap (Decision #160).**
+- **DES-8** — navbar / README / dependency cleanup owed.
+
+### PART 4 — CODE / TRACKER RECONCILIATION
+- Phase-number drift: "Phase 17/18/19" meant different things across original / definitive / session trackers.
+- Two tracker lies corrected: **Phases 15 & 16 were marked Pending but are fully BUILT** (Decision #162); a silent OTP scope-drop was never logged (#156).
+- First feature upgrade shipped this session: **`lib/workout-calories.ts`** — MET engine (`MET × 3.5 × bodyWeightKg / 200 × durationMins`) replacing the `durationMins×5 + sets×3` heuristic. *(NOTE: see Jun 21 reconciliation — this file was never committed.)*
+
+### PART 5/6 — THE BUILD SEQUENCE (permanent workstreams; replaces phase-number chaos)
+- **WS-1 Close the Loop:** (1) correct-plan-on-order [LOOP-3] (2) unify ledger MealLog→FoodEntry [LOOP-4] (3) seed all exercise schedules + assign at onboarding [LOOP-5/2, un-breaks consistency score] + wire `lib/workout-calories.ts` into finish route.
+- **WS-2 Adaptive Intelligence:** recalibration engine [LOOP-6] · personalised supplement stack [LOOP-7] · plan progression [LOOP-8].
+- **WS-3 Security Hardening:** rate limiting [SEC-1] · zod validation [SEC-2] · waitlist captcha/limit [SEC-3] · safe guest-merge [SEC-4] · middleware [SEC-6] · cron-auth + prod-env [SEC-7/8] · email-linking/OTP decision [SEC-5/#156].
+- **WS-4 Discoverability + Design Correctness:** branded 404/error/loading + empty states [DES-4] · a11y pass [DES-2] · supplements→nav + fix 404 slugs + real contact + sitemap/robots + allergen-at-checkout + server-render homepage w/ real data [DES-5].
+- **WS-5 Design Overhaul (last):** unify 11 pages [DES-1] · extract primitives [DES-6] · shared breakpoints + per-page mobile [DES-3] · photography [DES-7] · navbar+README+dep cleanup [DES-8].
+- **WS-6 AI Trainer + Chatbot (ex-Phase 12, un-parked):** last — fed by a now-closed loop (precondition of Decision #85).
+
+### Decisions
+- **#155** — Replace phase-number tracking with workstreams WS-1…WS-6; build top-down.
+- **#156** — OTP-or-drop decision pending; `allowDangerousEmailAccountLinking` must be resolved alongside it [SEC-5].
+- **#157** — `FITFUEL-COMPLETE-AUDIT.md` covers all four dimensions at equal depth; the 4 partial audits are superseded.
+- **#158** — Build WS-1→WS-6 top-down. **The plate must be correct (LOOP-3) before anything downstream is trustworthy.**
+- **#159** — The complete audit is the single source of truth for outstanding work; archive/delete the four partials.
+- **#160** — DES-2 (accessibility) and DES-7 (photography) are net-new gaps never previously tracked.
+- **#161** — SEC-1 (zero rate limiting) and SEC-2 (zero input validation) are systemic, never-tracked, launch-blocking holes.
+- **#162** — Correct the phase table: Phases 15 & 16 are DONE, not Pending.
+
+### Open items rolling forward (refreshed Jun 16–17):
+- WS-1 is the immediate frontier — start with correct-plan-on-order (LOOP-3) + wire workout-calories.ts.
+- All prior open items stand (cycleLengthDays 30-vs-60, Phase 13 live purchase, Resend domain → hello@fitfuel.in, Phase 18 catalog population, recipe seeding 1/126).
+- OTP-or-drop decision pending (#156).
+
+---
+
+## ═══════════ GITHUB RECONCILIATION (latest `main` crawl) ═══════════
+### Session: Jun 21, 2026 · additions-only · Decisions #163–#166
+### Method: fresh tarball of `pranitborkar98/fitfuel@main`, read actual source. Reconciles audit (memory-only) against committed code.
+
+> **Headline: the SCHEMA is ahead of the audit; the ROUTES are behind it.** Inter-session schema work already landed the models WS-1 needs — so WS-1 is now a *wiring* job, not a *modelling* job. Three reds remain live in the route layer.
+
+### What's already DONE in the repo (audit was stale on these)
+- **`UserActivePlan` model is live and canonical** — `{ mealPlanId, orderId, currentDay (auto-inc), status, calorie/protein/carb/fatTarget, duration, mealsPerDay, deliveryWindow, isDigital, bundle, skipDates[] }`, `@@map("user_active_plans")`. Both order routes already CREATE a `UserActivePlan` (not the legacy `ActivePlan`). Good.
+- **`FoodEntry.mealLogId String? @unique` + `mealLog MealLog?`** relation present. **`MealLog.foodEntry FoodEntry?`** back-reference present. The one-ledger link is *modelled* — just not *populated*.
+- **`Order.userActivePlans UserActivePlan[]`** relation present (order→activation link).
+- **Onboarding route** already carries a "FIX 1" guard against silently falling back to weight-loss-veg.
+
+### What is STILL BROKEN at the route layer (WS-1 targets, verified file:line)
+- **LOOP-3 🔴 — `app/api/orders/cod/route.ts:137` and `app/api/payments/payu/success/route.ts:97,148`** look up the plan by hardcoded slug `weight-loss-veg`, ignoring the purchase. **Root cause: the order request body destructures only `{ ...diet, dur, meal, price, deliveryWindow, useCredit }` — there is NO `planSlug`/`mealPlanId`.** The route physically cannot know which of the 126 plans was bought. Fix spans: (a) checkout frontend must send `planSlug`; (b) both order routes resolve `mealPlan` by that slug, with a *diet-aware* fallback (never a blind weight-loss-veg). The 19A note "/checkout passes planSlug but it's unused server-side" is the same defect.
+- **LOOP-4 🔴 — `app/api/user/active-plan/meals/log/route.ts`** creates `MealLog` only (line 81); never creates the `FoodEntry`. Ledger stays split. Fix: after MealLog insert, create a linked `FoodEntry` from the recipe macros (`caloriesPerServing/protein/carbs/fat × servingMultiplier`, scaled by actual/planned grams) with `mealLogId` set. **Blocker to resolve first:** `FoodEntry` requires `foodItemId` + `mealTypeId` FKs — recipes have neither. Decide the bridge (synthetic per-recipe FoodItem, or a recipe path on FoodEntry) before writing the route.
+- **workout-calories engine 🔴 — `lib/workout-calories.ts` is NOT in the repo.** Shipped Jun 16–17, never `git add`-ed (the known untracked-file trap). `app/api/user/active-plan/workout/complete/route.ts:101` still writes `caloriesBurned: today.estimatedCalories` (precomputed schedule field), not a bodyweight-aware MET calc. Fix: recreate the lib, look up latest body-metric weight, recompute on finish.
+- **LOOP-5 🔴** — only the weight-loss exercise schedule is seeded (`prisma/seed-exercise-schedule-weight-loss.ts`); 1 of 126×3. Consistency score's workout component stays broken until seeded + assigned at onboarding [LOOP-2].
+
+### Tracker state observed
+- Uploaded tracker (2560 lines) is NEWEST (has 18 + 19A). Committed tracker (2307 lines) stops at 17C-2 era. **Neither contains the Jun 16–17 audit session** — it existed only in memory until this consolidation. No `*AUDIT*` files are committed to the repo.
+
+### Decisions
+- **#163** — WS-1 is reclassified from "build models" to "wire existing schema." `UserActivePlan` + `FoodEntry.mealLogId` already exist; do not re-model them.
+- **#164** — LOOP-3 fix is two-sided: checkout must emit `planSlug`; order routes resolve it. The hardcoded `weight-loss-veg` fallback is replaced by a diet-aware lookup, never a blind default.
+- **#165** — LOOP-4 requires a FoodItem/MealType bridge decision (recipe → FoodEntry) BEFORE coding the log route — `foodItemId`/`mealTypeId` are non-null FKs.
+- **#166** — Re-commit `lib/workout-calories.ts` and `git add` it explicitly; verify presence on `main` before wiring (untracked-file trap already bit once).
+
+### Open items rolling forward (refreshed Jun 21):
+- **Immediate frontier: LOOP-3** — read `/checkout` frontend to see how plan params flow, then ship checkout + both order routes together.
+- LOOP-4 blocked on #165 FoodItem/MealType bridge decision.
+- Re-create + commit `lib/workout-calories.ts` (#166), then wire into `workout/complete`.
+- Seed remaining 125×3 exercise schedules + assign at onboarding (LOOP-5/2).
+- This session's audit + reconciliation should be committed as `FITFUEL-COMPLETE-AUDIT.md` to the repo (currently uncommitted anywhere).
+- All prior open items stand.
+
+---
+
+## ═══════════ WS-1 IMPLEMENTATION + HEALTH-OS STRATEGY LOCK ═══════════
+### Session: Jun 21, 2026 (cont.) · additions-only · Decisions #167–#179
+### Reference docs added: `FITFUEL-PHASE-8-EXERCISE-SYSTEM-ANALYSIS.md`, `FITFUEL-HEALTH-OS-AICOACH-EXPANSION.md`
+
+### PART A — SHIPPED THIS SESSION (verified on `main`, esbuild-checked, no db push)
+
+**LOOP-3 — correct plan on order ✅ SHIPPED** (resolves the hardcoded `weight-loss-veg`)
+- New `lib/resolve-purchased-plan.ts` — diet-aware resolver (planSlug → exact MealPlan → diet-variant fallback → any active; never blind default). DietVariant map veg/egg/nonveg/jain/vegan → VEG/EGG/NON_VEG/JAIN/VEGAN (schema-verified, distinct from OrderItem DietType enum).
+- `planSlug` now flows end-to-end: `buildCheckoutUrl` (already emitted it) → `/checkout` reads param → COD + PayU-init POST bodies → stashed in `Order.notes` JSON → COD resolves directly, PayU success reads `meta.planSlug`. Option A carry-through (notes JSON, no schema change).
+- Files: `lib/resolve-purchased-plan.ts` (new), `app/api/orders/cod/route.ts`, `app/api/payments/payu/route.ts`, `app/api/payments/payu/success/route.ts`, `app/checkout/page.tsx`. PayU success notification de-hardcoded too.
+
+**Plan-detail CTA dead-end ✅ FIXED** (user-reported regression)
+- `/plans/[slug]` hero + bottom "Start your plan" CTAs pointed to `/onboarding`; for already-onboarded signed-in users `onboarding/page.tsx` redirects to `/dashboard` → purchase dead-end. Repointed both to `#pricing` (Section 08 buy box → `/checkout?planSlug=…`). File: `app/plans/[slug]/PlanDetailClient.tsx`.
+- Also observed: anonymous `/plans` fetch returned a STALE pre-19A page (login→/login, no Digital Plans, "Coming Phase 8"); source has `force-dynamic` → likely CDN/edge cache or production alias on an older build. **OPEN: verify Vercel production alias = latest commit; purge cache.**
+
+**LOOP-4 — unified calorie ledger ✅ SHIPPED** (resolves Decision #165)
+- `meals/log/route.ts`: logging a plan meal now also creates a linked `FoodEntry` (mealLogId set) so it appears in the nutrition diary. Bridges: MealType find-or-create by seeded name (BREAKFAST/LUNCH/DINNER→Breakfast/Lunch/Dinner, **SNACK→"Snacks"** plural); FoodItem = synthetic per-recipe global item (category `PLAN_RECIPE`, per100 from recipe) — **Option A**. MealLog+FoodEntry created atomically in `$transaction`.
+- `lib/net-calories.ts`: `caloriesIn = plan meals (MealLog, gram-scaled grams/serving) + manual foods (FoodEntry where mealLogId IS NULL)`. Mirrors excluded → no double-count. Now consistent with `lib/progress.ts` (which already used this model) so dashboard ring and trend chart agree.
+
+**Workout calorie engine ✅ SHIPPED** (resolves Decision #166)
+- `lib/workout-calories.ts` (recreated — was never committed): MET engine `calories = MET × 3.5 × kg / 200 × min`, summed per set. MET by Exercise.category (strength 5.0; powerlifting/oly/strongman/plyo 6.0; cardio 7.0; stretching 2.5; default 4.0). Bodyweight = latest BodyMetric.weightKg → UserProfile.weightKg → 70. Explicit durationMins scales blended intensity to real clock time.
+- Wired BOTH write paths: plan-finish (`workout/complete`) computes from prescription (was static `today.estimatedCalories`, kept as fallback); freeform (`workout/sessions/[id]` PATCH) now **server-authoritative** — recomputes from logged sets, overrides client-sent caloriesBurned (closed a client-trust integrity hole). `workout/burned` unchanged (just sums).
+- Sanity: 70kg, 5ex×3×10, 45min strength → ~276 kcal (realistic).
+
+**WS-1 status:** LOOP-3 ✅ · LOOP-4 ✅ · workout engine ✅ · **remaining: LOOP-5/2** (only 1 of 126×3 schedules seeded → schedule generator, see Phase 8A).
+
+### PART B — PHASE 8: EXERCISE SYSTEM (analysis locked → `FITFUEL-PHASE-8-EXERCISE-SYSTEM-ANALYSIS.md`)
+Current state = a *dictionary*, not a *system*: 873 free-exercise-db rows, **66% strength (581), only 14 cardio**, ZERO HIIT/calisthenics-as-progressions/sport; form = 2 static JPGs/exercise; schedule model hard-wired to sets×reps (can't express intervals/circuits); 1/378 schedules seeded; no recommendation/progression.
+- **8A System foundation:** add `modality`/`met`/progression to Exercise; **protocol engine** (straight/superset/circuit/HIIT/Tabata/EMOM/AMRAP); **schedule generator** to seed all 126×3 (closes LOOP-5/2); backfill cardio/HIIT/calisthenics/sport/mobility content.
+- **8B Intelligence:** recommendation at onboarding (LOOP-2) + progression/overload (LOOP-8).
+- **8C Media:** licensed pre-rendered 3D clips for core (cheap/broad), optional interactive `react-three-fiber` glTF viewer for premium core; library/player UI redesign.
+- **8D Form analysis (moat):** MediaPipe BlazePose in-browser, on-device — rep counting + joint-angle form scoring; premium; feeds loop; merges with Phase 12.
+
+### PART C — HEALTH-OS / AI COACH EXPANSION (locked → `FITFUEL-HEALTH-OS-AICOACH-EXPANSION.md`)
+Frame: brain (AI Coach) before senses (new domains). Coach = independent + proactive (Sense→Summarise→Reason→Act), NOT chatbot-first. Act layer emits structured actions back into the system (closes LOOP-6/7/8). MI framework, RAG, memory, clinical guardrails. Chatbot = a later reactive surface of the same brain.
+- **Data-source reality:** web app CANNOT read HealthKit/Health Connect (native SDKs); Google Fit REST dies end-2026. → adopt a **unified wearable aggregator (evaluate Terra first)** for VERIFIED sleep/HR/HRV/CGM/cycle; manual = fallback. Verified streams = on-moat (same principle as owning the plate).
+- **New domains ranked by moat:** (1) medical condition mgmt — highest (CGM vs verified meals for diabetes; cycle for PCOS; clinician export; already implied by catalog) → tracking + export only, firm "not medical advice"; (2) sleep & recovery — verified, feeds recalibration; (3) habits/routines — consistency engine generalised, cheap/sticky; (4) skincare — LIGHT, "beauty from within" on existing skin/hair plans, not a flagship.
+- **No core redesign.** Two principled refactors only: `Routine` first-class abstraction (every domain one shape) + domain-pluggable **Health Score** (generalises consistency-score). Loop generalises; extend around the working heart.
+
+### Decisions (#167–#179)
+- **#167** — LOOP-3 shipped: resolvePurchasedPlan + planSlug end-to-end; weight-loss-veg hardcode removed (COD + PayU). Carry-through via Order.notes (Option A).
+- **#168** — Plan-detail "Start your plan" CTAs → `#pricing` (was `/onboarding`→`/dashboard` dead-end for onboarded users).
+- **#169** — LOOP-4 shipped (resolves #165): MealLog→FoodEntry mirror; net-calories unified (plan gram-scaled + manual mealLogId:null), double-count-safe; FoodItem/MealType bridge = Option A (synthetic per-recipe PLAN_RECIPE FoodItem; snack MealType = "Snacks").
+- **#170** — Workout engine shipped (resolves #166): MET engine wired to plan-finish + freeform; freeform PATCH now server-authoritative.
+- **#171** — Phase 8: build an exercise SYSTEM (taxonomy + protocol engine + schedule generator), not just seed schedules. Phasing 8A→8D.
+- **#172** — Form fork: do BOTH — demo (pre-rendered 3D clips first; interactive glTF for premium core later) AND camera form analysis (BlazePose, on-device, the moat). Camera = 8D, merges with Phase 12.
+- **#173** — Content sourcing: curate the modality/metadata gaps ourselves; license MEDIA, not metadata.
+- **#174** — AI Coach decoupled from chatbot; built independent + proactive first (revises #85 framing). Chatbot = later reactive surface.
+- **#175** — Wearable strategy: adopt a unified aggregator (evaluate Terra first) for verified sleep/HR/HRV/CGM/cycle; manual fallback. Driven by HealthKit/Health Connect being native-only + Google Fit REST EOL 2026.
+- **#176** — Two principled refactors, NO teardown: `Routine` abstraction + domain-pluggable Health Score. Keep the working loop.
+- **#177** — New-domain moat ranking: medical condition mgmt > sleep > habits > skincare(light). Medical = tracking + clinician export only (regulatory line; keep medical disclaimer).
+- **#178** — Native app shell deferred; aggregator-first for web now (native is a separate later strategic call to unlock HealthKit/Health Connect directly).
+- **#179** — Build sequence locked: **finish WS-1 loop first → Phase 8A schedule generator (closes LOOP-5/2)** so the loop is complete for all 126 plans → **AI Coach core (Weekly Review + recalibration LOOP-6)** as first brain proof → aggregator/sleep → medical condition mgmt → habits → skincare. Brain before senses; verified senses before self-reported; close the loop underneath the brain.
+
+### Open items rolling forward (refreshed Jun 21, post-implementation):
+- **NEXT BUILD: Phase 8A — schedule generator + exercise taxonomy** (closes LOOP-5/2, un-breaks consistency-score workout component; makes the workout loop real for all 126 plans, not 1).
+- Then AI Coach core: Weekly Review + recalibration action (LOOP-6).
+- Verify Vercel production alias = latest commit; purge stale anonymous `/plans` cache.
+- Evaluate Terra (vs Thryve/Vital) for the wearable layer; scope OAuth + webhook ingestion.
+- Recipe seeding still 1/126 (parallel track) — blocks meaningful MealLog→FoodEntry breadth and schedule generation quality.
+- All prior open items stand (security WS-3 rate-limit/zod still launch-blocking; DES accessibility; OTP-or-drop #156).
+
+---
+
+## ═══════════ REMAINING ROADMAP (RECONCILED — single source of forward truth) ═══════════
+### Added: Jun 21, 2026 · additions-only · Decision #180
+### Purpose: collapse the phase-number drift into ONE unambiguous forward list. When the old roadmap table and this section disagree, THIS section wins.
+
+### DRIFT RESOLUTION (read once)
+- The original roadmap *table* (phases 15–19) shows STALE labels. Actual builds: **15 = Admin ✅ · 16 = Notifications/email ✅ · 17 = Partner/Referral ✅ · 18 = Supplements/Affiliate ✅ · 19 = Plans Catalog ✅.**
+- Reused numbers buried three scope items that were **never built**: old "17 Personalised Supplement Stack" → now **LOOP-7**; old "18 Plan Progression + Recalibration" → now **LOOP-6 + LOOP-8**; old "19 Public TDEE Tool" → now **R19**.
+- **Naming fix:** the exercise-system rebuild was being called "Phase 8A–D", which COLLIDES with old Phase 8 (Supplement Guide ✅). Renamed here to **EX-1…EX-4**. Old Phase 8 is untouched and done.
+
+### REMAINING WORK — in build order
+
+**TRACK 1 · CLOSE THE LOOP (WS-1/WS-2) — top priority, makes the moat real**
+- **R1 · EX-1** — exercise taxonomy (`modality`/`met`/progression) + **protocol engine** (straight/superset/circuit/HIIT/Tabata/EMOM/AMRAP) + **schedule generator** → seeds all 126×3, closes **LOOP-5/LOOP-2**, un-breaks consistency-score workout component. **← NEXT BUILD (needs db push)**
+- **R2 · EX-2** — exercise recommendation at onboarding + progression/overload → closes **LOOP-8**
+- **R3 · EX-3** — media: licensed pre-rendered 3D clips for core; optional interactive glTF viewer
+- **R4 · EX-4** — BlazePose camera **form analysis** (moat; on-device) → merges with AI Coach
+- **R5 · LOOP-6** — adaptive recalibration engine (old "Phase 18" scope; never built)
+- **R6 · LOOP-7** — personalised supplement stack (old "Phase 17" scope; affiliate catalog ✅ exists, recommender doesn't)
+
+**TRACK 2 · AI COACH (un-parks Phase 12; independent + proactive, decoupled from chatbot — #174)**
+- **R7** — Coach core: Sense→Summarise→Reason→Act; ship **Weekly Review + recalibration** first (consumes LOOP-6)
+- **R8** — Coach actions deepen: progression (LOOP-8) + supplement stack (LOOP-7)
+- **R9** — Chatbot surface (reactive door, LAST)
+
+**TRACK 3 · WHOLE-PERSON EXPANSION (new senses — #175–#177)**
+- **R10** — refactors: `Routine` abstraction + domain-pluggable **Health Score** (no core teardown)
+- **R11** — wearable aggregator (evaluate **Terra**) → verified sleep/HR/HRV/CGM/cycle
+- **R12** — sleep & recovery domain
+- **R13** — **medical condition management** (highest moat; CGM/cycle via aggregator; symptom/metric logs; clinician export; tracking-only, firm "not medical advice")
+- **R14** — habits/routines (consistency engine generalised)
+- **R15** — skincare / beauty-from-within (LIGHT; rides on existing skin/hair plans)
+
+**TRACK 4 · LAUNCH-BLOCKING HARDENING (WS-3) — MUST precede launch**
+- **R16** — rate limiting (SEC-1) + Zod input validation (SEC-2)
+- **R17** — `middleware.ts` (SEC-6), safe guest-merge (SEC-4), waitlist captcha/limit (SEC-3), cron-auth + prod-env (SEC-7/8), OTP-or-drop decision (SEC-5/#156)
+
+**TRACK 5 · DESIGN & DISCOVERABILITY (WS-4/WS-5)**
+- **R18** — a11y pass (DES-2) + branded 404/error/loading/empty states (DES-4) + supplements→nav, sitemap/robots, real contact, server-render homepage w/ real data (DES-5)
+- **R19a** — design-system consolidation across 11 pages (DES-1), shared primitives (DES-6), breakpoints + per-page mobile (DES-3), photography strategy (DES-7), navbar/README/dep cleanup (DES-8)
+
+**TRACK 6 · LAUNCH & POST-LAUNCH (old numbering, still valid)**
+- **R19 · Public TDEE funnel tool** (old Phase 19 scope; onboarding has TDEE, no standalone public tool)
+- **R20 · Phase 16 remainder** — WhatsApp channel (WAHA on Oracle Cloud Free Tier)
+- **R21 · Phase 20** — QA, performance, DNS cutover, DPDP/legal compliance, launch readiness
+- **R22 · Phase 21** — Zomato/Swiggy aggregator (post-launch growth)
+- **R23 · Phase 22** — Social/Community (post-launch retention/virality)
+
+### CARRYOVER / PARALLEL (not phases, but owed)
+- **Recipe seeding 1/126** — parallel track; caps schedule-generator quality + MealLog→FoodEntry breadth. Do early.
+- **Verify Vercel production alias = latest commit; purge stale anonymous `/plans` cache.**
+- **Phase 18 catalog population** — manual Nutrabay URLs/images (8 priority → 46).
+- **Phase 10 tail** — printable signed slip (Claude Design), driver WhatsApp notify (MSG91).
+- **cycleLengthDays 30-vs-60** moat decision; **Resend domain** → `hello@fitfuel.in`.
+
+### Decision
+- **#180** — This reconciled roadmap is the single forward source of truth; the original phase table is historical. Exercise rebuild renamed EX-1…EX-4 (resolves the Phase 8 collision). LOOP-6/LOOP-7/LOOP-8 + WS-3 security are the items most at risk of being lost to drift — explicitly tracked here.
+
+---
+
+## ═══════════ EX-1 SHIPPED — EXERCISE SYSTEM v1 ═══════════
+### Session: Jun 21, 2026 (cont.) · additions-only · Decision #181 · commit 29cc56e
+
+**EX-1 ✅ SHIPPED — closes LOOP-5/2.** Every (subCategory × tier) across the 126 plans now has a generated 7-day workout program; the consistency-score workout component is no longer dead.
+
+Files (committed 29cc56e):
+- **schema**: `Exercise` gained `modality` (strength/cardio/hiit/calisthenics/mobility/sport), `met` (Float, real value), `progressionGroup`/`progressionLevel` + `@@index([modality])`. Pushed via `prisma db push` (live on Neon) + committed so Vercel builds with the new client.
+- **`prisma/backfill-exercise-modality.ts`** — idempotent; assigns modality+met from category/equipment. Breakdown: cardio 14 · hiit 61 (plyometrics) · mobility 123 (stretching) · calisthenics ~190 (bodyweight strength) · strength ~485.
+- **`lib/exercise-program.ts`** — the generator: archetype (fatloss/muscle/medical/athletic/general from subCategory keywords) × tier (STANDARD/PREMIUM/LUXURY → +days/+volume) → 7-day program of protocol blocks (straight/circuit/hiit/cardio/mobility), selecting real exercises by modality+muscle from the live pool. Deterministic per (subCategory|tier). Emits the exact day-JSON the workout routes read; MET-based per-day calorie estimate at 70kg ref (runtime recomputes per user).
+- **`prisma/seed-all-exercise-schedules.ts`** — loops distinct (subCategory,tier) from MealPlan, idempotent delete+recreate (cascade), writes ExerciseSchedule + days.
+
+Gotcha logged: standalone `tsx` scripts MUST `import "dotenv/config"` first, or `lib/prisma`'s `pg.Pool` reads an empty `DATABASE_URL` and throws `ECONNREFUSED` (pg falls back to localhost). The Prisma CLI auto-loads `.env`; raw tsx does not. (Bit us once on EX-1; fixed.)
+
+Known fast-follows (not blocking):
+- **EX-1b** — curated genuinely-new HIIT/cardio/calisthenics/sport content (free-db has only 14 cardio); programs currently draw from a thin cardio pool.
+- Archetype nuance: subCategory containing both "sport" + "strength" resolves to muscle split (matcher order); tune if a pure athletic subCategory needs conditioning.
+- Optional: wire `Exercise.met` into `lib/workout-calories.ts` (currently uses category-map fallback).
+
+### Decision
+- **#181** — EX-1 shipped (commit 29cc56e); LOOP-5/2 closed. Per #179 the next build is the **AI Coach core** (Weekly Review + recalibration, LOOP-6) — the loop is now complete enough to reason over. EX-2 (progression/recommendation) deferred behind the Coach: progression needs accumulated workout history that doesn't exist yet (schedule system is brand new).
+---
+
+## ═══════════ EX-1b SHIPPED — CURATED EXERCISE CONTENT ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #182 · commit f27253d
+
+**EX-1b ✅ SHIPPED.** Curated content the free-exercise-db lacks, so generated programs aren't drawing from just 14 cardio moves.
+
+- **`prisma/seed-exercises-curated.ts`** — 79 curated exercises: cardio 16, hiit 16, calisthenics 35 (with progression chains), sport 12. All `ff-` prefixed (no collision with free-db ids), idempotent upsert.
+- Sets `modality` + `met` DIRECTLY, and uses category strings the backfill ignores (`hiit`/`calisthenics`/`sport`) so a backfill re-run can't clobber them. (`cardio` category matches the backfill map anyway.)
+- **Progression chains seeded** (data only — consumed later by EX-2): pushup[1→8], pullup[1→7], squat[1→6], dip[1→4], core[1→6], handstand[1→4] via `progressionGroup`/`progressionLevel`.
+- Pool impact: cardio 14→~30, hiit ~77, calisthenics ~225, sport 12. `images: []` (real form media is EX-3).
+- Has the `import "dotenv/config"` line (EX-1 lesson applied). Run order: free-db seed → backfill → **this** → `seed-all-exercise-schedules` (regenerate to use the richer pool).
+
+### Decision
+- **#182** — EX-1b shipped (f27253d). Curated cardio/HIIT/calisthenics(+progressions)/sport in place; schedules regenerated against the richer pool.
+
+---
+
+## ═══════════ BUILD-FIX — VERCEL tsc TYPE ERROR (EX-1) ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #183
+
+**Vercel build was RED across commits 29cc56e (EX-1) AND f27253d (EX-1b)** — EX-1 never actually deployed; live site stayed on the pre-EX-1 build the whole time. Schema `db push` + local seeds worked (they hit Neon directly), masking that the *app build* was broken.
+
+- **Error**: `lib/exercise-program.ts:123 — Type 'string[]' is not assignable to type 'SlotKind[]'`. The literal `sequence` arrays inferred as `string[]`; `.slice()` returned `string[]`, not assignable to `Plan.sequence: SlotKind[]`.
+- **Fix** (commit after f27253d): cast all 5 sequence arrays `([...] as SlotKind[]).slice(...)`. Verified with **real `tsc --strict` exit 0**.
+
+### ⛔ NEW HARD RULE (root cause)
+**esbuild parse-check ≠ type-check.** `next build` runs a full `tsc`. esbuild only validates *syntax*, so pure *type* errors sail through and break Vercel. **Before handing off any non-trivial TS, run an actual `tsc --strict`** (standalone for pure files; for files importing app modules, a focused `tsconfig` + type-accurate stubs for the heavy imports). This is now standard procedure, not optional.
+
+### Decision
+- **#183** — Build unblocked. "tsc-not-esbuild" is a permanent pre-handoff gate. Note: in this sandbox Prisma engine binaries (`binaries.prisma.sh`) are blocked, so the full project client can't be generated here — type-check via focused tsconfig + stubs instead.
+
+---
+
+## ═══════════ AI COACH CORE (SPINE) SHIPPED ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #184
+
+**The Coach's brain, minus the language — deterministic, needs NO Anthropic key.** Built as the real Sense → Summarise → Reason → Act spine. (User has no API key yet; planned post-funding.)
+
+Files:
+- **`lib/coach/types.ts`** — contracts: `WeeklySummary`, `Recalibration`, `WeeklyReview`. Designed so the LLM swap changes nothing downstream (same summary in, same review out; `source` flips `"rules"`→`"llm"`).
+- **`lib/coach/weekly-summary.ts`** (Summarise) — wraps `getProgressData` + fetches `fitnessGoal`, computes a real weight-trend slope (least-squares regression over weigh-ins → kg/week; 28d window, widens to 56d/all, needs ≥2 points spanning ≥10d).
+- **`lib/coach/recalibration.ts`** (Act / **LOOP-6**) — PURE engine. Compares measured rate vs the goal's target rate (LOSE −0.5, GAIN +0.25, else 0 kg/wk; tolerance band), recommends a calorie-target change. Math: 7700 kcal/kg, capped ±300/day, floored 1200. Statuses: on_track/too_slow/too_fast/stalled/wrong_direction/insufficient_data.
+- **`lib/coach/weekly-review.ts`** (Reason, rules-based v1) — assembles `{headline, whatsWorking[], focusThisWeek[], recalibration, oneQuestion}` from deterministic rules (protein %, workouts, streak, weight trend, consistency). **This is the ONLY file the LLM replaces later** — swap the rules block for a Claude call on the same `WeeklySummary`.
+- **`app/api/coach/weekly-review/route.ts`** (GET) — returns the review for the session user.
+- **`app/api/coach/recalibration/apply/route.ts`** (POST) — server-authoritative: recomputes recalibration and applies its OWN recommended target to `UserActivePlan` + `UserProfile` (never a client-supplied number). 409 if nothing applicable.
+
+All six **tsc --strict clean (exit 0)** against the real `ProgressData` shape before handoff.
+
+### Decision
+- **#184** — AI Coach spine shipped. **LOOP-6 RESOLVED** (recalibration engine built). LLM "Reason" layer deferred to post-funding; isolated to `weekly-review.ts`. Recalibration + summary + routes are durable (LLM-independent).
+
+---
+
+## ═══════════ AI COACH — WEEKLY REVIEW CARD (UI) SHIPPED ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #185
+
+**The face of the Coach spine** — completes the first full slice (engine → API → UI).
+
+- **`app/dashboard/WeeklyReviewCard.tsx`** — self-contained `"use client"` card. Fetches `GET /api/coach/weekly-review`; renders eyebrow + headline + what's-working (lime checks) + focus-this-week (target markers) + the reflective question. When recalibration `canApply`, shows a lime-bordered panel with the rationale + **"Apply ±N kcal/day"** button → `POST /api/coach/recalibration/apply`, then confirms the new target inline. Matches house style (theme `T`, inline styles, lime `#84cc16`, lucide icons). **tsc --strict clean** with real React/lucide types.
+- Wired into `DashboardClient.tsx`: `import WeeklyReviewCard from "./WeeklyReviewCard";` + `<WeeklyReviewCard />` rendered right after the consistency card.
+- Integration gotcha (caught pre-push): the `<ConsistencyCard>` line was accidentally duplicated during the manual edit — render once, then `<WeeklyReviewCard />`.
+
+### Decision
+- **#185** — Coach Weekly Review card shipped; Coach slice now end-to-end. **Next build (no API key needed):** leaning **WS-3 security** (rate-limiting + zod validation — LAUNCH-BLOCKING) over a daily proactive nudge. EX-2 (progression, reads the EX-1b chains) still parked behind real workout history.

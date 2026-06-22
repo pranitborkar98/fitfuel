@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/orders/cod/route.ts
+// app/api/orders/cod/route.ts  · WS-3 hardened (SEC-1/2)
 // 16A: order_confirmed + staff_new_order notifications
 // 17A: capture ?ref cookie -> Order.referralAttribution + processReferralReward
 // 17C-2: apply credit balance if signed in & opted in; commit spend after order CONFIRMED.
@@ -10,6 +10,9 @@ import { auth } from "@/lib/auth";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 import { processReferralReward, applyCreditAtCheckout, recordCreditChange } from "@/lib/partners";
 import { resolvePurchasedPlan } from "@/lib/resolve-purchased-plan";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { codOrderSchema } from "@/lib/validation/schemas";
 
 const DIET_MAP: Record<string, string> = {
   veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
@@ -50,12 +53,18 @@ async function upsertCustomer(email: string, phone: string, name: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { firstname, lastname, email, phone, address, city, pincode, diet, dur, meal, price, deliveryWindow, useCredit, planSlug } = body;
+    // SEC-1: COD-flooding guard, by IP.
+    const rl = await enforceRateLimit(req, "checkout");
+    if (!rl.ok) return rl.response;
 
-    if (!firstname || !email || !phone || !address || !pincode || !diet || !dur || !meal || !price) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
+    // SEC-2: size-capped, schema-validated body. Replaces raw req.json() +
+    // hand-rolled presence checks. diet/dur/meal are restricted to known keys.
+    const parsed = await readJson(req, codOrderSchema);
+    if (!parsed.ok) return parsed.response;
+    const {
+      firstname, lastname, email, phone, address, city, pincode,
+      diet, dur, meal, price, deliveryWindow, useCredit, planSlug,
+    } = parsed.data;
 
     const dietEnum = DIET_MAP[diet];
     const durEnum  = DUR_MAP[dur];
@@ -84,7 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Phase 17A: capture ref from cookie OR body, snapshot on Order ──
-    const refFromBody: string | undefined = body.refCode;
+    const refFromBody: string | undefined = parsed.data.refCode;
     const refFromCookie = req.cookies.get("ff_ref")?.value;
     const refSnapshot = (refFromBody || refFromCookie || "").slice(0, 64) || null;
 

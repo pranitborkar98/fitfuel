@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/coupon/validate/route.ts  (Phase 13D — guest-friendly live coupon preview)
+// app/api/coupon/validate/route.ts  (Phase 13D · WS-3 hardened SEC-1/2)
 // Returns discount + new total for the digital checkout UI. No auth wall (guest checkout).
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyCoupon, type CouponLike } from "@/lib/coupons";
 import { computePrice, formatRs } from "@/lib/pricing";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { couponValidateSchema } from "@/lib/validation/schemas";
 
 export const runtime = "nodejs";
 
@@ -13,10 +17,15 @@ const DUR_MAP: Record<string, string> = {
   two_month: "TWO_MONTH", three_month: "THREE_MONTH",
 };
 
-export async function POST(req: Request) {
-  const { code, planSlug, dur, email, buyerStateCode } = await req.json() as {
-    code: string; planSlug: string; dur: string; email?: string; buyerStateCode?: string;
-  };
+export async function POST(req: NextRequest) {
+  // SEC-1: coupon enumeration guard.
+  const rl = await enforceRateLimit(req, "couponValidate");
+  if (!rl.ok) return rl.response;
+
+  // SEC-2: validated body (dur restricted to known keys, etc.).
+  const parsed = await readJson(req, couponValidateSchema);
+  if (!parsed.ok) return parsed.response;
+  const { code, planSlug, dur, email, buyerStateCode } = parsed.data;
 
   const durEnum = DUR_MAP[dur];
   if (!durEnum) return Response.json({ ok: false, reason: "Invalid duration." }, { status: 400 });

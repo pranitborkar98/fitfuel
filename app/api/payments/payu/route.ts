@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/payments/payu/route.ts
+// app/api/payments/payu/route.ts  · WS-3 hardened (SEC-1/2)
 // PayU initiation — builds the signed hash AND creates a PENDING_PAYMENT order
 // keyed by txnid so the success callback can complete it after the redirect.
 // 17C-2: apply credit balance if signed in & opted in; stamp Order.creditAppliedRs.
@@ -10,6 +10,9 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { applyCreditAtCheckout } from "@/lib/partners";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { payuInitSchema } from "@/lib/validation/schemas";
 
 const PAYU_KEY  = process.env.PAYU_MERCHANT_KEY!;
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
@@ -51,20 +54,23 @@ async function upsertCustomer(email: string, phone: string, name: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // SEC-1: checkout-init flooding guard, by IP.
+    const rl = await enforceRateLimit(req, "checkout");
+    if (!rl.ok) return rl.response;
+
+    // SEC-2: size-capped, schema-validated body. Replaces raw req.json() +
+    // hand-rolled presence checks.
+    const parsed = await readJson(req, payuInitSchema);
+    if (!parsed.ok) return parsed.response;
     const {
       firstname, lastname, email, phone,
       address, city, pincode,
       diet, dur, meal, price, deliveryWindow,
-      amount,       // string e.g. "7938.00" — total incl GST, what PayU charges (pre-credit)
+      amount,       // total incl GST, what PayU charges (pre-credit)
       productinfo,
       useCredit,    // 17C-2
       planSlug,     // LOOP-3: the plan the customer actually chose
-    } = body;
-
-    if (!firstname || !email || !phone || !amount || !productinfo) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
+    } = parsed.data;
 
     const dietEnum = DIET_MAP[diet];
     const durEnum  = DUR_MAP[dur];
