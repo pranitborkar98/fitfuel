@@ -1,16 +1,23 @@
 // app/api/cron/daily-nudges/route.ts
-// Phase 16C \u2014 daily 10 AM IST. Three nudge checks fan out from one endpoint:
-//   1) payment_pending  \u2014 orders 24h+ old, still PENDING (non-COD)
-//   2) plan_ending      \u2014 UserActivePlan ending in 2\u20133 days
-//   3) re_engagement    \u2014 active sub with no meal logs in 3+ days (max 1x/week)
+// Phase 16C — daily 10 AM IST. Nudge checks fan out from one endpoint:
+//   1) payment_pending  — orders 24h+ old, still PENDING (non-COD)
+//   2) plan_ending      — UserActivePlan ending in 2–3 days
+//   3) re_engagement    — active sub with no meal logs in 3+ days (max 1x/week)
+//   4) coach_nudges     — AI Coach signals: plateau / milestone / missed workouts
+//   5) coach_low_rating — a recent meal rated 1–2
 // Triggered by Upstash QStash schedule. Signature-verified + CRON_SECRET fallback.
+// AI Coach proactive nudges fold into THIS cron (no new cron — Hobby 2-cron limit).
 
 import { NextResponse } from "next/server";
 import { Receiver } from "@upstash/qstash";
 import { prisma } from "@/lib/prisma";
 import { sendNotification, wasRecentlySent } from "@/lib/notify";
+import { buildWeeklySummary } from "@/lib/coach/weekly-summary";
+import { computeRecalibration } from "@/lib/coach/recalibration";
+import { detectCoachNudges } from "@/lib/coach/nudges";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // coach summaries add per-user work; give headroom
 
 const receiver =
   process.env.QSTASH_CURRENT_SIGNING_KEY && process.env.QSTASH_NEXT_SIGNING_KEY
@@ -51,6 +58,8 @@ async function handle(req: Request) {
   const paymentPending = newStat();
   const planEnding = newStat();
   const reEngagement = newStat();
+  const coachNudges = newStat();
+  const lowRating = newStat();
 
   // ──────── 1. Payment pending ────────
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -97,7 +106,7 @@ async function handle(req: Request) {
     console.error("[daily-nudges] payment_pending query failed", e);
   }
 
-  // ──────── 2. Plan ending in 2\u20133 days ────────
+  // ──────── 2. Plan ending in 2–3 days ────────
   const twoDaysOut = new Date(now);
   twoDaysOut.setUTCDate(twoDaysOut.getUTCDate() + 2);
   twoDaysOut.setUTCHours(0, 0, 0, 0);
@@ -174,7 +183,7 @@ async function handle(req: Request) {
           break;
         }
         if (!lastLog) {
-          // never logged \u2014 don't nag yet, onboarding nudge belongs elsewhere
+          // never logged — don't nag yet, onboarding nudge belongs elsewhere
           reEngagement.skipped++;
           continue;
         }
@@ -201,12 +210,88 @@ async function handle(req: Request) {
     console.error("[daily-nudges] re_engagement query failed", e);
   }
 
+  // ──────── 4. Coach nudges (plateau / milestone / missed workouts) ────────
+  // Reuses the Coach spine: WeeklySummary → Recalibration → detectCoachNudges.
+  // Per-user heavy work is fine at current scale; revisit if the active base grows.
+  try {
+    const coachActive = await (prisma as any).userActivePlan.findMany({
+      where: {
+        status: "active",
+        isDigital: false,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      select: { userId: true },
+      distinct: ["userId"],
+    });
+    for (const { userId } of coachActive) {
+      try {
+        const summary = await buildWeeklySummary(userId);
+        const recal = computeRecalibration(summary);
+        const nudges = detectCoachNudges(summary, recal);
+        for (const n of nudges) {
+          try {
+            if (await wasRecentlySent(userId, n.templateKey, n.dedupHours)) {
+              coachNudges.skipped++;
+              continue;
+            }
+            const result = await sendNotification({
+              userId,
+              templateKey: n.templateKey,
+              vars: n.vars,
+            });
+            if (result.email === "sent" || result.whatsapp === "sent") coachNudges.fired++;
+            else coachNudges.skipped++;
+          } catch {
+            coachNudges.failed++;
+          }
+        }
+      } catch (e) {
+        coachNudges.failed++;
+        console.error("[daily-nudges] coach summary failed for user", userId, e);
+      }
+    }
+  } catch (e) {
+    console.error("[daily-nudges] coach_nudges query failed", e);
+  }
+
+  // ──────── 5. Low-rated meal (rated 1–2 in the last day) ────────
+  try {
+    const since = new Date(now.getTime() - 36 * 3600_000); // last ~1.5 days
+    const lowRated = await (prisma as any).mealLog.findMany({
+      where: { rating: { lte: 2, gt: 0 }, createdAt: { gt: since } },
+      select: { userId: true },
+      distinct: ["userId"],
+    });
+    for (const { userId } of lowRated) {
+      try {
+        if (await wasRecentlySent(userId, "coach_low_rating", 72)) {
+          lowRating.skipped++;
+          continue;
+        }
+        const result = await sendNotification({
+          userId,
+          templateKey: "coach_low_rating",
+          vars: {},
+        });
+        if (result.email === "sent" || result.whatsapp === "sent") lowRating.fired++;
+        else lowRating.skipped++;
+      } catch {
+        lowRating.failed++;
+      }
+    }
+  } catch (e) {
+    console.error("[daily-nudges] coach_low_rating query failed", e);
+  }
+
   return NextResponse.json({
     ok: true,
     ranAt: now.toISOString(),
     paymentPending,
     planEnding,
     reEngagement,
+    coachNudges,
+    lowRating,
   });
 }
 
