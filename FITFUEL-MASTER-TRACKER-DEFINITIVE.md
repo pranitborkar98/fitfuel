@@ -2886,3 +2886,131 @@ All six **tsc --strict clean (exit 0)** against the real `ProgressData` shape be
 
 ### Decision
 - **#185** — Coach Weekly Review card shipped; Coach slice now end-to-end. **Next build (no API key needed):** leaning **WS-3 security** (rate-limiting + zod validation — LAUNCH-BLOCKING) over a daily proactive nudge. EX-2 (progression, reads the EX-1b chains) still parked behind real workout history.
+---
+
+## ═══════════ WS-3 SECURITY — SEC-1/2/3 SHIPPED (TRACK 4 · R16) ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #186
+
+**Launch-blocking holes closed on the public attack surface (R16: rate limiting SEC-1 + Zod validation SEC-2 + waitlist SEC-3).** Built + deployed + verified live. `zod ^4.4.3` was already a dep (SEC-2 needed no install); `@upstash/ratelimit` + `@upstash/redis` added (SEC-1). Auth is Google-OAuth-only → no custom credential route to stuff; SEC-1's "login" surface = the OAuth callback, owned by NextAuth.
+
+New shared layer:
+- **`lib/rate-limit.ts`** — ONE shared limiter. Upstash sliding-window (prod) with a per-instance in-memory fallback when no Redis REST env is present (local/preview never break, never crash on a missing var). Presets: waitlist 5/10m, checkout 8/10m, couponValidate 30/5m, creditPreview 40/5m, partnerApply 5/h, mutation 60/m, read 120/m. `enforceRateLimit(req, preset, extraKey?)` → ready-made 429 + Retry-After. Reads `UPSTASH_REDIS_REST_URL`/`_TOKEN` OR Vercel KV's `KV_REST_API_URL`/`_TOKEN`.
+- **`lib/validation/core.ts`** — `readJson`/`readQuery`: 32 KB byte-cap (oversized-payload DoS → 413), malformed-JSON → 400, zod `safeParse` → typed data or shaped 400.
+- **`lib/validation/schemas.ts`** — schemas for every hardened route. NOTE: diet/dur/meal values are the FRONTEND keys (mirror the route `*_MAP`s), NOT the Prisma enums — keep in sync.
+
+Hardened (rate-limit + validated, full files preserving all business logic): `waitlist` [SEC-3], `orders/cod`, `payments/payu` (hash logic untouched), `coupon/validate`, `checkout/credit-preview`, `partners/apply` (cash PAN/IFSC checks preserved). All 9 files **tsc --strict exit 0** against real zod@4 types (caught a real `PropertyKey`-path error esbuild would have shipped — reaffirms the #183 "tsc-not-esbuild" gate) + runtime schema tests green (normalization, enum rejection, coercion, defaults, positivity, passthrough).
+
+Deploy: green. Upstash Redis DB created (Mumbai/ap-south-1), `UPSTASH_REDIS_REST_URL`/`_TOKEN` set in Vercel (all envs) + redeployed → limiter live on real Redis (not just the in-memory fallback). ⚠ Token was exposed in chat during setup → rotate in Upstash.
+
+### Remaining WS-3 (TRACK 4 · R16/R17 — tracked, not lost to drift)
+- **SEC-2 apply-list (authed/lower-risk `req.json` routes):** user/onboarding, user/profile, user/metrics, user/notification-preferences, user/deliveries, nutrition/{diary,foods,goals,water}, active-plan/meals/{log,rate}, workout/sessions*, attribute-ref → drop in the `mutation` limiter + a schema each (mechanical now the shared layer exists).
+- **R17:** SEC-6 `middleware.ts` · SEC-4 safe guest-merge · SEC-5/#156 OTP-or-drop email-linking · SEC-7/8 cron-auth (the cron routes already verify QStash sig + CRON_SECRET) + prod-env audit.
+
+### Decision
+- **#186** — WS-3 SEC-1/2/3 shipped + live on the public surface (R16 substantially done). Shared rate-limit + validation layer is reusable; remaining authed-route coverage (R17) is a mechanical apply pass.
+
+---
+
+## ═══════════ AI COACH — PROACTIVE NUDGES (TRACK 2 · R7 extension) ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #187
+
+**The Coach goes proactive — push/email, deterministic, no API key, no new cron.** Extends the spine (#184) + Weekly Review card (#185). Verified firing in production (`coachNudges: fired 3` on a live cron trigger). In-app coach feed (`TrainerEvent` / Option B) stays deferred with Phase 12 (#85) / R9.
+
+- **`lib/coach/nudges.ts`** — PURE detector. `detectCoachNudges(summary, recal)` → **plateau** (movement goal + flat trend OR recal `stalled`), **milestone** (target crossed, direction-aware), **missed_workouts** (active ≥3d, 0 workouts). Milestone suppresses plateau; null/thin data never fires. Reuses the WeeklySummary the spine already produces — clean seam, no new aggregation.
+- **`app/api/cron/daily-nudges/route.ts`** — sections 1–3 (16C) untouched; **+section 4** (coach nudges, per active non-digital user: buildWeeklySummary → computeRecalibration → detectCoachNudges → sendNotification w/ per-(user,template) dedup) **+section 5** (`coach_low_rating`: MealLog.rating 1–2 in last ~36h). Folded into the EXISTING cron → NO new Vercel cron (Hobby 2-cron limit preserved); rides the existing QStash trigger. `maxDuration=60` for per-user headroom.
+- **`prisma/seed-coach-nudge-templates.ts`** — 4 NotificationTemplate rows (`coach_plateau`/`coach_milestone`/`coach_missed_workouts`/`coach_low_rating`). EMAIL-only (WhatsApp deferred until MSG91 templates approved → flip to BOTH later), category `"nudges"` (respects `NotificationPreference.nudges`). Idempotent upsert. No schema change → no db push. Run: `npx tsx --env-file=.env.local prisma/seed-coach-nudge-templates.ts`.
+
+Verify: all files **tsc --strict exit 0** against the real coach types; detector runtime-tested across 11 scenarios (fire + suppression both correct); live cron returned `coachNudges.fired = 3`.
+
+### Decision
+- **#187** — Coach proactive nudges live (push/email). Deterministic, LLM-independent — advances R7 beyond the Weekly Review. Next coach step toward un-park: in-app coach-message feed (`TrainerEvent`, Option B / R9) when the API key lands / Phase 12 un-parks.
+
+---
+
+## ═══════════ PRICING MODEL — UN-BURIED + RECONCILED INTO LIVE ROADMAP ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #188
+
+**Founder flag (Jun 22): the pricing-overhaul decision got BURIED.** It was specced Jun 3 (old "9H — Pricing Overhaul" block), but Decision #180's roadmap reorg declared the old phase table "historical" and the pricing-MODEL spec was NOT carried into the R1–R23 list → it fell into the drift gap. Re-surfacing it here as a first-class, launch-relevant roadmap item so it cannot slip again. Confirmed unbuilt by the live COD checkout (order summary shows only Plan price + GST 5%, ₹ all-in as the headline — no delivery/packaging/handling decomposition, no MRP-vs-sale framing).
+
+### THE SPEC (founder's words, Jun 3 — verbatim intent)
+"we will be adding marketing level pricing... since this is full prices we will minus the delivery + packaging + all other charges for marketing then add coupons, sale price vs buying price, each and every pricing marketing gimmick."
+
+Four parts:
+1. **Headline decomposition.** Current `PlanPrice.priceRs` rows are FULL ALL-IN prices. Marketing/display price = full − delivery − packaging − handling − other ops, so the headline reads competitive; the stripped charges are then **added back as explicit line items at checkout** (or absorbed). Requires decomposing each price into components.
+2. **MRP vs sale.** Strike-through "buying price" (MRP) against the actual sale price — the classic discount visual. Both numbers per price row.
+3. **Coupons.** Codes, %/flat, validity, per-plan/global, first-order, usage caps.
+4. **Marketing gimmicks.** Limited-time offers, bundle pricing, first-order discounts — the full toolkit.
+
+### STATUS RECONCILE (verified against schema + live, Jun 22)
+- **Part 2 (MRP/sale): ✅ schema-ready.** `PlanPrice.mrpRs Int?` exists; coupon preview reads `mrpRs ?? priceRs`. May need consistent surfacing on `/plans` + checkout (strike-through everywhere).
+- **Part 3 (coupons): ✅ ENGINE BUILT** (Phase 13D). `Coupon` model (discountType/value/maxDiscountRs/minOrderRs/appliesTo/firstOrderOnly/usageLimitGlobal+PerUser/validFrom+Until/stackable/source) + `lib/coupons.ts` + `/api/coupon/validate` + `CouponRedemption`. **GAP: zero coupon rows seeded + no admin "create coupon" UI** → "no coupon available" on the live site. Owed: admin coupon CRUD (or a seed) so coupons can actually be issued.
+- **Part 1 (headline decomposition): ❌ NOT BUILT — the core missing piece.** `PlanPrice` has NO `deliveryRs`/`packagingRs`/`handlingRs`/`baseFoodRs`. Needs: (a) schema fields for cost components (`db push`, additive); (b) admin editing of components in `/admin/plans`; (c) checkout that shows the stripped headline + adds delivery/packaging/handling line items back to reach "pay" total; (d) the order-summary UI line items (cod + payu + digital paths) + the PDF "Your Numbers"/pricing surfaces. Touches the live revenue path → stage like #128/#133 (additive schema first, then touch payment files behind a flag).
+- **Part 4 (gimmicks): ◐ primitives only.** `firstOrderOnly` + validity windows (Coupon), `bundle` (DigitalBundle) exist; no orchestrated limited-time/bundle/first-order offer surface or UI.
+
+### ROADMAP PLACEMENT
+- **NEW: R-PRICE (Track 6 · launch-relevant)** — pricing-model overhaul. Pre-launch marketing decision; not API/feature-blocking, but it changes how every price renders, so it must land before the public launch (R21/Phase 20) and ideally before any paid-traffic push. Sub-items: R-PRICE-a cost-component schema + admin; R-PRICE-b checkout line-item decomposition (revenue-path, staged); R-PRICE-c admin coupon CRUD + seed; R-PRICE-d consistent MRP strike-through; R-PRICE-e gimmick surface (limited-time/bundle/first-order).
+
+### Decision
+- **#188** — Pricing-model overhaul un-buried and reconciled into the live roadmap as R-PRICE. Coupon engine ✅ + mrpRs ✅ already exist; the headline cost-decomposition (delivery+packaging+handling stripped from marketing price, added back at checkout) is the missing core and is launch-relevant. Founder also notes OTHER iterations from past sessions may be similarly buried → a full past-conversation reconciliation sweep is owed (offered).
+
+---
+
+## ═══════════ R-PRICE — PRICING MODEL LOCKED (decomposition + GST + count-fix) ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #189
+
+**Founder locked the full pricing-display model (Jun 22). No code yet — numbers approved, build staged next.** Resolves R-PRICE-a/b/d from #188.
+
+### THE MODEL (final, founder-confirmed)
+- **Anchor = the existing real price**, GST-EXCLUSIVE. The seeded `PlanPrice.priceRs` (e.g. 1-Month Veg ALL_FOUR Standard = ₹16,999) is the pre-GST subtotal and DOES NOT CHANGE.
+- **Charges are stripped from the headline, added back at checkout** (build UP, not down):
+  - card shows: `MRP (struck)` → **`base`** (the low hook)
+  - checkout shows: `base + delivery + packaging = subtotal (+) GST = pays`
+- **base = subtotal − delivery − packaging** (derived, never typed).
+- **Per-delivery basis (monthly = 30 deliveries):** delivery ₹1,500/mo, packaging ₹2,000/mo → scale by delivery count, round to ₹50. (Delivery ₹50/del, packaging ₹66.67/del.) **NOTE the swap: delivery 1500, packaging 2000** (founder corrected Jun 22).
+- **MRP (struck) = 1.85 × base**, rounded to a smooth ₹X,999/₹X,499 ending.
+- **GST = 5% on the FULL subtotal**, added ON TOP at checkout. ⚠ **This raises what PayU/COD collect** — 1-Month goes ₹16,999 → **₹17,849 paid**. Founder confirmed: 16,999 was always GST-exclusive; GST-inclusive total is correct.
+- **Tier scaling:** charges are PHYSICAL → FIXED across tiers; only base/subtotal scale (Std 1.0 / Prem 1.25 / Lux 1.5). 1-Month base: Std 13,499 / Prem 17,749 / Lux 21,998; each +1,500+2,000+GST.
+- **Digital (Starter/Pro): NO delivery, NO packaging.** base = price; card shows MRP(1.85×) struck → price; checkout adds GST only. Starter ₹499→₹299, Pro ₹1,499→₹699.
+
+### COMPUTED TABLE (Veg ALL_FOUR Standard — the reference column)
+| Duration | Del# | MRP | base(card) | +Deliv | +Pack | =Subtotal | +GST | PAYS |
+|---|---|---|---|---|---|---|---|---|
+| Trial Day | 1 | 999 | 650 | 50 | 50 | 750 | 38 | 788 |
+| 1 Week | 7 | 7,499 | 4,100 | 350 | 450 | 4,900 | 245 | 5,145 |
+| 2 Weeks | 14 | 14,999 | 8,070 | 700 | 950 | 9,720 | 486 | 10,206 |
+| Mon–Fri | 22 | 20,999 | 11,310 | 1,100 | 1,450 | 13,860 | 693 | 14,553 |
+| 1 Month | 30 | 24,999 | 13,499 | 1,500 | 2,000 | 16,999 | 850 | 17,849 |
+| 2 Months | 60 | 47,999 | 26,000 | 3,000 | 4,000 | 33,000 | 1,650 | 34,650 |
+| 3 Months | 90 | 67,999 | 36,750 | 4,500 | 6,000 | 47,250 | 2,362 | 49,612 |
+
+### BUG FIX BUNDLED (founder approved): DELIVERY-COUNT DRIFT
+Counts disagree across files — `BI_WEEKLY` 14 (cod/activate) vs 15 (plan-tier-pricing); `MONTHLY_EXCL_WEEKENDS` 26 (cod/activate) vs 22 (plan-tier-pricing). **Canonical DELIVERY_COUNT (for charge scaling) = {TRIAL_DAY:1, WEEKLY:7, BI_WEEKLY:14, MONTHLY_EXCL_WEEKENDS:22, ONE_MONTH:30, TWO_MONTH:60, THREE_MONTH:90}.** Separate latent bug noted: `DUR_DAYS` is reused for BOTH endDate calendar-span AND delivery count — for MONTHLY_EXCL these differ (span ~30 calendar days, 22 deliveries); split them when touching activation.
+
+### BUILD PLAN (staged like #128/#133 — revenue path)
+1. **schema (additive `db push`):** `PlanPrice` += `deliveryRs Int?`, `packagingRs Int?` (or compute-only via a shared lib — decide at build). 2. **`lib/pricing-decomposition.ts`** — single source: given (subtotal, durationCount, isDigital) → {mrp, base, deliveryRs, packagingRs, gstRs, total}. 3. **checkout UI** (cod + payu + digital paths) — line items + GST; PayU/COD now charge subtotal+GST. 4. **card/plan** — MRP strike-through + base headline. 5. **admin coupon CRUD + seed** (R-PRICE-c, separate). Each step tsc-gated (#183).
+
+### Decision
+- **#189** — Pricing-display model LOCKED + computed + approved. GST-exclusive anchor → +5% on top (collected total rises, founder-confirmed). Delivery ₹1,500 / packaging ₹2,000 monthly basis, scaled by canonical delivery count; base derived; MRP = 1.85×base smooth. Delivery-count drift fix bundled. Build staged, not yet started.
+
+---
+
+## ═══════════ R-PRICE — BUILD BATCH 1 (lib + checkout) SHIPPED ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #190
+
+**Pricing decomposition: keystone lib + main checkout built + tsc-clean. Routes untouched (display-only).**
+
+Key de-risk realized at build time: base + delivery + packaging = subtotal (the existing `priceRs`), so the order already records subtotal/gst/total correctly — **the decomposition is PURE PRESENTATION. COD/PayU routes need NO change.** Eliminates the revenue-path risk flagged in #189.
+
+- **`lib/pricing-decomposition.ts`** (NEW) — pure single-source: `decomposePrice({subtotalRs, duration, isDigital})` → `{mrpRs, baseRs, deliveryRs, packagingRs, subtotalRs, gstRs, totalRs}` + canonical `DELIVERY_COUNT` map + `durationKeyFromShort()`. Delivery ₹1,500/mo + packaging ₹2,000/mo scaled by count, rounded ₹50; base = subtotal − charges; MRP = 1.85× smooth; GST 5% on subtotal. **tsc --strict exit 0**; runtime-verified against the #189 table to the rupee + edge clamp (tiny price → base never ≤0).
+- **`app/checkout/page.tsx`** (EDIT) — order summary now shows Plan value (struck MRP) → Base price → Delivery → Packaging → Subtotal → GST → Total. **Fixed a pre-existing bug:** COD showed "Pay at door ₹16,999 / GST collected at delivery" while the COD route already recorded ₹17,849 — now COD pay-at-door = the GST-inclusive total (matches what's recorded). Submit button, COD keep-ready note, credit-preview, and confirmation-redirect all use the GST-inclusive `grandTotal`. **tsc --strict exit 0** (real lib + stubbed app imports).
+
+### REMAINING — R-PRICE build batch 2 (marketing display, lower risk)
+- `app/plans/PlansCatalog.tsx` — card price → struck MRP + base headline (lines ~150, ~326).
+- `app/plans/[slug]/PlanDetailClient.tsx` — per-duration price → MRP strike + base (lines ~978–983).
+- `app/checkout/digital/page.tsx` — digital decomposition (no delivery/packaging, MRP strike + GST).
+- `app/plans/digital/page.tsx` — digital card strike.
+- Delivery-count drift fix in `cod`/`activate-digital`/`plan-tier-pricing` (align to canonical `DELIVERY_COUNT`; keep endDate calendar-span separate).
+- R-PRICE-c: admin coupon CRUD + seed (so coupons can be issued — "no coupon available" on live).
+
+### Decision
+- **#190** — R-PRICE batch 1 (lib + main checkout) shipped, tsc-clean, routes untouched (display-only — no revenue-path risk). Batch 2 (catalog/detail/digital cards + count-fix + coupon CRUD) is the remaining marketing-display work.

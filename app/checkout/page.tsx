@@ -9,6 +9,7 @@ import {
   Banknote, CreditCard, FlaskConical, MapPin, Plus, Pencil,
 } from "lucide-react";
 import DeliveryWindowToggle from "@/components/DeliveryWindowToggle";
+import { decomposePrice, durationKeyFromShort } from "@/lib/pricing-decomposition";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -182,6 +183,14 @@ function CheckoutInner() {
   const price    = isTest ? 1 : rawPrice;
   const priceGST = isTest ? 1 : Math.round(rawPrice * 1.05);
 
+  // R-PRICE (#189) — marketing decomposition of the (GST-exclusive) anchor price.
+  // base + delivery + packaging = subtotal (rawPrice); GST on top → total.
+  // Display-only: the order still records subtotal/gst/total exactly as before.
+  const bd = isTest
+    ? null
+    : decomposePrice({ subtotalRs: rawPrice, duration: durationKeyFromShort(dur) });
+  const grandTotal = bd ? bd.totalRs : priceGST; // GST-inclusive, what's collected
+
   const productinfo = isTest
     ? "FitFuel TEST TRANSACTION — ignore"
     : `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
@@ -294,7 +303,7 @@ function CheckoutInner() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to place order");
-      router.push(`/order/confirmation?txnid=COD-${Date.now()}&amount=${rawPrice}&cod=1&order=${data.orderNumber}`);
+      router.push(`/order/confirmation?txnid=COD-${Date.now()}&amount=${grandTotal}&cod=1&order=${data.orderNumber}`);
     } catch (err) {
       console.error("[COD]", err);
       alert("Something went wrong. Please try WhatsApp ordering instead.");
@@ -336,7 +345,7 @@ function CheckoutInner() {
 
   // 17C-2 — fetch credit preview when total changes
   useEffect(() => {
-    const sub = payMethod === "cod" ? rawPrice : priceGST;
+    const sub = grandTotal;
     if (sub <= 0) return;
     fetch(`/api/checkout/credit-preview?subtotal=${sub}`)
       .then((r) => r.json())
@@ -349,7 +358,7 @@ function CheckoutInner() {
         }
       })
       .catch(() => { setCreditBalance(0); setCreditApplicable(0); });
-  }, [rawPrice, priceGST, payMethod]);
+  }, [rawPrice, priceGST, grandTotal, payMethod]);
 
   const showAddressForm = useNewAddress || savedAddresses.length === 0;
 
@@ -525,7 +534,7 @@ function CheckoutInner() {
                       borderRadius: 10, padding: "12px 16px",
                       fontSize: 13, color: T.textSecond, lineHeight: 1.6,
                     }}>
-                      💵 Keep <strong style={{ color: T.textPrimary }}>{fmt(rawPrice)}</strong> ready at delivery.
+                      💵 Keep <strong style={{ color: T.textPrimary }}>{fmt(grandTotal)}</strong> ready at delivery.
                       Our delivery partner will collect cash when your meals arrive.
                     </div>
                   </motion.div>
@@ -548,8 +557,8 @@ function CheckoutInner() {
                 {loading
                   ? (payMethod === "cod" ? "Placing order..." : "Redirecting to PayU...")
                   : payMethod === "cod"
-                    ? <><Banknote size={15} /> Place COD Order — {fmt(rawPrice)}</>
-                    : <>Pay {fmt(priceGST)} securely <ArrowRight size={15} /></>
+                    ? <><Banknote size={15} /> Place COD Order — {fmt(grandTotal)}</>
+                    : <>Pay {fmt(grandTotal)} securely <ArrowRight size={15} /></>
                 }
               </button>
 
@@ -592,27 +601,49 @@ function CheckoutInner() {
                   </div>
                 ) : (
                   <>
+                    {/* R-PRICE (#189) — marketing decomposition */}
+                    {bd && bd.mrpRs > bd.baseRs && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>Plan value</span>
+                        <span style={{ fontSize: 13, color: T.textMuted, textDecoration: "line-through" }}>{fmt(bd.mrpRs)}</span>
+                      </div>
+                    )}
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 13, color: T.textMuted }}>Plan price</span>
-                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(rawPrice)}</span>
+                      <span style={{ fontSize: 13, color: T.textMuted }}>Base price</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.baseRs : rawPrice)}</span>
+                    </div>
+                    {bd && bd.deliveryRs > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>Delivery charges</span>
+                        <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd.deliveryRs)}</span>
+                      </div>
+                    )}
+                    {bd && bd.packagingRs > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted }}>Packaging &amp; handling</span>
+                        <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd.packagingRs)}</span>
+                      </div>
+                    )}
+                    <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, color: T.textMuted }}>Subtotal</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.subtotalRs : rawPrice)}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
-                      <span style={{ fontSize: 13, color: payMethod === "cod" ? T.textMuted : T.textPrimary, fontStyle: payMethod === "cod" ? "italic" : "normal" }}>
-                        {payMethod === "cod" ? "collected at delivery" : fmt(priceGST - rawPrice)}
-                      </span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.gstRs : priceGST - rawPrice)}</span>
                     </div>
                     {creditApplicable > 0 && useCredit && (
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
                         <span style={{ fontSize: 13, color: T.accent }}>FitFuel credit</span>
-                        <span style={{ fontSize: 13, color: T.accent }}>{'\u2212'} {fmt(Math.min(creditApplicable, payMethod === "cod" ? rawPrice : priceGST))}</span>
+                        <span style={{ fontSize: 13, color: T.accent }}>{'\u2212'} {fmt(Math.min(creditApplicable, grandTotal))}</span>
                       </div>
                     )}
                     <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>{payMethod === "cod" ? "Pay at door" : "Total"}</span>
                       <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>
-                        {fmt(Math.max(0, (payMethod === "cod" ? rawPrice : priceGST) - (useCredit ? creditApplicable : 0)))}
+                        {fmt(Math.max(0, grandTotal - (useCredit ? creditApplicable : 0)))}
                       </span>
                     </div>
                   </>
