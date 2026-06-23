@@ -10,6 +10,7 @@ import { auth } from "@/lib/auth";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 import { processReferralReward, applyCreditAtCheckout, recordCreditChange } from "@/lib/partners";
 import { resolvePurchasedPlan } from "@/lib/resolve-purchased-plan";
+import { applyCoupon } from "@/lib/coupons";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { codOrderSchema } from "@/lib/validation/schemas";
@@ -74,10 +75,36 @@ export async function POST(req: NextRequest) {
     }
 
     const subtotal = Math.round(Number(price));
-    const gst      = Math.round(subtotal * 0.05);
-    const baseTotal = subtotal + gst;
 
     const user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
+
+    // ── R-PRICE: server-side coupon re-validation (discount applied BEFORE GST) ──
+    let couponDiscountRs = 0;
+    let appliedCouponCode: string | null = null;
+    let appliedCouponId: string | null = null;
+    const couponCode = parsed.data.couponCode?.trim().toUpperCase();
+    if (couponCode) {
+      const coupon = await (prisma as any).coupon.findUnique({ where: { code: couponCode } });
+      if (coupon) {
+        const [uCount, gCount, paid] = await Promise.all([
+          (prisma as any).couponRedemption.count({ where: { couponId: coupon.id, userId: user.id } }),
+          (prisma as any).couponRedemption.count({ where: { couponId: coupon.id } }),
+          (prisma as any).order.count({ where: { userId: user.id, paymentStatus: "SUCCESS" } }),
+        ]);
+        const cres = applyCoupon(coupon, {
+          saleSubtotalRs: subtotal, category: "PHYSICAL", planSlug,
+          isFirstOrder: paid === 0, userRedemptionCount: uCount, globalRedemptionCount: gCount, deliveryFeeRs: 0,
+        });
+        if (cres.ok) {
+          couponDiscountRs = Math.min(cres.discountRs, Math.max(0, subtotal - 1));
+          appliedCouponCode = coupon.code;
+          appliedCouponId = coupon.id;
+        }
+      }
+    }
+    const discountedSubtotal = subtotal - couponDiscountRs;
+    const gst      = Math.round(discountedSubtotal * 0.05);
+    const baseTotal = discountedSubtotal + gst;
 
     // ── 17C-2: apply credit if signed in AND opted in AND owns this account ──
     let creditAppliedRs = 0;
@@ -119,7 +146,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id, addressId: addr.id, orderNumber,
         status: "CONFIRMED", subtotalRs: subtotal, gstRs: gst, totalRs: total,
-        creditAppliedRs,
+        creditAppliedRs, discountRs: couponDiscountRs, couponCode: appliedCouponCode,
         paymentMethod: "CASH_ON_DELIVERY", paymentStatus: "PENDING",
         referralAttribution: refSnapshot,
         notes: JSON.stringify({ diet, dur, meal, planSlug: planSlug || null, deliveryWindow: deliveryWindow === "EVENING" ? "EVENING" : "MORNING", isJain: diet === "jain" }),
@@ -137,6 +164,15 @@ export async function POST(req: NextRequest) {
     await (prisma as any).payment.create({
       data: { orderId: order.id, method: "CASH_ON_DELIVERY", status: "PENDING", amountRs: total },
     });
+
+    // ── R-PRICE: record coupon redemption (enforces usage limits next time) ──
+    if (appliedCouponId && couponDiscountRs > 0) {
+      try {
+        await (prisma as any).couponRedemption.create({
+          data: { couponId: appliedCouponId, userId: user.id, orderId: order.id, amountRs: couponDiscountRs },
+        });
+      } catch (e) { console.error("[COD] coupon redemption record failed", e); }
+    }
 
     const startDate = new Date();
     const days = DUR_DAYS[durEnum] ?? 30;

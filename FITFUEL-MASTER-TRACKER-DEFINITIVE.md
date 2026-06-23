@@ -3078,3 +3078,26 @@ Verify: admin-auth exhaustiveness **tsc exit 0**; API + page + client **tsc --st
 
 ### Decision
 - **#193** — Admin coupon CRUD shipped; R-PRICE feature-complete. All R-PRICE changes ready for one mass live test pass (cards, checkout decomposition, COD GST-inclusive total, coupon apply, admin coupon create).
+
+---
+
+## ═══════════ R-PRICE — COUPONS WIRED INTO PHYSICAL CHECKOUT (the real gap) ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #194
+
+**Founder test surfaced the actual blocker: coupons were unusable on physical orders — no input box, and `/api/coupon/validate` was hardcoded DIGITAL-only.** Engine/seed/admin (#192/#193) existed but the customer-facing loop was never closed. Fixed end-to-end. (Decomposition itself verified perfect in live test: ₹24,999 struck → ₹13,499 base → +₹1,500 +₹2,000 = ₹16,999 → +₹850 = ₹17,849. COD/PayU/digital all correct.)
+
+- **`lib/validation/schemas.ts`** (EDIT) — `couponValidateSchema` += optional `meal`/`isDigital`/`subtotalRs`/`deliveryRs` (physical path); `codOrderSchema` + `payuInitSchema` += optional `couponCode`.
+- **`app/api/coupon/validate/route.ts`** (EDIT) — now category-aware. `isDigital:false` → applies coupon (category PHYSICAL) to the provided physical subtotal, returns discount + GST-incl total. Digital path unchanged (backward compatible).
+- **`app/checkout/page.tsx`** (EDIT) — coupon input box (Apply/Remove + message) + a "Coupon (CODE) − ₹X" summary line; GST recomputes on the net; `grandTotal` reflects the discount; `couponCode` passed to COD + PayU. (Fixed a hooks-order bug caught by tsc: coupon state must declare before the total computation that reads it.)
+- **`app/api/orders/cod/route.ts`** (EDIT) — server-side coupon RE-validation (never trusts client discount): applies category PHYSICAL before GST, records `Order.discountRs` + `couponCode`, creates `CouponRedemption` (enforces usage limits going forward). No schema change — `Order.discountRs`/`couponCode` + `CouponRedemption` already existed.
+- **`app/api/payments/payu/route.ts`** (EDIT) — same coupon re-validation; charge is now SERVER-AUTHORITATIVE (recomputes subtotal−discount+GST instead of trusting client `amount`). ⚠ PayU `CouponRedemption` recording belongs in the success callback (order is PENDING at init) — flagged; order already carries `couponCode`/`discountRs` for it.
+- **`app/order/confirmation/*`** (EDIT) — fixed "+ 5% GST" double-count copy (`amount` is now GST-inclusive).
+
+Verify: schemas (real zod), checkout UI, validate/cod/payu all **tsc --strict exit 0**.
+
+### Remaining (flagged)
+- PayU coupon `CouponRedemption` recording in the success callback route.
+- (carryover) MONTHLY_EXCL endDate-span split; digital MRP → 1.85× alignment.
+
+### Decision
+- **#194** — Coupons now usable + testable on physical checkout end-to-end (input → validate → discount → COD/PayU honor + redemption). Closes the loop that #192/#193 left open. R-PRICE fully functional.

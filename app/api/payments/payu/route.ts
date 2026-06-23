@@ -10,6 +10,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { applyCreditAtCheckout } from "@/lib/partners";
+import { applyCoupon } from "@/lib/coupons";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { payuInitSchema } from "@/lib/validation/schemas";
@@ -78,11 +79,42 @@ export async function POST(req: NextRequest) {
 
     let creditAppliedRs = 0;
     let user: any = null;
-    let chargeAmountRs = Math.round(Number(amount)); // what PayU will charge
+    let couponDiscountRs = 0;
+    let appliedCouponCode: string | null = null;
+    let appliedCouponId: string | null = null;
+    const subtotalRsServer = Math.round(Number(price));
+    let gstRsServer = Math.round(Number(amount)) - subtotalRsServer; // recomputed below
+    let chargeAmountRs = Math.round(Number(amount)); // recomputed server-side below
 
     // We need user.id BEFORE credit lookup. Upsert now (this is the order owner).
     if (dietEnum && durEnum && mealEnum && price) {
       user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
+
+      // ── R-PRICE: server-side coupon re-validation (discount BEFORE GST) ──
+      const couponCode = (parsed.data.couponCode || "").trim().toUpperCase();
+      if (couponCode) {
+        const coupon = await (prisma as any).coupon.findUnique({ where: { code: couponCode } });
+        if (coupon) {
+          const [uCount, gCount, paid] = await Promise.all([
+            (prisma as any).couponRedemption.count({ where: { couponId: coupon.id, userId: user.id } }),
+            (prisma as any).couponRedemption.count({ where: { couponId: coupon.id } }),
+            (prisma as any).order.count({ where: { userId: user.id, paymentStatus: "SUCCESS" } }),
+          ]);
+          const cres = applyCoupon(coupon, {
+            saleSubtotalRs: subtotalRsServer, category: "PHYSICAL", planSlug,
+            isFirstOrder: paid === 0, userRedemptionCount: uCount, globalRedemptionCount: gCount, deliveryFeeRs: 0,
+          });
+          if (cres.ok) {
+            couponDiscountRs = Math.min(cres.discountRs, Math.max(0, subtotalRsServer - 1));
+            appliedCouponCode = coupon.code;
+            appliedCouponId = coupon.id;
+          }
+        }
+      }
+      // Recompute the authoritative charge from subtotal − discount + GST.
+      const discountedSubtotal = subtotalRsServer - couponDiscountRs;
+      gstRsServer = Math.round(discountedSubtotal * 0.05);
+      chargeAmountRs = discountedSubtotal + gstRsServer;
 
       // 17C-2: apply credit only if signed in AND opted in AND owns this account
       if (useCredit) {
@@ -107,8 +139,8 @@ export async function POST(req: NextRequest) {
 
     // ── Create the PENDING order now, keyed by txnid ──
     if (user && dietEnum && durEnum && mealEnum && price) {
-      const subtotal = Math.round(Number(price));     // pre-GST
-      const gst      = Math.round(Number(amount)) - subtotal; // original gst (before credit)
+      const subtotal = subtotalRsServer;     // pre-GST (gross)
+      const gst      = gstRsServer;          // GST on discounted subtotal
       const window   = deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
 
       const addr = await (prisma as any).address.create({
@@ -120,7 +152,7 @@ export async function POST(req: NextRequest) {
           userId: user.id, addressId: addr.id, orderNumber: genOrderNumber(),
           status: "PENDING_PAYMENT",
           subtotalRs: subtotal, gstRs: gst, totalRs: chargeAmountRs,
-          creditAppliedRs,
+          creditAppliedRs, discountRs: couponDiscountRs, couponCode: appliedCouponCode,
           paymentMethod: "PAYU", paymentStatus: "PENDING", payuTxnId: txnid,
           notes: JSON.stringify({ diet, dur, meal, planSlug: planSlug || null, deliveryWindow: window, isJain: diet === "jain" }),
           items: {

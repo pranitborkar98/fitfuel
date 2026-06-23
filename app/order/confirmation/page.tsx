@@ -38,7 +38,7 @@ function ConfirmationInner() {
     { icon: <ChefHat     size={18} />, title: "Fresh preparation", sub: "Your meals are cooked fresh daily in our kitchen" },
     { icon: <Clock       size={18} />, title: "Delivery by 10am",  sub: "7am – 10am to your door every day" },
     { icon: <Truck       size={18} />, title: isCOD ? "Pay cash at door" : "Payment received ✓",
-      sub: isCOD ? `Keep ${fmt(amount)} + 5% GST ready` : "Paid online via PayU" },
+      sub: isCOD ? `Keep ${fmt(amount)} ready (incl. GST)` : "Paid online via PayU" },
   ];
 
   const isGuest = !session;
@@ -84,7 +84,7 @@ function ConfirmationInner() {
           </h1>
           <p style={{ fontSize: 15, color: T.textSecond, lineHeight: 1.7, margin: 0 }}>
             {isCOD
-              ? <>Keep <strong style={{ color: T.textPrimary }}>{fmt(amount)}</strong> + 5% GST ready at delivery. Fresh meals arrive <strong style={{ color: T.textPrimary }}>7am–10am</strong> daily.</>
+              ? <>Keep <strong style={{ color: T.textPrimary }}>{fmt(amount)}</strong> ready at delivery (incl. GST). Fresh meals arrive <strong style={{ color: T.textPrimary }}>7am–10am</strong> daily.</>
               : <>Your FitFuel order is confirmed. Fresh meals at your door between <strong style={{ color: T.textPrimary }}>7am–10am</strong> daily.</>
             }
           </p>
@@ -113,7 +113,7 @@ function ConfirmationInner() {
             {amount > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 13, color: T.textMuted }}>{isCOD ? "Pay at door" : "Amount paid"}</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: T.accent }}>{fmt(amount)}{isCOD ? " + GST" : ""}</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: T.accent }}>{fmt(amount)}</span>
               </div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

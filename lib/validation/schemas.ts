@@ -75,6 +75,12 @@ export const couponValidateSchema = z.object({
   dur: z.enum(DUR_KEYS),
   email: zEmail.optional(),
   buyerStateCode: z.string().trim().length(2).toUpperCase().optional(),
+  // R-PRICE: physical coupon support. When isDigital === false, the route applies
+  // the coupon against the provided physical subtotal (category PHYSICAL).
+  meal: z.enum(MEAL_KEYS).optional(),
+  isDigital: z.boolean().optional(),
+  subtotalRs: z.coerce.number().finite().min(0).max(500_000).optional(),
+  deliveryRs: z.coerce.number().finite().min(0).max(50_000).optional(),
 });
 export type CouponValidateInput = z.infer<typeof couponValidateSchema>;
 
@@ -101,6 +107,7 @@ export const codOrderSchema = z.object({
   useCredit: z.boolean().optional().default(false),
   planSlug: z.string().trim().max(120).optional(),
   refCode: z.string().trim().max(64).optional(),
+  couponCode: z.string().trim().max(40).optional(),
 });
 export type CodOrderInput = z.infer<typeof codOrderSchema>;
 
@@ -122,6 +129,7 @@ export const payuInitSchema = z.object({
   productinfo: z.string().trim().min(1).max(200),
   useCredit: z.boolean().optional().default(false),
   planSlug: z.string().trim().max(120).optional(),
+  couponCode: z.string().trim().max(40).optional(),
 });
 export type PayuInitInput = z.infer<typeof payuInitSchema>;
 

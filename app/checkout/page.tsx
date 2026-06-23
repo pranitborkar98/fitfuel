@@ -183,13 +183,23 @@ function CheckoutInner() {
   const price    = isTest ? 1 : rawPrice;
   const priceGST = isTest ? 1 : Math.round(rawPrice * 1.05);
 
+  // R-PRICE — coupon state (declared before the total computation that reads `discount`)
+  const [coupon, setCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponApplied, setCouponApplied] = useState<string | null>(null);
+  const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+
   // R-PRICE (#189) — marketing decomposition of the (GST-exclusive) anchor price.
   // base + delivery + packaging = subtotal (rawPrice); GST on top → total.
   // Display-only: the order still records subtotal/gst/total exactly as before.
   const bd = isTest
     ? null
     : decomposePrice({ subtotalRs: rawPrice, duration: durationKeyFromShort(dur) });
-  const grandTotal = bd ? bd.totalRs : priceGST; // GST-inclusive, what's collected
+  // coupon discount reduces the taxable subtotal; GST recomputes on the net.
+  const effSubtotal = Math.max(0, rawPrice - discount);
+  const effGst = bd ? Math.round(effSubtotal * 0.05) : 0;
+  const grandTotal = isTest ? priceGST : effSubtotal + effGst; // GST-inclusive collected
 
   const productinfo = isTest
     ? "FitFuel TEST TRANSACTION — ignore"
@@ -286,6 +296,39 @@ function CheckoutInner() {
     );
   }
 
+  async function applyCouponFn() {
+    const code = coupon.trim().toUpperCase();
+    if (!code) return;
+    setCouponBusy(true); setCouponMsg(null);
+    try {
+      const res = await fetch("/api/coupon/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code, planSlug, dur, email: form.email || undefined,
+          isDigital: false, subtotalRs: rawPrice, deliveryRs: bd?.deliveryRs ?? 0, meal,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setDiscount(data.discountRs); setCouponApplied(code);
+        setCouponMsg({ ok: true, text: `Applied — you save ${data.display.discount}` });
+      } else {
+        setDiscount(0); setCouponApplied(null);
+        setCouponMsg({ ok: false, text: data.reason || "Invalid coupon." });
+      }
+    } catch {
+      setDiscount(0); setCouponApplied(null);
+      setCouponMsg({ ok: false, text: "Could not validate coupon." });
+    } finally {
+      setCouponBusy(false);
+    }
+  }
+
+  function clearCoupon() {
+    setCoupon(""); setDiscount(0); setCouponApplied(null); setCouponMsg(null);
+  }
+
   async function handleCOD() {
     setLoading(true);
     const { address: deliveryAddress, city, pincode } = getDeliveryAddress();
@@ -299,6 +342,7 @@ function CheckoutInner() {
           address: deliveryAddress, city, pincode,
           diet, dur, meal, price: rawPrice, deliveryWindow, planSlug,
           useCredit: useCredit && creditApplicable > 0,
+          couponCode: couponApplied || undefined,
         }),
       });
       const data = await res.json();
@@ -323,8 +367,9 @@ function CheckoutInner() {
         email: form.email, phone: form.phone,
         address: deliveryAddress, city, pincode,
         diet, dur, meal, price: rawPrice, deliveryWindow, planSlug,
-        amount: priceGST.toFixed(2), productinfo,
+        amount: grandTotal.toFixed(2), productinfo,
         useCredit: useCredit && creditApplicable > 0,
+        couponCode: couponApplied || undefined,
       }),
     });
     if (!res.ok) throw new Error("Failed to initiate payment");
@@ -629,9 +674,15 @@ function CheckoutInner() {
                       <span style={{ fontSize: 13, color: T.textMuted }}>Subtotal</span>
                       <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.subtotalRs : rawPrice)}</span>
                     </div>
+                    {discount > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, color: T.accent }}>Coupon ({couponApplied})</span>
+                        <span style={{ fontSize: 13, color: T.accent }}>{'\u2212'} {fmt(discount)}</span>
+                      </div>
+                    )}
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
-                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.gstRs : priceGST - rawPrice)}</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? effGst : priceGST - rawPrice)}</span>
                     </div>
                     {creditApplicable > 0 && useCredit && (
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -649,6 +700,24 @@ function CheckoutInner() {
                   </>
                 )}
               </div>
+
+              {/* R-PRICE — coupon input */}
+              {!isTest && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Coupon code"
+                      style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: T.textPrimary, fontSize: 13, outline: "none" }} />
+                    {couponApplied ? (
+                      <button type="button" onClick={clearCoupon}
+                        style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "0 14px", fontSize: 13, cursor: "pointer" }}>Remove</button>
+                    ) : (
+                      <button type="button" onClick={applyCouponFn} disabled={couponBusy || !coupon.trim()}
+                        style={{ background: couponBusy || !coupon.trim() ? "rgba(132,204,22,0.4)" : T.accent, color: "#000", fontWeight: 800, border: "none", borderRadius: 8, padding: "0 16px", fontSize: 13, cursor: couponBusy ? "not-allowed" : "pointer" }}>{couponBusy ? "…" : "Apply"}</button>
+                    )}
+                  </div>
+                  {couponMsg && <div style={{ fontSize: 12, marginTop: 6, color: couponMsg.ok ? T.accent : "#ef4444" }}>{couponMsg.text}</div>}
+                </div>
+              )}
 
               {/* 17C-2 — credit toggle (signed-in users only) */}
               {creditApplicable > 0 && (
