@@ -3051,3 +3051,30 @@ Verify: `DurationKey → PlanDurationKey` assignability + numeric-field assertio
 
 ### Decision
 - **#192** — R-PRICE batch 2b shipped: digital correctly left as-is (own 18% inclusive logic), BI_WEEKLY count fixed, launch coupons seeded. Only the admin coupon CRUD UI remains to fully close R-PRICE.
+
+---
+
+## ═══════════ R-PRICE — ADMIN COUPON CRUD (R-PRICE-c) — R-PRICE COMPLETE ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #193
+
+**Admin coupon management shipped — R-PRICE fully built (pending the mass live test).**
+
+New "coupons" admin surface (OWNER/ADMIN), matching the requireSurface/requireApiRole pattern:
+- **`lib/admin-auth.ts`** (EDIT) — added `"coupons"` to the `Surface` union + `coupons: ["OWNER","ADMIN"]` to `SURFACE_ROLES` (Record stays exhaustive — tsc-verified).
+- **`app/admin/layout.tsx`** (EDIT) — added "Coupons" nav item (auto-hidden for non-OWNER/ADMIN by the existing `canAccess` filter).
+- **`app/api/admin/coupons/route.ts`** (NEW) — GET (list + redemption counts), POST `{action: create|update|toggle|delete}`. Validates code `^[A-Z0-9]{3,40}$` + uniqueness, PERCENT 1–100, FLAT ≥₹1. Delete preserves history: a coupon WITH redemptions is deactivated, not hard-deleted.
+- **`app/admin/coupons/page.tsx`** (NEW) — server, `requireSurface("coupons")` → client.
+- **`app/admin/coupons/CouponsClient.tsx`** (NEW) — create form (code/type/value/caps/limits/scope/validity/first-order/stackable) + live list with toggle-active + delete. Dark admin aesthetic.
+
+Verify: admin-auth exhaustiveness **tsc exit 0**; API + page + client **tsc --strict exit 0** (stubbed admin-auth/prisma/next).
+
+### R-PRICE — FULL STATUS (Decisions #188→#193)
+- ✅ #189 model locked + computed table approved
+- ✅ #190 batch 1: `lib/pricing-decomposition.ts` + main checkout breakdown
+- ✅ #191 batch 2a: catalog + plan-detail card MRP strike→base
+- ✅ #192 batch 2b: digital left as-is (correct), BI_WEEKLY count fix, launch coupon seed
+- ✅ #193 admin coupon CRUD
+- ⏳ Deferred (flagged, separate): MONTHLY_EXCL endDate-span vs delivery-count split (activation layer); digital MRP → 1.85× formula alignment (minor).
+
+### Decision
+- **#193** — Admin coupon CRUD shipped; R-PRICE feature-complete. All R-PRICE changes ready for one mass live test pass (cards, checkout decomposition, COD GST-inclusive total, coupon apply, admin coupon create).

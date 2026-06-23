@@ -31,6 +31,7 @@ const NAV: { label: string; href: string; surface: Surface }[] = [
   { label: "Staff", href: "/admin/staff", surface: "staff" },
 { label: "Partners", href: "/admin/partners", surface: "partners" },
   { label: "Supplements", href: "/admin/supplements", surface: "supplements" },
+  { label: "Coupons", href: "/admin/coupons", surface: "coupons" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
