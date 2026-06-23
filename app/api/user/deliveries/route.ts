@@ -1,23 +1,24 @@
 // app/api/user/deliveries/route.ts
 // Phase 15C-CONFIRM — the customer side of the delivery handshake.
-// GET  -> the user's recently dispatched deliveries (last 7 days)
-// POST -> { deliveryId, action: 'confirm' | 'issue', note? }
-//         'confirm' sets customerConfirmedAt; 'issue' sets customerIssueNote.
-// Both verify the delivery belongs to the signed-in user (via order.userId).
-// Phase 16A: on 'issue', fires delivery_issue_ack (customer) + staff_delivery_issue (OWNER/DISPATCH).
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { deliveryActionSchema } from "@/lib/validation/schemas";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
 
   const since = new Date();
   since.setDate(since.getDate() - 7);
@@ -50,21 +51,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
-  const deliveryId: string | undefined = body?.deliveryId;
-  const action: string | undefined = body?.action; // 'confirm' | 'issue'
-  const note: string | undefined =
-    typeof body?.note === "string" ? body.note.trim().slice(0, 500) : undefined;
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, deliveryActionSchema);
+  if (!parsed.ok) return parsed.response;
 
-  if (!deliveryId || (action !== "confirm" && action !== "issue")) {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
-  }
+  const deliveryId = parsed.data.deliveryId;
+  const action = parsed.data.action; // 'confirm' | 'issue'
+  const note = parsed.data.note?.trim().slice(0, 500) || undefined;
+
+  // action-specific requirement preserved (exact message)
   if (action === "issue" && !note) {
     return NextResponse.json({ error: "Please describe the issue." }, { status: 400 });
   }
 
-  // ── Ownership check: delivery must belong to one of this user's orders ──
-  // (Widened select for Phase 16A so staff alert can include orderNumber.)
+  // Ownership check: delivery must belong to one of this user's orders
   const owned = await (prisma as any).delivery.findFirst({
     where: { id: deliveryId, order: { userId: session.user.id } },
     select: {
@@ -85,7 +86,6 @@ export async function POST(req: NextRequest) {
     select: { id: true, customerConfirmedAt: true, customerIssueNote: true },
   });
 
-  // ────────────── Phase 16A: notifications on 'issue' ──────────────
   if (action === "issue") {
     try {
       const user = await (prisma as any).user.findUnique({

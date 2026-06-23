@@ -5,32 +5,28 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { calculateTDEE, getCalorieTarget, getMacroTargets } from '@/lib/tdee'
 import { addDays } from 'date-fns'
+import { enforceRateLimit } from '@/lib/rate-limit'
+import { readJson } from '@/lib/validation/core'
+import { onboardingSchema } from '@/lib/validation/schemas'
 
 // ── Plan selection logic ──────────────────────────────────────
-// Maps goal + diet + condition → meal plan slug
 function getPlanSlug(goal: string, diet: string, condition: string): string {
-  const d = diet // veg | egg | non-veg | jain | vegan
-
-  // Condition takes priority over goal
+  const d = diet
   if (condition === 'pcos')     return `pcos-${d}`
   if (condition === 'diabetic') return `diabetic-${d}`
   if (condition === 'thyroid')  return `thyroid-${d}`
   if (condition === 'heart')    return `heart-health-${d}`
   if (condition === 'obesity')  return `obesity-${d}`
   if (condition === 'gut')      return `gut-health-${d}`
-
-  // Goal-based
   if (goal === 'weight_loss')            return `weight-loss-${d}`
   if (goal === 'aggressive_weight_loss') return `weight-loss-${d}`
   if (goal === 'muscle_gain')            return `muscle-gain-${d}`
   if (goal === 'lean_bulk')              return `muscle-gain-${d}`
   if (goal === 'performance')            return `strength-hypertrophy-${d}`
   if (goal === 'maintenance')            return `balanced-${d}`
-
-  return `balanced-${d}` // safe default
+  return `balanced-${d}`
 }
 
-// Maps frontend diet value → slug suffix
 function dietToSlug(diet: string): string {
   const map: Record<string, string> = {
     vegetarian:     'veg',
@@ -50,7 +46,13 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id
-    const body = await req.json()
+
+    // WS-3 · SEC-1/2 (F1): rate-limit per user + validate body
+    const rl = await enforceRateLimit(req, 'mutation', userId)
+    if (!rl.ok) return rl.response
+    const parsed = await readJson(req, onboardingSchema)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.data
 
     const {
       weightKg,
@@ -64,25 +66,18 @@ export async function POST(req: NextRequest) {
       allergies = [],
     } = body
 
-    // ── Validate required fields ──────────────────────────────
     if (!weightKg || !heightCm || !age || !gender || !activityLevel || !goal || !dietaryPreference) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // ── Calculate TDEE + targets ──────────────────────────────
     const tdee = calculateTDEE({ weightKg, heightCm, age, gender, activityLevel })
     const calorieTarget = getCalorieTarget(tdee, goal, gender.toUpperCase() as any)
     const macros = getMacroTargets(calorieTarget, goal as any, weightKg)
 
-    // ── Determine plan slug ───────────────────────────────────
     const primaryCondition = healthConditions[0] ?? 'none'
     const dietSlug = dietToSlug(dietaryPreference)
     const targetSlug = getPlanSlug(goal, dietSlug, primaryCondition)
 
-    // ── Find the plan ─────────────────────────────────────────
-    // FIX 1: Never silently fall back to weight-loss-veg — that assigns the
-    // wrong diet to the user. If the target plan isn't seeded/active yet,
-    // tell the client explicitly so it doesn't serve wrong meals.
     const plan = await prisma.mealPlan.findUnique({
       where: { slug: targetSlug },
     })
@@ -101,7 +96,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── Check if already onboarded (prevent duplicate UserActivePlan) ──
     const existingProfile = await prisma.userProfile.findUnique({
       where: { userId },
     })
@@ -110,23 +104,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Already onboarded' }, { status: 400 })
     }
 
-    // ── FIX 2: Check for a confirmed order before creating UserActivePlan ──
-    // Onboarding saves the profile + targets but only creates the plan
-    // if the user has a CONFIRMED order. Without an order, we return the
-    // calculated targets so the Step 5 screen can display them — but the
-    // user must complete checkout to activate the plan.
     const confirmedOrder = await prisma.order.findFirst({
       where: {
         userId,
         status: 'CONFIRMED',
-        userActivePlans: { none: {} }, // order not already linked to a plan
+        userActivePlans: { none: {} },
       },
       orderBy: { createdAt: 'desc' },
     })
 
-    // ── Write to DB (transaction) ─────────────────────────────
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Always save UserProfile — targets are calculated regardless of order
+    const result = await prisma.$transaction(async (tx: any) => {
       const profile = await tx.userProfile.upsert({
         where: { userId },
         create: {
@@ -162,7 +149,6 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // 2. Only create UserActivePlan if there is a confirmed unpaired order
       let activePlan = null
       if (confirmedOrder) {
         const startDate = new Date()
@@ -172,7 +158,7 @@ export async function POST(req: NextRequest) {
           data: {
             userId,
             mealPlanId: plan.id,
-            orderId: confirmedOrder.id,  // link to the order that paid for this
+            orderId: confirmedOrder.id,
             startDate,
             endDate,
             currentDay: 1,
@@ -198,7 +184,6 @@ export async function POST(req: NextRequest) {
         displayName: result.plan.displayName,
         avgCaloriesPerDay: result.plan.avgCaloriesPerDay,
       },
-      // null if no confirmed order — frontend should redirect to checkout
       activePlanId: result.activePlan?.id ?? null,
       requiresOrder: !confirmedOrder,
     })
@@ -208,7 +193,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── Enum mappers ──────────────────────────────────────────────
 function mapGoalToEnum(goal: string) {
   const map: Record<string, string> = {
     weight_loss: 'LOSE_WEIGHT',

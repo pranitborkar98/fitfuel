@@ -1,19 +1,22 @@
 // app/api/nutrition/goals/route.ts
-// GET   /api/nutrition/goals   — fetch goals (or defaults)
-// PATCH /api/nutrition/goals   — create/update goals
-
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { goalsPatchSchema } from "@/lib/validation/schemas";
 
 const DEFAULTS = { calories: 2000, protein: 150, carbs: 250, fat: 67, waterMl: 2500 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
 
   const goal = await prisma.nutritionGoal.findUnique({
     where: { userId: session.user.id },
@@ -28,8 +31,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { calories, protein, carbs, fat, waterMl } = body;
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, goalsPatchSchema);
+  if (!parsed.ok) return parsed.response;
+  const { calories, protein, carbs, fat, waterMl } = parsed.data;
 
   const goal = await prisma.nutritionGoal.upsert({
     where:  { userId: session.user.id },

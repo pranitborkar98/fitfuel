@@ -1,11 +1,17 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { profilePatchSchema } from "@/lib/validation/schemas";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
 
   const user = await (prisma as any).user.findUnique({
     where: { id: session.user.id },
@@ -20,15 +26,17 @@ export async function GET() {
   return NextResponse.json(user);
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
-  const { name, phone, dietPreference, fitnessGoal, gender } = body;
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, profilePatchSchema);
+  if (!parsed.ok) return parsed.response;
+  const { name, phone, dietPreference, fitnessGoal, gender } = parsed.data;
 
-  // Update User (name + phone)
   try {
     await (prisma as any).user.update({
       where: { id: session.user.id },
@@ -47,7 +55,6 @@ export async function PATCH(req: Request) {
     throw e;
   }
 
-  // Upsert UserProfile (diet, goal, gender)
   await (prisma as any).userProfile.upsert({
     where:  { userId: session.user.id },
     update: {

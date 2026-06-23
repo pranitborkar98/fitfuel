@@ -1,16 +1,15 @@
 // app/api/user/notification-preferences/route.ts
-// Phase 16C \u2014 user-facing notification preference toggles.
-// GET returns current prefs (auto-create row with defaults if missing).
-// POST updates allowed fields (transactional categories are NOT editable here).
+// Phase 16C — user-facing notification preference toggles.
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { notificationPrefsSchema } from "@/lib/validation/schemas";
 
 export const dynamic = "force-dynamic";
 
-// Fields the user is allowed to toggle. orderUpdates + deliveryUpdates are
-// intentionally excluded \u2014 those are transactional and must always fire.
 const EDITABLE_FIELDS = [
   "weeklyDigest",
   "morningPush",
@@ -30,11 +29,13 @@ async function getOrCreatePrefs(userId: string) {
   return prefs;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
   const prefs = await getOrCreatePrefs(session.user.id);
   return NextResponse.json({ prefs });
 }
@@ -44,11 +45,15 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const body = await req.json().catch(() => ({}));
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, notificationPrefsSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data as Record<string, boolean | undefined>;
 
   const updateData: Record<string, boolean> = {};
   for (const f of EDITABLE_FIELDS) {
-    if (typeof body[f] === "boolean") updateData[f] = body[f];
+    if (typeof body[f] === "boolean") updateData[f] = body[f] as boolean;
   }
 
   const db = prisma as any;

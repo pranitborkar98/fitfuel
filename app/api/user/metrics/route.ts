@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson, readQuery } from "@/lib/validation/core";
+import { metricsQuerySchema, metricsPostSchema } from "@/lib/validation/schemas";
 
-// ─── GET /api/user/metrics — fetch all readings for current user ─────────────
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") ?? "30", 10);
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
+  const q = readQuery(req, metricsQuerySchema);
+  if (!q.ok) return q.response;
+  const limit = q.data.limit;
 
   const readings = await prisma.bodyMetric.findMany({
     where:   { userId: session.user.id },
@@ -19,26 +24,15 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ readings });
 }
 
-// ─── POST /api/user/metrics — save a new reading ─────────────────────────────
-// Field mapping: BodyMetricsClient → schema.prisma
-//   weight          → weightKg
-//   bodyFatRate     → bodyFatPct
-//   muscleMass      → muscleMassKg
-//   bodyWater       → waterPct
-//   boneMass        → boneMassKg
-//   bodyAge         → metabolicAge  (Int in schema — rounded)
-//   bmi             → bmi           ✅ same
-//   visceralFat     → visceralFat   ✅ same
-//   protein         → proteinPct
-//   subcutaneousFat → stored in notes JSON (not a schema column)
-//   skeletalMuscle  → stored in notes JSON (not a schema column)
-//   fatFreeWeight   → stored in notes JSON (not a schema column)
-//   bmr             → stored in notes JSON (not a schema column)
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, metricsPostSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   const {
     weight, bmi, bodyFatRate, fatFreeWeight, subcutaneousFat,
@@ -46,7 +40,6 @@ export async function POST(req: NextRequest) {
     protein, bmr, bodyAge, recordedAt,
   } = body;
 
-  // Pack the 4 fields not in schema into the notes column as JSON
   const extraFields: Record<string, number> = {};
   if (fatFreeWeight   != null) extraFields.fatFreeWeight   = fatFreeWeight;
   if (subcutaneousFat != null) extraFields.subcutaneousFat = subcutaneousFat;

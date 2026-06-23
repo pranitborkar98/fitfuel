@@ -1,11 +1,11 @@
 // app/api/nutrition/diary/route.ts
-// GET  /api/nutrition/diary?date=2026-05-18  — fetch diary + meal types + totals
-// POST /api/nutrition/diary                  — log a food entry
-
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson, readQuery } from "@/lib/validation/core";
+import { diaryQuerySchema, diaryPostSchema } from "@/lib/validation/schemas";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -13,9 +13,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(req.url);
-  const dateParam = searchParams.get("date");
-  const date = dateParam ? new Date(dateParam) : new Date();
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
+  const q = readQuery(req, diaryQuerySchema);
+  if (!q.ok) return q.response;
+
+  const date = q.data.date ? new Date(q.data.date) : new Date();
   date.setUTCHours(0, 0, 0, 0);
 
   const [entries, mealTypes] = await Promise.all([
@@ -28,7 +31,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   const totals = entries.reduce(
-    (acc, e) => ({
+    (acc: any, e: any) => ({
       calories: acc.calories + e.calories,
       protein:  acc.protein  + e.protein,
       carbs:    acc.carbs    + e.carbs,
@@ -47,15 +50,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { foodItemId, mealTypeId, date, quantity, notes } = body;
-
-  if (!foodItemId || !mealTypeId || !quantity || !date) {
-    return NextResponse.json(
-      { error: "foodItemId, mealTypeId, date, quantity required" },
-      { status: 400 }
-    );
-  }
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, diaryPostSchema);
+  if (!parsed.ok) return parsed.response;
+  const { foodItemId, mealTypeId, date, quantity, notes } = parsed.data;
 
   const food = await prisma.foodItem.findUnique({ where: { id: foodItemId } });
   if (!food) return NextResponse.json({ error: "Food not found" }, { status: 404 });

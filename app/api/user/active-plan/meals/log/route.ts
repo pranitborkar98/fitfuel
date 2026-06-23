@@ -2,16 +2,12 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { mealLogSchema } from "@/lib/validation/schemas";
 
-// POST /api/user/active-plan/meals/log
-// Body: { planScheduleSlotId: string, dayNumber: number, actualGrams?: number }
-//
-// LOOP-4 (Decision #165): logging a plan meal now ALSO writes a linked FoodEntry
-// (mealLogId set) so the meal surfaces in the unified nutrition diary. The
-// FoodEntry mirror is EXCLUDED from calorie sums (net-calories adds MealLog +
-// manual FoodEntries where mealLogId IS NULL), so nothing is double-counted.
+// LOOP-4 (Decision #165): logging a plan meal also writes a linked FoodEntry.
 
-// MealSlot enum -> seeded MealType.name (note: snack slot -> "Snacks", plural)
 const MEAL_TYPE_NAME: Record<string, string> = {
   BREAKFAST: "Breakfast",
   LUNCH: "Lunch",
@@ -26,13 +22,13 @@ export async function POST(req: NextRequest) {
   }
   const userId = session.user.id;
 
-  const { planScheduleSlotId, dayNumber, actualGrams } = await req.json();
+  const rl = await enforceRateLimit(req, "mutation", userId);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, mealLogSchema);
+  if (!parsed.ok) return parsed.response;
+  const { planScheduleSlotId, dayNumber, actualGrams } = parsed.data;
+  void dayNumber;
 
-  if (!planScheduleSlotId || !dayNumber) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
-
-  // 1. Resolve slot -> mealSlot + recipe (with macros) + servingMultiplier
   const slot = await prisma.planScheduleSlot.findUnique({
     where: { id: planScheduleSlotId },
     include: {
@@ -54,7 +50,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Slot not found" }, { status: 404 });
   }
 
-  // 2. Get user's active plan
   const activePlan = await prisma.userActivePlan.findFirst({
     where: { userId, status: "active" },
     select: { id: true },
@@ -64,11 +59,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No active plan" }, { status: 404 });
   }
 
-  // logDate = today at midnight UTC (matches @db.Date)
   const logDate = new Date();
   logDate.setUTCHours(0, 0, 0, 0);
 
-  // 3. Idempotency check
   const existing = await prisma.mealLog.findFirst({
     where: {
       userId,
@@ -86,12 +79,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // plannedGrams = recipe serving x slot multiplier
   const plannedGrams = Math.round(
     (slot.recipe.servingSizeGrams ?? 300) * Number(slot.servingMultiplier)
   );
 
-  // ── LOOP-4: macros actually eaten (scaled by grams), matches lib/progress.ts ──
   const serving = slot.recipe.servingSizeGrams > 0 ? slot.recipe.servingSizeGrams : 1;
   const gramsEaten = (actualGrams ?? plannedGrams) || serving;
   const factor = gramsEaten / serving;
@@ -101,7 +92,6 @@ export async function POST(req: NextRequest) {
   const eatenCarbs = r1(Number(slot.recipe.carbsGrams ?? 0) * factor);
   const eatenFat = r1(Number(slot.recipe.fatGrams ?? 0) * factor);
 
-  // ── Bridge 1: MealType (find-or-create by seeded name) ──
   const mtName = MEAL_TYPE_NAME[slot.mealSlot] ?? "Snacks";
   const mealType = await prisma.mealType.upsert({
     where: { name: mtName },
@@ -110,9 +100,6 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
 
-  // ── Bridge 2: synthetic per-recipe FoodItem (global, find-or-create) ──
-  // A recipe isn't a FoodItem; mint one (category PLAN_RECIPE) so the diary can
-  // show the dish by name. per100 macros derived from the recipe's serving.
   let foodItem = await prisma.foodItem.findFirst({
     where: { name: slot.recipe.name, category: "PLAN_RECIPE" },
     select: { id: true },
@@ -134,8 +121,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // 4. Create MealLog + linked FoodEntry atomically (one ledger)
-  const mealLog = await prisma.$transaction(async (tx) => {
+  const mealLog = await prisma.$transaction(async (tx: any) => {
     const ml = await tx.mealLog.create({
       data: {
         userId,

@@ -1,16 +1,21 @@
 // app/api/nutrition/foods/route.ts
-// GET  /api/nutrition/foods?q=rice   — search food library (global + user custom)
-// POST /api/nutrition/foods          — add a custom food
-
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson, readQuery } from "@/lib/validation/core";
+import { foodsQuerySchema, foodsPostSchema } from "@/lib/validation/schemas";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q")?.trim() ?? "";
+
+  // Read is auth-optional; rate-limit by IP (+ user axis when present).
+  const rl = await enforceRateLimit(req, "read", session?.user?.id);
+  if (!rl.ok) return rl.response;
+  const parsedQ = readQuery(req, foodsQuerySchema);
+  if (!parsedQ.ok) return parsedQ.response;
+  const q = parsedQ.data.q?.trim() ?? "";
 
   const userFilter = session?.user?.id
     ? { OR: [{ userId: null }, { userId: session.user.id }] }
@@ -43,12 +48,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { name, brand, category, per100Calories, per100Protein, per100Carbs, per100Fat, per100Fiber } = body;
-
-  if (!name || per100Calories === undefined) {
-    return NextResponse.json({ error: "name and per100Calories are required" }, { status: 400 });
-  }
+  const rl = await enforceRateLimit(req, "mutation", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, foodsPostSchema);
+  if (!parsed.ok) return parsed.response;
+  const { name, brand, category, per100Calories, per100Protein, per100Carbs, per100Fat, per100Fiber } = parsed.data;
 
   const food = await prisma.foodItem.create({
     data: {

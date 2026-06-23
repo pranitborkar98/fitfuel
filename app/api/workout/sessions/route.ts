@@ -1,12 +1,11 @@
 // app/api/workout/sessions/route.ts
-// GET  /api/workout/sessions        — fetch recent sessions for the user
-// POST /api/workout/sessions        — create a new workout session
-
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson, readQuery } from "@/lib/validation/core";
+import { workoutSessionQuerySchema, workoutSessionPostSchema } from "@/lib/validation/schemas";
 
-// ── GET — recent sessions ─────────────────────────────────────
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -14,9 +13,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = req.nextUrl;
-    const limit  = Math.min(parseInt(searchParams.get("limit") ?? "10"), 50);
-    const offset = parseInt(searchParams.get("offset") ?? "0");
+    const rl = await enforceRateLimit(req, "read", session.user.id);
+    if (!rl.ok) return rl.response;
+    const q = readQuery(req, workoutSessionQuerySchema);
+    if (!q.ok) return q.response;
+    const limit = q.data.limit;
+    const offset = q.data.offset;
 
     const [sessions, total] = await Promise.all([
       prisma.workoutSession.findMany({
@@ -55,7 +57,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ── POST — create new session ─────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -63,12 +64,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { name, date } = body;
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
+    const parsed = await readJson(req, workoutSessionPostSchema);
+    if (!parsed.ok) return parsed.response;
+    const { name, date } = parsed.data;
 
-    // date defaults to today if not provided
     const sessionDate = date ? new Date(date) : new Date();
-    // Normalize to date-only (strip time)
     sessionDate.setHours(0, 0, 0, 0);
 
     const workoutSession = await prisma.workoutSession.create({

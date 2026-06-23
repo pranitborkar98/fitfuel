@@ -1,12 +1,11 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { mealRateSchema } from "@/lib/validation/schemas";
 
 // POST /api/user/active-plan/meals/rate
-// Body: { mealSlot: string, logDate: string (ISO), rating: 1|2|3|4|5 }
-//
-// Finds the MealLog by userId + activePlan + mealSlot + logDate
-// Updates MealLog.rating, then recomputes Recipe.avgRating
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -15,33 +14,15 @@ export async function POST(req: NextRequest) {
   }
   const userId = session.user.id;
 
-  let body: { mealSlot?: string; logDate?: string; rating?: number; note?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const rl = await enforceRateLimit(req, "mutation", userId);
+  if (!rl.ok) return rl.response;
+  const parsed = await readJson(req, mealRateSchema);
+  if (!parsed.ok) return parsed.response;
+  const { mealSlot, logDate, rating, note } = parsed.data;
 
-  const { mealSlot, logDate, rating, note } = body;
-
-  if (!mealSlot || !logDate) {
-    return NextResponse.json(
-      { error: "mealSlot and logDate are required" },
-      { status: 400 }
-    );
-  }
-  if (!Number.isInteger(rating) || (rating as number) < 1 || (rating as number) > 5) {
-    return NextResponse.json(
-      { error: "rating must be an integer 1–5" },
-      { status: 400 }
-    );
-  }
-
-  // Normalise logDate to midnight UTC so it matches @db.Date storage
   const dateOnly = new Date(logDate);
   dateOnly.setUTCHours(0, 0, 0, 0);
 
-  // Find the MealLog — must belong to this user
   const mealLog = await prisma.mealLog.findFirst({
     where: {
       userId,
@@ -58,13 +39,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Update rating
   await prisma.mealLog.update({
     where: { id: mealLog.id },
     data: { rating: rating as number, ratingNote: note ?? null },
   });
 
-  // Recompute Recipe.avgRating from all rated logs for this recipe
   const agg = await prisma.mealLog.aggregate({
     where: {
       recipeId: mealLog.recipeId,
