@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { decomposePrice } from "@/lib/pricing-decomposition";
 import {
   TIERS,
   MEALS,
@@ -146,9 +147,19 @@ function PlanCard({
         borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: "auto",
       }}>
         <span style={{ fontSize: 12, color: "var(--text-dim)" }}>from</span>
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
-          {price !== null ? fmt(price) : "—"}
-        </span>
+        {price !== null ? (() => {
+          const b = decomposePrice({ subtotalRs: price, duration: dur });
+          return (
+            <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              {b.mrpRs > b.baseRs && (
+                <span style={{ fontSize: 13, color: "var(--text-dim)", textDecoration: "line-through" }}>{fmt(b.mrpRs)}</span>
+              )}
+              <span style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>{fmt(b.baseRs)}</span>
+            </span>
+          );
+        })() : (
+          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>—</span>
+        )}
       </div>
     </Link>
   );
@@ -321,14 +332,20 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
                 </p>
 
                 <div style={{ marginBottom: 20 }}>
-                  {price !== null ? (
-                    <>
-                      <span style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)" }}>{fmt(price)}</span>
-                      <span style={{ fontSize: 13, color: "var(--text-dim)", marginLeft: 8 }}>
-                        ₹{perDay?.toLocaleString("en-IN")}/day
-                      </span>
-                    </>
-                  ) : (
+                  {price !== null ? (() => {
+                    const b = decomposePrice({ subtotalRs: price, duration: dur });
+                    return (
+                      <>
+                        {b.mrpRs > b.baseRs && (
+                          <div style={{ fontSize: 15, color: "var(--text-dim)", textDecoration: "line-through", marginBottom: 2 }}>{fmt(b.mrpRs)}</div>
+                        )}
+                        <span style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)" }}>{fmt(b.baseRs)}</span>
+                        <span style={{ fontSize: 13, color: "var(--text-dim)", marginLeft: 8 }}>
+                          ₹{perDay?.toLocaleString("en-IN")}/day
+                        </span>
+                      </>
+                    );
+                  })() : (
                     <span style={{ fontSize: 14, color: "var(--text-dim)" }}>Unavailable for this combo</span>
                   )}
                 </div>

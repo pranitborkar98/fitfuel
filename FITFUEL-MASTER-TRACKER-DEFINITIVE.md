@@ -3014,3 +3014,23 @@ Key de-risk realized at build time: base + delivery + packaging = subtotal (the 
 
 ### Decision
 - **#190** — R-PRICE batch 1 (lib + main checkout) shipped, tsc-clean, routes untouched (display-only — no revenue-path risk). Batch 2 (catalog/detail/digital cards + count-fix + coupon CRUD) is the remaining marketing-display work.
+
+---
+
+## ═══════════ R-PRICE — BATCH 2a (catalog + detail cards) SHIPPED ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #191
+
+**Struck MRP → base headline now on the plan cards (the founder's "24,999 crossed → base" ask).** Display-only, consumes the batch-1 lib.
+
+- **`app/plans/PlansCatalog.tsx`** (EDIT) — both price surfaces: browse-grid "from" card + the 3-tier pricing cards now render struck `mrpRs` + `baseRs` (via `decomposePrice({subtotalRs: price, duration: dur})`; `dur` already in scope as `DurationKey`).
+- **`app/plans/[slug]/PlanDetailClient.tsx`** (EDIT) — per-duration selector buttons show struck MRP above base; per-day recomputed off base.
+
+Verify: `DurationKey → PlanDurationKey` assignability + numeric-field assertion **tsc --strict exit 0** (the only novel type surface; identical pattern in both files). Rest of both files unchanged working code.
+
+### REMAINING — R-PRICE batch 2b (final display + data)
+- `app/checkout/digital/page.tsx` + `app/plans/digital/page.tsx` — digital decomposition (`isDigital:true` → base=price, MRP strike + GST, no delivery/packaging).
+- Delivery-count drift fix: align `cod`/`activate-digital`/`plan-tier-pricing` to canonical `DELIVERY_COUNT` (keep endDate calendar-span separate).
+- R-PRICE-c: admin coupon CRUD + seed (fixes "no coupon available" on live).
+
+### Decision
+- **#191** — R-PRICE batch 2a (catalog + detail card decomposition) shipped, tsc-clean, display-only. Remaining: digital surfaces, delivery-count fix, coupon CRUD.

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { decomposePrice } from '@/lib/pricing-decomposition'
 
 // ─── Types (unchanged — drop-in compatible) ─────────────────────────────────
 
@@ -945,6 +946,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
                     {DURATION_META.map((d) => {
                       const price = getTierPrice(prices, tier.key, d.key, pickMeal)
+                      const bd = price !== null ? decomposePrice({ subtotalRs: price, duration: d.key }) : null
                       const isActiveDur = pickDur === d.key
                       const available = price !== null
                       return (
@@ -973,14 +975,19 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                             <div className="mono" style={{ fontSize: 10.5, color: isActiveDur ? tier.accent : 'var(--dim)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700 }}>
                               {d.label}
                             </div>
-                            {available && (
+                            {available && bd && (
                               <div className="mono" style={{ fontSize: 9.5, color: 'var(--faint)', marginTop: 2, letterSpacing: '0.04em' }}>
-                                ₹{Math.round(price! / d.days).toLocaleString('en-IN')}/DAY
+                                ₹{Math.round(bd.baseRs / d.days).toLocaleString('en-IN')}/DAY
                               </div>
                             )}
                           </div>
-                          <div className="cond" style={{ fontSize: 18, fontWeight: 600, color: available ? 'var(--ink)' : 'var(--faint)', lineHeight: 1 }}>
-                            {available ? `₹${price!.toLocaleString('en-IN')}` : '—'}
+                          <div className="cond" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.1 }}>
+                            {available && bd && bd.mrpRs > bd.baseRs && (
+                              <span className="mono" style={{ fontSize: 10, color: 'var(--faint)', textDecoration: 'line-through' }}>₹{bd.mrpRs.toLocaleString('en-IN')}</span>
+                            )}
+                            <span style={{ fontSize: 18, fontWeight: 600, color: available ? 'var(--ink)' : 'var(--faint)' }}>
+                              {available && bd ? `₹${bd.baseRs.toLocaleString('en-IN')}` : '—'}
+                            </span>
                           </div>
                           {d.popular && available && (
                             <span className="mono" style={{ position: 'absolute', display: 'none' }}>POP</span>
