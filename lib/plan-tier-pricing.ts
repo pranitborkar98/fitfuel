@@ -19,7 +19,7 @@ export type DietKey = 'VEG' | 'EGG' | 'NON_VEG' | 'JAIN' | 'VEGAN'
 export const DURATIONS: { key: DurationKey; label: string; days: number; legacy: string; popular?: boolean }[] = [
   { key: 'TRIAL_DAY',             label: 'Trial Day', days:  1, legacy: 'trial' },
   { key: 'WEEKLY',                label: '1 Week',    days:  7, legacy: 'weekly' },
-  { key: 'BI_WEEKLY',             label: '2 Weeks',   days: 15, legacy: 'biweekly' },
+  { key: 'BI_WEEKLY',             label: '2 Weeks',   days: 14, legacy: 'biweekly' },
   { key: 'MONTHLY_EXCL_WEEKENDS', label: 'Mon–Fri',   days: 22, legacy: 'monthly_ex' },
   { key: 'ONE_MONTH',             label: '1 Month',   days: 30, legacy: 'monthly', popular: true },
   { key: 'TWO_MONTH',             label: '2 Months',  days: 60, legacy: 'two_month' },

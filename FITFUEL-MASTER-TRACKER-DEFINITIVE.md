@@ -3034,3 +3034,20 @@ Verify: `DurationKey → PlanDurationKey` assignability + numeric-field assertio
 
 ### Decision
 - **#191** — R-PRICE batch 2a (catalog + detail card decomposition) shipped, tsc-clean, display-only. Remaining: digital surfaces, delivery-count fix, coupon CRUD.
+
+---
+
+## ═══════════ R-PRICE — BATCH 2b (count-fix + coupon seed) SHIPPED ═══════════
+### Session: Jun 22, 2026 · additions-only · Decision #192
+
+**Digital re-scoped, delivery-count bug fixed, coupons seeded.**
+
+- **Digital surfaces NOT changed (correct call).** Digital plans are 18% GST tax-INCLUSIVE with no delivery/packaging; `app/plans/digital/page.tsx` + `app/checkout/digital/page.tsx` already render struck `mrpRs` + correct 18% GST. The decomposition (delivery/packaging stripping) is PHYSICAL-only — forcing the 5%-GST lib onto digital would BREAK it. Note: the lib's `isDigital` branch is therefore unused by real surfaces (left in for completeness); digital MRP still uses stored `mrpRs`, not the 1.85× formula — align later if desired (minor).
+- **`lib/plan-tier-pricing.ts`** (EDIT) — `BI_WEEKLY` days 15 → **14** (clear bug: 2 weeks = 14 deliveries; aligns per-day display with cod's 14 and the canonical `DELIVERY_COUNT`). Remaining count nuance (NOT fixed, flagged): `cod` `DUR_DAYS` reuses one number for endDate-span AND delivery-count; for `MONTHLY_EXCL_WEEKENDS` these legitimately differ (≈30 calendar span vs 22 deliveries) — split when next touching activation/endDate.
+- **`prisma/seed-coupons.ts`** (NEW) — seeds 4 issuable launch coupons (LAUNCH20 20%/cap₹3000, WELCOME15 15% first-order, FLAT500 ₹500 off physical, FREEDEL free delivery) so the existing engine + `/api/coupon/validate` have data → fixes "no coupon available". Idempotent. Run: `npx tsx --env-file=.env.local prisma/seed-coupons.ts`. tsc-clean.
+
+### REMAINING — R-PRICE final piece
+- **R-PRICE-c admin coupon CRUD UI** — create/list/toggle coupons from `/admin`. Needs a new admin surface registered in `lib/admin-auth` (SURFACE_ROLES) + page + client + API. Sizable; deserves its own focused build. (Seed unblocks testing in the meantime.)
+
+### Decision
+- **#192** — R-PRICE batch 2b shipped: digital correctly left as-is (own 18% inclusive logic), BI_WEEKLY count fixed, launch coupons seeded. Only the admin coupon CRUD UI remains to fully close R-PRICE.
