@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, metricsPostSchema);
   if (!parsed.ok) return parsed.response;
-  const body = parsed.data;
+  const body = parsed.data as any;
 
   const {
     weight, bmi, bodyFatRate, fatFreeWeight, subcutaneousFat,

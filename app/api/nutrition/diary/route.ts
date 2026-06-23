@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, diaryPostSchema);
   if (!parsed.ok) return parsed.response;
-  const { foodItemId, mealTypeId, date, quantity, notes } = parsed.data;
+  const { foodItemId, mealTypeId, date, quantity, notes } = parsed.data as any;
 
   const food = await prisma.foodItem.findUnique({ where: { id: foodItemId } });
   if (!food) return NextResponse.json({ error: "Food not found" }, { status: 404 });

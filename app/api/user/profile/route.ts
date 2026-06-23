@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, profilePatchSchema);
   if (!parsed.ok) return parsed.response;
-  const { name, phone, dietPreference, fitnessGoal, gender } = parsed.data;
+  const { name, phone, dietPreference, fitnessGoal, gender } = parsed.data as any;
 
   try {
     await (prisma as any).user.update({

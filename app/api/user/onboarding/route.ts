@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     if (!rl.ok) return rl.response
     const parsed = await readJson(req, onboardingSchema)
     if (!parsed.ok) return parsed.response
-    const body = parsed.data
+    const body = parsed.data as any
 
     const {
       weightKg,
