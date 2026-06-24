@@ -1,4 +1,4 @@
-// app/plans/PlansCatalog.tsx — Phase 19A (house-style, restrained)
+// app/plans/PlansCatalog.tsx
 // Configurator: diet → duration → meals → live 3-tier pricing → browse grid.
 // Uses the site's own design tokens from globals.css (Inter, rounded, lime accent).
 "use client";
@@ -99,67 +99,54 @@ function Step({ label }: { label: string }) {
   );
 }
 
-// ─── Plan card ───────────────────────────────────────────────────────────────
+// ─── Plan card (redesigned — per-meal hero) ────────────────────
+function mealsInCombo(meal: MealKey): number {
+  return meal === "ALL_FOUR" ? 4 : 2;
+}
+
 function PlanCard({
   plan, prices, dur, meal,
 }: { plan: Plan; prices: PriceRow[]; dur: DurationKey; meal: MealKey }) {
   const price = getTierPrice(prices, "STANDARD", dur, meal);
-  const diet = DIETS.find((d) => d.key === plan.dietaryVariant);
+  const diet  = DIETS.find((d) => d.key === plan.dietaryVariant);
+  const days  = DURATIONS.find((d) => d.key === dur)?.days ?? 30;
+  const meals = mealsInCombo(meal);
+  const accent = plan.accentColor || "#a3e635";
+  const b = price !== null ? decomposePrice({ subtotalRs: price, duration: dur }) : null;
+  const perMeal = price !== null ? Math.round(price / Math.max(days * meals, 1)) : null;
 
   return (
-    <Link href={`/plans/${plan.slug}`}
-      style={{
-        display: "flex", flexDirection: "column",
-        background: "var(--bg-card)", border: "1px solid var(--border)",
-        borderRadius: 14, padding: 18, textDecoration: "none", color: "inherit",
-        transition: "all 0.2s ease", height: "100%",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-card-hover)";
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-hover)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-card)";
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)";
-      }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        {diet && <span style={{ width: 6, height: 6, background: diet.dot, borderRadius: 999 }} />}
-        <span style={{ fontSize: 12, color: "var(--text-dim)" }}>{diet?.short}</span>
-        <span style={{ color: "var(--text-faint)" }}>·</span>
-        <span style={{ fontSize: 12, color: "var(--text-dim)" }}>{plan.avgCaloriesPerDay} kcal</span>
+    <Link href={`/plans/${plan.slug}`} className="ff-card" style={{ ["--accent" as never]: accent } as React.CSSProperties}>
+      <span className="ff-card-edge" />
+
+      <div className="ff-spec">
+        {diet && <span className="ff-dot" style={{ background: diet.dot }} />}
+        <span>{diet?.short}</span><i>·</i>
+        <span>{plan.avgCaloriesPerDay} kcal</span><i>·</i>
+        <span>{plan.avgProteinGrams}g protein</span>
       </div>
 
-      <h3 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6, lineHeight: 1.3 }}>
-        {plan.displayName}
-      </h3>
-      {plan.tagline && (
-        <p style={{
-          fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5, marginBottom: 14,
-          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-          overflow: "hidden", flexGrow: 1,
-        }}>
-          {plan.tagline}
-        </p>
-      )}
+      <h3 className="ff-card-title">{plan.displayName}</h3>
+      {plan.tagline && <p className="ff-card-tag">{plan.tagline}</p>}
 
-      <div style={{
-        display: "flex", alignItems: "baseline", justifyContent: "space-between",
-        borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: "auto",
-      }}>
-        <span style={{ fontSize: 12, color: "var(--text-dim)" }}>from</span>
-        {price !== null ? (() => {
-          const b = decomposePrice({ subtotalRs: price, duration: dur });
-          return (
-            <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              {b.mrpRs > b.baseRs && (
-                <span style={{ fontSize: 13, color: "var(--text-dim)", textDecoration: "line-through" }}>{fmt(b.mrpRs)}</span>
-              )}
-              <span style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>{fmt(b.baseRs)}</span>
-            </span>
-          );
-        })() : (
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>—</span>
-        )}
+      <div className="ff-card-foot">
+        <div>
+          {perMeal !== null ? (
+            <>
+              <div className="ff-permeal">
+                <span className="ff-permeal-num cond">{fmt(perMeal)}</span>
+                <span className="ff-permeal-unit">/ meal</span>
+              </div>
+              <div className="ff-card-sub">
+                <span>{fmt(b!.baseRs)} · {days}d · {meals} meals</span>
+                {b!.mrpRs > b!.baseRs && <span className="ff-strike">{fmt(b!.mrpRs)}</span>}
+              </div>
+            </>
+          ) : (
+            <span className="ff-permeal-num cond">—</span>
+          )}
+        </div>
+        <span className="ff-card-go">→</span>
       </div>
     </Link>
   );
@@ -247,7 +234,34 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
   const grid3 = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 } as const;
 
   return (
-    <main style={{ background: "var(--bg-primary)", minHeight: "100vh", padding: "64px 20px 96px" }}>
+    <main className="ff-cat" style={{ background: "var(--bg-primary)", minHeight: "100vh", padding: "64px 20px 96px" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+        .ff-cat .cond{ font-family:'Barlow Condensed',sans-serif; }
+        .ff-cat .ff-spec{ font-family:'Space Mono',monospace; }
+        .ff-card{
+          position:relative; display:flex; flex-direction:column; min-height:190px;
+          background:var(--bg-card); border:1px solid var(--border); border-radius:6px;
+          padding:18px 18px 15px; text-decoration:none; color:inherit; overflow:hidden;
+          transition:transform .28s cubic-bezier(.16,1,.3,1), border-color .25s, background .25s;
+        }
+        .ff-card:hover{ transform:translateY(-3px); border-color:var(--accent); background:var(--bg-card-hover); }
+        .ff-card-edge{ position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); opacity:0; transition:opacity .25s; }
+        .ff-card:hover .ff-card-edge{ opacity:.95; }
+        .ff-spec{ display:flex; align-items:center; gap:7px; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-dim); margin-bottom:13px; }
+        .ff-spec i{ color:var(--text-faint); font-style:normal; }
+        .ff-dot{ width:6px; height:6px; border-radius:999px; flex-shrink:0; }
+        .ff-card-title{ font-size:19px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); line-height:1.18; margin-bottom:6px; }
+        .ff-card-tag{ font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:16px; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; flex-grow:1; }
+        .ff-card-foot{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; border-top:1px solid var(--border); padding-top:13px; margin-top:auto; }
+        .ff-permeal{ display:flex; align-items:baseline; gap:5px; }
+        .ff-permeal-num{ font-size:33px; font-weight:700; line-height:.85; color:var(--text-primary); letter-spacing:.3px; }
+        .ff-permeal-unit{ font-size:12px; color:var(--lime-light); font-weight:600; }
+        .ff-card-sub{ display:flex; align-items:baseline; gap:8px; margin-top:6px; font-size:11px; color:var(--text-dim); }
+        .ff-strike{ text-decoration:line-through; color:var(--text-faint); }
+        .ff-card-go{ font-size:18px; color:var(--text-faint); transition:color .25s, transform .25s; }
+        .ff-card:hover .ff-card-go{ color:var(--accent); transform:translateX(3px); }
+      `}</style>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
         {/* Hero */}
@@ -307,6 +321,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
           {TIERS.map((tier) => {
             const price = getTierPrice(pricesForCombo, tier.key, dur, meal);
             const perDay = price !== null ? Math.round(price / durMeta.days) : null;
+            const perMealT = price !== null ? Math.round(price / durMeta.days / mealsInCombo(meal)) : null;
             const isStandard = tier.key === "STANDARD";
             return (
               <div key={tier.key} style={{
@@ -341,7 +356,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
                         )}
                         <span style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)" }}>{fmt(b.baseRs)}</span>
                         <span style={{ fontSize: 13, color: "var(--text-dim)", marginLeft: 8 }}>
-                          ₹{perDay?.toLocaleString("en-IN")}/day
+                          ₹{perDay?.toLocaleString("en-IN")}/day · <span style={{ color: "var(--lime-light)" }}>₹{perMealT?.toLocaleString("en-IN")}/meal</span>
                         </span>
                       </>
                     );
