@@ -470,7 +470,7 @@ function PlanCard({ plan, index }: { plan: typeof plans[0]; index: number }) {
         lineHeight: 1, userSelect: "none", transition: "color 0.4s", pointerEvents: "none",
         letterSpacing: "-0.02em",
       }}>
-        {plan.num}
+        {plan.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
       </div>
 
       {plan.tag && (
