@@ -105,7 +105,7 @@ const FAQ = [
   { q: 'Can I skip a day or pause the plan?', a: 'Yes. Skip individual dates or pause from the dashboard. Paused days are pushed to your plan end date at no extra cost.' },
   { q: 'What time is delivery?', a: 'All meals arrive by 8am daily across Kharadi and surrounding Pune areas. We prep from 4am using fresh-sourced ingredients.' },
   { q: 'Can I switch plans mid-month?', a: 'Yes. Request a plan switch from your dashboard — the new plan starts from the next delivery day and your calorie targets recalculate against your current profile.' },
-  { q: 'Is there a minimum commitment?', a: 'Start with a Trial Day at \u20B9750 — no commitment. Weekly, bi-weekly and monthly options are available, with a lower per-day rate the longer you go.' },
+  { q: 'Is there a minimum commitment?', a: 'Start with a Trial Day at {TRIAL} — no commitment. Weekly, bi-weekly and monthly options are available, with a lower per-day rate the longer you go.' },
   { q: 'What if I have allergies?', a: 'You declare allergies during onboarding (nuts, dairy, gluten, shellfish). These are flagged on your account and the kitchen accommodates them. See our Allergen Policy for full details.' },
 ]
 
@@ -229,10 +229,10 @@ function useInViewOnce<T extends Element>() {
 
 // ─── Small composed pieces ────────────────────────────────────────────────────
 
-function Eyebrow({ index, label, color = '#a3e635' }: { index: string; label: string; color?: string }) {
+function Eyebrow({ index, label, color = '#a3e635' }: { index?: string; label: string; color?: string }) {
+  void index; // section markers removed — numbers belong only to real sequences
   return (
     <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11.5, letterSpacing: '0.18em', color, textTransform: 'uppercase', marginBottom: 18 }}>
-      <span style={{ color: '#3a3a36' }}>[ {index} ]</span>
       <span style={{ width: 28, height: 1, background: color, opacity: 0.5 }} />
       <span>{label}</span>
     </div>
@@ -289,6 +289,15 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [pickMeal, setPickMeal] = useState<MealKey>('ALL_FOUR')
   const [pickDur, setPickDur] = useState<DurationKey>('ONE_MONTH')
+
+  // F7: live trial price from real PlanPrice rows (was hardcoded ₹750)
+  const trialRows = prices.filter((p) => p.duration === 'TRIAL_DAY')
+  const trialRs = trialRows.length ? Math.min(...trialRows.map((p) => p.priceRs)) : null
+  const trialLabel = trialRs != null ? `Trial day · \u20B9${trialRs.toLocaleString('en-IN')}` : 'Trial day available'
+  const faqList = FAQ.map((f) => ({
+    ...f,
+    a: f.a.replace('{TRIAL}', trialRs != null ? `\u20B9${trialRs.toLocaleString('en-IN')}` : 'a low day rate'),
+  }))
   const [loaded, setLoaded] = useState(false)
   const [sel, setSel] = useState<Recipe | null>(null)
   // Phase 19A — waitlist modal state (Premium / Luxury CTAs)
@@ -356,7 +365,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
           --bg:#080808; --panel:#0c0c0c; --line:#191919; --line-2:#262626;
           --lime:#a3e635; --lime-d:#84cc16; --ink:#f4f3ee; --dim:#8d8d87; --faint:#565651;
           --bone:#efece3; --bone-ink:#16160f; --ember:#e7643c;
-          background:var(--bg); color:var(--ink); min-height:100vh; position:relative;
+          background:var(--bg); color:var(--ink); min-height:100vh; position:relative; padding-top:68px;
           overflow-x:hidden; font-family:'DM Sans',-apple-system,sans-serif;
           -webkit-font-smoothing:antialiased;
         }
@@ -487,7 +496,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
               <div className="enter e5" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 36 }}>
                 <a href="#pricing" className="btn btn-lime">Start your plan <IconArrow /></a>
-                <a href="#pricing" className="btn btn-ghost">Trial day · ₹750</a>
+                <a href="#pricing" className="btn btn-ghost">{trialLabel}</a>
               </div>
             </div>
 
@@ -1196,7 +1205,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <h2 className="h2">Common questions.</h2>
           </div>
           <div className="reveal d1">
-            {FAQ.map((item, i) => (
+            {faqList.map((item, i) => (
               <div key={i} style={{ borderTop: i === 0 ? '1px solid var(--line)' : 'none', borderBottom: '1px solid var(--line)' }}>
                 <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                   <span style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
