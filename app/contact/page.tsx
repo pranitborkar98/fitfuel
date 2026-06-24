@@ -18,7 +18,7 @@ const WRAP: React.CSSProperties = {
   paddingRight: 40,
 };
 
-const WA_NUMBER = "919579738811";
+const WA_NUMBER = "918850446348";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ const CONTACT_DETAILS = [
   {
     icon: Phone,
     label: "WhatsApp & Phone",
-    value: "+91 9579738811",
+    value: "+91 8850446348",
     sub: "Fastest response — usually within minutes",
     href: `https://wa.me/${WA_NUMBER}`,
     cta: "Open WhatsApp",

@@ -79,7 +79,7 @@ export default function Footer() {
             {/* Contact links */}
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
               <a
-                href="https://wa.me/91XXXXXXXXXX"
+                href="https://wa.me/918850446348"
                 style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#a3e635")}
                 onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
@@ -87,12 +87,12 @@ export default function Footer() {
                 <Phone style={{ width: 14, height: 14, flexShrink: 0 }} /> WhatsApp Us
               </a>
               <a
-                href="mailto:pranitborkar98@gmail.com"
+                href="mailto:contact@fitfuel.in"
                 style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#a3e635")}
                 onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
               >
-                <Mail style={{ width: 14, height: 14, flexShrink: 0 }} /> pranitborkar98@gmail.com
+                <Mail style={{ width: 14, height: 14, flexShrink: 0 }} /> contact@fitfuel.in
               </a>
               <div style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "#6b7280" }}>
                 <MapPin style={{ width: 14, height: 14, flexShrink: 0 }} /> Kharadi, Pune, Maharashtra
