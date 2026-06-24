@@ -45,12 +45,13 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
+        <a href="#main" className="skip-link">Skip to content</a>
         {/* SessionProvider wraps everything so useSession() works in any client component */}
         <ReferralCapture />
         <SessionProvider session={session}>
           {/* ChromeGate hides Navbar/Footer on standalone routes like /driver */}
           <ChromeGate navbar={<Navbar />} footer={<Footer />}>
-            {children}
+            <div id="main" tabIndex={-1}>{children}</div>
           </ChromeGate>
         </SessionProvider>
       </body>
