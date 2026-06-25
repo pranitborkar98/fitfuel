@@ -37,6 +37,8 @@ enum DietType {
   VEGETARIAN
   EGGETARIAN
   NON_VEGETARIAN
+  JAIN
+  VEGAN
 }
 
 enum MealPlanType {
