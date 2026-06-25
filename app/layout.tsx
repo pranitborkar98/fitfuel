@@ -10,6 +10,9 @@ import ReferralCapture from "@/components/ReferralCapture";
 
 const inter = Inter({ subsets: ["latin"] });
 
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 export const metadata: Metadata = {
   title: "FitFuel — Fuel Your Goals",
   description:
@@ -54,6 +57,8 @@ export default async function RootLayout({
             <div id="main" tabIndex={-1}>{children}</div>
           </ChromeGate>
         </SessionProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
