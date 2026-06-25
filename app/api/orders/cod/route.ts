@@ -28,7 +28,7 @@ const MEAL_MAP: Record<string, string> = {
 };
 const DUR_DAYS: Record<string, number> = {
   TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14,
-  MONTHLY_EXCL_WEEKENDS: 26, ONE_MONTH: 30,
+  MONTHLY_EXCL_WEEKENDS: 30, ONE_MONTH: 30,
   TWO_MONTH: 60, THREE_MONTH: 90,
 };
 

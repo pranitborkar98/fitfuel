@@ -18,7 +18,7 @@ const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
 
 const DUR_DAYS: Record<string, number> = {
   TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14,
-  MONTHLY_EXCL_WEEKENDS: 26, ONE_MONTH: 30, TWO_MONTH: 60, THREE_MONTH: 90,
+  MONTHLY_EXCL_WEEKENDS: 30, ONE_MONTH: 30, TWO_MONTH: 60, THREE_MONTH: 90,
 };
 const DUR_MAP: Record<string, string> = {
   trial: "TRIAL_DAY", weekly: "WEEKLY", biweekly: "BI_WEEKLY",
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     if (order.status === "CONFIRMED") {
       const done = meta.isDigital
         ? `${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`
-        : `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`;
+        : `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}&window=${meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING"}`;
       return NextResponse.redirect(done, 303);
     }
 
@@ -129,6 +129,27 @@ export async function POST(req: NextRequest) {
       console.error("[PayU] referral reward processing failed", e);
     }
 
+    // ════════════════════ COUPON REDEMPTION (R-PRICE parity, idempotent) ════════════════════
+    try {
+      if (order.couponCode && (order.discountRs ?? 0) > 0) {
+        const already = await (prisma as any).couponRedemption.findFirst({
+          where: { orderId: order.id }, select: { id: true },
+        });
+        if (!already) {
+          const coupon = await (prisma as any).coupon.findUnique({
+            where: { code: order.couponCode }, select: { id: true },
+          });
+          if (coupon) {
+            await (prisma as any).couponRedemption.create({
+              data: { couponId: coupon.id, userId: order.userId, orderId: order.id, amountRs: order.discountRs },
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[PayU] coupon redemption record failed", e);
+    }
+
     // ════════════════════ DIGITAL PATH ════════════════════
     if (meta.isDigital) {
       const plan = await (prisma as any).mealPlan.findUnique({ where: { slug: meta.planSlug } });
@@ -167,7 +188,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.redirect(
-      `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}`, 303
+      `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}&window=${meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING"}`, 303
     );
   } catch (err) {
     console.error("[PayU success handler error]", err);
