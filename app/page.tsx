@@ -14,13 +14,10 @@ import {
 /* ──────────────────────────────────────────────────────────────────
    FITFUEL — HOMEPAGE v2  ("Operating System" reposition)
    Locked tokens: bg #080808 · lime #a3e635 / #84cc16
-   Type system (3 roles):
-     Syne            → display headlines  (the system / tech voice)
-     Barlow Condensed → athletic numerals (stat punch, ₹ figures)
-     DM Sans          → body + UI text
+   Type: Barlow Condensed (display + numerals), body inherits globals.
 ─────────────────────────────────────────────────────────────────── */
 
-const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,800;1,900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`;
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap');`;
 
 const LIME = "#a3e635";
 const LIME_DEEP = "#84cc16";
@@ -87,9 +84,9 @@ const stats = [
 ];
 
 const testimonials = [
-  { name: "Rahul M.", loc: "Kharadi", plan: "Muscle Gain · 1 Month", result: "+3kg muscle", text: "I came for the food. I stayed because the app actually tells me when I'm slipping. The weekly review is scary accurate." },
+  { name: "Rahul M.", loc: "Kharadi", plan: "Muscle Gain · 1 Month", result: "+3kg muscle", text: "The food is genuinely good, and the app tells me when I'm slipping. The weekly review is scary accurate." },
   { name: "Priya S.", loc: "Viman Nagar", plan: "Weight Loss · Bi-Weekly", result: "−4kg in 15 days", text: "No starvation, no boiled chicken. When I plateaued it just… adjusted my target. I didn't have to figure anything out." },
-  { name: "Amit K.", loc: "Kalyani Nagar", plan: "Office Plan · Monthly", result: "Quit Zomato", text: "The consistency score broke my brain in a good way. I treat it like a game now and I'm winning for the first time." },
+  { name: "Amit K.", loc: "Kalyani Nagar", plan: "Office Plan · Monthly", result: "Quit Zomato", text: "The consistency score turned it into a game. First time I've actually stuck with a plan for a full month." },
 ];
 
 const WRAP: React.CSSProperties = {
@@ -102,7 +99,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 18 }}>
       <div style={{ width: 22, height: 2, background: LIME_DEEP, borderRadius: 1, flexShrink: 0 }} />
-      <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", color: LIME, textTransform: "uppercase" }}>
+      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", color: LIME, textTransform: "uppercase" }}>
         {children}
       </span>
     </div>
@@ -144,7 +141,7 @@ function Magnetic({ children, href }: { children: React.ReactNode; href: string 
 const primaryBtn: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 9,
   background: LIME_DEEP, color: "#000",
-  fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700,
+  fontSize: 13, fontWeight: 700,
   letterSpacing: "0.06em", textTransform: "uppercase", textDecoration: "none",
   padding: "15px 28px", borderRadius: 10,
   boxShadow: `0 4px 30px rgba(132,204,22,0.4)`, cursor: "pointer",
@@ -152,7 +149,7 @@ const primaryBtn: React.CSSProperties = {
 const ghostBtn: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: 9,
   background: "transparent", color: "#9ca3af",
-  fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
+  fontSize: 13, fontWeight: 600,
   letterSpacing: "0.06em", textTransform: "uppercase", textDecoration: "none",
   padding: "14px 22px", borderRadius: 10, border: "1px solid #2a2a2a", cursor: "pointer",
 };
@@ -217,9 +214,9 @@ function SystemConsole() {
             <span style={{ width: 22, height: 22, borderRadius: 7, background: LIME_DEEP, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={13} color="#000" />
             </span>
-            <span style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 14, color: "#fff", letterSpacing: "-0.01em" }}>Your System</span>
+            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 14, color: "#fff", letterSpacing: "-0.01em" }}>Your System</span>
           </div>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 600, color: LIME, letterSpacing: "0.08em" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, color: LIME, letterSpacing: "0.08em" }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: LIME, animation: reduce ? "none" : "ff-pulse 1.8s ease-in-out infinite" }} />
             LIVE
           </span>
@@ -229,11 +226,11 @@ function SystemConsole() {
           {/* Active plan row */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 22 }}>
             <div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#6b7280", textTransform: "uppercase", marginBottom: 7 }}>Active Plan</div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#6b7280", textTransform: "uppercase", marginBottom: 7 }}>Active Plan</div>
               <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 30, fontWeight: 900, lineHeight: 0.95, color: "#fff", textTransform: "uppercase" }}>Weight Loss</div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#000", background: LIME_DEEP, padding: "2px 8px", borderRadius: 5, letterSpacing: "0.05em" }}>STANDARD</span>
-                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#6b7280" }}>VEG · Day {day} of 30</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#000", background: LIME_DEEP, padding: "2px 8px", borderRadius: 5, letterSpacing: "0.05em" }}>STANDARD</span>
+                <span style={{ fontSize: 11, color: "#6b7280" }}>VEG · Day {day} of 30</span>
               </div>
             </div>
 
@@ -249,7 +246,7 @@ function SystemConsole() {
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 26, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{score}</span>
-                <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", marginTop: 1 }}>SCORE</span>
+                <span style={{ fontSize: 8, fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", marginTop: 1 }}>SCORE</span>
               </div>
             </div>
           </div>
@@ -262,10 +259,10 @@ function SystemConsole() {
               { k: "CALORIES", v: "1,120", t: "1,380", pct: 0.81, c: "#f59e0b" },
             ].map(m => (
               <div key={m.k} style={{ background: "#0c0c0c", border: "1px solid #161616", borderRadius: 11, padding: "11px 12px" }}>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "#6b7280" }}>{m.k}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "#6b7280" }}>{m.k}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, margin: "4px 0 8px" }}>
                   <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 19, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{m.v}</span>
-                  <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#4b5563" }}>/ {m.t}</span>
+                  <span style={{ fontSize: 10, color: "#4b5563" }}>/ {m.t}</span>
                 </div>
                 <div style={{ height: 4, background: "#181818", borderRadius: 99, overflow: "hidden" }}>
                   <div style={{ width: `${m.pct * 100}%`, height: "100%", background: m.c, borderRadius: 99 }} />
@@ -283,7 +280,7 @@ function SystemConsole() {
                   key={coachInsights[insight].label}
                   initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.3 }}
-                  style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: LIME }}
+                  style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: LIME }}
                 >
                   {coachInsights[insight].label}
                 </motion.span>
@@ -294,7 +291,7 @@ function SystemConsole() {
                 key={coachInsights[insight].text}
                 initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.3 }}
-                style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, lineHeight: 1.5, color: "#d1d5db", margin: 0 }}
+                style={{ fontSize: 13, lineHeight: 1.5, color: "#d1d5db", margin: 0 }}
               >
                 {coachInsights[insight].text}
               </motion.p>
@@ -319,8 +316,8 @@ function LoopStage({ stage, i }: { stage: typeof loopStages[0]; i: number }) {
           {String(i + 1).padStart(2, "0")} · {stage.key}
         </span>
       </div>
-      <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 19, fontWeight: 800, color: "#fff", margin: "0 0 8px", letterSpacing: "-0.01em" }}>{stage.title}</h3>
-      <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: 0 }}>{stage.desc}</p>
+      <h3 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 22, fontWeight: 900, textTransform: "uppercase", color: "#fff", margin: "0 0 8px", letterSpacing: "0.01em", lineHeight: 1 }}>{stage.title}</h3>
+      <p style={{ fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: 0 }}>{stage.desc}</p>
     </motion.div>
   );
 }
@@ -351,13 +348,13 @@ function GoalCard({ goal }: { goal: typeof goals[0] }) {
         }}>{goal.mono}</span>
 
         {goal.tag && (
-          <span style={{ display: "inline-block", fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#000", background: goal.accent, padding: "3px 8px", borderRadius: 5, marginBottom: 14 }}>{goal.tag}</span>
+          <span style={{ display: "inline-block", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#000", background: goal.accent, padding: "3px 8px", borderRadius: 5, marginBottom: 14 }}>{goal.tag}</span>
         )}
         <div style={{ position: "relative" }}>
           <div style={{ width: 32, height: 3, background: goal.accent, borderRadius: 2, marginBottom: 16 }} />
           <h3 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 28, fontWeight: 900, textTransform: "uppercase", color: "#fff", margin: "0 0 6px", letterSpacing: "0.01em", lineHeight: 1 }}>{goal.name}</h3>
-          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#9ca3af", margin: 0 }}>{goal.line}</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 18, color: hover ? goal.accent : "#52525b", transition: "color 0.25s ease", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: "0.04em" }}>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>{goal.line}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 18, color: hover ? goal.accent : "#52525b", transition: "color 0.25s ease", fontSize: 12, fontWeight: 600, letterSpacing: "0.04em" }}>
             View plans <ArrowRight size={13} />
           </div>
         </div>
@@ -377,24 +374,24 @@ function TierCard({ tier }: { tier: typeof tiers[0] }) {
       boxShadow: tier.featured ? "0 20px 60px rgba(163,230,53,0.08)" : "none",
     }}>
       {tier.featured && (
-        <span style={{ position: "absolute", top: 18, right: 18, display: "inline-flex", alignItems: "center", gap: 5, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#000", background: LIME, padding: "4px 9px", borderRadius: 6 }}>
+        <span style={{ position: "absolute", top: 18, right: 18, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#000", background: LIME, padding: "4px 9px", borderRadius: 6 }}>
           <Crown size={11} /> MOST PICKED
         </span>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 5 }}>
         <span style={{ width: 9, height: 9, borderRadius: "50%", background: tier.accent }} />
-        <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>{tier.name}</h3>
+        <h3 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 900, textTransform: "uppercase", color: "#fff", margin: 0, letterSpacing: "0.01em" }}>{tier.name}</h3>
       </div>
-      <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#9ca3af", margin: "0 0 20px" }}>{tier.line}</p>
+      <p style={{ fontSize: 13, color: "#9ca3af", margin: "0 0 20px" }}>{tier.line}</p>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 22 }}>
         <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 34, fontWeight: 900, color: tier.featured ? LIME : "#fff", lineHeight: 1 }}>{tier.price}</span>
-        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#6b7280" }}>{tier.unit}</span>
+        <span style={{ fontSize: 13, color: "#6b7280" }}>{tier.unit}</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {tier.feats.map(f => (
           <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             <CheckCircle size={15} color={tier.featured ? LIME : "#52525b"} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, color: "#d1d5db", lineHeight: 1.4 }}>{f}</span>
+            <span style={{ fontSize: 13.5, color: "#d1d5db", lineHeight: 1.4 }}>{f}</span>
           </div>
         ))}
       </div>
@@ -407,7 +404,7 @@ function ProofStat({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "clamp(2.4rem,5vw,3.4rem)", fontWeight: 900, color: "#fff", lineHeight: 1, letterSpacing: "0.01em" }}>{value}</div>
-      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", marginTop: 8, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", marginTop: 8, textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }
@@ -423,17 +420,18 @@ export default function HomePage() {
         @keyframes ff-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.8)} }
         @keyframes ff-drift { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-        body { font-family:'DM Sans',sans-serif; }
+        body { font-family: inherit; }
 
         .ff-display {
-          font-family:'Syne',sans-serif; font-weight:800;
-          letter-spacing:-0.025em; line-height:0.98;
-          font-size:clamp(2.6rem,5.2vw,5rem); color:#f9fafb;
+          font-family:'Barlow Condensed','Impact',sans-serif; font-weight:900;
+          text-transform:uppercase; letter-spacing:0.005em; line-height:0.95;
+          font-size:clamp(2.2rem,4.2vw,3.7rem); color:#f9fafb;
         }
         .ff-hero-h {
-          font-family:'Syne',sans-serif; font-weight:800;
-          letter-spacing:-0.03em; line-height:0.96;
-          font-size:clamp(3rem,6.4vw,6rem); color:#fff;
+          font-family:'Barlow Condensed','Impact',sans-serif; font-weight:900;
+          font-style:italic; text-transform:uppercase;
+          letter-spacing:-0.005em; line-height:0.9;
+          font-size:clamp(2.6rem,5vw,4.6rem); color:#fff;
         }
         .ff-hero-grid    { display:grid; grid-template-columns:1.05fr 0.95fr; gap:64px; align-items:center; }
         .ff-loop-grid    { display:grid; grid-template-columns:repeat(5,1fr); gap:28px; }
@@ -475,20 +473,18 @@ export default function HomePage() {
               <motion.div variants={fadeUp}>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "rgba(163,230,53,0.07)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 99, padding: "7px 15px", marginBottom: 28 }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: LIME, animation: reduce ? "none" : "ff-pulse 1.8s ease-in-out infinite" }} />
-                  <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, color: LIME, letterSpacing: "0.04em" }}>A health system that delivers food — live in Pune</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: LIME, letterSpacing: "0.04em" }}>Goal-based meal plans + tracking · live in Pune</span>
                 </div>
               </motion.div>
 
               <motion.h1 variants={fadeUp} className="ff-hero-h" style={{ margin: "0 0 24px" }}>
-                We don't deliver meals.<br />
-                We run your body<br />
-                like a <span style={{ color: LIME }}>system.</span>
+                Not a meal plan.<br />
+                A <span style={{ color: LIME }}>health system.</span>
               </motion.h1>
 
-              <motion.p variants={fadeUp} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 17, lineHeight: 1.65, color: "#9ca3af", maxWidth: 480, margin: "0 0 36px" }}>
-                Tell us your body and your goal. We calculate exactly what to eat, cook it,
-                track every gram, watch your weight trend, and adapt the plan when you stall.
-                The meal is the door. The system is the product.
+              <motion.p variants={fadeUp} style={{ fontSize: 17, lineHeight: 1.65, color: "#9ca3af", maxWidth: 480, margin: "0 0 36px" }}>
+                Tell us your body and your goal. We calculate what to eat, cook it, deliver it,
+                track every gram, and adjust the plan when you plateau. The food is just the start.
               </motion.p>
 
               <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 30 }}>
@@ -502,7 +498,7 @@ export default function HomePage() {
 
               <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 22px" }}>
                 {["Cancel anytime", "FSSAI kitchen", "No app lock-in"].map(t => (
-                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#71717a" }}>
+                  <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, color: "#71717a" }}>
                     <CheckCircle size={13} color={LIME_DEEP} /> {t}
                   </span>
                 ))}
@@ -525,7 +521,7 @@ export default function HomePage() {
             <motion.h2 variants={fadeUp} className="ff-display" style={{ marginBottom: 16, maxWidth: 760 }}>
               Anyone can cook you dinner.<br />Nobody else closes the loop.
             </motion.h2>
-            <motion.p variants={fadeUp} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 16, lineHeight: 1.7, color: "#9ca3af", maxWidth: 600, margin: "0 0 56px" }}>
+            <motion.p variants={fadeUp} style={{ fontSize: 16, lineHeight: 1.7, color: "#9ca3af", maxWidth: 600, margin: "0 0 56px" }}>
               Five steps that run every single day. Food goes in, data comes back, the plan
               corrects itself. This is the part competitors can't copy with a kitchen.
             </motion.p>
@@ -541,10 +537,10 @@ export default function HomePage() {
       <section id="plans" style={{ padding: "100px 0" }}>
         <div style={WRAP} className="ff-wrap-pad">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
-            <motion.div variants={fadeUp}><Eyebrow>Pick your door</Eyebrow></motion.div>
+            <motion.div variants={fadeUp}><Eyebrow>Find your plan</Eyebrow></motion.div>
             <motion.div variants={fadeUp} style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 48 }}>
               <h2 className="ff-display" style={{ margin: 0, maxWidth: 620 }}>
-                100+ plans, one for the body you actually have.
+                100+ plans, built for your goal.
               </h2>
               <Link href="/plans" style={{ ...ghostBtn, whiteSpace: "nowrap" }}>Browse all plans <ArrowRight size={14} /></Link>
             </motion.div>
@@ -560,12 +556,12 @@ export default function HomePage() {
       <section style={{ padding: "100px 0", background: "#060606", borderTop: "1px solid #131313", borderBottom: "1px solid #131313" }}>
         <div style={WRAP} className="ff-wrap-pad">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
-            <motion.div variants={fadeUp}><Eyebrow>How deep you go</Eyebrow></motion.div>
+            <motion.div variants={fadeUp}><Eyebrow>Plans &amp; tiers</Eyebrow></motion.div>
             <motion.h2 variants={fadeUp} className="ff-display" style={{ marginBottom: 16, maxWidth: 640 }}>
-              Start with food. Add a stack. Then a coach.
+              Go as deep as you want.
             </motion.h2>
-            <motion.p variants={fadeUp} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 16, lineHeight: 1.7, color: "#9ca3af", maxWidth: 560, margin: "0 0 48px" }}>
-              Every tier runs the same loop — they just hand you more of the system as you go.
+            <motion.p variants={fadeUp} style={{ fontSize: 16, lineHeight: 1.7, color: "#9ca3af", maxWidth: 560, margin: "0 0 48px" }}>
+              Every tier includes the tracking and weekly review. Higher tiers add more on top.
             </motion.p>
 
             <div className="ff-tiers-grid">
@@ -581,15 +577,15 @@ export default function HomePage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
             <motion.div variants={fadeUp}><Eyebrow>Two ways to start</Eyebrow></motion.div>
             <motion.h2 variants={fadeUp} className="ff-display" style={{ marginBottom: 48, maxWidth: 620 }}>
-              In Pune, or anywhere in India.
+              Two ways to start.
             </motion.h2>
 
             <div className="ff-ways-grid">
               {/* Delivered */}
               <motion.div variants={fadeUp} style={{ background: "#0b0b0b", border: "1px solid #1a1a1a", borderRadius: 18, padding: "30px 28px" }}>
                 <Truck size={26} color={LIME} style={{ marginBottom: 18 }} />
-                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>We cook & deliver</h3>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: "0 0 22px" }}>
+                <h3 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>We cook & deliver</h3>
+                <p style={{ fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: "0 0 22px" }}>
                   Fresh, chef-cooked meals at your door in Kharadi & Viman Nagar. Start with a single ₹400 trial day.
                 </p>
                 <Link href="/plans?trial=true" style={{ ...primaryBtn, fontSize: 12 }}>Order a trial day <ArrowRight size={14} /></Link>
@@ -598,8 +594,8 @@ export default function HomePage() {
               {/* Digital */}
               <motion.div variants={fadeUp} style={{ background: "#0b0b0b", border: "1px solid #1a1a1a", borderRadius: 18, padding: "30px 28px" }}>
                 <ChefHat size={26} color={LIME} style={{ marginBottom: 18 }} />
-                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>You cook it yourself</h3>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: "0 0 18px" }}>
+                <h3 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>You cook it yourself</h3>
+                <p style={{ fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: "0 0 18px" }}>
                   The full 30-day plan as a PDF — every recipe, macro, and grocery list. From <span style={{ color: LIME, fontWeight: 600 }}>₹299</span>, instant download.
                 </p>
                 <Link href="/plans/digital" style={{ ...ghostBtn, fontSize: 12 }}>Browse digital plans <ArrowRight size={14} /></Link>
@@ -608,8 +604,8 @@ export default function HomePage() {
               {/* TDEE free tool */}
               <motion.div variants={fadeUp} style={{ background: "linear-gradient(160deg, #101206, #0a0a0a)", border: "1px solid rgba(163,230,53,0.25)", borderRadius: 18, padding: "30px 28px" }}>
                 <LineChart size={26} color={LIME} style={{ marginBottom: 18 }} />
-                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>Just curious? Start free.</h3>
-                <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: "0 0 22px" }}>
+                <h3 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>Just curious? Start free.</h3>
+                <p style={{ fontSize: 14, lineHeight: 1.6, color: "#9ca3af", margin: "0 0 22px" }}>
                   Get your exact calorie + macro targets in 30 seconds. No sign-up. See which plans hit your number.
                 </p>
                 <Link href="/tdee-calculator" style={{ ...primaryBtn, fontSize: 12 }}>Calculate my targets <ArrowRight size={14} /></Link>
@@ -632,7 +628,7 @@ export default function HomePage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
             <motion.div variants={fadeUp}><Eyebrow>Real results</Eyebrow></motion.div>
             <motion.h2 variants={fadeUp} className="ff-display" style={{ marginBottom: 44, maxWidth: 560 }}>
-              They came for food. They stayed for the system.
+              Real people. Real results.
             </motion.h2>
 
             <div className="ff-tg-grid">
@@ -642,10 +638,10 @@ export default function HomePage() {
                     <Flame size={12} color={LIME} />
                     <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14, fontWeight: 800, color: LIME, letterSpacing: "0.03em" }}>{t.result}</span>
                   </div>
-                  <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14.5, lineHeight: 1.65, color: "#d1d5db", margin: "0 0 22px", flex: 1 }}>"{t.text}"</p>
+                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: "#d1d5db", margin: "0 0 22px", flex: 1 }}>"{t.text}"</p>
                   <div style={{ borderTop: "1px solid #181818", paddingTop: 16 }}>
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700, color: "#fff" }}>{t.name} <span style={{ color: "#52525b", fontWeight: 500 }}>· {t.loc}</span></div>
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#6b7280", marginTop: 3 }}>{t.plan}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{t.name} <span style={{ color: "#52525b", fontWeight: 500 }}>· {t.loc}</span></div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>{t.plan}</div>
                   </div>
                 </motion.div>
               ))}
@@ -665,22 +661,22 @@ export default function HomePage() {
               <div className="ff-cta-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
                 <div style={{ padding: "64px 56px", borderRight: "1px solid #1a1a1a" }}>
                   <Eyebrow>No risk</Eyebrow>
-                  <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(2.6rem,5vw,4.4rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 0.98, margin: "12px 0 20px", color: "#fff" }}>
+                  <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "clamp(2.6rem,5vw,4.4rem)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 0.98, margin: "12px 0 20px", color: "#fff" }}>
                     Try the system<br />for <span style={{ color: LIME }}>₹400.</span>
                   </h2>
-                  <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 15, lineHeight: 1.7, color: "#9ca3af", maxWidth: 340, margin: 0 }}>
-                    One trial day. Breakfast + lunch, cooked fresh and delivered tomorrow. No subscription, no lock-in. If it's not the best diet food you've had, you've lost ₹400.
+                  <p style={{ fontSize: 15, lineHeight: 1.7, color: "#9ca3af", maxWidth: 340, margin: 0 }}>
+                    One trial day. Breakfast + lunch, cooked fresh and delivered tomorrow. No subscription, no lock-in. Just exceptional food.
                   </p>
                 </div>
 
                 <div style={{ padding: "64px 56px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 30 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {["Fresh, chef-cooked meals daily", "Goal-based nutrition, not guesswork", "Tracking + weekly review from day one"].map(item => (
+                    {["Fresh, chef-cooked meals daily", "Goal-based nutrition, not guesswork", "Cancel anytime, no questions asked"].map(item => (
                       <div key={item} style={{ display: "flex", alignItems: "center", gap: 14 }}>
                         <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(163,230,53,0.12)", border: "1px solid rgba(163,230,53,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <CheckCircle size={13} color={LIME} />
                         </div>
-                        <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "#d1d5db" }}>{item}</span>
+                        <span style={{ fontSize: 14, color: "#d1d5db" }}>{item}</span>
                       </div>
                     ))}
                   </div>
@@ -688,7 +684,7 @@ export default function HomePage() {
                     <Magnetic href="/plans?trial=true"><span style={primaryBtn}>Order trial day <ArrowRight size={14} /></span></Magnetic>
                     <Link href="/plans" style={ghostBtn}>View all plans</Link>
                   </div>
-                  <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#52525b", margin: 0, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <p style={{ fontSize: 12, color: "#52525b", margin: 0, display: "inline-flex", alignItems: "center", gap: 7 }}>
                     <Shield size={12} /> GST 5% applicable · Delivery in Kharadi &amp; Viman Nagar, Pune
                   </p>
                 </div>
