@@ -346,8 +346,8 @@ function FullDashboard() {
       {bar(LIME_DEEP)}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderBottom: "1px solid #161616", flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ width: 38, height: 38, borderRadius: 11, background: "#161616", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: BARLOW, fontWeight: 900, color: LIME, fontSize: 18 }}>P</span>
-          <div><div style={{ ...lbl, marginBottom: 2 }}>Welcome back</div><div style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: 20, color: "#fff", textTransform: "uppercase", lineHeight: 1 }}>Pranit</div></div>
+          <span style={{ width: 38, height: 38, borderRadius: 11, background: "#161616", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center" }}><UserPlus size={18} color={LIME} /></span>
+          <div><div style={{ ...lbl, marginBottom: 2 }}>Welcome back</div><div style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: 20, color: "#fff", textTransform: "uppercase", lineHeight: 1 }}>Your Dashboard</div></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: "#000", background: LIME_DEEP, padding: "5px 11px", borderRadius: 7 }}>WEIGHT LOSS, STANDARD</span>
@@ -447,7 +447,7 @@ function DeliveryMock() {
   const steps: [string, boolean][] = [["Cooked", true], ["Packed", true], ["On the way", true], ["Delivered", false]];
   return (<div style={panel()}>{bar("#60a5fa")}{chrome("Today's delivery", "#60a5fa")}
     <div style={{ padding: "18px 18px 20px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}><span style={{ fontSize: 12, fontWeight: 700, color: "#000", background: "#60a5fa", padding: "5px 11px", borderRadius: 7 }}>BY 8 AM</span><span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, color: "#e5e7eb" }}><Truck size={15} color="#60a5fa" /> Out for delivery, Ramesh</span></div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}><span style={{ fontSize: 12, fontWeight: 700, color: "#000", background: "#60a5fa", padding: "5px 11px", borderRadius: 7 }}>BY 8 AM</span><span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, color: "#e5e7eb" }}><Truck size={15} color="#60a5fa" /> Out for delivery</span></div>
       <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>{steps.map(([t, done], i) => (<div key={t} style={{ flex: 1, textAlign: "center", position: "relative" }}>{i < steps.length - 1 && <div style={{ position: "absolute", top: 7, left: "50%", width: "100%", height: 2, background: done ? "#60a5fa" : "#222" }} />}<div style={{ position: "relative", width: 16, height: 16, borderRadius: "50%", margin: "0 auto", background: done ? "#60a5fa" : "#141414", border: `2px solid ${done ? "#60a5fa" : "#333"}` }} /><div style={{ fontSize: 10.5, color: done ? "#9ca3af" : "#52525b", marginTop: 7 }}>{t}</div></div>))}</div>
       <div style={{ ...lbl, marginBottom: 9 }}>In your box</div>{["Ragi porridge, almonds", "Grilled tofu beetroot bowl"].map(x => (<div key={x} style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 0", fontSize: 13.5, color: "#d1d5db" }}><ChefHat size={14} color="#60a5fa" />{x}</div>))}
     </div>
@@ -619,9 +619,9 @@ const steps = [
   { i: <RefreshCw size={22} color={LIME} />, t: "Adjust and evolve", d: "Swap meals, recalibrate on plateau, upgrade tier. The plan bends to you." },
 ];
 const tiers = [
-  { name: "Standard", accent: LIME, price: "From ₹9,500", unit: "per month, B+L", line: "The closed loop.", status: "Live now", cta: { label: "Start ₹400 trial", href: "/plans?trial=true" }, feats: ["Goal-based meals, delivered fresh", "Per-gram tracking and diary", "Body metrics and consistency score", "Adaptive recalibration", "Smart grocery list and weekly digest"] },
-  { name: "Premium", accent: AMBER, price: "From ₹11,875", unit: "per month, B+L", line: "Meals, your stack, a plan.", status: "Waitlist open", featured: true, cta: { label: "Join waitlist", href: "/pricing" }, feats: ["Everything in Standard", "Upgraded ingredients and weekly chef special", "Linked workout schedule", "Personalised supplement stack and delivery", "Weekly progress PDF and priority support"] },
-  { name: "Luxury", accent: FUCHSIA, price: "From ₹14,250", unit: "per month, B+L", line: "Your full-time AI trainer.", status: "Waitlist open", cta: { label: "Join waitlist", href: "/pricing" }, feats: ["Everything in Premium", "AI personal trainer chat", "One-on-one nutritionist consult", "Custom meal-plan adjustments", "Concierge delivery and quarterly report"] },
+  { name: "Standard", accent: LIME, price: "From ₹24,000", unit: "per month, B+L", line: "The closed loop.", status: "Live now", cta: { label: "Start ₹400 trial", href: "/plans?trial=true" }, feats: ["Goal-based meals, delivered fresh", "Per-gram tracking and diary", "Body metrics and consistency score", "Adaptive recalibration", "Smart grocery list and weekly digest"] },
+  { name: "Premium", accent: AMBER, price: "From ₹30,000", unit: "per month, B+L", line: "Meals, your stack, a plan.", status: "Waitlist open", featured: true, cta: { label: "Join waitlist", href: "/pricing" }, feats: ["Everything in Standard", "Upgraded ingredients and weekly chef special", "Linked workout schedule", "Personalised supplement stack and delivery", "Weekly progress PDF and priority support"] },
+  { name: "Luxury", accent: FUCHSIA, price: "From ₹45,000", unit: "per month, B+L", line: "Your full-time AI trainer.", status: "Waitlist open", cta: { label: "Join waitlist", href: "/pricing" }, feats: ["Everything in Premium", "AI personal trainer chat", "One-on-one nutritionist consult", "Custom meal-plan adjustments", "Concierge delivery and quarterly report"] },
 ];
 const trustBadges = [
   { i: <Shield size={15} />, t: "FSSAI 21523035002815" }, { i: <Leaf size={15} />, t: "Olive oil only" },
@@ -725,7 +725,7 @@ export default function HomePage() {
           <div className="ff-hero-grid">
             <motion.div initial="hidden" animate="visible" variants={stagger}>
               <motion.div variants={fadeUp}><div style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "rgba(163,230,53,0.07)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 99, padding: "7px 15px", marginBottom: 24, backdropFilter: "blur(6px)" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: LIME, animation: reduce ? "none" : "ff-pulse 1.8s ease-in-out infinite" }} /><span style={{ fontSize: 12, fontWeight: 600, color: LIME, letterSpacing: "0.04em" }}>A health system that delivers food, in Pune</span></div></motion.div>
-              <motion.h1 variants={fadeUp} className="ff-hero-h" style={{ margin: "0 0 22px" }}>The only diet coach<br />that <span style={{ color: LIME }}>cooks your food.</span></motion.h1>
+              <motion.h1 variants={fadeUp} className="ff-hero-h" style={{ margin: "0 0 22px" }}>The only health coach<br />that <span style={{ color: LIME }}>controls the plate.</span></motion.h1>
               <motion.p variants={fadeUp} style={{ fontSize: 17, lineHeight: 1.6, color: "#b3b8c0", maxWidth: 500, margin: "0 0 14px" }}>Apps track what you <i>say</i> you ate. We cook it, deliver it, and log every gram for you, so your nutrition is <b style={{ color: "#f1f3f5" }}>measured, not guessed</b>. Then we watch your weight, adapt on plateaus, and coach you on real data.</motion.p>
               <motion.p variants={fadeUp} style={{ fontSize: 14, color: LIME, fontWeight: 600, margin: "0 0 30px" }}>Track every gram. No dish repeats in 30 days. Personalised to your body.</motion.p>
               <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 24 }}><Magnetic href="/plans?trial=true"><span style={primaryBtn}>Start with a ₹400 trial <ArrowRight size={15} /></span></Magnetic><Magnetic href="#finder"><span style={ghostBtn}>Find my plan</span></Magnetic></motion.div>
