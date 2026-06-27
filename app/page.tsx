@@ -148,8 +148,8 @@ function Aurora() {
 /* ════════ atoms ════════ */
 function Eyebrow({ children, color = LIME }: { children: React.ReactNode; color?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
-      <div style={{ width: 22, height: 2, background: color, borderRadius: 1, flexShrink: 0 }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 16 }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0, boxShadow: `0 0 10px ${color}` }} />
       <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", color, textTransform: "uppercase" }}>{children}</span>
     </div>
   );
@@ -591,7 +591,7 @@ function PlanFinder() {
           ) : (
             <motion.div key="result" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: EASE }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 18 }}><Sparkles size={16} color={result!.accent} /><span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: result!.accent, textTransform: "uppercase" }}>Your match</span></div>
-              <div style={{ width: 40, height: 4, background: result!.accent, borderRadius: 2, marginBottom: 16 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: result!.accent, boxShadow: `0 0 10px ${result!.accent}` }} /></div>
               <h3 style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: "clamp(2rem,4vw,3rem)", textTransform: "uppercase", margin: "0 0 10px", color: "#fff", lineHeight: 1 }}>{result!.name}</h3>
               <p style={{ fontSize: 15, color: "#9ca3af", margin: "0 0 28px" }}>{result!.note}. The full 30-day menu is public, so you never sign in just to look.</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}><Link href={result!.href} style={{ ...primaryBtn, background: result!.accent, boxShadow: `0 4px 30px ${result!.accent}55` }}>View this plan <ArrowRight size={15} /></Link><button onClick={reset} style={{ ...ghostBtn, background: "transparent" }}>Start over</button></div>
