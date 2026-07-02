@@ -1,4 +1,4 @@
-// app/plans/page.tsx — Phase 19A (rev.)
+// app/plans/page.tsx, Phase 19A (rev.)
 // Server fetch: all 126 plans + their full physical PlanPrice rows.
 // Passes pricesByPlan to PlansCatalog for in-card tier × variation matrix.
 import { prisma } from "@/lib/prisma";
@@ -8,13 +8,28 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
-    title: "Meal Plans — FitFuel",
+    title: "Meal Plans | FitFuel",
     description:
-      "Browse 100+ meal plans with daily delivery in Pune. Three tiers — Standard, Premium, Luxury. Weight loss, PCOS, diabetic, athletic, and more.",
+      "Browse 100+ meal plans with daily delivery in Pune. Three tiers: Standard, Premium, Luxury. Weight loss, PCOS, diabetic, athletic, and more.",
   };
 }
 
-export default async function PlansPage() {
+const VALID_CATEGORIES = ["STANDARD", "LIFESTYLE_MEDICAL", "SPORTS", "CORPORATE", "DIGITAL"] as const;
+type CategoryParam = (typeof VALID_CATEGORIES)[number];
+
+export default async function PlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; trial?: string }>;
+}) {
+  const { category, trial } = await searchParams;
+  const initialCategory: CategoryParam | undefined = VALID_CATEGORIES.includes(
+    (category ?? "") as CategoryParam
+  )
+    ? (category as CategoryParam)
+    : undefined;
+  const startTrial = trial === "true";
+
   const db = prisma as any;
 
   const plans = await db.mealPlan.findMany({
@@ -48,5 +63,12 @@ export default async function PlansPage() {
     });
   }
 
-  return <PlansCatalog plans={plans as any} pricesByPlan={pricesByPlan} />;
+  return (
+    <PlansCatalog
+      plans={plans as any}
+      pricesByPlan={pricesByPlan}
+      initialCategory={initialCategory}
+      startTrial={startTrial}
+    />
+  );
 }

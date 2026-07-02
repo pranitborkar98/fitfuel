@@ -1,4 +1,4 @@
-// app/plans/PlansCatalog.tsx — Phase 19A (house-style, restrained)
+// app/plans/PlansCatalog.tsx, Phase 19A (house-style, restrained)
 // Configurator: diet → duration → meals → live 3-tier pricing → browse grid.
 // Uses the site's own design tokens from globals.css (Inter, rounded, lime accent).
 "use client";
@@ -44,6 +44,8 @@ interface Plan {
 interface Props {
   plans: Plan[];
   pricesByPlan: Record<string, PriceRow[]>;
+  initialCategory?: Plan["category"];
+  startTrial?: boolean;
 }
 
 const CATEGORY_LABELS: Record<Plan["category"], { label: string; desc: string }> = {
@@ -113,13 +115,13 @@ function Step({ label }: { label: string }) {
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
-export default function PlansCatalog({ plans, pricesByPlan }: Props) {
+export default function PlansCatalog({ plans, pricesByPlan, initialCategory, startTrial }: Props) {
   const [diet, setDiet] = useState<DietKey>("VEG");
-  const [dur, setDur]   = useState<DurationKey>("ONE_MONTH");
+  const [dur, setDur]   = useState<DurationKey>(startTrial ? "TRIAL_DAY" : "ONE_MONTH");
   const [meal, setMeal] = useState<MealKey>("ALL_FOUR");
 
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<"ALL" | Plan["category"]>("ALL");
+  const [activeCategory, setActiveCategory] = useState<"ALL" | Plan["category"]>(initialCategory ?? "ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [wlTier, setWlTier] = useState<Tier | null>(null);
@@ -207,7 +209,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
         <div style={{ marginBottom: 56, textAlign: "center" }}>
           <h1 className="heading-lg" style={{ marginBottom: 14 }}>Build your plan</h1>
           <p className="body-lg" style={{ maxWidth: 540, margin: "0 auto" }}>
-            {plans.length} meal plans across three tiers, delivered daily in Pune. Pick your diet, duration and meals — then choose your goal.
+            {plans.length} meal plans across three tiers, delivered daily in Pune. Pick your diet, duration and meals, then choose your goal.
           </p>
         </div>
 
@@ -331,7 +333,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
           })}
         </div>
 
-        {/* Browse — master/detail browser */}
+        {/* Browse: master/detail browser */}
         <div id="browse" className="ffb" style={{ marginBottom: 24, scrollMarginTop: 24 }}>
           <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap');
@@ -381,7 +383,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
 
           <div className="ffb-top">
             <h2 className="ffb-title">{browsePlans.length} {dietMeta.label} Plans</h2>
-            <input className="ffb-search" type="text" placeholder="Search — PCOS, cricket, keto…"
+            <input className="ffb-search" type="text" placeholder="Search: PCOS, cricket, keto…"
               value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
 
@@ -401,7 +403,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
             <div className="ffb-empty">No {dietMeta.label.toLowerCase()} plans match. Try another diet or clear the search.</div>
           ) : (
             <div className="ffb-grid">
-              {/* LEFT — scannable list */}
+              {/* LEFT: scannable list */}
               <div className="ffb-list">
                 {orderedCategories.map((cat) => (
                   <div key={cat}>
@@ -424,7 +426,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
                 ))}
               </div>
 
-              {/* RIGHT — live spec panel */}
+              {/* RIGHT: live spec panel */}
               {selected && (() => {
                 const ac = accentFor(selected);
                 const price = getTierPrice(pricesByPlan[selected.id] ?? [], "STANDARD", dur, meal);
@@ -467,7 +469,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
                       <div className="ffb-price">
                         {perMeal !== null ? (
                           <><b>{fmt(perMeal)}</b><span>/ meal</span><small>{b ? fmt(b.baseRs) : ""} · {days}d · {meals} meals</small></>
-                        ) : <b>—</b>}
+                        ) : <b>N/A</b>}
                       </div>
                       <Link href={`/plans/${selected.slug}`} className="ffb-cta">Start plan →</Link>
                     </div>
@@ -489,7 +491,7 @@ export default function PlansCatalog({ plans, pricesByPlan }: Props) {
               Outside Pune?
             </h3>
             <p className="body-sm" style={{ margin: 0 }}>
-              Get the full 30-day plan as a downloadable PDF — recipes, macros, grocery list.
+              Get the full 30-day plan as a downloadable PDF: recipes, macros, grocery list.
             </p>
           </div>
           <Link href="/plans/digital" className="btn-secondary" style={{ textDecoration: "none" }}>
