@@ -1,15 +1,18 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Simple in-memory rate limiting (For production, use Redis/Upstash)
-// This prevents brute force on auth endpoints
+// Simple rate limiting map (In production, use Redis/Upstash)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 export function middleware(request: NextRequest) {
-  const ip = request.ip ?? '127.0.0.1';
+  // Extract IP from headers (Vercel sets x-real-ip or x-forwarded-for)
+  const ip = request.headers.get('x-real-ip') || 
+             request.headers.get('x-forwarded-for')?.split(',')[0] || 
+             '127.0.0.1';
+  
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute window
-  const maxRequests = 20; // Allow 20 requests per minute per IP
+  const maxRequests = 20; // 20 requests per minute
 
   const record = rateLimitMap.get(ip) || { count: 0, resetTime: now + windowMs };
 
@@ -23,7 +26,7 @@ export function middleware(request: NextRequest) {
   rateLimitMap.set(ip, record);
 
   if (record.count > maxRequests) {
-    return new NextResponse(JSON.stringify({ error: 'Too many requests, please try again later.' }), {
+    return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },
     });
