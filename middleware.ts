@@ -1,14 +1,15 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Simple rate limiting map (In production, use Redis/Upstash)
+// Simple in-memory rate limiting (For production, use Redis/Upstash)
+// This prevents brute force on auth endpoints
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 export function middleware(request: NextRequest) {
   const ip = request.ip ?? '127.0.0.1';
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute window
-  const maxRequests = 10; // 10 requests per minute
+  const maxRequests = 20; // Allow 20 requests per minute per IP
 
   const record = rateLimitMap.get(ip) || { count: 0, resetTime: now + windowMs };
 
@@ -22,7 +23,7 @@ export function middleware(request: NextRequest) {
   rateLimitMap.set(ip, record);
 
   if (record.count > maxRequests) {
-    return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+    return new NextResponse(JSON.stringify({ error: 'Too many requests, please try again later.' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },
     });
