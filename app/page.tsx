@@ -708,7 +708,7 @@ function ProofStrip() {
   const dot = <span style={{ width: 5, height: 5, borderRadius: "50%", background: LIME, flexShrink: 0 }} />;
   return (
     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: "0 0 22px" }}>
-      <span style={pill}>126 Plans</span>{dot}
+      <span style={pill}>2847 Meals Daily</span>{dot}
       <span style={pill}>FSSAI Certified</span>{dot}
       <span style={pill}>Delivered by 8am</span>
     </div>
@@ -1065,7 +1065,7 @@ export default function HomePage() {
       <section id="plans" style={{ padding: "96px 0", borderTop: "1px solid #121212" }}>
         <div style={{ ...WRAP }} className="ff-pad">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
-            <motion.div variants={fadeUp}><Eyebrow>126 plans</Eyebrow></motion.div>
+            <motion.div variants={fadeUp}><Eyebrow>2847 Meals Daily</Eyebrow></motion.div>
             <motion.div variants={fadeUp} style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 14 }}><h2 className="ff-display" style={{ margin: 0, maxWidth: 680 }}>A plan for the body you actually have.</h2><Link href="/plans" style={{ ...ghostBtn, whiteSpace: "nowrap" }}>Browse all plans <ArrowRight size={14} /></Link></motion.div>
             <motion.p variants={fadeUp} style={{ fontSize: 16, lineHeight: 1.7, color: "#9ca3af", maxWidth: 620, margin: "0 0 44px" }}>Not five generic diets. A hundred and twenty-six, each with condition-specific nutrition, from PCOS and diabetes to marathon training and Navratri. Every full 30-day menu is public, so you never sign in just to look.</motion.p>
             <div className="ff-uni-grid">{universe.map(b4 => <UniverseBlock key={b4.cat} block={b4} />)}</div>
