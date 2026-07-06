@@ -1,3 +1,256 @@
+# FITFUEL — MASTER TRACKER (COMPILED / CANONICAL)
+
+> **Compiled: June 23, 2026.** This is the COMPLETE, single source of truth. It **preserves every line**
+> of all three prior trackers and adds a clean navigation + roadmap layer on top so the history is no
+> longer a maze.
+>
+> **This document contains, in full and unedited:**
+> - **PART I** — Canonical navigation, current status, and the forward roadmap (this section).
+> - **PART II** — The complete `FITFUEL-MASTER-TRACKER-DEFINITIVE.md` (3,102 lines, through Decision #194), verbatim.
+> - **PART III** — The complete `FITFUEL-PHASE-12-AI-TRAINER-SCOPE.md` (601 lines), verbatim.
+> - **PART IV** — The complete original `FITFUEL_PROJECT_TRACKER.md` (559 lines, Phases 0–8), verbatim.
+> - **PART V** — Documented file inventory (151 paths extracted from the trackers).
+>
+> **Rule:** Part I is the index and the forward plan. Parts II–IV are the immutable historical record —
+> additions-only, never edit. When Part I and an older section disagree on *current status*, Part I wins;
+> when you need the *detail* behind any item, jump to its section in Parts II–IV.
+>
+> **GitHub grounding note:** a live crawl of `pranitborkar98/fitfuel` was attempted this session but the
+> GitHub API was rate-limited on the shared build IP (unauthenticated). The file inventory in Part V is
+> therefore reconstructed from the trackers' own (append-only, reliable) file lists, not a live tree.
+> Re-run the crawl with an authenticated token to refresh.
+
+---
+
+# PART I — CANONICAL NAVIGATION, STATUS & ROADMAP
+
+## I.0 MISSION & MOAT (never deviate)
+
+**FitFuel is not a meal-delivery app. It is a personal health operating system that delivers food.**
+The meal is the entry point; the data loop is the product. A user signs up, tells us their body, goal, and
+condition; we calculate what they need to eat and how to move; we cook it, deliver it, track every gram,
+watch the weight trend, recalibrate on plateau, recommend supplements for the condition, and (when the AI
+is live) coach them daily like a trainer who watched every rep and every meal.
+
+**Moat in one line:** FitFuel is the only health coach that *controls the plate* — **verified intake, not
+self-reported.** No tiffin service, fitness app, or supplement brand can replicate the closed loop. The moat
+is operational + hyperlocal (owned Pune kitchen), **not** model sophistication. Do not position as "a better
+Ria/Healthify."
+
+**Owner:** Pranit Borkar (Chintu) · pranitborkar98@gmail.com · solo founder + developer · Pune only · English only.
+
+## I.1 COORDINATES & STACK
+
+| Thing | Value |
+|---|---|
+| Repo | `pranitborkar98/fitfuel` (branch `main`) |
+| Local | `C:\Users\VCOM\fitfuel` |
+| Drop folder | `F:\bny\files (N)` (flat; `Copy-Item -Force`) |
+| Live | `fitfuel-eosin.vercel.app` → `fitfuel.in` at launch |
+| Source-of-truth | **this file** |
+
+**Stack:** Next.js 16 / Turbopack · Prisma 7 (PrismaPg adapter + `prisma.config.ts`) · Neon Postgres (Mumbai)
+· Auth.js v5 (`auth()`) · PayU + COD · Vercel · Upstash Redis (rate-limit) · Resend (email) + MSG91/WAHA
+(WhatsApp later) · QStash + Vercel cron · Vercel Blob · Nutrabay affiliate (`pranit1944`).
+**Anthropic API key: not yet provisioned (post-funding).**
+
+**Hard build rules (do not relax — each was paid for in a broken build):**
+- **`tsc --strict` gate (#183)** — real-dependency typecheck before handoff; esbuild only checks syntax.
+- **`prisma db push` then `prisma generate` separately, never `migrate dev`** (drift → near-data-wipe). **Always `git add prisma/schema.prisma`** after a push (else Vercel builds a stale client → #143).
+- **New untracked files never show in `git diff`** → stage each explicitly; no `git add .` (#144).
+- **Standalone `tsx` scripts start with `import "dotenv/config"`** before importing `lib/prisma` (#181).
+- **Vercel Hobby = 2 crons** → fold new schedules into existing crons / QStash.
+- **Turbopack** — never import Prisma transitively through a `"use client"` file → split client-safe types from server-only DB (#142).
+- **Read `globals.css` + homepage BEFORE building UI** (#154). Tokens: bg `#080808`, lime `#a3e635`/`#84cc16`, Syne + DM Sans + Barlow Condensed.
+- **Business-viability filter (#66)** — before any feature: (1) works operationally/economically for a real cloud kitchen? (2) protects the moat rather than leaks it?
+- **Unicode in JSX** — actual chars or `{'\uXXXX'}`, never raw escape sequences (#67).
+
+## I.2 NUMBERING RECONCILIATION (why it looked collapsed)
+
+Phase numbers were **reused** across sessions for different scopes. This freezes what each old label
+*actually* is. Going forward, build from **I.5 (F-IDs)** only — they never collide.
+
+| Old label | What it really is | Status |
+|---|---|---|
+| Phases 0–8 (original) | Foundation → Supplement Guide | shipped |
+| Phase 9 | Lifestyle/medical meal plans (126 plans) | core (recipes 1/126) |
+| Phase 10 | Delivery system | done (small tail) |
+| Phase 11 | Progress charts | done |
+| **Phase 12** | AI Trainer (chat) | PARKED → un-parks as AI-1/2/3 |
+| Phase 13 | Digital meal-plan PDFs | core |
+| Phase 14 | Blog / FAQ / Testimonials | done |
+| Phase 15 | Admin Command Center | done |
+| Phase 16 | Notifications (email done / WhatsApp later) | partial |
+| Phase 17 (NEW) | Partner / Referral | done |
+| old "Phase 17 Supplement Stack" | personalised recommender → **LOOP-7** | not built |
+| Phase 18 (NEW) | Supplements DB + affiliate | infra done |
+| old "Phase 18 Recalibration" | **LOOP-6** (done) + **LOOP-8** progression (not built) | partial |
+| Phase 19 (NEW) | Plans catalog + tier pricing (19A) | done (19B/C deferred) |
+| old "Phase 19 Public TDEE tool" | → F-launch item | not built |
+| "Phase 8A–D" exercise rebuild | renamed **EX-1…EX-4** (collided w/ old Phase 8) | EX-1/1b done |
+| WS-1 | close-the-loop (LOOP-3/4 + workout engine) | done |
+| WS-3 | security hardening (SEC-1…8) | public routes done |
+| R-PRICE | pricing-display overhaul | done (#189–#194) |
+| Phase 20 / 21 / 22 | Launch / Zomato-Swiggy / Social | pending |
+
+## I.3 THE DAILY LOOP — what's actually live
+
+```
+SIGN-UP -> ONBOARDING (body+goal+diet+condition)            [LIVE]
+        -> TDEE + targets                                    [LIVE]
+        -> Meal Plan assigned (correct plan, LOOP-3)         [LIVE]
+        -> Exercise program assigned (EX-1 seeded 126x3)     [LIVE / progression=EX-2 pending]
+   --- EVERY DAY ---
+   | today's 4 meals                                         [LIVE]
+   | "I ate this" -> MealLog -> auto FoodEntry (LOOP-4)      [LIVE]
+   | workout logged -> kcal burned (engine wired)            [LIVE]
+   | net-calorie ring                                        [LIVE]
+   | weekly weigh-in -> trend -> plateau detect              [LIVE]
+   |   -> recalibrate targets (LOOP-6)                       [LIVE]
+   | consistency score (0-100)                               [LIVE]
+        -> weekly digest (email)                             [LIVE]
+        -> supplements: recommended stack                    [catalog LIVE / recommender LOOP-7 = NOT built]
+        -> AI coach                                          [proactive deterministic LIVE / LLM chat = NOT built, API key]
+```
+The loop is **closed and verified** through the consistency score. Two open seams: **LOOP-7** (supplement
+recommender) and the **conversational AI trainer** (API key gated).
+
+## I.4 CURRENT STATE SNAPSHOT
+
+| Area | Status | % |
+|---|---|---|
+| Core platform (auth, meals, checkout, dashboard) | done | 100 |
+| Health-OS daily loop | closed | 100 |
+| Recalibration / plateau (LOOP-6) | done | 100 |
+| Admin Command Center (9 surfaces) | done | 100 |
+| Notifications — email | done | 100 |
+| Notifications — WhatsApp | deferred | 0 |
+| Digital plans | core | 95 |
+| Partner / referral | done | 100 |
+| Supplements infra | done | 100 code / 10 products seeded (urls pending) |
+| Plans catalog + pricing (R-PRICE) | done | 100 |
+| Exercise schedules (EX-1/1b) | done | 100 |
+| Supplement recommender (LOOP-7) | not built | 0 |
+| Security hardening (WS-3) | DONE (F1+F2) | 100 |
+| Discoverability / a11y / design | not built | low |
+| AI trainer — proactive (deterministic) | done | 100 |
+| AI trainer — chat (LLM) | parked | 0 (API key) |
+| Recipe seeding (126 plans) | parallel | 1/126 |
+| Launch readiness (Phase 20) | not built | 0 |
+
+## I.5 FORWARD ROADMAP — the only build list (stable F-IDs, never reused)
+
+### BLOCK A — LAUNCH (must precede public launch; none need the API key)
+| F | Item | Track | Note | Maps to |
+|---|---|---|---|---|
+| F1 | **SHIPPED (#195)** — authed-route coverage: `mutation`/`read` limiter + Zod schema on 13 authed routes (onboarding, profile, metrics, notification-preferences, deliveries, nutrition/{diary,foods,goals,water}, meals/{log,rate}, workout/sessions, attribute-ref). tsc-strict clean + 21 runtime schema tests green. Business logic untouched. | WS-3 | DONE | SEC-2 |
+| F2 | **DONE (#197/#198/#199)** — SEC-6 middleware ✓, SEC-7 cron-auth ✓, SEC-4 atomic guest-merge ✓, SEC-8 env audit ✓, SEC-5 keep-link decided ✓. | WS-3 | DONE | R17 |
+| F3 | Rotate the Upstash token (exposed in chat, #186). | ops | do now | #186 |
+| F4 | Recipe seeding at scale — 1/126 → every sellable plan. Caps schedule + ledger quality. Benchmark `seed-recipes-weight-loss-veg.ts`. | content | parallel | carryover |
+| F5 | **IN PROGRESS (#200)** — `seed-supplements.ts` seeds 5 cats + 10 products w/ content; paste real Nutrabay urls/prices to activate buy-links + extend to 46. | revenue | DATA-ENTRY left | carryover |
+| F6 ✅(#211) | Affiliate disclosure footer on `/supplements`. | legal | quick | #146 |
+| F7 | **EFFECTIVELY DONE (#201-207)** — Browser rebuild, per-meal pricing, audit fixes, sitemap/robots, branded 404/error/loading, real contact, home monograms, a11y foundation. Minor polish left: server-render homepage stats, framer-motion reduced-motion. | WS-4 | ~DONE | DES-2/4/5 |
+| F8 ✅(#212) | Public TDEE funnel tool — standalone acquisition surface → onboarding (also feeds Zomato QR). | growth | — | old "Phase 19"/R19 |
+| F9 | Phase 16 remainder — WhatsApp via WAHA (Oracle free tier); flip templates BOTH. | notify | WAHA setup | R20 |
+| F10 | Cosmetic/data fixes — confirmation "7am–10am" → real window · homepage testimonials → `isFeatured` · DietType JAIN/VEGAN · PayU `CouponRedemption` in success callback · MONTHLY_EXCL span-vs-count split. | debt | batch | #194/#92/#58 |
+| F11 ◐(#213 cache done; fonts need .ttf) | Performance + assets — Blob caching for ~90-page PDF · brand fonts (Syne/DM Sans) in PDF · verify prod alias = latest commit + purge stale `/plans` cache. | perf | pre-traffic | #88/#93 |
+| F29 ✅(#211) | **Refund / Cancellation policy page** (`/refund`) — required by PayU/RBI for live payments. terms ✓ + privacy ✓ exist; refund MISSING. | legal | launch-blocking | NEW #208 |
+| F30 ✅(#211) | **Social/OG image + app icon + PWA manifest** — no `opengraph-image`, no `app/icon.png`, no `manifest.ts` (only favicon.ico). Links share blank; no mobile install icon. | brand/SEO | launch polish | NEW #208 |
+| F31 ✅(#211) | **Analytics + error monitoring** — none wired (no Vercel Analytics/Plausible/Sentry). Flying blind on traffic + prod errors at launch. | ops | launch | NEW #208 |
+| F32 | **Real plan photography / imagery** — `imageUrl` exists on plans but unused everywhere; cards/detail/OG all text-only. | brand | pre-launch | NEW #208 |
+| F12 | Phase 20 — LAUNCH READINESS — QA pass · DPDP/privacy/export/right-to-delete · `hello@fitfuel.in` Resend domain · DNS cutover fitfuel.in · pricing sign-off · CA confirm (SAC 9983, GST timing). | launch | THE GATE | Phase 20/R21 |
+
+### BLOCK B — MOAT-DEEPENING (parallel/after launch; mostly no API key)
+| F | Item | Note | Maps to |
+|---|---|---|---|
+| F13 ✅(#214) | LOOP-7 — personalised supplement recommender (`plan_category + condition → stack + doses`). Catalog exists; recommender does not. | high moat value | LOOP-7 |
+| F14 | EX-2 — progression/overload + onboarding assignment (closes LOOP-8). | behind workout history | EX-2/LOOP-8 |
+| F15 | EX-3 — exercise media (licensed clips; optional glTF viewer). | future | EX-3 |
+| F16 | EX-4 — BlazePose camera form analysis (on-device; merges w/ AI coach). | future | EX-4 |
+
+### BLOCK C — AI TRAINER (headline moat; un-parks Phase 12 — GATED ON API KEY / FUNDING)
+> Brain before mouth (#174). The deterministic proactive coach (weekly review + recalibration + nudges) is
+> ALREADY LIVE. What remains needs the API key. Full spec preserved in PART III.
+| F | Item | Note | Maps to |
+|---|---|---|---|
+| F17 | AI-1 — coach actions deepen: progression (LOOP-8) + supplement-stack (LOOP-7) surfaced as coach actions. | builds on F13/F14 | R8 |
+| F18 | AI-2 — Context Engine + Safety + cost — `lib/ai-trainer/context.ts`, 12-SAFE guards, prompt caching, two-model split, AiUsageLog, rate limits, eval harness. | needs API key | 12A/12-SAFE/12H/12I |
+| F19 | AI-3 — reactive chat + support + workout-mode — `/dashboard/trainer` streaming (Luxury gate), persistence, tool use (logMeal/requestSwap/suggestRecalibration confirm-gated), 12-SUPPORT, in-session workout-mode. **Flips Premium/Luxury waitlist live.** | needs API key + data depth | Phase 12 v1 |
+
+### BLOCK D — WHOLE-PERSON EXPANSION (post-launch new "senses", #175–#177)
+| F | Item | Maps to |
+|---|---|---|
+| F20 | `Routine` abstraction + pluggable Health Score. | R10 |
+| F21 | Wearable aggregator (evaluate Terra) → verified sleep/HR/HRV/CGM/cycle. | R11 |
+| F22 | Sleep & recovery domain. | R12 |
+| F23 | Medical condition management (highest moat; tracking-only, "not medical advice"; clinician export). | R13 |
+| F24 | Habits/routines (consistency engine generalised). | R14 |
+| F25 | Skincare / beauty-from-within (light). | R15 |
+
+### BLOCK E — GROWTH & RETENTION (post-launch)
+| F | Item | Note | Maps to |
+|---|---|---|---|
+| F26 | Zomato/Swiggy aggregator — kitchen-fill + cold acquisition ONLY; every box ships a QR → TDEE → onboarding → owned subscriber. Measure conversion, not GMV. | Phase 21 | R22 |
+| F27 | Social & Community — accountability, leaderboards, challenges, AI→human handoff. | Phase 22 | R23 |
+| F28 | Expo native app — ONLY on real Luxury wearable demand (~200 users). | future | #79 |
+
+## I.6 OPEN DEBT & PENDING INPUTS
+
+**Tech debt:** digital MRP → 1.85× alignment (minor) · cycleLengthDays 30-vs-60 moat decision · confirm 10
+repointed subscribers real vs test · digital out-of-band "provision access" admin action · **full
+past-conversation reconciliation sweep (#188 — this compile is the start of it).**
+
+**Pending external inputs:** FitDays scale hardware (BLE test) · Meta/WhatsApp or WAHA host · wellness
+partner tie-ups (Luxury) · CA sign-off (GST timing, SAC 9983) · legal-page placeholders (entity name,
+address, grievance officer, nutritionist credentials). *Resolved since original:* supplement supplier → Nutrabay.
+
+## I.7 DECISIONS INDEX (full prose preserved in Parts II–IV; ranges here)
+- **#1–#28** — stack, auth, payments, pricing-from-DB, design tokens, Pune/English-only.
+- **#30–#85** — Phase 9–12 era: medical disclaimer (#30), FoodEntry←MealLog gap (#32, later closed by LOOP-4), tone modulation (#46), business-viability filter (#66), encoding fix (#67), db-push (#71), Phase 12 finalized + parked (#79–#85).
+- **#86–#146** — digital plans (#86–#93), admin self-service (#94–#102), notifications (#103–#105), partner (#122/#128/#133), supplements pivot (#139–#146).
+- **#147–#180** — plans catalog (#148/#154), audit + WS restructure (#155–#166), AI-coach decoupled (#174), sequence lock (#179), **roadmap reconciliation (#180)**.
+- **#181–#195** — EX-1/1b (#181/#182), tsc-not-esbuild gate (#183), AI coach spine + card (#184/#185), WS-3 SEC-1/2/3 public (#186), nudges (#187), R-PRICE un-bury → shipped (#188–#194), **WS-3 SEC-2 authed routes / F1 (#195)**, **F1 build-fix + stub-tightening lesson (#196)**, **F2 SEC-6 middleware + SEC-7 cron-auth (#197)**, **F2 SEC-4 atomic guest-merge + SEC-8 env audit (#198)**, **F2 SEC-5 keep-link decision → F2 closed (#199)**, **F5 supplement seed scaffold (#200)**, **F7 audit + detail-page fixes (#201)**, **F7 PlansCatalog card redesign + per-meal pricing (#202)**, **F7 plans master/detail BROWSER rebuild (#203)**, **F7 sitemap/robots + branded 404/error/loading (#204)**, **F7 homepage goal-card numbers → monograms (#205)**, **F7 real contact details wired (#206)**, **F7 a11y pass (#207)**, **F10 testimonials/window/PayU-coupon fixes (#209)**, **F10 #5 MONTHLY_EXCL span fix → F10 complete (#210)**, **F6+F29+F30+F31 launch batch (#211)**, **F8 public TDEE calculator (#212)**, **F11 PDF Blob caching (#213)**, **F13 supplement recommender (#214)**.
+
+This compile overturns NO decision; it re-files them under a non-colliding index.
+
+## I.8 TRACKER PROTOCOL GOING FORWARD (so it never collapses again)
+1. **One forward list only.** Add work as the next **F-ID** in I.5. Never reuse an F-ID or a phase number for a new scope.
+2. **Additions-only, append-only** in Parts II–IV. Never remove/reorder shipped lines; change status in place (`not built → partial → done`).
+3. **Every shipped item updates two places:** its history section + its F-row status in I.5.
+4. **Decisions keep their global number**; summarise by range in I.7.
+5. **Status legend:** done · partial · not built · parked/deferred · flagged-risk.
+6. End each session with a one-line dated note in the SESSION LOG below.
+
+**— SESSION LOG —**
+- `Jun 23, 2026` — **F13 supplement recommender (Decision #214):** `lib/supplement-recommender.ts` (LOOP-7) — deterministic, maps buyer `UserProfile.fitnessGoal` → `SupplementGoal` (LOSE_WEIGHT→WEIGHT_LOSS, GAIN_MUSCLE→MUSCLE_GAIN, MAINTAIN/MANAGE→BALANCED, IMPROVE_FITNESS→PERFORMANCE), returns a ranked (isFeatured→popular→sortOrder) shortlist from the live catalogue; **diet-aware** — vegans never get whey/fish-oil (`veganFriendly` filter). Surfaced as a 'Picked for you / Built for {goal}' strip above the supplements catalogue (server component in the page; renders only for logged-in users with a goal + matching active products). No API key, no external calls. Strict+noUnusedLocals clean. First moat-deepening (F13) feature; degrades gracefully on empty catalogue / no goal.
+- `Jun 23, 2026` — **F11 PDF Blob caching (Decision #213):** `app/api/digital-plan/[slug]/pdf/route.tsx` now caches the rendered PDF in Vercel Blob instead of re-running `renderToBuffer` every download. Key = `digital-plans/{userId}/{slug}-{bundle}-{sha1(person+bundle+slug)[:12]}.pdf` — personalisation-hashed so a buyer’s stat change auto-invalidates; never serves stale. Cache served server-side through the authed route (no public-link leak); all Blob ops wrapped in try/catch → falls back to rendering, so caching can’t break a download. Strict gate clean. **F11 brand-fonts deferred:** the doc deliberately uses built-in Helvetica with a ‘no remote fonts → render never fails’ guarantee; brand fonts need actual .ttf files bundled in-repo (remote URLs would break that guarantee) — Chintu must add Barlow Condensed / Space Mono .ttf to e.g. public/fonts, then a Font.register pass. **All launch-blocking BUILDS now done; remainder = ops/content + F12 launch process.**
+- `Jun 23, 2026` — **F8 public TDEE calculator (Decision #212):** `/tdee-calculator` — server page (SEO metadata + canonical) + `TdeeCalculator` client. Mifflin–St Jeor BMR → activity TDEE → goal-adjusted calories (lose −20% / maintain / build +10%) + macro split (protein/kg, 25% fat, carb remainder). Live calorie ring + macro bar in the athletic aesthetic; goal-colored accent; CTA funnels to /plans ('See plans that hit N kcal'). Acquisition top-of-funnel (high-search term). Strict+noUnusedLocals clean. Sitemap updated with /tdee-calculator + /refund-policy. **F11 (PDF Blob caching + brand fonts) is the last launch build — needs grounding the PDF-gen pipeline before touching.**
+- `Jun 23, 2026` — **F6/F29/F30/F31 launch batch (Decision #211):** **F29** `/refund-policy` page (route matches Terms link; mirrors legal-page style; 10 sections incl. trial/COD/digital/supplements/timeline; contact wired). **F30** `opengraph-image.tsx` (1200x630 dark/lime share card via next/og), `icon.tsx` (lime ⚡ app icon), `manifest.ts` (PWA, theme #080808, standalone). **F31** layout adds `@vercel/analytics` + `@vercel/speed-insights` (needs `npm i @vercel/analytics @vercel/speed-insights`); Sentry left optional (needs DSN). **F6** `/supplements` affiliate-disclosure footer appended in the server wrapper (no client edit). Strict gate clean (refund/og/icon/manifest), scope gate clean (layout/supplements). Closes F6, F29, F30; F31 done pending the npm install.
+- `Jun 23, 2026` — **F10 #5 resolved (Decision #210):** MONTHLY_EXCL_WEEKENDS span `26 → 30` calendar days in BOTH `DUR_DAYS` maps (COD + PayU success) — Chintu chose 'a month of weekdays (~22 meals)'. endDate now spans a calendar month; weekend-skipping handled by delivery-gen. F10 COMPLETE (all 5). Note: weekend-exclusion in delivery generation itself not re-verified this pass — if deliveries don't already skip Sat/Sun, that's a separate delivery-gen item.
+- `Jun 23, 2026` — **F10 fixes bundle (Decision #209):** #1 homepage testimonials now load real `isFeatured`+`isActive` rows via new `app/api/testimonials/route.ts` (rate-limited read) with graceful fallback to hardcoded; #3 order-confirmation delivery window made param-aware (MORNING→‘7am–10am’/EVENING→‘6pm–9pm’) + PayU success passes `&window=`; #4 **PayU coupon-redemption now recorded** (idempotent via orderId guard — was the only real bug; COD already did it). Strict + scope/JSX gates clean. **#2 DietType JAIN/VEGAN = schema edit + db push (instruction given).** **#5 MONTHLY_EXCL deferred to a decision:** `DUR_DAYS` sets 26 *calendar* days → only ~18 weekday deliveries, not a month’s ~22 — needs Chintu’s intent (deliveries vs calendar span) before touching live checkout. COD-evening confirmation needs the client to append `&window=` (one-liner) for full coverage.
+- `Jun 23, 2026` — **Tracker completeness audit (Decision #208):** grounded scan found 4 build items missing from the F-list — added **F29** refund/cancellation page (PayU/RBI requirement; /terms + /privacy exist, /refund missing), **F30** OG/social image + app icon + PWA manifest (only favicon.ico present), **F31** analytics + error monitoring (nothing wired), **F32** real plan photography (imageUrl unused). Roadmap now F1–F32. Completion estimate: ~83% to public launch, ~52% to full vision (AI trainer chat + expansion + growth all ahead).
+- `Jun 23, 2026` — **F7 a11y pass (Decision #207):** `globals.css` +a11y block — keyboard `:focus-visible` lime ring (focus-visible only, not mouse), skip-link, `.sr-only`, `@media (prefers-reduced-motion)` killing CSS animations/scroll-smooth. `layout.tsx` — skip-to-content link + `<div id="main" tabIndex={-1}>` landmark wrapper (div not main — pages render their own <main>; avoids nesting). Navbar already had aria-label on toggle + named account button. Strict + brace-balance gates clean. **Caveat:** framer-motion JS animations need `useReducedMotion()` per-component for full reduced-motion (CSS rule covers keyframe/transition only) — noted as polish. F7 effectively complete for launch; minor remainders: server-render homepage stats (hardcoded marketing numbers), framer-motion reduced-motion.
+- `Jun 23, 2026` — **F7 real contact details (Decision #206):** wired Chintu's live details everywhere — `app/contact/page.tsx` WhatsApp/phone `919579738811`→`918850446348` (+ display `+91 8850446348`; email already `contact@fitfuel.in`); `components/Footer.tsx` fixed the literal `wa.me/91XXXXXXXXXX` placeholder → `918850446348` and `pranitborkar98@gmail.com` → `contact@fitfuel.in`. Scope+JSX gate clean. Closes the 'real contact' launch item.
+- `Jun 23, 2026` — **F7 homepage cleanup (Decision #205):** goal-card ghost `01–05` sequence numbers → ghost monograms (MG/WL/BD/OE/JD) — keeps the depth element, kills the wrong-signal numbers on parallel cards. Process-step `01/02/03` (Choose→Cook→Deliver) KEPT (real sequence). `₹400 trial day` left as-is: consistent with the model (1 day ≈ ₹450, advertised ₹400), separate from the ₹112/meal subscription hook — NOT a bug. Scope+JSX gate clean. **Open for Chintu: confirm home ₹400 trial matches the DB TRIAL_DAY price the detail page now reads live.**
+- `Jun 23, 2026` — **F7 SEO + branded states (Decision #204):** 5 new files — `app/sitemap.ts` (static routes + live MealPlan[isActive] + BlogPost[PUBLISHED] slugs, daily revalidate, per-query try/catch, base from NEXT_PUBLIC_BASE_URL→fitfuel.in), `app/robots.ts` (allow /, disallow /admin /dashboard /api /auth, sitemap+host), branded `not-found.tsx` (404 ‘Off the menu’), `error.tsx` (‘use client’ reset boundary + digest ref), `loading.tsx` (lime spinner). All dark/lime athletic, Barlow Condensed + Space Mono. Strict gate clean. Closes DES-5 (sitemap/robots) + DES-4 (branded states).
+- `Jun 23, 2026` — **F7 plans BROWSER rebuild (Decision #203):** retired the card grid entirely (it didn't scale to 126 plans — a wall). `PlansCatalog.tsx` now a master/detail **plan browser**: scannable category-grouped list (left) + live spec panel (right) with SVG calorie ring, P/C/F macro bar, who-it's-for, per-meal price + struck MRP, per-goal accent (accentColor → category fallback). Hover/click a plan → panel updates. Configurator (diet/dur/meal), tier pricing, waitlist modal all preserved; unused PlanCard removed. Architecture chosen by Chintu over Index + grid. Strict + noUnusedLocals gate clean (CSS-var casts, SVG, ring all verified). Solves 'too many cards / clustered / basic' at the IA level, not just styling.
+- `Jun 23, 2026` — **F7 card redesign (Decision #202):** `PlansCatalog.tsx` PlanCard rebuilt around the **per-meal hook** (₹13,499÷30÷4 = ₹112/meal) — per-meal price is now the hero number (Barlow Condensed), with monthly base · days · meals + struck MRP as secondary; mono spec-strip (diet · kcal · protein), per-plan accent edge + hover lift, scoped fonts matching the detail page. Tier cards now show `/day · /meal`. Pricing framing locked: advertise per-meal, not monthly sticker. Scope+JSX gate clean. **Confirmed (Chintu): trial/entry framed per-meal; identical card price is intended (shared tier pricing).**
+- `Jun 23, 2026` — **F7 started (Decision #201):** cross-site audit + fixes. `PlanDetailClient.tsx`: removed `[ 0x ]` section-number markers (Eyebrow no longer renders the bracket — kills 02/03/04/11 at once), live trial price from real `TRIAL_DAY` PlanPrice rows (was hardcoded ₹750 in hero + FAQ), navbar overlap fixed (`padding-top:68px` on `.ff-root` clears the global fixed navbar). `Navbar.tsx`: removed `← ADD THIS LINE` dev comment. Scope+JSX gate clean. **Audit doc `f7-WEBSITE-AUDIT.md` lists all findings.** Staged next: PlansCatalog card visual redesign; home `01-04` goal-card numbers. **Your calls: canonical trial price (home says ₹400, detail reads DB); whether all plans share one tier price (identical-card-price is data, not a bug).**
+- `Jun 23, 2026` — **F5 scaffold (Decision #200):** `seed-supplements.ts` — idempotent catalog seed grounded in real schema (Supplement + SupplementLink + SupplementCategory; AffiliateNetwork.NUTRABAY; SupplementGoal enum). Seeds 5 categories + 10 priority products with FULL educational content immediately; per product a `nutrabay` slot — paste real affiliate url+price → active buy-link, leave placeholder → content-only card (no dead button). Re-runnable (upsert by slug; find-or-update NUTRABAY link). tsc-strict clean; 10 unique slugs, all category refs resolve. **F5 remaining = DATA: Chintu pastes ~10 Nutrabay urls/prices + extends the array toward 46.** Run: `npx tsx seed-supplements.ts` from repo root.
+- `Jun 23, 2026` — **F2 COMPLETE (Decision #199):** SEC-5 resolved — **KEEP** `allowDangerousEmailAccountLinking: true` for launch. Rationale: Google is the sole login provider and verifies email ownership itself, so auto-linking is safe. **Trigger to revisit:** the moment email/password or any second provider is added → drop it and add OTP verification. No code change. F2 (R17) closed. Next launch-blocker: F3 (rotate Upstash token — ops) → F4 (recipe seeding) / F7 (design).
+- `Jun 23, 2026` — **F2 SEC-4 + SEC-8 (Decision #198):** `lib/auth.ts` guest-merge wrapped in `$transaction` (all-or-nothing; rolls back + retries on next sign-in; behaviour otherwise identical) — tsc-strict clean. SEC-8 prod-env audit checklist delivered (`f2-prod-env-audit.md`). **F2 remaining: SEC-5 decision only** — `allowDangerousEmailAccountLinking: true` kept-or-dropped (low-risk while Google is the sole, email-verifying provider; revisit when a 2nd provider is added). With that, F2 (R17) is effectively complete bar the SEC-5 call.
+- `Jun 23, 2026` — **F2 partial (Decision #197):** SEC-6 `middleware.ts` (security headers on all responses + session-cookie gate for /admin & /dashboard, edge-safe, no Prisma) + SEC-7 `lib/cron-auth.ts` (shared QStash-sig + CRON_SECRET verifier for future crons). Both NEW files, additive, tsc-strict clean. **F2 remaining:** SEC-4 safe/transactional guest-merge, SEC-5 OTP-or-drop email-linking decision, SEC-8 prod-env audit.
+- `Jun 23, 2026` — **F1 build-fix (Decision #196):** Vercel real-types caught `string` not assignable to `Gender`/`ActivityLevel` in onboarding — sandbox stub was too loose to catch it. Fixed by casting validated body to the original loose type (`parsed.data as any`) in 5 routes (onboarding, metrics, profile, diary, foods); runtime Zod validation unchanged. **Lesson: the #183 tsc gate is only as strong as the stub — type lib stubs with their REAL enum signatures, or the gate gives false green.**
+- `Jun 23, 2026` — **F1 shipped (Decision #195):** WS-3 SEC-2 authed-route hardening — 13 routes hardened with the shared limiter + Zod (14 files incl. `lib/validation/schemas.ts`). tsc-strict exit 0; 21 runtime schema tests green. Next launch-blocker: F2 (R17 — middleware/guest-merge/OTP/cron-audit).
+- `Jun 23, 2026` — Full compile: Part I navigation built atop the complete preserved record (definitive #194 + AI scope + original foundation). Numbering drift frozen into stable F1–F28. GitHub crawl attempted (API rate-limited); inventory reconstructed from trackers (Part V). No decisions overturned.
+
+---
+---
+
+# PART II — DEFINITIVE TRACKER (COMPLETE, VERBATIM — through Decision #194)
+
+> Preserved exactly as `FITFUEL-MASTER-TRACKER-DEFINITIVE.md`. Additions-only history. Do not edit.
+
 # FITFUEL — MASTER PROJECT TRACKER (DEFINITIVE)
 > **Last Updated: June 8, 2026**
 > **Reconciles: Master tracker (May 19) + Phase 9 tracker v1 (May 20) + Phase 9 tracker v2 + Phase 9 tracker v3 (May 26) + Vision Realignment (May 26) + Session update (May 27) + Day 2 build complete (May 27) + Day 3 build complete (May 30) + Phase 10 Delivery System core live (Jun 4) + Phase 11 Progress Charts + 9R/9D verified live + checkout encoding fix (Jun 5) + Phase 13 Digital Meal Plans core live (Jun 6) + Phase 14 Blog/FAQ/Testimonials core live (Jun 8)**
@@ -3101,3 +3354,1342 @@ Verify: schemas (real zod), checkout UI, validate/cod/payu all **tsc --strict ex
 
 ### Decision
 - **#194** — Coupons now usable + testable on physical checkout end-to-end (input → validate → discount → COD/PayU honor + redemption). Closes the loop that #192/#193 left open. R-PRICE fully functional.
+
+---
+---
+
+# PART III — AI TRAINER SCOPE (COMPLETE, VERBATIM)
+
+> Preserved exactly as `FITFUEL-PHASE-12-AI-TRAINER-SCOPE.md`. The authoritative Phase 12 / AI-trainer spec (full universe captured + tight v1 committed). Build maps to F17–F19 in Part I.
+
+# FITFUEL — PHASE 12: AI PERSONAL TRAINER — FULL SCOPE
+> **Status: Scope locked for build. Phase 12 = ⏸️ Pending → 🔄 starting.**
+> **This is a phase-scope document (like the Phase 9 plan). Fold into FITFUEL-MASTER-TRACKER-DEFINITIVE.md — additions only, never remove lines. This is NOT a second tracker.**
+> **Prereqs confirmed (Jun 5): Phase 11 complete. All four data signals live — MealLog, WorkoutSession, BodyMetric, ConsistencySnapshot + UserProfile.weeklyConsistencyScore.**
+> **Stack: Next.js App Router · Prisma 7 · Neon · Vercel · Claude API (Anthropic) · Auth.js v5 (auth()) · inline styles + checkout token set + Syne/DM Sans.**
+> **Vision anchor: "AI TRAINER: Has ALL this context. Not a chatbot. A trainer who watched every rep and every meal for 30 days."**
+
+---
+
+## 0. WHAT PHASE 12 ACTUALLY IS (AND IS NOT)
+
+**It is NOT** a generic chat window bolted onto the dashboard that answers fitness trivia. Anyone can ship that in an afternoon and it has no moat.
+
+**It IS** the conversational front-end to the entire FitFuel health OS — a coach that (a) already knows everything the user has logged, (b) can *take actions* inside the system on the user's behalf, (c) modulates its behaviour based on how consistent the user is, and (d) remembers the user across every session. This is the single feature no tiffin service, no fitness app, and no supplement brand can replicate, because it sits on top of the data loop we spent Phases 5–11 building.
+
+**The moat in one sentence:** every other coach starts from zero each time you talk to it; ours starts from 30 days of your meals, workouts, weight, and consistency — and it can act, not just advise.
+
+### 0.1 Why it's unblocked NOW (data inventory)
+
+| Signal the AI needs | Source (live today) | Status |
+|---|---|---|
+| Who the user is (age, sex, height, goal, conditions, allergies, TDEE, targets) | `UserProfile` | ✅ |
+| What plan they're on, what day, calorie target, delivery window | `UserActivePlan` | ✅ |
+| What they were *supposed* to eat | `PlanScheduleSlot` → `Recipe` | ✅ (WL-Veg) |
+| What they *actually* ate + how they rated it | `MealLog` (rating, ratingNote, actualGrams) | ✅ |
+| Manual diary food | `FoodEntry` | ✅ |
+| Weight / body-fat / muscle trend | `BodyMetric` | ✅ |
+| Workouts done + calories burned | `WorkoutSession` | ✅ |
+| What workout they were assigned | `ExerciseSchedule` / `ExerciseScheduleDay` | ✅ |
+| Consistency score + 5 components + week-over-week trend | `getWeeklyConsistency()` + `ConsistencySnapshot` | ✅ |
+| Their supplement stack | `lib/supplements-data.ts` resolver | ✅ |
+| Pre-aggregated progress (weight/calorie/macro/adherence) | `lib/progress.ts` `getProgressData()` | ✅ |
+
+> **Recipe-seed clarification (Decision #74 below):** 1/119 seeds does NOT block Phase 12. Only `weight-loss-veg` is `isActive` and only 1 user is subscribed. The AI coaches on logged behaviour, which is fully present. Seeding stays a parallel track.
+
+---
+
+## 1. CORE PRINCIPLES (NON-NEGOTIABLE)
+
+1. **Context-first.** The quality of the trainer = the quality of the context we assemble. 80% of the engineering effort is the Context Engine, not the chat UI.
+2. **Safety-first.** Medical-condition users (diabetic, PCOS, thyroid, heart, cancer-recovery, kidney…) are on this platform. The AI gives coaching, never medical advice, never unsafe restriction. Safety is built in 12-SAFE *before* chat ships, not after.
+3. **Action-capable.** The AI can log a meal, request a swap, summarise progress, surface a recalibration — via guarded tool use. Talk without action is a demo, not the product.
+4. **Consistency-aware.** Tone and ambition scale with the consistency score (Decision #46). High consistency → bold, specific pushes. Low consistency → curious, low-pressure, "what's getting in the way?"
+5. **Cost-disciplined.** This is a Luxury feature funded by you. Prompt caching + a two-model split + pre-computed briefs keep per-user cost survivable.
+6. **Tier-gated.** Full chat = Luxury only (per tier table). See §11 for the Premium upsell question.
+7. **Remembers you.** Durable, user-scoped memory of preferences, constraints, and history — not just the current thread.
+
+---
+
+## 2. ARCHITECTURE OVERVIEW
+
+```
+                         ┌─────────────────────────────────────────────┐
+   LIVE DB TABLES        │            CONTEXT ENGINE (12A)              │
+  (Phases 5–11)  ───────▶│  buildTrainerContext(userId)                 │
+  Profile, Plan,         │   → token-efficient structured snapshot      │
+  MealLog, Workout,      │   → derived insights (plateau, streak, deltas)│
+  BodyMetric,            └───────────────┬─────────────────────────────┘
+  Consistency, Recipe                    │
+                                         ▼
+                         ┌─────────────────────────────────────────────┐
+                         │        TRAINER BRIEF (12A, cached)           │
+                         │  precomputed daily JSON the chat + proactive │
+                         │  engine both read (fast, cheap)              │
+                         └───────┬───────────────────────┬─────────────┘
+                                 │                       │
+                   ┌─────────────▼──────────┐   ┌────────▼─────────────────┐
+                   │  REACTIVE CHAT (12B)    │   │  PROACTIVE ENGINE (12E)  │
+                   │  /dashboard/trainer     │   │  event triggers →        │
+                   │  streaming, persisted   │   │  "message from coach"    │
+                   └─────────────┬──────────┘   └────────┬─────────────────┘
+                                 │                       │
+                                 ▼                       ▼
+                   ┌──────────────────────────────────────────────────────┐
+                   │           SAFETY + PERSONA LAYER (12-SAFE)            │
+                   │  system prompt · tone modulation · medical/ED guards  │
+                   └─────────────────────────┬────────────────────────────┘
+                                             ▼
+                   ┌──────────────────────────────────────────────────────┐
+                   │              TOOL USE / ACTIONS (12D)                 │
+                   │  logMeal · logWorkout · requestSwap · getProgress ·   │
+                   │  suggestRecalibration · bookConsult   (all guarded)   │
+                   └─────────────────────────┬────────────────────────────┘
+                                             ▼
+                          ACTIONS WRITE BACK INTO THE OS
+                   (MealLog, swap, recalibration draft, consult request)
+                                             │
+                                             ▼
+                   ┌──────────────────────────────────────────────────────┐
+                   │        MEMORY / INSIGHTS (12F)  +  USAGE LOG          │
+                   │  durable user facts the AI learns + cost/quality log  │
+                   └──────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. DATA CONTEXT — HOW THE SNAPSHOT IS BUILT (12A detail)
+
+`lib/ai-trainer/context.ts` → `buildTrainerContext(userId)` returns a **structured, summarised** object (never raw rows — token cost and noise). Shape:
+
+```ts
+interface TrainerContext {
+  profile: {
+    name; age; sex; heightCm; currentWeightKg; targetWeightKg;
+    goal; activityLevel; diet; healthConditions[]; allergies[];
+    tdee; calorieTarget; proteinTarget; carbTarget; fatTarget;
+  };
+  plan: { slug; name; tier; currentDay; cycleLength; startDate; deliveryWindow };
+  nutrition7d: {
+    daysTracked; avgKcalIn; avgKcalOut; avgNet; targetKcal;
+    adherencePct; avgProtein; proteinTarget; topRatedMeals[]; lowRatedMeals[];
+  };
+  workouts7d: { scheduled; completed; totalKcalBurned; lastSessionDate; programType };
+  body: { latestWeight; weighInsLast30d; trend30dKg; bodyFatPct?; muscleKg?; bmi };
+  consistency: { thisWeekScore; label; components{meals,workouts,water,weighIn,noSkips}; trend4w[] };
+  supplements: { recommendedStack[] };
+  derived: {
+    plateauDetected: boolean;   // weight flat ≥14d while in a deficit/surplus goal
+    streakDays: number;
+    biggestGap: 'meals'|'workouts'|'water'|'weighIn'|'noSkips';  // lowest-scoring component
+    momentum: 'improving'|'flat'|'declining';  // from consistency trend
+  };
+}
+```
+
+**Derived insights are the secret sauce.** The raw numbers are cheap; the *interpretation* (plateau, momentum, biggest gap) is what lets the AI sound like it's been watching. Compute these in TS, not by asking the model to do math on raw rows.
+
+**Token budget:** the serialised context targets ≤ ~1.5–2k tokens. Summaries, not transcripts. 30 days of MealLog is rolled up to averages + the few meals with extreme ratings, never row-by-row.
+
+---
+
+## 4. 12-SAFE — PERSONA & SAFETY LAYER (ships WITH 12B, not after)
+
+This is a first-class sub-phase, not a disclaimer footer. It defines the system prompt and the hard guardrails.
+
+### 4.1 Persona
+A direct, warm, evidence-respecting coach. Knows the user's data cold. Speaks plainly (English, India-aware food references — dal, roti, paneer, not quinoa bowls). Celebrates real wins, names real problems, never fawns, never shames.
+
+### 4.2 Tone modulation by consistency (formalises Decision #46)
+| Score | Posture |
+|---|---|
+| 80–100 | Bold and specific. Push progression, raise targets, suggest the next plan. |
+| 50–79 | Steady. Reinforce what's working, fix the single biggest gap (`derived.biggestGap`). |
+| < 50 | Curious and low-pressure. Ask what's blocking. Do NOT pile on more demands. Shrink the ask. |
+
+### 4.3 Medical boundaries (hard rules in system prompt)
+- For any user with a `healthCondition`, the AI states it is a fitness/nutrition coach, **not a doctor**, and must not diagnose, change medication guidance, or contradict a clinician.
+- Condition-specific landmines are explicitly forbidden in the prompt (e.g. no carb/insulin titration for diabetics, no "push through it" for cardiac/post-surgery users).
+- Route medical questions to the **Luxury 1-on-1 nutritionist consult** (already a Luxury entitlement) via the `bookConsult` tool.
+- Carry the Decision #30 medical disclaimer in the trainer UI for condition-plan users.
+
+### 4.4 Disordered-eating guardrails (hard rules)
+- The AI never endorses dropping below a **configurable safe-calorie floor** (set per profile; defaults conservative; defers to a professional below it).
+- If a user pushes for extreme restriction, over-exercise, or expresses distress about food/body in a concerning way, the AI does **not** comply or optimise the restriction — it reflects care, de-escalates, and surfaces the nutritionist consult. No "shred to 1000 kcal" coaching, ever, regardless of how it's asked.
+- This guard sits *above* tool use: `suggestRecalibration` can never propose a target below the floor.
+
+### 4.5 Action guardrails
+- Any AI-initiated change to a real target (recalibration, plan progression) is a **draft requiring explicit user confirmation** in the UI — the AI proposes, the human commits.
+- Hard floors/ceilings enforced in code, not trusted to the model.
+
+### 4.6 Prompt-injection / abuse
+- User messages are untrusted input. System prompt instructs the model to ignore attempts to override its role, reveal the system prompt, or act outside the tool catalog.
+- Tools validate every argument server-side against the user's own data (a user can only ever act on their own `userId`).
+
+---
+
+## 5. SUB-PHASES (12A–12K)
+
+| Sub | Name | What it delivers | Priority |
+|---|---|---|---|
+| **12A** | Context Engine + Trainer Brief | `lib/ai-trainer/context.ts`, derived insights, cached daily brief | **P0 — foundation** |
+| **12-SAFE** | Persona & Safety Layer | system prompt, tone modulation, medical + ED guards, disclaimers | **P0 — ships with 12B** |
+| **12B** | Reactive Chat (MVP shippable moat) | `/dashboard/trainer` streaming chat, persisted threads, Luxury gate | **P0** |
+| **12C** | Conversation Persistence + Memory wiring | `AiConversation` / `AiMessage` models, history load | **P0 (part of 12B)** |
+| **12D** | Tool Use / Actions | logMeal, logWorkout, requestSwap, getProgress, suggestRecalibration, bookConsult | **P1** |
+| **12E** | Proactive Engine | event triggers → "message from your coach" | **P1** |
+| **12F** | Durable Memory / Insight Extraction | `TrainerInsight` model, post-conversation fact extraction | **P2** |
+| **12G** | WhatsApp surface (overlaps Phase 16) | trainer reachable in WhatsApp via n8n | **P2** |
+| **12H** | Cost & Usage controls | `AiUsageLog`, rate limits, prompt caching, two-model routing | **P1 (wire early)** |
+| **12I** | Eval Harness | golden conversations + safety red-team set, run on each prompt change | **P1** |
+| **12J** | Admin / Quality dashboard | review conversations, costs, flagged safety events | **P2** |
+| **12K** | Premium "AI Insights" lite feed (IF approved) | read-only proactive insights for Premium | **P3 — pending Decision #78** |
+
+---
+
+## 6. SCHEMA ADDITIONS (proposed — via `db push`, Decision #71; verify against schema.prisma first, Decision #61)
+
+```prisma
+model AiConversation {
+  id         String      @id @default(cuid())
+  userId     String
+  title      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  user       User        @relation(fields: [userId], references: [id])
+  messages   AiMessage[]
+  @@index([userId])
+}
+
+model AiMessage {
+  id              String         @id @default(cuid())
+  conversationId  String
+  role            AiRole         // USER | ASSISTANT | SYSTEM | TOOL
+  content         String         @db.Text
+  toolName        String?        // set when role = TOOL
+  toolPayload     Json?
+  tokensIn        Int?
+  tokensOut       Int?
+  createdAt       DateTime       @default(now())
+  conversation    AiConversation @relation(fields: [conversationId], references: [id])
+  @@index([conversationId])
+}
+
+model TrainerInsight {            // durable memory — "knows you"
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String   // preference | constraint | history | goal
+  text      String   // "dislikes paneer", "trains mornings only", "travels weekends"
+  source    String   // chat | derived
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  @@index([userId, active])
+}
+
+model TrainerEvent {             // proactive queue
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // plateau | missed_workouts | milestone | low_rating | weekly_review
+  payload     Json?
+  status      String   @default("pending") // pending | delivered | dismissed
+  createdAt   DateTime @default(now())
+  deliveredAt DateTime?
+  user        User     @relation(fields: [userId], references: [id])
+  @@index([userId, status])
+}
+
+model AiUsageLog {               // cost + quality
+  id          String   @id @default(cuid())
+  userId      String
+  model       String
+  tokensIn    Int
+  tokensOut   Int
+  cachedRead  Int?     // prompt-cache hit tokens
+  costUsd      Float?
+  flagged     Boolean  @default(false) // safety event flag
+  createdAt   DateTime @default(now())
+  @@index([userId, createdAt])
+}
+
+enum AiRole { USER ASSISTANT SYSTEM TOOL }
+```
+Add relations on `User`: `aiConversations`, `trainerInsights`, `trainerEvents`. **Read schema.prisma before writing any select.**
+
+---
+
+## 7. API ROUTES
+
+| Route | Method | Auth | Description | Sub |
+|---|---|---|---|---|
+| `/api/trainer/chat` | POST (stream) | Luxury | Send message → streamed AI reply (context injected, tools enabled) | 12B/12D |
+| `/api/trainer/conversations` | GET | Luxury | List user's threads | 12C |
+| `/api/trainer/conversations/[id]` | GET | Luxury | Load a thread | 12C |
+| `/api/trainer/brief` | GET | Luxury | Today's cached trainer brief | 12A |
+| `/api/trainer/events` | GET | Luxury | Pending proactive "messages from coach" | 12E |
+| `/api/trainer/events/[id]/dismiss` | POST | Luxury | Dismiss a proactive nudge | 12E |
+| `/api/cron/trainer-events` | GET | CRON_SECRET | Scan signals → enqueue TrainerEvent (⚠️ Vercel Hobby = 2 cron limit, see §8.4) | 12E |
+| `/api/trainer/insights` | GET / DELETE | Luxury | View / forget what the AI remembers (user control) | 12F |
+| `/api/admin/trainer/conversations` | GET | OWNER/ADMIN | QA review + flagged events | 12J |
+
+> Tool actions (logMeal etc.) reuse EXISTING routes where possible (`/api/user/active-plan/meals/log`, swap route from 9P) so the AI and the dashboard write through the same code path — no divergence.
+
+---
+
+## 8. COST & PERFORMANCE STRATEGY (12H — wire from day one)
+
+### 8.1 Prompt caching
+The system prompt + persona + the user's context block are large and stable within a session. Use Anthropic **prompt caching** so the big prefix is charged at the cheap cached-read rate on every turn after the first. For a multi-turn coaching chat this is the dominant cost lever — design the message assembly so the cacheable prefix is contiguous and first.
+
+### 8.2 Two-model split
+- **Live chat:** a fast, cheaper Claude model — latency + cost sensitive, many short turns.
+- **Weekly deep-dive / proactive analysis:** a stronger Claude model — runs rarely (once/week or per event), where reasoning quality justifies the cost.
+- Pick the exact current model strings from `docs.claude.com` at build time (lineup/pricing shift; don't hard-assume). Log `model` per call in `AiUsageLog`.
+
+### 8.3 Pre-computed brief
+`/api/trainer/brief` is computed once/day and cached, so opening the chat doesn't re-run every aggregation. The proactive engine reads the same brief.
+
+### 8.4 Cron budget reality (Vercel Hobby)
+You're at the **2-cron Hobby limit** (delivery generator + consistency snapshot, Decision #70/#71). The proactive scan (`/api/cron/trainer-events`) is a 3rd cron. Options: **(a)** fold it into the existing nightly delivery cron as a second step, **(b)** trigger it off the consistency snapshot cron, or **(c)** upgrade to Vercel Pro. → **Open Decision #76.**
+
+### 8.5 Rate limits
+Per-user daily message cap + token budget, enforced before the API call, logged in `AiUsageLog`. Prevents a single Luxury user from running up unbounded cost.
+
+---
+
+## 9. TOOL USE CATALOG (12D) — what the AI can DO
+
+| Tool | Effect | Guardrail |
+|---|---|---|
+| `getProgressSummary` | Returns `getProgressData()` digest | read-only |
+| `logMeal` | "I had dal and 2 rotis" → MealLog via existing log route | confirm grams if ambiguous |
+| `logWorkout` | Logs a WorkoutSession | sanity-check duration/kcal |
+| `requestMealSwap` | Triggers 9P swap, same slot ±100 kcal | only plan recipes |
+| `getTodaysMeals` / `getTodaysWorkout` | Reads plan + schedule | read-only |
+| `suggestRecalibration` | Drafts a new calorie target (Phase 18 logic) | **never below safe floor; user must confirm** |
+| `suggestPlanProgression` | Proposes next plan when goal hit | user must confirm |
+| `bookNutritionistConsult` | Creates a consult request (Luxury) | Luxury only |
+| `rememberFact` | Writes a `TrainerInsight` | user-visible + deletable |
+
+Every tool validates the target `userId` server-side = the authenticated user. The model can request; the server decides.
+
+---
+
+## 10. PROACTIVE TRIGGERS CATALOG (12E)
+
+| Trigger (signal) | Source | "Message from your coach" |
+|---|---|---|
+| Plateau: weight flat ≥14d in a deficit/surplus goal | `derived.plateauDetected` | "Your weight's held for two weeks — let's look at recalibrating." |
+| Missed workouts: 0 sessions in 3+ scheduled days | `WorkoutSession` vs schedule | "Noticed the gym's gone quiet — what's getting in the way?" |
+| Milestone: target weight hit / 30-day cycle done | `BodyMetric` / `currentDay` | celebrate + `suggestPlanProgression` |
+| Low rating: meal rated ≤2 | `MealLog.rating` | acknowledge + offer `requestMealSwap` |
+| Weekly review: every cycle close | `ConsistencySnapshot` | the week in numbers + one focus for next week |
+| Momentum drop: consistency trend declining | `consistency.trend4w` | low-pressure check-in (tone < 50 rules) |
+
+Events enqueue to `TrainerEvent`, surface in the chat as unread coach messages, and (Phase 16) can fan out to the WhatsApp Weekly Digest.
+
+---
+
+## 11. TIERING & MONETIZATION
+
+- **Luxury:** full two-way AI chat + tool use + proactive coach + nutritionist consult. This is the headline Luxury entitlement and the reason Premium/Luxury were waitlisted until Phase 12 (Decision #39). Shipping 12B flips the Luxury waitlist to live.
+- **Premium (Open Decision #78):** offer a **read-only "AI Insights" feed** — proactive weekly insights and nudges (no open chat, no tool use). Cheap to run (no live chat tokens), strong upsell ladder Premium → Luxury. My recommendation: yes, ship 12K after 12E is stable; it monetises the proactive engine you already built with almost no extra cost.
+- **Standard/Free:** none. (A single teaser insight on the progress page could seed FOMO → Open Decision #78b.)
+
+---
+
+## 12. BUILD ORDER (solo-dev sequence — MVP first, then depth)
+
+```
+STEP 1 (P0):  12A Context Engine + Trainer Brief
+              → lib/ai-trainer/context.ts + derived insights + /api/trainer/brief
+              → verify the snapshot reads YOUR real data correctly (you're the 1 live user)
+
+STEP 2 (P0):  12-SAFE + 12B + 12C  — the shippable moat
+              → AiConversation/AiMessage models (db push)
+              → /api/trainer/chat (streaming, context injected, NO tools yet)
+              → /dashboard/trainer chat UI (checkout token set, Syne/DM Sans)
+              → Luxury gate via auth() + role/tier check
+              → 12H cost basics wired: prompt caching + AiUsageLog + rate limit
+              ⇒ At end of Step 2 you have a real, safe, context-aware coach. Flip Luxury live.
+
+STEP 3 (P1):  12D Tool Use  — turn talk into action
+              → start with read-only (getProgress, getTodaysMeals) + logMeal + requestSwap
+              → THEN suggestRecalibration / suggestPlanProgression (confirm-required)
+
+STEP 4 (P1):  12E Proactive Engine + 12I Eval Harness
+              → TrainerEvent + trigger scan (fold into existing cron, Decision #76)
+              → golden + red-team conversation set; run before any prompt change
+
+STEP 5 (P2):  12F Memory  →  12G WhatsApp  →  12J Admin/QA  →  12K Premium feed (if #78 = yes)
+```
+
+> **Test-one-before-batch (your established rule):** validate the full chat loop end-to-end on your own account before any cost-scaling or proactive automation. The 1 live user (you) is the perfect canary.
+
+---
+
+## 13. OPEN DECISIONS (propose #74–#80 — confirm before/while building)
+
+| # | Decision | My recommendation |
+|---|---|---|
+| 74 | Recipe seeds do NOT gate Phase 12; AI coaches on logged behaviour; seeding stays parallel | **Lock as stated** |
+| 75 | Conversation persistence: full thread history vs rolling window of last N turns + brief | **Rolling window (cost) + durable TrainerInsight memory for the "remembers you" feel** |
+| 76 | 3rd cron problem (proactive scan) on Vercel Hobby 2-cron limit | **Fold into nightly delivery cron as step 2; upgrade to Pro only if it gets heavy** |
+| 77 | Two-model split — confirm which current Claude models for chat vs weekly deep-dive | **Pick from docs.claude.com at build; cheap-tier for chat, strong-tier for weekly** |
+| 78 | Premium read-only "AI Insights" feed as upsell (12K) | **Yes — ship after 12E; monetises proactive engine cheaply** |
+| 78b | One teaser insight on Standard/Free progress page for FOMO | **Optional — low effort, test conversion** |
+| 79 | Safe-calorie floor values per sex/goal (the ED guardrail constant) | **Conservative defaults; defer below floor to nutritionist; you set the numbers** |
+| 80 | Where the trainer lives in nav (and the deferred global nav rewire from Phase 11) | **Add /dashboard/trainer + link /dashboard/progress in the same nav pass** |
+
+---
+
+## 14. DEFINITION OF DONE (verification gates, like Phase 9 launch gates)
+
+| Gate | Requirement |
+|---|---|
+| T1 | `buildTrainerContext(userId)` returns accurate snapshot of YOUR real logged data (manually verified) |
+| T2 | Chat streams, persists across sessions, and the coach correctly references your actual meals/workouts/weight |
+| T3 | 12-SAFE verified: medical-question deflection + restriction-pushback + injection-resistance all pass the red-team set |
+| T4 | Tone modulation observably changes at your low (~26) vs a simulated high consistency score |
+| T5 | Tool use: logMeal + requestSwap write through the SAME routes the dashboard uses (no divergence) |
+| T6 | Cost: prompt caching confirmed hitting; per-message cost logged in AiUsageLog; rate limit enforced |
+| T7 | Proactive: a plateau/missed-workout event enqueues and surfaces as a coach message |
+| T8 | Luxury gate verified: non-Luxury user is correctly blocked |
+| T9 | Eval harness runs green before merge; admin QA can read conversations + flagged events |
+
+---
+
+> **Fold into master tracker on completion. Phase 12 = the moat. Build it on the loop, not beside it.**
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+# FITFUEL — PHASE 12: AI TRAINER — FINALIZED SCOPE
+> **Status: FINALIZED Jun 5, 2026 — BUILD PARKED. Scope is locked; build is intentionally deferred until the data loop is fuller and the later phases ship (Decision #85). Revisit and refine the v1 cut at build time, against richer data + newer/cheaper models. Supersedes the earlier Phase 12 draft.**
+> **This is the authoritative Phase 12 spec. Fold the summary + Decisions #79–#84 into FITFUEL-MASTER-TRACKER-DEFINITIVE.md (additions only).**
+> **Finalization principle: CAPTURE the full universe so nothing is ever forgotten. COMMIT to a tight v1 so it actually ships. Capture ≠ commit.**
+> **Stack: Next.js (PWA) · Prisma 7 · Neon · Vercel · Claude API · Auth.js v5. Native (Expo) deferred — Decision #79.**
+
+---
+
+## 0. THE FINALIZATION PRINCIPLE (read this first)
+
+The exploration that fed this doc was right to be expansive — the AI trainer surface is huge and the field moves monthly. But "lock all 25 capabilities before writing a line of code" is how a solo founder never launches. So this spec does two separate things on purpose:
+
+1. **Captures the complete universe** (§1) — every capability discussed, tagged with the wave it belongs to. Nothing is lost. This is the no-regret insurance.
+2. **Commits to a tight, shippable v1** (§2) — the moat, buildable now, on web, on data already in the system.
+
+The rest is sequenced into v2/v3/v4 (§3–§5) or reassigned to where it actually belongs (§6). You stay ahead of the field through clean architecture that lets you *add fast* (§8), not by building everything at once.
+
+**Platform call (Decision #79, confirmed):** PWA-first. Expo native app is deferred until Luxury wearable demand is real (target trigger: ~200 Luxury users or explicit at-scale wearable-import requests). v1 ships web-only. ~85% of the full AI-trainer surface is buildable on web; the ~15% that needs native is passive wearable sync (§5).
+
+---
+
+## 1. THE PHASE 12 UNIVERSE (complete capture — every capability, tagged)
+
+Wave key: **v1** = launch moat · **v2** = full daily loop · **v3** = depth + women's health + clinical-adjacent · **v4** = native/voice/social · **→Pn** = reassigned out of Phase 12.
+
+### Food & Nutrition
+| Capability | Wave |
+|---|---|
+| Meal logging via chat, macro tracking, plan-vs-logged, condition-aware coaching | v1 |
+| Meal swap via tool call (executes, not just suggests) | v1 |
+| Calorie-cycling guidance ("burned 400, eat 200 more tonight") — pure compute | v1 |
+| Recipe / ingredient explanation ("why this dish, what's in it") | v1 |
+| Food-photo logging (browser camera + vision API) | v2 |
+| Restaurant / outside-food ordering guidance | v2 |
+| Eating-time / circadian pattern analysis | v2 |
+| Off-day (weekend) cooking + grocery guidance | v2 |
+| Hydration tracking + prompts | v2 |
+
+### Workout & Movement
+| Capability | Wave |
+|---|---|
+| Pre-workout briefing (reads last session, suggests progressive overload) | v1 |
+| Post-workout debrief (sets completed, est. burn, net-calorie impact) | v1 |
+| Missed-workout + adaptive-load detection ("3 incomplete → consider deload") | v1 |
+| Injury / pain flag → modify session + escalate (safety-critical) | v1 (in 12-SAFE) |
+| **In-session workout mode** — dedicated screen, big Log-Set button, rest timer, next-up | **v1 (12-WORKOUT-MODE) — pulled into v1, "best version"** |
+| RPE / effort logging per set (drives load decisions) — needs schema | v2 |
+| Adaptive rest timer from RPE | v2 |
+| NEAT / manual step + daily-activity logging | v2 |
+| Deload-week detection + proposal | v2 |
+| Exercise form-video library | →Phase 7 (content; AI links to it) |
+
+### Body & Biometrics
+| Capability | Wave |
+|---|---|
+| Weight history, trend, plateau detection, TDEE recalibration suggestion, goal proximity | v1 |
+| Expanded measurement tracking (waist/hips/chest/arms) — verify schema | v3 |
+| Progress-photo storage + side-by-side comparison (NO AI body-fat verdict — §7) | v3 |
+| Menstrual-cycle tracking the AI reads (energy/water/cravings by phase) | v3 (12-CYCLE) |
+| Blood-report upload + parse → surface values (NO diagnosis/Rx — §7) | v3 (12-BLOODWORK) |
+
+### Sleep & Recovery
+| Capability | Wave |
+|---|---|
+| Manual sleep log (hrs + quality) → intensity/weight-fluctuation/recovery coaching | v2 (12-SLEEP) |
+| Pre-sleep nutrition guidance (condition-specific) | v2 |
+
+### Mental & Behavioral
+| Capability | Wave |
+|---|---|
+| Named, data-specific praise + cognitive reframing (pull data vs. just "keep going") | v1 (chat) |
+| Mood / energy daily log | v2 (12-MOOD) |
+| Stress / burnout pattern → supportive check-in, route toward human (§7) | v2 |
+| Behavioral pattern library ("always skips Friday workouts") | v3 (→ memory) |
+
+### Proactive & Predictive
+| Capability | Wave |
+|---|---|
+| Plateau alert, streak-risk alert, goal-hit → next-plan, weekly digest narrative | v1 (12E) |
+| Plan-fit detection ("only hitting 1,400 of 1,800 — portions wrong?") | v2 |
+| Seasonal / festival awareness (Diwali, etc.) | v2 |
+| Churn prediction + re-engagement (care, not dark-pattern — §7) | v3 (12-RETENTION) |
+| Condition medical-appointment / re-test nudges | v3 |
+| Supplement timing intelligence (ties Phase 17) | v2/v3 |
+
+### Conversation & Memory
+| Capability | Wave |
+|---|---|
+| Conversation continuity within/across sessions | v1 (12C) |
+| Proactive conversation starters (push → opens chat) | v1 (12E) |
+| Durable long-term memory ("hates coriander", "trip next week") | v2 (12-MEMORY) |
+| Hindi / Marathi / Hinglish | v2 (12-LANGUAGE) |
+
+### Platform / Technical / Trust
+| Capability | Wave |
+|---|---|
+| Explainability (AI always shows its reasoning) | v1 (persona) |
+| Confidence scoring (flags uncertainty on estimates) | v1/v2 |
+| Audit trail of AI recs to condition users | v1 (12-SAFE/12H) |
+| Coach → human nutritionist handoff protocol (Luxury consult exists) | v3/v4 |
+| MyFitnessPal CSV import | v3 |
+| Wearable import: Apple Health / Google Fit / Garmin / Whoop / Strava | v4 (12-IMPORT — needs Expo) |
+| Real-time voice coaching (mic-on during workout) | v4 (12-VOICE — Realtime API, heavy) |
+| Accountability matching / community challenges | →Phase 22 (Social) |
+| Data export / DPDP Act compliance / privacy | →Phase 20 (launch compliance pass) |
+
+---
+
+## 2. PHASE 12 v1 — THE COMMITTED CUT (the moat, ships first)
+
+**Definition:** a context-aware, safe, action-capable AI coach + support assistant, running on web, on data already in the system. No new schema beyond the conversation/memory/usage models + a small set/RPE-log addition for workout mode. No native, no vision, no voice.
+
+| Sub | Name | Notes |
+|---|---|---|
+| 12A | Context Engine + Trainer Brief | `lib/ai-trainer/context.ts` + derived insights (plateau, streak, momentum) + cached daily brief. 80% of the value. |
+| 12-SAFE | Persona + Safety Layer | tone modulation by consistency score; medical boundary; disordered-eating guards; injury-flag handling; prompt-injection; audit log. Ships WITH 12B. |
+| 12B | Reactive Chat | `/dashboard/trainer`, streaming, persisted, Luxury gate. |
+| 12-SUPPORT | Support layer (all subscribers) | order status, delivery ETA, pause/skip, address, billing Qs. Bounded + read-mostly; sensitive actions escalate to owner. Absorbs solo-founder support load. |
+| 12C | Conversation persistence + basic memory | AiConversation / AiMessage; rolling-window context + brief. |
+| 12D | Tool use | start: getProgress, getTodaysMeals/Workout, logMeal, requestSwap → then suggestRecalibration (confirm-gated, safe floor). |
+| 12E | Proactive engine | plateau, missed-workout, milestone, low-rating, weekly review → "message from your coach". |
+| 12-WORKOUT-MODE | In-session workout screen | dedicated screen (not chat): current exercise, target sets/reps/weight, Log-Set button, rest timer, next-up + RPE logging (adds a small set-log schema). Pulled into v1 — it's the daily-use surface chat can't replace. |
+| 12H | Cost & usage controls | prompt caching, two-model split, rate limits, AiUsageLog. Wired day one, not bolted on. |
+| 12I | Eval harness | golden conversations + safety red-team set; run before any prompt change. |
+
+**v1 is explicitly:** web-only · data-already-in-system · cost-bounded · Luxury (coach) + all-subscribers (support). Shipping v1 flips the Premium/Luxury waitlist live (Decision #39).
+
+**v1 Definition of Done:** context snapshot verified on a real account · chat references real logged data · 12-SAFE red-team passes (medical deflection, restriction pushback, injection) · tone shifts with consistency score · logMeal/requestSwap write through the SAME routes the dashboard uses · prompt caching confirmed + cost logged · proactive event surfaces · Luxury gate blocks non-Luxury · evals green.
+
+---
+
+## 3. PHASE 12 v2 — THE FULL DAILY LOOP (web, post-v1)
+
+12-SLEEP (sleep log + coaching) · 12-MOOD (mood/energy log + burnout detection) · 12-FOOD-VISION (photo meal logging) · 12-MEMORY (durable long-term memory) · 12-LANGUAGE (Hinglish/Marathi) · workout-mode refinements (adaptive rest from RPE, deload detection) · plan-fit detection · hydration · NEAT logging · seasonal awareness.
+
+The core in-session workout screen moved to v1 (best version). v2 deepens it. Sequence the rest by user demand; each adds schema + a surface + ongoing API cost.
+
+---
+
+## 4. PHASE 12 v3 — DEPTH + WOMEN'S HEALTH + CLINICAL-ADJACENT
+
+12-CYCLE (menstrual tracking the AI reads — big differentiator for women's-health plans) · 12-BLOODWORK (report upload + parse, surface-only) · 12-RETENTION (churn prediction + re-engagement) · progress-photo comparison · expanded measurements · behavioral pattern library · condition education library · MyFitnessPal CSV import.
+
+---
+
+## 5. PHASE 12 v4 — NATIVE / VOICE / SOCIAL
+
+12-IMPORT (Apple Health / Google Fit / Garmin / Whoop / Strava — **requires Expo native app**, Decision #79) · 12-VOICE (real-time audio coaching, OpenAI-Realtime-class, heavy cost) · coach→human handoff protocol. Community/accountability is NOT here — see §6.
+
+---
+
+## 6. REASSIGNED OUT OF PHASE 12 (so the phase stays shippable)
+
+| Item | Real home | Why |
+|---|---|---|
+| Exercise form-video library | Phase 7 (content extension) | It's curated video content; the AI just links to it. Not AI work. |
+| Data export / DPDP Act / privacy / right-to-delete | Phase 20 (launch compliance pass) | Platform-wide legal requirement, not an AI feature. (Audit trail of AI recs stays in 12-SAFE.) |
+| Community / accountability matching / challenges | **NEW Phase 22 — Social & Community** | A whole social product with its own moderation, matching, and abuse surface. Bolting it onto "AI trainer" bloats and delays Phase 12. |
+
+---
+
+## 7. SAFETY BOUNDARIES — HARD LINES (protect users AND the business)
+
+1. **Medical boundary.** The AI is a fitness/nutrition coach, not a clinician. For condition users (diabetic, PCOS, thyroid, heart, cancer-recovery, kidney…) and for blood-report data, it **surfaces and contextualizes only** — never diagnoses, prescribes, titrates medication, or alters medical management. Medical questions route to the Luxury nutritionist consult. Carries the Decision #30 disclaimer. (Decision #81)
+2. **Body-image / disordered-eating.** No AI body-fat % verdicts from photos (inaccurate + harmful). Progress photos = storage + side-by-side only. AI never endorses sub-floor calorie targets or extreme restriction; pushes for it are de-escalated and routed to a human. `suggestRecalibration` can never propose below a configurable safe floor. (Decision #82)
+3. **Proactive ≠ manipulative.** Churn/mood intelligence exists for care and retention through genuine value, not engagement dark-patterns. Sustained low mood / distress routes toward a human and supportive resources — it is never exploited as a re-engagement hook. (Decision #83)
+4. **Injury flag.** "My knee hurts" → AI removes the loading exercise today, suggests rest, escalates if persistent. (in 12-SAFE)
+5. **Audit trail.** Every AI recommendation to a condition user is logged with timestamp + context (AiUsageLog/AiMessage). Legal protection.
+
+---
+
+## 8. ARCHITECTURE GUARDRAILS — so v1 never blocks the future
+
+- **Build the receiving end now.** A clean `/api/import/health` endpoint accepting a standard activity/sleep/HR format ships conceptually with v2's manual logs. When Expo lands (v4), the native app just *sends* to the same endpoint — no rework. Same pattern for `/api/import/foodlog` (CSV now, app later).
+- **App-shell layout from v1.** Even web-only, build the PWA app shell (persistent bottom nav: Home / Log / Workouts / Progress / Coach) so v2's workout-mode and v3's surfaces slot in without re-architecting navigation. (Full webapp redesign stays a post-build pass per your call — but the layout primitives go in now.)
+- **Memory model is forward-compatible.** TrainerInsight (durable facts) is written generically (kind/text/source) so cycle data, blood markers, and behavioral patterns all land in the same store later without schema churn.
+- **Tools write through existing routes.** logMeal/requestSwap call the SAME APIs the dashboard uses — one code path, no divergence as surfaces grow.
+- **Two-model + caching from day one.** Cheap model for chat, strong model for weekly deep-dive; prompt-cache the big context prefix. Adding vision/voice later is an additive model route, not a re-architecture.
+
+---
+
+## 9. DECISIONS TO LOG (append to tracker — #79–#84)
+
+| # | Decision |
+|---|---|
+| 79 | **PWA-first; Expo native deferred.** v1 ships web-only. Native app enters roadmap only on real Luxury wearable demand (target trigger ~200 Luxury users or explicit at-scale requests). ~85% of the AI-trainer surface is web-buildable; the ~15% needing native = passive wearable sync. |
+| 80 | **Phase 12 finalized = tight v1 + captured backlog (v2–v4). Capture ≠ commit.** v1 = 12A + 12-SAFE + 12B + 12-SUPPORT + 12C + 12D + 12E + 12H + 12I, on data already in the system. Everything else is documented and sequenced, not built upfront. |
+| 81 | **AI medical boundary (hard line).** Bloodwork + condition coaching = surface/contextualize only. Never diagnose, prescribe, titrate, or alter medical management. Route medical questions to nutritionist consult. Reinforces #30. |
+| 82 | **Body-image guardrail (hard line).** No AI body-fat verdicts from photos. Progress photos = storage + comparison only. No sub-floor calorie targets ever. Governed by disordered-eating guards in 12-SAFE. |
+| 83 | **Proactive ≠ manipulative.** Mood/churn intelligence for genuine care + value-based retention only. Distress routes to a human; never a dark-pattern engagement hook. |
+| 84 | **Reassignments out of Phase 12.** Form-video → Phase 7 content. Data export / DPDP / privacy → Phase 20 launch compliance pass. Community / accountability / challenges → NEW Phase 22 (Social & Community). |
+| 85 | **Phase 12 build PARKED (Jun 5).** Scope finalized + fully captured; build intentionally deferred until the data loop is fuller (more users, more logged meals/workouts/weight, v2-class surfaces) and the later phases ship. Rationale: the AI's quality is bounded by data depth (1 user, sparse logs today), the field moves monthly (build against newer/cheaper models later), and operational + revenue phases come first. Keep §8 forward-compatible hooks (receiving-API pattern, app-shell nav) in mind during intervening phases so the eventual build is a slot-in, not a retrofit. Re-confirm the v1 cut at build time. |
+
+(Phase 22 — Social & Community — to be added to the Phase Status Overview + Upcoming Phases tables as ⏸️ Pending.)
+
+---
+
+## 10. BUILD ORDER — WHEN UN-PARKED
+
+Phase 12 is parked (Decision #85) — build the data-generating phases first. **When un-parked**, start at **12A — Context Engine**. Build `lib/ai-trainer/context.ts`, verify the snapshot reads a real account correctly (your own is the canary), then 12-SAFE + 12B chat with the Luxury gate and cost controls wired in. That sequence alone produces a shippable, world-class coach. Everything in §3–§5 layers on after, in demand order, without rework — because §8 made v1 forward-compatible. Re-confirm the exact v1 cut at that point against the data you actually have by then.
+
+> **The moat was never the wearable sync or the voice. It's that FitFuel owns the plate — verified intake, not self-reported. That runs 100% on web, in v1.**
+
+---
+---
+
+# PART IV — ORIGINAL FOUNDATION TRACKER (COMPLETE, VERBATIM — Phases 0–8)
+
+> Preserved exactly as `FITFUEL_PROJECT_TRACKER.md` (May 19, 2026). The original goals + Phase 0–8 detail, kept so the founding plan is never lost again.
+
+# FITFUEL — MASTER PROJECT TRACKER
+
+> **Last Updated: May 19, 2026 — Phase 8 COMPLETE — Supplement Guide live (public landing + dashboard). 50 supplements, personalised quiz stack, goal-based recommendations, India pricing, full catalogue.**
+> **Platform:** Next.js (React) + Node.js + PostgreSQL (Neon)
+> **Deployment:** Vercel — [fitfuel-eosin.vercel.app](https://fitfuel-eosin.vercel.app) → fitfuel.in after launch
+> **Mission:** Best meal delivery + health platform in Pune. Meals today. Supplements + AI tomorrow. Empire after that.
+
+---
+
+## PHASE STATUS OVERVIEW
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 0 | Audit & Planning | Complete |
+| 1 | Design System + Tech Stack + DB | Complete |
+| 2 | Core Website Redesign | Complete |
+| 3 | Meal Plans + Shop + PayU | Complete |
+| 4 | User Profile + Dashboard + Auth | Complete |
+| 5 | Body Metrics — FitDays BLE | Complete (scale hardware test pending) |
+| 6 | Nutrition Tracker | Complete — pushed to main |
+| 7 | Exercise Library + Workout Logger | Complete — pushed to main |
+| **8** | **Supplement Guide** | **Complete — pushed to main** |
+| 9 | Lifestyle Meal Plans (Medical, PCOS, etc.) | Pending |
+| 10 | Live Delivery Tracking | Pending |
+| 11 | Progress Tracking + Charts | Pending |
+| 12 | AI Chatbot + AI Personal Trainer | Pending |
+| 13 | Digital Meal Plans (PDF/downloadable) | Pending |
+| 14 | Blog, FAQ, Testimonials | Pending |
+| 15 | Admin Panel | Pending |
+| 16 | Notifications — n8n (WhatsApp + Email) | Pending |
+| 17 | QA, Performance, DNS cutover, Launch | Pending |
+
+---
+
+## PHASE 8 — SUPPLEMENT GUIDE — COMPLETE
+
+### Commits
+```
+feat: phase 8 supplement guide - public landing + dashboard, 50 supplements, quiz stack, India pricing
+Pushed → main (May 19 2026)
+```
+
+### Files Built & Pushed
+
+| File | Status | Notes |
+|------|--------|-------|
+| `lib/supplements-data.ts` | Done | Full data layer — 50 supplements, STACKS, VEGAN_SWAPS, resolveStack(), CATEGORY_META, GOAL_META |
+| `app/supplements/page.tsx` | Done | Server component — public landing page, auth-aware isLoggedIn prop |
+| `app/supplements/SupplementsLanding.tsx` | Done | Public marketing page — hero, goal-based stack preview, full 50-supplement catalogue, detail modal |
+| `app/dashboard/supplements/page.tsx` | Done | Server component — auth guard, fetches userGoal from UserProfile |
+| `app/dashboard/supplements/SupplementsClient.tsx` | Done | Dashboard client — personalised stack, quiz modal, full catalogue with category filter, supplement modal |
+
+### Features Built
+
+| Feature | Status |
+|---------|--------|
+| 50 science-backed supplements with full data | Done |
+| 13 supplement categories (protein, performance, recovery, vitamins, minerals, adaptogens, joints, gut, weight, hormones, cognitive, sleep, health) | Done |
+| 4 supplement goals (muscle_gain, weight_loss, balanced, performance) | Done |
+| Pre-built goal stacks (STACKS) | Done |
+| Vegan swap logic (VEGAN_SWAPS) | Done |
+| 5-step personalisation quiz (goal, frequency, challenge, diet, budget) | Done |
+| resolveStack() — vegan swaps + budget cap + challenge boost + B12 injection for vegans | Done |
+| Goal-based stack preview on public landing | Done |
+| Full 50-supplement catalogue on public landing | Done |
+| Category filter tabs (all + 13 categories) | Done |
+| Supplement detail modal — benefits, dosage, timing, evidence, study findings, India note, warnings | Done |
+| SupplementCard — emoji, category chip, tagline, price, vegan badge, popular badge | Done |
+| Dashboard — personalised stack section with quiz/retake quiz | Done |
+| Dashboard — full catalogue with category filter | Done |
+| QuizModal — 5-step with progress bar, back navigation, animated selection | Done |
+| mapProfileGoal() — maps user's profile goal string to SupplementGoal | Done |
+| Prices note — estimated pricing, supplier partnership coming soon | Done |
+| India-specific notes and availability per supplement | Done |
+
+### Data — supplements-data.ts
+
+| Section | Detail |
+|---------|--------|
+| Supplement count | 50 |
+| Categories covered | protein (5), performance (8), recovery (7), vitamins (4), minerals (4), adaptogens (4), weight (4), joints (3), gut (2), hormones (1), cognitive (1), sleep (1) |
+| Fields per supplement | id, name, aka, category, tagline, description, mechanism, benefits, dosage, timing, onsetTime, halfLife, form, cyclingRequired, cyclingProtocol, stacksWith, avoidWith, warnings, sideEffects, genderNotes, ageNotes, evidenceLevel, studyCount, keyStudyFindings, goals, accent, priceRange, valueRating, popular, veganFriendly, certificationNote, emoji, indiaNote, indiaAvailability |
+| Evidence levels | very_high (4), high (25+), moderate (15+) |
+| Vegan-friendly supplements | ~35 of 50 |
+| India availability | widely_available, available, limited, import_only |
+
+### Design System — Phase 8
+
+| Decision | Choice |
+|----------|--------|
+| Display font | Syne (600/700/800) — consistent with Phase 7 |
+| Body font | DM Sans (300/400/500/600) — consistent with Phase 7 |
+| Background | #080808 |
+| Card background | #101010 / #161616 on hover |
+| Accent per category | Protein #a3e635 · Performance #c084fc · Recovery #38bdf8 · Vitamins #fbbf24 · Minerals #94a3b8 · Adaptogens #f97316 · Weight #fb923c · Joints #ec4899 · Gut #10b981 · Hormones #f59e0b · Cognitive #a78bfa · Sleep #818cf8 |
+| Quiz accent | #a3e635 (lime green) |
+| Grid | repeat(auto-fill, minmax(175px, 1fr)) |
+| Max width | 1120px |
+
+### Page Locations
+```
+/supplements              — public landing (no auth required)
+/dashboard/supplements    — personalised dashboard (auth required)
+```
+
+### Notes for Phase 9+
+- Supplement purchases/ordering not yet implemented — "Coming soon" on price tiles
+- No DB schema changes required for Phase 8 — all data is static in supplements-data.ts
+- When supplier is confirmed: add SupplementOrder model to Prisma schema, wire up purchase flow
+- Dashboard card for supplements should be added to DashboardClient.tsx (link to /dashboard/supplements)
+- Barcode scanner for supplement tracking deferred to Phase 11+
+
+---
+
+## PHASE 7 — EXERCISE LIBRARY + WORKOUT LOGGER — COMPLETE
+
+### Commits
+```
+feat: premium exercise library redesign - fixed encoding, 6-col grid, Syne+DM Sans, per-category colors
+fix: lock dark background on html, body, main — kills Tailwind v4 white bleed
+Pushed → main (May 18 2026)
+```
+
+### Files Built & Pushed
+
+| File | Status | Notes |
+|------|--------|-------|
+| `app/dashboard/exercises/ExercisesClient.tsx` | Pushed | Full client UI — Browse, Workout, History tabs. Premium redesign. |
+| `app/globals.css` | Pushed | Dark bg locked on html + body + main + Next.js wrappers — fixes Tailwind v4 white bleed |
+
+### Features Built
+
+| Feature | Status |
+|---------|--------|
+| Browse tab — 6-col auto-fill grid (minmax 160px) | Done |
+| 30 exercises per page (up from 20) | Done |
+| Search — debounced, 873 exercises | Done |
+| Filter panel — Category / Level / Equipment / Muscle | Done |
+| Per-category color system (accent + glow per category) | Done |
+| Level bars (stacked 3-bar visual, color-coded) | Done |
+| Exercise card — image, category chip, level bars, muscles, equipment | Done |
+| Exercise detail modal — hero images (2-col), muscles, instructions, meta pills | Done |
+| Workout tab — start session, name session | Done |
+| Live session timer (MM:SS) | Done |
+| Add exercises to session (browse mode inside workout) | Done |
+| Per-exercise set logger — weight x reps or duration (time-based) | Done |
+| Set completion toggle (checkbox) + delete set | Done |
+| Add / remove exercises from active session | Done |
+| Collapsible exercise cards with progress bar | Done |
+| Session stats — exercises, sets done, kcal estimate | Done |
+| Finish workout — saves duration + estimated calories to DB | Done |
+| History tab — sessions grouped by date | Done |
+| History expand — exercises + sets per session | Done |
+| Calorie estimate (durationMins x 5 + sets x 3) | Done |
+
+### Design System — Phase 7
+
+| Decision | Choice |
+|----------|--------|
+| Display font | Syne (600/700/800) |
+| Body font | DM Sans (300/400/500/600) |
+| Background | #080808 locked globally |
+| Card background | #101010 / #161616 on hover |
+| Accent | Per-category: Strength #a3e635 · Cardio #fb923c · Stretching #38bdf8 · Plyometrics #c084fc · Powerlifting #f87171 · Strongman #fbbf24 · Olympic #22d3ee |
+| Grid | repeat(auto-fill, minmax(160px, 1fr)) — 6 cols on 1120px container |
+| Max width | 1120px (up from 1024px) |
+
+### Bug Fixes — Phase 7
+
+| Bug | Fix |
+|-----|-----|
+| UTF-8 encoding artifacts | Rewrote all string literals cleanly — no special chars in source |
+| Only 4 cards per row | Switched to CSS auto-fill minmax(160px,1fr) — now 6 on desktop |
+| White background strip on exercise page | globals.css — added html, body, main dark bg + Next.js root wrappers |
+| Tailwind v4 Preflight overriding body background | Locked --bg-primary on html, body, main, #__next, [data-nextjs-scroll-focus-boundary] |
+| 20 exercises per page — too few for 873 library | Bumped LIMIT to 30 |
+
+### Page Location
+```
+/dashboard/exercises
+```
+
+---
+
+## PHASE 6 — NUTRITION TRACKER — COMPLETE
+
+### Commit
+```
+feat: phase 6 nutrition tracker - food diary, 50 Indian foods, macro rings, water tracker, goals
+Migration: add-nutrition-tracker applied
+Seed: seed-nutrition.ts executed — 50 Indian foods + 4 meal types live in Neon
+Pushed → main (May 18 2026)
+```
+
+### Files Built & Pushed
+
+| File | Status | Notes |
+|------|--------|-------|
+| `prisma/schema.prisma` | Pushed | v4 — 5 Phase 6 models added, NutritionLog placeholder removed |
+| `prisma/seed-nutrition.ts` | Pushed + Executed | 50 Indian foods (per-100g macros) + 4 meal types seeded |
+| `app/dashboard/nutrition/page.tsx` | Pushed | Server component — auth guard, SSR initial data (entries + goal + water + meal types) |
+| `app/dashboard/nutrition/NutritionClient.tsx` | Pushed | Full client UI — diary, food search modal, macro rings, water tracker, goals modal |
+| `app/api/nutrition/foods/route.ts` | Pushed | GET search food library + POST add custom food |
+| `app/api/nutrition/diary/route.ts` | Pushed | GET diary by date (entries + meal types + totals) + POST log food entry |
+| `app/api/nutrition/diary/[id]/route.ts` | Pushed | DELETE food entry |
+| `app/api/nutrition/goals/route.ts` | Pushed | GET goals (or defaults) + PATCH upsert goals |
+| `app/api/nutrition/water/route.ts` | Pushed | GET water for date + POST add/subtract/set daily total |
+
+### Schema Changes (Phase 6)
+- **Removed:** NutritionLog model (flat placeholder — replaced entirely)
+- **Added:** MealType — Breakfast / Lunch / Dinner / Snacks (seeded, global)
+- **Added:** FoodItem — food library (global seed foods + user custom foods, per-100g macros)
+- **Added:** FoodEntry — diary log (userId, foodItemId, mealTypeId, entryDate, qty, computed macros)
+- **Added:** NutritionGoal — daily targets per user (calories, protein, carbs, fat, waterMl)
+- **Added:** WaterLog — daily water total per user (one row per user per day, upserted)
+- **Updated:** User — added relations: foodItems, foodEntries, nutritionGoal, waterLogs
+- Migration name: add-nutrition-tracker
+
+### Features Built
+
+| Feature | Status |
+|---------|--------|
+| Date navigator — prev/next day (disabled forward past today) | Done |
+| SSR initial load for today (no loading flash) | Done |
+| Daily summary card — SVG donut ring (calories vs goal) + 3 macro progress bars | Done |
+| 4 meal slots — Breakfast / Lunch / Dinner / Snacks (collapsible, kcal total, entry count) | Done |
+| Food search modal (full-screen, debounced, popular foods on open) | Done |
+| Quantity selector + quick buttons (50/100/150/200g) with live macro preview | Done |
+| Log food entry (macros computed server-side from per-100g values) | Done |
+| Delete food entry (hover-reveal trash, optimistic UI update) | Done |
+| Water tracker (glass buttons 250ml each, tap to add/undo, daily progress bar) | Done |
+| Goals modal (edit calories/protein/carbs/fat/waterMl — PATCH upsert) | Done |
+| Date change fetches new diary (parallel fetch diary + water) | Done |
+| Remaining kcal strip ("X kcal left" or "X kcal over" in red) | Done |
+| Custom food support (POST /api/nutrition/foods) | Done |
+
+### API Routes — Phase 6
+
+| Route | Method | Auth | Description |
+|-------|--------|------|-------------|
+| `/api/nutrition/foods` | GET | Optional | Search food library (global + user custom) |
+| `/api/nutrition/foods` | POST | Required | Add custom food |
+| `/api/nutrition/diary` | GET | Required | Fetch diary + meal types + daily totals for a date |
+| `/api/nutrition/diary` | POST | Required | Log a food entry (macros computed server-side) |
+| `/api/nutrition/diary/[id]` | DELETE | Required | Delete a food entry (ownership verified) |
+| `/api/nutrition/diary/[id]` | PATCH | Required | Update food entry quantity (inline edit) |
+| `/api/nutrition/goals` | GET | Required | Get user goals (returns defaults if none set) |
+| `/api/nutrition/goals` | PATCH | Required | Upsert user goals |
+| `/api/nutrition/water` | GET | Required | Get water intake for a date |
+| `/api/nutrition/water` | POST | Required | Add/subtract/set daily water (action param) |
+
+---
+
+## PHASE 5 — BODY METRICS — FITDAYS BLE — COMPLETE
+
+### Commit
+```
+feat: phase 5 body metrics - BLE connect UI, 13 params, manual entry, live dashboard card
+4 files changed, 861 insertions(+), 13 deletions(-)
+Pushed: f9f3201 → main (May 17 2026, 11:43 PM)
+```
+
+### Features Built
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| BLE connect UI — "Retry Connect" button | Done | Web Bluetooth API — FitDays GATT profile |
+| Manual entry fallback — "+ Manual Entry" | Done | All 13 params manually |
+| 13 body metrics display | Done | Weight, BMI, Body Fat, Fat-Free Weight, Subcutaneous Fat, Visceral Fat, Body Water, Skeletal Muscle + more |
+| Status badges (Normal / Healthy / Average) | Done | Color-coded per param range |
+| Overview / History / Log tabs | Done | History + Log scaffolded |
+| API — save metrics to DB | Done | POST /api/user/metrics |
+| API — fetch latest metrics | Done | GET /api/user/metrics |
+| Dashboard card | Done | Body Metrics card on main dashboard |
+
+### Physical Scale Testing
+- **Status: PENDING** — No FitDays scale hardware yet
+- BLE UI built to FitDays GATT profile; manual entry fully functional as fallback
+
+---
+
+## PHASE 4 — USER PROFILE + DASHBOARD + AUTH — COMPLETE
+
+### Auth Flow (confirmed working — May 17 2026)
+```
+User clicks "Continue with Google" → signIn("google", { callbackUrl: "/dashboard" })
+→ Google OAuth → /api/auth/callback/google
+→ PrismaAdapter writes Session + Account rows to Neon
+→ Redirect to /dashboard → Navbar shows avatar + "Pranit" + dropdown
+```
+
+### Guest → Auth Merge Flow (confirmed working — May 17 2026)
+```
+Guest places COD order → guest User row created by email
+→ Guest signs in with Google (same email)
+→ NextAuth signIn event: finds guest User, re-parents orders + addresses, deletes guest row
+→ Dashboard shows merged orders immediately
+```
+
+---
+
+## PHASE 3 — MEAL PLANS + SHOP + PAYU — COMPLETE
+
+### PayU Flow (confirmed working)
+```
+Checkout → POST /api/payments/payu (hash generated server-side)
+→ Hidden form → secure.payu.in/_payment
+→ PayU POSTs to /order/success → hash verified → /order/confirmation
+```
+
+### COD Flow (confirmed working + DB save — May 17 2026)
+```
+COD selected → POST /api/orders/cod (saves user, address, order, order_item, payment)
+→ redirect to /order/confirmation?txnid=COD-xxx&cod=1&order=FF-COD-...
+```
+
+### PayU Integration Details
+
+| Field | Value |
+|-------|-------|
+| Merchant Key | `YviYBu` |
+| Merchant Salt | `BHigtcZU3kzvpLC9ZFtnrWMYBVtYWz2R` |
+| Mode | Production |
+| surl | `https://fitfuel-eosin.vercel.app/order/success` |
+| furl | `https://fitfuel-eosin.vercel.app/api/payments/payu/failed` |
+| Hash formula | `key\|txnid\|amount\|productinfo\|firstname\|email\|\|\|\|\|\|\|\|\|\|salt` → HMAC-SHA512 |
+
+> Hash must be computed server-side only. Never expose salt to browser.
+
+---
+
+## PRICING MATRIX
+
+### Tier Multipliers
+| Tier | Multiplier | Phase | Status |
+|------|-----------|-------|--------|
+| Standard | 1.0x (base) | Phase 3 | Live |
+| Premium | 1.25x on Standard | Phase 8 | Waitlist open |
+| Luxury | 1.50x on Standard | Phase 12 | Waitlist open |
+
+### Standard Tier — Active
+
+| Duration | Breakfast + Lunch | Snack + Dinner | All 4 meals |
+|----------|-------------------|----------------|-------------|
+| Trial day | Rs 400 | Rs 400 | Rs 750 |
+| Weekly (7d) | Rs 2,700 | Rs 2,700 | Rs 4,900 |
+| Bi-weekly (15d) | Rs 5,775 | Rs 5,775 | Rs 9,720 |
+| Monthly excl. weekends | Rs 7,560 | Rs 7,560 | Rs 13,860 |
+| 1 Month | Rs 9,500 | Rs 9,500 | Rs 16,999 |
+| 2 Months | Rs 18,900 | Rs 18,900 | Rs 33,000 |
+| 3 Months | Rs 27,450 | Rs 27,450 | Rs 47,250 |
+
+> Non-Veg Monthly excl. weekends B+L / S+D = Rs 7,600 (not Rs 7,560)
+
+---
+
+## KEY FILES — CURRENT STATE
+
+| File | Status | Notes |
+|------|--------|-------|
+| `FITFUEL_PROJECT_TRACKER.md` | This file | Updated May 19 2026 — Phase 8 complete |
+| `lib/supplements-data.ts` | Done | 50 supplements, all types/interfaces, STACKS, resolveStack(), meta objects |
+| `app/supplements/page.tsx` | Done | Server component — public supplements landing, isLoggedIn prop |
+| `app/supplements/SupplementsLanding.tsx` | Done | Full public landing — hero, goal stack preview, 50-supplement catalogue, modals |
+| `app/dashboard/supplements/page.tsx` | Done | Server component — auth guard, userGoal from UserProfile |
+| `app/dashboard/supplements/SupplementsClient.tsx` | Done | Dashboard — personalised stack, 5-step quiz, category filter, full catalogue |
+| `prisma/schema.prisma` | Done | v4 — 5 nutrition models, no Phase 8 schema changes needed |
+| `prisma/seed.ts` | Done | 17 products, 966 price rows live |
+| `prisma/seed-nutrition.ts` | Done | 50 Indian foods + 4 meal types live in Neon |
+| `lib/auth.ts` | Done | NextAuth v5 — Google, PrismaAdapter, database sessions, guest merge |
+| `lib/prisma.ts` | Done | Prisma 7 singleton — PrismaPg + pg.Pool |
+| `app/api/auth/[...nextauth]/route.ts` | Done | NextAuth route handler |
+| `app/auth/signin/page.tsx` | Done | Custom sign-in page |
+| `app/globals.css` | Done | Dark bg locked on html+body+main+Next.js wrappers — Tailwind v4 fix included |
+| `app/layout.tsx` | Done | Navbar + Footer + SessionProvider |
+| `app/page.tsx` | Done | Full homepage — 3D card, all sections, Framer Motion |
+| `app/plans/page.tsx` | Done | Full pricing page — mobile responsive v2 |
+| `app/plans/[slug]/page.tsx` | Done | Individual plan pages |
+| `app/about/page.tsx` | Done | Pushed May 16 2026 |
+| `app/contact/page.tsx` | Done | Pushed May 16 2026 |
+| `app/locations/page.tsx` | Done | Pincode checker, 15 zones, Maps embed |
+| `app/checkout/page.tsx` | Done | PayU + COD + Rs 1 test mode |
+| `app/order/success/route.ts` | Done | PayU POST handler |
+| `app/order/confirmation/page.tsx` | Done | COD + PayU variant |
+| `app/api/payments/payu/route.ts` | Done | Hash generator — server-side |
+| `app/api/payments/payu/success/route.ts` | Done | Backup success handler |
+| `app/api/payments/payu/failed/route.ts` | Done | Failed payment handler |
+| `app/api/orders/cod/route.ts` | Done | COD order save to DB |
+| `app/dashboard/page.tsx` | Done | Server component — real orders from Neon by userId |
+| `app/dashboard/DashboardClient.tsx` | Done | Body Metrics + Nutrition Tracker + Exercise Library all live as LIVE cards |
+| `app/dashboard/profile/page.tsx` | Done | Server component — fetches user + profile |
+| `app/dashboard/profile/ProfileClient.tsx` | Done | Profile edit form |
+| `app/dashboard/body-metrics/page.tsx` | Done | Server component — auth guard, fetches latest metrics |
+| `app/dashboard/body-metrics/BodyMetricsClient.tsx` | Done | BLE connect UI, 13 params, manual entry, tabs |
+| `app/api/user/metrics/route.ts` | Done | GET + POST body metrics |
+| `app/api/user/profile/route.ts` | Done | GET + PATCH user profile |
+| `app/dashboard/nutrition/page.tsx` | Done | Server component — SSR today's diary, goal, water |
+| `app/dashboard/nutrition/NutritionClient.tsx` | Done | Full nutrition UI — diary, food search, macro rings, water, goals |
+| `app/api/nutrition/foods/route.ts` | Done | GET search + POST custom food |
+| `app/api/nutrition/diary/route.ts` | Done | GET diary by date + POST log entry |
+| `app/api/nutrition/diary/[id]/route.ts` | Done | DELETE entry |
+| `app/api/nutrition/goals/route.ts` | Done | GET + PATCH goals |
+| `app/api/nutrition/water/route.ts` | Done | GET + POST water |
+| `app/dashboard/exercises/page.tsx` | Done | Server component — auth guard, SSR initial exercises + filter options |
+| `app/dashboard/exercises/ExercisesClient.tsx` | Done | Premium UI — Browse (6-col), Workout logger, History. Syne+DM Sans. Per-category colors. |
+| `app/api/exercises/route.ts` | Done | GET exercises — search, filter, paginate |
+| `app/api/exercises/[id]/route.ts` | Done | GET single exercise with instructions |
+| `app/api/workout/sessions/route.ts` | Done | GET sessions list + POST create session |
+| `app/api/workout/sessions/[id]/route.ts` | Done | PATCH finish session (completedAt, durationMins, caloriesBurned) |
+| `app/api/workout/sessions/[id]/exercises/route.ts` | Done | POST add exercise + DELETE remove exercise |
+| `app/api/workout/sessions/[id]/exercises/[weId]/sets/route.ts` | Done | POST add set + PATCH update set + DELETE remove set |
+| `components/Navbar.tsx` | Done | Auth-aware — avatar + dropdown |
+| `components/Footer.tsx` | Done | Contrast audited |
+
+---
+
+## TECH STACK
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16.2.6 (React) |
+| Styling | Tailwind CSS + custom CSS variables + inline styles (Phase 7/8 dashboard) |
+| Fonts | Barlow Condensed (global) · Syne (Phase 7/8 dashboard) · DM Sans (Phase 7/8 dashboard) |
+| Animation | Framer Motion |
+| Icons | Lucide React |
+| State | Zustand (Phase 4+) |
+| Auth | NextAuth.js v5 beta — Google OAuth live, Phone OTP (MSG91) Phase 4 |
+| Backend | Next.js API routes |
+| ORM | Prisma 7 |
+| Database | PostgreSQL (Neon — free tier, 0.5GB) |
+| Payments | PayU + COD |
+| Body Metrics | Web Bluetooth API — FitDays BLE scale (UI built, hardware test pending) |
+| Notifications | n8n self-hosted — WhatsApp Business API + Email (Phase 16) |
+| Delivery Tracking | Driver PWA — Web Bluetooth / smartphone (Phase 10) |
+| AI | Claude API (Anthropic) — Phase 12 |
+| Hosting | Vercel (GitHub auto-deploy on push to main) |
+
+---
+
+## PRODUCT TIERS
+
+### Standard — Active (Phase 3 launch)
+- Meal delivery — all 5 active plans (Veg, Egg, Non-Veg, Jain, Custom)
+- Dashboard: order history, delivery tracking (Phase 10), today's meals (Phase 10)
+- Body metrics (manual entry or FitDays BLE UI — hardware test pending) — Phase 5
+- Nutrition tracker (calories + macros + water) — Phase 6
+- Exercise library + workout logger — Phase 7
+- Supplement Guide (public catalogue + personalised stack) — Phase 8
+- Digital meal plans (PDFs, sold separately) — Phase 13
+
+### Premium — Coming Soon (Phase 9+) · 1.25x Standard
+- Supplement add-ons delivered with meals (ordering flow — pending supplier)
+- Full nutrition tracker — macros, micros, plan vs actual
+- Exercise library + personalised workout plan
+- Priority WhatsApp support
+- Weekly PDF check-in report (automated via n8n)
+
+### Luxury — Coming Soon (Phase 12) · 1.50x Standard
+- Physical wellness add-ons (massage, spa, in-home yoga — Pune partners)
+- AI Personal Trainer (Claude API) — daily plans, form feedback, progressive overload
+- Concierge onboarding: 1-on-1 video call with head coach
+- Fully custom meal plan (personalised by nutritionist)
+- Quarterly body transformation report
+- Priority delivery slot (first of the day)
+
+---
+
+## DATABASE — CURRENT STATE (Phase 8 — Schema v4, no schema change in Phase 8)
+
+| Table | Purpose |
+|-------|---------|
+| users | Auth — email, phone, Google ID, role, emailVerified, image |
+| user_profiles | Name, age, gender, height, goal, activity level |
+| addresses | Delivery addresses (multiple per user) |
+| accounts | NextAuth OAuth account linking |
+| sessions | NextAuth database sessions |
+| verification_tokens | Email verification (future) |
+| meal_plan_products | 17 products (5 live Phase 3, 12 coming soon Phase 9) |
+| plan_prices | 966 price rows — full matrix seeded |
+| orders | Order header — user, product, plan choice, status |
+| order_items | Line items per order |
+| payments | PayU + COD transaction records |
+| deliveries | Daily delivery status per order |
+| active_plans | Currently running subscription per user |
+| body_metrics | FitDays scale data — 13 params |
+| exercises | Exercise library — name, category, level, equipment, muscles, images, instructions |
+| workout_sessions | Session header — name, date, durationMins, caloriesBurned, completedAt |
+| workout_exercises | Exercise within a session — orderInSession, notes |
+| workout_sets | Set data — reps, weightKg, durationSecs, distanceM, completed |
+| meal_types | Breakfast / Lunch / Dinner / Snacks (seeded) |
+| food_items | Food library — 50 Indian foods seeded + user custom foods (per-100g macros) |
+| food_entries | Diary log — userId, foodItemId, mealTypeId, entryDate, qty, computed macros |
+| nutrition_goals | Daily targets per user — calories, protein, carbs, fat, waterMl |
+| water_logs | Daily water total per user (one row per user per day, upserted) |
+
+> Note: Supplement data is static in lib/supplements-data.ts — no DB tables needed until ordering is implemented (Phase 9+)
+
+---
+
+## DECISIONS — LOCKED
+
+| # | Topic | Decision |
+|---|-------|----------|
+| 1 | App vs Website | Website |
+| 2 | Keep WordPress? | NO — full rebuild. WordPress backup kept for reference only. |
+| 3 | Tech Stack | Next.js + Node.js + PostgreSQL |
+| 4 | Deployment | Vercel — subdomain during build, then fitfuel.in |
+| 5 | Migration strategy | Soft launch on subdomain — active customers stay on WordPress until cutover |
+| 6 | Auth | Phone OTP (MSG91) + Google Sign-In — NextAuth.js v5 |
+| 7 | Payment | PayU (confirmed) + Cash on Delivery |
+| 8 | Pricing model | Fixed price lookup table from DB — not formula-based |
+| 9 | Notifications | n8n self-hosted — WhatsApp Business API + Email |
+| 10 | Revenue streams | Meal delivery + Digital plans + Supplements (Premium) + AI Trainer (Luxury) |
+| 11 | Admin ops | Solo (owner only) for now |
+| 12 | Design | Dark athletic — black #080808, lime #84cc16 / #a3e635, white #ffffff |
+| 13 | FitDays / Body Metrics | Web Bluetooth API — in-browser BLE (Chrome) |
+| 14 | Delivery Tracking | Driver PWA (smartphone) |
+| 15 | Exercise content | Custom 3D animated videos — placeholder (github exercise DB) now, replace Phase 8+ |
+| 16 | Language | English only |
+| 17 | Target city | Pune only (Kharadi base) — expand later |
+| 18 | SparkyFitness | Inspiration + feature reference — build natively |
+| 19 | Zomato/Swiggy | Live separately — no website integration |
+| 20 | GST | 5% on all meal plan products |
+| 21 | Owner email | pranitborkar98@gmail.com |
+| 22 | Guest checkout | Keep guest checkout — post-order sign-in nudge on confirmation page (Phase 4 remaining) |
+| 23 | Nutrition water logging | Daily total (one row per user per day, upserted) — not individual entries |
+| 24 | Nutrition food data | Per-100g storage + compute macros at log time — no variant system in Phase 6 |
+| 25 | Exercise library fonts | Syne (display) + DM Sans (body) — scoped to dashboard exercise/supplement pages |
+| 26 | Exercise grid | CSS auto-fill minmax(160px,1fr) — 6 cols on desktop, fully responsive |
+| 27 | Supplement data storage | Static in lib/supplements-data.ts — no DB until ordering is live (Phase 9+) |
+| 28 | Supplement ordering | Deferred — "Coming soon" on price tiles until supplier confirmed |
+
+---
+
+## PENDING INPUTS
+
+| # | What | Phase | Status |
+|---|------|-------|--------|
+| 1 | MSG91 or Twilio account | 4 | Pending |
+| 2 | FitDays scale model number (BLE compatibility check) | 5 | Pending — UI built, need hardware |
+| 3 | WhatsApp Business API / Meta Business account | 16 | Pending |
+| 4 | Hostinger VPS vs shared (for n8n) | 16 | Pending — check hPanel |
+| 5 | Supplement supplier / source | 9+ | Pending |
+| 6 | Wellness partner tie-ups (massage/spa) | 12+ | Pending |
+
+---
+
+## THE VISION
+
+FitFuel has been running in Pune since 2024 — real customers, real orders, real operations. This is a full platform revamp, not a launch.
+
+**Now (Phase 8 done):** Supplement Guide live — 50 science-backed supplements, personalised quiz stack, public landing + authenticated dashboard. No DB required — all static data. Syne + DM Sans design system consistent with Phase 7.
+
+**Phase 9:** Lifestyle Meal Plans (Medical, PCOS, etc.) — expand meal product catalogue beyond standard tiers.
+
+**Phase 12:** Unlock Luxury — AI Personal Trainer (Claude API), concierge onboarding, wellness partners. FitFuel becomes Pune's premium health platform.
+
+**Beyond:** Supplement ordering flow once supplier is confirmed. Lifestyle + medical plans, corporate clients, city expansion. Build the infrastructure once, scale it.
+
+Every phase is a building block. Build it right once.
+
+---
+---
+
+# PART V — DOCUMENTED FILE INVENTORY
+
+> 151 unique paths extracted from the trackers (append-only, reliable). NOT a live GitHub crawl (API rate-limited this session). Counts: 29 API routes · 34 pages · 38 lib · 29 prisma · 4 components + others.
+
+```
+app/about/page.tsx
+app/admin/coupons/CouponsClient.tsx
+app/admin/coupons/page.tsx
+app/admin/layout.tsx
+app/admin/recipes/ui.tsx
+app/allergen-policy/page.tsx
+app/api/admin/coupons/route.ts
+app/api/coach/recalibration/apply/route.ts
+app/api/coach/weekly-review/route.ts
+app/api/coupon/validate/route.ts
+app/api/cron/daily-nudges/route.ts
+app/api/cron/snapshot-consistency/route.ts
+app/api/exercises/route.ts
+app/api/nutrition/diary/route.ts
+app/api/nutrition/foods/route.ts
+app/api/nutrition/goals/route.ts
+app/api/nutrition/water/route.ts
+app/api/orders/cod/route.ts
+app/api/payments/payu/digital/route.ts
+app/api/payments/payu/failed/route.ts
+app/api/payments/payu/route.ts
+app/api/payments/payu/success/route.ts
+app/api/user/active-plan/consistency/route.ts
+app/api/user/active-plan/meals/log/route.ts
+app/api/user/active-plan/meals/rate/route.ts
+app/api/user/active-plan/meals/today/route.ts
+app/api/user/active-plan/pause/route.ts
+app/api/user/active-plan/route.ts
+app/api/user/active-plan/skip/route.ts
+app/api/user/active-plan/workout/complete/route.ts
+app/api/user/metrics/route.ts
+app/api/user/onboarding/route.ts
+app/api/user/profile/route.ts
+app/api/waitlist/route.ts
+app/api/workout/sessions/route.ts
+app/auth/signin/page.tsx
+app/blog/page.tsx
+app/checkout/digital/page.tsx
+app/checkout/page.tsx
+app/contact/page.tsx
+app/corporate/page.tsx
+app/dashboard/DashboardClient.tsx
+app/dashboard/WeeklyReviewCard.tsx
+app/dashboard/body-metrics/BodyMetricsClient.tsx
+app/dashboard/body-metrics/page.tsx
+app/dashboard/exercises/ExercisesClient.tsx
+app/dashboard/exercises/page.tsx
+app/dashboard/nutrition/NutritionClient.tsx
+app/dashboard/nutrition/page.tsx
+app/dashboard/page.tsx
+app/dashboard/profile/ProfileClient.tsx
+app/dashboard/profile/page.tsx
+app/dashboard/progress/ProgressClient.tsx
+app/dashboard/progress/page.tsx
+app/dashboard/supplements/SupplementsClient.tsx
+app/dashboard/supplements/page.tsx
+app/faq/page.tsx
+app/globals.css
+app/how-it-works/page.tsx
+app/layout.tsx
+app/locations/page.tsx
+app/medical-disclaimer/page.tsx
+app/onboarding/OnboardingClient.tsx
+app/onboarding/page.tsx
+app/order/confirmation/page.tsx
+app/order/success/route.ts
+app/our-ingredients/page.tsx
+app/our-kitchen/page.tsx
+app/our-team/page.tsx
+app/page.tsx
+app/plans/PlansCatalog.tsx
+app/plans/digital/page.tsx
+app/plans/page.tsx
+app/privacy/page.tsx
+app/refund-policy/page.tsx
+app/results/page.tsx
+app/supplements/SupplementsLanding.tsx
+app/supplements/page.tsx
+app/terms/page.tsx
+app/testimonials/page.tsx
+components/Footer.tsx
+components/ImageUpload.tsx
+components/Navbar.tsx
+components/PlanQuiz.tsx
+lib/activate-digital-plan.ts
+lib/admin-auth.ts
+lib/ai-trainer/context.ts
+lib/auth.ts
+lib/coach/nudges.ts
+lib/coach/recalibration.ts
+lib/coach/types.ts
+lib/coach/weekly-review.ts
+lib/coach/weekly-summary.ts
+lib/consistency-score.ts
+lib/coupons.ts
+lib/digital-plan-pdf.tsx
+lib/digital-plan-types.ts
+lib/digital-plan.ts
+lib/exercise-program.ts
+lib/meal-plans-data.ts
+lib/msg91-whatsapp.ts
+lib/net-calories.ts
+lib/notify.ts
+lib/partners.ts
+lib/personalization.ts
+lib/plan-tier-pricing.ts
+lib/pricing-decomposition.ts
+lib/pricing.ts
+lib/prisma.ts
+lib/production.ts
+lib/progress.ts
+lib/rate-limit.ts
+lib/resolve-purchased-plan.ts
+lib/supplements-data.ts
+lib/supplements-db.ts
+lib/supplements-types.ts
+lib/tdee.ts
+lib/user-day-meals.ts
+lib/validation/core.ts
+lib/validation/schemas.ts
+lib/workout-calories.ts
+lib/workout-plan.ts
+prisma/backfill-exercise-modality.ts
+prisma/fix-phase15-plan-data.ts
+prisma/grant-test-plan.ts
+prisma/patch-wl-veg.ts
+prisma/render-pdf.tsx
+prisma/schema.prisma
+prisma/seed-all-exercise-schedules.ts
+prisma/seed-coach-nudge-templates.ts
+prisma/seed-coupons.ts
+prisma/seed-exercise-schedule-weight-loss.ts
+prisma/seed-exercise-schedule.ts
+prisma/seed-exercises-curated.ts
+prisma/seed-meal-plans.ts
+prisma/seed-nutrition.ts
+prisma/seed-phase14.ts
+prisma/seed-plan-prices.ts
+prisma/seed-products.ts
+prisma/seed-recipes-diabetic-non-veg.ts
+prisma/seed-recipes-diabetic-veg.ts
+prisma/seed-recipes-muscle-gain-non-veg.ts
+prisma/seed-recipes-muscle-gain-veg.ts
+prisma/seed-recipes-pcos-non-veg.ts
+prisma/seed-recipes-pcos-veg.ts
+prisma/seed-recipes-strength-hypertrophy-non-veg.ts
+prisma/seed-recipes-strength-hypertrophy-veg.ts
+prisma/seed-recipes-weight-loss-egg.ts
+prisma/seed-recipes-weight-loss-veg.ts
+prisma/seed-supplements.ts
+prisma/seed.ts
+```

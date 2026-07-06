@@ -1,4 +1,4 @@
-# FitFuel Chat Generator — Master Reference v3.0
+# FitFuel Chat Generator — Master Reference v3.3
 
 ## The Idea
 
@@ -1045,3 +1045,455 @@ Tick every box. A single unchecked box means the file will either crash or write
 - [ ] `servingMultiplier: 1.0` on every slot creation?
 - [ ] `PLAN_SLUG`, `PLAN_CATEGORY`, `DIETARY_TAG` all set correctly for this file?
 - [ ] Recipe slug format is kebab-case with regional prefix and plan suffix (Rule 17)?
+---
+---
+
+# ══════════════════════════════════════════════════════════════════
+# v3.1 — HARDENED GENERATION PROTOCOL + MANDATORY SELF-AUDIT
+# (Designed so a small/cheap/free model produces a zero-bug file)
+# ══════════════════════════════════════════════════════════════════
+
+> **Why this section exists.** Rules 1–17 above say *what* a correct file contains.
+> This section says *how to build it in an order that makes mistakes impossible*, and
+> *forces the model to catch its own errors before it outputs anything*. If you are a
+> small model: do not freestyle. Follow Phases 0–8 in order. Do not skip the blueprint.
+> Do not skip the self-audit. Output the file ONLY after the audit is 100% green.
+
+## How to read this section
+1. First read Rules 1–17. They are the law.
+2. Then follow **THE PROTOCOL** (Phases 0–8) below, top to bottom, no reordering.
+3. Phase 7 (SELF-AUDIT) is **mandatory** and must appear in your reply **before** the file.
+4. If any audit line is ✗, you fix it and re-run the audit. You never emit a ✗ file.
+
+---
+
+## ══ THE PROTOCOL — 9 phases, in order ══
+
+### PHASE 0 — Lock the 4 plan variables (30 seconds, do this first)
+From the user's command `generate seed-recipes-<plan-slug>`, fill this in by reading the
+rule tables. Write these 4 values at the top of your scratch work and never change them:
+
+| Variable | Where to find it | Example (`weight-loss-egg`) |
+|---|---|---|
+| `PLAN_SLUG` | the command itself | `weight-loss-egg` |
+| `PLAN_CATEGORY` | Rule 7 table | `weight_loss` |
+| `DIETARY_TAG` | Rule 6 table | `EGG` |
+| slug suffix | Rule 17 table | `-wl-egg` |
+
+Also note the **plan mandate** (Rule 15) if the slug matches one (diabetic, keto, pcos,
+heart, jain, senior, kids, etc.). If it does, that mandate overrides everything in every
+recipe. Write the mandate constraints down now so you don't forget mid-file.
+
+### PHASE 1 — Build the 30-row BLUEPRINT TABLE *before writing any code*
+This single step prevents the 3 most common bugs (wrong recipe count, wrong slot split,
+too many IndianFusion). You plan all 30 recipes as a table FIRST, audit the table, and
+only then write TypeScript. See the **BLUEPRINT TEMPLATE** below. Rules the table must satisfy:
+
+- Exactly **30 rows**.
+- Slot column totals: **BREAKFAST 8, LUNCH 9, SNACK 5, DINNER 7**, then **+1 to exactly one slot** = 30. (LUNCH is the usual +1.)
+- **cuisineType** column: every value from the Rule 10 approved list. **≥24 pure-regional, ≤6 IndianFusion.**
+- Spread cuisines — don't use the same region more than ~4 times.
+- Each row has a **target kcal** inside its slot's Rule 14 band.
+- If a plan mandate applies (Rule 15), every row already respects it (e.g. keto rows carry no rice/roti/banana; diabetic rows use millets/brown rice only).
+
+**Audit the blueprint table now** (count slots, count fusion) before moving on. If it's
+wrong here, it's cheap to fix. If you discover it wrong after writing 30 recipes, it's not.
+
+### PHASE 2 — Header + FI block (copy verbatim)
+Paste Rule 1 header (change only slug/diet/plan in the 3 comment lines) and the **entire**
+Rule 2 FI block + `const NEW_FI` line **unchanged**. Never edit an FI id. Never add to FI.
+
+### PHASE 3 — Type definitions (copy verbatim)
+Paste the Rule 4 type block exactly. Do not modify field names or spelling
+(`fibreGrams`, `fibrePer100g` — British spelling, always).
+
+### PHASE 4 — Write the 30 recipes from the blueprint
+Go row by row through your blueprint. For each recipe build the `RecipeData` + `ingredients`
++ `steps`. Obey the **MACRO CONSTRUCTION RULE** (below) so macros are physically possible and
+in-band. Per recipe:
+- 5–10 ingredients. Each ingredient's `foodItemKey` is **either** an FI key (Rule 2) **or**
+  a key you will add to MISSING_FOOD_ITEMS in Phase 5. **Salt is always present and always a MISSING key.**
+- **4–6 steps**, each a full paragraph with technique + timing + a visual cue. **≥2 steps carry a `kitchenNote`** (batch size / hold time / packing). Single-sentence steps are rejected.
+- `mealType: MealSlot.XXX` (enum, never a string). Slug = Rule 17 pattern with the Phase-0 suffix.
+- Compute `per100g` macros: `per100 = round(perServing / servingSizeGrams * 100, 1)` for each of cal/protein/carbs/fat/fibre.
+
+### PHASE 5 — MISSING_FOOD_ITEMS (after recipes, so the list is complete)
+Collect **every** `foodItemKey` used in Phase 4 that is **not** an FI key. For each, add one
+MISSING_FOOD_ITEMS entry using the **canonical name** (Rule 3 name table — never a variant)
+with **all 5** `per100*` macro fields filled from a real source (IFCT-2017 first, then USDA).
+**Salt must be in this list.** Use the per-100g raw edible-portion value. Derive the key with
+the Rule 8 uppercase rule and confirm it matches the `foodItemKey` you wrote in the recipe.
+
+### PHASE 6 — Seed function (copy verbatim, change 4 values only)
+Paste the Rule 12 `getFoodItemId` helper + `seedRecipes()` body **unchanged**, then set the
+3 constants in Step 3 (`PLAN_SLUG`, `PLAN_CATEGORY`, `DIETARY_TAG`) and the slug in the
+opening `console.log`. Confirm `planScheduleSlot` uses `mealPlanId` + `dayNumber` +
+`servingMultiplier: 1.0` (Rule 13). Change nothing else.
+
+### PHASE 7 — MANDATORY SELF-AUDIT (do this in your reply, before the file)
+Fill in the **SELF-AUDIT BLOCK** (below) with the **actual numbers you counted in your own
+file**. Counting means counting — go line by line. If any line is ✗, fix the file and
+re-count. **You may not output the file until every line is ✓.**
+
+### PHASE 8 — Emit the file
+Only now, output the complete `.ts` in a single code block. After it, restate the one-line
+result: `30 recipes • 8/__/5/7 split • N fusion • audit green`.
+
+---
+
+## ══ MACRO CONSTRUCTION RULE (so weak models can't invent impossible macros) ══
+
+A recipe's stated macros must be **physically consistent** and **in-band**. Use this method:
+
+1. Pick `caloriesPerServing` inside the slot's Rule 14 band (e.g. LUNCH 450–560).
+2. Choose protein/carbs/fat grams so the **Atwater identity** holds within ±12%:
+   ```
+   kcal ≈ protein*4 + carbs*4 + fat*9
+   ```
+3. Bias protein **high** (it's a fitness kitchen): roughly
+   - weight_loss / cutting: protein ≥ 25% of kcal, fat ≤ 30% of kcal
+   - muscle_gain / lean_bulk: protein ≥ 25%, carbs high
+   - keto: carbs < 50 g total, fat high (Rule 15 overrides)
+   - diabetic: low-GI carbs only (Rule 15)
+4. Set `fibreGrams` realistically (5–12 g for a veg/dal-forward Indian meal).
+5. **Sanity check each recipe**: `|caloriesPerServing − (P*4 + C*4 + F*9)| ≤ 12%`. If it
+   fails, your macros are made up — adjust grams until it passes. (This is audit line 14.)
+
+Worked example (a LUNCH): 530 kcal, P28 C62 F18 → 28*4+62*4+18*9 = 112+248+162 = **522**,
+within 1.5% of 530. ✓ Pass.
+
+---
+
+## ══ BLUEPRINT TEMPLATE (fill this in Phase 1) ══
+
+Copy this table, fill 30 rows, audit the totals row, THEN write code.
+
+```
+#  | SLOT      | cuisineType (Rule 10) | recipe name                         | target kcal
+---+-----------+-----------------------+-------------------------------------+------------
+ 1 | BREAKFAST | Maharashtrian         | <name>                              | 380
+ 2 | BREAKFAST | Punjabi               | <name>                              | 430
+ ... (8 breakfast rows total) ...
+ 9 | LUNCH     | Andhra                | <name>                              | 530
+ ... (9 or 10 lunch rows) ...
+.. | SNACK     | ...                   | <name>                              | 150  (5 or 6 rows)
+.. | DINNER    | ...                   | <name>                              | 420  (7 or 8 rows)
+---+-----------+-----------------------+-------------------------------------+------------
+TOTALS: BREAKFAST=__  LUNCH=__  SNACK=__  DINNER=__  SUM=__(must be 30)
+        IndianFusion=__(≤6)   Pure-regional=__(≥24)   Distinct cuisines used=__
+```
+
+Worked totals for a valid file: `B=8 L=10 S=5 D=7 SUM=30 | Fusion=3 | Regional=27`.
+
+---
+
+## ══ SELF-AUDIT BLOCK (Phase 7 — paste filled-in, ABOVE the file) ══
+
+> Fill every `___` with the number you actually counted **in your file**. Mark ✓/✗.
+> Any ✗ → fix and re-audit. Do not emit the file with a single ✗.
+
+```
+SELF-AUDIT — seed-recipes-<plan-slug>.ts
+ 1. Total recipes ............................ ___  (=30)            [ ]
+ 2. BREAKFAST count .......................... ___  (8 or 9)         [ ]
+ 3. LUNCH count .............................. ___  (9 or 10)        [ ]
+ 4. SNACK count .............................. ___  (5 or 6)         [ ]
+ 5. DINNER count ............................. ___  (7 or 8)         [ ]
+ 6. Slot sum ................................. ___  (=30, one +1)    [ ]
+ 7. IndianFusion count ....................... ___  (≤6)             [ ]
+ 8. Pure-regional count ...................... ___  (≥24)            [ ]
+ 9. cuisineType values all in Rule 10 list? .. yes/no               [ ]
+10. Forbidden-ingredient hits (Rule 16) ...... ___  (=0; list hits) [ ]
+11. Recipes with <4 steps ................... ___  (=0)             [ ]
+12. Recipes with <2 kitchenNotes ............ ___  (=0)             [ ]
+13. caloriesPerServing outside Rule 14 band . ___  (=0; list)       [ ]
+14. Atwater failures (>12% off) ............. ___  (=0; list)       [ ]
+15. Salt present in MISSING_FOOD_ITEMS? ..... yes/no                [ ]
+16. MISSING items with all 5 per100 fields .. ___/___ (all)         [ ]
+17. Every recipe ingredient key resolves?
+    (FI key OR a MISSING_FOOD_ITEMS key) ..... yes/no               [ ]
+18. Slugs ending in correct suffix .......... ___/30                [ ]
+19. Duplicate slugs ......................... ___  (=0)             [ ]
+20. NEW_ID_ placeholders left in file ....... ___  (=0)             [ ]
+21. mealType uses MealSlot.ENUM (not string)? yes/no               [ ]
+22. planScheduleSlot has mealPlanId +
+    dayNumber + servingMultiplier:1.0? ....... yes/no               [ ]
+23. PLAN_SLUG / PLAN_CATEGORY / DIETARY_TAG
+    set correctly for this file? ............. yes/no               [ ]
+24. Plan mandate (Rule 15) applied to ALL
+    recipes (if slug matches a mandate)? ..... yes/no/NA            [ ]
+RESULT: ____ / 24 green.  Emit ONLY if 24/24.
+```
+
+---
+
+## ══ POST-DOWNLOAD AUDIT SCRIPT (give the user this; it re-checks mechanically) ══
+
+```bash
+F=prisma/seed-recipes-<plan-slug>.ts
+echo -n "placeholders (0): ";        grep -c "NEW_ID_" $F
+echo -n "recipes (30): ";            grep "slug: '" $F | grep -v "PLAN_SLUG\|RecipeData" | wc -l
+echo -n "BREAKFAST: ";               grep -c "MealSlot.BREAKFAST" $F
+echo -n "LUNCH: ";                   grep -c "MealSlot.LUNCH" $F
+echo -n "SNACK: ";                   grep -c "MealSlot.SNACK" $F
+echo -n "DINNER: ";                  grep -c "MealSlot.DINNER" $F
+echo    "cuisineTypes:";             grep "cuisineType:" $F | grep -v "string" | sort | uniq -c
+echo -n "Salt present (1): ";        grep -c "name: 'Salt'" $F
+echo    "forbidden (none):";         grep -iE "tahini|miso|gochujang|kimchi|couscous|avocado|edamame|chipotle|sriracha|quinoa|feta|parmesan|hummus|balsamic|caesar|tortilla|pita|rice noodle" $F || echo "  none ✓"
+echo -n "steps total (~120+): ";     grep -c "stepNumber:" $F
+echo -n "kitchenNotes (>=60): ";     grep -c "kitchenNote:" $F
+# then the real gate:
+npx tsc --noEmit --strict $F   # must exit 0 (esbuild/tsx will NOT catch type errors)
+npx tsx $F                     # creates 30 recipes + 120 plan_schedule_slots
+```
+
+---
+
+## ══ WEAK-MODEL FAILURE MODES — the 12 that actually happen, and the fix ══
+
+| # | Failure | Why it happens | The fix this section enforces |
+|---|---|---|---|
+| 1 | 28 or 29 recipes, not 30 | model loses count while writing | Phase 1 blueprint + audit line 1 |
+| 2 | Wrong slot split (e.g. 10B/8L) | no plan, writes ad hoc | blueprint slot totals + lines 2–6 |
+| 3 | 7+ IndianFusion | reaches for fusion when stuck | blueprint fusion cap + lines 7–8 |
+| 4 | `cuisineType: 'SouthIndian'`/`'INDIAN'` | generic default | Rule 10 list + line 9 |
+| 5 | Recipe has 3 steps | rushes the boring part | Rule 9 + line 11 |
+| 6 | No kitchenNote anywhere | treats steps as a recipe blog | Rule 9 + line 12 |
+| 7 | Impossible macros (kcal ≠ P/C/F) | invents round numbers | MACRO RULE + line 14 |
+| 8 | kcal out of slot band | ignores Rule 14 | line 13 |
+| 9 | Salt missing from MISSING_FI | forgets it's a food item | Phase 5 + line 15 |
+| 10 | MISSING item missing a per100 field | copies 4 of 5 fields | Rule 3 + line 16 |
+| 11 | `mealSlot`/`prepTime`/`fiberGrams` | wrong schema names | Rule 5 + lines 16,21 |
+| 12 | `planId`/`day` in schedule slot | wrong schema names | Rule 13 + line 22 |
+
+---
+
+## ══ ONE-PARAGRAPH PROMPT TO PASTE INTO A CHEAP MODEL ══
+
+> You are generating one FitFuel seed file. Read Rules 1–17, then follow the v3.1 PROTOCOL
+> Phases 0–8 exactly. Phase 1: build and audit the 30-row blueprint table first. Phase 4:
+> obey the MACRO CONSTRUCTION RULE (Atwater within 12%, in-band kcal). Phase 7: paste the
+> filled-in SELF-AUDIT BLOCK and confirm 24/24 green. Only then output the complete .ts in
+> one code block. Copy the header, FI block, type block, and seed function verbatim; change
+> only the 4 plan variables. Salt always goes in MISSING_FOOD_ITEMS with all 5 macros. Never
+> use a forbidden ingredient or a non-approved cuisineType. If any audit line fails, fix and
+> re-audit before emitting.
+
+*End v3.1 hardened protocol.*
+
+---
+---
+
+# ══════════════════════════════════════════════════════════════════
+# v3.2 — CULINARY CRAFT STANDARD (this is what makes the food master-chef)
+# ══════════════════════════════════════════════════════════════════
+
+> Rules 1–17 make a file that *runs*. The v3.1 protocol makes it *pass audits*.
+> THIS section makes the food **worth eating** — the difference between a generic
+> "egg curry with rice" and a FitFuel dish. **Every recipe in every file must be
+> built to this standard.** A recipe that runs and passes the structural audit but
+> reads like a canteen menu is a FAIL. The gold benchmark is FitFuel's own salad
+> menu (Signature Experience format). Match that depth, every time.
+
+## THE NON-NEGOTIABLE CRAFT MANDATE
+Every recipe must be **composed**, not assembled. That means four sensory dimensions
+are deliberately designed into the dish and **written into the `description` and `steps`**:
+
+1. **Taste Layering** — a base note, a brightener, and a rounder. (e.g. earthy millet → lemon-mint lift → pinch of jaggery to round the acid.) Never one-dimensional.
+2. **Texture Contrast** — at least three textures in the bowl. (creamy + crunchy + snappy.) A dish of one texture is a fail.
+3. **Aroma at the Pass** — the aromatic element (tadka / char / toasted spice / fresh herb) is finished **at the end**, poured or scattered over, not cooked away. This is the single biggest lever for "smells like a restaurant."
+4. **Flavor Finishers** — a final dusting/zest/crunch that the customer sees and smells first (chaat masala, lemon zest, toasted til, crushed peanut, microgreens).
+
+If a recipe's description does not let you *taste it in your head*, it is not done.
+
+## HOW THE CRAFT IS ENCODED (no schema change — it lives in the words)
+The schema already has the fields. The craft goes here:
+- **`description`** (2–3 sentences): must name the **taste layering**, the **texture contrast**, and the **aroma/finisher**. This is the menu-card sentence a customer reads. Write it like the FitFuel salad cards.
+- **`shortDescription`** (1 line): the hook — region + hero ingredient + one sensory word.
+- **`steps`**: at least one step is an **"aroma at the pass"** finish (tadka poured over / flash-char / toasted-spice scatter), and the `kitchenNote`s carry the **Prep Logic** (batch, hold time, dressing-packed-separately, assemble <90s) exactly like the salad cards.
+- **Plating** goes in the final step's instruction or kitchenNote (layer order, garnish, drizzle pattern) so the kitchen plates it identically for delivery photos.
+
+## CORPUS-FIRST SOURCING (use the real dishes — do not invent from zero)
+FitFuel already has a dish library (salads, bowls, bars, breakfasts, the Zomato menu).
+**Start there.** For a given plan + slot, pull the closest real FitFuel dish, then:
+1. **Elevate** it to the four-dimension craft standard above.
+2. **De-Westernise** it to India-first using the swap table below (Rule 16 forbidden → desi).
+3. **Re-macro** it for the slot's Rule 14 band and the plan mandate (Rule 15).
+
+### India-first elevation swaps (apply silently — never ship a forbidden ingredient)
+| Forbidden / imported | India-first replacement (sourceable in Pune) |
+|---|---|
+| quinoa | foxtail millet, barnyard millet, dalia (cracked wheat) |
+| avocado | hung curd, cashew paste, steamed green-pea mash |
+| hummus | roasted-chana dip, peanut-curd dip |
+| tahini | roasted-til (sesame) paste |
+| feta / parmesan | crumbled paneer, grated dry coconut |
+| edamame | sprouted moong, fresh green peas, val/field beans |
+| soba / rice noodles | rice sevai (idiyappam), millet noodles |
+| balsamic / caesar | mustard-curd or coriander-mint-curd dressing |
+| olive oil (as hero) | groundnut oil, mustard oil, or cold-pressed til oil |
+| black beans / corn (Mexican) | rajma, chana, fresh corn is OK in small qty |
+
+## FORMAT VARIETY BY SLOT (so 30 days never repeats a plate)
+You said it yourself: lunch can be a **bowl**, dinner a **salad**, snack a **bar**.
+Across the 30 recipes in a file, **rotate formats deliberately** — do not write 9 gravy-and-rice
+lunches. Use this Indian-format menu and spread it:
+
+| Slot | Rotate across these formats (pick a spread, no format more than ~3×) |
+|---|---|
+| BREAKFAST | chilla/cheela, poha, upma, savoury oats, idli/dosa plate, paratha-roll, smoothie-bowl, sprout-bowl |
+| LUNCH | **power bowl**, thali (dal-sabzi-roti), pulao/khichdi, curry-rice, stuffed-roti plate, grain-salad bowl |
+| SNACK | **protein bar**, chaat cup, roasted-chana/sprout cup, tikki, dhokla, makhana, buttermilk+savoury |
+| DINNER | **salad** (substantial), light curry-roti, soup+millet, stir-fry bowl, grilled-protein plate, steamed-dumpling (momo/modak-savoury) |
+
+Aim for **at least 5 distinct formats per slot-group across the file.** A file where every
+lunch is "X curry + rice" is a craft fail even if it passes the structural audit.
+
+## ─── GOLD RECIPE — copy this DEPTH (a fully-crafted RecipeDef) ───
+This is the bar for `description`, `steps`, and `kitchenNote`. Match this richness in every recipe.
+
+```typescript
+{
+  recipe: {
+    name: 'Maharashtrian Sprouted Moong & Foxtail-Millet Power Bowl',
+    slug: 'maharashtrian-moong-millet-power-bowl-wl-veg',
+    description: 'A composed Maharashtrian power bowl: earthy foxtail millet and nutty sprouted moong as the base, lifted by a coriander-mint-curd dressing with a whisper of jaggery to round the lemon, then finished at the pass with a curry-leaf and mustard-seed tadka poured over for smoky aroma. Texture runs fluffy millet, snappy raw sprouts, and a brittle roasted peanut-til crumble.',
+    shortDescription: 'Foxtail-millet & moong-sprout bowl, curry-leaf tadka at the pass.',
+    cuisineType: 'Maharashtrian',
+    mealType: MealSlot.LUNCH,
+    dietaryTags: ['VEGETARIAN'],
+    planCategories: ['weight_loss'],
+    tierAvailability: [PlanTier.STANDARD, PlanTier.PREMIUM, PlanTier.LUXURY],
+    servingSizeGrams: 400, prepTimeMins: 15, cookTimeMins: 18,
+    difficulty: 'medium', equipmentNeeded: ['Pressure cooker', 'Tadka pan'],
+    allergens: ['Peanut', 'Sesame', 'Dairy'],
+    shelfLifeHours: 24, packagingType: 'Bowl + side dressing sachet',
+    kitchenStation: 'Cold assembly', seasonTags: ['all'], rotationGroup: 1,
+    caloriesPerServing: 485, proteinGrams: 32, carbsGrams: 56, fatGrams: 14, fibreGrams: 11,
+    caloriesPer100g: 121.3, proteinPer100g: 8, carbsPer100g: 14, fatPer100g: 3.5, fibrePer100g: 2.8,
+    isActive: true, isFeatured: true,
+  },
+  ingredients: [
+    { foodItemKey: 'FOXTAIL_MILLET', quantityGrams: 70, cookedWeightFactor: 2.6, prepNote: 'cooked fluffy, cooled', isOptional: false, orderInRecipe: 1 },
+    { foodItemKey: 'MOONG_DAL', quantityGrams: 60, cookedWeightFactor: 2.0, prepNote: 'sprouted 12h, raw', isOptional: false, orderInRecipe: 2 },
+    { foodItemKey: 'BEETROOT', quantityGrams: 35, cookedWeightFactor: 1.0, prepNote: 'grated raw', isOptional: false, orderInRecipe: 3 },
+    { foodItemKey: 'CARROT', quantityGrams: 35, cookedWeightFactor: 1.0, prepNote: 'grated', isOptional: false, orderInRecipe: 4 },
+    { foodItemKey: 'CUCUMBER', quantityGrams: 35, cookedWeightFactor: 1.0, prepNote: 'diced', isOptional: false, orderInRecipe: 5 },
+    { foodItemKey: 'CURD_LOWFAT', quantityGrams: 60, cookedWeightFactor: 1.0, prepNote: 'for dressing', isOptional: false, orderInRecipe: 6 },
+    { foodItemKey: 'MINT_LEAVES', quantityGrams: 5, cookedWeightFactor: 1.0, prepNote: 'dressing', isOptional: false, orderInRecipe: 7 },
+    { foodItemKey: 'PEANUTS', quantityGrams: 12, cookedWeightFactor: 1.0, prepNote: 'roasted, crushed', isOptional: false, orderInRecipe: 8 },
+    { foodItemKey: 'SESAME_SEEDS', quantityGrams: 5, cookedWeightFactor: 1.0, prepNote: 'toasted', isOptional: false, orderInRecipe: 9 },
+    { foodItemKey: 'CURRY_LEAVES', quantityGrams: 2, cookedWeightFactor: 1.0, prepNote: 'tadka', isOptional: false, orderInRecipe: 10 },
+    { foodItemKey: 'MUSTARD_SEEDS', quantityGrams: 2, cookedWeightFactor: 1.0, prepNote: 'tadka', isOptional: false, orderInRecipe: 11 },
+    { foodItemKey: 'GROUNDNUT_OIL', quantityGrams: 5, cookedWeightFactor: 1.0, prepNote: 'tadka', isOptional: false, orderInRecipe: 12 },
+    { foodItemKey: 'JAGGERY', quantityGrams: 3, cookedWeightFactor: 1.0, prepNote: 'in dressing', isOptional: false, orderInRecipe: 13 },
+    { foodItemKey: 'LEMON', quantityGrams: 8, cookedWeightFactor: 1.0, prepNote: 'juice', isOptional: false, orderInRecipe: 14 },
+    { foodItemKey: 'SALT', quantityGrams: 3, cookedWeightFactor: 1.0, prepNote: '', isOptional: false, orderInRecipe: 15 },
+  ],
+  steps: [
+    { stepNumber: 1, title: 'Cook the millet base', instruction: 'Pressure-cook foxtail millet 2 whistles to a fluffy, separate-grain finish, then spread on a tray to cool — warm millet steams the sprouts and kills the crunch.', durationMins: 18, technique: 'pressure_cook', kitchenNote: 'Batch 4 kg millet per cooker; cool on trays and hold chilled. Never assemble a bowl on warm millet.' },
+    { stepNumber: 2, title: 'Build the bright dressing', instruction: 'Blend low-fat curd with mint, lemon, a whisper of jaggery and salt to a pourable coriander-mint dressing — the jaggery rounds the lemon so the acid lifts rather than bites.', durationMins: 5, technique: 'blend', kitchenNote: 'Dressing holds 24h chilled; pack in a SIDE SACHET, never on the bowl, or the millet goes soggy in transit.' },
+    { stepNumber: 3, title: 'Toast the crumble', instruction: 'Dry-roast peanuts and white til separately until they just colour and smell nutty; crush the peanuts coarse and keep the til whole for a brittle, crackling finisher.', durationMins: 4, technique: 'roast', kitchenNote: 'Toast in 1 kg lots, store airtight; this crumble is the texture hero, keep it crisp and away from anything wet.' },
+    { stepNumber: 4, title: 'Layer the bowl', instruction: 'In a deep bowl, bed the cooled millet, then arrange sprouted moong, grated beet, carrot and cucumber in rainbow sections for the menu photo. Scatter the peanut-til crumble.', durationMins: 3, technique: 'assemble', kitchenNote: 'Sectioned plating (not tossed) is the Swiggy/Zomato look; assemble under 90 sec from prepped mise.' },
+    { stepNumber: 5, title: 'Aroma at the pass', instruction: 'Heat groundnut oil, crackle mustard seeds and curry leaves, and pour this hot tadka over the bowl right before it leaves the pass — the curry-leaf aroma blooms on contact and is the dishs signature first impression.', durationMins: 1, technique: 'temper', kitchenNote: 'Tadka is finished PER ORDER, never pre-mixed in; that hiss-on-pour is the whole point. Dressing sachet goes on the side.' },
+  ],
+}
+```
+Notice: the description makes you taste it; three textures are explicit; the tadka is finished
+at the pass; a finisher (peanut-til) is named; every kitchenNote is real prep logic. **That is the bar.**
+(`FOXTAIL_MILLET`, `BEETROOT`, `CUCUMBER`, `SESAME_SEEDS`, `MINT_LEAVES`, `JAGGERY` go in
+MISSING_FOOD_ITEMS with all 5 macros, per Rule 3.)
+
+## CRAFT SELF-AUDIT (add these to the Phase-7 block — all must be ✓)
+```
+25. Every description names taste-layering + texture + aroma/finisher? .. yes/no  [ ]
+26. Every recipe has an "aroma at the pass" finish step?  ............... yes/no  [ ]
+27. Each recipe has >=3 distinct textures designed in?  ................. yes/no  [ ]
+28. >=5 distinct formats per slot-group across the file?  ............... yes/no  [ ]
+29. Sourced/elevated from the FitFuel corpus (not invented generic)?  ... yes/no  [ ]
+30. Zero forbidden ingredients (India-first swaps applied)?  ............ yes/no  [ ]
+RESULT: emit ONLY if 30/30 green.
+```
+
+*End v3.2 culinary craft standard. This file (Rules 1–17 + v3.1 protocol + v3.2 craft) is the
+single source of truth: hand it to any model with `generate seed-recipes-<plan-slug>` and it
+produces a master-chef, India-first, audit-clean seed file for any of the 120+ plans.*
+
+---
+---
+
+# ══════════════════════════════════════════════════════════════════
+# v3.3 — RULE 14B: PLAN-GOAL ENERGY & PROTEIN MATRIX
+# (makes meals goal-specific, not just slot-specific)
+# ══════════════════════════════════════════════════════════════════
+
+> **Why this exists.** Rule 14 alone gives every plan the same per-slot calories, so a
+> muscle-gain meal and a weight-loss meal come out identical in energy — wrong. Rule 14B
+> **overrides Rule 14** with a per-slot band + per-meal protein floor chosen by the plan's
+> GOAL TIER. Rule 15 (medical constraints) still applies on top. Pick the tier from the slug,
+> then build every recipe to that tier's band. The self-audit checks the **tier** band, not the
+> generic Rule 14 band.
+
+## STEP 1 — Map the plan slug to a GOAL TIER
+
+| Goal tier | Plan slugs in this tier | Energy intent |
+|---|---|---|
+| **CUT** | `weight-loss-*`, `cutting-*`, `obesity-*`, `fatty-liver-*`, `liver-detox`, `detox-*`, `gout-*` | calorie deficit, protein-sparing |
+| **LEAN** | `balanced-*`, `balanced-diet-*`, `diabetic-*`, `pre-diabetic-*`, `pcos-*`, `hormonal-acne-*`, `pms-*`, `heart-health-*`, `hypertension-*`, `kidney-health-*`, `gut-health-*`, `intermittent-fasting-*`, `fertility-*`, `menopause-*`, `post-pregnancy-*`, `senior-*`, `knee-health-*`, `thyroid-*` | maintenance, nutrient-dense |
+| **GAIN** | `muscle-gain-*`, `lean-bulk-*`, `strength-hypertrophy-*`, `body-recomp-*` | calorie surplus, high protein |
+| **PERFORM** | `endurance-*`, `sports-recovery-*`, `competition-prep-*`, `cricket-*`, `football-*`, `swimming-*`, `female-athlete-*`, `female-athlete-sports-*` | high energy, carb-forward, fast recovery |
+| **KIDS** | `kids-teen-*` | growth, moderate energy, calcium/iron |
+
+(Keto is its own macro shape — follow Rule 15 keto limits, and use the LEAN energy band unless
+the slug also says `cutting`/`weight-loss`, then CUT. Carbs <50g always wins.)
+
+## STEP 2 — Build every recipe to that tier's per-slot band + protein floor
+
+**Per-slot CALORIE band (kcal) — use the row for YOUR tier; this REPLACES Rule 14:**
+
+| Tier | BREAKFAST | LUNCH | SNACK | DINNER | ~Daily |
+|---|---|---|---|---|---|
+| CUT     | 320–430 | 440–540 | 130–190 | 370–470 | 1450–1650 |
+| LEAN    | 380–470 | 520–620 | 160–230 | 450–550 | 1700–1950 |
+| GAIN    | 480–580 | 650–780 | 230–330 | 560–680 | 2250–2600 |
+| PERFORM | 450–560 | 620–760 | 220–320 | 520–650 | 2100–2500 |
+| KIDS    | 350–450 | 480–580 | 150–230 | 420–520 | 1550–1800 |
+
+**Per-meal PROTEIN FLOOR (grams, minimum — go higher freely):**
+
+| Tier | BREAKFAST | LUNCH | SNACK | DINNER |
+|---|---|---|---|---|
+| CUT     | ≥20 | ≥28 | ≥12 | ≥25 |
+| LEAN    | ≥18 | ≥26 | ≥10 | ≥24 |
+| GAIN    | ≥30 | ≥42 | ≥18 | ≥36 |
+| PERFORM | ≥24 | ≥34 | ≥14 | ≥30 |
+| KIDS    | ≥15 | ≥22 | ≥9  | ≥20 |
+
+**Carb posture by tier (applied within the calorie band):**
+- CUT — carbs moderate, fibre high, low-GI bias; protein the hero.
+- LEAN — balanced; whole grains/millets.
+- GAIN — carbs high to fuel surplus; complex carbs at lunch/dinner, fast carbs ok post-workout snack.
+- PERFORM — carbs highest; deliberate fast-carb at the recovery snack; salt slightly higher for sweat loss (unless Rule 15 sodium cap applies).
+- KIDS — balanced, calcium + iron rich (paneer, ragi, dates, green leafy).
+
+## STEP 3 — Macro construction still uses the Atwater check (v3.1)
+Pick the in-band kcal for your tier+slot, then solve P/C/F so `kcal ≈ P*4+C*4+F*9` (±12%),
+with protein ≥ the tier floor above. Rule 15 constraints override (e.g. keto carbs <50g,
+hypertension sodium <1.5g) — when a mandate and a tier band conflict, **the mandate wins**.
+
+## STEP 4 — Add to the self-audit (Phase 7)
+```
+31. Goal TIER identified from slug (CUT/LEAN/GAIN/PERFORM/KIDS)? ..... yes/no  [ ]
+32. Every caloriesPerServing inside the TIER band (not generic R14)?   ___ (=0 out) [ ]
+33. Every recipe meets the TIER protein floor for its slot? .......... ___ (=0 fail) [ ]
+34. Tier carb posture applied + Rule 15 mandate still respected? ..... yes/no  [ ]
+RESULT: emit ONLY if all green.
+```
+
+**Net effect:** the same command on two different plans now yields genuinely different food —
+`generate seed-recipes-muscle-gain-veg` produces ~2400 kcal/day high-protein surplus meals;
+`generate seed-recipes-weight-loss-veg` produces ~1550 kcal/day protein-sparing deficit meals;
+`generate seed-recipes-diabetic-veg` produces LEAN-band, low-GI, no-sugar meals. Plan-specific,
+end to end.
+
+*End v3.3 plan-goal matrix.*

@@ -635,9 +635,9 @@ const franchiseFeatures = [
   { i: <Building2 size={20} color={LIME} />, t: "Corporate plans too", d: "B2B health programs for companies, billed and managed through the same platform." },
 ];
 const testimonials = [
-  { name: "Rahul M.", loc: "Kharadi", plan: "Muscle Gain, 1 Month", result: "Plus 3kg muscle", text: "The food is genuinely good, and the app tells me when I'm slipping. The weekly review is scary accurate." },
-  { name: "Priya S.", loc: "Viman Nagar", plan: "PCOS, Bi-Weekly", result: "Down 4kg in 15 days", text: "A PCOS plan that's actually built for PCOS, low-GI and no guesswork. When I plateaued it just adjusted my target." },
-  { name: "Amit K.", loc: "Kalyani Nagar", plan: "Weight Loss, Monthly", result: "Quit Zomato", text: "Knowing my macros are measured, not guessed, changed everything. First time I've stuck with a plan for a full month." },
+  { name: "Rahul M.", loc: "Kharadi", plan: "Muscle Gain, 1 Month", result: "Plus 3kg muscle", accent: LIME, text: "The food is genuinely good, and the app tells me when I'm slipping. The weekly review is scary accurate." },
+  { name: "Priya S.", loc: "Viman Nagar", plan: "PCOS, Bi-Weekly", result: "Down 4kg in 15 days", accent: "#f472b6", text: "A PCOS plan that's actually built for PCOS, low-GI and no guesswork. When I plateaued it just adjusted my target." },
+  { name: "Amit K.", loc: "Kalyani Nagar", plan: "Weight Loss, Monthly", result: "Quit Zomato", accent: "#60a5fa", text: "Knowing my macros are measured, not guessed, changed everything. First time I've stuck with a plan for a full month." },
 ];
 function TierCard({ tier }: { tier: typeof tiers[0] }) {
   return (
@@ -652,6 +652,213 @@ function TierCard({ tier }: { tier: typeof tiers[0] }) {
   );
 }
 
+
+/* ════════════════════ ENHANCEMENT LAYER (Claude Design merge) ════════════════════
+   New atmosphere + storytelling components grafted from the Claude Design
+   redesign brief, upgraded: the Morning Story is now scroll-driven (signature),
+   the testimonial grid becomes a drag rail, the kitchen gains a photo reel.
+   Kitchen and food photos are Unsplash placeholders. Replace under F32 with
+   owned photography before launch.
+════════════════════════════════════════════════════════════════════════════════ */
+
+const tickerItems = ["Weight Loss", "Muscle Gain", "PCOS", "Diabetic", "Thyroid", "Heart Health", "Fatty Liver", "Gut Health", "Post-Pregnancy", "Keto Indian", "Cricket", "Endurance", "Senior", "Kids & Teen"];
+
+const kitchenPhotos = [
+  "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=700&q=70",
+  "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=700&q=70",
+  "https://images.unsplash.com/photo-1547592180-85f173990554?w=700&q=70",
+  "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=70",
+  "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=700&q=70",
+  "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=700&q=70",
+];
+
+const morningSteps = [
+  { time: "4:00 AM", icon: <ChefHat size={22} color={LIME} />,     d: "Our kitchen is already awake. Your meal is prepped with measured ingredients, no frying, olive oil only." },
+  { time: "6:30 AM", icon: <Truck size={22} color={LIME} />,       d: "Your box is packed and out for delivery, tracked from our door to yours." },
+  { time: "7:45 AM", icon: <Bell size={22} color={LIME} />,        d: "A notification lands: your delivery is ten minutes away." },
+  { time: "8:00 AM", icon: <Boxes size={22} color={LIME} />,       d: "At your door. Breakfast and lunch, fresh, never frozen." },
+  { time: "8:02 AM", icon: <CheckCircle size={22} color={LIME} />, d: "Tap I ate this. Your macros log instantly, your ring updates, the streak continues." },
+];
+
+function NoiseOverlay() {
+  return <div aria-hidden style={{ position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none", mixBlendMode: "overlay", opacity: 0.045, backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%222%22 stitchTiles=%22stitch%22/></filter><rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/></svg>')` }} />;
+}
+
+function CursorGlow() {
+  const reduce = useReducedMotion();
+  const x = useMotionValue(-100);
+  const y = useMotionValue(-100);
+  const sx = useSpring(x, { stiffness: 500, damping: 45 });
+  const sy = useSpring(y, { stiffness: 500, damping: 45 });
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (reduce) return;
+    if (typeof window === "undefined" || window.matchMedia("(hover: none)").matches) return;
+    setOn(true);
+    const mv = (e: PointerEvent) => { x.set(e.clientX - 13); y.set(e.clientY - 13); };
+    window.addEventListener("pointermove", mv, { passive: true });
+    return () => window.removeEventListener("pointermove", mv);
+  }, [reduce, x, y]);
+  if (!on) return null;
+  return <motion.div aria-hidden style={{ position: "fixed", top: 0, left: 0, x: sx, y: sy, width: 26, height: 26, borderRadius: "50%", border: "1.5px solid rgba(163,230,53,0.7)", boxShadow: "0 0 12px rgba(163,230,53,0.3)", zIndex: 9999, pointerEvents: "none", mixBlendMode: "screen" }} />;
+}
+
+function ProofStrip() {
+  const pill: React.CSSProperties = { display: "inline-flex", alignItems: "center", background: "#0d0d0d", border: "1px solid #1c1c1c", borderRadius: 99, padding: "8px 14px", fontSize: 11, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#cbd5c0", whiteSpace: "nowrap" };
+  const dot = <span style={{ width: 5, height: 5, borderRadius: "50%", background: LIME, flexShrink: 0 }} />;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: "0 0 22px" }}>
+      <span style={pill}>126 Plans</span>{dot}
+      <span style={pill}>FSSAI Certified</span>{dot}
+      <span style={pill}>Delivered by 8am</span>
+    </div>
+  );
+}
+
+function ConditionTicker() {
+  const loop = [...tickerItems, ...tickerItems];
+  return (
+    <div aria-hidden style={{ position: "relative", overflow: "hidden", margin: "0 0 30px", maxWidth: 520, WebkitMaskImage: "linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)" }}>
+      <div className="ff-marquee" style={{ display: "flex", width: "max-content", animationDuration: "34s" }}>
+        {loop.map((t, i) => (
+          <span key={`${t}-${i}`} style={{ flexShrink: 0, fontFamily: BARLOW, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: LIME, background: "#0a0a0a", border: "1px solid #161616", borderRadius: 8, padding: "7px 13px", marginRight: 8, whiteSpace: "nowrap" }}>{t}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChevronCue() {
+  return (
+    <div className="ff-chev" aria-hidden style={{ position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 3 }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+    </div>
+  );
+}
+
+function DreamManifesto() {
+  const line: React.CSSProperties = { fontFamily: BARLOW, fontWeight: 900, fontStyle: "italic", textTransform: "uppercase", letterSpacing: "-0.01em", lineHeight: 0.95, fontSize: "clamp(2rem,5vw,3.6rem)", color: "#fff" };
+  const rule = <div style={{ height: 1, background: "linear-gradient(to right,transparent,rgba(163,230,53,0.3) 50%,transparent)" }} />;
+  return (
+    <section style={{ background: "#050505", padding: "100px 0", borderTop: "1px solid #121212", borderBottom: "1px solid #121212" }}>
+      <div style={{ ...WRAP, textAlign: "center" }} className="ff-pad">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger} style={{ maxWidth: 900, margin: "0 auto" }}>
+          <motion.div variants={fadeUp} style={{ ...line, paddingBottom: 22 }}>You want to lose the weight.</motion.div>
+          <motion.div variants={fadeUp}>{rule}</motion.div>
+          <motion.div variants={fadeUp} style={{ ...line, padding: "22px 0" }}>You want to build the body.</motion.div>
+          <motion.div variants={fadeUp}>{rule}</motion.div>
+          <motion.div variants={fadeUp} style={{ ...line, paddingTop: 22 }}>You want a number that says <span style={{ color: LIME }}>it is working.</span></motion.div>
+          <motion.p variants={fadeUp} style={{ fontSize: "clamp(1rem,2vw,1.2rem)", lineHeight: 1.65, color: "#6b7280", maxWidth: 620, margin: "40px auto 0" }}>You have tried tracking apps. You have tried tiffin services. Neither works alone. Apps trust what you type. Tiffins cook what they have. We are the first service that does both.</motion.p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function MorningStep({ s, last }: { s: typeof morningSteps[0]; last: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-15% 0px -15% 0px" });
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.6, ease: EASE }}
+      >
+        <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#0a0a0a", border: `1px solid ${inView ? "rgba(163,230,53,0.5)" : "rgba(163,230,53,0.15)"}`, boxShadow: inView ? "0 0 24px rgba(163,230,53,0.15)" : "none", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, transition: "border-color 0.5s, box-shadow 0.5s" }}>{s.icon}</div>
+        <div style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: 24, color: inView ? LIME : "#3f3f46", marginBottom: 6, transition: "color 0.5s", textShadow: inView ? "0 0 22px rgba(163,230,53,0.35)" : "none" }}>{s.time}</div>
+        <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "#9ca3af", margin: 0, maxWidth: last ? undefined : 220 }}>{s.d}</p>
+      </motion.div>
+    </div>
+  );
+}
+
+function MorningStory() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 82%", "end 60%"] });
+  const raw = useSpring(scrollYProgress, { stiffness: 55, damping: 18 });
+  return (
+    <section style={{ padding: "94px 0", borderTop: "1px solid #121212" }}>
+      <div style={{ ...WRAP }} className="ff-pad">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
+          <motion.div variants={fadeUp}><Eyebrow>One morning with FitFuel</Eyebrow></motion.div>
+          <motion.h2 variants={fadeUp} className="ff-display" style={{ marginBottom: 48, maxWidth: 640 }}>While you sleep, the system is already working.</motion.h2>
+        </motion.div>
+
+        <div ref={ref} style={{ position: "relative", marginBottom: 56 }}>
+          {/* scroll-driven progress line */}
+          <div className="ff-morning-line" style={{ position: "absolute", top: 30, left: "6%", right: "6%", height: 2, background: "#161616", borderRadius: 2, overflow: "hidden" }}>
+            <motion.div style={{ height: "100%", background: `linear-gradient(90deg, ${LIME_DEEP}, ${LIME})`, boxShadow: "0 0 12px rgba(163,230,53,0.6)", transformOrigin: "left", scaleX: reduce ? 1 : raw }} />
+          </div>
+          <div className="ff-morning-grid" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 18 }}>
+            {morningSteps.map((s, i) => <MorningStep key={s.time} s={s} last={i === morningSteps.length - 1} />)}
+          </div>
+        </div>
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={fadeIn} style={{ position: "relative", maxWidth: "84%", margin: "0 auto", borderRadius: 18, overflow: "hidden", border: "1px solid rgba(163,230,53,0.2)", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }}>
+          {bar(LIME_DEEP)}
+          {/* F32 placeholder: replace with owned dish photography */}
+          <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=1400&q=85" alt="A freshly plated FitFuel meal" loading="lazy" style={{ width: "100%", height: "auto", display: "block", objectFit: "cover", maxHeight: 520 }} />
+        </motion.div>
+        <p style={{ textAlign: "center", fontSize: 14, color: "#6b7280", margin: "18px auto 0" }}>Grilled paneer and beetroot bowl. 480 cal. 32g protein. Logged automatically.</p>
+      </div>
+    </section>
+  );
+}
+
+function KitchenReel() {
+  const loop = [...kitchenPhotos, ...kitchenPhotos];
+  return (
+    <div aria-hidden style={{ overflow: "hidden", marginTop: 48, WebkitMaskImage: "linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)" }}>
+      <div className="ff-marquee" style={{ display: "flex", gap: 18, width: "max-content", padding: "0 9px", animationDuration: "60s" }}>
+        {loop.map((src, i) => (
+          /* F32 placeholders: swap for owned kitchen photography */
+          <img key={i} src={src} alt="" loading="lazy" className="ff-kphoto" style={{ flexShrink: 0, width: 380, height: 260, objectFit: "cover", borderRadius: 14, border: "1px solid #1a1a1a" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TestimonialRail() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const drag = useRef({ down: false, startX: 0, scrollLeft: 0 });
+  const onDown = (e: React.PointerEvent) => {
+    const el = railRef.current; if (!el) return;
+    drag.current = { down: true, startX: e.clientX, scrollLeft: el.scrollLeft };
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const el = railRef.current; if (!el || !drag.current.down) return;
+    el.scrollLeft = drag.current.scrollLeft - (e.clientX - drag.current.startX);
+  };
+  const endDrag = () => { drag.current.down = false; };
+  return (
+    <div
+      ref={railRef} className="ff-test-rail"
+      onPointerDown={onDown} onPointerMove={onMove} onPointerUp={endDrag} onPointerLeave={endDrag}
+      style={{ display: "flex", gap: 18, overflowX: "auto", scrollSnapType: "x proximity", padding: "4px 4px 22px", cursor: "grab" }}
+    >
+      {testimonials.map(t => (
+        <div key={t.name} style={{ scrollSnapAlign: "start", flexShrink: 0, width: "min(340px, 84vw)", background: "#0b0b0b", border: "1px solid #1a1a1a", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {bar(t.accent)}
+          <div style={{ padding: 24, display: "flex", flexDirection: "column", flex: 1 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", background: `${t.accent}14`, border: `1px solid ${t.accent}33`, borderRadius: 99, padding: "6px 13px", marginBottom: 18 }}>
+              <span className="ff-dotpulse" style={{ width: 7, height: 7, borderRadius: "50%", background: t.accent }} />
+              <span style={{ fontFamily: BARLOW, fontSize: 15, fontWeight: 800, color: t.accent, textTransform: "uppercase" }}>{t.result}</span>
+            </div>
+            <p style={{ fontSize: 14.5, lineHeight: 1.65, color: "#d1d5db", margin: "0 0 22px", flex: 1 }}>&ldquo;{t.text}&rdquo;</p>
+            <div style={{ borderTop: "1px solid #181818", paddingTop: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{t.name} <span style={{ color: "#52525b", fontWeight: 500 }}>, {t.loc}</span></div>
+              <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>{t.plan}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ════════════════════ PAGE ════════════════════ */
 export default function HomePage() {
   const reduce = useReducedMotion();
@@ -662,6 +869,8 @@ export default function HomePage() {
 
   return (
     <div style={{ background: "#080808", color: "#fff", overflow: "hidden" }}>
+      <NoiseOverlay />
+      <CursorGlow />
       <style>{`
         ${FONT_IMPORT}
         @keyframes ff-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.8)} }
@@ -671,7 +880,16 @@ export default function HomePage() {
         .ff-float { animation: ff-float 6s ease-in-out infinite; }
         .ff-marquee { animation: ff-scroll 40s linear infinite; }
         .ff-marquee:hover { animation-play-state: paused; }
-        @media (prefers-reduced-motion: reduce) { .ff-float, .ff-marquee { animation: none !important; } }
+        @keyframes ff-chev { 0%,100%{transform:translateY(0);opacity:0.45} 50%{transform:translateY(7px);opacity:1} }
+        @keyframes ff-dotpulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.9);opacity:0.4} }
+        .ff-chev { animation: ff-chev 1.8s ease-in-out infinite; }
+        .ff-dotpulse { animation: ff-dotpulse 2s ease-in-out infinite; }
+        .ff-kphoto { transition: filter 0.4s; }
+        .ff-kphoto:hover { filter: saturate(1.15) brightness(1.05); }
+        .ff-test-rail { scrollbar-width: none; }
+        .ff-test-rail::-webkit-scrollbar { display: none; }
+        .ff-test-rail:active { cursor: grabbing; }
+        @media (prefers-reduced-motion: reduce) { .ff-float, .ff-marquee, .ff-chev, .ff-dotpulse { animation: none !important; } }
 
         .ff-pad { padding-left:40px; padding-right:40px; }
         .ff-display { font-family:${BARLOW}; font-weight:900; text-transform:uppercase; letter-spacing:0.005em; line-height:0.95; font-size:clamp(2.1rem,4.2vw,3.7rem); color:#f9fafb; }
@@ -704,6 +922,8 @@ export default function HomePage() {
           .ff-notif-grid .ff-notif-mock { max-width:460px; }
           .ff-tiers-grid, .ff-tg-grid, .ff-steps-grid, .ff-fr-grid { grid-template-columns:1fr; }
           .ff-dash-grid { grid-template-columns:1fr; }
+          .ff-morning-grid { grid-template-columns:repeat(2,1fr) !important; }
+          .ff-morning-line { display:none; }
         }
         @media(max-width:760px){
           .ff-compare-desktop { display:none !important; }
@@ -711,6 +931,7 @@ export default function HomePage() {
         }
         @media(max-width:640px){
           .ff-stats-grid { grid-template-columns:repeat(2,1fr); gap:30px 20px; }
+          .ff-morning-grid { grid-template-columns:1fr !important; }
           .ff-pad { padding-left:20px !important; padding-right:20px !important; }
           .ff-cta-grid { grid-template-columns:1fr; }
           .ff-cta-grid > div:first-child { border-right:none !important; border-bottom:1px solid #1a1a1a !important; }
@@ -720,21 +941,27 @@ export default function HomePage() {
       {/* ══ HERO ══ */}
       <section ref={heroRef} style={{ position: "relative", padding: "108px 0 84px", overflow: "hidden", minHeight: "88vh", display: "flex", alignItems: "center" }}>
         <Aurora />
+        {/* F32 placeholder: replace with owned dish photography */}
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1400&q=80" alt="" loading="eager" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.28, pointerEvents: "none", WebkitMaskImage: "radial-gradient(75% 65% at 70% 42%,#000 0%,transparent 72%)", maskImage: "radial-gradient(75% 65% at 70% 42%,#000 0%,transparent 72%)" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,#080808 0%,rgba(8,8,8,0.78) 38%,rgba(8,8,8,0.25) 100%)", pointerEvents: "none" }} />
         <motion.div style={{ ...WRAP, position: "relative", y: heroY, opacity: heroFade }} className="ff-pad">
           <div className="ff-hero-grid">
             <motion.div initial="hidden" animate="visible" variants={stagger}>
               <motion.div variants={fadeUp}><div style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "rgba(163,230,53,0.07)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 99, padding: "7px 15px", marginBottom: 24, backdropFilter: "blur(6px)" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: LIME, animation: reduce ? "none" : "ff-pulse 1.8s ease-in-out infinite" }} /><span style={{ fontSize: 12, fontWeight: 600, color: LIME, letterSpacing: "0.04em" }}>A health system that delivers food, in Pune</span></div></motion.div>
               <motion.h1 variants={fadeUp} className="ff-hero-h" style={{ margin: "0 0 22px" }}>The only health coach<br />that <span style={{ color: LIME }}>controls the plate.</span></motion.h1>
+              <motion.div variants={fadeUp}><ProofStrip /></motion.div>
               <motion.p variants={fadeUp} style={{ fontSize: 17, lineHeight: 1.6, color: "#b3b8c0", maxWidth: 500, margin: "0 0 14px" }}>Apps track what you <i>say</i> you ate. We cook it, deliver it, and log every gram for you, so your nutrition is <b style={{ color: "#f1f3f5" }}>measured, not guessed</b>. Then we watch your weight, adapt on plateaus, and coach you on real data.</motion.p>
-              <motion.p variants={fadeUp} style={{ fontSize: 14, color: LIME, fontWeight: 600, margin: "0 0 30px" }}>Track every gram. No dish repeats in 30 days. Personalised to your body.</motion.p>
+              <motion.div variants={fadeUp}><ConditionTicker /></motion.div>
               <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 24 }}><Magnetic href="/plans?trial=true"><span style={primaryBtn}>Start with a ₹400 trial <ArrowRight size={15} /></span></Magnetic><Magnetic href="#finder"><span style={ghostBtn}>Find my plan</span></Magnetic></motion.div>
-              <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px" }}>{trustBadges.slice(0, 3).map(b => <span key={b.t} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "#8b8f98" }}><span style={{ color: LIME_DEEP }}>{b.i}</span>{b.t}</span>)}</motion.div>
             </motion.div>
             <motion.div className="ff-hero-card" initial={{ opacity: 0, y: 30, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}><Console /></motion.div>
           </div>
         </motion.div>
+        <ChevronCue />
       </section>
+
+      {/* ══ THE DREAM ══ */}
+      <DreamManifesto />
 
       {/* ══ MARQUEE ══ */}
       <section style={{ background: "#060606", borderTop: "1px solid #121212", borderBottom: "1px solid #121212" }}><Marquee /></section>
@@ -780,6 +1007,9 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* ══ THE MORNING STORY ══ */}
+      <MorningStory />
 
       {/* ══ HOW IT WORKS ══ */}
       <section style={{ padding: "92px 0", background: "#060606", borderTop: "1px solid #121212", borderBottom: "1px solid #121212" }}>
@@ -880,6 +1110,7 @@ export default function HomePage() {
             <motion.div variants={fadeUp} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>{trustBadges.map(b5 => (<span key={b5.t} style={{ display: "inline-flex", alignItems: "center", gap: 9, fontSize: 13.5, fontWeight: 600, color: "#d1d5db", background: "#0c0c0c", border: "1px solid #1d1d1d", borderRadius: 10, padding: "11px 16px" }}><span style={{ color: LIME }}>{b5.i}</span>{b5.t}</span>))}<Link href="/our-kitchen" style={{ ...ghostBtn }}>See our kitchen <ArrowRight size={14} /></Link></motion.div>
           </motion.div>
         </div>
+        <KitchenReel />
       </section>
 
       {/* ══ PROOF ══ */}
@@ -889,7 +1120,7 @@ export default function HomePage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={stagger}>
             <motion.div variants={fadeUp}><Eyebrow>Real results</Eyebrow></motion.div>
             <motion.h2 variants={fadeUp} className="ff-display" style={{ marginBottom: 40, maxWidth: 560 }}>They came for food. They stayed for the system.</motion.h2>
-            <div className="ff-tg-grid">{testimonials.map(t => (<motion.div key={t.name} variants={fadeUp} style={{ background: "#0b0b0b", border: "1px solid #1a1a1a", borderRadius: 16, padding: "26px 24px", display: "flex", flexDirection: "column" }}><div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: "rgba(163,230,53,0.08)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 7, padding: "4px 10px", marginBottom: 18 }}><Flame size={12} color={LIME} /><span style={{ fontFamily: BARLOW, fontSize: 14, fontWeight: 800, color: LIME }}>{t.result}</span></div><p style={{ fontSize: 14.5, lineHeight: 1.65, color: "#d1d5db", margin: "0 0 22px", flex: 1 }}>&ldquo;{t.text}&rdquo;</p><div style={{ borderTop: "1px solid #181818", paddingTop: 16 }}><div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{t.name} <span style={{ color: "#52525b", fontWeight: 500 }}>, {t.loc}</span></div><div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>{t.plan}</div></div></motion.div>))}</div>
+            <motion.div variants={fadeUp}><TestimonialRail /></motion.div>
           </motion.div>
         </div>
       </section>
