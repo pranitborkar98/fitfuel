@@ -7,14 +7,14 @@ import {
   ArrowRight, Check, Flame, Leaf, Dumbbell, HeartPulse, Trophy, ChefHat,
   Truck, ShieldCheck, Star, Building2, Users, Pill, FileText, Gift, Clock,
   MapPin, Sparkles, Activity, Scale, Utensils, Repeat, Target, Brain, Store,
-  Globe, Crown, ArrowUpRight, CheckCircle2, LineChart, X,
+  Globe, Crown, CheckCircle2, LineChart, X, Droplet, Bell, ClipboardList,
 } from "lucide-react";
 
 /* ══════════════════════════════════════════════════════════════════
-   FITFUEL HOMEPAGE — the full story (2026-07)
+   FITFUEL HOMEPAGE, the full story (2026-07)
    Mission (tracker I.0): "Not a meal-delivery app. A personal health
    operating system that delivers food. The meal is the entry point;
-   the data loop is the product." Moat: controls the plate — verified
+   the data loop is the product." Moat: controls the plate, verified
    intake, not self-reported. Three products connected (tiffin + fitness
    app + supplement brand). Individuals → corporate → gyms → franchise.
    Tokens: bg #080808 · lime #84cc16/#a3e635 · Barlow Condensed display.
@@ -88,6 +88,7 @@ export default function Home() {
       <VerifiedIntake />
       <ConditionMarquee />
       <ThreeProducts />
+      <AppDepth />
       <AiTrainer />
       <Tiers />
       <Ecosystem />
@@ -125,7 +126,7 @@ function Hero() {
           <Reveal>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 9, background: "rgba(132,204,22,0.08)", border: "1px solid rgba(132,204,22,0.25)", borderRadius: 999, padding: "7px 16px", marginBottom: 30 }}>
               <Sparkles size={13} color={LIME_LIGHT} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: LIME_LIGHT }}>A personal health operating system — that delivers food</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: LIME_LIGHT }}>A personal health operating system that delivers food</span>
             </div>
           </Reveal>
 
@@ -179,8 +180,8 @@ function Manifesto() {
         <Reveal>
           <p style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: "clamp(1.6rem,3.6vw,2.6rem)", lineHeight: 1.2, color: TXT, textTransform: "uppercase", margin: 0 }}>
             The meal is just the door.{" "}
-            <span style={{ color: DIM }}>The system that tracks it, adapts it, and coaches you on it —</span>{" "}
-            <span style={{ color: LIME }}>that&apos;s the product.</span>
+            <span style={{ color: DIM }}>The system that tracks it, adapts it, and coaches you on it is</span>{" "}
+            <span style={{ color: LIME }}>the product.</span>
           </p>
         </Reveal>
       </div>
@@ -220,7 +221,7 @@ function Problem() {
         </div>
         <Reveal style={{ textAlign: "center", marginTop: 44 }}>
           <p style={{ fontFamily: BARLOW, fontWeight: 800, fontSize: "clamp(1.5rem,3.4vw,2.3rem)", textTransform: "uppercase", color: TXT, margin: 0 }}>
-            FitFuel builds all three — <span style={{ color: LIME }}>connected.</span>
+            FitFuel builds all three, <span style={{ color: LIME }}>connected.</span>
           </p>
         </Reveal>
       </div>
@@ -234,11 +235,11 @@ function DailyLoop() {
     { icon: Target, t: "Onboard", d: "Tell us your body, goal, diet and condition. We compute your exact calories and macros with Mifflin-St Jeor." },
     { icon: ChefHat, t: "We cook it", d: "Your plan is cooked fresh in our Pune kitchen from 4am, portioned to your macros. Never frozen." },
     { icon: Truck, t: "We deliver it", d: "Hot meals at your door by 8am, six days a week. Track your box from kitchen to doorstep." },
-    { icon: Utensils, t: "You eat, we log it", d: "Tap 'I ate this' and it auto-logs to your diary. No calorie-counting — the intake is already verified." },
+    { icon: Utensils, t: "You eat, we log it", d: "Tap 'I ate this' and it auto-logs to your diary. No calorie-counting, the intake is already verified." },
     { icon: Dumbbell, t: "You train", d: "A workout linked to your plan, not random. Complete it and burned calories feed your net-calorie ring." },
     { icon: Scale, t: "You weigh in", d: "Weekly weigh-in trends your weight. Flat for two weeks? The system flags a plateau automatically." },
     { icon: Repeat, t: "We recalibrate", d: "Plateau detected → your target drops and the plan adapts. It changes as your body changes." },
-    { icon: LineChart, t: "Consistency score", d: "Meals, workouts, water and weigh-ins roll into a 0-100 score — the signal that drives everything." },
+    { icon: LineChart, t: "Consistency score", d: "Meals, workouts, water and weigh-ins roll into a 0-100 score, the signal that drives everything." },
   ];
   return (
     <section id="loop" style={{ padding: "90px 0", background: "#060606", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, scrollMarginTop: 70 }}>
@@ -270,7 +271,7 @@ function DailyLoop() {
 
         <Reveal style={{ textAlign: "center", marginTop: 40 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: BARLOW, fontWeight: 700, fontSize: 18, color: TXT, textTransform: "uppercase", letterSpacing: "0.05em", background: "rgba(132,204,22,0.06)", border: "1px solid rgba(132,204,22,0.2)", borderRadius: 999, padding: "12px 24px" }}>
-            <Repeat size={17} color={LIME} /> Then it repeats — sharper every week
+            <Repeat size={17} color={LIME} /> Then it repeats, sharper every week
           </span>
         </Reveal>
       </div>
@@ -297,7 +298,7 @@ function VerifiedIntake() {
             <Eyebrow>The moat</Eyebrow>
             <Title style={{ marginBottom: 18 }}>Verified intake,<br />not self-reported</Title>
             <p style={{ fontSize: 15.5, color: MUTE, lineHeight: 1.7, marginBottom: 22 }}>
-              When we cook every meal, your macros are measured — not guessed. That closed loop is what no tiffin
+              When we cook every meal, your macros are measured, not guessed. That closed loop is what no tiffin
               service, fitness app or supplement brand can replicate. The moat isn&apos;t clever software. It&apos;s
               owning the plate.
             </p>
@@ -346,7 +347,7 @@ function ConditionMarquee() {
   return (
     <section style={{ padding: "40px 0", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, background: "#060606" }}>
       <p style={{ textAlign: "center", fontSize: 12.5, color: DIM, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 24 }}>
-        126 plans — one for every body, goal and condition
+        126 plans, one for every body, goal and condition
       </p>
       <div style={{ position: "relative", overflow: "hidden", maskImage: "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)" }}>
         <div className="ff-marq-track" style={{ display: "flex", gap: 12, width: "max-content" }}>
@@ -364,14 +365,14 @@ function ThreeProducts() {
   const p = [
     { icon: ChefHat, t: "The kitchen", tag: "Meals", d: "Chef-cooked, macro-portioned meals for 126 goals and conditions, delivered daily across Pune.", href: "/plans", cta: "See meal plans" },
     { icon: Dumbbell, t: "The fitness app", tag: "Movement", d: "Plan-linked workouts, an 800+ exercise library, net-calorie tracking, body metrics and progress charts.", href: "/how-it-works", cta: "Inside the app" },
-    { icon: Pill, t: "The supplement stack", tag: "Nutrabay", d: "A condition-matched stack with real doses — not a wall of pills. Educational first, ordered via Nutrabay.", href: "/supplements", cta: "Browse supplements" },
+    { icon: Pill, t: "The supplement stack", tag: "Nutrabay", d: "A condition-matched stack with real doses, not a wall of pills. Educational first, ordered via Nutrabay.", href: "/supplements", cta: "Browse supplements" },
   ];
   return (
     <section style={{ padding: "90px 0" }}>
       <div style={WRAP}>
         <Reveal style={{ textAlign: "center", marginBottom: 54, maxWidth: 720, marginLeft: "auto", marginRight: "auto" }}>
           <Eyebrow>Three products, one system</Eyebrow>
-          <Title>A tiffin, an app and a supplement brand — talking to each other</Title>
+          <Title>A tiffin, an app and a supplement brand, talking to each other</Title>
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px,1fr))", gap: 18 }}>
           {p.map((x, i) => (
@@ -395,6 +396,53 @@ function ThreeProducts() {
   );
 }
 
+/* ═══════════════ INSIDE THE APP (the tracking depth) ═══════════════ */
+function AppDepth() {
+  const tools = [
+    { icon: Utensils, t: "Meal logging", d: "Tap 'I ate this' and every dish auto-logs to your diary with exact macros. No counting, no guessing." },
+    { icon: Flame, t: "Net-calorie engine", d: "Calories in from your meals, minus calories burned from workouts, against your target. One live ring." },
+    { icon: Droplet, t: "Water tracking", d: "Log every glass and hit your daily hydration goal, right alongside your food." },
+    { icon: Dumbbell, t: "Today's workout", d: "A recommended session linked to your plan type, not a random routine. Built for your goal." },
+    { icon: ClipboardList, t: "Workout logger", d: "Log sets, reps and weight from an 800+ exercise library. Burned calories feed the ring automatically." },
+    { icon: Scale, t: "Body metrics", d: "Weight, body fat, muscle, BMI and more, trended over time. Manual now, smart-scale sync coming." },
+    { icon: LineChart, t: "Progress charts", d: "Weight trend, macro history and consistency, visualised. Plateaus surface before you feel stuck." },
+    { icon: Target, t: "Consistency score", d: "Meals, workouts, water and weigh-ins roll into one 0-100 score that drives your recalibration." },
+    { icon: Bell, t: "Coach nudges + digest", d: "A morning preview, an evening recap and a Sunday digest of everything you did this week." },
+  ];
+  return (
+    <section style={{ padding: "90px 0" }}>
+      <div style={WRAP}>
+        <Reveal style={{ textAlign: "center", marginBottom: 52, maxWidth: 720, marginLeft: "auto", marginRight: "auto" }}>
+          <Eyebrow>Inside the app</Eyebrow>
+          <Title>Every gram, every rep, every glass. Tracked.</Title>
+          <p style={{ fontSize: 15.5, color: MUTE, maxWidth: 580, margin: "18px auto 0", lineHeight: 1.6 }}>
+            Your meals come with a full health app. Not a stepcounter bolted on, but a connected system where
+            food, movement, water and weight all feed one another.
+          </p>
+        </Reveal>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px,1fr))", gap: 16 }}>
+          {tools.map((x, i) => (
+            <Reveal key={x.t} delay={(i % 3) * 0.06}>
+              <div className="ff-card" style={{ background: CARD2, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "24px 22px", height: "100%" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 11, background: "rgba(132,204,22,0.1)", border: "1px solid rgba(132,204,22,0.22)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <x.icon size={20} color={LIME} />
+                </div>
+                <h3 style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: 20, textTransform: "uppercase", margin: "0 0 7px", color: TXT }}>{x.t}</h3>
+                <p style={{ fontSize: 13.5, color: MUTE, lineHeight: 1.55, margin: 0 }}>{x.d}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <Reveal style={{ textAlign: "center", marginTop: 40 }}>
+          <Link href="/how-it-works" className="ff-ghost" style={{ ...ghostStyle, padding: "14px 26px" }}>
+            See the full system <ArrowRight size={15} />
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ═══════════════ AI TRAINER ═══════════════ */
 function AiTrainer() {
   return (
@@ -408,7 +456,7 @@ function AiTrainer() {
             <Title style={{ marginBottom: 18 }}>An AI trainer that watched every rep and every meal</Title>
             <p style={{ fontSize: 15.5, color: MUTE, lineHeight: 1.7 }}>
               Not a chatbot you have to explain yourself to. Because the system already logged 30 days of your
-              meals, workouts, weigh-ins and score, the coach knows exactly where you slipped and what to fix —
+              meals, workouts, weigh-ins and score, the coach knows exactly where you slipped and what to fix,
               and it talks to you daily like a trainer who was there for all of it.
             </p>
           </Reveal>
@@ -486,8 +534,8 @@ function Ecosystem() {
   const lines = [
     { icon: HeartPulse, accent: LIME_LIGHT, tag: "For you", title: "Individuals", body: "126 goal and condition plans, cooked and tracked for you daily.", href: "/plans", cta: "Find your plan" },
     { icon: Building2, accent: "#38bdf8", tag: "For companies", title: "Corporate Wellness", body: "Subsidised, condition-specific meal programs and wellness reporting for Pune offices.", href: "/corporate", cta: "Enquire for your team" },
-    { icon: Users, accent: "#c084fc", tag: "For gyms & coaches", title: "Partner Program", body: "Gyms, trainers, dieticians and clinics earn on every member — QR onboarding, live tracking, monthly payouts.", href: "/partners/apply", cta: "Become a partner" },
-    { icon: FileText, accent: "#fbbf24", tag: "Anywhere in India", title: "Digital Plans", body: "Not in Pune? Get the full 30-day plan as a designed PDF — recipes, macros, grocery list, training.", href: "/plans/digital", cta: "Browse digital plans" },
+    { icon: Users, accent: "#c084fc", tag: "For gyms & coaches", title: "Partner Program", body: "Gyms, trainers, dieticians and clinics earn on every member, QR onboarding, live tracking, monthly payouts.", href: "/partners/apply", cta: "Become a partner" },
+    { icon: FileText, accent: "#fbbf24", tag: "Anywhere in India", title: "Digital Plans", body: "Not in Pune? Get the full 30-day plan as a designed PDF, recipes, macros, grocery list, training.", href: "/plans/digital", cta: "Browse digital plans" },
   ];
   return (
     <section style={{ padding: "90px 0", background: "#060606", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
@@ -531,7 +579,7 @@ function Franchise() {
                 </div>
                 <Title style={{ marginBottom: 18 }}>A cloud kitchen<br />in a box</Title>
                 <p style={{ fontSize: 15.5, color: MUTE, lineHeight: 1.7, marginBottom: 24 }}>
-                  FitFuel isn&apos;t just a brand — it&apos;s the operating system to run one. Recipe SOPs with
+                  FitFuel isn&apos;t just a brand, it&apos;s the operating system to run one. Recipe SOPs with
                   step-by-step cooking, batch scaling, and a kitchen production dashboard that tells any outlet
                   exactly how many portions of each dish to cook tomorrow. The system that runs our Pune kitchen
                   is the system a franchise partner plugs into.
@@ -664,7 +712,7 @@ function Vision() {
           <Title>Today, the plate.<br />Tomorrow, everything.</Title>
           <p style={{ fontSize: 15.5, color: MUTE, lineHeight: 1.7, maxWidth: 620, margin: "18px auto 34px" }}>
             The loop that runs on food generalises to every health signal. As we grow, the same engine will take
-            in sleep, recovery and verified wearable data — one operating system for your whole body.
+            in sleep, recovery and verified wearable data, one operating system for your whole body.
           </p>
         </Reveal>
         <Reveal delay={0.1}>
@@ -726,7 +774,7 @@ function Kitchen() {
           { icon: MapPin, t: "Our own kitchen", d: "FSSAI-licensed, in Kharadi, Pune. Never outsourced." },
           { icon: Flame, t: "Fresh from 4am", d: "Cooked every morning. Never frozen, never fried." },
           { icon: Truck, t: "At your door by 8am", d: "Six days a week, tracked kitchen to doorstep." },
-          { icon: ShieldCheck, t: "GST included", d: "Delivery, packaging and 5% GST — all in, no surprises." },
+          { icon: ShieldCheck, t: "GST included", d: "Delivery, packaging and 5% GST, all in, no surprises." },
         ].map((x, i) => (
           <Reveal key={x.t} delay={i * 0.06}>
             <div style={{ display: "flex", gap: 14 }}>

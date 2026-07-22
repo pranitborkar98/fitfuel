@@ -1203,7 +1203,7 @@ export default function DashboardClient({
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Notifications</p>
                 </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Choose which emails you get {'\u2014'} daily nudges, weekly digest, order updates.</p>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Choose which emails you get: daily nudges, weekly digest, order updates.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
