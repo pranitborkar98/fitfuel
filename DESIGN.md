@@ -1,9 +1,19 @@
-# FitFuel — DESIGN.md (locked art direction)
+# FitFuel — DESIGN.md (art direction)
 
-This file owns the visual ground. Any page or component that deviates is a bug.
-Direction: **"Lab Dossier"** — editorial precision for a *verified-intake* health OS.
-It should read like a precision instrument / scientific record, never like a generic
-dark-SaaS landing page.
+> **2026-07-23 — Homepage direction pivot (owner directive).**
+> The **homepage (`app/page.tsx`)** now runs a **"Beast Mode"** treatment that
+> intentionally supersedes the flat rules below: an animated canvas particle
+> constellation + drifting aurora in the hero, count-up stats, cursor-spotlight
+> gradient-border cards, a live animated readout, and richer scroll motion. On
+> the homepage, controlled glow / gradient-border / spotlight ARE allowed. This
+> is deliberate, not a bug. Everything stays lime-on-near-black, keeps the
+> Barlow + Space Mono identity, is fully code-driven (zero images), and respects
+> `prefers-reduced-motion`. The "Lab Dossier" rules below still govern interior
+> app/marketing pages until they are pivoted too.
+
+Direction (interior pages): **"Lab Dossier"** — editorial precision for a
+*verified-intake* health OS. It should read like a precision instrument /
+scientific record, never like a generic dark-SaaS landing page.
 
 ## The one-line brief
 Measured, flush-left, high-contrast, near-flat. Data is the hero. Colour is rationed.
