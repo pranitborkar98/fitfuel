@@ -104,7 +104,7 @@ export default function MedicalDisclaimerPage() {
         </Section>
 
         <Section title="10. Contact Us">
-          <P>Questions about this disclaimer? Email <a href="mailto:pranitborkar98@gmail.com" style={linkStyle}>pranitborkar98@gmail.com</a>. See also our <Link href="/terms" style={linkStyle}>Terms &amp; Conditions</Link> and <Link href="/allergen-policy" style={linkStyle}>Allergen Policy</Link>.</P>
+          <P>Questions about this disclaimer? Email <a href="mailto:contact@fitfuel.in" style={linkStyle}>contact@fitfuel.in</a>. See also our <Link href="/terms" style={linkStyle}>Terms &amp; Conditions</Link> and <Link href="/allergen-policy" style={linkStyle}>Allergen Policy</Link>.</P>
         </Section>
 
         <div style={{ marginTop: 24 }}>

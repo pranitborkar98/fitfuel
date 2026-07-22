@@ -131,7 +131,7 @@ export default function TermsPage() {
         <Section title="18. Contact Us">
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 22px" }}>
             <P>Questions about these Terms? Reach us at:</P>
-            <P><B>FitFuel</B> &middot; [Registered Entity Name]<br />[Full Registered Address, Pune, Maharashtra, PIN]<br />Email: <a href="mailto:pranitborkar98@gmail.com" style={linkStyle}>pranitborkar98@gmail.com</a><br />FSSAI Licence: 21523035002815</P>
+            <P><B>FitFuel</B> &middot; [Registered Entity Name]<br />[Full Registered Address, Pune, Maharashtra, PIN]<br />Email: <a href="mailto:contact@fitfuel.in" style={linkStyle}>contact@fitfuel.in</a><br />FSSAI Licence: 21523035002815</P>
           </div>
         </Section>
 

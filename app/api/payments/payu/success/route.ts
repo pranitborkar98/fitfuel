@@ -58,6 +58,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`, 303);
     }
 
+    // Belt-and-braces: the hash already covers `amount`, but also cross-check it
+    // against what THIS order is supposed to cost before confirming anything.
+    const paidRs = parseFloat(amount);
+    if (!Number.isFinite(paidRs) || Math.abs(paidRs - order.totalRs) > 1) {
+      console.error("[PayU] Amount mismatch", { txnid, posted: amount, expected: order.totalRs });
+      return NextResponse.redirect(`${BASE_URL}/checkout?error=amount_mismatch&txnid=${txnid}`, 303);
+    }
+
     const meta = (() => { try { return JSON.parse(order.notes ?? "{}"); } catch { return {}; } })();
 
     // IMPORTANT: this early-return is what makes credit-commit idempotent.

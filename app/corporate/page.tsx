@@ -58,7 +58,7 @@ export default function CorporatePage() {
         <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: `1px solid ${C.accent}33`, borderRadius: 18, padding: "36px 32px", textAlign: "center" }}>
           <div style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10 }}>Let us build a program for your team.</div>
           <p style={{ color: C.sub, fontSize: 15, margin: "0 0 22px" }}>Tell us your team size and goals and we will put together a proposal.</p>
-          <a href="mailto:pranitborkar98@gmail.com?subject=FitFuel%20Corporate%20Enquiry" style={{ display: "inline-block", background: C.accent2, color: "#000", fontWeight: 800, fontSize: 14, padding: "13px 30px", borderRadius: 10, textDecoration: "none", letterSpacing: "0.04em" }}>ENQUIRE NOW</a>
+          <a href="mailto:contact@fitfuel.in?subject=FitFuel%20Corporate%20Enquiry" style={{ display: "inline-block", background: C.accent2, color: "#000", fontWeight: 800, fontSize: 14, padding: "13px 30px", borderRadius: 10, textDecoration: "none", letterSpacing: "0.04em" }}>ENQUIRE NOW</a>
         </div>
 
         <div style={{ marginTop: 36 }}><Link href="/" style={link}>&larr; Back to home</Link></div>

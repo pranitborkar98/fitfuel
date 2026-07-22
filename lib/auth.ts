@@ -15,6 +15,10 @@ declare module "next-auth" {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
+  // Auth.js v5 reads AUTH_SECRET; fall back to the legacy NEXTAUTH_SECRET name
+  // so local .env files using the v4 name keep working.
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || undefined,
+
   session: {
     strategy: "database",
   },

@@ -1234,7 +1234,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 36 }}>
             <a href="#pricing" className="btn btn-lime" style={{ padding: '17px 38px', fontSize: 15.5 }}>Start your plan <IconArrow /></a>
-            <a href={`https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(`Hi, I want to know more about the ${plan.name} plan`)}`} target="_blank" rel="noopener noreferrer" className="btn btn-wa" style={{ padding: '17px 30px' }}>
+            <a href={`https://wa.me/918850446348?text=${encodeURIComponent(`Hi, I want to know more about the ${plan.name} plan`)}`} target="_blank" rel="noopener noreferrer" className="btn btn-wa" style={{ padding: '17px 30px' }}>
               <IconWhats size={17} /> WhatsApp us
             </a>
           </div>

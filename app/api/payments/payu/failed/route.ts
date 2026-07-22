@@ -16,11 +16,14 @@ export async function POST(req: NextRequest) {
 
     console.error("[PayU] Payment FAILED", { txnid, amount, email, error_Message });
 
-    // TODO Phase 3: log failure to DB
-    // await prisma.payments.create({ txnid, amount, status: "failed", errorMsg: error_Message })
+    // This endpoint is unauthenticated (PayU posts here), so treat error_Message
+    // as untrusted: strip to a safe charset and cap length before reflecting it.
+    const safeMsg = (error_Message || "Payment was not completed")
+      .replace(/[^\w\s.,:()'-]/g, "")
+      .slice(0, 120);
 
     return NextResponse.redirect(
-      `${BASE_URL}/checkout?error=payment_failed&txnid=${txnid}&msg=${encodeURIComponent(error_Message || "Payment was not completed")}`
+      `${BASE_URL}/checkout?error=payment_failed&txnid=${encodeURIComponent(txnid || "")}&msg=${encodeURIComponent(safeMsg)}`
     );
   } catch (err) {
     console.error("[PayU failed handler error]", err);

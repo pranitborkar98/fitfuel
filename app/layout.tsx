@@ -1,6 +1,14 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ChromeGate from "@/components/ChromeGate";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
+import ReferralCapture from "@/components/ReferralCapture";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,14 +27,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+// Async so auth() runs server-side and SessionProvider hydrates on first paint.
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&display=swap"
+          rel="stylesheet"
+        />
         {/* Google Analytics */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-QZ32L5KQ6X" />
         <script
@@ -66,7 +83,18 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
+        <a href="#main" className="skip-link">Skip to content</a>
+        <ReferralCapture />
+        <SessionProvider session={session}>
+          {/* ChromeGate hides Navbar/Footer on standalone routes like /driver and /admin */}
+          <ChromeGate navbar={<Navbar />} footer={<Footer />}>
+            <div id="main" tabIndex={-1}>{children}</div>
+          </ChromeGate>
+        </SessionProvider>
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

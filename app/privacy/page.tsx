@@ -123,7 +123,7 @@ export default function PrivacyPage() {
         <Section title="10. Grievance Officer">
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 22px" }}>
             <P>In line with applicable Indian law, you can contact our Grievance Officer for any concern about your data:</P>
-            <P><B>Grievance Officer:</B> [Grievance Officer Name]<br />FitFuel &middot; [Registered Entity Name]<br />[Full Registered Address, Pune, Maharashtra, PIN]<br />Email: <a href="mailto:pranitborkar98@gmail.com" style={linkStyle}>pranitborkar98@gmail.com</a></P>
+            <P><B>Grievance Officer:</B> [Grievance Officer Name]<br />FitFuel &middot; [Registered Entity Name]<br />[Full Registered Address, Pune, Maharashtra, PIN]<br />Email: <a href="mailto:contact@fitfuel.in" style={linkStyle}>contact@fitfuel.in</a></P>
             <P>We will acknowledge and address grievances within the timelines required by law.</P>
           </div>
         </Section>
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="13. Contact Us">
-          <P>For any privacy question, email us at <a href="mailto:pranitborkar98@gmail.com" style={linkStyle}>pranitborkar98@gmail.com</a>. See also our <Link href="/terms" style={linkStyle}>Terms &amp; Conditions</Link>.</P>
+          <P>For any privacy question, email us at <a href="mailto:contact@fitfuel.in" style={linkStyle}>contact@fitfuel.in</a>. See also our <Link href="/terms" style={linkStyle}>Terms &amp; Conditions</Link>.</P>
         </Section>
 
         <div style={{ marginTop: 24 }}>

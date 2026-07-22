@@ -107,7 +107,7 @@ export default function AllergenPolicyPage() {
         <Section title="8. Contact Us">
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 22px" }}>
             <P>Questions about allergens in your meals?</P>
-            <P><B>FitFuel</B> &middot; Email: <a href="mailto:pranitborkar98@gmail.com" style={linkStyle}>pranitborkar98@gmail.com</a><br />FSSAI Licence: 21523035002815</P>
+            <P><B>FitFuel</B> &middot; Email: <a href="mailto:contact@fitfuel.in" style={linkStyle}>contact@fitfuel.in</a><br />FSSAI Licence: 21523035002815</P>
             <P>See also our <Link href="/medical-disclaimer" style={linkStyle}>Medical Disclaimer</Link> and <Link href="/terms" style={linkStyle}>Terms &amp; Conditions</Link>.</P>
           </div>
         </Section>

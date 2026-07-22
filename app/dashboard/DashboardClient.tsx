@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import {
   Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
   Calendar, Target, CheckCircle2, Circle, X, Clock, ChefHat, Flame, Star,
-  Gift, Briefcase,
+  Gift, Briefcase, TrendingUp, Pill, Bell,
 } from "lucide-react";
 
 const T = {
@@ -1109,7 +1109,7 @@ export default function DashboardClient({
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Body Metrics</p>
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Track 18 body composition parameters — connect your FitDays BLE scale or log manually.</p>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Track 18 body composition parameters — quick manual logging, FitDays BLE scale sync coming soon.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>
@@ -1148,6 +1148,62 @@ export default function DashboardClient({
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>873 exercises {'\u2014'} browse, log workouts, track sets and burned kcal.</p>
+              </div>
+              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+          </Link>
+
+          <Link href="/dashboard/progress" style={{ textDecoration: "none" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                <TrendingUp size={20} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Progress</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                </div>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Weight trend, body composition charts and plateau detection over time.</p>
+              </div>
+              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+          </Link>
+
+          <Link href="/dashboard/supplements" style={{ textDecoration: "none" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                <Pill size={20} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Supplements</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                </div>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Your goal-matched stack with doses, plus the full educational catalogue.</p>
+              </div>
+              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+            </div>
+          </Link>
+
+          <Link href="/dashboard/notification-settings" style={{ textDecoration: "none" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                <Bell size={20} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Notifications</p>
+                </div>
+                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Choose which emails you get {'\u2014'} daily nudges, weekly digest, order updates.</p>
               </div>
               <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
             </div>

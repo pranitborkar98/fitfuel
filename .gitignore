@@ -44,3 +44,9 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# repo hygiene — local dev artifacts, never commit (audit 2026-07-22)
+prisma.zip
+progress.json
+seed-progress.json
+seed-supplements.ts.bak
