@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChromeGate from "@/components/ChromeGate";
 import { SessionProvider } from "next-auth/react";
-import { auth } from "@/lib/auth";
 import ReferralCapture from "@/components/ReferralCapture";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -27,14 +26,13 @@ export const metadata: Metadata = {
   },
 };
 
-// Async so auth() runs server-side and SessionProvider hydrates on first paint.
-export default async function RootLayout({
+// Kept static (no server-side auth() call) so the loading.tsx streaming boundary
+// resolves on the client. SessionProvider fetches the session client-side.
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
@@ -86,7 +84,7 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
         <a href="#main" className="skip-link">Skip to content</a>
         <ReferralCapture />
-        <SessionProvider session={session}>
+        <SessionProvider>
           {/* ChromeGate hides Navbar/Footer on standalone routes like /driver and /admin */}
           <ChromeGate navbar={<Navbar />} footer={<Footer />}>
             <div id="main" tabIndex={-1}>{children}</div>
