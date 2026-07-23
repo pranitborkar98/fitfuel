@@ -70,12 +70,12 @@ function YoutubeIcon() {
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 800, color: "#f3f4f6", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 20 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: "var(--ff-ink)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 20 }}>
         {title}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {links.map(link => (
-          <Link key={link.href} href={link.href} className="ff-flink" style={{ fontSize: 13.5, color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}>
+          <Link key={link.href} href={link.href} className="ff-flink" style={{ fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
             {link.label}
           </Link>
         ))}
@@ -97,26 +97,26 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 11, textDecoration: "none", marginBottom: 20 }}>
-              <div style={{ width: 34, height: 34, background: "#84cc16", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 14px rgba(132,204,22,0.3)" }}>
+              <div style={{ width: 34, height: 34, background: "#84cc16", borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Zap style={{ width: 18, height: 18, color: "#000" }} fill="#000" />
               </div>
-              <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.025em", color: "#f9fafb" }}>
+              <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.025em", color: "var(--ff-ink)" }}>
                 Fit<span style={{ color: "#84cc16" }}>Fuel</span>
               </span>
             </Link>
 
-            <p style={{ color: "#6b7280", fontSize: 13.5, lineHeight: 1.75, marginBottom: 28, maxWidth: 260 }}>
+            <p style={{ color: "var(--ff-dim)", fontSize: 13.5, lineHeight: 1.75, marginBottom: 28, maxWidth: 260 }}>
               The only health coach that controls the plate. Chef-cooked, condition-specific meals, delivered daily in Pune. Verified intake, not self-reported.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-              <a href="https://wa.me/918850446348" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}>
+              <a href="https://wa.me/918850446348" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
                 <Phone style={{ width: 14, height: 14, flexShrink: 0 }} /> WhatsApp Us
               </a>
-              <a href="mailto:contact@fitfuel.in" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}>
+              <a href="mailto:contact@fitfuel.in" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
                 <Mail style={{ width: 14, height: 14, flexShrink: 0 }} /> contact@fitfuel.in
               </a>
-              <div style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "#6b7280" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)" }}>
                 <MapPin style={{ width: 14, height: 14, flexShrink: 0 }} /> Kharadi, Pune, Maharashtra
               </div>
             </div>
@@ -127,14 +127,14 @@ export default function Footer() {
                 { href: "https://youtube.com/@fitfuel",     label: "YouTube",   Icon: YoutubeIcon },
               ].map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="ff-social"
-                  style={{ width: 38, height: 38, borderRadius: 9, background: "#111", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", textDecoration: "none", transition: "color 0.2s, border-color 0.2s, box-shadow 0.2s" }}>
+                  style={{ width: 38, height: 38, borderRadius: 0, background: "#111", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s, border-color 0.2s, box-shadow 0.2s" }}>
                   <Icon />
                 </a>
               ))}
             </div>
 
             {/* Kitchen trust */}
-            <p style={{ fontSize: 11.5, color: "#4b5563", marginTop: 24, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 11.5, color: "var(--ff-dim)", marginTop: 24, lineHeight: 1.6 }}>
               FSSAI Lic. No. 21523035002815
             </p>
           </div>
@@ -145,18 +145,18 @@ export default function Footer() {
 
           {/* Trial CTA */}
           <div>
-            <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: "1px solid rgba(132,204,22,0.22)", borderRadius: 18, padding: 24, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}>
-              <div style={{ height: 2, background: "linear-gradient(90deg, #84cc16, transparent)", margin: "-24px -24px 20px", borderTopLeftRadius: 18, borderTopRightRadius: 18 }} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(132,204,22,0.09)", color: "#a3e635", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", padding: "4px 12px", borderRadius: 999, border: "1px solid rgba(132,204,22,0.22)", textTransform: "uppercase", marginBottom: 14 }}>
+            <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: "1px solid rgba(132,204,22,0.22)", borderRadius: 0, padding: 24, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}>
+              <div style={{ height: 2, background: "linear-gradient(90deg, #84cc16, transparent)", margin: "-24px -24px 20px", borderTopLeftRadius: 0, borderTopRightRadius: 0 }} />
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(132,204,22,0.09)", color: "#a3e635", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", padding: "4px 12px", borderRadius: 0, border: "1px solid rgba(132,204,22,0.22)", textTransform: "uppercase", marginBottom: 14 }}>
                 Try Today
               </span>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#f9fafb", marginBottom: 8, letterSpacing: "-0.01em" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ff-ink)", marginBottom: 8, letterSpacing: "-0.01em" }}>
                 Trial Day at Rs 400
               </div>
-              <p style={{ color: "#9ca3af", fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>
+              <p style={{ color: "var(--ff-mute)", fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>
                 Breakfast plus Lunch delivered tomorrow. No commitment, no lock-in.
               </p>
-              <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#84cc16", color: "#000", fontSize: 13, fontWeight: 900, padding: "11px 0", borderRadius: 9, textDecoration: "none", letterSpacing: "0.07em", textTransform: "uppercase", boxShadow: "0 4px 20px rgba(132,204,22,0.35)", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
+              <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#84cc16", color: "#000", fontSize: 13, fontWeight: 900, padding: "11px 0", borderRadius: 0, textDecoration: "none", letterSpacing: "0.07em", textTransform: "uppercase", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
                 Start Trial
               </Link>
             </div>
@@ -165,12 +165,12 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div style={{ marginTop: 56, paddingTop: 28, borderTop: "1px solid #181818", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <p style={{ fontSize: 12, color: "#4b5563", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12, color: "var(--ff-dim)", margin: 0, lineHeight: 1.6 }}>
             © {new Date().getFullYear()} FitFuel. All rights reserved. · GST 5% applicable on all meal plans.
           </p>
           <div style={{ display: "flex", gap: 22, flexWrap: "wrap" }}>
             {legalLinks.map(link => (
-              <Link key={link.href} href={link.href} className="ff-legal" style={{ fontSize: 12, color: "#4b5563", textDecoration: "none", transition: "color 0.2s" }}>
+              <Link key={link.href} href={link.href} className="ff-legal" style={{ fontSize: 12, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
                 {link.label}
               </Link>
             ))}
@@ -180,9 +180,9 @@ export default function Footer() {
 
       <style>{`
         .ff-flink:hover  { color: #a3e635 !important; }
-        .ff-legal:hover  { color: #9ca3af !important; }
-        .ff-social:hover { color: #84cc16 !important; border-color: rgba(132,204,22,0.35) !important; box-shadow: 0 0 12px rgba(132,204,22,0.2); }
-        .ff-trial-cta:hover { background: #a3e635 !important; transform: translateY(-1px); box-shadow: 0 6px 26px rgba(132,204,22,0.5) !important; }
+        .ff-legal:hover  { color: var(--ff-mute) !important; }
+        .ff-social:hover { color: #84cc16 !important; border-color: rgba(132,204,22,0.35) !important;  }
+        .ff-trial-cta:hover { background: #a3e635 !important; transform: translateY(-1px);  }
         @media (max-width: 1080px) {
           .ff-footer-grid { grid-template-columns: 1fr 1fr 1fr !important; gap: 40px !important; }
         }

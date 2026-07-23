@@ -25,8 +25,10 @@ import { ArrowRight } from "lucide-react";
 
 const BG = "#070707";
 const INK = "#f7f7f5";
-const MUTE = "#9a9a94";
-const DIM = "#63635f";
+const MUTE = "#9a9a94"; // 7.1:1 on BG
+// Was #63635f, which computed to ~3.3:1 and failed WCAG AA everywhere it
+// was used (11-13px labels: hero readout, tier pricing, attribution).
+const DIM = "#85857e"; // 5.4:1 on BG, passes AA at small sizes
 const RULE = "#232320";
 const LIME = "#84cc16";
 
@@ -86,17 +88,20 @@ export default function Home() {
     <div style={{ background: BG, color: INK, overflowX: "hidden" }}>
       <Hero />
       <Pillars />
+      {/* Finder sits directly under the hero: it is the cheapest
+          conversion step on the page and the hero subhead describes it. */}
+      <Finder />
       <Statement />
-      <ServiceMap />
-      <Loop />
       <Kitchen />
       <AppBlock />
       <Supplements />
+      <Loop />
       <Partners />
       <Franchise />
       <Membership />
-      <Finder />
       <Voices />
+      {/* Trimmed index near the foot; the Footer carries full completeness. */}
+      <ServiceMap />
       <Close />
 
       <style>{`
@@ -109,13 +114,8 @@ export default function Home() {
           background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
         .ff-hov:hover .ff-frame img { transform: scale(1.05); }
 
-        .ff-btn { position:relative; overflow:hidden; display:inline-block; background:${LIME}; color:#000; font-family:${COND}; font-weight:800; font-size:19px; letter-spacing:.06em; text-transform:uppercase; padding:17px 34px; text-decoration:none; border-radius:0; transition:background .2s; }
-        .ff-btn:hover { background:#a3e635; }
-        .ff-btn::after { content:""; position:absolute; top:0; left:-120%; width:55%; height:100%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent); transform:skewX(-18deg); transition:left .6s ease; }
-        .ff-btn:hover::after { left:130%; }
-
-        .ff-a { color:${INK}; text-decoration:none; display:inline-flex; align-items:center; gap:9px; font-family:${COND}; font-weight:700; font-size:19px; letter-spacing:.05em; text-transform:uppercase; border-bottom:2px solid ${LIME}; padding-bottom:3px; transition:gap .2s,color .2s; }
-        .ff-a:hover { gap:15px; color:${LIME}; }
+        /* .ff-btn and .ff-a now live in globals.css so the Navbar, Footer
+           and this page all share one button + link treatment. */
 
         /* service directory */
         .ff-svc { display:block; padding:9px 0; border-bottom:1px solid ${RULE}; color:${MUTE}; text-decoration:none; font-size:14.5px; transition:color .18s, padding-left .18s, border-color .18s; }
@@ -126,8 +126,28 @@ export default function Home() {
 
         .ff-strip:hover { background:#0c0c0a; }
 
+        /* Short viewports (13" laptops, tablets in landscape): the headline,
+           subhead, CTAs and readout bar all compete for height. */
+        @media (max-height:900px) and (min-width:1000px){
+          .ff-hero-h1{ font-size:clamp(3rem,8vw,6.4rem) !important; }
+          .ff-hero-stage{ min-height:min(90vh,780px) !important; }
+        }
+        @media (max-height:740px) and (min-width:1000px){
+          .ff-hero-h1{ font-size:clamp(2.6rem,6vw,4.8rem) !important; }
+        }
         @media (max-width:1000px){ .ff-2col{ grid-template-columns:1fr !important; } .ff-bleed{ min-height:520px !important; } }
-        @media (max-width:760px){ .ff-4col{ grid-template-columns:1fr 1fr !important; } .ff-hide{ display:none !important; } }
+        @media (max-width:760px){
+          .ff-4col{ grid-template-columns:1fr 1fr !important; }
+          .ff-hide{ display:none !important; }
+          /* Perf guard: FitFuel's customers order on mid-range Android over
+             mobile data. Eight full-bleed frames each running a filter stack
+             plus an SVG-turbulence grain is exactly the load that is free on
+             a dev laptop and janky on a 15k phone. Keep the duotone identity,
+             drop the expensive parts. */
+          .ff-grain{ display:none !important; }
+          .ff-food img{ filter:none !important; }
+          .ff-duo img{ filter:grayscale(1) !important; }
+        }
         @media (prefers-reduced-motion:reduce){ .ff-btn::after{ display:none; } .ff-hov:hover .ff-frame img{ transform:none; } }
       `}</style>
     </div>
@@ -143,7 +163,7 @@ function Hero() {
 
   return (
     <section ref={ref} style={{ position: "relative", paddingTop: 68 }}>
-      <div style={{ position: "relative", minHeight: "min(94vh,940px)", display: "flex", flexDirection: "column", justifyContent: "flex-end", overflow: "hidden" }}>
+      <div className="ff-hero-stage" style={{ position: "relative", minHeight: "min(94vh,940px)", display: "flex", flexDirection: "column", justifyContent: "flex-end", overflow: "hidden" }}>
         <motion.div style={{ position: "absolute", inset: "-6% 0 0", y }}>
           <Frame src="/images/hero-bowl.jpg" alt="A FitFuel bowl of fresh vegetables, chickpeas and avocado" sizes="100vw" priority />
         </motion.div>
@@ -154,6 +174,7 @@ function Hero() {
             initial={reduce ? undefined : { opacity: 0, y: 34 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE }}
+            className="ff-hero-h1"
             style={huge("clamp(3.6rem,13.5vw,11.5rem)")}
           >
             We cook it.<br />We weigh it.<br /><span style={{ color: LIME }}>We track it.</span>
@@ -163,9 +184,11 @@ function Hero() {
             <p style={{ ...copy(16.5), maxWidth: "50ch" }}>
               Chef-cooked meals delivered across Pune, a full training and body-metrics app, and a supplement stack that matches your condition. One operating system for what you eat, burn and weigh.
             </p>
+            {/* Trial is the primary action: it is the lowest-friction offer
+                and the thing the whole page closes on. */}
             <div style={{ display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap" }}>
-              <Link href="/plans" className="ff-btn">Explore plans</Link>
-              <Link href="/plans?trial=true" className="ff-a">Trial day Rs 400 <ArrowRight size={17} /></Link>
+              <Link href="/plans?trial=true" className="ff-btn">Start trial day, Rs 400</Link>
+              <Link href="/plans" className="ff-a">All plans <ArrowRight size={17} /></Link>
             </div>
           </div>
         </div>
@@ -237,9 +260,6 @@ function ServiceMap() {
   const cols: [string, [string, string][]][] = [
     ["Eat", [
       ["All 126 meal plans", "/plans"],
-      ["Weight loss", "/plans/weight-loss-veg"],
-      ["Muscle gain", "/plans/muscle-gain-veg"],
-      ["Balanced maintenance", "/plans/balanced-veg"],
       ["Medical and lifestyle", "/plans?category=LIFESTYLE_MEDICAL"],
       ["Sports nutrition", "/plans?category=SPORTS"],
       ["Digital PDF plans", "/plans/digital"],
@@ -247,21 +267,15 @@ function ServiceMap() {
     ]],
     ["Track", [
       ["How the system works", "/how-it-works"],
-      ["Your dashboard", "/dashboard"],
-      ["Nutrition diary", "/dashboard/nutrition"],
       ["Exercise library", "/dashboard/exercises"],
       ["Body metrics", "/dashboard/body-metrics"],
-      ["Progress charts", "/dashboard/progress"],
       ["TDEE calculator, free", "/tdee-calculator"],
       ["Member results", "/results"],
     ]],
     ["Supplement", [
-      ["The supplement stack", "/supplements"],
-      ["Ordered via Nutrabay", "/supplements"],
+      ["The stack, via Nutrabay", "/supplements"],
       ["Your stack", "/dashboard/supplements"],
       ["Our ingredients", "/our-ingredients"],
-      ["Allergen policy", "/allergen-policy"],
-      ["Medical disclaimer", "/medical-disclaimer"],
     ]],
     ["Partner", [
       ["Corporate wellness", "/corporate"],
@@ -269,16 +283,6 @@ function ServiceMap() {
       ["Partner dashboard", "/dashboard/partners"],
       ["Franchise enquiry", "/contact"],
       ["Refer and earn Rs 500", "/dashboard/referrals"],
-      ["Blog", "/blog"],
-    ]],
-    ["Operate", [
-      ["Our kitchen", "/our-kitchen"],
-      ["Our team", "/our-team"],
-      ["Delivery areas in Pune", "/locations"],
-      ["About FitFuel", "/about"],
-      ["Reviews", "/testimonials"],
-      ["FAQ", "/faq"],
-      ["Contact us", "/contact"],
     ]],
   ];
   return (
@@ -288,13 +292,13 @@ function ServiceMap() {
           <h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "20ch" }}>Everything we run, end to end</h2>
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: "clamp(24px,3vw,44px)", marginTop: "clamp(36px,5vw,64px)" }}>
-          {cols.map(([head, items], i) => (
-            <Reveal key={head} delay={i * 0.05}>
+          {cols.map(([head, items]) => (
+            <div key={head}>
               <div style={{ ...tag(LIME), paddingBottom: 12, borderBottom: `2px solid ${LIME}`, marginBottom: 6 }}>{head}</div>
               {items.map(([label, href]) => (
                 <Link key={label + href} href={href} className="ff-svc">{label}</Link>
               ))}
-            </Reveal>
+            </div>
           ))}
         </div>
       </div>
@@ -315,13 +319,13 @@ function Loop() {
           </div>
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: "clamp(32px,4vw,54px)", borderTop: `1px solid ${RULE}` }}>
+          {/* No per-item scroll reveal here: blanket fade-up on every element
+              is itself a templated pattern. The band reads as one object. */}
           {steps.map((s, i) => (
-            <Reveal key={s} delay={(i % 4) * 0.05}>
-              <div className="ff-strip" style={{ padding: "22px 18px 26px", borderBottom: `1px solid ${RULE}`, borderRight: `1px solid ${RULE}`, height: "100%", transition: "background .2s" }}>
-                <div style={{ ...tag(LIME), fontSize: 11.5 }}>{String(i + 1).padStart(2, "0")}</div>
-                <div style={{ ...mid("clamp(1.35rem,2.2vw,1.85rem)"), marginTop: 12 }}>{s}</div>
-              </div>
-            </Reveal>
+            <div key={s} className="ff-strip" style={{ padding: "22px 18px 26px", borderBottom: `1px solid ${RULE}`, borderRight: `1px solid ${RULE}`, height: "100%", transition: "background .2s" }}>
+              <div style={{ ...tag(LIME), fontSize: 11.5 }}>{String(i + 1).padStart(2, "0")}</div>
+              <div style={{ ...mid("clamp(1.35rem,2.2vw,1.85rem)"), marginTop: 12 }}>{s}</div>
+            </div>
           ))}
         </div>
       </div>
@@ -521,16 +525,14 @@ function Voices() {
     <section style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
       <div style={WRAP}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", borderTop: `1px solid ${RULE}` }}>
-          {q.map((t, i) => (
-            <Reveal key={t.n} delay={i * 0.08}>
-              <div style={{ padding: "clamp(26px,3vw,40px) clamp(18px,2vw,32px)", borderRight: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, height: "100%", display: "flex", flexDirection: "column" }}>
-                <p style={{ ...mid("clamp(1.35rem,2.2vw,1.8rem)"), lineHeight: 1.12, flex: 1 }}>{t.q}</p>
-                <div style={{ marginTop: 26 }}>
-                  <div style={{ ...copy(14), color: INK }}>{t.n}</div>
-                  <div style={{ ...tag(DIM), fontSize: 11, marginTop: 4 }}>{t.r}</div>
-                </div>
+          {q.map((t) => (
+            <div key={t.n} style={{ padding: "clamp(26px,3vw,40px) clamp(18px,2vw,32px)", borderRight: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, height: "100%", display: "flex", flexDirection: "column" }}>
+              <p style={{ ...mid("clamp(1.35rem,2.2vw,1.8rem)"), lineHeight: 1.12, flex: 1 }}>{t.q}</p>
+              <div style={{ marginTop: 26 }}>
+                <div style={{ ...copy(14), color: INK }}>{t.n}</div>
+                <div style={{ ...tag(DIM), fontSize: 11, marginTop: 4 }}>{t.r}</div>
               </div>
-            </Reveal>
+            </div>
           ))}
         </div>
         <Reveal style={{ marginTop: 34 }}><Link href="/testimonials" className="ff-a">All reviews <ArrowRight size={17} /></Link></Reveal>

@@ -66,7 +66,7 @@ const topLinks = [
 
 const itemBase: React.CSSProperties = {
   display: "flex", alignItems: "flex-start", gap: 10,
-  padding: "9px 12px", borderRadius: 9, textDecoration: "none", transition: "background 0.15s",
+  padding: "9px 12px", borderRadius: 0, textDecoration: "none", transition: "background 0.15s",
 };
 
 function MenuItem({ href, label, note, icon, onNavigate }: {
@@ -76,8 +76,8 @@ function MenuItem({ href, label, note, icon, onNavigate }: {
     <Link href={href} onClick={onNavigate} className="ff-menu-item" style={itemBase}>
       {icon ? <span style={{ marginTop: 2, flexShrink: 0 }}>{icon}</span> : null}
       <span>
-        <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "#e5e7eb", lineHeight: 1.35 }}>{label}</span>
-        {note ? <span style={{ display: "block", fontSize: 12, color: "#6b7280", lineHeight: 1.4, marginTop: 1 }}>{note}</span> : null}
+        <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--ff-mute)", lineHeight: 1.35 }}>{label}</span>
+        {note ? <span style={{ display: "block", fontSize: 12, color: "var(--ff-dim)", lineHeight: 1.4, marginTop: 1 }}>{note}</span> : null}
       </span>
     </Link>
   );
@@ -85,7 +85,7 @@ function MenuItem({ href, label, note, icon, onNavigate }: {
 
 function ColHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 10.5, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.14em", padding: "0 12px", marginBottom: 8 }}>
+    <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.14em", padding: "0 12px", marginBottom: 8 }}>
       {children}
     </div>
   );
@@ -146,15 +146,15 @@ export default function Navbar() {
 
   const dropTriggerStyle = (active: boolean): React.CSSProperties => ({
     display: "inline-flex", alignItems: "center", gap: 5,
-    padding: "8px 13px", fontSize: 14, fontWeight: 500, borderRadius: 8,
-    color: active ? "#f9fafb" : "#9ca3af", background: active ? "rgba(255,255,255,0.05)" : "transparent",
+    padding: "8px 13px", fontSize: 14, fontWeight: 500, borderRadius: 0,
+    color: active ? "var(--ff-ink)" : "var(--ff-mute)", background: active ? "rgba(255,255,255,0.05)" : "transparent",
     border: "none", cursor: "pointer", transition: "color 0.2s, background 0.2s", letterSpacing: "0.01em",
   });
 
   const panelStyle: React.CSSProperties = {
     position: "absolute", top: "calc(100% + 10px)",
-    background: "#0d0d0d", border: "1px solid #1f1f1f", borderRadius: 16,
-    boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(132,204,22,0.05)",
+    background: "#0d0d0d", border: "1px solid #1f1f1f", borderRadius: 0,
+    
     zIndex: 100, overflow: "hidden",
   };
 
@@ -168,17 +168,17 @@ export default function Navbar() {
     }}>
       {/* Scroll progress */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "#1a1a1a" }}>
-        <div style={{ height: "100%", width: `${scrollPct}%`, background: `linear-gradient(90deg, ${LIME}, ${LIME_LIGHT})`, boxShadow: "0 0 8px rgba(132,204,22,0.6)" }} />
+        <div style={{ height: "100%", width: `${scrollPct}%`, background: `linear-gradient(90deg, ${LIME}, ${LIME_LIGHT})` }} />
       </div>
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
 
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", flexShrink: 0 }}>
-          <div style={{ width: 36, height: 36, background: LIME, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 16px rgba(132,204,22,0.35)" }}>
+          <div style={{ width: 36, height: 36, background: LIME, borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Zap style={{ width: 19, height: 19, color: "#000" }} fill="#000" />
           </div>
-          <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", color: "#f9fafb" }}>
+          <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", color: "var(--ff-ink)" }}>
             Fit<span style={{ color: LIME }}>Fuel</span>
           </span>
         </Link>
@@ -219,12 +219,12 @@ export default function Navbar() {
                   <Link href="/plans?trial=true" onClick={closeAll} className="ff-menu-item" style={{
                     marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between",
                     background: "rgba(132,204,22,0.06)", border: "1px solid rgba(132,204,22,0.2)",
-                    borderRadius: 11, padding: "12px 16px", textDecoration: "none",
+                    borderRadius: 0, padding: "12px 16px", textDecoration: "none",
                   }}>
                     <span style={{ fontSize: 13, color: "#d1d5db" }}>
                       <b style={{ color: LIME_LIGHT }}>Trial Day, Rs 400.</b> Breakfast plus lunch delivered tomorrow. No lock-in.
                     </span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "6px 14px", borderRadius: 7, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start Trial</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "6px 14px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start Trial</span>
                   </Link>
                 </motion.div>
               )}
@@ -234,8 +234,8 @@ export default function Navbar() {
           {topLinks.map(link => (
             <Link key={link.href} href={link.href} className="ff-top-link" style={{
               padding: "8px 13px", fontSize: 14, fontWeight: 500,
-              color: pathname === link.href ? "#f9fafb" : "#9ca3af",
-              textDecoration: "none", borderRadius: 8, transition: "color 0.2s, background 0.2s", letterSpacing: "0.01em",
+              color: pathname === link.href ? "var(--ff-ink)" : "var(--ff-mute)",
+              textDecoration: "none", borderRadius: 0, transition: "color 0.2s, background 0.2s", letterSpacing: "0.01em",
             }}>
               {link.label}
             </Link>
@@ -274,14 +274,14 @@ export default function Navbar() {
                 onClick={() => setOpenMenu(m => m === "user" ? null : "user")}
                 aria-expanded={openMenu === "user"} aria-haspopup="true"
                 className="ff-outline-btn"
-                style={{ display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "1px solid #242424", borderRadius: 8, padding: "6px 12px 6px 6px", cursor: "pointer", transition: "border-color 0.2s" }}
+                style={{ display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "1px solid #242424", borderRadius: 0, padding: "6px 12px 6px 6px", cursor: "pointer", transition: "border-color 0.2s" }}
               >
                 <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {user?.image
                     ? <img src={user.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     : <User size={14} color="#737373" />}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#f9fafb", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ff-ink)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user?.name?.split(" ")[0] ?? "Account"}
                 </span>
               </button>
@@ -290,15 +290,15 @@ export default function Navbar() {
                   <motion.div
                     initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#111111", border: "1px solid #1f1f1f", borderRadius: 12, padding: 8, minWidth: 190, boxShadow: "0 16px 40px rgba(0,0,0,0.5)", zIndex: 100 }}
+                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#111111", border: "1px solid #1f1f1f", borderRadius: 0, padding: 8, minWidth: 190, boxShadow: "0 16px 40px rgba(0,0,0,0.5)", zIndex: 100 }}
                   >
-                    <MenuItem href="/dashboard"         label="Dashboard"    icon={<LayoutDashboard size={14} color="#9ca3af" />} onNavigate={closeAll} />
-                    <MenuItem href="/dashboard/profile" label="Edit Profile" icon={<User size={14} color="#9ca3af" />}            onNavigate={closeAll} />
+                    <MenuItem href="/dashboard"         label="Dashboard"    icon={<LayoutDashboard size={14} color="var(--ff-mute)" />} onNavigate={closeAll} />
+                    <MenuItem href="/dashboard/profile" label="Edit Profile" icon={<User size={14} color="var(--ff-mute)" />}            onNavigate={closeAll} />
                     <div style={{ height: 1, background: "#1a1a1a", margin: "6px 0" }} />
                     <button
                       onClick={() => { closeAll(); signOut({ callbackUrl: "/" }); }}
                       className="ff-signout"
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "transparent", border: "none", cursor: "pointer", padding: "9px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500, color: "#9ca3af", transition: "background 0.15s, color 0.15s", textAlign: "left" }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "transparent", border: "none", cursor: "pointer", padding: "9px 12px", borderRadius: 0, fontSize: 13, fontWeight: 500, color: "var(--ff-mute)", transition: "background 0.15s, color 0.15s", textAlign: "left" }}
                     >
                       <LogOut size={14} /> Sign Out
                     </button>
@@ -307,11 +307,11 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            <Link href="/auth/signin" className="ff-outline-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 14, fontWeight: 600, color: "#9ca3af", textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid #242424", background: "transparent", transition: "color 0.2s, border-color 0.2s", letterSpacing: "0.01em" }}>
+            <Link href="/auth/signin" className="ff-outline-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", textDecoration: "none", padding: "8px 18px", borderRadius: 0, border: "1px solid #242424", background: "transparent", transition: "color 0.2s, border-color 0.2s", letterSpacing: "0.01em" }}>
               Sign In
             </Link>
           )}
-          <Link href="/plans" className="ff-cta-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", padding: "9px 20px", borderRadius: 8, background: LIME, letterSpacing: "0.06em", textTransform: "uppercase", boxShadow: "0 2px 16px rgba(132,204,22,0.35)", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
+          <Link href="/plans" className="ff-cta-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", padding: "9px 20px", borderRadius: 0, background: LIME, letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
             Order Now
           </Link>
         </div>
@@ -320,7 +320,7 @@ export default function Navbar() {
         <button
           onClick={() => setMobileOpen(o => !o)}
           className="ff-nav-mobile ff-outline-btn"
-          style={{ background: "none", border: "1px solid #242424", cursor: "pointer", padding: 8, color: "#9ca3af", borderRadius: 8, display: "none", transition: "border-color 0.2s, color 0.2s" }}
+          style={{ background: "none", border: "1px solid #242424", cursor: "pointer", padding: 8, color: "var(--ff-mute)", borderRadius: 0, display: "none", transition: "border-color 0.2s, color 0.2s" }}
           aria-label="Toggle menu" aria-expanded={mobileOpen}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -361,7 +361,7 @@ export default function Navbar() {
                     <MobileButtonLink href="/dashboard/profile" onNavigate={closeAll} icon={<User size={14} />} label="Edit Profile" />
                     <button
                       onClick={() => { closeAll(); signOut({ callbackUrl: "/" }); }}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "#9ca3af", background: "transparent", border: "1px solid #242424", borderRadius: 8, cursor: "pointer" }}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", background: "transparent", border: "1px solid #242424", borderRadius: 0, cursor: "pointer" }}
                     >
                       <LogOut size={14} /> Sign Out
                     </button>
@@ -369,7 +369,7 @@ export default function Navbar() {
                 ) : (
                   <MobileButtonLink href="/auth/signin" onNavigate={closeAll} label="Sign In" />
                 )}
-                <Link href="/plans" onClick={closeAll} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 11, fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", borderRadius: 8, background: LIME, textTransform: "uppercase", letterSpacing: "0.07em", boxShadow: "0 2px 16px rgba(132,204,22,0.35)" }}>
+                <Link href="/plans" onClick={closeAll} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 11, fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", borderRadius: 0, background: LIME, textTransform: "uppercase", letterSpacing: "0.07em" }}>
                   Order Now
                 </Link>
               </div>
@@ -380,11 +380,11 @@ export default function Navbar() {
 
       <style>{`
         .ff-menu-item:hover, .ff-top-link:hover { background: rgba(255,255,255,0.05); }
-        .ff-top-link:hover { color: #f9fafb !important; }
-        .ff-outline-btn:hover { border-color: #3a3a3a !important; color: #f9fafb !important; }
-        .ff-cta-btn:hover { background: ${LIME_LIGHT} !important; transform: translateY(-1px); box-shadow: 0 4px 22px rgba(132,204,22,0.5) !important; }
+        .ff-top-link:hover { color: var(--ff-ink) !important; }
+        .ff-outline-btn:hover { border-color: #3a3a3a !important; color: var(--ff-ink) !important; }
+        .ff-cta-btn:hover { background: ${LIME_LIGHT} !important; transform: translateY(-1px);  }
         .ff-signout:hover { background: rgba(239,68,68,0.08); color: #fca5a5 !important; }
-        a:focus-visible, button:focus-visible { outline: 2px solid ${LIME}; outline-offset: 2px; border-radius: 8px; }
+        a:focus-visible, button:focus-visible { outline: 2px solid ${LIME}; outline-offset: 2px; border-radius: 0; }
         @media (max-width: 1020px) {
           .ff-nav-desktop { display: none !important; }
           .ff-nav-mobile  { display: flex !important; }
@@ -409,10 +409,10 @@ function MobileSection({ title, children }: { title: string; children: React.Rea
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "none", cursor: "pointer", padding: "14px 4px", fontSize: 15, fontWeight: 600, color: "#f3f4f6" }}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "none", cursor: "pointer", padding: "14px 4px", fontSize: 15, fontWeight: 600, color: "var(--ff-ink)" }}
       >
         {title}
-        <ChevronDown size={15} color="#6b7280" style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
+        <ChevronDown size={15} color="var(--ff-dim)" style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -427,7 +427,7 @@ function MobileSection({ title, children }: { title: string; children: React.Rea
 
 function MobileLink({ href, label, onNavigate }: { href: string; label: string; onNavigate: () => void }) {
   return (
-    <Link href={href} onClick={onNavigate} className="ff-menu-item" style={{ display: "block", padding: "10px 14px", fontSize: 14, color: "#9ca3af", textDecoration: "none", borderRadius: 8 }}>
+    <Link href={href} onClick={onNavigate} className="ff-menu-item" style={{ display: "block", padding: "10px 14px", fontSize: 14, color: "var(--ff-mute)", textDecoration: "none", borderRadius: 0 }}>
       {label}
     </Link>
   );
@@ -435,7 +435,7 @@ function MobileLink({ href, label, onNavigate }: { href: string; label: string; 
 
 function MobileButtonLink({ href, label, icon, onNavigate }: { href: string; label: string; icon?: React.ReactNode; onNavigate: () => void }) {
   return (
-    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "#f9fafb", textDecoration: "none", borderRadius: 8, border: "1px solid #242424" }}>
+    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "var(--ff-ink)", textDecoration: "none", borderRadius: 0, border: "1px solid #242424" }}>
       {icon}{label}
     </Link>
   );

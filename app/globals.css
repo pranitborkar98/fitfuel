@@ -1,6 +1,25 @@
 @import "tailwindcss";
 
 :root {
+  /* ═══════════════════════════════════════════════════════════════
+     CANONICAL TOKENS — single source of truth for the homepage AND
+     the global chrome (Navbar, Footer). Editorial system: warm
+     off-blacks, square corners, flat lime. See DESIGN.md.
+     Everything below this block is LEGACY, still referenced by older
+     interior pages; migrate them to --ff-* over time.
+     ═══════════════════════════════════════════════════════════════ */
+  --ff-bg:         #070707;
+  --ff-panel:      #050504;
+  --ff-ink:        #f7f7f5;
+  --ff-mute:       #9a9a94;  /* 7.1:1 on --ff-bg  (AA, AAA for large) */
+  --ff-dim:        #85857e;  /* 5.4:1 on --ff-bg  (AA at small sizes) */
+  --ff-rule:       #232320;
+  --ff-rule-2:     #33332f;
+  --ff-lime:       #84cc16;
+  --ff-lime-light: #a3e635;
+  --ff-radius:     0px;      /* square corners are the house style */
+  --ff-cond:       'Barlow Condensed', 'Arial Narrow', sans-serif;
+
   /* Brand colors */
   --lime:       #84cc16;
   --lime-light: #a3e635;
@@ -19,7 +38,9 @@
   --border-hover: #3a3a3a;
   --border-lime: rgba(132, 204, 22, 0.25);
 
-  /* Text — aligned with Tailwind gray scale used in page.tsx */
+  /* Text — LEGACY Tailwind gray scale. NOTE: the homepage and chrome do
+     NOT use these; they use the warmer --ff-* ramp above. Kept only for
+     interior pages that still reference them. */
   --text-primary:   #f9fafb;   /* gray-50  — headings, key content  */
   --text-secondary: #d1d5db;   /* gray-300 — body paragraphs        */
   --text-muted:     #9ca3af;   /* gray-400 — descriptions, captions */
@@ -289,6 +310,61 @@ main {
   pointer-events: none;
   z-index: 1;
 }
+/* ── Shared chrome components (Navbar + Footer + homepage) ─────────────
+   One button treatment across the whole site: flat lime, square, shine
+   sweep on hover, NO glow shadow. Defined once, used everywhere. */
+.ff-btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  background: var(--ff-lime);
+  color: #000;
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 17px 34px;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--ff-radius);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.ff-btn:hover { background: var(--ff-lime-light); }
+.ff-btn::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -120%;
+  width: 55%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.6s ease;
+}
+.ff-btn:hover::after { left: 130%; }
+
+/* Underlined lime link, the site's secondary action */
+.ff-a {
+  color: var(--ff-ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--ff-lime);
+  padding-bottom: 3px;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+.ff-a:hover { gap: 15px; color: var(--ff-lime); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-btn::after { display: none; }
+}
+
 /* ── Accessibility (WS-4 / F7) ─────────────────────────────────────────── */
 
 /* Skip link — hidden until keyboard-focused */
