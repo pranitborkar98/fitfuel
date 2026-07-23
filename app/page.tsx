@@ -7,6 +7,7 @@ import Frame from "./_home/Frame";
 import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
 import LoopDial from "./_home/LoopDial";
+import Coach from "./_home/Coach";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -62,6 +63,9 @@ export default function Home() {
       <AppBlock />
       <Supplements />
       <LoopDial />
+      {/* The coach and the daily comms loop. Both ship; neither was on
+          the site before. Sits after the loop because it is what runs it. */}
+      <Coach />
       <Partners />
       <Franchise />
       <Membership />
@@ -240,7 +244,11 @@ function Bleed({ src, alt, duo, flip, title, body, href, cta, points }: {
   return (
     <section className="ff-hov" style={{ borderTop: `1px solid ${RULE}` }}>
       <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: flip ? "1fr 1.1fr" : "1.1fr 1fr", direction: flip ? "rtl" : "ltr" }}>
-        <div className="ff-bleed" style={{ position: "relative", minHeight: "clamp(360px,46vw,620px)", direction: "ltr" }}>
+        {/* The photo drifts slower than the page as it passes, so the two
+            halves of the block separate in depth instead of sliding as one
+            flat slab. Seventh mechanism: scroll-driven translate on the
+            image inside an overflow-clipped frame. */}
+        <div className="ff-bleed ff-para" style={{ position: "relative", minHeight: "clamp(360px,46vw,620px)", direction: "ltr", overflow: "hidden" }}>
           <Frame src={src} alt={alt} sizes="(max-width:1000px) 100vw, 52vw" duo={duo} />
         </div>
         <div style={{ direction: "ltr", display: "flex", alignItems: "center", padding: "clamp(38px,6vw,84px) clamp(20px,4vw,64px)", background: BG }}>

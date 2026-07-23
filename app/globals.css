@@ -836,6 +836,155 @@ main[data-surface="marketing"] {
 .ff-svcmap .ff-svc-col:has(.ff-svc:hover) .ff-svc-head { opacity: 1 !important; }
 .ff-svc-head { transition: opacity .22s ease; }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   THE COACH — a number that recalibrates as you scroll
+   ═══════════════════════════════════════════════════════════════════════
+   A sixth mechanism, different again from the ring, the strike, the scan,
+   the spotlight and the wipe: an ANIMATED CUSTOM PROPERTY rendered through
+   a CSS counter.
+
+   `@property` registers --n as an integer, which makes it interpolatable.
+   A scroll-driven animation walks it from one target to the other, and
+   `counter-reset` + `content: counter()` prints it. The result is a
+   number that counts in pure CSS, driven by scroll position, with no JS.
+
+   It is doing the thing the section describes: the recalibration engine
+   measures your trend and moves the target, and here the target moves.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@property --ff-n {
+  syntax: "<integer>";
+  inherits: false;
+  /* Carries the last three digits only; the "1," is a literal in
+     content below, because counter() cannot do digit grouping. Both
+     targets are four-digit and share a leading 1, so this holds. */
+  initial-value: 720;
+}
+
+/* Default: the static figure shows, the counter is hidden. */
+.ff-count { display: none; }
+.ff-count-fallback { display: block; }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ff-count { display: block; }
+    .ff-count-fallback { display: none; }
+
+    .ff-count {
+      --ff-n: 850;
+      counter-reset: ffn var(--ff-n);
+      animation: ff-recount linear both;
+      animation-timeline: view();
+      animation-range: entry 70% cover 40%;
+    }
+    /* Indian digit grouping is 1,720 not 1720. `counter()` cannot group,
+       so the thousands separator is a literal and the counter carries the
+       remaining three digits. Both targets are four-digit, so this holds. */
+    .ff-count::before { content: "1," counter(ffn); }
+    @keyframes ff-recount {
+      from { --ff-n: 850; }
+      to   { --ff-n: 720; }
+    }
+
+    /* The connecting track fills toward the new target. */
+    .ff-recal-track {
+      display: block;
+      height: 1px;
+      width: 100%;
+      background: var(--ff-rule-2);
+      position: relative;
+      overflow: hidden;
+    }
+    .ff-recal-track::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--ff-lime);
+      transform: scaleX(1);
+      transform-origin: left center;
+      animation: ff-track-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 70% cover 40%;
+    }
+    @keyframes ff-track-fill {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+  }
+}
+
+.ff-recal-grid {
+  display: grid;
+  grid-template-columns: auto minmax(60px, 1fr) auto minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 44px);
+}
+.ff-recal-arrow { display: flex; align-items: center; width: 100%; }
+
+.ff-coach-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(30px, 5vw, 80px);
+}
+
+.ff-sends { list-style: none; margin: 22px 0 0; padding: 0; }
+.ff-send {
+  display: grid;
+  grid-template-columns: minmax(92px, 118px) minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 26px);
+  padding: 18px 0;
+  border-top: 1px solid var(--ff-rule);
+}
+.ff-send:last-child { border-bottom: 1px solid var(--ff-rule); }
+.ff-send-time { white-space: nowrap; }
+
+.ff-watch { margin: 22px 0 0; }
+.ff-watch-row {
+  padding: 16px 0;
+  border-top: 1px solid var(--ff-rule);
+}
+.ff-watch-row:last-child { border-bottom: 1px solid var(--ff-rule); }
+.ff-watch-row dd { margin-top: 6px; }
+
+@media (max-width: 900px) {
+  .ff-coach-cols { grid-template-columns: 1fr; }
+  .ff-recal-grid { grid-template-columns: auto minmax(40px, 1fr) auto; }
+  .ff-recal-grid > p { grid-column: 1 / -1; margin-top: 6px; }
+}
+@media (max-width: 540px) {
+  .ff-recal-grid { grid-template-columns: 1fr; gap: 18px; }
+  .ff-recal-arrow { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BLEED BLOCKS — depth by differential speed
+   ═══════════════════════════════════════════════════════════════════════
+   Seventh mechanism. The photo half of each editorial block drifts slower
+   than the page as the block passes, so the image and the type separate in
+   depth instead of sliding past as one flat slab. This is the oldest trick
+   in the book, and it is here because it is the right one: these blocks are
+   two panels side by side and nothing was distinguishing them.
+
+   The frame is overflow-clipped and the image is oversized, so the drift
+   never exposes an edge.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1000px) {
+  @supports (animation-timeline: view()) {
+    .ff-para .ff-frame {
+      /* Oversize so a 9% drift cannot uncover the top or bottom edge. */
+      inset: -9% 0 -9% 0 !important;
+      animation: ff-para-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: transform;
+    }
+    @keyframes ff-para-drift {
+      from { transform: translateY(-4.5%); }
+      to   { transform: translateY(4.5%); }
+    }
+  }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
