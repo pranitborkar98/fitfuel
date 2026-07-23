@@ -1187,6 +1187,61 @@ main[data-surface="marketing"] {
   .ff-spec-detail { margin-top: 6px !important; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   FRANCHISE stack — an operating system that assembles itself
+   ═══════════════════════════════════════════════════════════════════════
+   Mechanism 12. Four layers stacked like strata; each clip-wipes up into
+   place on scroll, staggered from the bottom (the kitchen) upward, so the
+   system visibly builds. Base state is fully assembled, so an inactive
+   timeline shows the whole stack. */
+.ff-stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ff-stack-layer {
+  display: grid;
+  grid-template-columns: clamp(52px, 6vw, 84px) minmax(180px, 300px) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 44px);
+  align-items: baseline;
+  padding: clamp(22px, 3vw, 38px) clamp(18px, 2.4vw, 34px);
+  border: 1px solid var(--ff-rule);
+  border-bottom: none;
+  background: #070706;
+  position: relative;
+}
+.ff-stack-layer:last-child { border-bottom: 1px solid var(--ff-rule); }
+/* Each layer up sits on a fractionally lighter panel, so the stack reads as
+   depth: kitchen at the base, software on top. */
+.ff-stack-layer:nth-child(4) { background: #060605; }
+.ff-stack-layer:nth-child(3) { background: #0a0a08; }
+.ff-stack-layer:nth-child(2) { background: #0e0e0b; }
+.ff-stack-layer:nth-child(1) { background: #121210; }
+.ff-stack-layer:hover { border-color: var(--ff-rule-2); }
+.ff-stack-title { align-self: baseline; }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+    .ff-stack-layer {
+      animation: ff-stack-build linear both;
+      animation-timeline: view();
+      /* --l is the layer index from the bottom (0 = base). Higher layers
+         start later, so the stack assembles kitchen-up. */
+      animation-range: entry calc(30% + var(--l) * 9%) entry calc(66% + var(--l) * 9%);
+    }
+    @keyframes ff-stack-build {
+      from { clip-path: inset(0 0 100% 0); opacity: 0; }
+      to   { clip-path: inset(0 0 0 0); opacity: 1; }
+    }
+  }
+}
+@media (max-width: 760px) {
+  .ff-stack-layer { grid-template-columns: auto 1fr; row-gap: 6px; }
+  .ff-stack-body { grid-column: 1 / -1; }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed

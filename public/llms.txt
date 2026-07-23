@@ -55,6 +55,16 @@ calorie and protein intake is weighed rather than estimated from a food diary.
   influencers, dieticians, doctors, corporate offices and residential
   societies. QR onboarding, live client tracking, monthly payouts, and a
   commission per member. Apply at /partners/apply.
+- Franchise: FitFuel is vertically integrated, and the operating system that
+  runs its own kitchen is the franchise product. It is live software, not a
+  recipe binder: step-by-step recipe SOPs (technique, temperature, timing,
+  kitchen notes, per-step photos), an auto-computed production board that
+  gives tomorrow's portions per recipe by delivery window and meal slot from
+  live subscriptions, a scaled ingredient roll-up and consolidated shopping
+  list, and outlet-scoped delivery generation with a tokenised driver portal.
+  The franchise portal is a future phase; the operating system underneath is
+  already cooking every FitFuel box in Pune. Enquiries go to the founders via
+  the contact page.
 
 ## What FitFuel does not do
 

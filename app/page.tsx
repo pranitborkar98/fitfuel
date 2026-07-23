@@ -12,6 +12,7 @@ import Conditions from "./_home/Conditions";
 import Diary from "./_home/Diary";
 import Refer from "./_home/Refer";
 import Terms from "./_home/Terms";
+import Franchise from "./_home/Franchise";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -348,12 +349,6 @@ function Partners() {
   );
 }
 
-function Franchise() {
-  return <Bleed src="/images/chef-hands.jpg" alt="Fresh ingredients on a prep board" flip title="Franchise the whole system"
-    body="FitFuel is also the operating system to run a cloud kitchen. Recipe SOPs, batch scaling and a production board that tells any outlet exactly how much to cook tomorrow."
-    points={["Recipe SOPs, portion-scaled", "Production board, auto-computed", "Outlet dispatch and driver boards"]}
-    href="/contact" cta="Talk franchise" />;
-}
 
 /* ═══ MEMBERSHIP ═══ */
 function Membership() {
