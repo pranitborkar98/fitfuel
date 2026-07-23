@@ -58,6 +58,24 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
   });
 
   return rows.map((r: any) => {
+    // The static copy in supplements-data.ts was de-dashed per DESIGN.md, but
+    // the same fields also live in the DB, where the old text still carries
+    // em dashes. Rows are edited through the admin UI, so normalising on read
+    // keeps the rule enforced no matter what gets typed in later.
+    //
+    // Same heuristic as the codebase sweep: a short trailing fragment is an
+    // appositive (comma), a long one is an independent clause (full stop).
+    const deDash = (v: unknown): string => {
+      if (typeof v !== "string" || !v.includes("—")) return (v as string) ?? "";
+      return v.replace(/\s*—\s*/g, (_m, off: number, whole: string) => {
+        const after = whole.slice(off).replace(/^\s*—\s*/, "");
+        const seg = after.split(/[.,;:!?]/)[0] ?? "";
+        return seg.trim().split(/\s+/).filter(Boolean).length >= 5 ? ". " : ", ";
+      });
+    };
+    const deDashList = (v: unknown): string[] =>
+      Array.isArray(v) ? v.map((x) => deDash(x)) : [];
+
     const links: SupplementBuyLink[] = (r.links || []).map((l: any) => ({
       id: l.id,
       network: l.network,
@@ -73,26 +91,26 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       name: r.name,
       aka: r.aka || [],
       category: (r.category?.slug || "protein") as SupplementCategory,
-      tagline: r.tagline || "",
-      description: r.description || "",
-      mechanism: r.mechanism || "",
-      benefits: r.benefits || [],
-      dosage: r.dosage || "",
-      timing: r.timing || "",
-      onsetTime: r.onsetTime || "",
-      halfLife: r.halfLife || "",
+      tagline: deDash(r.tagline),
+      description: deDash(r.description),
+      mechanism: deDash(r.mechanism),
+      benefits: deDashList(r.benefits),
+      dosage: deDash(r.dosage),
+      timing: deDash(r.timing),
+      onsetTime: deDash(r.onsetTime),
+      halfLife: deDash(r.halfLife),
       form: r.form || "",
       cyclingRequired: !!r.cyclingRequired,
-      cyclingProtocol: r.cyclingProtocol || undefined,
+      cyclingProtocol: r.cyclingProtocol ? deDash(r.cyclingProtocol) : undefined,
       stacksWith: r.stacksWith || [],
       avoidWith: r.avoidWith || [],
-      warnings: r.warnings || "",
-      sideEffects: r.sideEffects || [],
-      genderNotes: r.genderNotes || undefined,
-      ageNotes: r.ageNotes || undefined,
+      warnings: deDash(r.warnings),
+      sideEffects: deDashList(r.sideEffects),
+      genderNotes: r.genderNotes ? deDash(r.genderNotes) : undefined,
+      ageNotes: r.ageNotes ? deDash(r.ageNotes) : undefined,
       evidenceLevel: (r.evidenceLevel || "moderate") as any,
       studyCount: r.studyCount || "",
-      keyStudyFindings: r.keyStudyFindings || [],
+      keyStudyFindings: deDashList(r.keyStudyFindings),
       goals: goalsBackToLower(r.recommendedFor),
       // Was `r.accentColor || "#a3e635"`. The DB carries a per-supplement
       // accent, and the live rows hold amber, purple, sky and indigo, which
@@ -106,9 +124,9 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       valueRating: (r.valueRating || "good") as any,
       popular: !!r.popular,
       veganFriendly: !!r.veganFriendly,
-      certificationNote: r.certificationNote || "",
+      certificationNote: deDash(r.certificationNote),
       emoji: r.emoji || "\uD83D\uDC8A",
-      indiaNote: r.indiaNote || undefined,
+      indiaNote: r.indiaNote ? deDash(r.indiaNote) : undefined,
       indiaAvailability: (r.indiaAvailability || "available") as any,
       // Phase 18-1 / 18-3 additions:
       links,

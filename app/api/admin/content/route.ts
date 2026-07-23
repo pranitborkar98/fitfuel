@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (e: any) {
     // unique-slug clashes etc.
-    const msg = e?.code === "P2002" ? "That slug is already taken — choose another." : "Save failed.";
+    const msg = e?.code === "P2002" ? "That slug is already taken, choose another." : "Save failed.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

@@ -217,7 +217,7 @@ function PincodeChecker() {
               Not in our zone yet
             </div>
             <div style={{ fontSize: 13, color: "#9a9a94", lineHeight: 1.6 }}>
-              We&apos;re expanding. WhatsApp us — sometimes we can accommodate.{" "}
+              We&apos;re expanding, so WhatsApp us. Sometimes we can accommodate.{" "}
               <a
                 href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi FitFuel! I'm at pincode ${input}. Do you deliver here?`)}`}
                 target="_blank"
@@ -268,7 +268,7 @@ export default function LocationsPage() {
             </FadeItem>
             <FadeItem>
               <p style={{ fontSize: 17, color: "#9a9a94", lineHeight: 1.8, maxWidth: 520, marginBottom: 0 }}>
-                We deliver to 15 areas across East and Central Pune — every day, 7am to 10am. Kharadi is our home base.
+                We deliver to 15 areas across East and Central Pune, every day, 7am to 10am. Kharadi is our home base.
               </p>
             </FadeItem>
           </motion.div>
@@ -400,12 +400,12 @@ export default function LocationsPage() {
                 }}>
                   Don&apos;t see your area?{" "}
                   <a
-                    href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi FitFuel! I want to check if you deliver to my area — ")}`}
+                    href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi FitFuel! I want to check if you deliver to my area: ")}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: "#84cc16", fontWeight: 600, textDecoration: "none" }}
                   >
-                    WhatsApp us — we&apos;re expanding. →
+                    WhatsApp us, we&apos;re expanding. →
                   </a>
                 </div>
               </FadeItem>
@@ -427,7 +427,7 @@ export default function LocationsPage() {
                     borderRadius: 20, overflow: "hidden",
                   }}>
                     <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid #1a1a1a" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb" }}>Our kitchen — Kharadi, Pune</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb" }}>Our kitchen, Kharadi, Pune</div>
                       <div style={{ fontSize: 12, color: "#85857e", marginTop: 2 }}>All deliveries dispatched from here daily at 7am</div>
                     </div>
                     <iframe
@@ -438,7 +438,7 @@ export default function LocationsPage() {
                       allowFullScreen
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
-                      title="FitFuel kitchen location — Kharadi, Pune"
+                      title="FitFuel kitchen location, Kharadi, Pune"
                     />
                     <div style={{ padding: "14px 24px" }}>
                       <a
@@ -524,7 +524,7 @@ export default function LocationsPage() {
                 }} />
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: "#84cc16", textTransform: "uppercase", marginBottom: 14 }}>
-                    — Ready to start
+                    Ready to start
                   </div>
                   <h2 style={{
                     fontFamily: "var(--ff-cond)",
@@ -536,7 +536,7 @@ export default function LocationsPage() {
                     We deliver to you.<br />Start for ₹400.
                   </h2>
                   <p style={{ fontSize: 15, color: "#9a9a94", maxWidth: 400, lineHeight: 1.7 }}>
-                    Trial day — no commitment, no subscription. Just fresh food at your door tomorrow morning.
+                    Trial day, no commitment, no subscription. Just fresh food at your door tomorrow morning.
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", position: "relative", zIndex: 1 }}>

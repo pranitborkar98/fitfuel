@@ -69,7 +69,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       }
     }
   } catch (e) {
-    console.error("[pdf] blob cache read failed — rendering fresh", e);
+    console.error("[pdf] blob cache read failed, rendering fresh", e);
   }
 
   // 2) Render.

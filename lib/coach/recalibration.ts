@@ -53,7 +53,7 @@ export function computeRecalibration(summary: WeeklySummary): Recalibration {
       deltaKcal: 0,
       canApply: false,
       rationale:
-        "Not enough weigh-ins yet to read a reliable trend — log at least two weigh-ins about two weeks apart and I'll recalibrate.",
+        "Not enough weigh-ins yet to read a reliable trend. Log at least two weigh-ins about two weeks apart and I'll recalibrate.",
     };
   }
 
@@ -147,7 +147,7 @@ function rationaleFor(
     case "too_slow":
       return `Progress is slower than target (${trend} vs ${tgt}). ${cap(dir)}ming ${amt} kcal/day should bring it in line.`;
     case "too_fast":
-      return `You're moving faster than target (${trend} vs ${tgt}) — that risks muscle/energy. I'd ${dir} ${amt} kcal/day to ease it to a sustainable pace.`;
+      return `You're moving faster than target (${trend} vs ${tgt}), that risks muscle/energy. I'd ${dir} ${amt} kcal/day to ease it to a sustainable pace.`;
     default:
       return `Adjusting your daily target by ${delta} kcal aligns your trend with your goal.`;
   }

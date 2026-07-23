@@ -103,10 +103,10 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["creatine", "bcaa", "glutamine"],
     avoidWith: [],
     warnings:
-      "Not suitable for dairy allergy. Lactose-intolerant individuals may experience bloating — switch to isolate. Excess protein above 2.2g/kg/day adds no additional muscle benefit.",
+      "Not suitable for dairy allergy. Lactose-intolerant individuals may experience bloating, switch to isolate. Excess protein above 2.2g/kg/day adds no additional muscle benefit.",
     sideEffects: ["Bloating (if lactose intolerant)", "Mild nausea if taken on empty stomach in large doses"],
-    genderNotes: "Women need the same leucine threshold (~2–3g) to stimulate MPS — use same dose. No hormonal concerns.",
-    ageNotes: "Older adults (55+) may need 35–40g per serving due to anabolic resistance — higher leucine doses overcome this.",
+    genderNotes: "Women need the same leucine threshold (~2–3g) to stimulate MPS, use same dose. No hormonal concerns.",
+    ageNotes: "Older adults (55+) may need 35–40g per serving due to anabolic resistance. Higher leucine doses overcome this.",
     evidenceLevel: "very_high",
     studyCount: "500+ RCTs",
     keyStudyFindings: [
@@ -120,9 +120,9 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "exceptional",
     popular: true,
     veganFriendly: false,
-    certificationNote: "Look for Informed Choice or NSF Certified for Sport. In India, MuscleBlaze has FSSAI approval — third-party lab-test batches exist.",
+    certificationNote: "Look for Informed Choice or NSF Certified for Sport. In India, MuscleBlaze has FSSAI approval, third-party lab-test batches exist.",
     emoji: "🥛",
-    indiaNote: "Beware adulteration — buy from verified sellers (Amazon, brand direct sites). MuscleBlaze, Optimum Nutrition Gold Standard, and AS-IT-IS are reliable. Avoid unbranded gym-counter products.",
+    indiaNote: "Beware adulteration. Buy from verified sellers (Amazon, brand direct sites). MuscleBlaze, Optimum Nutrition Gold Standard, and AS-IT-IS are reliable. Avoid unbranded gym-counter products.",
     indiaAvailability: "widely_available",
   },
 
@@ -137,8 +137,8 @@ export const SUPPLEMENTS: Supplement[] = [
     mechanism:
       "Same mTORC1 activation pathway as concentrate via leucine, but absorbed slightly faster due to lower fat/lactose content. Virtually no gastric distress. Ion-exchange or cross-flow microfiltration removes nearly all lactose.",
     benefits: [
-      "90%+ protein by weight — highest of all dairy proteins",
-      "Near-zero lactose — gut friendly for the lactose intolerant",
+      "90%+ protein by weight. Highest of all dairy proteins",
+      "Near-zero lactose. Gut friendly for the lactose intolerant",
       "Minimal carbohydrates and fat per serving",
       "Slightly faster absorption than concentrate",
       "Ideal for cutting phases with strict calorie targets",
@@ -152,7 +152,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["creatine", "glutamine"],
     avoidWith: [],
     warnings:
-      "Still derived from dairy — not suitable for milk protein allergy (different from lactose intolerance). More expensive than concentrate with marginal muscle-building advantage.",
+      "Still derived from dairy. Not suitable for milk protein allergy (different from lactose intolerance). More expensive than concentrate with marginal muscle-building advantage.",
     sideEffects: ["Very rare GI issues", "Possible allergy if milk protein sensitive"],
     evidenceLevel: "very_high",
     studyCount: "300+ RCTs",
@@ -181,27 +181,27 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Casein makes up 80% of milk protein and forms a gel in the stomach, releasing amino acids slowly over 5–7 hours. Ideal before sleep to prevent muscle catabolism during the overnight fast.",
     mechanism:
-      "Forms a clot in the acidic stomach environment, slowing gastric emptying. Results in a sustained but lower peak blood amino acid level compared to whey — perfect for anti-catabolic overnight coverage rather than acute MPS spikes. Also has high glutamine content (4.9% per 100g).",
+      "Forms a clot in the acidic stomach environment, slowing gastric emptying. Results in a sustained but lower peak blood amino acid level compared to whey. Perfect for anti-catabolic overnight coverage rather than acute MPS spikes. Also has high glutamine content (4.9% per 100g).",
     benefits: [
       "5–7hr sustained amino acid release into blood",
       "Prevents overnight muscle protein breakdown",
-      "Higher satiety — reduces late-night hunger",
+      "Higher satiety, reduces late-night hunger",
       "Supports morning glycogen and muscle recovery",
       "High glutamine content supports gut integrity",
     ],
     dosage: "25–40g",
     timing: "30–45 min before bed",
-    onsetTime: "Slow absorption — amino acids peak at 3–4 hours",
+    onsetTime: "Slow absorption. Amino acids peak at 3–4 hours",
     halfLife: "Provides amino acids over 5–7 hour window",
     form: "Powder",
     cyclingRequired: false,
     stacksWith: ["magnesium", "zma"],
     avoidWith: [],
     warnings:
-      "Dairy-derived — avoid with milk protein allergy. Thick texture may be unpalatable. Mix with minimal water for a pudding consistency. Contains more lactose than isolate.",
+      "Dairy-derived. Avoid with milk protein allergy. Thick texture may be unpalatable. Mix with minimal water for a pudding consistency. Contains more lactose than isolate.",
     sideEffects: ["Bloating in lactose-sensitive individuals", "Thick, chalky texture some find unpleasant"],
     genderNotes: "Particularly useful in women during caloric restriction to prevent overnight muscle loss.",
-    ageNotes: "Critical for older adults to prevent sarcopenia — overnight protein feeding is especially effective in 55+ age group.",
+    ageNotes: "Critical for older adults to prevent sarcopenia. Overnight protein feeding is especially effective in 55+ age group.",
     evidenceLevel: "high",
     studyCount: "100+ RCTs",
     keyStudyFindings: [
@@ -215,7 +215,7 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "good",
     popular: false,
     veganFriendly: false,
-    certificationNote: "Optimum Nutrition Gold Standard Casein is the benchmark. Look for 'micellar casein' not 'calcium caseinate' on the label — micellar is superior.",
+    certificationNote: "Optimum Nutrition Gold Standard Casein is the benchmark. Look for 'micellar casein' not 'calcium caseinate' on the label, micellar is superior.",
     emoji: "🌙",
     indiaAvailability: "available",
   },
@@ -239,16 +239,16 @@ export const SUPPLEMENTS: Supplement[] = [
     ],
     dosage: "25–35g per serving (5–10g more than whey to compensate for lower leucine density)",
     timing: "Post-workout or between meals",
-    onsetTime: "Moderate — peak amino acids at 1.5–2.5 hours",
+    onsetTime: "Moderate. Peak amino acids at 1.5–2.5 hours",
     halfLife: "Intermediate between whey and casein",
     form: "Powder",
     cyclingRequired: false,
     stacksWith: ["creatine", "vitamin-b12"],
     avoidWith: [],
     warnings:
-      "Slightly lower leucine content than whey — use 5–10g more per serving to compensate. Some people find the texture gritty; blend with banana or oat milk. Avoid soy-heavy blends if hormonal concerns exist.",
+      "Slightly lower leucine content than whey. Use 5–10g more per serving to compensate. Some people find the texture gritty; blend with banana or oat milk. Avoid soy-heavy blends if hormonal concerns exist.",
     sideEffects: ["Gritty texture", "Mild bloating from pea protein in some individuals"],
-    genderNotes: "Good option for women concerned about dairy — leucine matched to whey performs equivalently for body composition.",
+    genderNotes: "Good option for women concerned about dairy. Leucine matched to whey performs equivalently for body composition.",
     evidenceLevel: "high",
     studyCount: "50+ RCTs",
     keyStudyFindings: [
@@ -275,19 +275,19 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "protein",
     tagline: "Dairy-free, lactose-free, perfect amino acid score",
     description:
-      "Made from dehydrated egg whites, this protein is lactose-free with a PDCAAS of 1.0 — the highest possible score. Medium absorption rate sits between whey and casein, making it versatile for post-workout or between meals.",
+      "Made from dehydrated egg whites, this protein is lactose-free with a PDCAAS of 1.0, the highest possible score. Medium absorption rate sits between whey and casein, making it versatile for post-workout or between meals.",
     mechanism:
       "Highly bioavailable with all 9 EAAs in excellent ratios. Absorption speed is moderate (2–3 hrs to peak), making it useful both post-workout and between meals. High in BCAAs without lactose or dairy. Rich in lysine, methionine, and cysteine.",
     benefits: [
-      "PDCAAS of 1.0 — the highest possible amino acid score",
-      "Lactose-free and dairy-free — ideal for intolerances",
-      "Medium absorption rate — versatile timing",
+      "PDCAAS of 1.0. The highest possible amino acid score",
+      "Lactose-free and dairy-free, ideal for intolerances",
+      "Medium absorption rate, versatile timing",
       "Rich in BCAAs, glutamine, and sulphur amino acids",
       "Low fat and carbohydrate per serving",
     ],
     dosage: "25–30g",
     timing: "Post-workout, between meals, or as a meal replacement",
-    onsetTime: "Medium — peak amino acids at 2–3 hours",
+    onsetTime: "Medium. Peak amino acids at 2–3 hours",
     halfLife: "Moderate; provides sustained amino acid availability",
     form: "Powder",
     cyclingRequired: false,
@@ -300,7 +300,7 @@ export const SUPPLEMENTS: Supplement[] = [
     studyCount: "40+ studies",
     keyStudyFindings: [
       "Egg white protein produced equal MPS response to whey when matched for leucine content",
-      "PDCAAS 1.0 — highest biological value of any food protein",
+      "PDCAAS 1.0. Highest biological value of any food protein",
       "Egg white protein preserved lean mass equally to whey during 12-week caloric restriction study",
     ],
     goals: ["muscle_gain", "balanced"],
@@ -309,7 +309,7 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "moderate",
     popular: false,
     veganFriendly: false,
-    certificationNote: "Limited Indian brands — NOW Foods Egg White Protein is a reliable import option available on Amazon.in.",
+    certificationNote: "Limited Indian brands. NOW Foods Egg White Protein is a reliable import option available on Amazon.in.",
     emoji: "🥚",
     indiaAvailability: "limited",
   },
@@ -334,10 +334,10 @@ export const SUPPLEMENTS: Supplement[] = [
       "Accelerates lean muscle mass gain (+1–2kg over 12 weeks vs. placebo)",
       "Improves sprint and power output by 3–8%",
       "May enhance memory and cognitive performance under stress",
-      "Completely safe for long-term use — no cycling required",
+      "Completely safe for long-term use, no cycling required",
     ],
-    dosage: "3–5g daily (no loading phase needed — loading just saturates faster)",
-    timing: "Any time — post-workout slightly favoured in some studies but consistency matters far more",
+    dosage: "3–5g daily (no loading phase needed, loading just saturates faster)",
+    timing: "Any time. Post-workout slightly favoured in some studies but consistency matters far more",
     onsetTime: "Muscle saturation: 4 weeks at 3–5g/day (or 5–7 days with 20g/day loading)",
     halfLife: "Muscle creatine stores deplete over ~4–6 weeks without supplementation",
     form: "Powder / Capsule",
@@ -345,14 +345,14 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["whey-protein", "beta-alanine", "pre-workout", "hmb"],
     avoidWith: [],
     warnings:
-      "May cause 1–2kg initial water weight gain (intramuscular, not subcutaneous). Ensure adequate hydration (3L+/day). Rare reports of GI discomfort — take with food. Not contraindicated for kidneys in healthy individuals — this myth is debunked.",
+      "May cause 1–2kg initial water weight gain (intramuscular, not subcutaneous). Ensure adequate hydration (3L+/day). Rare reports of GI discomfort, take with food. Not contraindicated for kidneys in healthy individuals, this myth is debunked.",
     sideEffects: [
-      "Intramuscular water retention (1–2kg initial weight gain — not fat)",
+      "Intramuscular water retention (1–2kg initial weight gain, not fat)",
       "Mild GI discomfort if taken as a single large dose (split into 2–3 doses to minimise)",
       "Occasional muscle cramping if under-hydrated",
     ],
     genderNotes: "Women respond equivalently to men for strength gains. Women have slightly lower baseline creatine stores, so may see relatively larger initial gains. Safe during training ages.",
-    ageNotes: "Particularly important for older adults — sarcopenia and cognitive decline are both attenuated by creatine. 5g/day is well-studied in 50+ populations.",
+    ageNotes: "Particularly important for older adults. Sarcopenia and cognitive decline are both attenuated by creatine. 5g/day is well-studied in 50+ populations.",
     evidenceLevel: "very_high",
     studyCount: "500+ RCTs",
     keyStudyFindings: [
@@ -366,9 +366,9 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "exceptional",
     popular: true,
     veganFriendly: true,
-    certificationNote: "Creapure® (AlzChem, Germany) is the gold standard brand — look for the Creapure logo. AS-IT-IS and MuscleBlaze Creatine both offer Creapure-grade monohydrate in India.",
+    certificationNote: "Creapure® (AlzChem, Germany) is the gold standard brand. Look for the Creapure logo. AS-IT-IS and MuscleBlaze Creatine both offer Creapure-grade monohydrate in India.",
     emoji: "⚡",
-    indiaNote: "Creatine monohydrate is the most underpriced performance supplement available in India (₹400–600/kg). Simple micronised monohydrate is all you need — ignore expensive 'HCl', 'buffered', or 'Kre-Alkalyn' versions; they offer no proven advantage.",
+    indiaNote: "Creatine monohydrate is the most underpriced performance supplement available in India (₹400–600/kg). Simple micronised monohydrate is all you need, ignore expensive 'HCl', 'buffered', or 'Kre-Alkalyn' versions; they offer no proven advantage.",
     indiaAvailability: "widely_available",
   },
 
@@ -379,7 +379,7 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "performance",
     tagline: "Engineered energy for your best session",
     description:
-      "A multi-ingredient formula combining stimulants, vasodilators, and buffering agents. A quality pre-workout contains caffeine, beta-alanine, L-citrulline, and betaine — each with independent evidence. Avoid 'proprietary blends' with hidden doses.",
+      "A multi-ingredient formula combining stimulants, vasodilators, and buffering agents. A quality pre-workout contains caffeine, beta-alanine, L-citrulline, and betaine, each with independent evidence. Avoid 'proprietary blends' with hidden doses.",
     mechanism:
       "Caffeine blocks adenosine receptors to reduce perceived exertion. L-citrulline raises plasma arginine → nitric oxide → vasodilation. Beta-alanine buffers intramuscular acid. Betaine enhances power output via osmolyte action. Together they synergistically extend performance across multiple pathways.",
     benefits: [
@@ -389,7 +389,7 @@ export const SUPPLEMENTS: Supplement[] = [
       "Faster reaction time and mental focus",
       "Delays onset of muscular fatigue",
     ],
-    dosage: "1 scoop (7–12g) — check label per product; critical ingredients need minimum doses: 200mg caffeine, 6g citrulline, 3.2g beta-alanine",
+    dosage: "1 scoop (7–12g), check label per product; critical ingredients need minimum doses: 200mg caffeine, 6g citrulline, 3.2g beta-alanine",
     timing: "20–30 min before training",
     onsetTime: "Caffeine onset: 15–30 min; peak at 60–90 min",
     halfLife: "Caffeine: 5–6 hours; avoid within 6 hours of sleep",
@@ -399,15 +399,15 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["creatine", "bcaa"],
     avoidWith: ["caffeine", "energy-drinks"],
     warnings:
-      "Do not take within 6 hours of sleep. Sensitive individuals may experience jitteriness, palpitations, or anxiety. Avoid if you have heart conditions, anxiety disorders, or hypertension. Many Indian 'pre-workout' products are underdosed — check individual ingredient amounts.",
+      "Do not take within 6 hours of sleep. Sensitive individuals may experience jitteriness, palpitations, or anxiety. Avoid if you have heart conditions, anxiety disorders, or hypertension. Many Indian 'pre-workout' products are underdosed, check individual ingredient amounts.",
     sideEffects: [
       "Jitteriness, anxiety, palpitations (from caffeine)",
-      "Skin tingling/flushing (from beta-alanine — harmless)",
+      "Skin tingling/flushing (from beta-alanine, harmless)",
       "Insomnia if taken too late",
       "Potential blood pressure spike",
       "GI discomfort in some formulas",
     ],
-    genderNotes: "Women are generally more sensitive to caffeine — start with half a dose to assess tolerance.",
+    genderNotes: "Women are generally more sensitive to caffeine. Start with half a dose to assess tolerance.",
     evidenceLevel: "high",
     studyCount: "Individual ingredients: 200+ RCTs combined",
     keyStudyFindings: [
@@ -421,7 +421,7 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "moderate",
     popular: false,
     veganFriendly: true,
-    certificationNote: "Transparent Labs BULK and Optimum Nutrition Gold Standard Pre-Workout are transparent-label options. Avoid any product with a 'proprietary blend' — doses are hidden.",
+    certificationNote: "Transparent Labs BULK and Optimum Nutrition Gold Standard Pre-Workout are transparent-label options. Avoid any product with a 'proprietary blend': doses are hidden.",
     emoji: "🔥",
     indiaAvailability: "available",
   },
@@ -446,7 +446,7 @@ export const SUPPLEMENTS: Supplement[] = [
     dosage: "3–6mg per kg bodyweight (200–400mg for most adults)",
     timing: "45–60 min pre-workout for exercise; 30 min before cognitive tasks",
     onsetTime: "15–30 min to onset; peak plasma at 60–90 min",
-    halfLife: "5–6 hours (longer in some individuals — up to 9.5 hrs)",
+    halfLife: "5–6 hours (longer in some individuals, up to 9.5 hrs)",
     form: "Capsule / Tablet / Powder / Coffee",
     cyclingRequired: true,
     cyclingProtocol: "Take 2-week breaks every 8 weeks to reset adenosine receptor sensitivity",
@@ -462,8 +462,8 @@ export const SUPPLEMENTS: Supplement[] = [
       "Caffeine dependence with daily use",
       "Withdrawal headaches on cessation",
     ],
-    genderNotes: "Women metabolise caffeine somewhat slower due to hormonal influences on CYP1A2 enzyme — effects may last longer. Oral contraceptives slow caffeine metabolism by 30%.",
-    ageNotes: "Older adults may be more sensitive to cardiovascular effects — start at 100mg and assess.",
+    genderNotes: "Women metabolise caffeine somewhat slower due to hormonal influences on CYP1A2 enzyme, effects may last longer. Oral contraceptives slow caffeine metabolism by 30%.",
+    ageNotes: "Older adults may be more sensitive to cardiovascular effects. Start at 100mg and assess.",
     evidenceLevel: "very_high",
     studyCount: "1,000+ studies",
     keyStudyFindings: [
@@ -487,7 +487,7 @@ export const SUPPLEMENTS: Supplement[] = [
     name: "Beta-Alanine",
     aka: ["CarnoSyn", "β-Alanine"],
     category: "performance",
-    tagline: "Buffer acid — push harder, longer",
+    tagline: "Buffer acid, push harder, longer",
     description:
       "Beta-alanine is the rate-limiting precursor to carnosine in muscle tissue. Higher carnosine = better buffering of hydrogen ions during intense exercise, directly delaying fatigue in efforts lasting 1–4 minutes.",
     mechanism:
@@ -500,7 +500,7 @@ export const SUPPLEMENTS: Supplement[] = [
       "Stacks synergistically with creatine for different energy systems",
     ],
     dosage: "3.2–6.4g daily (split into 2–3 doses to reduce paresthesia)",
-    timing: "Any time — effects are cumulative via muscle carnosine stores, not acute",
+    timing: "Any time. Effects are cumulative via muscle carnosine stores, not acute",
     onsetTime: "Carnosine saturation and performance benefits: 4–6 weeks",
     halfLife: "Muscle carnosine levels return to baseline over ~9 weeks after stopping",
     form: "Powder / Capsule",
@@ -510,7 +510,7 @@ export const SUPPLEMENTS: Supplement[] = [
     warnings:
       "Paresthesia (harmless skin tingling/flushing) is common, especially at higher doses. Use slow-release capsules or split doses to minimise. Not beneficial for activities shorter than 60 seconds.",
     sideEffects: [
-      "Paresthesia (tingling, flushing) — harmless but alarming to newcomers",
+      "Paresthesia (tingling, flushing). Harmless but alarming to newcomers",
       "Mild GI discomfort at high single doses",
     ],
     evidenceLevel: "high",
@@ -557,7 +557,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["whey-protein", "glutamine", "creatine"],
     avoidWith: [],
     warnings:
-      "Largely redundant if daily protein intake is already adequate (1.6–2.2g/kg). Prioritise total protein first — BCAAs are a supplement for specific scenarios, not a protein replacement.",
+      "Largely redundant if daily protein intake is already adequate (1.6–2.2g/kg). Prioritise total protein first. BCAAs are a supplement for specific scenarios, not a protein replacement.",
     sideEffects: ["Bitter taste in powder form", "No significant adverse effects at recommended doses"],
     evidenceLevel: "moderate",
     studyCount: "50+ RCTs",
@@ -572,7 +572,7 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "moderate",
     popular: false,
     veganFriendly: true,
-    certificationNote: "AS-IT-IS BCAA uses Ajinomoto-grade fermented amino acids — a reliable standard. Avoid synthetic BCAAs from non-food sources.",
+    certificationNote: "AS-IT-IS BCAA uses Ajinomoto-grade fermented amino acids, a reliable standard. Avoid synthetic BCAAs from non-food sources.",
     emoji: "💪",
     indiaAvailability: "widely_available",
   },
@@ -584,7 +584,7 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "performance",
     tagline: "Maximum pump, maximum endurance",
     description:
-      "L-Citrulline is an amino acid that converts to arginine in the kidneys — more efficiently than taking arginine directly. The resulting nitric oxide production causes vasodilation, improving blood flow, nutrient delivery, and producing the coveted muscle pump.",
+      "L-Citrulline is an amino acid that converts to arginine in the kidneys. More efficiently than taking arginine directly. The resulting nitric oxide production causes vasodilation, improving blood flow, nutrient delivery, and producing the coveted muscle pump.",
     mechanism:
       "Citrulline → arginine (via ASS and ASL enzymes in kidneys) → nitric oxide synthase → nitric oxide → smooth muscle relaxation → vasodilation. Also reduces ammonia accumulation during exercise, directly delaying fatigue onset. Malate form adds TCA cycle support.",
     benefits: [
@@ -618,7 +618,7 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "good",
     popular: false,
     veganFriendly: true,
-    certificationNote: "AS-IT-IS L-Citrulline Malate and Nutrabay Pure series are reliable Indian options. Check ratio — 2:1 malate is standard.",
+    certificationNote: "AS-IT-IS L-Citrulline Malate and Nutrabay Pure series are reliable Indian options. Check ratio: 2:1 malate is standard.",
     emoji: "💉",
     indiaAvailability: "available",
   },
@@ -628,14 +628,14 @@ export const SUPPLEMENTS: Supplement[] = [
     name: "Essential Amino Acids (EAAs)",
     aka: ["EAAs", "Full Spectrum Aminos", "Complete Amino Acids"],
     category: "performance",
-    tagline: "All 9 essential aminos — the complete MPS substrate",
+    tagline: "All 9 essential aminos, the complete MPS substrate",
     description:
-      "EAAs include all 9 amino acids the body cannot synthesise — the 3 BCAAs plus histidine, lysine, methionine, phenylalanine, threonine, and tryptophan. A superior alternative to BCAAs alone as they provide the full substrate required for muscle protein synthesis.",
+      "EAAs include all 9 amino acids the body cannot synthesise. The 3 BCAAs plus histidine, lysine, methionine, phenylalanine, threonine, and tryptophan. A superior alternative to BCAAs alone as they provide the full substrate required for muscle protein synthesis.",
     mechanism:
       "All 9 EAAs are required as building blocks for muscle protein synthesis. While leucine triggers mTOR, the other EAAs must be available as raw material. EAAs outperform BCAAs alone because they remove the substrate limitation for MPS even when dietary protein is absent.",
     benefits: [
       "Complete substrate for muscle protein synthesis",
-      "Superior to BCAAs alone — includes all 9 required amino acids",
+      "Superior to BCAAs alone. Includes all 9 required amino acids",
       "Effective even without food or whey protein",
       "Useful during fasted training or prolonged sessions",
       "Supports recovery between sessions",
@@ -687,7 +687,7 @@ export const SUPPLEMENTS: Supplement[] = [
       "Accelerates recovery from high-volume training",
     ],
     dosage: "3g daily (1g × 3 doses with meals)",
-    timing: "With meals — 3 divided doses throughout the day; take one dose within 1–2 hours of training",
+    timing: "With meals: 3 divided doses throughout the day; take one dose within 1–2 hours of training",
     onsetTime: "Anti-catabolic effects: acute; anabolic effects build over 3–4 weeks",
     halfLife: "~2–3 hours; requires divided dosing for sustained coverage",
     form: "Capsule / Powder",
@@ -743,10 +743,10 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["beta-alanine", "caffeine", "creatine"],
     avoidWith: ["high-sodium-diet"],
     warnings:
-      "Causes significant GI distress (nausea, diarrhea, cramping) in ~50% of users when taken as powder. Use enteric-coated capsules or split across 4 small doses with water to minimise. Not appropriate for daily use — best reserved for competition or hard sessions.",
+      "Causes significant GI distress (nausea, diarrhea, cramping) in ~50% of users when taken as powder. Use enteric-coated capsules or split across 4 small doses with water to minimise. Not appropriate for daily use. Best reserved for competition or hard sessions.",
     sideEffects: [
-      "GI distress — nausea, bloating, diarrhea (very common with powder form)",
-      "High sodium load — caution with hypertension",
+      "GI distress, nausea, bloating, diarrhea (very common with powder form)",
+      "High sodium load, caution with hypertension",
       "Metabolic alkalosis at very high doses",
     ],
     evidenceLevel: "high",
@@ -793,9 +793,9 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["caffeine", "beta-alanine", "citrulline"],
     avoidWith: ["antibacterial-mouthwash"],
     warnings:
-      "Do not use antibacterial mouthwash — oral bacteria are required to convert nitrate to nitrite. Effect is blunted in highly trained athletes. Beetroot juice causes harmless red/pink urine and stool.",
+      "Do not use antibacterial mouthwash. Oral bacteria are required to convert nitrate to nitrite. Effect is blunted in highly trained athletes. Beetroot juice causes harmless red/pink urine and stool.",
     sideEffects: [
-      "Red/pink urine and stool (beeturia) — harmless",
+      "Red/pink urine and stool (beeturia), harmless",
       "Potential GI discomfort from high-dose juice",
       "Headache in some individuals",
     ],
@@ -814,7 +814,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Beet It Sport shots are the most researched commercial product. Frozen beetroot juice from local Indian stores is a cost-effective alternative.",
     emoji: "🫒",
-    indiaNote: "Fresh beetroot is cheap and widely available across India — juicing 150–200g fresh beetroot provides adequate nitrate. Far cheaper than supplement form.",
+    indiaNote: "Fresh beetroot is cheap and widely available across India. Juicing 150–200g fresh beetroot provides adequate nitrate. Far cheaper than supplement form.",
     indiaAvailability: "widely_available",
   },
 
@@ -831,15 +831,15 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "EPA and DHA are long-chain omega-3 fatty acids found in fatty fish and fish oil. They modulate the inflammatory response, supporting faster recovery, joint health, cardiovascular function, and brain health. One of the most universally beneficial supplements.",
     mechanism:
-      "EPA and DHA are incorporated into cell membrane phospholipids, displacing arachidonic acid and reducing production of pro-inflammatory eicosanoids (PGE2, LTB4). They also produce resolvins and protectins — specialised pro-resolving mediators that actively terminate inflammation rather than just suppressing it.",
+      "EPA and DHA are incorporated into cell membrane phospholipids, displacing arachidonic acid and reducing production of pro-inflammatory eicosanoids (PGE2, LTB4). They also produce resolvins and protectins. Specialised pro-resolving mediators that actively terminate inflammation rather than just suppressing it.",
     benefits: [
       "Reduces exercise-induced inflammation and DOMS",
       "Supports joint health, mobility, and reduces joint pain",
-      "Cardiovascular protection — lowers triglycerides by 15–20%",
+      "Cardiovascular protection, lowers triglycerides by 15–20%",
       "Brain health, cognitive function, and mood regulation",
       "May improve body composition via enhanced fat oxidation",
     ],
-    dosage: "2–3g combined EPA+DHA daily (check label — total fish oil ≠ EPA+DHA content)",
+    dosage: "2–3g combined EPA+DHA daily (check label. Total fish oil ≠ EPA+DHA content)",
     timing: "With any fat-containing meal to maximise absorption",
     onsetTime: "Cell membrane incorporation takes 4–6 weeks; anti-inflammatory effects may be felt in 2–3 weeks",
     halfLife: "EPA/DHA are stored in cell membranes long-term; not relevant in same way as other supplements",
@@ -848,7 +848,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["vitamin-d3", "magnesium", "curcumin"],
     avoidWith: ["blood-thinners"],
     warnings:
-      "High doses (>3g/day EPA+DHA) may increase bleeding risk — consult doctor if on anticoagulants. Refrigerate after opening to prevent oxidation. Look for IFOS 5-star certified brands. Take with meals to avoid fishy burps.",
+      "High doses (>3g/day EPA+DHA) may increase bleeding risk. Consult doctor if on anticoagulants. Refrigerate after opening to prevent oxidation. Look for IFOS 5-star certified brands. Take with meals to avoid fishy burps.",
     sideEffects: [
       "Fishy aftertaste or burps",
       "Mild GI discomfort",
@@ -885,7 +885,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Magnesium is involved in 300+ enzymatic reactions including protein synthesis, muscle contraction, nerve transmission, and ATP production. Athletes lose magnesium through sweat, making deficiency common in active individuals, and glycinate is the most bioavailable and gentlest form.",
     mechanism:
-      "Acts as a natural NMDA receptor antagonist (similar to glycine), calming the nervous system and reducing cortisol. Cofactor for ATP synthase — essential for energy production. Regulates calcium channels in muscle cells; deficiency causes cramping. Supports melatonin production for sleep onset.",
+      "Acts as a natural NMDA receptor antagonist (similar to glycine), calming the nervous system and reducing cortisol. Cofactor for ATP synthase, essential for energy production. Regulates calcium channels in muscle cells; deficiency causes cramping. Supports melatonin production for sleep onset.",
     benefits: [
       "Significantly improves sleep quality and duration",
       "Eliminates nocturnal muscle cramps and spasms",
@@ -894,7 +894,7 @@ export const SUPPLEMENTS: Supplement[] = [
       "Improves insulin sensitivity and blood glucose regulation",
     ],
     dosage: "300–400mg elemental magnesium (glycinate form)",
-    timing: "30–60 min before bed — compounds sleep benefits",
+    timing: "30–60 min before bed, compounds sleep benefits",
     onsetTime: "Sleep improvements: 1–2 weeks; cramp reduction: within days",
     halfLife: "Magnesium status improves over 4–6 weeks of consistent supplementation",
     form: "Capsule / Powder",
@@ -902,14 +902,14 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["zinc", "vitamin-d3", "omega3", "l-theanine"],
     avoidWith: [],
     warnings:
-      "Oxide form causes diarrhea — always choose glycinate or malate. High doses can lower blood pressure. Separate from calcium supplements and antibiotics (tetracycline) by 2 hours.",
+      "Oxide form causes diarrhea. Always choose glycinate or malate. High doses can lower blood pressure. Separate from calcium supplements and antibiotics (tetracycline) by 2 hours.",
     sideEffects: [
-      "Loose stools/diarrhea (oxide/citrate forms — not glycinate)",
+      "Loose stools/diarrhea (oxide/citrate forms, not glycinate)",
       "Blood pressure lowering at high doses",
       "Drowsiness (desirable at bedtime; avoid morning use)",
     ],
     genderNotes: "Women are more commonly deficient due to hormonal fluctuations. Magnesium may reduce PMS symptoms including cramping and mood disturbances.",
-    ageNotes: "Older adults absorb less magnesium from food and excrete more — supplementation is particularly important at 50+.",
+    ageNotes: "Older adults absorb less magnesium from food and excrete more. Supplementation is particularly important at 50+.",
     evidenceLevel: "high",
     studyCount: "100+ RCTs",
     keyStudyFindings: [
@@ -938,7 +938,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "The most abundant amino acid in the body, glutamine is conditionally essential during heavy training. It supports intestinal lining integrity, immune function, and muscle glycogen resynthesis. Most useful under high training volume or during caloric restriction.",
     mechanism:
-      "Primary fuel for intestinal enterocytes and immune cells (lymphocytes, macrophages). Maintains tight junction proteins in the gut wall (preventing leaky gut). During heavy training, muscle glutamine stores deplete, impairing immunity and recovery — supplementation restores intracellular glutamine pools.",
+      "Primary fuel for intestinal enterocytes and immune cells (lymphocytes, macrophages). Maintains tight junction proteins in the gut wall (preventing leaky gut). During heavy training, muscle glutamine stores deplete, impairing immunity and recovery. Supplementation restores intracellular glutamine pools.",
     benefits: [
       "Speeds post-workout muscle recovery",
       "Supports gut barrier integrity (reduces intestinal permeability)",
@@ -988,12 +988,12 @@ export const SUPPLEMENTS: Supplement[] = [
     benefits: [
       "Reduces delayed onset muscle soreness (DOMS) after exercise",
       "Joint inflammation relief comparable to ibuprofen in arthritis studies",
-      "Powerful antioxidant — reduces oxidative stress biomarkers",
+      "Powerful antioxidant, reduces oxidative stress biomarkers",
       "Supports cardiovascular health via endothelial function",
       "Anti-cancer, anti-diabetic, and neuroprotective properties in research",
     ],
     dosage: "500–1,000mg curcumin (as BCM-95, Meriva, or with 20mg piperine from black pepper)",
-    timing: "With meals containing fat — fat is required for absorption",
+    timing: "With meals containing fat. Fat is required for absorption",
     onsetTime: "Anti-inflammatory effects: 2–4 weeks; joint pain relief: 6–8 weeks",
     halfLife: "Poor bioavailability means tissue levels are maintained by consistent daily dosing",
     form: "Capsule",
@@ -1001,7 +1001,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["omega3", "vitamin-d3", "black-pepper-piperine"],
     avoidWith: ["blood-thinners"],
     warnings:
-      "Standard turmeric powder has <3% bioavailability — always use a standardised curcumin extract with piperine (BioPerine) or phospholipid complex. High doses (>8g/day) may interact with blood thinners.",
+      "Standard turmeric powder has <3% bioavailability. Always use a standardised curcumin extract with piperine (BioPerine) or phospholipid complex. High doses (>8g/day) may interact with blood thinners.",
     sideEffects: [
       "Mild GI discomfort at high doses",
       "Yellow staining of teeth/skin at very high doses",
@@ -1033,7 +1033,7 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "recovery",
     tagline: "Accelerate recovery, sleep better",
     description:
-      "Tart (Montmorency) cherries are exceptionally rich in anthocyanins and naturally occurring melatonin. They reduce muscle damage markers, accelerate recovery from intense exercise, and improve sleep quality — making them ideal during heavy training blocks.",
+      "Tart (Montmorency) cherries are exceptionally rich in anthocyanins and naturally occurring melatonin. They reduce muscle damage markers, accelerate recovery from intense exercise, and improve sleep quality. Making them ideal during heavy training blocks.",
     mechanism:
       "Anthocyanins inhibit COX-1/2 enzymes (same target as ibuprofen), reducing inflammatory markers post-exercise. Natural melatonin content (2.5µg/serving) and tryptophan improve sleep onset and duration. Polyphenols also reduce oxidative stress via upregulation of endogenous antioxidant enzymes.",
     benefits: [
@@ -1046,13 +1046,13 @@ export const SUPPLEMENTS: Supplement[] = [
     dosage: "480mg extract twice daily (or 240ml concentrate twice daily)",
     timing: "Morning and evening, or split around training",
     onsetTime: "Acute anti-inflammatory effects within 24 hours; sleep benefits: first night",
-    halfLife: "Anthocyanins cleared within 4–8 hours — twice-daily dosing maintains coverage",
+    halfLife: "Anthocyanins cleared within 4–8 hours, twice-daily dosing maintains coverage",
     form: "Capsule / Concentrate",
     cyclingRequired: false,
     stacksWith: ["magnesium", "omega3"],
     avoidWith: [],
     warnings:
-      "Juice form has high sugar content (16g sugar per 240ml) — use extract capsules for lower calories. Some products contain artificial colours — buy pure extract.",
+      "Juice form has high sugar content (16g sugar per 240ml). Use extract capsules for lower calories. Some products contain artificial colours, buy pure extract.",
     sideEffects: ["Mild GI discomfort from juice form", "High calorie/sugar if using concentrate form repeatedly"],
     evidenceLevel: "moderate",
     studyCount: "20+ RCTs",
@@ -1079,7 +1079,7 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "recovery",
     tagline: "Master antioxidant precursor and recovery accelerator",
     description:
-      "NAC is the precursor to glutathione — the body's most powerful endogenous antioxidant. It replenishes cysteine, the rate-limiting amino acid for glutathione synthesis. Used in clinical medicine for acetaminophen overdose; in sports for reducing oxidative stress, supporting lung function, and accelerating recovery.",
+      "NAC is the precursor to glutathione, the body's most powerful endogenous antioxidant. It replenishes cysteine, the rate-limiting amino acid for glutathione synthesis. Used in clinical medicine for acetaminophen overdose; in sports for reducing oxidative stress, supporting lung function, and accelerating recovery.",
     mechanism:
       "NAC → cysteine → glutathione (GSH). Glutathione is the primary intracellular antioxidant, neutralising reactive oxygen species produced during intense exercise and illness. NAC also has direct mucolytic properties, thins respiratory secretions, and modulates inflammatory NF-κB signalling.",
     benefits: [
@@ -1098,7 +1098,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["vitamin-c", "selenium", "alpha-lipoic-acid"],
     avoidWith: ["nitroglycerin"],
     warnings:
-      "Avoid taking immediately post-workout in high doses — there is evidence that excessive antioxidant supplementation can blunt training adaptations (hormesis). Use on rest days or in the morning. Interaction with nitroglycerin for angina — consult doctor.",
+      "Avoid taking immediately post-workout in high doses. There is evidence that excessive antioxidant supplementation can blunt training adaptations (hormesis). Use on rest days or in the morning. Interaction with nitroglycerin for angina, consult doctor.",
     sideEffects: [
       "Nausea and GI discomfort (especially on empty stomach)",
       "Rotten egg smell in urine (sulphur-containing compound)",
@@ -1127,20 +1127,20 @@ export const SUPPLEMENTS: Supplement[] = [
     name: "CoQ10 (Coenzyme Q10)",
     aka: ["Ubiquinol", "Ubiquinone", "CoQ10"],
     category: "recovery",
-    tagline: "Mitochondrial fuel — energy at the cellular level",
+    tagline: "Mitochondrial fuel. Energy at the cellular level",
     description:
       "Coenzyme Q10 is an essential component of the mitochondrial electron transport chain, required for ATP synthesis. Levels decline with age and are depleted by statin medications. Supplementation improves energy production, reduces oxidative stress, and supports cardiovascular health.",
     mechanism:
-      "CoQ10 shuttles electrons between Complex I/II and Complex III in the mitochondrial electron transport chain — directly enabling ATP synthesis. It is also a potent lipid-soluble antioxidant, protecting mitochondrial membranes from oxidative damage. Ubiquinol is the active, reduced form (better absorbed).",
+      "CoQ10 shuttles electrons between Complex I/II and Complex III in the mitochondrial electron transport chain, directly enabling ATP synthesis. It is also a potent lipid-soluble antioxidant, protecting mitochondrial membranes from oxidative damage. Ubiquinol is the active, reduced form (better absorbed).",
     benefits: [
-      "Supports mitochondrial ATP production — cellular energy",
+      "Supports mitochondrial ATP production, cellular energy",
       "Reduces fatigue in statin-treated individuals (statins deplete CoQ10)",
       "Reduces oxidative stress and protects cardiovascular tissue",
       "Improves exercise tolerance in heart failure patients",
       "Anti-aging effects via mitochondrial protection",
     ],
     dosage: "100–300mg ubiquinol (active form) or 200–600mg ubiquinone",
-    timing: "With meals containing fat — fat-soluble compound",
+    timing: "With meals containing fat, fat-soluble compound",
     onsetTime: "Plasma CoQ10 increases within 2–4 weeks; energy effects may take 4–8 weeks",
     halfLife: "~34–72 hours in plasma",
     form: "Softgel / Capsule",
@@ -1148,7 +1148,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["omega3", "vitamin-e", "alpha-lipoic-acid"],
     avoidWith: ["warfarin"],
     warnings:
-      "May reduce effectiveness of warfarin (anticoagulant) — consult doctor. Ubiquinol is superior to ubiquinone for absorption, especially in older adults. Most important in those on statin drugs (atorvastatin, rosuvastatin).",
+      "May reduce effectiveness of warfarin (anticoagulant), consult doctor. Ubiquinol is superior to ubiquinone for absorption, especially in older adults. Most important in those on statin drugs (atorvastatin, rosuvastatin).",
     sideEffects: ["Mild GI discomfort", "Insomnia if taken in the evening (energising)", "Very rare: rash"],
     ageNotes: "Essential for adults 40+ and those on statins. CoQ10 plasma levels drop significantly with age and are halved by statin medication use.",
     evidenceLevel: "high",
@@ -1166,7 +1166,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Kaneka Q+® ubiquinol is the most bioavailable and researched form. Healthkart and NOW both carry CoQ10 in India.",
     emoji: "⚙️",
-    indiaNote: "Particularly relevant for the growing number of Indians on statin medications for cholesterol — statins deplete CoQ10 by up to 54%.",
+    indiaNote: "Particularly relevant for the growing number of Indians on statin medications for cholesterol. Statins deplete CoQ10 by up to 54%.",
     indiaAvailability: "available",
   },
 
@@ -1181,7 +1181,7 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "vitamins",
     tagline: "The hormone your body desperately needs",
     description:
-      "Vitamin D3 functions more like a hormone than a vitamin, regulating 200+ genes including immune function, muscle strength, testosterone production, calcium absorption, and mood. Deficiency is epidemic globally — including in sunny India — due to indoor lifestyles and melanin.",
+      "Vitamin D3 functions more like a hormone than a vitamin, regulating 200+ genes including immune function, muscle strength, testosterone production, calcium absorption, and mood. Deficiency is epidemic globally. Including in sunny India. Due to indoor lifestyles and melanin.",
     mechanism:
       "Converted to calcitriol (active form, 1,25-dihydroxyvitamin D) in liver and kidneys. Binds to Vitamin D receptors (VDR) present in virtually every tissue type. K2 (MK-7 form) activates osteocalcin and Matrix Gla Protein, directing calcium into bones and away from arterial walls.",
     benefits: [
@@ -1194,19 +1194,19 @@ export const SUPPLEMENTS: Supplement[] = [
     dosage: "2,000–5,000 IU D3 + 100–200mcg K2 (MK-7 form)",
     timing: "With the largest, fattiest meal of the day (fat-soluble vitamin)",
     onsetTime: "Blood serum levels begin rising within 1 week; clinical effects may take 8–12 weeks",
-    halfLife: "25(OH)D has a half-life of ~25 days in the body — regular dosing maintains levels",
+    halfLife: "25(OH)D has a half-life of ~25 days in the body, regular dosing maintains levels",
     form: "Softgel / Drops",
     cyclingRequired: false,
     stacksWith: ["magnesium", "omega3", "zinc"],
     avoidWith: [],
     warnings:
-      "Fat-soluble — can accumulate to toxic levels above 10,000 IU/day long-term. Always test serum 25(OH)D before and after starting — target 40–60 ng/mL. Always pair with K2 to prevent calcium misplacement into arteries.",
+      "Fat-soluble. Can accumulate to toxic levels above 10,000 IU/day long-term. Always test serum 25(OH)D before and after starting, target 40–60 ng/mL. Always pair with K2 to prevent calcium misplacement into arteries.",
     sideEffects: [
       "Toxicity (rare) with sustained doses >10,000 IU/day: nausea, weakness, kidney damage",
       "Hypercalcemia at very high doses without K2 co-supplementation",
     ],
     genderNotes: "Women with PCOS show greater improvements in insulin sensitivity with vitamin D normalisation. Reduces menstrual pain severity.",
-    ageNotes: "Essential after 60 — skin synthesis declines dramatically with age. Increases fall-prevention efficacy in conjunction with calcium.",
+    ageNotes: "Essential after 60. Skin synthesis declines dramatically with age. Increases fall-prevention efficacy in conjunction with calcium.",
     evidenceLevel: "very_high",
     studyCount: "5,000+ studies",
     keyStudyFindings: [
@@ -1220,7 +1220,7 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "exceptional",
     popular: true,
     veganFriendly: true,
-    certificationNote: "NOW D3+K2 drops are widely available and well-dosed. Avoid ergocalciferol (D2) — D3 is 87% more effective at raising serum levels.",
+    certificationNote: "NOW D3+K2 drops are widely available and well-dosed. Avoid ergocalciferol (D2). D3 is 87% more effective at raising serum levels.",
     emoji: "☀️",
     indiaNote: "Despite India's sunshine, 70–90% of urban Indians are deficient. Darker skin pigmentation requires 3–6× more sun exposure to produce equivalent D3. A simple serum 25(OH)D test (₹600–800) before supplementing is recommended.",
     indiaAvailability: "widely_available",
@@ -1235,7 +1235,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Vitamin C is a water-soluble antioxidant essential for collagen synthesis, immune function, iron absorption, and cortisol metabolism. Athletes have higher requirements due to increased oxidative stress from training. Also required as cofactor for collagen supplementation to work.",
     mechanism:
-      "Powerful reducing agent — neutralises reactive oxygen species. Essential cofactor for prolyl hydroxylase, which stabilises collagen's triple helix structure. Regenerates vitamin E to extend the antioxidant network. Reduces cortisol overproduction during psychological and physical stress.",
+      "Powerful reducing agent, neutralises reactive oxygen species. Essential cofactor for prolyl hydroxylase, which stabilises collagen's triple helix structure. Regenerates vitamin E to extend the antioxidant network. Reduces cortisol overproduction during psychological and physical stress.",
     benefits: [
       "Boosts immune function during heavy training",
       "Essential for tendon, ligament, and bone collagen synthesis",
@@ -1252,7 +1252,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["zinc", "iron", "collagen"],
     avoidWith: [],
     warnings:
-      "High doses >2g/day can cause osmotic diarrhea. High-dose antioxidants taken immediately post-workout may blunt some training adaptations — use away from training. May interfere with some blood tests (false creatinine readings).",
+      "High doses >2g/day can cause osmotic diarrhea. High-dose antioxidants taken immediately post-workout may blunt some training adaptations, use away from training. May interfere with some blood tests (false creatinine readings).",
     sideEffects: [
       "Diarrhea at doses >2g/day (osmotic)",
       "GI cramps at high doses",
@@ -1289,29 +1289,29 @@ export const SUPPLEMENTS: Supplement[] = [
     benefits: [
       "Prevents megaloblastic anaemia from B12 deficiency",
       "Protects nerve health and myelin sheath integrity",
-      "Reduces homocysteine — a cardiovascular risk marker",
+      "Reduces homocysteine, a cardiovascular risk marker",
       "Supports energy production from food macronutrients",
       "Mood and cognitive function support",
     ],
     dosage: "500–1,000mcg daily (cyanocobalamin); 1,000mcg methylcobalamin sublingually",
     timing: "Morning with breakfast; sublingual absorbed regardless of food",
     onsetTime: "Serum B12 normalises within weeks; neurological improvements may take months",
-    halfLife: "B12 is stored in the liver (2–3 year reserve) — deficiency takes time to develop but also takes time to correct",
+    halfLife: "B12 is stored in the liver (2–3 year reserve). Deficiency takes time to develop but also takes time to correct",
     form: "Sublingual tablet / Capsule / Injection (severe deficiency)",
     cyclingRequired: false,
     stacksWith: ["vitamin-d3", "iron", "folate"],
     avoidWith: [],
     warnings:
-      "Water-soluble and very safe — excess is excreted. Cyanocobalamin is cheap and well-absorbed in most; methylcobalamin may suit those with MTHFR gene variants. Sublingual absorption bypasses gastric issues in older adults.",
-    sideEffects: ["Essentially none at recommended doses — excess is urinary-excreted", "Rarely: acne-like skin reaction at very high doses"],
-    genderNotes: "Pregnant women have dramatically increased B12 needs — deficiency during pregnancy causes neural tube defects.",
-    ageNotes: "Elderly people absorb B12 poorly due to reduced intrinsic factor production — sublingual or injection may be required.",
+      "Water-soluble and very safe, excess is excreted. Cyanocobalamin is cheap and well-absorbed in most; methylcobalamin may suit those with MTHFR gene variants. Sublingual absorption bypasses gastric issues in older adults.",
+    sideEffects: ["Essentially none at recommended doses, excess is urinary-excreted", "Rarely: acne-like skin reaction at very high doses"],
+    genderNotes: "Pregnant women have dramatically increased B12 needs. Deficiency during pregnancy causes neural tube defects.",
+    ageNotes: "Elderly people absorb B12 poorly due to reduced intrinsic factor production. Sublingual or injection may be required.",
     evidenceLevel: "very_high",
     studyCount: "500+ studies",
     keyStudyFindings: [
       "B12 deficiency (serum <200 pg/mL) affects ~47% of Indians in population surveys",
       "B12 supplementation reversed neurological symptoms (tingling, weakness) in 70% of deficient patients over 3 months",
-      "High-dose B12 (1mg/day) reduced homocysteine by 33% in vegans — cardiovascular risk marker normalisation",
+      "High-dose B12 (1mg/day) reduced homocysteine by 33% in vegans, cardiovascular risk marker normalisation",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced", "performance"],
     accent: "#a3e635",
@@ -1321,7 +1321,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Methylcobalamin sublingual (1000mcg) is the preferred form. Jarrow B12 sublingual and Solgar Methylcobalamin are reliable. Any FSSAI-certified Indian methylcobalamin product is adequate.",
     emoji: "🧬",
-    indiaNote: "India has one of the world's highest B12 deficiency rates — estimated 47% of the population. The primarily vegetarian diet is the main cause. Vegetarians and vegans must supplement without exception. Even many non-vegetarians eating limited animal products are deficient.",
+    indiaNote: "India has one of the world's highest B12 deficiency rates. Estimated 47% of the population. The primarily vegetarian diet is the main cause. Vegetarians and vegans must supplement without exception. Even many non-vegetarians eating limited animal products are deficient.",
     indiaAvailability: "widely_available",
   },
 
@@ -1334,7 +1334,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "A comprehensive multivitamin-mineral provides insurance against micronutrient gaps that are nearly universal in athletes due to high energy expenditure, sweat losses, and dietary restrictions. Does not replace good nutrition but fills the inevitable gaps.",
     mechanism:
-      "Provides recommended daily amounts of vitamins and minerals that serve as cofactors for thousands of enzymatic reactions — energy production, DNA repair, protein synthesis, immune function, hormone production, and antioxidant systems.",
+      "Provides recommended daily amounts of vitamins and minerals that serve as cofactors for thousands of enzymatic reactions, energy production, DNA repair, protein synthesis, immune function, hormone production, and antioxidant systems.",
     benefits: [
       "Covers common micronutrient gaps in active individuals",
       "Supports energy metabolism via B-vitamin cofactors",
@@ -1351,10 +1351,10 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["omega3", "vitamin-d3", "magnesium"],
     avoidWith: [],
     warnings:
-      "Multivitamins do not replace poor diet. Avoid iron-containing multivitamins in adult men and post-menopausal women unless diagnosed iron deficient. Fat-soluble vitamins (A, D, E, K) can accumulate — do not combine with individual fat-soluble supplements without accounting for the multi's contribution.",
+      "Multivitamins do not replace poor diet. Avoid iron-containing multivitamins in adult men and post-menopausal women unless diagnosed iron deficient. Fat-soluble vitamins (A, D, E, K) can accumulate. Do not combine with individual fat-soluble supplements without accounting for the multi's contribution.",
     sideEffects: [
       "Nausea if taken on empty stomach",
-      "Bright yellow urine (riboflavin / B2 excess — harmless)",
+      "Bright yellow urine (riboflavin / B2 excess, harmless)",
       "Iron-containing multis can cause GI discomfort and constipation",
     ],
     evidenceLevel: "moderate",
@@ -1388,10 +1388,10 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Zinc is an essential trace mineral involved in 300+ enzymatic processes including testosterone biosynthesis, immune function, protein synthesis, and wound healing. Athletes lose zinc through sweat, making deficiency very common in those training regularly.",
     mechanism:
-      "Structural component of zinc-finger transcription factors. Essential cofactor for 5-alpha reductase (testosterone pathway). Inhibits aromatase (reduces estrogen conversion). Required for thymulin — a hormone controlling T-cell development. Zinc deficiency directly impairs testosterone production.",
+      "Structural component of zinc-finger transcription factors. Essential cofactor for 5-alpha reductase (testosterone pathway). Inhibits aromatase (reduces estrogen conversion). Required for thymulin. A hormone controlling T-cell development. Zinc deficiency directly impairs testosterone production.",
     benefits: [
       "Supports testosterone production in deficient individuals",
-      "Strengthens immune response — especially against viral infections",
+      "Strengthens immune response, especially against viral infections",
       "Accelerates wound and tissue healing",
       "Supports protein synthesis and recovery",
       "Maintains taste, smell, and appetite",
@@ -1405,13 +1405,13 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["magnesium", "vitamin-d3"],
     avoidWith: ["iron", "calcium"],
     warnings:
-      "Chronic intake above 40mg/day depletes copper — supplement 2mg copper per 15mg zinc if using long-term. Take away from iron and calcium supplements. Nausea on empty stomach at >30mg.",
+      "Chronic intake above 40mg/day depletes copper. Supplement 2mg copper per 15mg zinc if using long-term. Take away from iron and calcium supplements. Nausea on empty stomach at >30mg.",
     sideEffects: [
       "Nausea and vomiting (especially on empty stomach at high doses)",
       "Copper deficiency with chronic high doses",
       "Metallic taste at very high doses",
     ],
-    genderNotes: "Men lose more zinc through ejaculation — those with high sexual frequency may have increased requirements.",
+    genderNotes: "Men lose more zinc through ejaculation. Those with high sexual frequency may have increased requirements.",
     evidenceLevel: "high",
     studyCount: "200+ studies",
     keyStudyFindings: [
@@ -1427,7 +1427,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Zinc picolinate and bisglycinate have superior absorption to zinc oxide. NOW Foods Zinc Glycinate is widely available on Amazon.in.",
     emoji: "🔩",
-    indiaNote: "Vegetarian Indian diets are often low in zinc — phytates in grains and legumes reduce absorption. Soaking, sprouting, or fermenting legumes before cooking improves zinc bioavailability by 20–50%.",
+    indiaNote: "Vegetarian Indian diets are often low in zinc. Phytates in grains and legumes reduce absorption. Soaking, sprouting, or fermenting legumes before cooking improves zinc bioavailability by 20–50%.",
     indiaAvailability: "widely_available",
   },
 
@@ -1436,11 +1436,11 @@ export const SUPPLEMENTS: Supplement[] = [
     name: "Iron",
     aka: ["Ferrous Sulfate", "Ferrous Bisglycinate", "Ferric Iron"],
     category: "minerals",
-    tagline: "Oxygen delivery — the aerobic foundation",
+    tagline: "Oxygen delivery, the aerobic foundation",
     description:
       "Iron is the central atom in hemoglobin and myoglobin, enabling oxygen transport and storage in blood and muscle. Iron-deficiency anaemia is one of the most common nutritional deficiencies globally, severely limiting aerobic capacity and cognitive function.",
     mechanism:
-      "Core of the heme group in hemoglobin (oxygen transport in RBCs) and myoglobin (oxygen storage in muscle). Also essential component of cytochromes in the mitochondrial electron transport chain — directly powers ATP production. Iron deficiency without anaemia still impairs exercise performance.",
+      "Core of the heme group in hemoglobin (oxygen transport in RBCs) and myoglobin (oxygen storage in muscle). Also essential component of cytochromes in the mitochondrial electron transport chain, directly powers ATP production. Iron deficiency without anaemia still impairs exercise performance.",
     benefits: [
       "Prevents and reverses iron-deficiency anaemia",
       "Maximises oxygen delivery to working muscles",
@@ -1448,28 +1448,28 @@ export const SUPPLEMENTS: Supplement[] = [
       "Supports immune function",
       "Critical during pregnancy and for those with heavy menstruation",
     ],
-    dosage: "18mg RDA for women (pre-menopausal), 8mg for men — only supplement with confirmed deficiency",
+    dosage: "18mg RDA for women (pre-menopausal), 8mg for men. Only supplement with confirmed deficiency",
     timing: "On empty stomach for maximum absorption with 100mg Vitamin C; away from coffee/tea/dairy",
     onsetTime: "Serum ferritin normalises over 3–6 months of treatment",
-    halfLife: "Iron is retained in the body with very efficient recycling — toxicity is a real risk with excess",
+    halfLife: "Iron is retained in the body with very efficient recycling. Toxicity is a real risk with excess",
     form: "Capsule / Liquid (bisglycinate is gentlest)",
     cyclingRequired: false,
     stacksWith: ["vitamin-c", "vitamin-b12"],
     avoidWith: ["calcium", "zinc", "coffee", "tea", "dairy"],
     warnings:
-      "CRITICAL: Do NOT supplement iron without a blood test (serum ferritin + full blood count). Excess iron is a pro-oxidant and toxic — it accelerates cardiovascular disease and cancer. Men and post-menopausal women rarely need supplemental iron.",
+      "CRITICAL: Do NOT supplement iron without a blood test (serum ferritin + full blood count). Excess iron is a pro-oxidant and toxic. It accelerates cardiovascular disease and cancer. Men and post-menopausal women rarely need supplemental iron.",
     sideEffects: [
       "Constipation and dark stools (especially ferrous sulfate)",
       "Nausea and GI cramping",
       "Teeth staining (liquid forms)",
-      "Toxicity in overdose — especially dangerous in children",
+      "Toxicity in overdose, especially dangerous in children",
     ],
-    genderNotes: "Pre-menopausal women lose significant iron through menstruation — iron-deficiency anaemia affects up to 53% of Indian women. Female athletes are at highest risk.",
+    genderNotes: "Pre-menopausal women lose significant iron through menstruation. Iron-deficiency anaemia affects up to 53% of Indian women. Female athletes are at highest risk.",
     evidenceLevel: "very_high",
     studyCount: "1,000+ studies",
     keyStudyFindings: [
       "Iron supplementation improved VO2 max by 8.1% in anaemic athletes over 8 weeks",
-      "Even non-anaemic iron deficiency (low ferritin) impaired endurance performance — correction improved 5km time by 42 seconds",
+      "Even non-anaemic iron deficiency (low ferritin) impaired endurance performance. Correction improved 5km time by 42 seconds",
       "53% of Indian women of reproductive age are anaemic (NFHS-5, 2021)",
     ],
     goals: ["balanced", "performance"],
@@ -1480,7 +1480,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Ferrous bisglycinate (e.g., Ferrochel®) causes far less GI distress than ferrous sulfate. Ferrous gluconate is an intermediate option. Always test before supplementing.",
     emoji: "🩸",
-    indiaNote: "Anaemia affects 53% of Indian women and 20% of men per NFHS-5 data. Plant-based Indian diets provide non-heme iron (less bioavailable) — always pair with citrus. Chai/coffee with meals dramatically reduces iron absorption.",
+    indiaNote: "Anaemia affects 53% of Indian women and 20% of men per NFHS-5 data. Plant-based Indian diets provide non-heme iron (less bioavailable), always pair with citrus. Chai/coffee with meals dramatically reduces iron absorption.",
     indiaAvailability: "widely_available",
   },
 
@@ -1502,7 +1502,7 @@ export const SUPPLEMENTS: Supplement[] = [
       "Reduces nocturnal muscle cramps",
     ],
     dosage: "3 capsules (provides ~30mg zinc, 450mg magnesium, 10.5mg B6)",
-    timing: "Before bed on an empty stomach — 30–60 min before sleep",
+    timing: "Before bed on an empty stomach: 30–60 min before sleep",
     onsetTime: "Sleep improvements: within 3–7 days; hormonal benefits in deficient individuals: 4–6 weeks",
     halfLife: "Zinc and magnesium tissue levels change over weeks",
     form: "Capsule",
@@ -1510,9 +1510,9 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["vitamin-d3", "casein-protein"],
     avoidWith: ["calcium", "dairy"],
     warnings:
-      "Take on an empty stomach — calcium and dairy dramatically interfere with zinc absorption. Benefits most pronounced in those actually deficient in zinc or magnesium — get tested if unsure.",
+      "Take on an empty stomach. Calcium and dairy dramatically interfere with zinc absorption. Benefits most pronounced in those actually deficient in zinc or magnesium, get tested if unsure.",
     sideEffects: [
-      "Vivid dreams (sometimes reported — harmless)",
+      "Vivid dreams (sometimes reported, harmless)",
       "GI discomfort if taken with food/dairy",
     ],
     evidenceLevel: "moderate",
@@ -1540,7 +1540,7 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "minerals",
     tagline: "Hydration, performance, and cramp prevention",
     description:
-      "An electrolyte complex provides sodium, potassium, magnesium, and chloride — the key ions lost through sweat during exercise. Electrolyte depletion is the primary cause of exercise cramps and impairs both endurance and strength performance.",
+      "An electrolyte complex provides sodium, potassium, magnesium, and chloride. The key ions lost through sweat during exercise. Electrolyte depletion is the primary cause of exercise cramps and impairs both endurance and strength performance.",
     mechanism:
       "Sodium drives fluid retention and plasma volume expansion. Potassium maintains resting membrane potential for muscle and nerve firing. Magnesium regulates calcium channels. Together they maintain osmotic balance, nerve conduction velocity, and muscular contraction. Sodium + water create plasma osmolality signal to retain fluid.",
     benefits: [
@@ -1553,13 +1553,13 @@ export const SUPPLEMENTS: Supplement[] = [
     dosage: "1,000–2,000mg sodium + 200–400mg potassium + 60mg magnesium per litre of fluid during exercise",
     timing: "During exercise (>60 min sessions) and post-exercise for rehydration",
     onsetTime: "Immediate effect on hydration status when combined with adequate water",
-    halfLife: "Sodium is tightly regulated — excess excreted via kidneys",
+    halfLife: "Sodium is tightly regulated, excess excreted via kidneys",
     form: "Powder / Tablets / Capsules",
     cyclingRequired: false,
     stacksWith: ["magnesium", "vitamin-d3"],
     avoidWith: ["hypertension-medications"],
     warnings:
-      "High sodium intake can worsen blood pressure in salt-sensitive individuals. Not needed for sessions under 45–60 minutes if dietary sodium is adequate. Avoid low-sodium electrolyte products — sodium is the critical electrolyte.",
+      "High sodium intake can worsen blood pressure in salt-sensitive individuals. Not needed for sessions under 45–60 minutes if dietary sodium is adequate. Avoid low-sodium electrolyte products. Sodium is the critical electrolyte.",
     sideEffects: ["GI discomfort from high-concentration solutions", "Blood pressure increase in salt-sensitive individuals"],
     evidenceLevel: "high",
     studyCount: "100+ studies",
@@ -1574,9 +1574,9 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "good",
     popular: false,
     veganFriendly: true,
-    certificationNote: "LMNT and Precision Hydration are evidence-based formulas. Indian options: ORS sachets from pharmacies work well. Avoid sugar-laden 'sports drinks' — opt for low-sugar electrolyte formulas.",
+    certificationNote: "LMNT and Precision Hydration are evidence-based formulas. Indian options: ORS sachets from pharmacies work well. Avoid sugar-laden 'sports drinks', opt for low-sugar electrolyte formulas.",
     emoji: "💧",
-    indiaNote: "Critical in Indian summer heat — particularly in Pune/Maharashtra where summer temperatures routinely exceed 40°C. Even 1–2% body weight dehydration impairs performance by 5–10%. ORS sachets from chemists provide cheap electrolyte replacement.",
+    indiaNote: "Critical in Indian summer heat. Particularly in Pune/Maharashtra where summer temperatures routinely exceed 40°C. Even 1–2% body weight dehydration impairs performance by 5–10%. ORS sachets from chemists provide cheap electrolyte replacement.",
     indiaAvailability: "widely_available",
   },
 
@@ -1605,7 +1605,7 @@ export const SUPPLEMENTS: Supplement[] = [
     dosage: "300–600mg KSM-66 or Sensoril extract daily",
     timing: "With meals; evening use compounds sleep benefits",
     onsetTime: "Stress and sleep benefits: 2–4 weeks; strength/testosterone effects: 4–8 weeks",
-    halfLife: "Withanolides are detectable in blood for ~24 hours — once-daily dosing is adequate",
+    halfLife: "Withanolides are detectable in blood for ~24 hours, once-daily dosing is adequate",
     form: "Capsule",
     cyclingRequired: false,
     stacksWith: ["magnesium", "vitamin-d3", "omega3", "zinc"],
@@ -1633,7 +1633,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "KSM-66 (by Ixoreal Biomed, Hyderabad, India) is the world's most clinically studied ashwagandha extract. Sensoril (Natreon) is the second most researched. Both are extracted using a non-alcohol process.",
     emoji: "🌿",
-    indiaNote: "Ashwagandha is indigenous to India — it grows across Rajasthan and Madhya Pradesh. KSM-66 is manufactured in Hyderabad. The full plant-based Ayurvedic name is Ashwagandha, meaning 'smell of horse' — referring to its strength-promoting properties.",
+    indiaNote: "Ashwagandha is indigenous to India. It grows across Rajasthan and Madhya Pradesh. KSM-66 is manufactured in Hyderabad. The full plant-based Ayurvedic name is Ashwagandha, meaning 'smell of horse', referring to its strength-promoting properties.",
     indiaAvailability: "widely_available",
   },
 
@@ -1657,14 +1657,14 @@ export const SUPPLEMENTS: Supplement[] = [
     dosage: "200–600mg (standardised to 3% rosavins, 1% salidroside)",
     timing: "Morning or 30 min before demanding work or training",
     onsetTime: "Acute fatigue-reducing effects: within hours; sustained adaptogenic effects: 2–4 weeks",
-    halfLife: "Salidroside has ~6 hour half-life — morning dosing sufficient",
+    halfLife: "Salidroside has ~6 hour half-life, morning dosing sufficient",
     form: "Capsule",
     cyclingRequired: true,
-    cyclingProtocol: "5 days on, 2 days off — or use week days only",
+    cyclingProtocol: "5 days on, 2 days off, or use week days only",
     stacksWith: ["ashwagandha", "caffeine", "l-theanine"],
     avoidWith: ["MAOIs", "SSRIs"],
     warnings:
-      "Can be mildly stimulating — avoid late evening use. May interact with antidepressants (SSRIs, MAOIs) via COMT inhibition. Start at 200mg to assess tolerance before increasing.",
+      "Can be mildly stimulating, avoid late evening use. May interact with antidepressants (SSRIs, MAOIs) via COMT inhibition. Start at 200mg to assess tolerance before increasing.",
     sideEffects: [
       "Mild insomnia if taken late in the day",
       "Irritability or overstimulation at high doses",
@@ -1743,7 +1743,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Lion's Mane is a medicinal mushroom that stimulates Nerve Growth Factor (NGF) and BDNF production, supporting neuroplasticity, cognitive function, and nerve repair. Emerging evidence supports benefits for focus, memory, and mood regulation.",
     mechanism:
-      "Hericenones and erinacines (unique bioactive compounds) penetrate the blood-brain barrier and stimulate NGF and BDNF (Brain-Derived Neurotrophic Factor) synthesis — promoting neuroplasticity, neurogenesis in the hippocampus, and myelin sheath repair. Effects are most pronounced with fruiting body extracts.",
+      "Hericenones and erinacines (unique bioactive compounds) penetrate the blood-brain barrier and stimulate NGF and BDNF (Brain-Derived Neurotrophic Factor) synthesis, promoting neuroplasticity, neurogenesis in the hippocampus, and myelin sheath repair. Effects are most pronounced with fruiting body extracts.",
     benefits: [
       "Stimulates Nerve Growth Factor (NGF) and BDNF production",
       "Improves memory and cognitive function over time",
@@ -1760,7 +1760,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["rhodiola", "l-theanine", "lions-mane"],
     avoidWith: [],
     warnings:
-      "Ensure product is a fruiting body extract — mycelium on grain (common in cheap products) is far less potent (primarily starch). Very rare respiratory allergy in mushroom-sensitive individuals. Full effects require 4–8 weeks.",
+      "Ensure product is a fruiting body extract. Mycelium on grain (common in cheap products) is far less potent (primarily starch). Very rare respiratory allergy in mushroom-sensitive individuals. Full effects require 4–8 weeks.",
     sideEffects: ["Very rare respiratory allergy in mushroom-sensitive individuals", "Mild GI discomfort in some users"],
     evidenceLevel: "moderate",
     studyCount: "15+ RCTs",
@@ -1793,7 +1793,7 @@ export const SUPPLEMENTS: Supplement[] = [
     benefits: [
       "Increases free testosterone, especially in men with low baseline levels",
       "Improves libido and sexual function",
-      "Supports male fertility — improves sperm quality",
+      "Supports male fertility, improves sperm quality",
       "Reduces cortisol:testosterone ratio under chronic stress",
       "Mild anabolic effect on lean body mass in stressed men",
     ],
@@ -1806,7 +1806,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["zinc", "vitamin-d3", "ashwagandha"],
     avoidWith: ["immunosuppressants"],
     warnings:
-      "Evidence strongest in men with LOW baseline testosterone — minimal benefit in men with normal levels. Some contamination concerns in lower-quality products (lead, mercury). Theoretical concern re: WADA — athletes subject to anti-doping should exercise caution. One case of hepatotoxicity reported.",
+      "Evidence strongest in men with LOW baseline testosterone. Minimal benefit in men with normal levels. Some contamination concerns in lower-quality products (lead, mercury). Theoretical concern re: WADA. Athletes subject to anti-doping should exercise caution. One case of hepatotoxicity reported.",
     sideEffects: [
       "Mild insomnia if taken late",
       "Mild GI discomfort",
@@ -1840,7 +1840,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Alpha-GPC is the most bioavailable choline precursor, raising brain acetylcholine levels to support focus, memory, and the mind-muscle connection. Used clinically for cognitive decline and athletically as a pre-workout nootropic.",
     mechanism:
-      "Alpha-GPC crosses the blood-brain barrier and is cleaved to release glycerophosphate and choline. Choline is converted to acetylcholine via choline acetyltransferase — boosting cholinergic transmission, which governs focus, muscle contraction signalling (neuromuscular junction), and memory consolidation.",
+      "Alpha-GPC crosses the blood-brain barrier and is cleaved to release glycerophosphate and choline. Choline is converted to acetylcholine via choline acetyltransferase, boosting cholinergic transmission, which governs focus, muscle contraction signalling (neuromuscular junction), and memory consolidation.",
     benefits: [
       "Enhances focus and mind-muscle connection",
       "Improves working memory and cognitive function",
@@ -1857,7 +1857,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["caffeine", "l-theanine", "lion-s-mane"],
     avoidWith: ["scopolamine", "anticholinergic-drugs"],
     warnings:
-      "Avoid in individuals with depression — increased acetylcholine can worsen depressive symptoms in some people. Start at 300mg; some users report headaches at 600mg+ if they are already choline-sufficient.",
+      "Avoid in individuals with depression. Increased acetylcholine can worsen depressive symptoms in some people. Start at 300mg; some users report headaches at 600mg+ if they are already choline-sufficient.",
     sideEffects: [
       "Headache (if choline intake is already high)",
       "GI discomfort",
@@ -1900,7 +1900,7 @@ export const SUPPLEMENTS: Supplement[] = [
       "Boosts endurance energy availability during cardio sessions",
       "Preserves muscle glycogen via fat-sparing effect",
       "Improves recovery via reduced oxidative stress and ammonia",
-      "May improve insulin sensitivity — beneficial for blood glucose",
+      "May improve insulin sensitivity, beneficial for blood glucose",
     ],
     dosage: "1,000–2,000mg (L-Carnitine L-Tartrate for athletic use; ALCAR for cognitive benefits)",
     timing: "30 min before cardio exercise",
@@ -1911,7 +1911,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["caffeine", "green-tea", "cla"],
     avoidWith: [],
     warnings:
-      "Effect on fat loss is modest without exercise — not a standalone fat burner. TMAO conversion (gut microbiome metabolite) has been associated with cardiovascular risk in some observational research — limit to recommended doses and avoid if gut microbiome is imbalanced.",
+      "Effect on fat loss is modest without exercise. Not a standalone fat burner. TMAO conversion (gut microbiome metabolite) has been associated with cardiovascular risk in some observational research. Limit to recommended doses and avoid if gut microbiome is imbalanced.",
     sideEffects: [
       "Fishy body odour at high doses (via TMAO conversion)",
       "GI discomfort",
@@ -1942,14 +1942,14 @@ export const SUPPLEMENTS: Supplement[] = [
     category: "weight",
     tagline: "Lean out while keeping muscle",
     description:
-      "CLA is a naturally occurring fatty acid found in grass-fed dairy and beef. It modestly reduces body fat while preserving lean muscle mass. Effects are small but consistent in meta-analyses — best used alongside a caloric deficit and exercise.",
+      "CLA is a naturally occurring fatty acid found in grass-fed dairy and beef. It modestly reduces body fat while preserving lean muscle mass. Effects are small but consistent in meta-analyses. Best used alongside a caloric deficit and exercise.",
     mechanism:
       "Activates PPARα (peroxisome proliferator-activated receptor alpha), increasing fatty acid oxidation in muscle. Inhibits lipoprotein lipase in adipose tissue (reduces fat storage from blood triglycerides). Activates CPT-1 in muscle, directing fatty acids to mitochondrial oxidation.",
     benefits: [
       "Modest fat mass reduction (0.1–0.2kg/week vs. placebo)",
       "Lean muscle mass preservation in caloric deficit",
       "Supports metabolic rate maintenance",
-      "Anti-catabolic effect — prevents muscle loss",
+      "Anti-catabolic effect, prevents muscle loss",
       "Some anti-inflammatory properties",
     ],
     dosage: "3–6g daily with main meals",
@@ -1961,7 +1961,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["l-carnitine", "green-tea", "caffeine"],
     avoidWith: [],
     warnings:
-      "Effects are modest — set realistic expectations (0.1–0.2kg fat loss per week vs. placebo). Some studies show increased insulin resistance at very high doses >6g/day. Stick to 3–6g.",
+      "Effects are modest, set realistic expectations (0.1–0.2kg fat loss per week vs. placebo). Some studies show increased insulin resistance at very high doses >6g/day. Stick to 3–6g.",
     sideEffects: [
       "GI discomfort, loose stools (initially)",
       "Potential insulin resistance at doses >6g/day",
@@ -1997,7 +1997,7 @@ export const SUPPLEMENTS: Supplement[] = [
     benefits: [
       "Increases metabolic rate by 3–4%",
       "Enhances fat oxidation during fasted and low-intensity exercise",
-      "Powerful antioxidant — among the highest ORAC score compounds",
+      "Powerful antioxidant. Among the highest ORAC score compounds",
       "Supports cardiovascular and metabolic health",
       "Mild appetite suppression",
     ],
@@ -2010,7 +2010,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["l-carnitine", "caffeine", "cla"],
     avoidWith: [],
     warnings:
-      "Taking on empty stomach commonly causes nausea. High doses (>800mg EGCG/day) have been associated with liver stress — stay within 400–500mg. Contains some caffeine — account for total daily caffeine intake.",
+      "Taking on empty stomach commonly causes nausea. High doses (>800mg EGCG/day) have been associated with liver stress, stay within 400–500mg. Contains some caffeine. Account for total daily caffeine intake.",
     sideEffects: [
       "Nausea on empty stomach",
       "Liver stress at high doses (>800mg EGCG)",
@@ -2043,7 +2043,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Berberine is a plant alkaloid with remarkable glucose-lowering and lipid-lowering effects. Multiple meta-analyses show it rivals metformin for blood glucose control. Also supports weight management via AMPK activation and gut microbiome modulation.",
     mechanism:
-      "Activates AMPK (AMP-activated protein kinase) — the master metabolic switch that mimics effects of caloric restriction and exercise. Inhibits gluconeogenesis in the liver, increases insulin sensitivity, reduces intestinal glucose absorption, and shifts gut microbiome toward a leaner phenotype. Also inhibits PCSK9, lowering LDL cholesterol.",
+      "Activates AMPK (AMP-activated protein kinase). The master metabolic switch that mimics effects of caloric restriction and exercise. Inhibits gluconeogenesis in the liver, increases insulin sensitivity, reduces intestinal glucose absorption, and shifts gut microbiome toward a leaner phenotype. Also inhibits PCSK9, lowering LDL cholesterol.",
     benefits: [
       "Reduces fasting blood glucose by 20–30%",
       "Lowers HbA1c comparably to metformin in head-to-head trials",
@@ -2052,25 +2052,25 @@ export const SUPPLEMENTS: Supplement[] = [
       "Improves gut microbiome diversity",
     ],
     dosage: "500mg, 2–3 times daily with meals",
-    timing: "With meals — reduces GI side effects and improves absorption",
+    timing: "With meals. Reduces GI side effects and improves absorption",
     onsetTime: "Blood glucose lowering: within 1–2 weeks; lipid lowering: 4–8 weeks",
-    halfLife: "~4–5 hours — requires 2–3 daily doses to maintain blood levels",
+    halfLife: "~4–5 hours. Requires 2–3 daily doses to maintain blood levels",
     form: "Capsule",
     cyclingRequired: true,
     cyclingProtocol: "8 weeks on, 2 weeks off",
     stacksWith: ["omega3", "vitamin-d3", "psyllium-husk"],
     avoidWith: ["metformin", "blood-pressure-medications", "blood-thinners", "cyclosporine"],
     warnings:
-      "Significant drug interactions — consult a doctor if on diabetes medication, blood pressure drugs, statins, or immunosuppressants. Causes GI side effects (cramping, diarrhea) when starting — build up gradually over 2 weeks. Cycle 8 weeks on, 2 weeks off.",
+      "Significant drug interactions. Consult a doctor if on diabetes medication, blood pressure drugs, statins, or immunosuppressants. Causes GI side effects (cramping, diarrhea) when starting. Build up gradually over 2 weeks. Cycle 8 weeks on, 2 weeks off.",
     sideEffects: [
-      "GI discomfort — cramping, diarrhea, constipation (especially initially)",
+      "GI discomfort, cramping, diarrhea, constipation (especially initially)",
       "Hypoglycemia risk when combined with diabetes medications",
       "Potential drug interactions via CYP enzyme inhibition",
     ],
     evidenceLevel: "high",
     studyCount: "40+ RCTs",
     keyStudyFindings: [
-      "Meta-analysis (2015, 27 RCTs): berberine reduced HbA1c by 0.71%, fasting glucose by 1.05 mmol/L — comparable to first-line oral diabetic drugs",
+      "Meta-analysis (2015, 27 RCTs): berberine reduced HbA1c by 0.71%, fasting glucose by 1.05 mmol/L. Comparable to first-line oral diabetic drugs",
       "Berberine reduced LDL by 0.65 mmol/L and triglycerides by 0.50 mmol/L across multiple studies",
       "Berberine reduced body weight by 5lbs and waist circumference by 2cm vs. placebo in 12-week RCT",
     ],
@@ -2082,7 +2082,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Thorne Berberine-500 and NOW Berberine are well-tested products. Check berberine HCl purity (>97%) on certificate of analysis.",
     emoji: "🌱",
-    indiaNote: "Particularly relevant for Indians — who have a genetic predisposition to insulin resistance and Type 2 diabetes (affects 11.4% of Indian adults). Always check with your doctor before starting, especially if already on diabetes or blood pressure medication.",
+    indiaNote: "Particularly relevant for Indians. Who have a genetic predisposition to insulin resistance and Type 2 diabetes (affects 11.4% of Indian adults). Always check with your doctor before starting, especially if already on diabetes or blood pressure medication.",
     indiaAvailability: "available",
   },
 
@@ -2099,7 +2099,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Hydrolysed collagen provides the amino acid building blocks (glycine, proline, hydroxyproline) specifically required for collagen synthesis in tendons, ligaments, cartilage, and skin. Best taken with Vitamin C 30–60 min before exercise.",
     mechanism:
-      "Hydroxyproline-proline-glycine peptides from hydrolysed collagen stimulate fibroblast and chondrocyte activity, increasing collagen synthesis in connective tissue. When taken 30–60 min before exercise, collagen amino acids peak in the tendon during mechanical loading — maximising the anabolic signal to rebuild connective tissue.",
+      "Hydroxyproline-proline-glycine peptides from hydrolysed collagen stimulate fibroblast and chondrocyte activity, increasing collagen synthesis in connective tissue. When taken 30–60 min before exercise, collagen amino acids peak in the tendon during mechanical loading. Maximising the anabolic signal to rebuild connective tissue.",
     benefits: [
       "Reduces joint pain in osteoarthritis",
       "Supports tendon and ligament repair and strengthening",
@@ -2116,8 +2116,8 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["vitamin-c", "omega3", "curcumin"],
     avoidWith: [],
     warnings:
-      "Not a complete protein — lacks tryptophan. Do not use as sole protein source. Must be taken with Vitamin C for collagen synthesis (hydroxylation steps require ascorbate). Marine collagen may be purer than bovine.",
-    sideEffects: ["Occasional GI discomfort", "Heavy metal risk with low-quality sources — buy certified products"],
+      "Not a complete protein, lacks tryptophan. Do not use as sole protein source. Must be taken with Vitamin C for collagen synthesis (hydroxylation steps require ascorbate). Marine collagen may be purer than bovine.",
+    sideEffects: ["Occasional GI discomfort", "Heavy metal risk with low-quality sources, buy certified products"],
     evidenceLevel: "moderate",
     studyCount: "20+ RCTs",
     keyStudyFindings: [
@@ -2162,13 +2162,13 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["omega3", "collagen", "curcumin", "msm"],
     avoidWith: ["blood-thinners"],
     warnings:
-      "Glucosamine is commonly derived from shellfish — check label if shellfish allergy exists (vegan glucosamine from fermentation is available). Chondroitin may mildly reduce platelet aggregation — caution with anticoagulants.",
+      "Glucosamine is commonly derived from shellfish. Check label if shellfish allergy exists (vegan glucosamine from fermentation is available). Chondroitin may mildly reduce platelet aggregation, caution with anticoagulants.",
     sideEffects: [
       "Mild GI discomfort",
       "Shellfish allergy risk (glucosamine from shellfish sources)",
       "Mild blood-thinning effect",
     ],
-    ageNotes: "Most effective for adults 45+ with existing joint wear. Prevention data is weak — therapeutic use in symptomatic joints is the primary evidence base.",
+    ageNotes: "Most effective for adults 45+ with existing joint wear. Prevention data is weak. Therapeutic use in symptomatic joints is the primary evidence base.",
     evidenceLevel: "moderate",
     studyCount: "30+ RCTs",
     keyStudyFindings: [
@@ -2196,7 +2196,7 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "MSM is an organic sulfur compound that provides the substrate for collagen and keratin synthesis. It has anti-inflammatory and analgesic properties, reducing joint pain and exercise-induced muscle damage without the GI side effects of NSAIDs.",
     mechanism:
-      "Provides bioavailable sulfur — required for disulfide bonds in collagen, keratin, and other structural proteins. Reduces NF-κB activity, lowering production of inflammatory cytokines. Inhibits substance P (pain neurotransmitter) release. Also supports liver glutathione synthesis as a sulfur donor.",
+      "Provides bioavailable sulfur. Required for disulfide bonds in collagen, keratin, and other structural proteins. Reduces NF-κB activity, lowering production of inflammatory cytokines. Inhibits substance P (pain neurotransmitter) release. Also supports liver glutathione synthesis as a sulfur donor.",
     benefits: [
       "Reduces joint and muscle pain",
       "Decreases post-exercise muscle damage markers",
@@ -2213,7 +2213,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["glucosamine-chondroitin", "collagen", "curcumin"],
     avoidWith: [],
     warnings:
-      "Very safe profile. May cause mild GI discomfort initially — start at 1g/day and build up over 1–2 weeks. Ensure adequate hydration. OptiMSM® (Cardinal Nutrition) is the purity-certified form.",
+      "Very safe profile. May cause mild GI discomfort initially. Start at 1g/day and build up over 1–2 weeks. Ensure adequate hydration. OptiMSM® (Cardinal Nutrition) is the purity-certified form.",
     sideEffects: [
       "Mild GI discomfort initially",
       "Rare: headache during initial days of use",
@@ -2221,7 +2221,7 @@ export const SUPPLEMENTS: Supplement[] = [
     evidenceLevel: "moderate",
     studyCount: "15+ RCTs",
     keyStudyFindings: [
-      "3g/day MSM reduced pain and impairment in knee OA patients (10-week RCT) — WOMAC scores improved vs. placebo",
+      "3g/day MSM reduced pain and impairment in knee OA patients (10-week RCT), WOMAC scores improved vs. placebo",
       "MSM reduced CK (muscle damage marker) and inflammation after exercise vs. placebo",
       "MSM combined with glucosamine showed additive effect on pain reduction vs. either alone",
     ],
@@ -2258,15 +2258,15 @@ export const SUPPLEMENTS: Supplement[] = [
       "Reduces bloating, gas, and IBS symptoms",
     ],
     dosage: "10–50 billion CFU (multi-strain with Lactobacillus and Bifidobacterium)",
-    timing: "With or before meals in the morning — consistency is key",
+    timing: "With or before meals in the morning, consistency is key",
     onsetTime: "GI symptoms: 1–4 weeks; immune benefits: 3–4 weeks",
-    halfLife: "Bacteria colonisation is temporary — daily dosing maintains levels",
+    halfLife: "Bacteria colonisation is temporary, daily dosing maintains levels",
     form: "Capsule (refrigerated or shelf-stable enteric-coated)",
     cyclingRequired: false,
     stacksWith: ["glutamine", "psyllium-husk"],
     avoidWith: ["antibiotics"],
     warnings:
-      "Initial increase in gas and bloating is normal (1–2 weeks) — represents microbiome change. If on antibiotics, take probiotics 2 hours apart. Refrigerate unless labelled shelf-stable.",
+      "Initial increase in gas and bloating is normal (1–2 weeks), represents microbiome change. If on antibiotics, take probiotics 2 hours apart. Refrigerate unless labelled shelf-stable.",
     sideEffects: [
       "Initial gas and bloating (resolves within 1–2 weeks)",
       "Rare systemic infection risk in immunocompromised individuals",
@@ -2286,7 +2286,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Look for strain-specific labelling (e.g. L. acidophilus NCFM, B. longum BB536). Culturelle, Seed, and Align are evidence-based brands. Check CFU count at expiry, not manufacture.",
     emoji: "🦠",
-    indiaNote: "Curd (dahi), kefir, and idli/dosa ferments are excellent probiotic foods in the Indian diet. Supplement probiotics therapeutically — during/after antibiotics, travel, or for specific GI conditions.",
+    indiaNote: "Curd (dahi), kefir, and idli/dosa ferments are excellent probiotic foods in the Indian diet. Supplement probiotics therapeutically, during/after antibiotics, travel, or for specific GI conditions.",
     indiaAvailability: "available",
   },
 
@@ -2299,24 +2299,24 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Psyllium husk is a soluble fibre that forms a gel in the digestive tract, slowing glucose absorption, lowering cholesterol, and feeding beneficial gut bacteria. One of the most evidence-backed fibre supplements and FDA-approved for cholesterol reduction.",
     mechanism:
-      "Soluble fibre dissolves in water forming a viscous gel, trapping bile acids (forcing the liver to use cholesterol to make more bile acids — lowering LDL), slowing gastric emptying (reducing post-meal glucose spike), and being fermented by gut bacteria into butyrate and other SCFAs. Excellent prebiotic.",
+      "Soluble fibre dissolves in water forming a viscous gel, trapping bile acids (forcing the liver to use cholesterol to make more bile acids, lowering LDL), slowing gastric emptying (reducing post-meal glucose spike), and being fermented by gut bacteria into butyrate and other SCFAs. Excellent prebiotic.",
     benefits: [
       "Lowers LDL cholesterol by 5–10%",
       "Reduces post-meal blood sugar spikes",
       "Feeds beneficial gut bacteria (prebiotic effect)",
       "Relieves both constipation and diarrhea (bidirectional)",
-      "Increases satiety — useful for weight management",
+      "Increases satiety, useful for weight management",
     ],
     dosage: "5–10g (1–2 teaspoons) per dose",
     timing: "Before meals with a large glass of water (240ml minimum)",
     onsetTime: "Cholesterol reduction: 4–6 weeks; GI benefits: within days",
-    halfLife: "Not absorbed — works entirely in GI tract",
+    halfLife: "Not absorbed. Works entirely in GI tract",
     form: "Powder / Husk / Capsules",
     cyclingRequired: false,
     stacksWith: ["probiotics", "berberine"],
     avoidWith: [],
     warnings:
-      "CRITICAL: Must be taken with adequate water (240ml minimum per dose). Without water, can cause choking or intestinal obstruction. Start at 5g and increase gradually. Take 2 hours away from medications — slows absorption.",
+      "CRITICAL: Must be taken with adequate water (240ml minimum per dose). Without water, can cause choking or intestinal obstruction. Start at 5g and increase gradually. Take 2 hours away from medications, slows absorption.",
     sideEffects: [
       "Gas and bloating (especially initially)",
       "Choking risk if taken without sufficient water",
@@ -2337,7 +2337,7 @@ export const SUPPLEMENTS: Supplement[] = [
     veganFriendly: true,
     certificationNote: "Any pharmaceutical-grade isabgol powder is adequate. Sat Isabgol by Dabur and generic pharmacy isabgol are reliable, inexpensive Indian options.",
     emoji: "🌾",
-    indiaNote: "Known as Isabgol in India — one of the best value supplements available. Widely sold at every chemist in India. Extremely cost-effective at ₹100–200/month.",
+    indiaNote: "Known as Isabgol in India. One of the best value supplements available. Widely sold at every chemist in India. Extremely cost-effective at ₹100–200/month.",
     indiaAvailability: "widely_available",
   },
 
@@ -2354,12 +2354,12 @@ export const SUPPLEMENTS: Supplement[] = [
     description:
       "Melatonin is the body's natural sleep-onset hormone, produced in the pineal gland in response to darkness. Supplementation is most useful for circadian disruption (jet lag, shift work, late screens), not as a sedative. Low doses (0.5–1mg) are as effective as higher doses with fewer side effects.",
     mechanism:
-      "Binds to MT1 and MT2 melatonin receptors in the suprachiasmatic nucleus (SCN) — the master circadian clock. MT1 activation inhibits neuronal firing, reducing alertness. MT2 activation shifts the circadian phase (phase-advancing or delaying the body clock). Melatonin does not directly cause sedation — it signals darkness.",
+      "Binds to MT1 and MT2 melatonin receptors in the suprachiasmatic nucleus (SCN), the master circadian clock. MT1 activation inhibits neuronal firing, reducing alertness. MT2 activation shifts the circadian phase (phase-advancing or delaying the body clock). Melatonin does not directly cause sedation, it signals darkness.",
     benefits: [
       "Reduces time to fall asleep by 7–12 minutes",
       "Resets circadian rhythm after jet lag or shift work",
       "Improves sleep quality (sleep architecture)",
-      "Powerful antioxidant — protects mitochondrial DNA",
+      "Powerful antioxidant, protects mitochondrial DNA",
       "Supports immune function via MT receptor signalling",
     ],
     dosage: "0.5–1mg for circadian shifting; 0.5–3mg for sleep onset",
@@ -2372,7 +2372,7 @@ export const SUPPLEMENTS: Supplement[] = [
     stacksWith: ["magnesium", "l-theanine", "zma"],
     avoidWith: ["alcohol", "sedatives", "blood-thinners"],
     warnings:
-      "Avoid driving or heavy machinery for 5+ hours after use. Nightly long-term use may reduce natural melatonin production. Interactions with anticoagulants and sedatives. Low doses (0.5–1mg) are as effective as 5–10mg but with fewer next-day grogginess effects — higher doses are commonly sold but evidence favours low doses.",
+      "Avoid driving or heavy machinery for 5+ hours after use. Nightly long-term use may reduce natural melatonin production. Interactions with anticoagulants and sedatives. Low doses (0.5–1mg) are as effective as 5–10mg but with fewer next-day grogginess effects. Higher doses are commonly sold but evidence favours low doses.",
     sideEffects: [
       "Next-day grogginess (especially at high doses)",
       "Dizziness",
@@ -2383,7 +2383,7 @@ export const SUPPLEMENTS: Supplement[] = [
     evidenceLevel: "high",
     studyCount: "200+ clinical studies",
     keyStudyFindings: [
-      "0.5mg melatonin reduced sleep onset latency by 7 minutes — as effective as 5mg with 10× fewer side effects",
+      "0.5mg melatonin reduced sleep onset latency by 7 minutes. As effective as 5mg with 10× fewer side effects",
       "Meta-analysis (2013): melatonin reduced jet lag severity by 2.2 points (7-point scale) vs. placebo",
       "Nightly melatonin in elderly adults improved sleep efficiency from 78% to 86% over 4 weeks",
     ],
@@ -2393,9 +2393,9 @@ export const SUPPLEMENTS: Supplement[] = [
     valueRating: "good",
     popular: false,
     veganFriendly: true,
-    certificationNote: "Low-dose formulas (0.5–1mg) are preferable. Natrol Melatonin 1mg is widely available. Avoid 5mg and 10mg doses typically sold — they are pharmacologically excessive.",
+    certificationNote: "Low-dose formulas (0.5–1mg) are preferable. Natrol Melatonin 1mg is widely available. Avoid 5mg and 10mg doses typically sold, they are pharmacologically excessive.",
     emoji: "🌛",
-    indiaNote: "Melatonin is a prescription drug in India (Schedule H) — technically requires a doctor's prescription but is widely available OTC. Check local pharmacy regulations. Most useful for managing jet lag, shift work, or circadian disruption rather than primary insomnia.",
+    indiaNote: "Melatonin is a prescription drug in India (Schedule H), technically requires a doctor's prescription but is widely available OTC. Check local pharmacy regulations. Most useful for managing jet lag, shift work, or circadian disruption rather than primary insomnia.",
     indiaAvailability: "available",
   },
 

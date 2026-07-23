@@ -353,7 +353,7 @@ export async function buildProductionReport(
     // flag recipes missing an SOP so the kitchen knows the data is incomplete
     for (const line of lineMap.values()) {
       if (line.ingredients.length === 0) {
-        report.warnings.push(`No ingredients defined for recipe "${line.recipeName}" — cannot generate prep list.`);
+        report.warnings.push(`No ingredients defined for recipe "${line.recipeName}": cannot generate prep list.`);
       }
     }
   }

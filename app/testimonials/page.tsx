@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/testimonials" },
   title: "Reviews",
   description:
-    "Real results from FitFuel members across Pune — weight loss, muscle gain and better daily eating, on plans we cook and deliver.",
+    "Real results from FitFuel members across Pune, weight loss, muscle gain and better daily eating, on plans we cook and deliver.",
   openGraph: {
     title: "FitFuel Reviews",
     description: "Real member results across Pune.",

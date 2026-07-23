@@ -96,7 +96,7 @@ async function getUpstashLimiter(preset: RateLimitPreset): Promise<any | null> {
     if (!warnedNoRedis) {
       warnedNoRedis = true;
       console.warn(
-        "[rate-limit] No Upstash/KV REST env found — using in-memory fallback. " +
+        "[rate-limit] No Upstash/KV REST env found, using in-memory fallback. " +
           "Set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN in production.",
       );
     }
@@ -127,7 +127,7 @@ async function getUpstashLimiter(preset: RateLimitPreset): Promise<any | null> {
     upstashReady = false;
     if (!warnedNoRedis) {
       warnedNoRedis = true;
-      console.warn("[rate-limit] Upstash init failed — in-memory fallback.", err);
+      console.warn("[rate-limit] Upstash init failed, in-memory fallback.", err);
     }
     return null;
   }

@@ -126,7 +126,7 @@ export default async function FAQPage() {
         </p>
 
         {faqs.length === 0 ? (
-          <p style={{ color: C.muted, fontSize: 15 }}>FAQs are being prepared — check back soon.</p>
+          <p style={{ color: C.muted, fontSize: 15 }}>FAQs are being prepared. Check back soon.</p>
         ) : (
           order.map((cat) => (
             <section key={cat} style={{ marginBottom: 40 }}>
@@ -174,7 +174,7 @@ export default async function FAQPage() {
           }}
         >
           <p style={{ color: C.sub, fontSize: 15.5, lineHeight: 1.7, margin: "0 0 18px" }}>
-            Ready to put it to the test? Start with a single trial day — no lock-in.
+            Ready to put it to the test? Start with a single trial day, no lock-in.
           </p>
           <Link
             href="/plans"

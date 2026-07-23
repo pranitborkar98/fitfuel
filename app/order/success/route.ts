@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         where: { txnid },
       });
       if (existing) {
-        console.log("[PayU] Duplicate callback — txnid already saved, skipping", { txnid });
+        console.log("[PayU] Duplicate callback, txnid already saved, skipping", { txnid });
         return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`);
       }
     } catch (dbCheckErr) {
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 4. Skip DB write for test transactions ────────────────────────────────
-    const isTest = productinfo === "FitFuel TEST TRANSACTION — ignore";
+    const isTest = productinfo === "FitFuel TEST TRANSACTION, ignore";
 
     if (!isTest) {
       const amountNum = parseFloat(amount);
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
 
       console.log("[PayU] Order saved to DB", { orderNumber, userId: user.id, total, txnid, mihpayid });
     } else {
-      console.log("[PayU] Test transaction — skipping DB save", { txnid });
+      console.log("[PayU] Test transaction, skipping DB save", { txnid });
     }
 
     return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`);

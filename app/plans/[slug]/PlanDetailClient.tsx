@@ -75,13 +75,13 @@ const SLOT_LABEL: Record<string, string> = {
   BREAKFAST: 'Breakfast', LUNCH: 'Lunch', SNACK: 'Snack', DINNER: 'Dinner',
 }
 const SLOT_TIME: Record<string, string> = {
-  BREAKFAST: '07:00 — 09:00', LUNCH: '12:30 — 14:00',
-  SNACK: '16:00 — 17:00', DINNER: '19:00 — 20:30',
+  BREAKFAST: '07:00–09:00', LUNCH: '12:30–14:00',
+  SNACK: '16:00–17:00', DINNER: '19:00–20:30',
 }
 const SLOT_DESC: Record<string, string> = {
-  BREAKFAST: 'High-protein Indian start. Moong chilla, poha, upma, idli — never boring, always filling.',
+  BREAKFAST: 'High-protein Indian start. Moong chilla, poha, upma, idli, never boring, always filling.',
   LUNCH: 'A full dal–sabzi–roti or rice plate, built around your largest calorie window of the day.',
-  SNACK: 'Low-calorie, high-satiety. Makhana, roasted chana, fruit — kills the 6pm pantry raid.',
+  SNACK: 'Low-calorie, high-satiety. Makhana, roasted chana, fruit. Kills the 6pm pantry raid.',
   DINNER: 'Light but satisfying. Lower carb, higher protein. Palak paneer, dal tadka, grilled options.',
 }
 
@@ -99,20 +99,20 @@ import {
 } from '@/lib/plan-tier-pricing'
 
 const FAQ = [
-  { q: 'How many meals do I get per day?', a: 'Four meals daily — Breakfast, Lunch, Snack and Dinner. Every box also includes your Morning Boost (a coffee or green-tea sachet). All four are freshly prepared and delivered by 8am.' },
-  { q: 'Is the 30-day menu really non-repeating?', a: 'Yes. Every plan runs 30 unique days — 8 breakfast, 10 lunch, 5 snack and 7 dinner variations rotate across the month. No dish repeats in a full cycle.' },
+  { q: 'How many meals do I get per day?', a: 'Four meals daily, Breakfast, Lunch, Snack and Dinner. Every box also includes your Morning Boost (a coffee or green-tea sachet). All four are freshly prepared and delivered by 8am.' },
+  { q: 'Is the 30-day menu really non-repeating?', a: 'Yes. Every plan runs 30 unique days: 8 breakfast, 10 lunch, 5 snack and 7 dinner variations rotate across the month. No dish repeats in a full cycle.' },
   { q: 'How do I track what I eat?', a: 'After signing in, your dashboard shows today\u2019s four meals. Tap \u201CI ate this\u201D on any meal and it logs the macros automatically and updates your calorie ring. Every gram tracked without manual entry.' },
   { q: 'Can I skip a day or pause the plan?', a: 'Yes. Skip individual dates or pause from the dashboard. Paused days are pushed to your plan end date at no extra cost.' },
   { q: 'What time is delivery?', a: 'All meals arrive by 8am daily across Kharadi and surrounding Pune areas. We prep from 4am using fresh-sourced ingredients.' },
-  { q: 'Can I switch plans mid-month?', a: 'Yes. Request a plan switch from your dashboard — the new plan starts from the next delivery day and your calorie targets recalculate against your current profile.' },
-  { q: 'Is there a minimum commitment?', a: 'Start with a Trial Day at {TRIAL} — no commitment. Weekly, bi-weekly and monthly options are available, with a lower per-day rate the longer you go.' },
+  { q: 'Can I switch plans mid-month?', a: 'Yes. Request a plan switch from your dashboard. The new plan starts from the next delivery day and your calorie targets recalculate against your current profile.' },
+  { q: 'Is there a minimum commitment?', a: 'Start with a Trial Day at {TRIAL}, no commitment. Weekly, bi-weekly and monthly options are available, with a lower per-day rate the longer you go.' },
   { q: 'What if I have allergies?', a: 'You declare allergies during onboarding (nuts, dairy, gluten, shellfish). These are flagged on your account and the kitchen accommodates them. See our Allergen Policy for full details.' },
 ]
 
 const TESTIMONIALS = [
   { name: 'Priya M.', location: 'Kharadi, Pune', result: '\u22126.2 kg / 30 days', text: 'I\u2019ve tried every diet. This is the first time I didn\u2019t have to think. The food showed up, I logged it, and the numbers moved.' },
   { name: 'Rahul S.', location: 'Viman Nagar, Pune', result: 'Consistency 91%', text: 'The tracking is what got me. Watching my consistency score climb from 60 to 91 over four weeks changed how I think about habits.' },
-  { name: 'Sneha K.', location: 'Koregaon Park, Pune', result: '30 days completed', text: 'I was sceptical about tiffin food. These aren\u2019t tiffin portions — they\u2019re full meals with proper macros. The rajma and dal are genuinely good.' },
+  { name: 'Sneha K.', location: 'Koregaon Park, Pune', result: '30 days completed', text: 'I was sceptical about tiffin food. These aren\u2019t tiffin portions. They\u2019re full meals with proper macros. The rajma and dal are genuinely good.' },
 ]
 
 // ─── Inline icon set (no emoji — line-drawn, currentColor) ────────────────────
@@ -485,7 +485,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <h1 className="h1 enter e2">{plan.name}</h1>
 
               <p className="enter e3 mono" style={{ fontSize: 14.5, lineHeight: 1.8, color: 'var(--dim)', maxWidth: 540, marginTop: 26, letterSpacing: '0.01em' }}>
-                {plan.tagline ?? plan.description ?? 'A 30-day meal system engineered to your exact calorie and macro targets — freshly cooked, delivered by 8am, every gram tracked.'}
+                {plan.tagline ?? plan.description ?? 'A 30-day meal system engineered to your exact calorie and macro targets, freshly cooked, delivered by 8am, every gram tracked.'}
               </p>
 
               {/* Spec strip — instrument readout */}
@@ -548,7 +548,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         <div className="ticker">
           {[0, 1].map((dup) => (
             <span key={dup}>
-              <b>Zero repeats in 30 days</b> — Delivered by 8am — <b>Per-gram tracked</b> — Sourced from Pune APMC — <b>No frying · olive oil only</b> — Adaptive recalibration — <b>The menu is the proof</b> —
+              <b>Zero repeats in 30 days</b> · Delivered by 8am · <b>Per-gram tracked</b> · Sourced from Pune APMC · <b>No frying · olive oil only</b> · Adaptive recalibration · <b>The menu is the proof</b> ·
             </span>
           ))}
         </div>
@@ -561,14 +561,14 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <Eyebrow index="02" label="Who is this for" />
             <h2 className="h2">Built for people serious about results.</h2>
             <p style={{ color: 'var(--dim)', lineHeight: 1.85, fontSize: 15.5, marginTop: 24, maxWidth: 460 }}>
-              {plan.whoIsItFor ?? 'Not a quick fix — a 30-day system that works when you follow it. The food does the heavy lifting. You eat it, tap \u201CI ate this\u201D, and watch the data build.'}
+              {plan.whoIsItFor ?? 'Not a quick fix. A 30-day system that works when you follow it. The food does the heavy lifting. You eat it, tap \u201CI ate this\u201D, and watch the data build.'}
             </p>
           </div>
           <div className="reveal d2">
             {[
               { t: 'You want to lose weight without starving', d: `${plan.avgCaloriesPerDay} kcal/day across 4 filling meals. High protein keeps you satiated.` },
               { t: 'You\u2019re tired of tracking manually', d: 'Every meal pre-logged. One tap. Macros auto-populated to your diary.' },
-              { t: 'You want Indian food, not rabbit food', d: '80% regional Indian cuisine — dal, sabzi, roti, rice, done right.' },
+              { t: 'You want Indian food, not rabbit food', d: '80% regional Indian cuisine, dal, sabzi, roti, rice, done right.' },
               { t: 'You want progress you can measure', d: 'Weight trend, consistency score and calorie ring, all on one dashboard.' },
             ].map((item, i) => (
               <div key={item.t} style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 18, padding: '22px 0', borderTop: i === 0 ? 'none' : '1px solid var(--line)', alignItems: 'baseline' }}>
@@ -616,7 +616,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <span style={{ color: 'var(--lime)' }}><IconBolt size={20} /></span>
             <div style={{ fontSize: 14, color: 'var(--dim)' }}>
               <span style={{ color: 'var(--ink)', fontWeight: 600 }}>Every box includes your Morning Boost</span>
-              <span style={{ color: 'var(--faint)', marginLeft: 12 }}>— a coffee or green-tea sachet. The ritual that makes opening the box feel like a start, not a chore.</span>
+              <span style={{ color: 'var(--faint)', marginLeft: 12 }}>A coffee or green-tea sachet. The ritual that makes opening the box feel like a start, not a chore.</span>
             </div>
           </div>
         </div>
@@ -631,7 +631,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <h2 className="h2">{totalDays} days. Zero repeats.<br /><span style={{ color: 'var(--lime)' }}>Every dish, every macro.</span></h2>
             </div>
             <p className="mono" style={{ fontSize: 12, color: 'var(--faint)', maxWidth: 250, lineHeight: 1.7, letterSpacing: '0.02em' }}>
-              No auth wall. No blur. The whole menu is public — because the food is the sales pitch.
+              No auth wall. No blur. The whole menu is public. Because the food is the sales pitch.
             </p>
           </div>
 
@@ -768,16 +768,16 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               </div>
             </div>
             <p style={{ fontSize: 13.5, lineHeight: 1.7, color: '#3a3a30', marginBottom: 22 }}>
-              {plan.avgCaloriesPerDay} kcal/day is a science-backed target — aggressive enough to move the needle, conservative enough to protect muscle and energy.
+              {plan.avgCaloriesPerDay} kcal/day is a science-backed target. Aggressive enough to move the needle, conservative enough to protect muscle and energy.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {(plan.keyPrinciples?.length ? plan.keyPrinciples : [
-                'High protein — preserves muscle during a deficit',
-                'Moderate complex carbs — dal, roti, rice, not eliminated',
-                'Low saturated fat — olive oil only, zero frying',
-                'High fibre — keeps you full, supports gut health',
+                'High protein. Preserves muscle during a deficit',
+                'Moderate complex carbs, dal, roti, rice, not eliminated',
+                'Low saturated fat, olive oil only, zero frying',
+                'High fibre, keeps you full, supports gut health',
                 'Zero refined sugar in any plan meal',
-                'Sourced from Pune APMC — no imported ingredients',
+                'Sourced from Pune APMC, no imported ingredients',
               ]).map((item, i, arr) => (
                 <div key={item} style={{ display: 'grid', gridTemplateColumns: '26px 1fr', gap: 12, alignItems: 'start', padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(20,20,15,.1)' : 'none' }}>
                   <span style={{ width: 20, height: 20, borderRadius: 3, background: '#1c2b07', color: 'var(--lime)', display: 'grid', placeItems: 'center', marginTop: 1 }}><IconCheck size={13} stroke={2.6} /></span>
@@ -798,7 +798,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 'Refined sugar or maida',
                 'Artificial flavours and preservatives',
                 'Heavy cream and full-fat cheese in base meals',
-                'Mystery macros — every gram is declared',
+                'Mystery macros, every gram is declared',
               ]).map((item, i, arr) => (
                 <div key={item} style={{ display: 'grid', gridTemplateColumns: '26px 1fr', gap: 12, alignItems: 'center', padding: '15px 20px', borderBottom: i < arr.length - 1 ? '1px solid var(--line)' : 'none' }}>
                   <span style={{ color: 'var(--ember)', fontSize: 18, lineHeight: 1 }}>×</span>
@@ -862,13 +862,13 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <Eyebrow index="07" label="The data loop" />
             <h2 className="h2">One tap. Every macro logged.</h2>
             <p style={{ color: 'var(--dim)', fontSize: 15, lineHeight: 1.8, margin: '22px 0 30px', maxWidth: 440 }}>
-              The food is the door. The loop is the product — every meal, workout and weigh-in feeds an engine that knows you better than any nutritionist.
+              The food is the door. The loop is the product, every meal, workout and weigh-in feeds an engine that knows you better than any nutritionist.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {[
                 { t: 'No manual entry', d: 'Every meal pre-loaded. Tap \u201CI ate this\u201D and the macros land in your diary instantly.' },
                 { t: 'Calorie ring updates live', d: 'Calories in vs target in real time. Log a workout and the ring adjusts for net calories.' },
-                { t: 'Consistency score', d: 'A weekly 0–100 score across meals, workouts and weigh-ins — the number your AI trainer watches.' },
+                { t: 'Consistency score', d: 'A weekly 0–100 score across meals, workouts and weigh-ins. The number your AI trainer watches.' },
               ].map((item, i, arr) => (
                 <div key={item.t} style={{ display: 'grid', gridTemplateColumns: '40px 1fr', gap: 16, padding: '18px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--line)' : 'none' }}>
                   <span className="cond" style={{ fontSize: 22, color: 'var(--lime)', fontWeight: 600 }}>0{i + 1}</span>

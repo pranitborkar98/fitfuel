@@ -105,7 +105,7 @@ export default function TdeeCalculator() {
       <div className="tdee-wrap">
         <div className="tdee-eyebrow">Free Tool</div>
         <h1 className="tdee-h1">TDEE &amp;<br/>Calorie Calculator</h1>
-        <p className="tdee-sub">Find your maintenance calories and the exact protein, carb and fat split for your goal — then let FitFuel deliver meals that hit them, every day.</p>
+        <p className="tdee-sub">Find your maintenance calories and the exact protein, carb and fat split for your goal. Then let FitFuel deliver meals that hit them, every day.</p>
 
         <div className="tdee-grid">
           {/* INPUTS */}
@@ -175,9 +175,9 @@ export default function TdeeCalculator() {
             </div>
 
             <div className="cta">
-              <p>These are your numbers. FitFuel plans are built around exactly this — meals pre-portioned to your target, macros auto-logged, no weighing or guessing.</p>
+              <p>These are your numbers. FitFuel plans are built around exactly this. Meals pre-portioned to your target, macros auto-logged, no weighing or guessing.</p>
               <Link href="/plans">See plans that hit {result.calories.toLocaleString("en-IN")} kcal →</Link>
-              <div className="note">Estimates use the Mifflin–St Jeor equation. Individual needs vary — treat as a starting point.</div>
+              <div className="note">Estimates use the Mifflin–St Jeor equation. Individual needs vary. Treat as a starting point.</div>
             </div>
           </div>
         </div>

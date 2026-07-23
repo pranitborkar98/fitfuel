@@ -31,17 +31,17 @@ const VALUES = [
   {
     icon: ChefHat,
     title: "Chef-Cooked Daily",
-    desc: "Every meal is prepared fresh each morning in our FSSAI-certified kitchen in Kharadi. No frozen food, no reheating — ever.",
+    desc: "Every meal is prepared fresh each morning in our FSSAI-certified kitchen in Kharadi. No frozen food, no reheating, ever.",
   },
   {
     icon: Heart,
     title: "Nutritionist-Designed",
-    desc: "Our meal plans are built around real nutrition science — the right macros for your specific goal, not just calorie counting.",
+    desc: "Our meal plans are built around real nutrition science: the right macros for your specific goal, not just calorie counting.",
   },
   {
     icon: Shield,
     title: "FSSAI Certified",
-    desc: "We operate under FSSAI license 21523035002815. Clean, hygienic, compliant — because your health depends on it.",
+    desc: "We operate under FSSAI license 21523035002815. Clean, hygienic, compliant. Because your health depends on it.",
   },
   {
     icon: Truck,
@@ -51,12 +51,12 @@ const VALUES = [
   {
     icon: Star,
     title: "Quality Ingredients",
-    desc: "We source locally and carefully. Natural ingredients, no artificial preservatives, no frying — just clean food that tastes good.",
+    desc: "We source locally and carefully. Natural ingredients, no artificial preservatives, no frying. Just clean food that tastes good.",
   },
   {
     icon: Users,
     title: "Built for Pune",
-    desc: "We understand Pune's lifestyle — working professionals, students, families, fitness enthusiasts. We cook for all of them.",
+    desc: "We understand Pune's lifestyle: working professionals, students, families, fitness enthusiasts. We cook for all of them.",
   },
 ];
 
@@ -64,12 +64,12 @@ const TIMELINE = [
   {
     year: "2019",
     title: "FitFuel is born",
-    desc: "Pranit Borkar starts FitFuel out of a simple belief — nutritious food should be accessible, affordable, and actually delicious. Operations begin in Kharadi, Pune.",
+    desc: "Pranit Borkar starts FitFuel out of a simple belief: nutritious food should be accessible, affordable, and actually delicious. Operations begin in Kharadi, Pune.",
   },
   {
     year: "2021",
     title: "Plans expand",
-    desc: "Growing demand leads to the full suite of meal plans — Muscle Gain, Weight Loss, Balanced Diet, Office Employee, and Jain Diet — each with dedicated menus.",
+    desc: "Growing demand leads to the full suite of meal plans: Muscle Gain, Weight Loss, Balanced Diet, Office Employee and Jain Diet, each with its own menu.",
   },
   {
     year: "2024",
@@ -79,7 +79,7 @@ const TIMELINE = [
   {
     year: "2026",
     title: "Full platform revamp",
-    desc: "FitFuel moves beyond meal delivery — rebuilding from the ground up as a health platform with nutrition tracking, supplements, and AI coaching coming next.",
+    desc: "FitFuel moves beyond meal delivery, rebuilding from the ground up as a health platform with nutrition tracking, training and a matched supplement stack.",
   },
 ];
 
@@ -203,7 +203,7 @@ export default function AboutPage() {
                 fontSize: 18, color: "#9a9a94", lineHeight: 1.8,
                 maxWidth: 640, marginBottom: 48,
               }}>
-                FitFuel started in 2019 with one conviction — that eating right shouldn't require a degree in nutrition, hours in the kitchen, or a compromise on taste. Five years and thousands of meals later, that conviction runs every kitchen operation we do.
+                FitFuel started in 2019 with one conviction: that eating right shouldn't require a degree in nutrition, hours in the kitchen, or a compromise on taste. Five years and thousands of meals later, that conviction runs every kitchen operation we do.
               </p>
             </FadeItem>
 
@@ -322,7 +322,7 @@ export default function AboutPage() {
                   maxWidth: 780,
                   position: "relative", zIndex: 1,
                 }}>
-                  "To revolutionize the way people nourish themselves — providing convenient access to wholesome, nutritious meals, delivered daily, empowering individuals to lead healthier, more fulfilling lives."
+                  "To revolutionize the way people nourish themselves: providing convenient access to wholesome, nutritious meals, delivered daily, empowering individuals to lead healthier, more fulfilling lives."
                 </p>
               </FadeItem>
               <FadeItem>
@@ -375,12 +375,12 @@ export default function AboutPage() {
               </FadeItem>
               <FadeItem>
                 <p style={{ fontSize: 15, color: "#9a9a94", lineHeight: 1.8, marginBottom: 20 }}>
-                  We've spent years honing our recipes, building systems, and listening to customers. Every meal plan — from Muscle Gain to Jain Diet — was built from real feedback, real nutrition science, and real kitchen experience.
+                  We've spent years honing our recipes, building systems, and listening to customers. Every meal plan, from Muscle Gain to Jain Diet, was built from real feedback, real nutrition science, and real kitchen experience.
                 </p>
               </FadeItem>
               <FadeItem>
                 <p style={{ fontSize: 15, color: "#9a9a94", lineHeight: 1.8 }}>
-                  Now in 2026, we're going further. The same kitchen quality, the same daily delivery promise — built on a platform that tracks your nutrition, supports your training, and grows with your goals.
+                  Now in 2026, we're going further. The same kitchen quality, the same daily delivery promise. Built on a platform that tracks your nutrition, supports your training, and grows with your goals.
                 </p>
               </FadeItem>
             </FadeSection>
@@ -412,7 +412,7 @@ export default function AboutPage() {
                     Pranit Borkar
                   </div>
                   <p style={{ fontSize: 14, color: "#9a9a94", lineHeight: 1.7 }}>
-                    Started FitFuel with a single mission — make healthy eating effortless for Pune. Leads everything from kitchen operations to product development.
+                    Started FitFuel with a single mission: make healthy eating effortless for Pune. Leads everything from kitchen operations to product development.
                   </p>
                 </div>
               </FadeItem>
@@ -612,7 +612,7 @@ export default function AboutPage() {
                 }} />
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: "#84cc16", textTransform: "uppercase", marginBottom: 14 }}>
-                    — Start today
+                    Start today
                   </div>
                   <h2 style={{
                     fontFamily: "var(--ff-cond)",

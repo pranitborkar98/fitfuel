@@ -38,11 +38,11 @@ export async function resolvePurchasedPlan(opts: {
   if (opts.planSlug) {
     const bySlug = await db.mealPlan.findUnique({ where: { slug: opts.planSlug } });
     if (bySlug) return bySlug;
-    console.error("[resolvePurchasedPlan] planSlug not found — falling back", {
+    console.error("[resolvePurchasedPlan] planSlug not found, falling back", {
       planSlug: opts.planSlug,
     });
   } else {
-    console.error("[resolvePurchasedPlan] no planSlug on order — falling back", {
+    console.error("[resolvePurchasedPlan] no planSlug on order, falling back", {
       diet: opts.diet,
     });
   }

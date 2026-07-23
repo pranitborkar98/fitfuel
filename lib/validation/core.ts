@@ -9,7 +9,7 @@
 // Guards added on top of zod:
 //   • oversized-payload DoS — rejects bodies over maxBytes (Content-Length AND
 //     actual byte length) with 413 before parsing.
-//   • malformed JSON — 400 instead of an unhandled throw.
+//   • malformed JSON: 400 instead of an unhandled throw.
 
 import { NextRequest, NextResponse } from "next/server";
 import type { ZodType } from "zod";

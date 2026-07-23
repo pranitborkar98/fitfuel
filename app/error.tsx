@@ -25,7 +25,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       <div>
         <span className="er-tag">FitFuel // Error</span>
         <h1 className="er-h">Something broke</h1>
-        <p className="er-p">A glitch on our end — not yours. Try again, and if it keeps happening, head back home.</p>
+        <p className="er-p">A glitch on our end, not yours. Try again, and if it keeps happening, head back home.</p>
         <div className="er-row">
           <button onClick={() => reset()} className="er-btn primary">Try again</button>
           <Link href="/" className="er-btn ghost">Home</Link>

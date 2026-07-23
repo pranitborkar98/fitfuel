@@ -111,7 +111,7 @@ export default function LandingClient({ view }: { view: View }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 24 }}>
           <Mini title="Real meals delivered" body="Chef-built, macro-tracked, Pune-wide morning delivery." />
           <Mini title="Auto-logged macros" body="Every meal logs to your dashboard the moment it's delivered." />
-          <Mini title="Coach-grade tracking" body="Weight, workouts, body metrics, consistency — one place." />
+          <Mini title="Coach-grade tracking" body="Weight, workouts, body metrics, consistency, one place." />
         </div>
 
         <div style={{ marginTop: 32, fontSize: 12, color: T.dim, textAlign: "center" }}>
@@ -142,7 +142,7 @@ function subFor(v: View): string {
   if (v.type === "DIETICIAN" || v.type === "DOCTOR") return v.qualification || "Clinically-aligned meal plans, delivered.";
   if (v.type === "CORPORATE") return "Employee wellness, done right.";
   if (v.type === "RESIDENCE") return "Fresh meals, delivered to your gate.";
-  return "A friend who's been eating better — and wants you to too.";
+  return "A friend who's been eating better, and wants you to too.";
 }
 
 function Hero({ view }: { view: View }) {

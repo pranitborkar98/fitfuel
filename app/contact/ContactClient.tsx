@@ -36,7 +36,7 @@ const CONTACT_DETAILS = [
     icon: Phone,
     label: "WhatsApp & Phone",
     value: "+91 8850446348",
-    sub: "Fastest response — usually within minutes",
+    sub: "Fastest response, usually within minutes",
     href: `https://wa.me/${WA_NUMBER}`,
     cta: "Open WhatsApp",
   },
@@ -68,8 +68,8 @@ const CONTACT_DETAILS = [
 
 const FAQS = [
   { q: "How do I place an order?",         a: "WhatsApp us or use the Order Now button on the Plans page. We'll confirm your diet, duration, and delivery address and get you started." },
-  { q: "Can I pause or cancel my plan?",   a: "Yes — just WhatsApp us at least 24 hours before your next delivery. No penalties, no lock-in." },
-  { q: "Do you deliver on weekends?",      a: "Yes, we deliver 7 days a week. The 'Monthly excl. weekends' plan is a specific option — standard plans include weekends." },
+  { q: "Can I pause or cancel my plan?",   a: "Yes. Just WhatsApp us at least 24 hours before your next delivery. No penalties, no lock-in." },
+  { q: "Do you deliver on weekends?",      a: "Yes, we deliver 7 days a week. The 'Monthly excl. weekends' plan is a specific option. Standard plans include weekends." },
   { q: "What areas do you deliver to?",    a: "We currently serve Kharadi and surrounding Pune areas. WhatsApp us your pincode to confirm your zone." },
   { q: "Can I customise my meals?",        a: "Preferences like no onion, no garlic, extra protein etc. can be noted when you order. WhatsApp us to discuss." },
 ];
@@ -215,7 +215,7 @@ export default function ContactPage() {
             </FadeItem>
             <FadeItem>
               <p style={{ fontSize: 17, color: "#9a9a94", lineHeight: 1.8, maxWidth: 520 }}>
-                Questions about plans, delivery areas, or your current order — WhatsApp us. We respond fast, usually within minutes.
+                Questions about plans, delivery areas or your current order? WhatsApp us. We respond fast, usually within minutes.
               </p>
             </FadeItem>
           </motion.div>
@@ -393,7 +393,7 @@ export default function ContactPage() {
                     </button>
 
                     <p style={{ textAlign: "center", fontSize: 12, color: "#85857e", marginTop: 12 }}>
-                      Opens WhatsApp with your message pre-filled — works on desktop too
+                      Opens WhatsApp with your message pre-filled. Works on desktop too.
                     </p>
                   </div>
                 </div>
@@ -539,7 +539,7 @@ export default function ContactPage() {
               <p style={{ marginTop: 32, fontSize: 14, color: "#85857e" }}>
                 Didn&apos;t find your answer?{" "}
                 <a
-                  href={buildWALink("Hi FitFuel! I have a question that wasn't in the FAQ — ")}
+                  href={buildWALink("Hi FitFuel! I have a question that wasn't in the FAQ: ")}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "#84cc16", fontWeight: 600, textDecoration: "none" }}

@@ -3,12 +3,12 @@
 // Public marketing page — fully open, no premium gates
 // All supplements visible, personalised stack preview, drives sign-in
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   Zap, ChevronRight, CheckCircle2,
   ArrowRight, Sparkles, Shield, Truck, Star,
-  X,
+  X, Leaf,
 } from "lucide-react";
 import {
   STACKS, GOAL_META, CATEGORY_META,
@@ -32,9 +32,45 @@ const CATEGORIES: Array<"all" | SupplementCategory> = [
   "adaptogens", "joints", "gut", "weight", "hormones", "cognitive", "sleep",
 ];
 
+/**
+ * Placeholder shown when a supplement has no product photo.
+ *
+ * This was the raw emoji from the data file, rendered at 44px and 64px as the
+ * primary product visual. DESIGN.md rejects emoji on sight, and a 💊 standing
+ * in for a product shot reads as a missing asset either way. A condensed
+ * monogram of the supplement name is in-system, scales cleanly, and still
+ * distinguishes one card from the next.
+ */
+function Monogram({ name, size }: { name: string; size: number }) {
+  const initials = name
+    .replace(/[^A-Za-z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+  return (
+    <span
+      aria-hidden
+      style={{
+        fontFamily: "var(--ff-cond)",
+        fontWeight: 900,
+        fontSize: size,
+        lineHeight: 1,
+        letterSpacing: "-0.03em",
+        color: "rgba(163,230,53,0.55)",
+        userSelect: "none",
+      }}
+    >
+      {initials || "FF"}
+    </span>
+  );
+}
+
 // ── Supplement Detail Modal ───────────────────────────────────────────────────
 function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose: () => void }) {
   const catMeta = CATEGORY_META[supp.category];
+  const panel = useRef<HTMLDivElement>(null);
 
   const primary = supp.links && supp.links.length > 0 ? supp.links[0] : null;
   const livePrice = primary?.priceRs ?? null;
@@ -42,30 +78,73 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
   const discount = livePrice && liveMrp && liveMrp > livePrice
     ? Math.round(((liveMrp - livePrice) / liveMrp) * 100) : 0;
 
+  // This was a click-to-dismiss div with no keyboard path in or out: Escape
+  // did nothing, focus stayed on the page behind it, and the body kept
+  // scrolling under the sheet. Same treatment as the mobile nav.
+  useEffect(() => {
+    const { body } = document;
+    const prevOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+
+    const focusables = () => Array.from(
+      panel.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    ).filter((el) => el.offsetParent !== null);
+    focusables()[0]?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !panel.current?.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(10px)" }} />
-      <div style={{
-        position: "relative", width: "100%", maxWidth: 560,
-        background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "24px 24px 0 0", maxHeight: "92vh", overflowY: "auto",
-        boxShadow: "0 -20px 60px rgba(0,0,0,0.8)",
-      }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.88)" }} />
+      <div
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-label={supp.name}
+        style={{
+          position: "relative", width: "100%", maxWidth: 560,
+          // Was radius 24px with a frosted backdrop-blur scrim: rounded
+          // corners and glassmorphism are both DESIGN.md rejects.
+          background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 0, maxHeight: "92dvh", overflowY: "auto",
+        }}
+      >
         {/* Accent top bar */}
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${supp.accent}, transparent)` }} />
+        <div style={{ height: 3, background: supp.accent }} />
 
-        {/* Hero — image + meta + BUY CTA */}
+        {/* Hero: image + meta + BUY CTA */}
         <div style={{
           padding: "24px 24px 20px",
-          background: `linear-gradient(135deg, ${supp.accent}10 0%, transparent 70%)`,
+          // Was a lime gradient wash. Flat panel instead.
+          background: "transparent",
           borderBottom: "1px solid rgba(255,255,255,0.05)",
           position: "relative",
         }}>
           <button
             onClick={onClose}
-            style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}
+            aria-label="Close"
+            style={{ position: "absolute", top: 12, right: 12, width: 44, height: 44, borderRadius: 0, background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", color: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}
           >
-            <X size={14} />
+            <X size={16} />
           </button>
 
           <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: primary ? 16 : 0 }}>
@@ -79,7 +158,7 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
               {supp.imageUrl ? (
                 <img src={supp.imageUrl} alt={supp.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8 }} />
               ) : (
-                <div style={{ fontSize: 44 }}>{supp.emoji}</div>
+                <Monogram name={supp.name} size={40} />
               )}
             </div>
 
@@ -191,8 +270,8 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
             </div>
             {supp.veganFriendly && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.06)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 12, padding: "12px 16px" }}>
-                <span style={{ fontSize: 16 }}>🌿</span>
-                <span style={{ fontSize: 12, color: "rgba(163,230,53,0.7)", fontFamily: "inherit", fontWeight: 600 }}>Vegan-friendly</span>
+                <Leaf size={15} color="#a3e635" aria-hidden />
+                <span style={{ fontSize: 12.5, color: "#a3e635", fontFamily: "inherit", fontWeight: 600 }}>Vegan-friendly</span>
               </div>
             )}
           </div>
@@ -260,26 +339,36 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
   }
 
   return (
+    // Was a plain <div onClick>. That made every card in a 50+ item catalogue
+    // unreachable by keyboard and invisible to assistive tech. role/tabIndex/
+    // key handling turn it into a real control without restructuring the card.
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${supp.name}, view details`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); }
+      }}
       style={{
         background: "#0f0f0f",
-        border: `1px solid ${hovered ? `${supp.accent}40` : "rgba(255,255,255,0.06)"}`,
-        borderRadius: 16, cursor: "pointer",
-        transform: hovered ? "translateY(-3px)" : "none",
-        transition: "all 0.18s ease", position: "relative", overflow: "hidden",
-        boxShadow: hovered ? `0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px ${supp.accent}15` : "none",
+        border: `1px solid ${hovered ? "rgba(163,230,53,0.45)" : "rgba(255,255,255,0.06)"}`,
+        // Was radius 16 with a 3px lift and a coloured glow shadow on hover.
+        borderRadius: 0, cursor: "pointer",
+        transition: "border-color 0.18s ease, background 0.18s ease",
+        position: "relative", overflow: "hidden",
         display: "flex", flexDirection: "column",
       }}
     >
-      {/* Image / emoji hero block */}
+      {/* Product image, or a monogram when there is no photo */}
       <div style={{
         position: "relative",
-        background: supp.imageUrl
-          ? "#000"
-          : `linear-gradient(135deg, ${supp.accent}18, ${supp.accent}05)`,
+        // Was a lime gradient wash behind every card.
+        background: supp.imageUrl ? "#000" : "#0b0b0b",
         height: 160,
         display: "flex", alignItems: "center", justifyContent: "center",
         borderBottom: `1px solid rgba(255,255,255,0.04)`,
@@ -290,16 +379,18 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
             alt={supp.name}
             style={{ width: "100%", height: "100%", objectFit: "contain", padding: 16 }}
             onError={(e) => {
-              // Fallback to emoji if image fails to load
+              // Fall back to the monogram if the image 404s.
               (e.currentTarget as HTMLImageElement).style.display = "none";
-              const next = (e.currentTarget.nextSibling as HTMLElement);
+              const next = e.currentTarget.nextElementSibling as HTMLElement | null;
               if (next) next.style.display = "block";
             }}
           />
         ) : null}
-        {!supp.imageUrl && (
-          <div style={{ fontSize: 64, opacity: 0.9 }}>{supp.emoji}</div>
-        )}
+        {/* Rendered but hidden when an image exists, so the onError handler
+            above has a sibling to reveal. */}
+        <span style={{ display: supp.imageUrl ? "none" : "block" }}>
+          <Monogram name={supp.name} size={58} />
+        </span>
 
         {/* Popular badge. Was amber #fbbf24, the last off-palette hue on a
             public surface. Lime is the only accent (DESIGN.md). */}
@@ -329,11 +420,15 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
         {/* Vegan icon */}
         {supp.veganFriendly && (
           <div style={{
-            position: "absolute", bottom: 10, right: 10,
-            background: "rgba(0,0,0,0.7)", borderRadius: "50%",
-            width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 12,
-          }} title="Vegan-friendly">🌿</div>
+            position: "absolute", bottom: 8, right: 8,
+            display: "inline-flex", alignItems: "center", gap: 5,
+            background: "rgba(0,0,0,0.72)", border: "1px solid rgba(163,230,53,0.3)",
+            padding: "4px 8px",
+            fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 12,
+            letterSpacing: "0.1em", textTransform: "uppercase", color: "#a3e635",
+          }}>
+            <Leaf size={12} aria-hidden /> Vegan
+          </div>
         )}
       </div>
 
@@ -525,12 +620,13 @@ export default function SupplementsLanding({
               return (
                 <button key={goal} onClick={() => setActiveGoal(goal)} style={{
                   display: "flex", alignItems: "center", gap: 8,
-                  padding: "10px 18px", borderRadius: 12,
-                  background: active ? meta.accent : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${active ? meta.accent : "rgba(255,255,255,0.08)"}`,
-                  color: active ? "#000" : "rgba(255,255,255,0.4)",
-                  fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 13, cursor: "pointer",
-                  transition: "all 0.18s ease",
+                  padding: "0 18px", minHeight: 44, borderRadius: 0,
+                  background: active ? meta.accent : "transparent",
+                  border: `1px solid ${active ? meta.accent : "rgba(255,255,255,0.12)"}`,
+                  color: active ? "#000" : "#c9c9c2",
+                  fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 14, cursor: "pointer",
+                  letterSpacing: "0.04em", textTransform: "uppercase",
+                  transition: "border-color 0.18s ease, background 0.18s ease, color 0.18s ease",
                 }}>
                   <span>{meta.label}</span>
                 </button>
@@ -564,7 +660,7 @@ export default function SupplementsLanding({
                   Full Catalogue
                 </p>
                 <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
-                  {filteredCatalogue.length} supplement{filteredCatalogue.length !== 1 ? "s" : ""} — tap any for full details
+                  {filteredCatalogue.length} supplement{filteredCatalogue.length !== 1 ? "s" : ""}, tap any for full details
                 </h2>
               </div>
             </div>
@@ -578,12 +674,13 @@ export default function SupplementsLanding({
                 return (
                   <button key={cat} onClick={() => setCatFilter(cat)} style={{
                     display: "flex", alignItems: "center", gap: 5,
-                    padding: "6px 12px", borderRadius: 8,
-                    background: active ? `${accent}15` : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${active ? `${accent}35` : "rgba(255,255,255,0.07)"}`,
-                    color: active ? accent : "rgba(255,255,255,0.35)",
-                    fontFamily: "inherit", fontWeight: 500, fontSize: 12,
-                    cursor: "pointer", transition: "all 0.15s ease",
+                    padding: "0 14px", minHeight: 44, borderRadius: 0,
+                    background: active ? `${accent}15` : "transparent",
+                    border: `1px solid ${active ? `${accent}55` : "rgba(255,255,255,0.12)"}`,
+                    color: active ? accent : "#c9c9c2",
+                    fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 13,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    cursor: "pointer", transition: "border-color 0.15s ease, background 0.15s ease, color 0.15s ease",
                   }}>
                     <span>{cat === "all" ? "All" : meta?.label ?? cat}</span>
                   </button>

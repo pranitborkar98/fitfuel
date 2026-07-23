@@ -97,7 +97,7 @@ function AffiliateDisclosure() {
       >
         <strong style={{ color: "#a3a3a3", fontWeight: 600 }}>Affiliate disclosure.</strong>{" "}
         FitFuel recommends supplements from trusted third-party retailers. Some links on this
-        page are affiliate links — if you buy through them, FitFuel may earn a small commission
+        page are affiliate links. If you buy through them, FitFuel may earn a small commission
         at no extra cost to you. We only recommend products we believe in; commissions never
         change what we suggest. Supplements are sold, shipped and supported by the retailer, and
         their returns and refund terms apply. See our{" "}

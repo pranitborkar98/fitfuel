@@ -74,7 +74,7 @@ function DigitalCheckout() {
     setCouponMsg(null);
     const res = await fetch("/api/coupon/validate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: coupon.trim().toUpperCase(), planSlug, dur, email }) });
     const data = await res.json();
-    if (data.ok) { setDiscount(data.discountRs); setCouponMsg({ ok: true, text: `Applied — you save ${data.display.discount}` }); }
+    if (data.ok) { setDiscount(data.discountRs); setCouponMsg({ ok: true, text: `Applied, you save ${data.display.discount}` }); }
     else { setDiscount(0); setCouponMsg({ ok: false, text: data.reason || "Invalid coupon" }); }
   }
   async function pay() {

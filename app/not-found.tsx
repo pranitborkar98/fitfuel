@@ -20,7 +20,7 @@ export default function NotFound() {
         <span className="nf-tag">FitFuel // 404</span>
         <p className="nf-code">404</p>
         <h1 className="nf-h">Off the menu</h1>
-        <p className="nf-p">This page isn&apos;t on the plan — but your next meal is. Let&apos;s get you back on track.</p>
+        <p className="nf-p">This page isn&apos;t on the plan, but your next meal is. Let&apos;s get you back on track.</p>
         <div className="nf-row">
           <Link href="/" className="nf-btn primary">Home</Link>
           <Link href="/plans" className="nf-btn ghost">Browse plans →</Link>

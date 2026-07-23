@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FitFuel — Personal Health Operating System",
+    name: "FitFuel, Personal Health Operating System",
     short_name: "FitFuel",
     description: "Verified meals, macros tracked, workouts logged, coaching built in. Pune.",
     start_url: "/",

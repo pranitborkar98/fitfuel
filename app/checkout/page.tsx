@@ -202,7 +202,7 @@ function CheckoutInner() {
   const grandTotal = isTest ? priceGST : effSubtotal + effGst; // GST-inclusive collected
 
   const productinfo = isTest
-    ? "FitFuel TEST TRANSACTION — ignore"
+    ? "FitFuel TEST TRANSACTION, ignore"
     : `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
 
   // Saved addresses state
@@ -312,7 +312,7 @@ function CheckoutInner() {
       const data = await res.json();
       if (data.ok) {
         setDiscount(data.discountRs); setCouponApplied(code);
-        setCouponMsg({ ok: true, text: `Applied — you save ${data.display.discount}` });
+        setCouponMsg({ ok: true, text: `Applied, you save ${data.display.discount}` });
       } else {
         setDiscount(0); setCouponApplied(null);
         setCouponMsg({ ok: false, text: data.reason || "Invalid coupon." });
@@ -445,7 +445,7 @@ function CheckoutInner() {
           >
             <FlaskConical size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 2 }}>Test mode — &#8377;1 charge</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 2 }}>Test mode: &#8377;1 charge</div>
               <div style={{ fontSize: 13, color: T.textSecond }}>
                 Live &#8377;1 test transaction. Remove <code style={{ color: "#fbbf24" }}>?test=1</code> for production.
               </div>
@@ -602,7 +602,7 @@ function CheckoutInner() {
                 {loading
                   ? (payMethod === "cod" ? "Placing order..." : "Redirecting to PayU...")
                   : payMethod === "cod"
-                    ? <><Banknote size={15} /> Place COD Order — {fmt(grandTotal)}</>
+                    ? <><Banknote size={15} /> Place COD Order: {fmt(grandTotal)}</>
                     : <>Pay {fmt(grandTotal)} securely <ArrowRight size={15} /></>
                 }
               </button>
@@ -737,7 +737,7 @@ function CheckoutInner() {
               background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
               borderRadius: 12, padding: "14px 18px", fontSize: 13, color: T.textSecond, lineHeight: 1.6,
             }}>
-              🚚 <strong style={{ color: T.textPrimary }}>Free delivery</strong> — 7am–10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
+              🚚 <strong style={{ color: T.textPrimary }}>Free delivery</strong>, 7am–10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
             </div>
 
             <a

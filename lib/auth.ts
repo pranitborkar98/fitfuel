@@ -79,7 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     await (prisma as any).user.delete({ where: { id: guestUser.id } });
 
-    console.log(`[Auth] Merge complete — guest ${guestUser.id} deleted`);
+    console.log(`[Auth] Merge complete, guest ${guestUser.id} deleted`);
   },
 },
   pages: {

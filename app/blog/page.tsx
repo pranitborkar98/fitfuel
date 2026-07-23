@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/blog" },
   title: "Blog",
   description:
-    "Nutrition, training and fat-loss guidance for Pune — written by the team that cooks your meals. Practical, India-first, no fad diets.",
+    "Nutrition, training and fat-loss guidance for Pune, written by the team that cooks your meals. Practical, India-first, no fad diets.",
   openGraph: {
     title: "FitFuel Blog",
     description: "Practical nutrition and training guidance, India-first.",
@@ -171,7 +171,7 @@ export default async function BlogPage({
 
         {visible.length === 0 ? (
           <p style={{ color: C.muted, fontSize: 15 }}>
-            No articles here yet — check back soon.
+            No articles here yet. Check back soon.
           </p>
         ) : (
           <>

@@ -22,7 +22,7 @@ export async function notifyDriverWhatsApp(payload: NotifyDriverPayload): Promis
 
   if (!authKey || !templateId || !integratedNumber) {
     console.warn(
-      "[notify-driver] Skipping WhatsApp — MSG91_WA_TEMPLATE_ID or MSG91_WA_INTEGRATED_NUMBER not set."
+      "[notify-driver] Skipping WhatsApp. MSG91_WA_TEMPLATE_ID or MSG91_WA_INTEGRATED_NUMBER not set."
     );
     return;
   }

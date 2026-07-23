@@ -426,7 +426,7 @@ export default function OnboardingClient({ userName }: Props) {
                 <ChevronLeft size={14} /> Back
               </button>
             )}
-            <p style={s.stepLabel}>Step {step + 1} of 5 — {STEPS[step].label}</p>
+            <p style={s.stepLabel}>Step {step + 1} of 5: {STEPS[step].label}</p>
             <h1 style={s.title}>
               {step === 0 && `Hey${userName ? ` ${userName.split(' ')[0]}` : ''}! Tell us about your body`}
               {step === 1 && 'What is your primary goal?'}
@@ -489,7 +489,7 @@ export default function OnboardingClient({ userName }: Props) {
                         />
                       </div>
                       <div>
-                        <label style={s.label}>Target Weight (kg) — optional</label>
+                        <label style={s.label}>Target Weight (kg), optional</label>
                         <input
                           style={s.input}
                           type="number"

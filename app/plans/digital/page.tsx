@@ -8,7 +8,7 @@ const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
 
 const COPY: Record<string, { tag: string; label: string; bullets: string[]; popular: boolean }> = {
   STARTER: { tag: "STARTER", label: "Digital Starter", popular: false, bullets: ["Full 30-day recipe book (PDF)", "Per-meal macros + daily totals", "Consolidated grocery list", "Meal logging on your dashboard"] },
-  PRO:     { tag: "PRO",     label: "Digital Pro",     popular: true,  bullets: ["Everything in Starter", "30-day training plan (PDF) — sets, reps, rest & weekly split", "Workout calorie targets per day", "Progress & body-metrics tracking", "Free plan updates"] },
+  PRO:     { tag: "PRO",     label: "Digital Pro",     popular: true,  bullets: ["Everything in Starter", "30-day training plan (PDF), sets, reps, rest & weekly split", "Workout calorie targets per day", "Progress & body-metrics tracking", "Free plan updates"] },
 };
 
 export const metadata = {
@@ -33,7 +33,7 @@ export default async function DigitalPlansPage() {
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ color: T.accent, fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Digital Meal Plans</span>
           <h1 style={{ fontSize: 40, fontWeight: 800, margin: "12px 0 10px" }}>Cook it yourself. Anywhere in India.</h1>
-          <p style={{ color: T.textSecond, fontSize: 16, maxWidth: 560, margin: "0 auto" }}>The full 30-day plan as a downloadable PDF — recipes, macros, grocery list, and (on Pro) a complete training plan. No delivery, no city limits.</p>
+          <p style={{ color: T.textSecond, fontSize: 16, maxWidth: 560, margin: "0 auto" }}>The full 30-day plan as a downloadable PDF, recipes, macros, grocery list, and (on Pro) a complete training plan. No delivery, no city limits.</p>
         </div>
 
         {prices.length === 0 ? <p style={{ textAlign: "center", color: T.textMuted }}>No digital plans available yet.</p> : (
