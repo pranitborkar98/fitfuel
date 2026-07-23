@@ -42,7 +42,19 @@ calorie and protein intake is weighed rather than estimated from a food diary.
   consistency score. This is NOT an AI chatbot; there is no chat feature.
 - Supplements are advisory only. FitFuel recommends a stack and the customer
   buys it from Nutrabay at Nutrabay's price. FitFuel does not sell supplements.
-- Prices exclude 5% GST, which is applied at checkout.
+- Prices exclude 5% GST, which is applied at checkout. Delivery is included.
+- Plan lengths: trial day, weekly, bi-weekly, monthly excluding weekends,
+  one month, two months, three months. Delivery window is morning or
+  evening. Pause or skip before the next box; no lock-in.
+- Payment: UPI, credit and debit cards and netbanking via PayU, or cash on
+  delivery.
+- Referral: every account gets a code (FF-NAME-XXXX). When a referred
+  friend's first order is confirmed, Rs 500 in credit is added to both
+  wallets, spendable on the next plan.
+- Partner program takes seven professional types: gyms, personal trainers,
+  influencers, dieticians, doctors, corporate offices and residential
+  societies. QR onboarding, live client tracking, monthly payouts, and a
+  commission per member. Apply at /partners/apply.
 
 ## What FitFuel does not do
 

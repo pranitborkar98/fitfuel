@@ -10,6 +10,8 @@ import LoopDial from "./_home/LoopDial";
 import Coach from "./_home/Coach";
 import Conditions from "./_home/Conditions";
 import Diary from "./_home/Diary";
+import Refer from "./_home/Refer";
+import Terms from "./_home/Terms";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -76,7 +78,12 @@ export default function Home() {
       <Partners />
       <Franchise />
       <Membership />
+      {/* 7 durations, delivery windows, PayU + COD, digital plans. The
+          operational/trust answers, placed next to the pricing decision. */}
+      <Terms />
       <Voices />
+      {/* Rs 500 referral credit loop. Was one footer link. */}
+      <Refer />
       {/* Trimmed index near the foot; the Footer carries full completeness. */}
       <ServiceMap />
       <Close />
@@ -308,7 +315,17 @@ function Partners() {
     <section style={{ borderTop: `1px solid ${RULE}`, padding: "clamp(70px,9vw,120px) 0" }}>
       <div style={WRAP}>
         <Reveal><h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "16ch" }}>We also feed teams and gyms</h2></Reveal>
-        <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: "clamp(34px,4vw,56px)" }}>
+        {/* The partner program takes seven professional types, not two.
+            Naming them makes the breadth legible; the two cards below are
+            the entry points. */}
+        <Reveal delay={0.04}>
+          <p style={{ ...copy(16), maxWidth: "62ch", marginTop: 20 }}>
+            Gyms, personal trainers, influencers, dieticians, doctors, offices and residential
+            societies all run on FitFuel. QR onboarding, live client tracking and monthly payouts,
+            with a commission on every member who eats to their macros.
+          </p>
+        </Reveal>
+        <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: "clamp(28px,3.4vw,44px)" }}>
           {[
             { src: "/images/corporate.jpg", alt: "A team at work in a Pune office", t: "Corporate wellness", d: "Subsidised, condition-specific meal programs for Pune offices, with reporting your HR team can actually use.", href: "/corporate", cta: "For your team" },
             { src: "/images/gym.jpg", alt: "A gym floor with dumbbells", t: "Gyms and trainers", d: "Your members eat to their macros and you earn on every one. QR onboarding, live client tracking and monthly payouts.", href: "/partners/apply", cta: "Become a partner" },

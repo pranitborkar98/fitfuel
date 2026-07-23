@@ -1075,6 +1075,118 @@ main[data-surface="marketing"] {
 }
 @media (max-width: 900px) { .ff-diary-cols { grid-template-columns: 1fr; } }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   REFERRAL — a connector that draws across the loop
+   ═══════════════════════════════════════════════════════════════════════
+   Mechanism 10. A lime line runs behind the three steps and fills left to
+   right as the section scrolls, so the referral loop visibly completes:
+   share, order, earn. Base state is fully drawn, so the meaning survives if
+   the timeline never activates. */
+.ff-refer { position: relative; }
+.ff-refer-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(20px, 4vw, 56px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.ff-refer-step { position: relative; }
+.ff-refer-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(46px, 5vw, 62px);
+  height: clamp(46px, 5vw, 62px);
+  background: var(--ff-lime);
+  position: relative;
+  z-index: 1;
+}
+/* The connector sits at the vertical centre of the number row. */
+.ff-refer-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: clamp(23px, 2.5vw, 31px);
+  height: 2px;
+  background: var(--ff-rule-2);
+  z-index: 0;
+}
+.ff-refer-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ff-lime);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 700px) {
+    .ff-refer-line::after {
+      animation: ff-refer-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 62% cover 46%;
+    }
+    @keyframes ff-refer-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  }
+}
+@media (max-width: 700px) {
+  .ff-refer-steps { grid-template-columns: 1fr; gap: 8px; }
+  /* Vertical layout: the horizontal connector would be meaningless. */
+  .ff-refer-line { display: none; }
+  .ff-refer-step { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 14px 0; border-top: 1px solid var(--ff-rule); }
+  .ff-refer-step h3 { margin-top: 0 !important; }
+  .ff-refer-step p { grid-column: 2; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TERMS spec sheet — rows that wipe in
+   ═══════════════════════════════════════════════════════════════════════
+   Mechanism 11. Each row's hairline rule wipes in on scroll, staggered so
+   the sheet assembles top to bottom like a readout being drawn. */
+.ff-spec { margin: 0; }
+.ff-spec-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(220px, 1.1fr) minmax(0, 1.4fr);
+  gap: clamp(16px, 3vw, 48px);
+  align-items: baseline;
+  padding: clamp(22px, 3vw, 38px) 0;
+}
+.ff-spec-rule {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 1px;
+  background: var(--ff-rule);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+.ff-spec-row:last-child::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: var(--ff-rule);
+}
+.ff-spec-label { align-self: center; }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+    .ff-spec-rule {
+      animation: ff-spec-wipe linear both;
+      animation-timeline: view();
+      /* All rows share the section's timeline; the per-row stagger comes
+         from --r shifting each row's start point down the range. */
+      animation-range: entry calc(40% + var(--r) * 8%) entry calc(78% + var(--r) * 8%);
+    }
+    @keyframes ff-spec-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  }
+}
+@media (max-width: 760px) {
+  .ff-spec-row { grid-template-columns: 1fr; gap: 6px; }
+  .ff-spec-detail { margin-top: 6px !important; }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
