@@ -75,7 +75,7 @@ export default function ImageUpload({
           <div style={{ color: busy ? C.accent : C.muted, fontSize: 13 }}>
             {busy ? "Uploading…" : <>Drag an image here, or <span style={{ color: C.accent, fontWeight: 600 }}>browse</span></>}
           </div>
-          <div style={{ color: C.muted, fontSize: 11, marginTop: 4 }}>JPG / PNG / WebP · up to 8 MB</div>
+          <div style={{ color: C.muted, fontSize: 12, marginTop: 4 }}>JPG / PNG / WebP · up to 8 MB</div>
         </div>
       )}
 
@@ -92,7 +92,7 @@ export default function ImageUpload({
             style={{ width: "100%", background: C.soft, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: "7px 10px", fontSize: 12.5, boxSizing: "border-box" }}
           />
         ) : (
-          <button type="button" onClick={() => setShowUrl(true)} style={{ background: "none", border: "none", color: C.muted, fontSize: 11.5, cursor: "pointer", padding: 0, textDecoration: "underline" }}>
+          <button type="button" onClick={() => setShowUrl(true)} style={{ background: "none", border: "none", color: C.muted, fontSize: 12.5, cursor: "pointer", padding: 0, textDecoration: "underline" }}>
             or paste a URL
           </button>
         )}

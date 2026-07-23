@@ -91,7 +91,7 @@ function MenuItem({ href, label, note, icon, onNavigate }: {
 
 function ColHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.14em", padding: "0 12px", marginBottom: 8 }}>
+    <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.14em", padding: "0 12px", marginBottom: 8 }}>
       {children}
     </div>
   );

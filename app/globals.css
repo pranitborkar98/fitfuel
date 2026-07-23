@@ -470,6 +470,120 @@ main[data-surface="marketing"] {
 }
 .ff-choice:hover { border-color: #4a4a45 !important; }
 
+/* ── The loop: one continuous day, not eight tiles ──────────────────────
+   A rail runs down the left edge and threads every row together, so the
+   eight steps read as a sequence rather than a grid of loose labels. Each
+   row is a four-column band: rail, ordinal, time, then name + detail. */
+.ff-loop-row {
+  display: grid;
+  grid-template-columns: 30px 42px minmax(96px, 130px) minmax(0, 1fr);
+  align-items: start;
+  column-gap: clamp(14px, 2vw, 30px);
+  padding: clamp(18px, 2vw, 26px) 0;
+  border-top: 1px solid var(--ff-rule);
+  position: relative;
+  transition: background .2s ease;
+}
+.ff-loop-row:last-child { border-bottom: 1px solid var(--ff-rule); }
+.ff-loop-row:hover { background: rgba(255, 255, 255, .015); }
+
+/* The vertical thread. Absolutely positioned against the row so it spans
+   the row's full height and meets the next row's thread at the border,
+   which is what makes eight rows read as one continuous day. */
+.ff-loop-rail {
+  position: static;
+  display: block;
+}
+.ff-loop-rail::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  background: var(--ff-rule-2);
+}
+.ff-loop-row:last-child .ff-loop-rail::before { height: 26px; }
+
+.ff-loop-dot {
+  position: absolute;
+  left: 0;
+  top: calc(clamp(18px, 2vw, 26px) + 6px);
+  width: 11px;
+  height: 11px;
+  background: var(--ff-panel);
+  border: 1px solid var(--ff-rule-2);
+  transition: background .25s ease, border-color .25s ease;
+}
+.ff-loop-row:hover .ff-loop-dot {
+  background: var(--ff-lime);
+  border-color: var(--ff-lime);
+}
+
+.ff-loop-n    { align-self: start; padding-top: 4px; }
+.ff-loop-when { align-self: start; padding-top: 1px; white-space: nowrap; }
+.ff-loop-name { grid-column: 4; }
+.ff-loop-what { grid-column: 4; margin-top: 8px; max-width: 62ch; }
+
+@media (max-width: 760px) {
+  /* Stack on phones: the time sits above the step name, and the rail keeps
+     threading the sequence down the left. */
+  .ff-loop-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 2px;
+  }
+  .ff-loop-rail { grid-row: 1 / span 3; }
+  .ff-loop-n    { display: none; }
+  .ff-loop-when { grid-column: 2; }
+  .ff-loop-name { grid-column: 2; }
+  .ff-loop-what { grid-column: 2; }
+}
+
+/* Statement comparison band: three columns of what everyone else stops
+   short of. Stacks below the tablet breakpoint. */
+@media (max-width: 860px) {
+  .ff-vs { grid-template-columns: 1fr !important; }
+  .ff-vs > div > div { border-left: none !important; border-top: 1px solid var(--ff-rule); }
+  .ff-vs > div:first-child > div { border-top: none !important; }
+}
+
+/* Pillar strip: the arrow only commits on hover/focus, so the resting
+   state stays quiet and the row still signals it is clickable. */
+.ff-pillar-go { opacity: 0; transform: translateX(-4px); transition: opacity .2s ease, transform .2s ease; }
+.ff-pillar:hover .ff-pillar-go,
+.ff-pillar:focus-visible .ff-pillar-go { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ff-pillar-go { transition: none; transform: none; }
+}
+@media (hover: none) {
+  /* No hover on touch, so never hide the affordance there. */
+  .ff-pillar-go { opacity: 1; transform: none; }
+}
+
+/* ── Page surface ──────────────────────────────────────────────────────
+   Nine thousand pixels of flat #070707 is what reads as dead on a real
+   screen: there is no material, so nothing catches light. A single fixed
+   grain layer over the whole page gives the black a printed texture
+   without adding a single visual element to any section.
+
+   Fixed, not repeated per-section, so it costs one composited layer.
+   Suppressed under 1000px for the same reason the photographic grain is:
+   mid-range Android over mobile data. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+@media (max-width: 1000px) {
+  body::after { display: none; }
+}
+
 .ff-strip:hover { background: var(--ff-panel-2); }
 
 /* Short viewports (13" laptops, tablets in landscape): the headline,

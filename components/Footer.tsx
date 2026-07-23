@@ -70,7 +70,7 @@ function YoutubeIcon() {
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 800, color: "var(--ff-ink)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 20 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: "var(--ff-ink)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 20 }}>
         {title}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -134,7 +134,7 @@ export default function Footer() {
             </div>
 
             {/* Kitchen trust */}
-            <p style={{ fontSize: 11.5, color: "var(--ff-dim)", marginTop: 24, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 12.5, color: "var(--ff-dim)", marginTop: 24, lineHeight: 1.6 }}>
               FSSAI Lic. No. 21523035002815
             </p>
           </div>
@@ -147,7 +147,7 @@ export default function Footer() {
           <div>
             <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: "1px solid rgba(132,204,22,0.22)", borderRadius: 0, padding: 24, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}>
               <div style={{ height: 2, background: "linear-gradient(90deg, #84cc16, transparent)", margin: "-24px -24px 20px", borderTopLeftRadius: 0, borderTopRightRadius: 0 }} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(132,204,22,0.09)", color: "#a3e635", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", padding: "4px 12px", borderRadius: 0, border: "1px solid rgba(132,204,22,0.22)", textTransform: "uppercase", marginBottom: 14 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(132,204,22,0.09)", color: "#a3e635", fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", padding: "4px 12px", borderRadius: 0, border: "1px solid rgba(132,204,22,0.22)", textTransform: "uppercase", marginBottom: 14 }}>
                 Try Today
               </span>
               <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ff-ink)", marginBottom: 8, letterSpacing: "-0.01em" }}>

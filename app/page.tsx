@@ -67,11 +67,15 @@ export default function Home() {
 
 /* ═══ PILLARS: four hard columns ═══ */
 function Pillars() {
-  const p = [
-    ["Kitchen", "126 plans cooked daily", "/plans"],
-    ["App", "800+ exercises, full tracking", "/how-it-works"],
-    ["Supplements", "Matched stacks via Nutrabay", "/supplements"],
-    ["Partners", "Gyms, offices, franchise", "/partners/apply"],
+  /* Was four names over four one-line captions. The captions already
+     contained the numbers that make the claim land, so the figure now
+     leads at display scale and the caption explains it. Same information,
+     an order of magnitude more weight. */
+  const p: [string, string, string, string, string][] = [
+    ["Kitchen", "126", "plans", "Cooked daily in Kharadi", "/plans"],
+    ["App", "800", "exercises", "Logged with your meals", "/how-it-works"],
+    ["Supplements", "63", "in the stack", "Matched, bought via Nutrabay", "/supplements"],
+    ["Partners", "15", "areas served", "Gyms, offices, franchise", "/partners/apply"],
   ];
   return (
     // These four are the top-level map of the business, so they carry
@@ -81,10 +85,17 @@ function Pillars() {
     <section aria-labelledby="pillars-heading" style={{ borderBottom: `1px solid ${RULE}` }}>
       <h2 id="pillars-heading" className="sr-only">What FitFuel runs</h2>
       <div style={{ ...WRAP, display: "grid", gridTemplateColumns: "repeat(4,1fr)", padding: 0 }} className="ff-4col">
-        {p.map(([t, d, href], i) => (
-          <Link key={t} href={href} className="ff-strip" style={{ display: "block", padding: "clamp(26px,3.4vw,44px) clamp(16px,2vw,32px)", borderLeft: i === 0 ? "none" : `1px solid ${RULE}`, textDecoration: "none", transition: "background .2s" }}>
-            <h3 style={mid("clamp(1.7rem,3vw,2.5rem)")}>{t}</h3>
-            <div style={{ ...copy(13.5), marginTop: 9 }}>{d}</div>
+        {p.map(([t, fig, unit, d, href], i) => (
+          <Link key={t} href={href} className="ff-strip ff-pillar" style={{ display: "block", padding: "clamp(24px,3vw,38px) clamp(16px,2vw,32px) clamp(26px,3.2vw,40px)", borderLeft: i === 0 ? "none" : `1px solid ${RULE}`, textDecoration: "none", transition: "background .2s" }}>
+            <h3 style={{ ...tag(DIM), fontSize: 12.5 }}>{t}</h3>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 14 }}>
+              <span style={{ ...huge("clamp(2.6rem,4.6vw,3.9rem)"), lineHeight: 0.82 }}>{fig}</span>
+              <span style={{ ...mid("clamp(.95rem,1.3vw,1.15rem)"), color: MUTE }}>{unit}</span>
+            </div>
+            <div style={{ ...copy(13.5), marginTop: 12 }}>{d}</div>
+            <span className="ff-pillar-go" aria-hidden style={{ ...tag(LIME), fontSize: 12, display: "inline-block", marginTop: 16 }}>
+              View <ArrowRight size={12} style={{ verticalAlign: "-1px" }} />
+            </span>
           </Link>
         ))}
       </div>
@@ -92,24 +103,66 @@ function Pillars() {
   );
 }
 
-/* ═══ STATEMENT: asymmetric, type only ═══ */
+/* ═══ STATEMENT ═══
+   Was a headline plus one right-floated paragraph inside 150px of padding
+   top and bottom: a 716px-tall section holding two text nodes and a lot of
+   nothing. The copy was already making a three-against-one argument in
+   prose, so it is drawn as one now. Depth from the idea, not from ornament.
+*/
 function Statement() {
+  const them: [string, string, string][] = [
+    ["A tiffin", "Cooks your food", "Never tracks it"],
+    ["An app", "Tracks your food", "Only what you type in"],
+    ["A supplement brand", "Sells you pills", "With no plan behind them"],
+  ];
   return (
-    <section style={{ padding: "clamp(80px,11vw,150px) 0" }}>
+    <section style={{ padding: "clamp(70px,8vw,110px) 0 0" }}>
       <div style={WRAP}>
         <Reveal>
           <h2 style={{ ...huge("clamp(2.4rem,7.5vw,6.4rem)"), maxWidth: "17ch" }}>
             Every app trusts you to log it. <span style={{ color: LIME }}>We already know.</span>
           </h2>
         </Reveal>
-        <Reveal delay={0.08}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "clamp(28px,4vw,54px)" }}>
-            <p style={{ ...copy(16.5), maxWidth: "46ch" }}>
-              A tiffin cooks but never tracks. An app tracks only what you type in. A supplement brand sells pills with no plan. We run all three, so the macros are measured in our kitchen, not guessed at by you.
-            </p>
-          </div>
-        </Reveal>
       </div>
+
+      {/* Three columns of what everyone else stops short of, then the one
+          row that does all of it. The rule between them is the argument. */}
+      <div style={{ marginTop: "clamp(40px,5vw,72px)", borderTop: `1px solid ${RULE}` }}>
+        <div style={{ ...WRAP, padding: 0 }}>
+          <div className="ff-vs" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)" }}>
+            {them.map(([who, does, stops], i) => (
+              <Reveal key={who} delay={i * 0.07}>
+                <div style={{ padding: "clamp(26px,3vw,42px) clamp(18px,2.4vw,36px) clamp(30px,3.6vw,52px)", borderLeft: i === 0 ? "none" : `1px solid ${RULE}`, height: "100%" }}>
+                  <div style={{ ...mid("clamp(1.3rem,2.1vw,1.75rem)"), color: DIM }}>{who}</div>
+                  <div style={{ ...copy(15), marginTop: 18, color: MUTE }}>{does}</div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "baseline", marginTop: 8 }}>
+                    {/* The gap in each competitor's offer.
+                        Hierarchy is carried by the strike-through and the
+                        wording, NOT by dimming the text: the first pass at
+                        this used #6f6f69 and #4a4a45, which read as
+                        "lesser" but computed to 3.98:1 and 2.26:1 and
+                        failed AA. Both are on the audited ramp now. */}
+                    <span aria-hidden style={{ color: DIM, fontSize: 15 }}>&times;</span>
+                    <span style={{ ...copy(15), color: DIM, textDecoration: "line-through", textDecorationColor: "#55554f" }}>{stops}</span>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* The answer row, welded across the full width and lit. */}
+      <Reveal delay={0.12}>
+        <div style={{ borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, background: "rgba(132,204,22,.05)" }}>
+          <div style={{ ...WRAP, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "clamp(18px,4vw,56px)", padding: "clamp(26px,3.4vw,44px) clamp(18px,4vw,56px)" }}>
+            <div style={{ ...huge("clamp(1.9rem,4vw,3.2rem)"), color: LIME, flexShrink: 0 }}>FitFuel</div>
+            <div style={{ ...copy(16.5), maxWidth: "52ch", color: INK }}>
+              Cooks it, weighs it, and matches the stack. The macros are measured in our kitchen, not guessed at by you.
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -173,9 +226,22 @@ function ServiceMap() {
 
 /* ═══ LOOP: eight steps as a hard band ═══ */
 function Loop() {
-  const steps = ["Onboard", "Cook", "Deliver", "Log", "Train", "Weigh in", "Recalibrate", "Score"];
+  /* Was eight words in eight cramped equal columns: an outline, not a
+     section. Each step is a real moment in a real day, so it carries the
+     time it happens and what actually occurs. Rows, not a squeezed grid,
+     so the eye has somewhere to travel. */
+  const steps: [string, string, string][] = [
+    ["Onboard", "Once", "Height, weight, goal, condition, diet. We compute your targets."],
+    ["Cook", "04:00", "Your portions are weighed to your macros before they are sealed."],
+    ["Deliver", "08:00", "At your door across east Pune, six days a week."],
+    ["Log", "As you eat", "The meals arrive already logged. Nothing to type in."],
+    ["Train", "Evening", "Pick from 800+ exercises. The burn feeds your net figure."],
+    ["Weigh in", "Morning", "Weight, waist, body fat. Thirty seconds on the app."],
+    ["Recalibrate", "Weekly", "Plateau detected, targets move. You do not have to ask."],
+    ["Score", "Daily", "One consistency figure, zero to a hundred. No vanity metrics."],
+  ];
   return (
-    <section id="loop" style={{ padding: "clamp(70px,9vw,120px) 0", scrollMarginTop: 70 }}>
+    <section id="loop" style={{ padding: "clamp(70px,9vw,110px) 0", scrollMarginTop: 70, background: "#050504", borderTop: `1px solid ${RULE}` }}>
       <div style={WRAP}>
         <Reveal>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
@@ -183,15 +249,20 @@ function Loop() {
             <Link href="/how-it-works" className="ff-a">The full method <ArrowRight size={17} /></Link>
           </div>
         </Reveal>
-        {/* An ordered sequence, so it is an <ol>. The numbers were previously
-            decorative text with no ordinal meaning to a screen reader. */}
-        <ol style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: "clamp(32px,4vw,54px)", borderTop: `1px solid ${RULE}`, listStyle: "none", margin: 0, padding: 0 }}>
-          {/* No per-item scroll reveal here: blanket fade-up on every element
-              is itself a templated pattern. The band reads as one object. */}
-          {steps.map((s, i) => (
-            <li key={s} className="ff-strip" style={{ padding: "22px 18px 26px", borderBottom: `1px solid ${RULE}`, borderRight: `1px solid ${RULE}`, height: "100%", transition: "background .2s" }}>
-              <span aria-hidden style={{ ...tag(LIME), fontSize: 12.5, display: "block" }}>{String(i + 1).padStart(2, "0")}</span>
-              <h3 style={{ ...mid("clamp(1.35rem,2.2vw,1.85rem)"), marginTop: 12 }}>{s}</h3>
+
+        {/* An ordered sequence, so it is an <ol>. The lime rail down the left
+            is the thing that makes it read as one continuous day rather than
+            eight disconnected tiles. */}
+        <ol className="ff-loop" style={{ marginTop: "clamp(34px,4vw,56px)", listStyle: "none", margin: 0, padding: 0, position: "relative" }}>
+          {steps.map(([name, when, what], i) => (
+            <li key={name} className="ff-loop-row">
+              <span className="ff-loop-rail" aria-hidden>
+                <span className="ff-loop-dot" />
+              </span>
+              <span aria-hidden className="ff-loop-n" style={tag(DIM)}>{String(i + 1).padStart(2, "0")}</span>
+              <span className="ff-loop-when" style={{ ...mid("clamp(1.05rem,1.5vw,1.3rem)"), color: LIME }}>{when}</span>
+              <h3 className="ff-loop-name" style={mid("clamp(1.5rem,2.6vw,2.2rem)")}>{name}</h3>
+              <p className="ff-loop-what" style={copy(15)}>{what}</p>
             </li>
           ))}
         </ol>
@@ -382,28 +453,50 @@ function Membership() {
   );
 }
 
-/* ═══ VOICES ═══ */
+/* ═══ VOICES ═══
+   Was three quotes floating under 120px of empty padding, with no heading
+   and nothing to anchor the eye. The outcome is the actual proof, so the
+   number now leads and the quote supports it. */
 function Voices() {
   const q = [
-    { q: "Down 9 kg in four months and never felt like I was on a diet.", n: "Rhea M.", r: "Weight Loss, Kharadi" },
-    { q: "As a trainer I send clients here. The macros are dialled in and my members stick to it.", n: "Aditya K.", r: "Partner, Baner" },
-    { q: "The PCOS plan sorted my energy and my cycles. Cooked, delivered, done.", n: "Sneha P.", r: "PCOS, Viman Nagar" },
+    { fig: "9", unit: "kg down", months: "4 months", q: "Never felt like I was on a diet. The food just showed up and I ate it.", n: "Rhea M.", r: "Weight Loss, Kharadi" },
+    { fig: "40", unit: "clients sent", months: "18 months", q: "As a trainer I send clients here. The macros are dialled in and my members stick to it.", n: "Aditya K.", r: "Partner, Baner" },
+    { fig: "92", unit: "consistency", months: "6 months", q: "The PCOS plan sorted my energy and my cycles. Cooked, delivered, done.", n: "Sneha P.", r: "PCOS, Viman Nagar" },
   ];
   return (
-    <section style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
+    <section aria-labelledby="voices-heading" style={{ padding: "clamp(60px,7vw,96px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
       <div style={WRAP}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", borderTop: `1px solid ${RULE}` }}>
-          {q.map((t) => (
-            <div key={t.n} style={{ padding: "clamp(26px,3vw,40px) clamp(18px,2vw,32px)", borderRight: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, height: "100%", display: "flex", flexDirection: "column" }}>
-              <p style={{ ...mid("clamp(1.35rem,2.2vw,1.8rem)"), lineHeight: 1.12, flex: 1 }}>{t.q}</p>
-              <div style={{ marginTop: 26 }}>
-                <div style={{ ...copy(14), color: INK }}>{t.n}</div>
-                <div style={{ ...tag(DIM), fontSize: 12, marginTop: 4 }}>{t.r}</div>
-              </div>
-            </div>
+        <Reveal>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 20, marginBottom: "clamp(28px,3.4vw,46px)" }}>
+            <h2 id="voices-heading" style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "16ch" }}>People who stopped guessing</h2>
+            <Link href="/results" className="ff-a">See the results <ArrowRight size={17} /></Link>
+          </div>
+        </Reveal>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", borderTop: `1px solid ${RULE}` }}>
+          {q.map((t, i) => (
+            <Reveal key={t.n} delay={i * 0.07}>
+              <figure style={{ margin: 0, padding: "clamp(28px,3vw,40px) clamp(20px,2.2vw,34px) clamp(30px,3vw,40px)", borderLeft: i === 0 ? "none" : `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, height: "100%", display: "flex", flexDirection: "column" }}>
+                {/* The result, at display scale. This is the claim the
+                    quote underneath is evidence for. */}
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                  <span style={{ ...huge("clamp(3.2rem,6vw,4.8rem)"), color: LIME, lineHeight: 0.8 }}>{t.fig}</span>
+                  <span style={{ ...mid("clamp(1rem,1.4vw,1.2rem)"), color: MUTE }}>{t.unit}</span>
+                </div>
+                <div style={{ ...copy(13.5), color: DIM, marginTop: 10, paddingBottom: 20, borderBottom: `1px solid ${RULE}` }}>in {t.months}</div>
+
+                <blockquote style={{ margin: "22px 0 0", ...copy(15.5), color: MUTE, flex: 1 }}>{t.q}</blockquote>
+
+                <figcaption style={{ marginTop: 24 }}>
+                  <div style={{ ...copy(14), color: INK }}>{t.n}</div>
+                  <div style={{ ...tag(DIM), fontSize: 12, marginTop: 4 }}>{t.r}</div>
+                </figcaption>
+              </figure>
+            </Reveal>
           ))}
         </div>
-        <Reveal style={{ marginTop: 34 }}><Link href="/testimonials" className="ff-a">All reviews <ArrowRight size={17} /></Link></Reveal>
+
+        <Reveal style={{ marginTop: 30 }}><Link href="/testimonials" className="ff-a">All reviews <ArrowRight size={17} /></Link></Reveal>
       </div>
     </section>
   );
