@@ -20,7 +20,7 @@ const T = {
   accentLight: "#a3e635",
   textPrimary: "#ffffff",
   textSecond:  "#a3a3a3",
-  textMuted:   "#737373",
+  textMuted:   "#9a9a94",
 };
 
 const WA_NUMBER = "919579738811";
@@ -111,7 +111,7 @@ function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMet
               <div style={{ color: active ? T.accent : T.textMuted, marginTop: 1, flexShrink: 0 }}>{opt.icon}</div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: active ? T.textPrimary : T.textSecond, marginBottom: 2 }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{opt.sub}</div>
+                <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>{opt.sub}</div>
               </div>
             </button>
           );
@@ -147,7 +147,7 @@ function AddressCard({
       </div>
       <div style={{ flex: 1 }}>
         {address.label && (
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.accent, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>
             {address.label}
           </div>
         )}
@@ -424,10 +424,10 @@ function CheckoutInner() {
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 1 }} />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>Checkout</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>Checkout</span>
           </div>
           <h1 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--ff-cond)",
             fontSize: "clamp(2rem, 6vw, 3.5rem)",
             fontWeight: 900, textTransform: "uppercase",
             color: T.textPrimary, lineHeight: 1, letterSpacing: "-0.01em",
@@ -624,7 +624,7 @@ function CheckoutInner() {
 
             <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>Order Summary</div>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>Order Summary</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 {[
                   { label: "Diet",     value: DIET_LABELS[diet] || diet },
@@ -726,7 +726,7 @@ function CheckoutInner() {
                     <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} style={{ width: 18, height: 18, accentColor: T.accent }} />
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary }}>Apply {fmt(creditApplicable)} credit</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Balance: {fmt(creditBalance)}</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Balance: {fmt(creditBalance)}</div>
                     </div>
                   </label>
                 </div>

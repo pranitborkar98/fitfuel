@@ -2,20 +2,21 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "Refund & Cancellation Policy | FitFuel",
+  alternates: { canonical: "/refund-policy" },
+  title: "Refund & Cancellation Policy",
   description: "How cancellations, pauses and refunds work for FitFuel meal subscriptions, trial days, digital plans and supplements.",
 };
 
 const C = {
   bg: "#080808", accent: "#a3e635", text: "#ffffff",
-  sub: "#a3a3a3", muted: "#737373", border: "#1f1f1f", card: "#111111",
+  sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111",
 };
 const linkStyle = { color: C.accent, textDecoration: "none" } as const;
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ marginBottom: 34 }}>
-      <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 700, fontSize: 20, color: C.text, margin: "0 0 12px", letterSpacing: "-0.01em" }}>{title}</h2>
+      <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 20, color: C.text, margin: "0 0 12px", letterSpacing: "-0.01em" }}>{title}</h2>
       {children}
     </section>
   );
@@ -42,8 +43,8 @@ export default function RefundPolicyPage() {
   return (
     <main style={{ background: C.bg, minHeight: "100vh", color: C.text }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Legal</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,52px)", lineHeight: 1.05, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Legal</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,52px)", lineHeight: 1.05, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
           Refund &amp; Cancellation Policy<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.muted, fontSize: 14, margin: "0 0 40px" }}>Last updated: 24 June 2026</p>

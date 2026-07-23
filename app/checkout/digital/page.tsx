@@ -6,7 +6,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const T = { bg: "#0a0a0a", card: "#111111", cardBorder: "#1f1f1f", accent: "#84cc16", accentLight: "#a3e635", textPrimary: "#fff", textSecond: "#a3a3a3", textMuted: "#737373" };
+const T = { bg: "#0a0a0a", card: "#111111", cardBorder: "#1f1f1f", accent: "#84cc16", accentLight: "#a3e635", textPrimary: "#fff", textSecond: "#a3a3a3", textMuted: "#9a9a94" };
 const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
 
 function Field({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; type?: string }) {
@@ -145,7 +145,7 @@ function DigitalCheckout() {
         <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700 }}>Personalise my plan</h3>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#0a0a0a", background: T.accent, padding: "2px 8px", borderRadius: 999 }}>OPTIONAL</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#0a0a0a", background: T.accent, padding: "2px 8px", borderRadius: 999 }}>OPTIONAL</span>
           </div>
           <p style={{ color: T.textMuted, fontSize: 12.5, marginBottom: 16 }}>
             Add your stats and your PDF opens with your own numbers {'\u2014'} BMI, calorie target, deficit and a weight-projection chart. Skip it and you{'\u2019'}ll get the standard plan; you can add these later in your dashboard.

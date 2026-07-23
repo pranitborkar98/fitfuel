@@ -2,11 +2,12 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "Our Ingredients | FitFuel",
+  alternates: { canonical: "/our-ingredients" },
+  title: "Our Ingredients",
   description: "What goes into a FitFuel meal: fresh local sourcing, clean oils, real proteins, and what we deliberately leave out.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#737373", border: "#1f1f1f", card: "#111111" };
+const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
 const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
 
 const groups = [
@@ -25,15 +26,15 @@ const avoid = [
 ];
 
 function H2({ children }: { children: ReactNode }) {
-  return <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>{children}</h2>;
+  return <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>{children}</h2>;
 }
 
 export default function OurIngredientsPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: 920, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Ingredients</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Ingredients</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
           Real food, nothing hidden<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 640, margin: "0 0 56px" }}>

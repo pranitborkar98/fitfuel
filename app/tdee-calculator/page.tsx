@@ -2,7 +2,7 @@
 import TdeeCalculator from "./TdeeCalculator";
 
 export const metadata = {
-  title: "Free TDEE & Calorie Calculator | FitFuel",
+  title: "Free TDEE & Calorie Calculator",
   description:
     "Calculate your TDEE, daily calories and ideal protein/carb/fat split in seconds — then get meals delivered in Pune that hit those numbers automatically.",
   alternates: { canonical: "/tdee-calculator" },

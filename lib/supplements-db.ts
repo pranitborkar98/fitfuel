@@ -94,7 +94,14 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       studyCount: r.studyCount || "",
       keyStudyFindings: r.keyStudyFindings || [],
       goals: goalsBackToLower(r.recommendedFor),
-      accent: r.accentColor || "#a3e635",
+      // Was `r.accentColor || "#a3e635"`. The DB carries a per-supplement
+      // accent, and the live rows hold amber, purple, sky and indigo, which
+      // rendered a four-hue palette on the public /supplements page even
+      // after the static fallbacks in supplements-data.ts were unified.
+      // Lime is the only chromatic value on marketing surfaces (DESIGN.md),
+      // so the column is ignored here rather than being migrated: it stays
+      // available to the admin UI, which is not bound by the marketing rules.
+      accent: "#a3e635",
       priceRange: r.priceRange || "",
       valueRating: (r.valueRating || "good") as any,
       popular: !!r.popular,

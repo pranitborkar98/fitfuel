@@ -1,13 +1,25 @@
-"use client";
-
-import { useState, useRef, useEffect, type CSSProperties, type ReactNode } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion, useReducedMotion, useInView, useScroll, useTransform } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+
+import StructuredData from "@/components/StructuredData";
+import Frame from "./_home/Frame";
+import Hero from "./_home/Hero";
+import Finder from "./_home/Finder";
+import Reveal from "./_home/Reveal";
+import CountUp from "./_home/CountUp";
+import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
 
 /* ══════════════════════════════════════════════════════════════════
    FITFUEL HOMEPAGE
+
+   This is a SERVER component. It used to carry "use client" at the top,
+   which pushed all 570 lines plus framer-motion into the browser bundle
+   for a page that is ~95% static. Only four things here actually need
+   the client, and they now live in ./_home as islands: Hero (scroll
+   parallax), Finder (selection state), CountUp (rAF), and Reveal (the
+   in-view fade, which takes server-rendered children so wrapping a
+   section in it does not drag that section's markup client-side).
 
    Anti-slop constraints, held deliberately:
    · Body type is Archivo (set in layout), never Inter.
@@ -19,73 +31,19 @@ import { ArrowRight } from "lucide-react";
    · Photography is art-directed full-bleed with one unified grade
      (food keeps colour for appetite, people/places take a lime
      duotone) so it reads as designed, not as stock dropped in slots.
-   · Every service the business runs is on this page and linked.
+   · Every service the business runs is on this page, linked, and
+     reachable WITHOUT an account.
    No em dashes.
 ══════════════════════════════════════════════════════════════════ */
-
-const BG = "#070707";
-const INK = "#f7f7f5";
-const MUTE = "#9a9a94"; // 7.1:1 on BG
-// Was #63635f, which computed to ~3.3:1 and failed WCAG AA everywhere it
-// was used (11-13px labels: hero readout, tier pricing, attribution).
-const DIM = "#85857e"; // 5.4:1 on BG, passes AA at small sizes
-const RULE = "#232320";
-const LIME = "#84cc16";
-
-const COND = "'Barlow Condensed','Arial Narrow',sans-serif";
-const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
-
-const WRAP: CSSProperties = { width: "100%", maxWidth: 1400, margin: "0 auto", padding: "0 clamp(18px,4vw,56px)" };
-
-/* extreme scale: 900 display vs 400 body, nothing in between */
-const huge = (size: string): CSSProperties => ({ fontFamily: COND, fontWeight: 900, fontSize: size, lineHeight: 0.83, letterSpacing: "-0.02em", textTransform: "uppercase", color: INK, margin: 0 });
-const mid = (size: string): CSSProperties => ({ fontFamily: COND, fontWeight: 800, fontSize: size, lineHeight: 0.9, letterSpacing: "-0.01em", textTransform: "uppercase", color: INK, margin: 0 });
-const copy = (size = 15): CSSProperties => ({ fontSize: size, fontWeight: 400, color: MUTE, lineHeight: 1.62 });
-const tag = (color = DIM): CSSProperties => ({ fontFamily: COND, fontWeight: 700, fontSize: 12.5, letterSpacing: "0.28em", textTransform: "uppercase", color });
-
-function Reveal({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: CSSProperties }) {
-  const reduce = useReducedMotion();
-  if (reduce) return <div style={style}>{children}</div>;
-  return (
-    <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-90px" }} transition={{ duration: 0.75, ease: EASE, delay }} style={style}>
-      {children}
-    </motion.div>
-  );
-}
-
-function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const reduce = useReducedMotion();
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    if (reduce) return setV(to);
-    let raf = 0; const s = performance.now();
-    const tick = (n: number) => { const t = Math.min(1, (n - s) / 1400); setV(to * (1 - Math.pow(1 - t, 3))); if (t < 1) raf = requestAnimationFrame(tick); };
-    raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
-  }, [inView, to, reduce]);
-  return <span ref={ref}>{Math.round(v).toLocaleString("en-IN")}{suffix}</span>;
-}
-
-/* Art-directed frame. `duo` applies the lime duotone grade. */
-function Frame({ src, alt, sizes, priority, duo, className }: { src: string; alt: string; sizes: string; priority?: boolean; duo?: boolean; className?: string }) {
-  return (
-    <div className={`ff-frame ${duo ? "ff-duo" : "ff-food"} ${className ?? ""}`} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} style={{ objectFit: "cover" }} />
-      {duo ? <span className="ff-tint" aria-hidden /> : null}
-      <span className="ff-grain" aria-hidden />
-    </div>
-  );
-}
-
-const GOALS = [{ key: "weight-loss", label: "Lose fat" }, { key: "muscle-gain", label: "Build muscle" }, { key: "balanced", label: "Eat balanced" }];
-const DIETS = [{ key: "veg", label: "Veg" }, { key: "egg", label: "Egg" }, { key: "non-veg", label: "Non-Veg" }, { key: "jain", label: "Jain" }];
-const GOAL_NAME: Record<string, string> = { "weight-loss": "Weight Loss", "muscle-gain": "Muscle Gain", balanced: "Balanced" };
 
 export default function Home() {
   return (
     <div style={{ background: BG, color: INK, overflowX: "hidden" }}>
+      {/* Organization / FoodEstablishment / Service / WebSite graph.
+          Server-rendered, so it is in the initial HTML for crawlers and
+          answer engines rather than appearing after hydration. */}
+      <StructuredData />
+
       <Hero />
       <Pillars />
       {/* Finder sits directly under the hero: it is the cheapest
@@ -103,111 +61,7 @@ export default function Home() {
       {/* Trimmed index near the foot; the Footer carries full completeness. */}
       <ServiceMap />
       <Close />
-
-      <style>{`
-        /* one unified grade so photography reads art-directed, not stock */
-        .ff-frame img { transition: transform 1.4s cubic-bezier(.16,1,.3,1); }
-        .ff-food img { filter: saturate(1.06) contrast(1.07) brightness(.94); }
-        .ff-duo  img { filter: grayscale(1) contrast(1.22) brightness(.72); }
-        .ff-tint { position:absolute; inset:0; background:${LIME}; mix-blend-mode:color; opacity:.5; pointer-events:none; }
-        .ff-grain { position:absolute; inset:0; pointer-events:none; opacity:.14; mix-blend-mode:overlay;
-          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-        .ff-hov:hover .ff-frame img { transform: scale(1.05); }
-
-        /* .ff-btn and .ff-a now live in globals.css so the Navbar, Footer
-           and this page all share one button + link treatment. */
-
-        /* service directory */
-        .ff-svc { display:block; padding:9px 0; border-bottom:1px solid ${RULE}; color:${MUTE}; text-decoration:none; font-size:14.5px; transition:color .18s, padding-left .18s, border-color .18s; }
-        .ff-svc:hover { color:${INK}; padding-left:10px; border-color:${LIME}; }
-
-        .ff-choice { cursor:pointer; border-radius:0; font-family:${COND}; font-weight:800; text-transform:uppercase; transition:all .18s; }
-        .ff-choice:hover { border-color:#4a4a45 !important; }
-
-        .ff-strip:hover { background:#0c0c0a; }
-
-        /* Short viewports (13" laptops, tablets in landscape): the headline,
-           subhead, CTAs and readout bar all compete for height. */
-        @media (max-height:900px) and (min-width:1000px){
-          .ff-hero-h1{ font-size:clamp(3rem,8vw,6.4rem) !important; }
-          .ff-hero-stage{ min-height:min(90vh,780px) !important; }
-        }
-        @media (max-height:740px) and (min-width:1000px){
-          .ff-hero-h1{ font-size:clamp(2.6rem,6vw,4.8rem) !important; }
-        }
-        @media (max-width:1000px){ .ff-2col{ grid-template-columns:1fr !important; } .ff-bleed{ min-height:520px !important; } }
-        @media (max-width:760px){
-          .ff-4col{ grid-template-columns:1fr 1fr !important; }
-          .ff-hide{ display:none !important; }
-          /* Perf guard: FitFuel's customers order on mid-range Android over
-             mobile data. Eight full-bleed frames each running a filter stack
-             plus an SVG-turbulence grain is exactly the load that is free on
-             a dev laptop and janky on a 15k phone. Keep the duotone identity,
-             drop the expensive parts. */
-          .ff-grain{ display:none !important; }
-          .ff-food img{ filter:none !important; }
-          .ff-duo img{ filter:grayscale(1) !important; }
-        }
-        @media (prefers-reduced-motion:reduce){ .ff-btn::after{ display:none; } .ff-hov:hover .ff-frame img{ transform:none; } }
-      `}</style>
     </div>
-  );
-}
-
-/* ═══ HERO: full-bleed, giant type, integrated readout bar ═══ */
-function Hero() {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 90]);
-
-  return (
-    <section ref={ref} style={{ position: "relative", paddingTop: 68 }}>
-      <div className="ff-hero-stage" style={{ position: "relative", minHeight: "min(94vh,940px)", display: "flex", flexDirection: "column", justifyContent: "flex-end", overflow: "hidden" }}>
-        <motion.div style={{ position: "absolute", inset: "-6% 0 0", y }}>
-          <Frame src="/images/hero-bowl.jpg" alt="A FitFuel bowl of fresh vegetables, chickpeas and avocado" sizes="100vw" priority />
-        </motion.div>
-        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(7,7,7,.82) 0%, rgba(7,7,7,.34) 34%, rgba(7,7,7,.86) 76%, #070707 100%)" }} />
-
-        <div style={{ ...WRAP, position: "relative", paddingBottom: "clamp(28px,4vw,52px)", paddingTop: 120 }}>
-          <motion.h1
-            initial={reduce ? undefined : { opacity: 0, y: 34 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: EASE }}
-            className="ff-hero-h1"
-            style={huge("clamp(3.6rem,13.5vw,11.5rem)")}
-          >
-            We cook it.<br />We weigh it.<br /><span style={{ color: LIME }}>We track it.</span>
-          </motion.h1>
-
-          <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "clamp(20px,4vw,60px)", alignItems: "end", marginTop: "clamp(28px,4vw,48px)" }}>
-            <p style={{ ...copy(16.5), maxWidth: "50ch" }}>
-              Chef-cooked meals delivered across Pune, a full training and body-metrics app, and a supplement stack that matches your condition. One operating system for what you eat, burn and weigh.
-            </p>
-            {/* Trial is the primary action: it is the lowest-friction offer
-                and the thing the whole page closes on. */}
-            <div style={{ display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap" }}>
-              <Link href="/plans?trial=true" className="ff-btn">Start trial day, Rs 400</Link>
-              <Link href="/plans" className="ff-a">All plans <ArrowRight size={17} /></Link>
-            </div>
-          </div>
-        </div>
-
-        {/* readout welded to the bottom edge, square, not a floating card */}
-        <div style={{ position: "relative", borderTop: `1px solid ${RULE}`, background: "rgba(7,7,7,.9)", backdropFilter: "blur(10px)" }}>
-          <div style={{ ...WRAP, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "clamp(18px,4vw,54px)", padding: "16px clamp(18px,4vw,56px)" }}>
-            <span style={tag(LIME)}>Today, verified</span>
-            {[["Intake", "1,842"], ["Burn", "410"], ["Net", "1,432"], ["Target", "1,450"]].map(([k, v], i) => (
-              <span key={k} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
-                <span style={{ ...copy(13), color: DIM }}>{k}</span>
-                <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 27, color: i === 2 ? LIME : INK }}>{v}</span>
-              </span>
-            ))}
-            <span className="ff-hide" style={{ ...copy(13), color: DIM, marginLeft: "auto" }}>Consistency 92 / 100</span>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -220,11 +74,16 @@ function Pillars() {
     ["Partners", "Gyms, offices, franchise", "/partners/apply"],
   ];
   return (
-    <section style={{ borderBottom: `1px solid ${RULE}` }}>
+    // These four are the top-level map of the business, so they carry
+    // heading semantics rather than being anonymous divs. The section
+    // heading itself is visually redundant next to the hero, so it is
+    // available to assistive tech only.
+    <section aria-labelledby="pillars-heading" style={{ borderBottom: `1px solid ${RULE}` }}>
+      <h2 id="pillars-heading" className="sr-only">What FitFuel runs</h2>
       <div style={{ ...WRAP, display: "grid", gridTemplateColumns: "repeat(4,1fr)", padding: 0 }} className="ff-4col">
         {p.map(([t, d, href], i) => (
           <Link key={t} href={href} className="ff-strip" style={{ display: "block", padding: "clamp(26px,3.4vw,44px) clamp(16px,2vw,32px)", borderLeft: i === 0 ? "none" : `1px solid ${RULE}`, textDecoration: "none", transition: "background .2s" }}>
-            <div style={mid("clamp(1.7rem,3vw,2.5rem)")}>{t}</div>
+            <h3 style={mid("clamp(1.7rem,3vw,2.5rem)")}>{t}</h3>
             <div style={{ ...copy(13.5), marginTop: 9 }}>{d}</div>
           </Link>
         ))}
@@ -257,6 +116,10 @@ function Statement() {
 
 /* ═══ SERVICE MAP: everything the business runs, linked ═══ */
 function ServiceMap() {
+  /* Every href here must be reachable LOGGED OUT. Five of these used to
+     point at /dashboard/* routes, which 307 to the sign-in wall: a third of
+     a section that presents itself as a public index of the business was
+     bouncing prospects into a login form. Public equivalents only. */
   const cols: [string, [string, string][]][] = [
     ["Eat", [
       ["All 126 meal plans", "/plans"],
@@ -264,25 +127,27 @@ function ServiceMap() {
       ["Sports nutrition", "/plans?category=SPORTS"],
       ["Digital PDF plans", "/plans/digital"],
       ["Trial day, Rs 400", "/plans?trial=true"],
+      ["Delivery areas in Pune", "/locations"],
     ]],
     ["Track", [
       ["How the system works", "/how-it-works"],
-      ["Exercise library", "/dashboard/exercises"],
-      ["Body metrics", "/dashboard/body-metrics"],
       ["TDEE calculator, free", "/tdee-calculator"],
       ["Member results", "/results"],
+      ["Reviews", "/testimonials"],
+      ["Questions, answered", "/faq"],
     ]],
     ["Supplement", [
       ["The stack, via Nutrabay", "/supplements"],
-      ["Your stack", "/dashboard/supplements"],
       ["Our ingredients", "/our-ingredients"],
+      ["Inside our kitchen", "/our-kitchen"],
+      ["Journal", "/blog"],
     ]],
     ["Partner", [
       ["Corporate wellness", "/corporate"],
       ["Gyms and trainers", "/partners/apply"],
-      ["Partner dashboard", "/dashboard/partners"],
       ["Franchise enquiry", "/contact"],
-      ["Refer and earn Rs 500", "/dashboard/referrals"],
+      ["About FitFuel", "/about"],
+      ["The team", "/our-team"],
     ]],
   ];
   return (
@@ -318,16 +183,18 @@ function Loop() {
             <Link href="/how-it-works" className="ff-a">The full method <ArrowRight size={17} /></Link>
           </div>
         </Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: "clamp(32px,4vw,54px)", borderTop: `1px solid ${RULE}` }}>
+        {/* An ordered sequence, so it is an <ol>. The numbers were previously
+            decorative text with no ordinal meaning to a screen reader. */}
+        <ol style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: "clamp(32px,4vw,54px)", borderTop: `1px solid ${RULE}`, listStyle: "none", margin: 0, padding: 0 }}>
           {/* No per-item scroll reveal here: blanket fade-up on every element
               is itself a templated pattern. The band reads as one object. */}
           {steps.map((s, i) => (
-            <div key={s} className="ff-strip" style={{ padding: "22px 18px 26px", borderBottom: `1px solid ${RULE}`, borderRight: `1px solid ${RULE}`, height: "100%", transition: "background .2s" }}>
-              <div style={{ ...tag(LIME), fontSize: 11.5 }}>{String(i + 1).padStart(2, "0")}</div>
-              <div style={{ ...mid("clamp(1.35rem,2.2vw,1.85rem)"), marginTop: 12 }}>{s}</div>
-            </div>
+            <li key={s} className="ff-strip" style={{ padding: "22px 18px 26px", borderBottom: `1px solid ${RULE}`, borderRight: `1px solid ${RULE}`, height: "100%", transition: "background .2s" }}>
+              <span aria-hidden style={{ ...tag(LIME), fontSize: 12.5, display: "block" }}>{String(i + 1).padStart(2, "0")}</span>
+              <h3 style={{ ...mid("clamp(1.35rem,2.2vw,1.85rem)"), marginTop: 12 }}>{s}</h3>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );
@@ -431,6 +298,8 @@ function Membership() {
     { name: "Premium", price: "Waitlist", href: "/plans", cta: "Join waitlist" },
     { name: "Luxury", price: "Waitlist", href: "/plans", cta: "Join waitlist" },
   ];
+  /* "AI trainer chat" was listed as a shipping Luxury feature. There is no
+     AI anywhere in the codebase, so it has been removed rather than sold. */
   const matrix: [string, boolean[]][] = [
     ["Full menus and macros", [true, true, true, true]],
     ["Meal delivery", [false, true, true, true]],
@@ -440,74 +309,73 @@ function Membership() {
     ["Linked workout schedule", [false, false, true, true]],
     ["Personalised supplement stack", [false, false, true, true]],
     ["Weekly progress PDF", [false, false, true, true]],
-    ["AI trainer chat", [false, false, false, true]],
     ["Nutritionist consult", [false, false, false, true]],
   ];
-  const gt = "minmax(190px,1.7fr) repeat(4,minmax(84px,1fr))";
+  const cell: CSSProperties = { padding: "14px 12px", textAlign: "center", borderLeft: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}` };
   return (
     <section style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
       <div style={WRAP}>
-        <Reveal><h2 style={huge("clamp(2.2rem,6vw,4.6rem)")}>Pick your level</h2></Reveal>
+        <Reveal><h2 id="tiers-heading" style={huge("clamp(2.2rem,6vw,4.6rem)")}>Pick your level</h2></Reveal>
         <Reveal delay={0.05} style={{ marginTop: "clamp(30px,4vw,52px)" }}>
-          <div style={{ overflowX: "auto", borderTop: `1px solid ${RULE}` }}>
-            <div style={{ minWidth: 680 }}>
-              <div style={{ display: "grid", gridTemplateColumns: gt, borderBottom: `1px solid ${RULE}` }}>
-                <span />
-                {tiers.map((t) => (
-                  <div key={t.name} style={{ padding: "20px 12px", borderLeft: `1px solid ${RULE}`, background: t.on ? "rgba(132,204,22,.07)" : "transparent" }}>
-                    <div style={{ ...mid("1.7rem"), color: t.on ? LIME : INK }}>{t.name}</div>
-                    <div style={{ ...copy(12.5), color: DIM, marginTop: 5 }}>{t.price}</div>
-                  </div>
-                ))}
-              </div>
-              {matrix.map(([label, marks]) => (
-                <div key={label} className="ff-strip" style={{ display: "grid", gridTemplateColumns: gt, borderBottom: `1px solid ${RULE}`, transition: "background .2s" }}>
-                  <span style={{ ...copy(14), padding: "14px 16px 14px 0" }}>{label}</span>
-                  {marks.map((m, ci) => (
-                    <span key={ci} style={{ padding: "14px 12px", textAlign: "center", borderLeft: `1px solid ${RULE}`, background: ci === 1 ? "rgba(132,204,22,.04)" : "transparent", color: m ? (ci === 1 ? LIME : MUTE) : "#2e2e2b", fontSize: 15 }}>{m ? "✓" : "·"}</span>
-                  ))}
-                </div>
-              ))}
-              <div style={{ display: "grid", gridTemplateColumns: gt }}>
-                <span />
-                {tiers.map((t) => (
-                  <div key={t.name} style={{ padding: "16px 10px", borderLeft: `1px solid ${RULE}` }}>
-                    {t.on
-                      ? <Link href={t.href} className="ff-btn" style={{ display: "block", textAlign: "center", fontSize: 14, padding: "12px 8px" }}>{t.cta}</Link>
-                      : <Link href={t.href} style={{ display: "block", textAlign: "center", ...tag(MUTE), fontSize: 12, textDecoration: "none" }}>{t.cta}</Link>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
+          {/* This was ten rows by four tiers of comparison data built out of
+              CSS-grid divs, with inclusion encoded as a bare "✓" or "·"
+              glyph. A screen reader got an unassociated stream of "check,
+              middle dot" with no idea which tier a cell belonged to, and the
+              "·" sat at 1.5:1 so sighted low-vision users saw nothing either.
+              It is a real <table> now, with scoped headers and a text
+              alternative on every cell.
 
-/* ═══ FINDER ═══ */
-function Finder() {
-  const [goal, setGoal] = useState<string | null>(null);
-  const [diet, setDiet] = useState<string | null>(null);
-  const ready = goal && diet;
-  const planName = ready ? `${GOAL_NAME[goal!]}, ${DIETS.find((d) => d.key === diet)!.label}` : "";
-  const bs = (a: boolean, big: boolean): CSSProperties => ({ background: a ? LIME : "transparent", color: a ? "#000" : "#d0d0ca", border: `1px solid ${a ? LIME : "#33332f"}`, padding: big ? "15px 30px" : "12px 26px", fontSize: big ? 23 : 19 });
-  return (
-    <section id="finder" style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, scrollMarginTop: 70 }}>
-      <div style={WRAP}>
-        <Reveal><h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "15ch" }}>Find your plan in a minute</h2></Reveal>
-        <Reveal delay={0.06} style={{ marginTop: "clamp(30px,4vw,52px)" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
-            {GOALS.map((g) => <button key={g.key} onClick={() => setGoal(g.key)} className="ff-choice" style={bs(goal === g.key, true)}>{g.label}</button>)}
+              tabIndex + role=group make the horizontal scroller keyboard
+              reachable, which an overflow container is not by default. */}
+          <div
+            role="group"
+            aria-labelledby="tiers-heading"
+            tabIndex={0}
+            style={{ overflowX: "auto", borderTop: `1px solid ${RULE}` }}
+          >
+            <table className="ff-tiers" style={{ minWidth: 680, width: "100%", borderCollapse: "collapse" }}>
+              <caption className="sr-only">
+                Feature comparison across the Free, Standard, Premium and Luxury membership tiers.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col"><span className="sr-only">Feature</span></th>
+                  {tiers.map((t) => (
+                    <th key={t.name} scope="col" style={{ padding: "20px 12px", textAlign: "left", verticalAlign: "top", borderLeft: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, background: t.on ? "rgba(132,204,22,.07)" : "transparent" }}>
+                      <span style={{ ...mid("1.7rem"), display: "block", color: t.on ? LIME : INK }}>{t.name}</span>
+                      <span style={{ ...copy(12.5), display: "block", color: DIM, marginTop: 5 }}>{t.price}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {matrix.map(([label, marks]) => (
+                  <tr key={label} className="ff-strip" style={{ transition: "background .2s" }}>
+                    <th scope="row" style={{ ...copy(14), fontWeight: 400, textAlign: "left", padding: "14px 16px 14px 0", borderBottom: `1px solid ${RULE}` }}>{label}</th>
+                    {marks.map((m, ci) => (
+                      <td key={tiers[ci].name} style={{ ...cell, background: ci === 1 ? "rgba(132,204,22,.04)" : "transparent" }}>
+                        <span aria-hidden style={{ color: m ? (ci === 1 ? LIME : MUTE) : DIM, fontSize: 15 }}>{m ? "✓" : "—"}</span>
+                        <span className="sr-only">{m ? "Included" : "Not included"}</span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td />
+                  {tiers.map((t) => (
+                    <td key={t.name} style={{ padding: "16px 10px", borderLeft: `1px solid ${RULE}` }}>
+                      {t.on
+                        ? <Link href={t.href} className="ff-btn" style={{ display: "block", textAlign: "center", fontSize: 14, padding: "13px 8px" }}>{t.cta}</Link>
+                        : <Link href={t.href} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 44, ...tag(MUTE), fontSize: 12.5, textDecoration: "none" }}>{t.cta} <span className="sr-only">, {t.name} tier</span></Link>}
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
+            </table>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            {DIETS.map((d) => <button key={d.key} onClick={() => setDiet(d.key)} className="ff-choice" style={bs(diet === d.key, false)}>{d.label}</button>)}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20, marginTop: 40, paddingTop: 28, borderTop: `1px solid ${RULE}` }}>
-            <span style={{ ...huge("clamp(1.9rem,4.5vw,3.4rem)"), color: ready ? INK : "#2e2e2b" }}>{ready ? planName : "Choose a goal and diet"}</span>
-            {ready ? <Link href={`/plans/${goal}-${diet}`} className="ff-btn">See my plan</Link> : null}
-          </div>
+          <p style={{ ...copy(13), color: DIM, marginTop: 14 }} className="ff-scroll-hint">Scroll the table sideways to compare all four tiers.</p>
         </Reveal>
       </div>
     </section>
@@ -530,7 +398,7 @@ function Voices() {
               <p style={{ ...mid("clamp(1.35rem,2.2vw,1.8rem)"), lineHeight: 1.12, flex: 1 }}>{t.q}</p>
               <div style={{ marginTop: 26 }}>
                 <div style={{ ...copy(14), color: INK }}>{t.n}</div>
-                <div style={{ ...tag(DIM), fontSize: 11, marginTop: 4 }}>{t.r}</div>
+                <div style={{ ...tag(DIM), fontSize: 12, marginTop: 4 }}>{t.r}</div>
               </div>
             </div>
           ))}
@@ -560,7 +428,7 @@ function Close() {
               {[[<CountUp key="a" to={126} />, "Plans"], [<CountUp key="b" to={800} suffix="+" />, "Exercises"], [<span key="c">04:00</span>, "Cooked from"], [<span key="d">08:00</span>, "At your door"]].map(([v, l], i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
                   <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, color: INK }}>{v}</span>
-                  <span style={{ ...tag(DIM), fontSize: 11 }}>{l}</span>
+                  <span style={{ ...tag(DIM), fontSize: 12 }}>{l}</span>
                 </span>
               ))}
             </div>

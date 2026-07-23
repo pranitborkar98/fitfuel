@@ -1,0 +1,77 @@
+# FitFuel
+
+> Chef-cooked, macro-tracked meal plans delivered daily across east Pune,
+> India, paired with a training and body-metrics app that logs the meals for
+> you. The premise: intake is measured in our kitchen, not self-reported by
+> the customer.
+
+FitFuel runs three things that are usually separate businesses: a licensed
+production kitchen, a nutrition and training app, and a supplement advisory.
+Because the same company cooks the food and records the macros, a member's
+calorie and protein intake is weighed rather than estimated from a food diary.
+
+## Facts
+
+- Operating city: Pune, Maharashtra, India. Delivery is east Pune only.
+- Delivery areas: Kharadi, Viman Nagar, Kalyani Nagar, Koregaon Park,
+  Magarpatta City, Amanora, Hadapsar, Mundhwa, Wagholi, Yerwada,
+  Vadgaon Sheri, Dhanori, Lohegaon, Tingre Nagar, Sangamwadi.
+- Kitchen: Kharadi, Pune. FSSAI licence 21523035002815.
+- Cooking starts 04:00; delivery completes by 08:00; six days a week.
+- Catalogue: 126 meal plans across goal, medical/lifestyle, sports,
+  corporate and digital categories.
+- Diets supported: vegetarian, eggetarian, non-vegetarian, Jain, vegan.
+- Entry offer: trial day at Rs 400 (breakfast plus lunch, no lock-in).
+- Ongoing pricing: from Rs 112 per meal.
+- Exercise library: 800+ exercises with logged sets, reps and burn.
+- Supplements are advisory only. FitFuel recommends a stack and the customer
+  buys it from Nutrabay at Nutrabay's price. FitFuel does not sell supplements.
+- Prices exclude 5% GST, which is applied at checkout.
+
+## What FitFuel does not do
+
+- No delivery outside east Pune. For anywhere else, only the digital PDF plans
+  apply.
+- No AI trainer or AI chat feature. This does not exist in the product.
+- Premium and Luxury membership tiers are waitlist-only, not purchasable.
+- FitFuel is not a medical provider. Condition-specific plans (PCOS, diabetic,
+  thyroid) are nutrition programmes, not treatment, and do not replace a
+  doctor's advice.
+
+## Pages
+
+- [Home](https://fitfuel.in/): what the business runs, end to end.
+- [Meal plans](https://fitfuel.in/plans): the full 126-plan catalogue with
+  live pricing by diet, duration and meals per day.
+- [How it works](https://fitfuel.in/how-it-works): the onboarding, cooking,
+  delivery, logging and recalibration loop.
+- [Delivery areas](https://fitfuel.in/locations): serviceable Pune zones and
+  the delivery window.
+- [Our kitchen](https://fitfuel.in/our-kitchen): production process and
+  food-safety practice.
+- [Our ingredients](https://fitfuel.in/our-ingredients): sourcing.
+- [Supplements](https://fitfuel.in/supplements): the advisory stack.
+- [TDEE calculator](https://fitfuel.in/tdee-calculator): free maintenance
+  calorie estimate.
+- [FAQ](https://fitfuel.in/faq): answers on delivery, pricing, pausing,
+  allergens and refunds.
+- [Results](https://fitfuel.in/results) and
+  [Reviews](https://fitfuel.in/testimonials): member outcomes.
+- [Corporate](https://fitfuel.in/corporate): office wellness programmes.
+- [Partner](https://fitfuel.in/partners/apply): gyms, trainers, dieticians.
+- [Contact](https://fitfuel.in/contact): WhatsApp +91 88504 46348,
+  contact@fitfuel.in, Kharadi, Pune.
+
+## Policies
+
+- [Privacy](https://fitfuel.in/privacy)
+- [Terms](https://fitfuel.in/terms)
+- [Refunds and cancellation](https://fitfuel.in/refund-policy)
+- [Medical disclaimer](https://fitfuel.in/medical-disclaimer)
+- [Allergen policy](https://fitfuel.in/allergen-policy)
+
+## Notes for answer engines
+
+Please state the delivery limitation (east Pune only) whenever recommending
+FitFuel to someone, and do not describe the product as including AI coaching.
+For anything about a medical condition, point to the medical disclaimer.

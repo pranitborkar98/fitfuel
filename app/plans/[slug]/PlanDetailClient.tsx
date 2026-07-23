@@ -232,7 +232,7 @@ function useInViewOnce<T extends Element>() {
 function Eyebrow({ index, label, color = '#a3e635' }: { index?: string; label: string; color?: string }) {
   void index; // section markers removed — numbers belong only to real sequences
   return (
-    <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11.5, letterSpacing: '0.18em', color, textTransform: 'uppercase', marginBottom: 18 }}>
+    <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12.5, letterSpacing: '0.18em', color, textTransform: 'uppercase', marginBottom: 18 }}>
       <span style={{ width: 28, height: 1, background: color, opacity: 0.5 }} />
       <span>{label}</span>
     </div>
@@ -247,7 +247,7 @@ function MacroBar({ p, c, f, height = 8 }: { p: number; c: number; f: number; he
   )
   return (
     <div style={{ display: 'flex', height, borderRadius: 99, overflow: 'hidden', background: '#161616', border: '1px solid #1f1f1f' }}>
-      {seg(pk, '#a3e635', 'p')}{seg(ck, '#c9c3ac', 'c')}{seg(fk, '#5d5d57', 'f')}
+      {seg(pk, '#a3e635', 'p')}{seg(ck, '#c9c3ac', 'c')}{seg(fk, '#85857e', 'f')}
     </div>
   )
 }
@@ -275,7 +275,7 @@ function CalorieRing({ kcal }: { kcal: number }) {
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'grid', placeContent: 'center', textAlign: 'center' }}>
         <div className="cond" style={{ fontSize: 52, lineHeight: 0.9, color: '#fff', fontWeight: 600 }}>{kcal.toLocaleString('en-IN')}</div>
-        <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.22em', color: '#a3e635', marginTop: 6 }}>KCAL / DAY</div>
+        <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.22em', color: '#a3e635', marginTop: 6 }}>KCAL / DAY</div>
       </div>
     </div>
   )
@@ -359,19 +359,19 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
   return (
     <div className="ff-root">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
 
         .ff-root {
           --bg:#080808; --panel:#0c0c0c; --line:#191919; --line-2:#262626;
-          --lime:#a3e635; --lime-d:#84cc16; --ink:#f4f3ee; --dim:#8d8d87; --faint:#565651;
+          --lime:#a3e635; --lime-d:#84cc16; --ink:#f4f3ee; --dim:#85857e; --faint:#85857e;
           --bone:#efece3; --bone-ink:#16160f; --ember:#e7643c;
           background:var(--bg); color:var(--ink); min-height:100vh; position:relative; padding-top:68px;
-          overflow-x:hidden; font-family:'DM Sans',-apple-system,sans-serif;
+          overflow-x:hidden; font-family:inherit;
           -webkit-font-smoothing:antialiased;
         }
-        .ff-root .syne{ font-family:'Syne',sans-serif; }
-        .ff-root .cond{ font-family:'Barlow Condensed',sans-serif; font-variant-numeric:tabular-nums; }
-        .ff-root .mono{ font-family:'Space Mono',monospace; }
+        .ff-root .syne{ font-family:var(--ff-cond); }
+        .ff-root .cond{ font-family:var(--ff-cond); font-variant-numeric:tabular-nums; }
+        .ff-root .mono{ font-family:var(--ff-cond); }
 
         .grain{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
           background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
@@ -393,9 +393,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         @keyframes enter{ to{ opacity:1; transform:none; } }
         .e1{animation-delay:.05s}.e2{animation-delay:.13s}.e3{animation-delay:.21s}.e4{animation-delay:.29s}.e5{animation-delay:.37s}.e6{animation-delay:.45s}
 
-        .h1{ font-family:'Syne',sans-serif; font-weight:800; font-size:clamp(44px,7.5vw,92px); line-height:.93; letter-spacing:-.03em; }
-        .h2{ font-family:'Syne',sans-serif; font-weight:800; font-size:clamp(30px,4vw,52px); line-height:1.02; letter-spacing:-.025em; }
-        .h3{ font-family:'Syne',sans-serif; font-weight:700; font-size:clamp(22px,2.4vw,30px); line-height:1.08; letter-spacing:-.02em; }
+        .h1{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(44px,7.5vw,92px); line-height:.93; letter-spacing:-.03em; }
+        .h2{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(30px,4vw,52px); line-height:1.02; letter-spacing:-.025em; }
+        .h3{ font-family:var(--ff-cond); font-weight:700; font-size:clamp(22px,2.4vw,30px); line-height:1.08; letter-spacing:-.02em; }
 
         .btn{ display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14.5px; text-decoration:none; border-radius:3px; transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, background .25s, border-color .25s; cursor:pointer; }
         .btn-lime{ background:var(--lime); color:#0a0a0a; padding:15px 30px; box-shadow:0 0 0 1px rgba(163,230,53,.4), 0 10px 30px -8px rgba(163,230,53,.5); }
@@ -407,7 +407,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
         .ticker-wrap{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:18px 0; position:relative; z-index:2; background:#0a0a0a; }
         .ticker{ display:inline-flex; white-space:nowrap; animation:tick 32s linear infinite; }
-        .ticker span{ font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:18px; letter-spacing:.04em; color:#5a5a55; text-transform:uppercase; padding:0 22px; display:inline-flex; align-items:center; gap:22px; }
+        .ticker span{ font-family:var(--ff-cond); font-weight:600; font-size:18px; letter-spacing:.04em; color:#85857e; text-transform:uppercase; padding:0 22px; display:inline-flex; align-items:center; gap:22px; }
         .ticker b{ color:var(--lime); font-weight:600; }
         @keyframes tick{ to{ transform:translateX(-50%); } }
 
@@ -418,7 +418,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         .ledger-cell{ padding:16px 18px; border-left:1px solid var(--line); }
         .ledger-cell:first-child{ border-left:none; }
 
-        .seg{ font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:.05em; padding:11px 20px; border:1px solid var(--line-2); border-radius:3px; background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:uppercase; }
+        .seg{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.05em; padding:11px 20px; border:1px solid var(--line-2); border-radius:3px; background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:uppercase; }
         .seg:hover{ color:var(--ink); border-color:#3a3a3a; }
         .seg.on{ background:var(--lime); color:#0a0a0a; border-color:var(--lime); font-weight:700; }
 
@@ -455,14 +455,20 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
       {/* ── Document header bar ─────────────────────────────────────────── */}
       <div className="wrap enter" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 32px', borderBottom: '1px solid var(--line)' }}>
-        <div className="mono" style={{ fontSize: 11, letterSpacing: '0.2em', display: 'flex', gap: 10, alignItems: 'center', color: 'var(--dim)' }}>
-          <Link href="/" style={{ color: 'var(--dim)', textDecoration: 'none' }}>FITFUEL</Link>
-          <span style={{ color: '#2e2e2e' }}>/</span>
-          <Link href="/plans" style={{ color: 'var(--dim)', textDecoration: 'none' }}>PLANS</Link>
-          <span style={{ color: '#2e2e2e' }}>/</span>
-          <span style={{ color: 'var(--lime)' }}>{plan.slug}</span>
-        </div>
-        <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.18em', color: 'var(--faint)' }}>PUNE · IND</div>
+        {/* This is a breadcrumb trail, so it is marked up as one. It was a
+            flex row of loose links with "/" separators at #2e2e2e (1.47:1),
+            which is invisible and also read aloud as "slash" by a screen
+            reader. Separators are now decorative and the trail is navigable. */}
+        <nav aria-label="Breadcrumb" className="mono" style={{ fontSize: 12, letterSpacing: '0.2em' }}>
+          <ol style={{ display: 'flex', gap: 10, alignItems: 'center', listStyle: 'none', margin: 0, padding: 0, color: 'var(--dim)' }}>
+            <li><Link href="/" style={{ color: 'var(--dim)', textDecoration: 'none' }}>FITFUEL</Link></li>
+            <li aria-hidden style={{ color: 'var(--ff-dim)' }}>/</li>
+            <li><Link href="/plans" style={{ color: 'var(--dim)', textDecoration: 'none' }}>PLANS</Link></li>
+            <li aria-hidden style={{ color: 'var(--ff-dim)' }}>/</li>
+            <li><span aria-current="page" style={{ color: 'var(--lime)' }}>{plan.slug}</span></li>
+          </ol>
+        </nav>
+        <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.18em', color: 'var(--faint)' }}>PUNE · IND</div>
       </div>
 
       {/* ── 01 · Hero ───────────────────────────────────────────────────── */}
@@ -471,9 +477,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
           <div className="hero-grid">
             <div>
               <div className="enter e1" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
-                <span className="mono" style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--lime)', border: '1px solid #2c3a14', background: '#121807', padding: '6px 13px', borderRadius: 3 }}>{tierLabel}</span>
-                <span className="mono" style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 3, display: 'inline-flex', gap: 8, alignItems: 'center' }}><DietMark veg={isVeg} />{dietLabel}</span>
-                <span className="mono" style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 3 }}>{plan.cycleLengthDays || 30}-Day Cycle</span>
+                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--lime)', border: '1px solid #2c3a14', background: '#121807', padding: '6px 13px', borderRadius: 3 }}>{tierLabel}</span>
+                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 3, display: 'inline-flex', gap: 8, alignItems: 'center' }}><DietMark veg={isVeg} />{dietLabel}</span>
+                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 3 }}>{plan.cycleLengthDays || 30}-Day Cycle</span>
               </div>
 
               <h1 className="h1 enter e2">{plan.name}</h1>
@@ -489,7 +495,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     <div className="cond" style={{ fontSize: 46, lineHeight: 0.85, color: 'var(--ink)', fontWeight: 600 }}>
                       {s.value}<span style={{ fontSize: 18, color: 'var(--lime)', marginLeft: 3 }}>{s.unit}</span>
                     </div>
-                    <div className="mono" style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--faint)', marginTop: 10 }}>{s.label}</div>
+                    <div className="mono" style={{ fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--faint)', marginTop: 10 }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -504,8 +510,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <div className="enter e4" style={{ ...card({ padding: 28, position: 'relative', overflow: 'hidden' }) }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,var(--lime),transparent)' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
-                <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.2em', color: 'var(--faint)' }}>FITFUEL // DAILY SPEC</div>
-                <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.12em', color: 'var(--lime)' }}>LIVE</div>
+                <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.2em', color: 'var(--faint)' }}>FITFUEL // DAILY SPEC</div>
+                <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.12em', color: 'var(--lime)' }}>LIVE</div>
               </div>
 
               <CalorieRing kcal={plan.avgCaloriesPerDay} />
@@ -515,7 +521,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   {[
                     { k: 'P', v: plan.avgProteinGrams, c: '#a3e635' },
                     { k: 'C', v: plan.avgCarbsGrams, c: '#c9c3ac' },
-                    { k: 'F', v: plan.avgFatGrams, c: '#5d5d57' },
+                    { k: 'F', v: plan.avgFatGrams, c: '#85857e' },
                   ].map((m) => (
                     <span key={m.k} style={{ fontSize: 12, color: 'var(--dim)' }}>
                       <span style={{ color: m.c }}>{m.k}</span> {m.v}g
@@ -594,11 +600,11 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <span style={{ color: 'var(--lime)' }}><Icon size={26} /></span>
-                    <span className="mono" style={{ fontSize: 10, color: 'var(--faint)' }}>0{i + 1}</span>
+                    <span className="mono" style={{ fontSize: 12, color: 'var(--faint)' }}>0{i + 1}</span>
                   </div>
                   <div>
                     <div className="syne" style={{ fontWeight: 700, fontSize: 20, color: 'var(--ink)' }}>{SLOT_LABEL[slot]}</div>
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--lime)', letterSpacing: '0.05em', marginTop: 4 }}>{SLOT_TIME[slot]}</div>
+                    <div className="mono" style={{ fontSize: 12, color: 'var(--lime)', letterSpacing: '0.05em', marginTop: 4 }}>{SLOT_TIME[slot]}</div>
                   </div>
                   <div style={{ color: 'var(--dim)', fontSize: 13, lineHeight: 1.65 }}>{SLOT_DESC[slot]}</div>
                 </div>
@@ -640,9 +646,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
           {/* Ledger header */}
           <div className="ledger-row" style={{ background: '#0a0a0a' }}>
-            <div className="ledger-cell mono" style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--faint)' }}>DAY</div>
+            <div className="ledger-cell mono" style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--faint)' }}>DAY</div>
             {(['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as MealSlotKey[]).map((s) => (
-              <div key={s} className="ledger-cell mono" style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--faint)', textTransform: 'uppercase' }}>{SLOT_LABEL[s]}</div>
+              <div key={s} className="ledger-cell mono" style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--faint)', textTransform: 'uppercase' }}>{SLOT_LABEL[s]}</div>
             ))}
           </div>
 
@@ -655,7 +661,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 <div key={day} className="ledger-row">
                   <div className="ledger-cell" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <span className="cond" style={{ fontSize: 30, fontWeight: 600, color: 'var(--ink)', lineHeight: 0.9 }}>{String(day).padStart(2, '0')}</span>
-                    <span className="mono" style={{ fontSize: 9.5, color: 'var(--faint)', marginTop: 6 }}>
+                    <span className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 6 }}>
                       {daySlots.reduce((a, s) => a + s.recipe.caloriesPerServing, 0)} KCAL
                     </span>
                   </div>
@@ -672,11 +678,11 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                                 : <span style={{ color: '#262626' }}><CellIcon size={22} /></span>}
                             </div>
                             <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}</div>
-                            <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
+                            <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
                               <span style={{ color: 'var(--lime)' }}>{s.recipe.caloriesPerServing}</span> kcal · {s.recipe.proteinGrams}P {s.recipe.carbsGrams}C {s.recipe.fatGrams}F
                             </div>
                           </>
-                        ) : <span className="mono" style={{ fontSize: 11, color: '#2c2c2c' }}>—</span>}
+                        ) : <span className="mono" style={{ fontSize: 12, color: '#2c2c2c' }}>—</span>}
                       </div>
                     )
                   })}
@@ -708,12 +714,12 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <span style={{ color: 'var(--lime)' }}><Icon size={22} /></span>
                         <div>
-                          <div className="mono" style={{ fontSize: 11, color: 'var(--lime)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{SLOT_LABEL[slot.mealSlot]}</div>
-                          <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 3 }}>{SLOT_TIME[slot.mealSlot]}</div>
+                          <div className="mono" style={{ fontSize: 12, color: 'var(--lime)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{SLOT_LABEL[slot.mealSlot]}</div>
+                          <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 3 }}>{SLOT_TIME[slot.mealSlot]}</div>
                         </div>
                       </div>
                       <div className="cond" style={{ fontSize: 38, fontWeight: 600, color: 'var(--ink)', lineHeight: 0.85 }}>
-                        {r.caloriesPerServing}<span className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginLeft: 4 }}>kcal</span>
+                        {r.caloriesPerServing}<span className="mono" style={{ fontSize: 12, color: 'var(--faint)', marginLeft: 4 }}>kcal</span>
                       </div>
                     </div>
 
@@ -724,17 +730,17 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                       {[
                         { l: 'Protein', v: `${r.proteinGrams}g`, c: '#a3e635' },
                         { l: 'Carbs', v: `${r.carbsGrams}g`, c: '#c9c3ac' },
-                        { l: 'Fat', v: `${r.fatGrams}g`, c: '#8d8d87' },
-                        { l: 'Fibre', v: r.fibreGrams != null ? `${r.fibreGrams}g` : '—', c: '#8d8d87' },
+                        { l: 'Fat', v: `${r.fatGrams}g`, c: '#85857e' },
+                        { l: 'Fibre', v: r.fibreGrams != null ? `${r.fibreGrams}g` : '—', c: '#85857e' },
                       ].map((m) => (
                         <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid var(--line)', borderRadius: 3, padding: '11px 8px', textAlign: 'center' }}>
                           <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>
-                          <div className="mono" style={{ fontSize: 8.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
+                          <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
                         </div>
                       ))}
                     </div>
 
-                    <div className="mono" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.03em' }}>
+                    <div className="mono" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.03em' }}>
                       {r.cuisineType && <span>{r.cuisineType}</span>}
                       {(r.prepTimeMins || r.cookTimeMins) && <span>{(r.prepTimeMins ?? 0) + (r.cookTimeMins ?? 0)} MIN</span>}
                       {r.servingSizeGrams && <span>{r.servingSizeGrams}G SERVE</span>}
@@ -754,10 +760,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
           <div className="reveal" style={{ background: 'var(--bone)', color: 'var(--bone-ink)', borderRadius: 5, padding: '34px 32px', position: 'relative', boxShadow: '0 30px 80px -30px rgba(0,0,0,.8)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1.5px solid rgba(20,20,15,.18)', paddingBottom: 16, marginBottom: 22 }}>
               <div>
-                <div className="mono" style={{ fontSize: 10.5, letterSpacing: '0.18em', color: '#4a5a22' }}>NUTRITIONAL SPEC</div>
+                <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.18em', color: '#4a5a22' }}>NUTRITIONAL SPEC</div>
                 <div className="syne" style={{ fontWeight: 800, fontSize: 23, marginTop: 6, letterSpacing: '-0.02em' }}>In every meal</div>
               </div>
-              <div className="mono" style={{ fontSize: 9, letterSpacing: '0.1em', textAlign: 'right', color: '#5c5c50', border: '1px solid rgba(20,20,15,.25)', padding: '6px 9px', borderRadius: 3, lineHeight: 1.5 }}>
+              <div className="mono" style={{ fontSize: 12, letterSpacing: '0.1em', textAlign: 'right', color: '#5c5c50', border: '1px solid rgba(20,20,15,.25)', padding: '6px 9px', borderRadius: 3, lineHeight: 1.5 }}>
                 FITFUEL<br />VERIFIED
               </div>
             </div>
@@ -812,12 +818,12 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,var(--lime),transparent)' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--line)', paddingBottom: 16, marginBottom: 16 }}>
               <div>
-                <div className="mono" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--faint)' }}>TODAY · DAY 03 / 30</div>
+                <div className="mono" style={{ fontSize: 12, letterSpacing: '0.16em', color: 'var(--faint)' }}>TODAY · DAY 03 / 30</div>
                 <div className="syne" style={{ fontWeight: 700, fontSize: 15, marginTop: 5 }}>{plan.name}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div className="cond" style={{ fontSize: 30, fontWeight: 600, color: 'var(--lime)', lineHeight: 0.9 }}>669</div>
-                <div className="mono" style={{ fontSize: 9.5, color: 'var(--faint)', marginTop: 3 }}>/ 1600 KCAL</div>
+                <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 3 }}>/ 1600 KCAL</div>
               </div>
             </div>
             {[
@@ -832,18 +838,18 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <span style={{ color: m.done ? 'var(--lime)' : 'var(--faint)' }}><Icon size={18} /></span>
                     <div>
-                      <div className="mono" style={{ fontSize: 9.5, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{SLOT_LABEL[m.slot]}</div>
+                      <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{SLOT_LABEL[m.slot]}</div>
                       <div style={{ fontSize: 13.5, color: 'var(--ink)', marginTop: 2 }}>{m.name}</div>
                     </div>
                   </div>
                   {m.done
-                    ? <span className="mono" style={{ fontSize: 10, color: 'var(--lime)', display: 'flex', alignItems: 'center', gap: 5 }}><IconCheck size={12} /> LOGGED</span>
-                    : <span className="mono" style={{ fontSize: 10, color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '5px 11px', borderRadius: 3 }}>I ATE THIS</span>}
+                    ? <span className="mono" style={{ fontSize: 12, color: 'var(--lime)', display: 'flex', alignItems: 'center', gap: 5 }}><IconCheck size={12} /> LOGGED</span>
+                    : <span className="mono" style={{ fontSize: 12, color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '5px 11px', borderRadius: 3 }}>I ATE THIS</span>}
                 </div>
               )
             })}
             <div style={{ marginTop: 16 }}>
-              <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--faint)', marginBottom: 8 }}>
+              <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--faint)', marginBottom: 8 }}>
                 <span>NET PROGRESS</span><span style={{ color: 'var(--lime)' }}>42%</span>
               </div>
               <div style={{ height: 6, background: '#161616', borderRadius: 99, overflow: 'hidden' }}>
@@ -888,7 +894,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
           {/* Meal-combo selector — drives all 3 tier columns */}
           <div className="reveal d1" style={{ marginBottom: 24 }}>
-            <p className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Choose your meals</p>
+            <p className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Choose your meals</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {MEAL_COMBO_META.map((m) => {
                 const active = pickMeal === m.key
@@ -904,7 +910,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     onMouseEnter={(e) => { if (!active) e.currentTarget.style.borderColor = '#333' }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.borderColor = 'var(--line)' }}>
                     <div className="syne" style={{ fontSize: 18, fontWeight: 700, color: active ? 'var(--lime)' : 'var(--ink)' }}>{m.short}</div>
-                    <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 4 }}>{m.time}</div>
+                    <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 4 }}>{m.time}</div>
                   </button>
                 )
               })}
@@ -939,7 +945,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                       </div>
                       {!tier.available && (
                         <span className="mono" style={{
-                          fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 2,
+                          fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 2,
                           background: `${tier.accent}1f`, color: tier.accent, letterSpacing: '0.08em',
                         }}>
                           WAITLIST
@@ -981,18 +987,18 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                           onMouseLeave={(e) => { if (!isActiveDur && available) e.currentTarget.style.borderColor = '#1a1a1a' }}
                         >
                           <div>
-                            <div className="mono" style={{ fontSize: 10.5, color: isActiveDur ? tier.accent : 'var(--dim)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700 }}>
+                            <div className="mono" style={{ fontSize: 12.5, color: isActiveDur ? tier.accent : 'var(--dim)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700 }}>
                               {d.label}
                             </div>
                             {available && bd && (
-                              <div className="mono" style={{ fontSize: 9.5, color: 'var(--faint)', marginTop: 2, letterSpacing: '0.04em' }}>
+                              <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 2, letterSpacing: '0.04em' }}>
                                 ₹{Math.round(bd.baseRs / d.days).toLocaleString('en-IN')}/DAY
                               </div>
                             )}
                           </div>
                           <div className="cond" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.1 }}>
                             {available && bd && bd.mrpRs > bd.baseRs && (
-                              <span className="mono" style={{ fontSize: 10, color: 'var(--faint)', textDecoration: 'line-through' }}>₹{bd.mrpRs.toLocaleString('en-IN')}</span>
+                              <span className="mono" style={{ fontSize: 12, color: 'var(--faint)', textDecoration: 'line-through' }}>₹{bd.mrpRs.toLocaleString('en-IN')}</span>
                             )}
                             <span style={{ fontSize: 18, fontWeight: 600, color: available ? 'var(--ink)' : 'var(--faint)' }}>
                               {available && bd ? `₹${bd.baseRs.toLocaleString('en-IN')}` : '—'}
@@ -1048,7 +1054,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             })}
           </div>
 
-          <p className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 22, letterSpacing: '0.04em', textAlign: 'center' }}>
+          <p className="mono" style={{ fontSize: 12, color: 'var(--faint)', marginTop: 22, letterSpacing: '0.04em', textAlign: 'center' }}>
             PAYU · UPI · CREDIT / DEBIT · CASH ON DELIVERY · GST 5% INCLUDED · PREMIUM &amp; LUXURY PRICES ESTIMATED
           </p>
         </div>
@@ -1081,7 +1087,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 aria-label="Close"
               >×</button>
               <div className="mono" style={{
-                fontSize: 11, color: TIER_META.find((t) => t.key === wlTier)!.accent,
+                fontSize: 12, color: TIER_META.find((t) => t.key === wlTier)!.accent,
                 fontWeight: 700, letterSpacing: '0.1em', marginBottom: 10,
               }}>
                 {wlTier} · WAITLIST
@@ -1114,7 +1120,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                       flex: '1 1 200px', padding: '12px 14px', background: '#0a0a0a',
                       border: '1px solid #1a1a1a', borderRadius: 4,
                       color: 'var(--ink)', fontSize: 14, outline: 'none',
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "inherit",
                     }}
                   />
                   <button
@@ -1159,7 +1165,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             ].map(({ Icon, t, d }, i) => (
               <div key={t} style={{ ...card({ padding: '32px 24px' }) }}>
                 <div style={{ width: 48, height: 48, borderRadius: 4, border: '1px solid #2c3a18', background: '#101807', color: 'var(--lime)', display: 'grid', placeItems: 'center', margin: '0 auto 18px' }}><Icon size={22} /></div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--faint)', letterSpacing: '0.14em', marginBottom: 8 }}>STEP 0{i + 1}</div>
+                <div className="mono" style={{ fontSize: 12, color: 'var(--faint)', letterSpacing: '0.14em', marginBottom: 8 }}>STEP 0{i + 1}</div>
                 <div className="syne" style={{ fontWeight: 700, fontSize: 18, marginBottom: 6 }}>{t}</div>
                 <div style={{ color: 'var(--faint)', fontSize: 13 }}>{d}</div>
               </div>
@@ -1187,9 +1193,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--line)', paddingTop: 18 }}>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>{t.name}</div>
-                    <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 3, letterSpacing: '0.04em' }}>{t.location}</div>
+                    <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 3, letterSpacing: '0.04em' }}>{t.location}</div>
                   </div>
-                  <span className="mono" style={{ fontSize: 11, color: 'var(--lime)', border: '1px solid #2c3a18', background: '#101807', padding: '6px 12px', borderRadius: 3, fontWeight: 700 }}>{t.result}</span>
+                  <span className="mono" style={{ fontSize: 12, color: 'var(--lime)', border: '1px solid #2c3a18', background: '#101807', padding: '6px 12px', borderRadius: 3, fontWeight: 700 }}>{t.result}</span>
                 </div>
               </div>
             ))}
@@ -1209,7 +1215,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <div key={i} style={{ borderTop: i === 0 ? '1px solid var(--line)' : 'none', borderBottom: '1px solid var(--line)' }}>
                 <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                   <span style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                    <span className="mono" style={{ fontSize: 11, color: openFaq === i ? 'var(--lime)' : 'var(--faint)' }}>{String(i + 1).padStart(2, '0')}</span>
+                    <span className="mono" style={{ fontSize: 12, color: openFaq === i ? 'var(--lime)' : 'var(--faint)' }}>{String(i + 1).padStart(2, '0')}</span>
                     <span style={{ color: openFaq === i ? 'var(--lime)' : 'var(--ink)' }}>{item.q}</span>
                   </span>
                   <span style={{ color: 'var(--lime)', fontSize: 22, fontWeight: 300, flexShrink: 0, transition: 'transform .4s cubic-bezier(.16,1,.3,1)', transform: openFaq === i ? 'rotate(45deg)' : 'none' }}>+</span>
@@ -1238,7 +1244,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <IconWhats size={17} /> WhatsApp us
             </a>
           </div>
-          <div className="mono" style={{ fontSize: 10.5, color: 'var(--faint)', letterSpacing: '0.1em', display: 'flex', gap: 18, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.1em', display: 'flex', gap: 18, justifyContent: 'center', flexWrap: 'wrap' }}>
             <span style={{ display: 'inline-flex', gap: 7, alignItems: 'center' }}><IconTruck size={14} /> KHARADI · PUNE</span>
             <span>FSSAI 21523035002815</span>
           </div>
@@ -1254,7 +1260,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 <h3 className="syne" style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2, margin: 0 }}>{sel.name}</h3>
                 <button onClick={() => setSel(null)} style={{ background: 'transparent', border: '1px solid #222', color: 'var(--dim)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{'\u00D7'}</button>
               </div>
-              <div className="mono" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              <div className="mono" style={{ fontSize: 12, color: 'var(--faint)', marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 {sel.cuisineType && <span>{sel.cuisineType}</span>}
                 {(sel.prepTimeMins || sel.cookTimeMins) && <span>{(sel.prepTimeMins ?? 0) + (sel.cookTimeMins ?? 0)} MIN</span>}
                 {sel.servingSizeGrams && <span>{sel.servingSizeGrams}G SERVE</span>}
@@ -1265,11 +1271,11 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   { l: 'Kcal', v: String(sel.caloriesPerServing), c: 'var(--lime)' },
                   { l: 'Protein', v: `${sel.proteinGrams}g`, c: '#a3e635' },
                   { l: 'Carbs', v: `${sel.carbsGrams}g`, c: '#c9c3ac' },
-                  { l: 'Fat', v: `${sel.fatGrams}g`, c: '#8d8d87' },
+                  { l: 'Fat', v: `${sel.fatGrams}g`, c: '#85857e' },
                 ].map((m) => (
                   <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 6, padding: '12px 8px', textAlign: 'center' }}>
                     <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>
-                    <div className="mono" style={{ fontSize: 8.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
+                    <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
                   </div>
                 ))}
               </div>

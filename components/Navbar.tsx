@@ -18,6 +18,12 @@ import { motion, AnimatePresence } from "framer-motion";
 const LIME = "#84cc16";
 const LIME_LIGHT = "#a3e635";
 
+// Category icons were previously colour-coded teal / purple / sky / amber /
+// pink. That leaked a five-hue secondary palette into the global chrome, so
+// it rendered on every page including the homepage, against DESIGN.md's
+// "lime is the only chromatic value". Icons now carry meaning by shape.
+const ICON = "var(--ff-dim)";
+
 // ── Menu data ────────────────────────────────────────────────────────────────
 
 const popularPlans = [
@@ -31,15 +37,15 @@ const popularPlans = [
 
 const planCategories = [
   { label: "All Plans",            href: "/plans",                            icon: <Flame size={14} color={LIME} />,      note: "Browse the full catalog" },
-  { label: "Medical & Lifestyle",  href: "/plans?category=LIFESTYLE_MEDICAL", icon: <HeartPulse size={14} color="#2dd4bf" />, note: "Condition-specific nutrition" },
-  { label: "Sports Nutrition",     href: "/plans?category=SPORTS",            icon: <Dumbbell size={14} color="#c084fc" />, note: "Fuel for your sport" },
-  { label: "Corporate",            href: "/plans?category=CORPORATE",         icon: <Building2 size={14} color="#38bdf8" />, note: "Office wellness programs" },
-  { label: "Digital Plans (PDF)",  href: "/plans/digital",                    icon: <FileText size={14} color="#fbbf24" />, note: "Personalised plan, anywhere" },
+  { label: "Medical & Lifestyle",  href: "/plans?category=LIFESTYLE_MEDICAL", icon: <HeartPulse size={14} color={ICON} />, note: "Condition-specific nutrition" },
+  { label: "Sports Nutrition",     href: "/plans?category=SPORTS",            icon: <Dumbbell size={14} color={ICON} />,   note: "Fuel for your sport" },
+  { label: "Corporate",            href: "/plans?category=CORPORATE",         icon: <Building2 size={14} color={ICON} />,  note: "Office wellness programs" },
+  { label: "Digital Plans (PDF)",  href: "/plans/digital",                    icon: <FileText size={14} color={ICON} />,   note: "Personalised plan, anywhere" },
 ];
 
 const planTools = [
-  { label: "TDEE Calculator", href: "/tdee-calculator", icon: <Calculator size={14} color={LIME} />, note: "Know your daily calories, free" },
-  { label: "Find My Plan",    href: "/#finder",         icon: <Sparkles size={14} color="#f9a8d4" />, note: "60-second plan match" },
+  { label: "TDEE Calculator", href: "/tdee-calculator", icon: <Calculator size={14} color={ICON} />, note: "Know your daily calories, free" },
+  { label: "Find My Plan",    href: "/#finder",         icon: <Sparkles size={14} color={ICON} />,   note: "60-second plan match" },
 ];
 
 const companyLinks = [
@@ -99,6 +105,8 @@ export default function Navbar() {
   const [scrollPct, setScrollPct]   = useState(0);
   const [openMenu, setOpenMenu]     = useState<"plans" | "company" | "user" | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mobilePanel = useRef<HTMLDivElement>(null);
+  const hamburger   = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
 
   const { data: session, status } = useSession();
@@ -133,6 +141,57 @@ export default function Navbar() {
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
   }, [openMenu]);
+
+  // The mobile menu is a full-height overlay. Without these three things it
+  // behaved as a decoration rather than a dialog: the page scrolled behind
+  // it, and keyboard/screen-reader users tabbed straight through it into the
+  // page underneath because focus never moved in.
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    // 1. Lock body scroll, compensating for the scrollbar so the page
+    //    underneath does not visibly shift when it disappears.
+    const { body } = document;
+    const prevOverflow = body.style.overflow;
+    const prevPad = body.style.paddingRight;
+    const gap = window.innerWidth - document.documentElement.clientWidth;
+    body.style.overflow = "hidden";
+    if (gap > 0) body.style.paddingRight = `${gap}px`;
+
+    // 2. Move focus into the panel.
+    const panel = mobilePanel.current;
+    const focusables = () =>
+      Array.from(
+        panel?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((el) => el.offsetParent !== null);
+    focusables()[0]?.focus();
+
+    // 3. Trap Tab inside the panel while it is open.
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !panel?.contains(active))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      body.style.overflow = prevOverflow;
+      body.style.paddingRight = prevPad;
+      document.removeEventListener("keydown", onKeyDown);
+      // Return focus to the control that opened the panel.
+      hamburger.current?.focus();
+    };
+  }, [mobileOpen]);
 
   const hoverOpen = (m: "plans" | "company") => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -318,10 +377,13 @@ export default function Navbar() {
 
         {/* Hamburger */}
         <button
+          ref={hamburger}
           onClick={() => setMobileOpen(o => !o)}
           className="ff-nav-mobile ff-outline-btn"
-          style={{ background: "none", border: "1px solid #242424", cursor: "pointer", padding: 8, color: "var(--ff-mute)", borderRadius: 0, display: "none", transition: "border-color 0.2s, color 0.2s" }}
-          aria-label="Toggle menu" aria-expanded={mobileOpen}
+          style={{ background: "none", border: "1px solid #242424", cursor: "pointer", padding: 10, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", color: "var(--ff-mute)", borderRadius: 0, display: "none", transition: "border-color 0.2s, color 0.2s" }}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="ff-mobile-menu"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={mobileOpen ? "close" : "open"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
@@ -335,13 +397,37 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
+            ref={mobilePanel}
+            id="ff-mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site menu"
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            style={{ overflow: "hidden", background: "rgba(8,8,8,0.97)", borderBottom: "1px solid #1e1e1e", backdropFilter: "blur(16px)", maxHeight: "calc(100vh - 68px)", overflowY: "auto" }}
+            style={{ overflow: "hidden", background: "rgba(8,8,8,0.97)", borderBottom: "1px solid #1e1e1e", backdropFilter: "blur(16px)", maxHeight: "calc(100dvh - 68px)", overflowY: "auto" }}
           >
             <div style={{ padding: "14px 24px 28px" }}>
 
-              <MobileSection title="Meal Plans">
+              {/* Trial strip: was desktop-only, so the cheapest offer on the
+                  site was invisible to the majority of traffic. */}
+              <Link href="/plans?trial=true" onClick={closeAll} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                background: "rgba(132,204,22,0.06)", border: "1px solid rgba(132,204,22,0.2)",
+                padding: "12px 14px", textDecoration: "none", marginBottom: 14, minHeight: 44,
+              }}>
+                <span style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.4 }}>
+                  <b style={{ color: LIME_LIGHT }}>Trial Day, Rs 400.</b> Breakfast plus lunch, no lock-in.
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "7px 12px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start</span>
+              </Link>
+
+              {/* `popularPlans` used to render on desktop hover only, so the
+                  six highest-intent links on the site did not exist in the
+                  mobile nav at all. Opened by default: two taps to reach a
+                  plan was one tap too many on the primary traffic source. */}
+              <MobileSection title="Meal Plans" defaultOpen>
+                {popularPlans.map(p => <MobileLink key={p.href} href={p.href} label={p.label} note={p.note} onNavigate={closeAll} />)}
+                <MobileDivider />
                 {planCategories.map(c => <MobileLink key={c.href} href={c.href} label={c.label} onNavigate={closeAll} />)}
                 {planTools.map(t => <MobileLink key={t.href} href={t.href} label={t.label} onNavigate={closeAll} />)}
               </MobileSection>
@@ -402,14 +488,14 @@ export default function Navbar() {
 
 // ── Mobile primitives ────────────────────────────────────────────────────────
 
-function MobileSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+function MobileSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderBottom: "1px solid #161616" }}>
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "none", cursor: "pointer", padding: "14px 4px", fontSize: 15, fontWeight: 600, color: "var(--ff-ink)" }}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "none", cursor: "pointer", padding: "14px 4px", minHeight: 48, fontSize: 15, fontWeight: 600, color: "var(--ff-ink)" }}
       >
         {title}
         <ChevronDown size={15} color="var(--ff-dim)" style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
@@ -425,17 +511,23 @@ function MobileSection({ title, children }: { title: string; children: React.Rea
   );
 }
 
-function MobileLink({ href, label, onNavigate }: { href: string; label: string; onNavigate: () => void }) {
+function MobileDivider() {
+  return <div style={{ height: 1, background: "#1a1a1a", margin: "10px 14px" }} />;
+}
+
+function MobileLink({ href, label, note, onNavigate }: { href: string; label: string; note?: string; onNavigate: () => void }) {
   return (
-    <Link href={href} onClick={onNavigate} className="ff-menu-item" style={{ display: "block", padding: "10px 14px", fontSize: 14, color: "var(--ff-mute)", textDecoration: "none", borderRadius: 0 }}>
+    // 44px min-height: these were 38px, under the touch-target guideline.
+    <Link href={href} onClick={onNavigate} className="ff-menu-item" style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "10px 14px", minHeight: 44, fontSize: 14, color: "var(--ff-mute)", textDecoration: "none", borderRadius: 0 }}>
       {label}
+      {note ? <span style={{ fontSize: 12, color: "var(--ff-dim)", marginTop: 2 }}>{note}</span> : null}
     </Link>
   );
 }
 
 function MobileButtonLink({ href, label, icon, onNavigate }: { href: string; label: string; icon?: React.ReactNode; onNavigate: () => void }) {
   return (
-    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "var(--ff-ink)", textDecoration: "none", borderRadius: 0, border: "1px solid #242424" }}>
+    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, minHeight: 44, fontSize: 14, fontWeight: 600, color: "var(--ff-ink)", textDecoration: "none", borderRadius: 0, border: "1px solid #242424" }}>
       {icon}{label}
     </Link>
   );

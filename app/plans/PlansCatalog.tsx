@@ -1,6 +1,9 @@
-// app/plans/PlansCatalog.tsx, Phase 19A (house-style, restrained)
+// app/plans/PlansCatalog.tsx
 // Configurator: diet → duration → meals → live 3-tier pricing → browse grid.
-// Uses the site's own design tokens from globals.css (Inter, rounded, lime accent).
+//
+// House style per DESIGN.md: Barlow Condensed display, Archivo body, square
+// corners, lime as the only chromatic accent. The header comment here used to
+// say "Inter, rounded" which is no longer true of anything on the site.
 "use client";
 
 import { useMemo, useState, type CSSProperties } from "react";
@@ -61,15 +64,17 @@ const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
 // ─── Browser helpers ─────────────────────────────────────────────────────────
 const mealsInCombo = (meal: MealKey): number => (meal === "ALL_FOUR" ? 4 : 2);
 const cssVars = (o: Record<string, string | number>) => o as unknown as CSSProperties;
-const CATEGORY_ACCENT: Record<Plan["category"], string> = {
-  STANDARD: "#a3e635",
-  LIFESTYLE_MEDICAL: "#c084fc",
-  SPORTS: "#38bdf8",
-  CORPORATE: "#f59e0b",
-  DIGITAL: "#9ca3af",
-};
-const accentFor = (p: Plan): string => p.accentColor || CATEGORY_ACCENT[p.category] || "#a3e635";
-const glowOf = (c: string): string => (/^#[0-9a-fA-F]{6}$/.test(c) ? c + "22" : "rgba(163,230,53,.13)");
+// This used to hand each category its own hue: purple #c084fc for medical,
+// sky #38bdf8 for sports, amber #f59e0b for corporate, plus a per-card glow
+// derived from it. That is a five-colour secondary palette on the page every
+// homepage CTA lands on, against DESIGN.md's "lime is the only chromatic
+// value" and its "accent colour used decoratively" reject. Category is now
+// carried by the label, which is what people actually read.
+//
+// `accentColor` from the DB is deliberately ignored rather than dropped from
+// the query: the column still feeds the admin preview.
+const accentFor = (_p: Plan): string => "#a3e635";
+const glowOf = (_c: string): string => "transparent";
 
 // ─── Selectable chip ─────────────────────────────────────────────────────────
 function Chip({
@@ -77,14 +82,16 @@ function Chip({
 }: { active: boolean; onClick: () => void; label: string; sub?: string; dot?: string }) {
   return (
     <button onClick={onClick}
+      aria-pressed={active}
       style={{
         textAlign: "left",
         padding: "12px 16px",
+        minHeight: 44,
         background: active ? "rgba(132,204,22,0.08)" : "var(--bg-card)",
         border: active ? "1px solid rgba(132,204,22,0.5)" : "1px solid var(--border)",
-        borderRadius: 12,
+        borderRadius: 0,
         cursor: "pointer",
-        transition: "all 0.2s ease",
+        transition: "border-color 0.2s ease, background 0.2s ease",
         minWidth: 0,
       }}
       onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-hover)"; }}
@@ -107,8 +114,10 @@ function Chip({
 
 // ─── Section heading ─────────────────────────────────────────────────────────
 function Step({ label }: { label: string }) {
+  // Was 13px Archivo semibold. Step headings are display type like every
+  // other heading on the site.
   return (
-    <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", marginBottom: 14, letterSpacing: "0.01em" }}>
+    <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 15, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--ff-dim)", marginBottom: 14 }}>
       {label}
     </h2>
   );
@@ -275,7 +284,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>{tier.label}</h3>
                   {!tier.available && (
                     <span style={{
-                      fontSize: 10, fontWeight: 700, color: "var(--text-dim)",
+                      fontSize: 12, fontWeight: 700, color: "var(--text-dim)",
                       background: "var(--bg-elevated)", border: "1px solid var(--border-mid)",
                       padding: "3px 9px", borderRadius: 999, marginLeft: "auto",
                       letterSpacing: "0.06em", textTransform: "uppercase",
@@ -336,49 +345,52 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
         {/* Browse: master/detail browser */}
         <div id="browse" className="ffb" style={{ marginBottom: 24, scrollMarginTop: 24 }}>
           <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
             .ffb{ --bd:#1c1c1c; }
             .ffb-top{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
-            .ffb-title{ font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:30px; letter-spacing:.4px; text-transform:uppercase; color:#f4f3ee; margin:0; }
-            .ffb-search{ flex:1; min-width:220px; max-width:360px; font-family:'Space Mono',monospace; font-size:12px; color:#c9c3ac; background:#0d0d0d; border:1px solid var(--bd); border-radius:7px; padding:11px 14px; outline:none; }
-            .ffb-search::placeholder{ color:#56564f; }
+            .ffb-title{ font-family:var(--ff-cond); font-weight:800; font-size:30px; letter-spacing:.4px; text-transform:uppercase; color:#f4f3ee; margin:0; }
+            .ffb-search{ flex:1; min-width:220px; max-width:360px; font-family:var(--ff-cond); font-size:16px; color:#f4f3ee; background:#0d0d0d; border:1px solid var(--bd); border-radius:0; padding:12px 14px; min-height:44px; outline:none; }
+            .ffb-search::placeholder{ color:#85857e; }
             .ffb-cats{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px; }
-            .ffb-cat-pill{ font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:.06em; padding:7px 13px; border-radius:999px; cursor:pointer; border:1px solid var(--bd); background:transparent; color:#8d8d87; transition:all .18s; }
+            /* Was 7px/13px padding at radius 999px: a 34px-tall pill, under
+               the 44px touch target, and a rounded chip in a square system.
+               Square now, and tall enough to hit on a phone. */
+            .ffb-cat-pill{ font-family:var(--ff-cond); font-size:13px; letter-spacing:.06em; padding:0 15px; min-height:44px; display:inline-flex; align-items:center; border-radius:0; cursor:pointer; border:1px solid var(--bd); background:transparent; color:#c9c9c2; transition:border-color .18s, background .18s, color .18s; }
             .ffb-cat-pill.on{ background:#a3e635; color:#0a0a0a; border-color:#a3e635; font-weight:700; }
             .ffb-grid{ display:grid; grid-template-columns:270px 1fr; gap:14px; }
             @media (max-width:760px){ .ffb-grid{ grid-template-columns:1fr; } .ffb-list{ max-height:260px; } }
-            .ffb-list{ border:1px solid var(--bd); border-radius:9px; padding:7px; max-height:520px; overflow:auto; }
-            .ffb-listcat{ font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:#56564f; padding:13px 9px 5px; display:flex; justify-content:space-between; }
-            .ffb-row{ display:grid; grid-template-columns:8px 1fr auto; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 10px; border:0; background:transparent; border-radius:6px; cursor:pointer; transition:background .15s; }
+            .ffb-list{ border:1px solid var(--bd); border-radius:0; padding:7px; max-height:520px; overflow:auto; }
+            .ffb-listcat{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#85857e; padding:13px 9px 5px; display:flex; justify-content:space-between; }
+            .ffb-row{ display:grid; grid-template-columns:8px 1fr auto; align-items:center; gap:10px; width:100%; min-height:44px; text-align:left; padding:11px 10px; border:0; background:transparent; border-radius:0; cursor:pointer; transition:background .15s; }
             .ffb-row:hover{ background:#101010; }
             .ffb-row.on{ background:color-mix(in srgb, var(--ac) 12%, transparent); }
             .ffb-dot{ width:7px; height:7px; border-radius:999px; }
-            .ffb-rname{ font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:16px; letter-spacing:.3px; text-transform:uppercase; color:#b9b8b0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .ffb-rname{ font-family:var(--ff-cond); font-weight:600; font-size:16px; letter-spacing:.3px; text-transform:uppercase; color:#c9c9c2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
             .ffb-row.on .ffb-rname{ color:#f4f3ee; }
-            .ffb-rk{ font-family:'Space Mono',monospace; font-size:10px; color:#56564f; }
-            .ffb-panel{ position:relative; border:1px solid var(--bd); border-radius:9px; padding:24px; overflow:hidden; min-height:360px; }
-            .ffb-panel:before{ content:""; position:absolute; inset:0; background:radial-gradient(120% 90% at 85% 0%, var(--gl), transparent 55%); pointer-events:none; }
+            .ffb-rk{ font-family:var(--ff-cond); font-size:12px; color:#85857e; }
+            .ffb-panel{ position:relative; border:1px solid var(--bd); border-radius:0; padding:24px; overflow:hidden; min-height:360px; }
+            /* Removed a radial-gradient glow wash behind every plan card. */
             .ffb-edge{ position:absolute; top:0; left:0; right:0; height:2px; background:var(--ac); }
             .ffb-pills{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px; position:relative; }
-            .ffb-pill{ font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:5px 10px; border-radius:3px; border:1px solid #262626; color:#8d8d87; }
+            .ffb-pill{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.12em; text-transform:uppercase; padding:5px 10px; border-radius:3px; border:1px solid #262626; color:#85857e; }
             .ffb-pill.ac{ color:var(--ac); border-color:color-mix(in srgb, var(--ac) 35%, #262626); }
-            .ffb-name{ font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:clamp(32px,5vw,46px); line-height:.9; letter-spacing:.5px; text-transform:uppercase; color:#f4f3ee; position:relative; margin:0 0 12px; }
-            .ffb-who{ font-size:13px; color:#8d8d87; line-height:1.6; max-width:420px; position:relative; margin:0 0 22px; }
+            .ffb-name{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(32px,5vw,46px); line-height:.9; letter-spacing:.5px; text-transform:uppercase; color:#f4f3ee; position:relative; margin:0 0 12px; }
+            .ffb-who{ font-size:13px; color:#85857e; line-height:1.6; max-width:420px; position:relative; margin:0 0 22px; }
             .ffb-mid{ display:flex; align-items:center; gap:24px; position:relative; margin-bottom:22px; flex-wrap:wrap; }
             .ffb-ring{ position:relative; width:108px; height:108px; flex-shrink:0; }
             .ffb-ringc{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-            .ffb-ringc b{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:29px; color:#f4f3ee; line-height:.9; }
-            .ffb-ringc i{ font-family:'Space Mono',monospace; font-style:normal; font-size:8px; letter-spacing:.13em; color:#6b6b64; margin-top:3px; }
+            .ffb-ringc b{ font-family:var(--ff-cond); font-weight:700; font-size:29px; color:#f4f3ee; line-height:.9; }
+            .ffb-ringc i{ font-family:var(--ff-cond); font-style:normal; font-size:12px; letter-spacing:.13em; color:#85857e; margin-top:3px; }
             .ffb-mac{ flex:1; min-width:160px; }
-            .ffb-macrow{ display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10.5px; color:#8d8d87; margin-bottom:8px; }
+            .ffb-macrow{ display:flex; justify-content:space-between; font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-bottom:8px; }
             .ffb-macbar{ display:flex; height:6px; border-radius:99px; overflow:hidden; background:#161616; }
             .ffb-foot{ display:flex; align-items:center; justify-content:space-between; gap:14px; border-top:1px solid var(--bd); padding-top:18px; position:relative; flex-wrap:wrap; }
-            .ffb-price b{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:27px; color:#f4f3ee; }
-            .ffb-price span{ font-family:'Space Mono',monospace; font-size:10px; color:#6b6b64; margin-left:4px; }
-            .ffb-price small{ display:block; font-family:'Space Mono',monospace; font-size:9.5px; color:#56564f; margin-top:3px; }
-            .ffb-cta{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; background:var(--ac); color:#0a0a0a; font-weight:700; padding:12px 20px; border-radius:5px; text-decoration:none; transition:transform .2s; }
-            .ffb-cta:hover{ transform:translateX(2px); }
-            .ffb-empty{ text-align:center; padding:56px 20px; border:1px solid var(--bd); border-radius:12px; color:#8d8d87; font-size:13px; }
+            .ffb-price b{ font-family:var(--ff-cond); font-weight:700; font-size:27px; color:#f4f3ee; }
+            .ffb-price span{ font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-left:4px; }
+            .ffb-price small{ display:block; font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-top:3px; }
+            .ffb-cta{ font-family:var(--ff-cond); font-size:14px; letter-spacing:.1em; text-transform:uppercase; background:var(--ac); color:#0a0a0a; font-weight:800; padding:0 22px; min-height:44px; display:inline-flex; align-items:center; border-radius:0; text-decoration:none; transition:background .2s; }
+            .ffb-cta:hover{ background:#bef264; }
+            .ffb-empty{ text-align:center; padding:56px 20px; border:1px solid var(--bd); border-radius:12px; color:#85857e; font-size:13px; }
           `}</style>
 
           <div className="ffb-top">
@@ -564,8 +576,10 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
                   }}>
                   {wlStatus === "submitting" ? "…" : "Notify me"}
                 </button>
+                {/* #ef4444 computed to ~4.2:1 on this background, just under
+                    AA. #fca5a5 clears it and still reads as an error. */}
                 {wlStatus === "error" && wlErr && (
-                  <p style={{ marginTop: 10, fontSize: 12, color: "#ef4444" }}>{wlErr}</p>
+                  <p role="alert" style={{ marginTop: 10, fontSize: 13, color: "#fca5a5" }}>{wlErr}</p>
                 )}
               </>
             )}

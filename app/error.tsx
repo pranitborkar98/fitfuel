@@ -11,16 +11,16 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   return (
     <main style={{ minHeight: "100vh", background: "#080808", color: "#f4f3ee", display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 24px", textAlign: "center" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap');
-        .er-tag{ font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#f87171; }
-        .er-h{ font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:clamp(34px,7vw,56px); text-transform:uppercase; letter-spacing:.5px; margin:12px 0 8px; }
-        .er-p{ font-family:'Space Mono',monospace; font-size:13px; color:#8d8d87; line-height:1.6; max-width:400px; margin:0 auto 28px; }
+
+        .er-tag{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:#f87171; }
+        .er-h{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(34px,7vw,56px); text-transform:uppercase; letter-spacing:.5px; margin:12px 0 8px; }
+        .er-p{ font-family:var(--ff-cond); font-size:13px; color:#85857e; line-height:1.6; max-width:400px; margin:0 auto 28px; }
         .er-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-        .er-btn{ font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; padding:13px 22px; border-radius:5px; text-decoration:none; cursor:pointer; border:0; transition:transform .2s; }
+        .er-btn{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.1em; text-transform:uppercase; padding:13px 22px; border-radius:5px; text-decoration:none; cursor:pointer; border:0; transition:transform .2s; }
         .er-btn.primary{ background:#a3e635; color:#0a0a0a; font-weight:700; }
         .er-btn.ghost{ border:1px solid #262626; color:#c9c3ac; background:transparent; }
         .er-btn:hover{ transform:translateY(-2px); }
-        .er-digest{ font-family:'Space Mono',monospace; font-size:10px; color:#3a3a35; margin-top:22px; }
+        .er-digest{ font-family:var(--ff-cond); font-size:12px; color:#3a3a35; margin-top:22px; }
       `}</style>
       <div>
         <span className="er-tag">FitFuel // Error</span>

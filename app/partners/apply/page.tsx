@@ -9,6 +9,14 @@ import ApplyClient from "./ApplyClient";
 
 const db = prisma as any;
 
+export const metadata = {
+  title: "Partner With FitFuel",
+  description:
+    "Gyms, trainers, dieticians and doctors: your clients eat to their macros and " +
+    "you earn on every one. QR onboarding, live client tracking, monthly payouts.",
+  alternates: { canonical: "/partners/apply" },
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PartnerApplyPage() {

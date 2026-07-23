@@ -2,11 +2,12 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "Results | FitFuel",
+  alternates: { canonical: "/results" },
+  title: "Results",
   description: "How FitFuel measures real progress, and an honest invitation to become one of our first transformation stories.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#737373", border: "#1f1f1f", card: "#111111" };
+const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
 const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
 
 const measures = [
@@ -35,10 +36,10 @@ function PlaceholderStory() {
 
 export default function ResultsPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Results</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Results</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
           Real progress, measured honestly<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 660, margin: "0 0 40px" }}>
@@ -51,7 +52,7 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>What we actually track</h2>
+        <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>What we actually track</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, marginBottom: 72 }}>
           {measures.map((m) => (
             <div key={m.t} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 22px" }}>
@@ -61,7 +62,7 @@ export default function ResultsPage() {
           ))}
         </div>
 
-        <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>Transformation stories</h2>
+        <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>Transformation stories</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, marginBottom: 64 }}>
           <PlaceholderStory />
           <PlaceholderStory />
@@ -69,7 +70,7 @@ export default function ResultsPage() {
         </div>
 
         <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: `1px solid ${C.accent}33`, borderRadius: 18, padding: "36px 32px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10 }}>Be one of the first.</div>
+          <div style={{ fontFamily: "var(--ff-cond)", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10 }}>Be one of the first.</div>
           <p style={{ color: C.sub, fontSize: 15, margin: "0 0 22px" }}>Start your plan, track your weeks, and your real numbers could be the story on this page.</p>
           <Link href="/plans/weight-loss-veg" style={{ display: "inline-block", background: C.accent2, color: "#000", fontWeight: 800, fontSize: 14, padding: "13px 30px", borderRadius: 10, textDecoration: "none", letterSpacing: "0.04em" }}>START YOUR PLAN</Link>
         </div>

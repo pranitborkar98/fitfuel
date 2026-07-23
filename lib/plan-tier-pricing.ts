@@ -34,19 +34,38 @@ export const MEALS: { key: MealKey; label: string; short: string; time: string; 
 ]
 
 // ─── Diet metadata (Jain is first-class) ─────────────────────────────────────
+//
+// These dots are the ONE sanctioned exception to the lime-only palette in
+// DESIGN.md. Green-for-vegetarian and red-for-non-vegetarian is FSSAI
+// labelling convention in India, so the colour is carrying regulated meaning
+// here, not decoration: recolouring it lime would actively mislead.
+//
+// Jain was #a78bfa (purple), which is not part of that convention and was
+// just an arbitrary hue. Jain food is stricter vegetarian, so it now sits in
+// the green family alongside veg and vegan. Egg keeps amber, which matches
+// the yellow marker commonly used for eggetarian in Indian menus.
+//
+// Colour is never the sole signal: every dot is paired with its text label.
 export const DIETS: { key: DietKey; label: string; short: string; dot: string; legacy: string }[] = [
   { key: 'VEG',     label: 'Vegetarian',     short: 'Veg',     dot: '#22c55e', legacy: 'veg'    },
   { key: 'EGG',     label: 'Eggetarian',     short: 'Egg',     dot: '#f59e0b', legacy: 'egg'    },
   { key: 'NON_VEG', label: 'Non-Vegetarian', short: 'Non-veg', dot: '#ef4444', legacy: 'nonveg' },
-  { key: 'JAIN',    label: 'Jain',           short: 'Jain',    dot: '#a78bfa', legacy: 'jain'   },
+  { key: 'JAIN',    label: 'Jain',           short: 'Jain',    dot: '#4ade80', legacy: 'jain'   },
   { key: 'VEGAN',   label: 'Vegan',          short: 'Vegan',   dot: '#10b981', legacy: 'veg'    },
 ]
 
 // ─── Tier metadata ───────────────────────────────────────────────────────────
+// Accents were lime / amber / violet, i.e. a three-hue tier palette. Tiers are
+// now distinguished by availability, not colour: the one purchasable tier gets
+// lime, the two waitlisted ones sit muted. Same reason as the category accents
+// in PlansCatalog, see DESIGN.md.
+//
+// The Luxury tagline promised an "AI trainer". There is no AI anywhere in this
+// codebase, so it is not being sold here or on the homepage tier table.
 export const TIERS: { key: Tier; label: string; tagline: string; accent: string; available: boolean }[] = [
-  { key: 'STANDARD', label: 'Standard', tagline: 'Real food, real macros, real results.',     accent: '#84cc16', available: true  },
-  { key: 'PREMIUM',  label: 'Premium',  tagline: 'Standard + supplements + workout plan.',     accent: '#f59e0b', available: false },
-  { key: 'LUXURY',   label: 'Luxury',   tagline: 'Premium + AI trainer + concierge service.',  accent: '#a78bfa', available: false },
+  { key: 'STANDARD', label: 'Standard', tagline: 'Real food, real macros, real results.',        accent: '#84cc16', available: true  },
+  { key: 'PREMIUM',  label: 'Premium',  tagline: 'Standard + supplements + workout plan.',        accent: '#85857e', available: false },
+  { key: 'LUXURY',   label: 'Luxury',   tagline: 'Premium + nutritionist consult + concierge.',   accent: '#85857e', available: false },
 ]
 
 // ─── Tier multipliers (Premium ≈ 1.25× STD, Luxury ≈ 1.5× STD) ────────────────

@@ -23,8 +23,14 @@ export async function generateMetadata({ params }: Props) {
   })
   if (!plan) return {}
   return {
-    title: `${plan.name} — FitFuel`,
-    description: plan.description ?? `${plan.name} meal plan with daily delivery in Pune.`,
+    // Title was `${plan.name} — FitFuel`, which collided with the root
+    // layout's "%s | FitFuel Pune" template and rendered the brand twice.
+    // The template supplies the suffix now, and the em dash is gone.
+    title: plan.name,
+    description:
+      plan.description ??
+      `${plan.name} meal plan, cooked to your macros and delivered daily across Pune.`,
+    alternates: { canonical: `/plans/${slug}` },
   }
 }
 
@@ -111,12 +117,57 @@ export default async function PlanPage({ params }: Props) {
 
   const day1Slots = schedule[1] ?? []
 
+  // Product + Offer schema. A plan page states a price, a diet, a calorie
+  // target and an availability, all of which were previously readable only
+  // as prose. Emitted server-side so it is in the initial HTML.
+  const cheapest = (prices as any[])?.length
+    ? Math.min(...(prices as any[]).map((p: any) => Number(p.priceRs ?? p.price ?? 0)).filter((n) => n > 0))
+    : null
+
+  const productLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: plan.name,
+    description: plan.description ?? plan.tagline ?? `${plan.name} meal plan delivered in Pune.`,
+    category: 'Meal plan',
+    brand: { '@type': 'Brand', name: 'FitFuel' },
+    url: `https://fitfuel.in/plans/${plan.slug}`,
+    additionalProperty: [
+      { '@type': 'PropertyValue', name: 'Calories per day', value: plan.avgCaloriesPerDay },
+      { '@type': 'PropertyValue', name: 'Protein per day (g)', value: plan.avgProteinGrams },
+      { '@type': 'PropertyValue', name: 'Diet', value: plan.dietaryVariant },
+      { '@type': 'PropertyValue', name: 'Meals per day', value: plan.mealsPerDay },
+    ],
+    ...(cheapest
+      ? {
+          offers: {
+            '@type': 'Offer',
+            price: String(cheapest),
+            priceCurrency: 'INR',
+            // Deliberately NOT keyed off plan.isActive: that column is false
+            // on all 126 rows while the catalog sells every one of them, so
+            // trusting it would publish "out of stock" for the entire
+            // product line. See the note in app/sitemap.ts.
+            availability: 'https://schema.org/InStock',
+            url: `https://fitfuel.in/plans/${plan.slug}`,
+            areaServed: { '@type': 'City', name: 'Pune' },
+          },
+        }
+      : {}),
+  }
+
   return (
-    <PlanDetailClient
-      plan={plan as any}
-      schedule={schedule as any}
-      day1Slots={day1Slots as any}
-      prices={prices as any}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
+      <PlanDetailClient
+        plan={plan as any}
+        schedule={schedule as any}
+        day1Slots={day1Slots as any}
+        prices={prices as any}
+      />
+    </>
   )
 }

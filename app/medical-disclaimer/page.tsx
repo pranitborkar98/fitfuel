@@ -2,7 +2,8 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "Medical Disclaimer | FitFuel",
+  alternates: { canonical: "/medical-disclaimer" },
+  title: "Medical Disclaimer",
   description: "FitFuel provides food and general nutrition guidance, not medical advice. Important information before starting any plan.",
 };
 
@@ -12,7 +13,7 @@ const C = {
   warn: "#fb7185",
   text: "#ffffff",
   sub: "#a3a3a3",
-  muted: "#737373",
+  muted: "#9a9a94",
   border: "#1f1f1f",
   card: "#111111",
 };
@@ -20,7 +21,7 @@ const C = {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ marginBottom: 34 }}>
-      <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 700, fontSize: 20, color: C.text, margin: "0 0 12px", letterSpacing: "-0.01em" }}>{title}</h2>
+      <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 20, color: C.text, margin: "0 0 12px", letterSpacing: "-0.01em" }}>{title}</h2>
       {children}
     </section>
   );
@@ -46,10 +47,10 @@ const linkStyle = { color: C.accent, textDecoration: "none", borderBottom: `1px 
 
 export default function MedicalDisclaimerPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Legal</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,52px)", lineHeight: 1.05, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Legal</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,52px)", lineHeight: 1.05, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
           Medical Disclaimer<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.muted, fontSize: 14, margin: "0 0 40px" }}>Last updated: 5 June 2026</p>

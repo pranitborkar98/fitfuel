@@ -2,11 +2,12 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "How It Works | FitFuel",
+  alternates: { canonical: "/how-it-works" },
+  title: "How It Works",
   description: "From your goal to your door: how FitFuel personalises, cooks, delivers and tracks your nutrition every day.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#737373", border: "#1f1f1f", card: "#111111" };
+const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
 const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
 
 const steps = [
@@ -25,15 +26,15 @@ const moat = [
 ];
 
 function H2({ children }: { children: ReactNode }) {
-  return <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 28, color: C.text, margin: "0 0 28px", letterSpacing: "-0.02em" }}>{children}</h2>;
+  return <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 28, color: C.text, margin: "0 0 28px", letterSpacing: "-0.02em" }}>{children}</h2>;
 }
 
 export default function HowItWorksPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: 1040, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>How It Works</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>How It Works</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
           Your goal to your door<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 620, margin: "0 0 64px" }}>
@@ -43,7 +44,7 @@ export default function HowItWorksPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 80 }}>
           {steps.map((s) => (
             <div key={s.n} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "26px 24px" }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 34, fontWeight: 800, color: C.accent, lineHeight: 1, marginBottom: 14 }}>{s.n}</div>
+              <div style={{ fontFamily: "var(--ff-cond)", fontSize: 34, fontWeight: 800, color: C.accent, lineHeight: 1, marginBottom: 14 }}>{s.n}</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>{s.t}</div>
               <p style={{ color: C.sub, fontSize: 14.5, lineHeight: 1.65, margin: 0 }}>{s.d}</p>
             </div>
@@ -61,7 +62,7 @@ export default function HowItWorksPage() {
         </div>
 
         <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: `1px solid ${C.accent}33`, borderRadius: 18, padding: "36px 32px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10 }}>Start eating right tomorrow.</div>
+          <div style={{ fontFamily: "var(--ff-cond)", fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10 }}>Start eating right tomorrow.</div>
           <p style={{ color: C.sub, fontSize: 15, margin: "0 0 22px" }}>Not next Monday. See the plan and try a single trial day, no lock-in.</p>
           <Link href="/plans/weight-loss-veg" style={{ display: "inline-block", background: C.accent2, color: "#000", fontWeight: 800, fontSize: 14, padding: "13px 30px", borderRadius: 10, textDecoration: "none", letterSpacing: "0.04em" }}>VIEW THE PLAN</Link>
         </div>

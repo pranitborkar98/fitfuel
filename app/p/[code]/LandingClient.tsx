@@ -76,7 +76,7 @@ export default function LandingClient({ view }: { view: View }) {
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
 
         {/* Ribbon */}
-        <div style={{ display: "inline-block", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 20, padding: "6px 12px", border: `1px solid ${T.accent2}`, borderRadius: 99, background: "rgba(132,204,22,0.08)" }}>
+        <div style={{ display: "inline-block", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 20, padding: "6px 12px", border: `1px solid ${T.accent2}`, borderRadius: 99, background: "rgba(132,204,22,0.08)" }}>
           You're invited
         </div>
 
@@ -86,7 +86,7 @@ export default function LandingClient({ view }: { view: View }) {
         {/* Offer card */}
         <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, marginTop: 28 }}>
           <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Your welcome offer</div>
-          <div style={{ fontFamily: '"Syne", system-ui', fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>{offer}</div>
+          <div style={{ fontFamily: 'var(--ff-cond)', fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>{offer}</div>
           <div style={{ color: T.dim, fontSize: 14, marginTop: 8 }}>
             Applied automatically at checkout. Valid on your first FitFuel meal plan or digital plan.
           </div>
@@ -102,7 +102,7 @@ export default function LandingClient({ view }: { view: View }) {
             </Link>
           </div>
 
-          <div style={{ marginTop: 18, fontSize: 11, color: T.dim }}>
+          <div style={{ marginTop: 18, fontSize: 12, color: T.dim }}>
             Referral code: <strong style={{ color: T.text, fontFamily: 'ui-monospace, monospace' }}>{view.code}</strong>
           </div>
         </div>
@@ -164,7 +164,7 @@ function Hero({ view }: { view: View }) {
       )}
 
       <div>
-        <h1 style={{ fontFamily: '"Syne", system-ui', fontSize: 38, fontWeight: 800, lineHeight: 1.05, margin: 0 }}>
+        <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 38, fontWeight: 800, lineHeight: 1.05, margin: 0 }}>
           {headlineFor(view)}
         </h1>
         <div style={{ color: T.dim, fontSize: 15, marginTop: 12, lineHeight: 1.5 }}>{sub}</div>
@@ -186,7 +186,7 @@ function Hero({ view }: { view: View }) {
 
 function MetaChip({ children }: { children: any }) {
   return (
-    <span style={{ background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 99, padding: "4px 10px", fontSize: 11, color: T.dim, letterSpacing: "0.02em" }}>
+    <span style={{ background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 99, padding: "4px 10px", fontSize: 12, color: T.dim, letterSpacing: "0.02em" }}>
       {children}
     </span>
   );

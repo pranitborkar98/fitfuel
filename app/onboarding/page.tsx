@@ -5,7 +5,8 @@ import { prisma } from '@/lib/prisma'
 import OnboardingClient from './OnboardingClient'
 
 export const metadata = {
-  title: 'Set Up Your Plan — FitFuel',
+  alternates: { canonical: "/onboarding" },
+  title: 'Set Up Your Plan',
   description: 'Tell us about yourself so we can personalise your meal plan and calorie targets.',
 }
 

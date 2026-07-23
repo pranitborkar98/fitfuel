@@ -2,11 +2,12 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "Our Kitchen | FitFuel",
+  alternates: { canonical: "/our-kitchen" },
+  title: "Our Kitchen",
   description: "Inside the FitFuel kitchen: fresh daily prep, no deep frying, clean oils and FSSAI-licensed food safety in Pune.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#737373", border: "#1f1f1f", card: "#111111" };
+const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
 const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
 
 const standards = [
@@ -33,15 +34,15 @@ function Photo({ label }: { label: string }) {
   );
 }
 function H2({ children }: { children: ReactNode }) {
-  return <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>{children}</h2>;
+  return <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>{children}</h2>;
 }
 
 export default function OurKitchenPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: 1040, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Kitchen</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Kitchen</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
           Fresh, clean, every morning<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 640, margin: "0 0 56px" }}>
@@ -68,7 +69,7 @@ export default function OurKitchenPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 64 }}>
           {rhythm.map((r, i) => (
             <div key={r.time} style={{ display: "flex", gap: 22, paddingBottom: i === rhythm.length - 1 ? 0 : 24 }}>
-              <div style={{ minWidth: 96, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 17, color: C.accent, paddingTop: 1 }}>{r.time}</div>
+              <div style={{ minWidth: 96, fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 17, color: C.accent, paddingTop: 1 }}>{r.time}</div>
               <div style={{ borderLeft: `1px solid ${C.border}`, paddingLeft: 22 }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>{r.t}</div>
                 <p style={{ color: C.sub, fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>{r.d}</p>

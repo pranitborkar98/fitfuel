@@ -13,7 +13,7 @@ const T = {
   accent:      "#84cc16",
   textPrimary: "#f9fafb",
   textSecond:  "#a3a3a3",
-  textMuted:   "#737373",
+  textMuted:   "#9a9a94",
 };
 
 function SignInInner() {
@@ -60,7 +60,7 @@ function SignInInner() {
         </Link>
 
         <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
+          fontFamily: "var(--ff-cond)",
           fontSize: 36, fontWeight: 900, textTransform: "uppercase",
           lineHeight: 1, letterSpacing: "-0.01em",
           color: T.textPrimary, marginBottom: 8,

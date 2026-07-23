@@ -92,7 +92,7 @@ export default async function PartnerLandingPage({ params }: Props) {
 export async function generateMetadata({ params }: Props) {
   const { code } = await params;
   return {
-    title: `Welcome via ${code} \u2014 FitFuel`,
+    title: `Welcome via ${code}`,
     description: "Get a special welcome offer on your first FitFuel plan.",
   };
 }

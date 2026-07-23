@@ -25,10 +25,6 @@ type SupplementWithLinks = Supplement & {
   isFeatured?: boolean;
 };
 
-const FONT = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
-`;
-
 const GOALS: SupplementGoal[] = ["muscle_gain", "weight_loss", "balanced", "performance"];
 
 const CATEGORIES: Array<"all" | SupplementCategory> = [
@@ -88,11 +84,11 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
             </div>
 
             <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: supp.accent, background: `${supp.accent}15`, border: `1px solid ${supp.accent}30`, borderRadius: 6, padding: "3px 9px", fontFamily: "DM Sans, sans-serif" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: supp.accent, background: `${supp.accent}15`, border: `1px solid ${supp.accent}30`, borderRadius: 6, padding: "3px 9px", fontFamily: "inherit" }}>
                 {catMeta.label}
               </span>
-              <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 700, color: "#fff", margin: "10px 0 4px", lineHeight: 1.2 }}>{supp.name}</h2>
-              <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.5 }}>{supp.tagline}</p>
+              <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "10px 0 4px", lineHeight: 1.2 }}>{supp.name}</h2>
+              <p style={{ fontFamily: "inherit", fontSize: 12, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.5 }}>{supp.tagline}</p>
             </div>
           </div>
 
@@ -106,7 +102,7 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                 background: supp.accent, color: "#000",
                 textDecoration: "none", borderRadius: 12, padding: "14px 18px",
-                fontFamily: "DM Sans, sans-serif", fontWeight: 800,
+                fontFamily: "inherit", fontWeight: 800,
                 transition: "filter 0.15s",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
@@ -116,7 +112,7 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
                 <span style={{ fontSize: 12, opacity: 0.65, letterSpacing: "0.05em" }}>Buy on Nutrabay</span>
                 {livePrice != null ? (
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                    <span style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800 }}>
+                    <span style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800 }}>
                       {'\u20B9'}{livePrice.toLocaleString("en-IN")}
                     </span>
                     {liveMrp && liveMrp > livePrice && (
@@ -124,17 +120,17 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
                         <span style={{ fontSize: 12, opacity: 0.5, textDecoration: "line-through" }}>
                           {'\u20B9'}{liveMrp.toLocaleString("en-IN")}
                         </span>
-                        <span style={{ fontSize: 10, fontWeight: 800, background: "#000", color: supp.accent, padding: "2px 6px", borderRadius: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, background: "#000", color: supp.accent, padding: "2px 6px", borderRadius: 4 }}>
                           {discount}% OFF
                         </span>
                       </>
                     )}
                   </div>
                 ) : (
-                  <span style={{ fontFamily: "Syne, sans-serif", fontSize: 16 }}>View product {'\u2192'}</span>
+                  <span style={{ fontFamily: "var(--ff-cond)", fontSize: 16 }}>View product {'\u2192'}</span>
                 )}
                 {primary.notes && (
-                  <span style={{ fontSize: 10, opacity: 0.65 }}>{primary.notes}</span>
+                  <span style={{ fontSize: 12, opacity: 0.65 }}>{primary.notes}</span>
                 )}
               </div>
               <span style={{ fontSize: 22 }}>{'\u2192'}</span>
@@ -143,18 +139,18 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
         </div>
 
         <div style={{ padding: "20px 24px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
-          <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontFamily: "inherit", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: 0 }}>
             {supp.description}
           </p>
 
           {/* Benefits */}
           <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px" }}>
-            <p style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "DM Sans, sans-serif" }}>Key Benefits</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "inherit" }}>Key Benefits</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {supp.benefits.map((b) => (
                 <div key={b} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <CheckCircle2 size={13} color={supp.accent} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.5 }}>{b}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "inherit", lineHeight: 1.5 }}>{b}</span>
                 </div>
               ))}
             </div>
@@ -169,8 +165,8 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
               { label: "Evidence", value: `${supp.evidenceLevel.replace("_", " ")} (${supp.studyCount})` },
             ].map(({ label, value }) => (
               <div key={label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>{label}</p>
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.4 }}>{value}</p>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>{label}</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", fontFamily: "inherit", lineHeight: 1.4 }}>{value}</p>
               </div>
             ))}
           </div>
@@ -178,10 +174,10 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
           {/* Key study findings */}
           {supp.keyStudyFindings?.length > 0 && (
             <div style={{ background: `${supp.accent}06`, border: `1px solid ${supp.accent}15`, borderRadius: 14, padding: "14px 16px" }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: supp.accent, letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 10px", fontFamily: "DM Sans, sans-serif" }}>Research Findings</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: supp.accent, letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 10px", fontFamily: "inherit" }}>Research Findings</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {supp.keyStudyFindings.map((f, i) => (
-                  <p key={i} style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>• {f}</p>
+                  <p key={i} style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "inherit", lineHeight: 1.6 }}>• {f}</p>
                 ))}
               </div>
             </div>
@@ -190,13 +186,13 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
           {/* Estimated price range + vegan badge */}
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1, background: `${supp.accent}08`, border: `1px solid ${supp.accent}20`, borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>Typical Range</p>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: supp.accent, fontFamily: "Syne, sans-serif" }}>{supp.priceRange}</p>
+              <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>Typical Range</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: supp.accent, fontFamily: "var(--ff-cond)" }}>{supp.priceRange}</p>
             </div>
             {supp.veganFriendly && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.06)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 12, padding: "12px 16px" }}>
                 <span style={{ fontSize: 16 }}>🌿</span>
-                <span style={{ fontSize: 11, color: "rgba(163,230,53,0.7)", fontFamily: "DM Sans, sans-serif", fontWeight: 600 }}>Vegan-friendly</span>
+                <span style={{ fontSize: 12, color: "rgba(163,230,53,0.7)", fontFamily: "inherit", fontWeight: 600 }}>Vegan-friendly</span>
               </div>
             )}
           </div>
@@ -211,7 +207,7 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                 background: supp.accent, color: "#000",
                 textDecoration: "none", borderRadius: 12, padding: "14px 18px",
-                fontFamily: "DM Sans, sans-serif", fontWeight: 800, fontSize: 14,
+                fontFamily: "inherit", fontWeight: 800, fontSize: 14,
                 letterSpacing: "0.04em",
               }}
             >
@@ -226,16 +222,16 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
           {/* India note */}
           {supp.indiaNote && (
             <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 700, color: "rgba(251,191,36,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>🇮🇳 India Note</p>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>{supp.indiaNote}</p>
+              <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(251,191,36,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>🇮🇳 India Note</p>
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "inherit", lineHeight: 1.6 }}>{supp.indiaNote}</p>
             </div>
           )}
 
           {/* Warnings */}
           {supp.warnings && (
             <div style={{ background: "rgba(251,113,133,0.06)", border: "1px solid rgba(251,113,133,0.15)", borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 700, color: "rgba(251,113,133,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>⚠️ Cautions</p>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>{supp.warnings}</p>
+              <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(251,113,133,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>⚠️ Cautions</p>
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "inherit", lineHeight: 1.6 }}>{supp.warnings}</p>
             </div>
           )}
         </div>
@@ -305,15 +301,16 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
           <div style={{ fontSize: 64, opacity: 0.9 }}>{supp.emoji}</div>
         )}
 
-        {/* Popular badge */}
+        {/* Popular badge. Was amber #fbbf24, the last off-palette hue on a
+            public surface. Lime is the only accent (DESIGN.md). */}
         {supp.popular && (
           <div style={{
             position: "absolute", top: 10, right: 10,
-            background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
-            border: "1px solid rgba(251,191,36,0.4)",
-            borderRadius: 6, padding: "3px 8px",
-            fontSize: 9, fontWeight: 800, color: "#fbbf24",
-            letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif",
+            background: "rgba(0,0,0,0.72)",
+            border: "1px solid rgba(163,230,53,0.4)",
+            borderRadius: 0, padding: "4px 8px",
+            fontSize: 12, fontWeight: 800, color: "#a3e635",
+            letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "var(--ff-cond)",
           }}>Popular</div>
         )}
 
@@ -323,8 +320,8 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
           background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
           border: `1px solid ${supp.accent}40`,
           borderRadius: 6, padding: "3px 8px",
-          fontSize: 9, fontWeight: 700, color: supp.accent,
-          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif",
+          fontSize: 12, fontWeight: 700, color: supp.accent,
+          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "inherit",
         }}>
           {catMeta.label}
         </div>
@@ -342,10 +339,10 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
 
       {/* Content block */}
       <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
-        <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: "DM Sans, sans-serif", lineHeight: 1.3 }}>
+        <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: "inherit", lineHeight: 1.3 }}>
           {supp.name}
         </p>
-        <p style={{ margin: "0 0 12px", fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.45, minHeight: 30 }}>
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "inherit", lineHeight: 1.45, minHeight: 30 }}>
           {supp.tagline}
         </p>
 
@@ -353,17 +350,17 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
         <div style={{ marginBottom: 12, marginTop: "auto" }}>
           {livePrice != null ? (
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 800, color: supp.accent, fontFamily: "Syne, sans-serif" }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: supp.accent, fontFamily: "var(--ff-cond)" }}>
                 {'\u20B9'}{livePrice.toLocaleString("en-IN")}
               </span>
               {liveMrp && liveMrp > livePrice && (
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textDecoration: "line-through" }}>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "line-through" }}>
                   {'\u20B9'}{liveMrp.toLocaleString("en-IN")}
                 </span>
               )}
               {liveMrp && liveMrp > livePrice && (
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: "#22c55e",
+                  fontSize: 12, fontWeight: 700, color: "#22c55e",
                   background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
                   borderRadius: 4, padding: "1px 6px", letterSpacing: "0.05em",
                 }}>
@@ -372,7 +369,7 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
               )}
             </div>
           ) : (
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "DM Sans, sans-serif", fontWeight: 500 }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "inherit", fontWeight: 500 }}>
               {supp.priceRange}
             </span>
           )}
@@ -386,7 +383,7 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
               width: "100%", background: supp.accent, color: "#000",
               border: "none", borderRadius: 10, padding: "11px 14px",
               fontSize: 13, fontWeight: 800, cursor: "pointer",
-              fontFamily: "DM Sans, sans-serif", letterSpacing: "0.04em",
+              fontFamily: "inherit", letterSpacing: "0.04em",
               transition: "filter 0.15s",
             }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)"; }}
@@ -399,7 +396,7 @@ function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick:
             width: "100%", background: "transparent", color: "rgba(255,255,255,0.4)",
             border: `1px dashed ${supp.accent}30`, borderRadius: 10, padding: "10px 14px",
             fontSize: 12, fontWeight: 600, textAlign: "center",
-            fontFamily: "DM Sans, sans-serif", letterSpacing: "0.04em",
+            fontFamily: "inherit", letterSpacing: "0.04em",
           }}>
             View details {'\u2192'}
           </div>
@@ -434,7 +431,6 @@ export default function SupplementsLanding({
 
   return (
     <>
-      <style>{FONT}</style>
       <style>{`
         * { box-sizing: border-box; }
         @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(163,230,53,0.2)} 50%{box-shadow:0 0 40px rgba(163,230,53,0.4)} }
@@ -450,19 +446,19 @@ export default function SupplementsLanding({
           <div style={{ maxWidth: 800, margin: "0 auto", position: "relative" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(163,230,53,0.08)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 20, padding: "6px 16px", marginBottom: 28 }}>
               <Sparkles size={13} color="#a3e635" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#a3e635", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#a3e635", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "inherit" }}>
                 Science-backed · India-specific · 50 supplements
               </span>
             </div>
 
-            <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: "clamp(2.4rem, 6vw, 4.5rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "0 0 20px", color: "#fff" }}>
+            <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(2.4rem, 6vw, 4.5rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "0 0 20px", color: "#fff" }}>
               Supplements built for{" "}
               <span style={{ background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 your goal
               </span>
             </h1>
 
-            <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 36px" }}>
+            <p style={{ fontFamily: "inherit", fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 36px" }}>
               Stop guessing. Browse 50 science-backed supplements with clinical dosages, India-specific pricing, and personalised stack recommendations.
             </p>
 
@@ -472,7 +468,7 @@ export default function SupplementsLanding({
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   background: "#a3e635", color: "#000",
-                  fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14,
+                  fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 14,
                   padding: "14px 28px", borderRadius: 14, textDecoration: "none",
                   letterSpacing: "0.03em",
                   animation: "pulse-glow 3s ease-in-out infinite",
@@ -485,7 +481,7 @@ export default function SupplementsLanding({
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.7)", fontFamily: "DM Sans, sans-serif", fontWeight: 500, fontSize: 14,
+                  color: "rgba(255,255,255,0.7)", fontFamily: "inherit", fontWeight: 500, fontSize: 14,
                   padding: "14px 24px", borderRadius: 14, textDecoration: "none",
                 }}
               >
@@ -499,7 +495,7 @@ export default function SupplementsLanding({
                 { icon: <Truck size={13} />, text: "Delivered with your meals" },
                 { icon: <Star size={13} />, text: "India pricing & context" },
               ].map(({ icon, text }) => (
-                <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>
+                <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "inherit" }}>
                   {icon}<span>{text}</span>
                 </div>
               ))}
@@ -510,13 +506,13 @@ export default function SupplementsLanding({
         {/* ── Goal-based stack preview ── */}
         <section style={{ padding: "60px 24px", maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 12 }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, fontFamily: "inherit", marginBottom: 12 }}>
               Your Goal · Your Stack
             </p>
-            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>
+            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>
               Personalised for what you're working toward
             </h2>
-            <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+            <p style={{ fontFamily: "inherit", fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0 }}>
               Sign in to take the full quiz and get a stack tuned to your diet, budget, and challenges
             </p>
           </div>
@@ -533,10 +529,10 @@ export default function SupplementsLanding({
                   background: active ? meta.accent : "rgba(255,255,255,0.04)",
                   border: `1px solid ${active ? meta.accent : "rgba(255,255,255,0.08)"}`,
                   color: active ? "#000" : "rgba(255,255,255,0.4)",
-                  fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer",
+                  fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 13, cursor: "pointer",
                   transition: "all 0.18s ease",
                 }}>
-                  <span>{meta.emoji}</span><span>{meta.label}</span>
+                  <span>{meta.label}</span>
                 </button>
               );
             })}
@@ -552,7 +548,7 @@ export default function SupplementsLanding({
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <Link
               href={isLoggedIn ? "/dashboard/supplements" : "/auth/signin?callbackUrl=/dashboard/supplements"}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#a3e635", fontFamily: "DM Sans, sans-serif", fontWeight: 600, fontSize: 13, textDecoration: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#a3e635", fontFamily: "inherit", fontWeight: 600, fontSize: 13, textDecoration: "none" }}
             >
               Take the full quiz to personalise your stack <ChevronRight size={14} />
             </Link>
@@ -564,10 +560,10 @@ export default function SupplementsLanding({
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
               <div>
-                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, fontFamily: "DM Sans, sans-serif", margin: "0 0 8px" }}>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, fontFamily: "inherit", margin: "0 0 8px" }}>
                   Full Catalogue
                 </p>
-                <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
+                <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
                   {filteredCatalogue.length} supplement{filteredCatalogue.length !== 1 ? "s" : ""} — tap any for full details
                 </h2>
               </div>
@@ -586,10 +582,9 @@ export default function SupplementsLanding({
                     background: active ? `${accent}15` : "rgba(255,255,255,0.04)",
                     border: `1px solid ${active ? `${accent}35` : "rgba(255,255,255,0.07)"}`,
                     color: active ? accent : "rgba(255,255,255,0.35)",
-                    fontFamily: "DM Sans, sans-serif", fontWeight: 500, fontSize: 11,
+                    fontFamily: "inherit", fontWeight: 500, fontSize: 12,
                     cursor: "pointer", transition: "all 0.15s ease",
                   }}>
-                    {meta && <span style={{ fontSize: 12 }}>{meta.emoji}</span>}
                     <span>{cat === "all" ? "All" : meta?.label ?? cat}</span>
                   </button>
                 );
@@ -607,21 +602,27 @@ export default function SupplementsLanding({
         {/* ── Why FitFuel Supplements ── */}
         <section style={{ padding: "40px 24px 60px", maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
+            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
               Why supplement with FitFuel?
             </h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {/* Emoji icons removed: DESIGN.md rejects them on sight, and a
+                🎯/🚚/🔬 row on top of a 3-up card grid is the exact template
+                the house style exists to avoid. A numbered rule carries the
+                same structure without the decoration. */}
             {[
-              { emoji: "🎯", title: "Goal-matched, not generic", body: "Your stack is built around your specific goal — muscle gain, fat loss, or peak performance. Each recommendation includes clinical dosage and timing." },
-              { emoji: "🚚", title: "Delivered with your meals", body: "No extra orders. Your supplements arrive packaged with your daily FitFuel meal box — convenient, consistent, and trackable." },
-              { emoji: "🔬", title: "Science-backed, no fluff", body: "Every supplement is backed by clinical research. We include study counts, effect sizes, and India-specific availability notes — so you know exactly what and why." },
-              { emoji: "🇮🇳", title: "India-first pricing", body: "Every supplement includes INR pricing estimates and local availability info — widely available, available, limited, or import only." },
-            ].map(({ emoji, title, body }) => (
-              <div key={title} style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 18, padding: 24 }}>
-                <div style={{ fontSize: 30, marginBottom: 14 }}>{emoji}</div>
-                <p style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: "Syne, sans-serif" }}>{title}</p>
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "DM Sans, sans-serif", lineHeight: 1.7 }}>{body}</p>
+              { title: "Goal-matched, not generic", body: "Your stack is built around your specific goal: muscle gain, fat loss, or peak performance. Each recommendation includes clinical dosage and timing." },
+              { title: "Delivered with your meals", body: "No extra orders. Your supplements arrive packaged with your daily FitFuel meal box, so they are convenient, consistent and trackable." },
+              { title: "Science-backed, no fluff", body: "Every supplement is backed by clinical research. We include study counts, effect sizes and India-specific availability, so you know exactly what and why." },
+              { title: "India-first pricing", body: "Every supplement includes INR pricing estimates and local availability: widely available, available, limited, or import only." },
+            ].map(({ title, body }, i) => (
+              <div key={title} style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, padding: 24 }}>
+                <div aria-hidden style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 12.5, letterSpacing: "0.28em", color: "#a3e635", marginBottom: 14 }}>
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <p style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 800, color: "#fff", fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "-0.01em" }}>{title}</p>
+                <p style={{ margin: 0, fontSize: 13.5, color: "#9a9a94", fontFamily: "inherit", lineHeight: 1.7 }}>{body}</p>
               </div>
             ))}
           </div>
@@ -629,12 +630,11 @@ export default function SupplementsLanding({
 
         {/* ── CTA Banner ── */}
         <section style={{ padding: "20px 24px 80px", maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ background: "linear-gradient(135deg, rgba(163,230,53,0.08) 0%, rgba(163,230,53,0.03) 100%)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 24, padding: "48px 32px" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⚡</div>
-            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 800, color: "#fff", margin: "0 0 12px" }}>
+          <div style={{ background: "rgba(163,230,53,0.05)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 0, padding: "48px 32px" }}>
+            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 800, color: "#fff", margin: "0 0 12px" }}>
               Ready to fuel smarter?
             </h2>
-            <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: 14, color: "rgba(255,255,255,0.4)", margin: "0 0 28px", lineHeight: 1.6 }}>
+            <p style={{ fontFamily: "inherit", fontSize: 14, color: "rgba(255,255,255,0.4)", margin: "0 0 28px", lineHeight: 1.6 }}>
               Sign in to take the personalised quiz and get a stack built around your goal, training frequency, diet, and budget.
             </p>
             <Link
@@ -642,7 +642,7 @@ export default function SupplementsLanding({
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 background: "#a3e635", color: "#000",
-                fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14,
+                fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 14,
                 padding: "14px 28px", borderRadius: 14, textDecoration: "none",
                 boxShadow: "0 6px 24px rgba(163,230,53,0.25)",
               }}

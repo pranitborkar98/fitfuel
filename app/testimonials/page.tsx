@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Reviews | FitFuel",
+  alternates: { canonical: "/testimonials" },
+  title: "Reviews",
   description:
     "Real results from FitFuel members across Pune — weight loss, muscle gain and better daily eating, on plans we cook and deliver.",
   openGraph: {
@@ -23,14 +24,14 @@ const C = {
   accent2: "#84cc16",
   text: "#ffffff",
   sub: "#a3a3a3",
-  muted: "#737373",
+  muted: "#9a9a94",
   border: "#1f1f1f",
   card: "#111111",
 };
 
-const DISPLAY = "'Barlow Condensed', sans-serif";
-const BODY = "'DM Sans', system-ui, -apple-system, sans-serif";
-const MONO = "'Space Mono', ui-monospace, monospace";
+const DISPLAY = "var(--ff-cond)";
+const BODY = "inherit";
+const MONO = "var(--ff-cond), monospace";
 
 const GOAL_FILTERS: { label: string; value: string | null }[] = [
   { label: "All", value: null },
@@ -95,7 +96,7 @@ export default async function TestimonialsPage({
           <div
             style={{
               fontFamily: MONO,
-              fontSize: 11,
+              fontSize: 12,
               letterSpacing: 2,
               textTransform: "uppercase",
               color: C.accent2,
@@ -184,7 +185,7 @@ export default async function TestimonialsPage({
                   <span
                     style={{
                       fontFamily: MONO,
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: 700,
                       color: C.accent,
                       background: `${C.accent2}14`,
@@ -207,7 +208,7 @@ export default async function TestimonialsPage({
                     <span style={{ color: C.muted, fontWeight: 400 }}> · {t.location}</span>
                   </div>
                   <div
-                    style={{ fontFamily: MONO, fontSize: 11, color: C.muted, marginTop: 4 }}
+                    style={{ fontFamily: MONO, fontSize: 12, color: C.muted, marginTop: 4 }}
                     dangerouslySetInnerHTML={{ __html: t.planLabel }}
                   />
                 </div>

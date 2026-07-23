@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "FAQ | FitFuel",
+  alternates: { canonical: "/faq" },
+  title: "FAQ",
   description:
     "Answers about FitFuel meal plans, delivery in Pune, tracking, dietary options, payments, allergens and more.",
 };
@@ -16,14 +17,14 @@ const C = {
   accent2: "#84cc16",
   text: "#ffffff",
   sub: "#a3a3a3",
-  muted: "#737373",
+  muted: "#9a9a94",
   border: "#1f1f1f",
   card: "#111111",
 };
 
-const DISPLAY = "'Barlow Condensed', sans-serif";
-const BODY = "'DM Sans', system-ui, -apple-system, sans-serif";
-const MONO = "'Space Mono', ui-monospace, monospace";
+const DISPLAY = "var(--ff-cond)";
+const BODY = "inherit";
+const MONO = "var(--ff-cond), monospace";
 
 // Strip HTML to plain text for the JSON-LD answer field
 function stripHtml(html: string) {
@@ -90,7 +91,7 @@ export default async function FAQPage() {
           <div
             style={{
               fontFamily: MONO,
-              fontSize: 11,
+              fontSize: 12,
               letterSpacing: 2,
               textTransform: "uppercase",
               color: C.accent2,

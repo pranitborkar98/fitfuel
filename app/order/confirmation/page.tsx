@@ -13,7 +13,7 @@ const T = {
   accent:      "#84cc16",
   textPrimary: "#ffffff",
   textSecond:  "#a3a3a3",
-  textMuted:   "#737373",
+  textMuted:   "#9a9a94",
 };
 
 const WA_NUMBER = "919579738811";
@@ -71,11 +71,11 @@ function ConfirmationInner() {
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           style={{ textAlign: "center", marginBottom: 36 }}
         >
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase", marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase", marginBottom: 12 }}>
             {isCOD ? "Order Placed" : "Payment Confirmed"}
           </div>
           <h1 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
+            fontFamily: "var(--ff-cond)",
             fontSize: "clamp(2rem, 8vw, 3rem)",
             fontWeight: 900, textTransform: "uppercase",
             color: T.textPrimary, lineHeight: 1, margin: "0 0 12px",
@@ -100,7 +100,7 @@ function ConfirmationInner() {
           }}
         >
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>
             Order Details
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -168,7 +168,7 @@ function ConfirmationInner() {
             borderRadius: 20, padding: "24px 20px", marginBottom: 16,
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 20 }}>
             What happens next
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>

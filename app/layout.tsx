@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
+import { Archivo, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,23 +9,58 @@ import ReferralCapture from "@/components/ReferralCapture";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+// TWO faces for the whole site, both self-hosted by next/font.
+//
 // Archivo, not Inter. Inter is the single most common "AI-generated site"
 // tell; Archivo is a sturdier grotesque that pairs with Barlow Condensed.
-const archivo = Archivo({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+//
+// Barlow Condensed was previously pulled with a <link> in <head>, and eight
+// interior pages each pulled Syne / DM Sans / Space Mono with an @import
+// nested inside an inline <style> tag. That is the worst case for render:
+// the browser cannot discover the font until it has parsed the stylesheet,
+// so it costs an extra round trip to fonts.googleapis.com before any text
+// paints. /plans/[slug] alone was making 12 font requests for 5 typefaces.
+// Everything now resolves to these two, self-hosted, zero extra requests.
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-archivo",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-barlow-condensed",
+});
+
+const TITLE = "FitFuel: Chef-Cooked Macro-Tracked Meal Plans Delivered in Pune";
+const DESCRIPTION =
+  "Chef-cooked meals weighed to your macros and delivered across Pune by 8am, " +
+  "plus a training and body-metrics app that logs them for you. 126 goal and " +
+  "condition plans. Trial day Rs 400.";
 
 export const metadata: Metadata = {
-  title: "FitFuel - Verified Nutrition",
-  description: "Verified intake, not self-reported. Premium meal plans delivered.",
-  metadataBase: new URL('https://fitfuel.in'),
+  // Was "FitFuel - Verified Nutrition": no city, no product, no intent.
+  title: { default: TITLE, template: "%s | FitFuel Pune" },
+  description: DESCRIPTION,
+  metadataBase: new URL("https://fitfuel.in"),
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "FitFuel - Verified Nutrition",
-    description: "Verified intake, not self-reported. Premium meal plans delivered.",
-    url: 'https://fitfuel.in',
-    siteName: 'FitFuel',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    locale: 'en_US',
-    type: 'website',
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "https://fitfuel.in",
+    siteName: "FitFuel",
+    // The explicit /og-image.png entry that used to sit here 404s, and it
+    // silently overrode the working file-based app/opengraph-image.tsx.
+    // Dropped so the generated card wins.
+    locale: "en_IN",
+    type: "website",
   },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  robots: { index: true, follow: true },
 };
 
 // Kept static (no server-side auth() call) so the loading.tsx streaming boundary
@@ -36,14 +71,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html
+      lang="en-IN"
+      className={`${archivo.variable} ${barlowCondensed.variable} scroll-smooth`}
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&display=swap"
-          rel="stylesheet"
-        />
+        {/* Fonts are self-hosted by next/font above. The preconnects and the
+            blocking Barlow <link> that used to live here are gone with them. */}
         {/* Google Analytics */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-QZ32L5KQ6X" />
         <script
@@ -83,7 +118,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${archivo.className} bg-[#080808] text-white antialiased`}>
+      <body className={`${archivo.className} antialiased`} style={{ background: "var(--ff-bg)", color: "var(--ff-ink)" }}>
         <a href="#main" className="skip-link">Skip to content</a>
         <ReferralCapture />
         <SessionProvider>

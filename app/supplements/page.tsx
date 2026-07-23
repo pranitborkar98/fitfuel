@@ -8,7 +8,8 @@ import { getAllSupplements } from "@/lib/supplements-db";
 import { getRecommendedSupplements, type SupplementRecommendation } from "@/lib/supplement-recommender";
 
 export const metadata = {
-  title: "Supplements — FitFuel Premium",
+  alternates: { canonical: "/supplements" },
+  title: "Supplements",
   description: "Goal-based supplement stacks personalised for you. Delivered with your meals.",
 };
 
@@ -37,17 +38,17 @@ function RecommendedStrip({ rec }: { rec: SupplementRecommendation }) {
   return (
     <section style={{ background: "#080808", borderBottom: "1px solid #1c1c1c", padding: "104px 24px 24px" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Space+Mono:wght@400;700&display=swap');
+
         .rec-wrap{ max-width:1000px; margin:0 auto; }
-        .rec-eyebrow{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#a3e635; margin-bottom:8px; }
-        .rec-h{ font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:26px; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; margin:0 0 18px; }
+        .rec-eyebrow{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#a3e635; margin-bottom:8px; }
+        .rec-h{ font-family:var(--ff-cond); font-weight:800; font-size:26px; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; margin:0 0 18px; }
         .rec-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
         .rec-card{ display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid #1c1c1c; border-radius:8px; background:#0d0d0d; text-decoration:none; color:inherit; transition:border-color .2s, transform .2s; position:relative; overflow:hidden; }
         .rec-card:hover{ transform:translateY(-2px); border-color:var(--ac,#a3e635); }
         .rec-emoji{ font-size:24px; }
-        .rec-name{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; }
-        .rec-tag{ font-size:12px; color:#8d8d87; line-height:1.5; }
-        .rec-go{ font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ac,#a3e635); margin-top:auto; }
+        .rec-name{ font-family:var(--ff-cond); font-weight:700; font-size:18px; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; }
+        .rec-tag{ font-size:12px; color:#85857e; line-height:1.5; }
+        .rec-go{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ac,#a3e635); margin-top:auto; }
       `}</style>
       <div className="rec-wrap">
         <div className="rec-eyebrow">Picked for you</div>
@@ -90,7 +91,7 @@ function AffiliateDisclosure() {
           margin: "0 auto",
           fontSize: 12.5,
           lineHeight: 1.7,
-          color: "#737373",
+          color: "#9a9a94",  // was #9a9a94 (4.22:1), just under AA
           textAlign: "center",
         }}
       >

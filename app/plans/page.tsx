@@ -8,9 +8,12 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
-    title: "Meal Plans | FitFuel",
+    title: "Meal Plans in Pune",
     description:
-      "Browse 100+ meal plans with daily delivery in Pune. Three tiers: Standard, Premium, Luxury. Weight loss, PCOS, diabetic, athletic, and more.",
+      "Browse 126 chef-cooked meal plans with daily delivery in Pune. Weight loss, muscle gain, PCOS, diabetic, Jain and sports nutrition, cooked to your macros.",
+    // Canonical points at the bare path so the ?category= and ?trial= filter
+    // variants consolidate here instead of competing as separate URLs.
+    alternates: { canonical: "/plans" },
   };
 }
 

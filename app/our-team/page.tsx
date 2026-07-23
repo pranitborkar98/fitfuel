@@ -2,30 +2,31 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 export const metadata = {
-  title: "Our Team | FitFuel",
+  alternates: { canonical: "/our-team" },
+  title: "Our Team",
   description: "The people behind FitFuel and the nutrition principles that shape every plan.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#737373", border: "#1f1f1f", card: "#111111" };
+const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
 const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
 
 function Avatar({ initials }: { initials: string }) {
   return (
-    <div style={{ width: 76, height: 76, borderRadius: 16, background: "#0e0e0e", border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 26, color: C.accent, flexShrink: 0 }}>
+    <div style={{ width: 76, height: 76, borderRadius: 16, background: "#0e0e0e", border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.accent, flexShrink: 0 }}>
       {initials}
     </div>
   );
 }
 function H2({ children }: { children: ReactNode }) {
-  return <h2 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24, color: C.text, margin: "0 0 22px", letterSpacing: "-0.02em" }}>{children}</h2>;
+  return <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 24, color: C.text, margin: "0 0 22px", letterSpacing: "-0.02em" }}>{children}</h2>;
 }
 
 export default function OurTeamPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
       <div style={{ maxWidth: 880, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Team</p>
-        <h1 style={{ fontFamily: "'Syne','Barlow Condensed',sans-serif", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
+        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Team</p>
+        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
           The people behind your plate<span style={{ color: C.accent }}>.</span>
         </h1>
         <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 600, margin: "0 0 56px" }}>

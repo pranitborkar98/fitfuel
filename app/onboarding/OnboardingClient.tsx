@@ -230,7 +230,7 @@ export default function OnboardingClient({ userName }: Props) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px 16px',
-      fontFamily: '"DM Sans", sans-serif',
+      fontFamily: 'inherit',
     },
     card: {
       width: '100%',
@@ -254,7 +254,7 @@ export default function OnboardingClient({ userName }: Props) {
       padding: '28px 32px 0',
     },
     stepLabel: {
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: 600,
       letterSpacing: '0.12em',
       color: '#a3e635',
@@ -265,7 +265,7 @@ export default function OnboardingClient({ userName }: Props) {
       fontSize: 26,
       fontWeight: 700,
       color: '#ffffff',
-      fontFamily: '"Syne", sans-serif',
+      fontFamily: 'var(--ff-cond)',
       lineHeight: 1.2,
       margin: 0,
     },
@@ -348,7 +348,7 @@ export default function OnboardingClient({ userName }: Props) {
       gap: 8,
       marginTop: 24,
       transition: 'all 0.2s',
-      fontFamily: '"Syne", sans-serif',
+      fontFamily: 'var(--ff-cond)',
     }),
     backBtn: {
       background: 'none',
@@ -373,7 +373,7 @@ export default function OnboardingClient({ userName }: Props) {
       fontSize: 36,
       fontWeight: 800,
       color: '#a3e635',
-      fontFamily: '"Syne", sans-serif',
+      fontFamily: 'var(--ff-cond)',
       lineHeight: 1,
     },
     statLabel: {
@@ -395,7 +395,6 @@ export default function OnboardingClient({ userName }: Props) {
 
   return (
     <>
-      <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <div style={s.wrap}>
         {/* Step indicators */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, alignItems: 'center' }}>
@@ -567,7 +566,7 @@ export default function OnboardingClient({ userName }: Props) {
                               </div>
                               <div style={{ fontSize: 12, color: '#555', marginTop: 1 }}>{a.desc}</div>
                             </div>
-                            <div style={{ fontSize: 11, color: '#444', fontFamily: '"Syne", sans-serif' }}>{a.multiplier}</div>
+                            <div style={{ fontSize: 12, color: '#444', fontFamily: 'var(--ff-cond)' }}>{a.multiplier}</div>
                           </button>
                         ))}
                       </div>
@@ -591,7 +590,7 @@ export default function OnboardingClient({ userName }: Props) {
                             onClick={() => set('dietaryPreference', d.value)}
                           >
                             <span style={{ fontSize: 22 }}>{d.emoji}</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' as const }}>{d.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' as const }}>{d.label}</span>
                           </button>
                         ))}
                       </div>
@@ -654,12 +653,12 @@ export default function OnboardingClient({ userName }: Props) {
                       <div style={s.statBox}>
                         <div style={s.statNum}>{tdee.toLocaleString()}</div>
                         <div style={s.statLabel}>YOUR TDEE</div>
-                        <div style={{ fontSize: 11, color: '#444', marginTop: 4 }}>calories/day to maintain</div>
+                        <div style={{ fontSize: 12, color: '#444', marginTop: 4 }}>calories/day to maintain</div>
                       </div>
                       <div style={{ ...s.statBox, border: '1.5px solid #a3e635', background: 'rgba(163,230,53,0.05)' }}>
                         <div style={s.statNum}>{calorieTarget.toLocaleString()}</div>
                         <div style={{ ...s.statLabel, color: '#a3e635' }}>YOUR TARGET</div>
-                        <div style={{ fontSize: 11, color: '#444', marginTop: 4 }}>personalised to your goal</div>
+                        <div style={{ fontSize: 12, color: '#444', marginTop: 4 }}>personalised to your goal</div>
                       </div>
                     </div>
 
@@ -670,15 +669,16 @@ export default function OnboardingClient({ userName }: Props) {
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>
                         {[
-                          { label: 'Protein', value: Math.round((calorieTarget * 0.30) / 4), unit: 'g', color: '#60a5fa' },
+                          // was #60a5fa (blue), the last off-palette hue on a public surface
+                          { label: 'Protein', value: Math.round((calorieTarget * 0.30) / 4), unit: 'g', color: '#a3e635' },
                           { label: 'Carbs',   value: Math.round((calorieTarget * 0.43) / 4), unit: 'g', color: '#f59e0b' },
                           { label: 'Fat',     value: Math.round((calorieTarget * 0.27) / 9), unit: 'g', color: '#f87171' },
                         ].map(m => (
                           <div key={m.label} style={{ flex: 1, textAlign: 'center' as const }}>
-                            <div style={{ fontSize: 22, fontWeight: 700, color: m.color, fontFamily: '"Syne", sans-serif' }}>
+                            <div style={{ fontSize: 22, fontWeight: 700, color: m.color, fontFamily: 'var(--ff-cond)' }}>
                               {m.value}{m.unit}
                             </div>
-                            <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{m.label}</div>
+                            <div style={{ fontSize: 12, color: '#555', marginTop: 2 }}>{m.label}</div>
                           </div>
                         ))}
                       </div>
@@ -703,7 +703,7 @@ export default function OnboardingClient({ userName }: Props) {
                       </div>
                       <div>
                         <div style={{ fontSize: 12, color: '#666', marginBottom: 3 }}>YOUR ASSIGNED PLAN</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: '"Syne", sans-serif' }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: 'var(--ff-cond)' }}>
                           {/* Will be confirmed by server — show best guess */}
                           {form.goal === 'weight_loss' || form.goal === 'aggressive_weight_loss'
                             ? 'Weight Loss Plan'

@@ -116,8 +116,8 @@ export default function ApplyClient({ prefill }: { prefill: { name: string; emai
 
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700 }}>Partner with FitFuel</div>
-          <h1 style={{ fontFamily: '"Syne", system-ui', fontSize: 34, fontWeight: 800, margin: "8px 0 0", lineHeight: 1.1 }}>
+          <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700 }}>Partner with FitFuel</div>
+          <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 34, fontWeight: 800, margin: "8px 0 0", lineHeight: 1.1 }}>
             {step === "select" && "Apply to become a partner"}
             {step === "form" && `${TYPE_LABEL[type as PartnerType]}`}
             {step === "done" && "Application received"}
@@ -290,7 +290,7 @@ function DonePane() {
   return (
     <div style={{ background: T.card, border: `1px solid ${T.accent}`, borderRadius: 16, padding: 32, textAlign: "center" }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>{'\u2713'}</div>
-      <h2 style={{ fontFamily: '"Syne", system-ui', fontSize: 24, fontWeight: 800, margin: 0 }}>Thanks for applying</h2>
+      <h2 style={{ fontFamily: 'var(--ff-cond)', fontSize: 24, fontWeight: 800, margin: 0 }}>Thanks for applying</h2>
       <div style={{ color: T.dim, fontSize: 14, marginTop: 10, lineHeight: 1.6 }}>
         We{'\u2019'}ll review your application and email you within 2{'\u20133'} business days. Once approved, your partner dashboard becomes active and you can start sharing your code.
       </div>
@@ -305,12 +305,12 @@ function DonePane() {
 
 /* ── form primitives ── */
 function SectionTitle({ children }: { children: any }) {
-  return <div style={{ fontSize: 11, color: T.accent, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700, marginTop: 20, marginBottom: 10 }}>{children}</div>;
+  return <div style={{ fontSize: 12, color: T.accent, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700, marginTop: 20, marginBottom: 10 }}>{children}</div>;
 }
 function Field({ label, required, children }: { label: string; required?: boolean; children: any }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={{ display: "block", fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
+      <label style={{ display: "block", fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
         {label}{required && <span style={{ color: T.err, marginLeft: 4 }}>*</span>}
       </label>
       {children}
