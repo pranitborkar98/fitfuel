@@ -1,5 +1,37 @@
 # FitFuel — DESIGN.md (art direction)
 
+## ANTI-SLOP CONSTRAINTS (2026-07-23, non-negotiable)
+
+Silence equals defaults: anything this file does not specify, a model fills
+with the statistically average choice, and that average IS the "AI slop" look.
+So these are stated as hard negatives. Breaking one is a bug.
+
+**Never:**
+- ❌ `Inter`, Roboto, or system-ui as the body face. It is the single most
+  recognisable AI-generated-site tell. Body is **Archivo**; display is
+  **Barlow Condensed**.
+- ❌ Border-radius ≥ 8px. Corners are square (radius 0). No rounded cards.
+- ❌ Uniform 3-up card grids as a section's whole layout.
+- ❌ The rhythm `small kicker label → headline → paragraph → three cards`,
+  repeated section after section. Vary the structure of every block.
+- ❌ Decorative micro-labels, spec codes, unit captions or eyebrow chips
+  stacked on every element. The owner reads these as slop on sight.
+- ❌ Purple/indigo/blue gradients. The accent is lime `#84cc16` on near-black.
+- ❌ Lukewarm type. No 400→600 weight steps, no timid size ramps.
+
+**Always:**
+- ✅ Extreme scale: display runs to ~11rem against ~15px body (≈10x), weights
+  are 900 or 400 with nothing in between.
+- ✅ Photography is art-directed full-bleed with ONE unified grade, never
+  stock dropped into card slots: food keeps colour (`saturate 1.06 /
+  contrast 1.07`), people and places take the lime duotone (`grayscale +
+  #84cc16 mix-blend colour`), everything carries the shared grain overlay.
+- ✅ Every service the business runs is reachable from the homepage
+  (kitchen, app, supplements via Nutrabay, corporate, gym/trainer partners,
+  franchise, digital plans, referrals, TDEE tool, ops pages).
+- ✅ Run an explicit anti-slop audit pass before shipping any UI work.
+
+
 > **2026-07-23 — Homepage direction pivot (owner directive).**
 > The **homepage (`app/page.tsx`)** now runs a **"Beast Mode"** treatment that
 > intentionally supersedes the flat rules below: an animated canvas particle

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,7 +9,9 @@ import ReferralCapture from "@/components/ReferralCapture";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const inter = Inter({ subsets: ["latin"] });
+// Archivo, not Inter. Inter is the single most common "AI-generated site"
+// tell; Archivo is a sturdier grotesque that pairs with Barlow Condensed.
+const archivo = Archivo({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: "FitFuel - Verified Nutrition",
@@ -81,7 +83,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} bg-[#080808] text-white antialiased`}>
+      <body className={`${archivo.className} bg-[#080808] text-white antialiased`}>
         <a href="#main" className="skip-link">Skip to content</a>
         <ReferralCapture />
         <SessionProvider>

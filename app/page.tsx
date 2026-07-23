@@ -4,45 +4,54 @@ import { useState, useRef, useEffect, type CSSProperties, type ReactNode } from 
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion, useInView, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 /* ══════════════════════════════════════════════════════════════════
-   FITFUEL HOMEPAGE — editorial, image-led. Photography carries the
-   page; text is spare. Represents the whole business: kitchen, app,
-   Nutrabay supplements, corporate wellness, gym + trainer partners,
-   digital plans and franchise. Real licensed photography in /public.
+   FITFUEL HOMEPAGE
+
+   Anti-slop constraints, held deliberately:
+   · Body type is Archivo (set in layout), never Inter.
+   · Square corners. Radius 0. No rounded-card grids.
+   · Extreme type scale: display runs to 11rem against 15px body.
+     Weights are 900 or 400, never the lukewarm middle.
+   · No "kicker label + headline + paragraph + three cards" rhythm.
+     Every block is structured differently on purpose.
+   · Photography is art-directed full-bleed with one unified grade
+     (food keeps colour for appetite, people/places take a lime
+     duotone) so it reads as designed, not as stock dropped in slots.
+   · Every service the business runs is on this page and linked.
    No em dashes.
 ══════════════════════════════════════════════════════════════════ */
 
 const BG = "#070707";
-const PANEL = "#0e0e0e";
-const HAIR = "#1e1e1e";
-const TXT = "#f6f6f4";
-const MUTE = "#a5a5a0";
-const DIM = "#6f6f6b";
+const INK = "#f7f7f5";
+const MUTE = "#9a9a94";
+const DIM = "#63635f";
+const RULE = "#232320";
 const LIME = "#84cc16";
-const LIME_LT = "#a3e635";
 
-const BARLOW = "'Barlow Condensed','Arial Narrow',sans-serif";
+const COND = "'Barlow Condensed','Arial Narrow',sans-serif";
 const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
-const WRAP: CSSProperties = { width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 clamp(22px,5vw,48px)" };
-const display = (size: string): CSSProperties => ({ fontFamily: BARLOW, fontWeight: 800, fontSize: size, lineHeight: 0.95, letterSpacing: "-0.01em", textTransform: "uppercase", color: TXT, margin: 0 });
-const body = (size = 17): CSSProperties => ({ fontSize: size, color: MUTE, lineHeight: 1.6 });
-const kicker = (color = LIME): CSSProperties => ({ fontFamily: BARLOW, fontWeight: 700, fontSize: 15, letterSpacing: "0.2em", textTransform: "uppercase", color });
+const WRAP: CSSProperties = { width: "100%", maxWidth: 1400, margin: "0 auto", padding: "0 clamp(18px,4vw,56px)" };
 
-/* ── motion primitives ── */
-function Reveal({ children, delay = 0, y = 26, style }: { children: ReactNode; delay?: number; y?: number; style?: CSSProperties }) {
+/* extreme scale: 900 display vs 400 body, nothing in between */
+const huge = (size: string): CSSProperties => ({ fontFamily: COND, fontWeight: 900, fontSize: size, lineHeight: 0.83, letterSpacing: "-0.02em", textTransform: "uppercase", color: INK, margin: 0 });
+const mid = (size: string): CSSProperties => ({ fontFamily: COND, fontWeight: 800, fontSize: size, lineHeight: 0.9, letterSpacing: "-0.01em", textTransform: "uppercase", color: INK, margin: 0 });
+const copy = (size = 15): CSSProperties => ({ fontSize: size, fontWeight: 400, color: MUTE, lineHeight: 1.62 });
+const tag = (color = DIM): CSSProperties => ({ fontFamily: COND, fontWeight: 700, fontSize: 12.5, letterSpacing: "0.28em", textTransform: "uppercase", color });
+
+function Reveal({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: CSSProperties }) {
   const reduce = useReducedMotion();
   if (reduce) return <div style={style}>{children}</div>;
   return (
-    <motion.div initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-90px" }} transition={{ duration: 0.75, ease: EASE, delay }} style={style}>
+    <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-90px" }} transition={{ duration: 0.75, ease: EASE, delay }} style={style}>
       {children}
     </motion.div>
   );
 }
 
-function CountUp({ to, suffix = "", style }: { to: number; suffix?: string; style?: CSSProperties }) {
+function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const reduce = useReducedMotion();
@@ -51,236 +60,240 @@ function CountUp({ to, suffix = "", style }: { to: number; suffix?: string; styl
     if (!inView) return;
     if (reduce) return setV(to);
     let raf = 0; const s = performance.now();
-    const tick = (n: number) => { const t = Math.min(1, (n - s) / 1500); setV(to * (1 - Math.pow(1 - t, 3))); if (t < 1) raf = requestAnimationFrame(tick); };
+    const tick = (n: number) => { const t = Math.min(1, (n - s) / 1400); setV(to * (1 - Math.pow(1 - t, 3))); if (t < 1) raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
   }, [inView, to, reduce]);
-  return <span ref={ref} style={style}>{Math.round(v).toLocaleString("en-IN")}{suffix}</span>;
+  return <span ref={ref}>{Math.round(v).toLocaleString("en-IN")}{suffix}</span>;
 }
 
-/* Cover image with a slow zoom-on-hover, using next/image fill. */
-function Cover({ src, alt, sizes, priority, style, imgClass }: { src: string; alt: string; sizes: string; priority?: boolean; style?: CSSProperties; imgClass?: string }) {
+/* Art-directed frame. `duo` applies the lime duotone grade. */
+function Frame({ src, alt, sizes, priority, duo, className }: { src: string; alt: string; sizes: string; priority?: boolean; duo?: boolean; className?: string }) {
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", ...style }}>
-      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={imgClass} style={{ objectFit: "cover" }} />
+    <div className={`ff-frame ${duo ? "ff-duo" : "ff-food"} ${className ?? ""}`} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} style={{ objectFit: "cover" }} />
+      {duo ? <span className="ff-tint" aria-hidden /> : null}
+      <span className="ff-grain" aria-hidden />
     </div>
   );
 }
 
-/* ── data ── */
 const GOALS = [{ key: "weight-loss", label: "Lose fat" }, { key: "muscle-gain", label: "Build muscle" }, { key: "balanced", label: "Eat balanced" }];
 const DIETS = [{ key: "veg", label: "Veg" }, { key: "egg", label: "Egg" }, { key: "non-veg", label: "Non-Veg" }, { key: "jain", label: "Jain" }];
 const GOAL_NAME: Record<string, string> = { "weight-loss": "Weight Loss", "muscle-gain": "Muscle Gain", balanced: "Balanced" };
 
-const SECTION: CSSProperties = { padding: "clamp(84px,11vw,140px) 0" };
-
-/* ═══════════════════════════════════════════════════════════════════ */
 export default function Home() {
   return (
-    <div style={{ background: BG, color: TXT, fontFamily: "Inter, system-ui, sans-serif", overflowX: "hidden" }}>
+    <div style={{ background: BG, color: INK, overflowX: "hidden" }}>
       <Hero />
-      <FoodMarquee />
-      <Moat />
-      <Products />
+      <Pillars />
+      <Statement />
+      <ServiceMap />
       <Loop />
-      <AppLayer />
-      <BuiltFor />
-      <Membership />
+      <Kitchen />
+      <AppBlock />
+      <Supplements />
+      <Partners />
       <Franchise />
+      <Membership />
       <Finder />
-      <Results />
-      <Referral />
-      <FinalCta />
+      <Voices />
+      <Close />
 
       <style>{`
-        @keyframes ff-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .ff-marquee { animation: ff-slide 45s linear infinite; }
-        .ff-marquee:hover { animation-play-state: paused; }
-        @keyframes ff-pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-        .ff-dot { animation: ff-pulse 2.6s ease-in-out infinite; }
-        .ff-zoom img { transition: transform 1.1s cubic-bezier(.16,1,.3,1); }
-        .ff-zoom:hover img { transform: scale(1.06); }
-        .ff-card { transition: transform .4s cubic-bezier(.16,1,.3,1), border-color .4s; }
-        .ff-card:hover { transform: translateY(-6px); border-color: rgba(132,204,22,.4) !important; }
-        .ff-cta { position: relative; overflow: hidden; transition: transform .2s, box-shadow .25s, background .2s; }
-        .ff-cta:hover { background: ${LIME_LT} !important; transform: translateY(-2px); box-shadow: 0 14px 40px rgba(132,204,22,.35); }
-        .ff-cta::after { content:""; position:absolute; top:0; left:-120%; width:55%; height:100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-18deg); transition: left .6s ease; }
-        .ff-cta:hover::after { left: 130%; }
-        .ff-link { color: ${LIME_LT}; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: gap .2s, color .2s; }
-        .ff-link:hover { gap: 13px; color: #fff; }
-        .ff-choice:hover { border-color: #3a3a3a !important; }
-        .ff-row { transition: background .2s; }
-        .ff-row:hover { background: #0b0b0b; }
-        @media (max-width: 940px){ .ff-hero{ grid-template-columns: 1fr !important; } .ff-hero-img{ min-height: 420px !important; } .ff-split{ grid-template-columns: 1fr !important; } }
-        @media (max-width: 680px){ .ff-hide-sm{ display:none !important; } }
-        @media (prefers-reduced-motion: reduce){ .ff-marquee,.ff-dot{ animation: none !important; } .ff-cta::after{ display:none; } .ff-zoom:hover img{ transform:none; } }
+        /* one unified grade so photography reads art-directed, not stock */
+        .ff-frame img { transition: transform 1.4s cubic-bezier(.16,1,.3,1); }
+        .ff-food img { filter: saturate(1.06) contrast(1.07) brightness(.94); }
+        .ff-duo  img { filter: grayscale(1) contrast(1.22) brightness(.72); }
+        .ff-tint { position:absolute; inset:0; background:${LIME}; mix-blend-mode:color; opacity:.5; pointer-events:none; }
+        .ff-grain { position:absolute; inset:0; pointer-events:none; opacity:.14; mix-blend-mode:overlay;
+          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+        .ff-hov:hover .ff-frame img { transform: scale(1.05); }
+
+        .ff-btn { position:relative; overflow:hidden; display:inline-block; background:${LIME}; color:#000; font-family:${COND}; font-weight:800; font-size:19px; letter-spacing:.06em; text-transform:uppercase; padding:17px 34px; text-decoration:none; border-radius:0; transition:background .2s; }
+        .ff-btn:hover { background:#a3e635; }
+        .ff-btn::after { content:""; position:absolute; top:0; left:-120%; width:55%; height:100%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent); transform:skewX(-18deg); transition:left .6s ease; }
+        .ff-btn:hover::after { left:130%; }
+
+        .ff-a { color:${INK}; text-decoration:none; display:inline-flex; align-items:center; gap:9px; font-family:${COND}; font-weight:700; font-size:19px; letter-spacing:.05em; text-transform:uppercase; border-bottom:2px solid ${LIME}; padding-bottom:3px; transition:gap .2s,color .2s; }
+        .ff-a:hover { gap:15px; color:${LIME}; }
+
+        /* service directory */
+        .ff-svc { display:block; padding:9px 0; border-bottom:1px solid ${RULE}; color:${MUTE}; text-decoration:none; font-size:14.5px; transition:color .18s, padding-left .18s, border-color .18s; }
+        .ff-svc:hover { color:${INK}; padding-left:10px; border-color:${LIME}; }
+
+        .ff-choice { cursor:pointer; border-radius:0; font-family:${COND}; font-weight:800; text-transform:uppercase; transition:all .18s; }
+        .ff-choice:hover { border-color:#4a4a45 !important; }
+
+        .ff-strip:hover { background:#0c0c0a; }
+
+        @media (max-width:1000px){ .ff-2col{ grid-template-columns:1fr !important; } .ff-bleed{ min-height:520px !important; } }
+        @media (max-width:760px){ .ff-4col{ grid-template-columns:1fr 1fr !important; } .ff-hide{ display:none !important; } }
+        @media (prefers-reduced-motion:reduce){ .ff-btn::after{ display:none; } .ff-hov:hover .ff-frame img{ transform:none; } }
       `}</style>
     </div>
   );
 }
 
-/* ═══ HERO ═══ */
+/* ═══ HERO: full-bleed, giant type, integrated readout bar ═══ */
 function Hero() {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const yImg = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 60]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 90]);
 
   return (
-    <section ref={ref} style={{ paddingTop: 68, position: "relative" }}>
-      <div className="ff-hero" style={{ display: "grid", gridTemplateColumns: "1.04fr 0.96fr", minHeight: "min(88vh, 860px)" }}>
-        {/* left: copy */}
-        <div style={{ display: "flex", alignItems: "center", position: "relative", background: BG }}>
-          {/* soft lime glow, not a particle field */}
-          <div aria-hidden style={{ position: "absolute", top: "12%", left: "-8%", width: 460, height: 460, background: "radial-gradient(circle, rgba(132,204,22,0.14), transparent 62%)", filter: "blur(50px)", pointerEvents: "none" }} />
-          <div style={{ ...WRAP, position: "relative", paddingTop: 56, paddingBottom: 56 }}>
-            <motion.div initial={reduce ? undefined : { opacity: 0, y: 12 }} animate={reduce ? undefined : { opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }} style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-              <span className="ff-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: LIME, boxShadow: `0 0 12px ${LIME}` }} />
-              <span style={kicker(MUTE)}>Cooked in Pune. Tracked to the gram.</span>
-            </motion.div>
+    <section ref={ref} style={{ position: "relative", paddingTop: 68 }}>
+      <div style={{ position: "relative", minHeight: "min(94vh,940px)", display: "flex", flexDirection: "column", justifyContent: "flex-end", overflow: "hidden" }}>
+        <motion.div style={{ position: "absolute", inset: "-6% 0 0", y }}>
+          <Frame src="/images/hero-bowl.jpg" alt="A FitFuel bowl of fresh vegetables, chickpeas and avocado" sizes="100vw" priority />
+        </motion.div>
+        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(7,7,7,.82) 0%, rgba(7,7,7,.34) 34%, rgba(7,7,7,.86) 76%, #070707 100%)" }} />
 
-            <h1 style={display("clamp(3rem,7vw,6rem)")}>
-              <HeroLine text="Food that" i={0} />
-              <HeroLine text="knows your" i={1} />
-              <HeroLine text="numbers." i={2} lime />
-            </h1>
+        <div style={{ ...WRAP, position: "relative", paddingBottom: "clamp(28px,4vw,52px)", paddingTop: 120 }}>
+          <motion.h1
+            initial={reduce ? undefined : { opacity: 0, y: 34 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE }}
+            style={huge("clamp(3.6rem,13.5vw,11.5rem)")}
+          >
+            We cook it.<br />We weigh it.<br /><span style={{ color: LIME }}>We track it.</span>
+          </motion.h1>
 
-            <motion.p initial={reduce ? undefined : { opacity: 0 }} animate={reduce ? undefined : { opacity: 1 }} transition={{ duration: 0.8, ease: EASE, delay: 0.5 }} style={{ ...body(18.5), maxWidth: "42ch", marginTop: 28 }}>
-              We cook every meal, weigh every macro, and adjust when you plateau. A full health app comes with it. Intake you can verify, not a number you typed in.
-            </motion.p>
-
-            <motion.div initial={reduce ? undefined : { opacity: 0 }} animate={reduce ? undefined : { opacity: 1 }} transition={{ duration: 0.8, ease: EASE, delay: 0.62 }} style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginTop: 38 }}>
-              <Link href="/plans" className="ff-cta" style={{ fontSize: 15.5, fontWeight: 800, background: LIME, color: "#000", textDecoration: "none", padding: "17px 32px", borderRadius: 12 }}>Explore plans</Link>
-              <Link href="/plans?trial=true" className="ff-link" style={{ fontSize: 15.5 }}>Trial day, Rs 400 <ArrowRight size={16} /></Link>
-            </motion.div>
-
-            <div style={{ display: "flex", gap: "clamp(20px,4vw,44px)", marginTop: 52, flexWrap: "wrap" }}>
-              {[[<CountUp key="p" to={126} />, "Plans"], [<CountUp key="e" to={800} suffix="+" />, "Exercises"], [<span key="k">04:00</span>, "Cooked from"]].map(([v, l], i) => (
-                <div key={i}>
-                  <div style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: "clamp(2rem,3.5vw,2.7rem)", color: TXT, lineHeight: 1 }}>{v}</div>
-                  <div style={{ ...kicker(DIM), fontSize: 12, marginTop: 6 }}>{l}</div>
-                </div>
-              ))}
+          <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "clamp(20px,4vw,60px)", alignItems: "end", marginTop: "clamp(28px,4vw,48px)" }}>
+            <p style={{ ...copy(16.5), maxWidth: "50ch" }}>
+              Chef-cooked meals delivered across Pune, a full training and body-metrics app, and a supplement stack that matches your condition. One operating system for what you eat, burn and weigh.
+            </p>
+            <div style={{ display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap" }}>
+              <Link href="/plans" className="ff-btn">Explore plans</Link>
+              <Link href="/plans?trial=true" className="ff-a">Trial day Rs 400 <ArrowRight size={17} /></Link>
             </div>
           </div>
         </div>
 
-        {/* right: hero image + floating live macro card */}
-        <div className="ff-hero-img" style={{ position: "relative", minHeight: 480, overflow: "hidden" }}>
-          <motion.div style={{ position: "absolute", inset: "-8% 0", y: yImg }}>
-            <Cover src="/images/hero-bowl.jpg" alt="A colourful FitFuel bowl of fresh vegetables, chickpeas and avocado" sizes="(max-width: 940px) 100vw, 50vw" priority />
-          </motion.div>
-          <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(7,7,7,0.85), transparent 22%, transparent 70%, rgba(7,7,7,0.35))" }} />
-          <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(7,7,7,0.5), transparent 30%)" }} />
-          <MacroCard />
+        {/* readout welded to the bottom edge, square, not a floating card */}
+        <div style={{ position: "relative", borderTop: `1px solid ${RULE}`, background: "rgba(7,7,7,.9)", backdropFilter: "blur(10px)" }}>
+          <div style={{ ...WRAP, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "clamp(18px,4vw,54px)", padding: "16px clamp(18px,4vw,56px)" }}>
+            <span style={tag(LIME)}>Today, verified</span>
+            {[["Intake", "1,842"], ["Burn", "410"], ["Net", "1,432"], ["Target", "1,450"]].map(([k, v], i) => (
+              <span key={k} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
+                <span style={{ ...copy(13), color: DIM }}>{k}</span>
+                <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 27, color: i === 2 ? LIME : INK }}>{v}</span>
+              </span>
+            ))}
+            <span className="ff-hide" style={{ ...copy(13), color: DIM, marginLeft: "auto" }}>Consistency 92 / 100</span>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function HeroLine({ text, i, lime }: { text: string; i: number; lime?: boolean }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.span style={{ display: "block", color: lime ? LIME : TXT }} initial={reduce ? undefined : { opacity: 0, y: 28 }} animate={reduce ? undefined : { opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.14 + i * 0.11 }}>
-      {text}
-    </motion.span>
-  );
-}
-
-/* Floating glass card over the hero image: today's net calories. */
-function MacroCard() {
-  const reduce = useReducedMotion();
-  const pct = 1432 / 1450;
-  return (
-    <motion.div
-      initial={reduce ? undefined : { opacity: 0, y: 24 }}
-      animate={reduce ? undefined : { opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: EASE, delay: 0.55 }}
-      style={{ position: "absolute", left: "clamp(18px,4vw,36px)", bottom: "clamp(18px,4vw,36px)", width: "min(300px, 78%)", background: "rgba(10,10,10,0.72)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "18px 20px", boxShadow: "0 24px 60px rgba(0,0,0,.5)" }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <span style={{ ...kicker(MUTE), fontSize: 12 }}>Today, verified</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, ...kicker(LIME_LT), fontSize: 12 }}><span className="ff-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: LIME }} /> Live</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: 46, color: LIME, lineHeight: 1 }}><CountUp to={1432} /></span>
-        <span style={{ ...body(13), color: MUTE }}>/ 1,450 kcal net</span>
-      </div>
-      <div style={{ height: 5, background: "rgba(255,255,255,0.1)", borderRadius: 3, marginTop: 14, overflow: "hidden" }}>
-        <motion.div initial={{ width: 0 }} whileInView={{ width: `${pct * 100}%` }} viewport={{ once: true }} transition={{ duration: 1.2, ease: EASE }} style={{ height: "100%", background: `linear-gradient(90deg, ${LIME}, ${LIME_LT})` }} />
-      </div>
-    </motion.div>
-  );
-}
-
-/* ═══ FOOD MARQUEE ═══ */
-function FoodMarquee() {
-  const imgs = [
-    ["/images/salad-bowl.jpg", "Protein tofu bowl"],
-    ["/images/meal-spread.jpg", "Plated meals"],
-    ["/images/salmon-plate.jpg", "Seared salmon"],
-    ["/images/produce.jpg", "Fresh produce"],
-    ["/images/chef-hands.jpg", "Prep board"],
-    ["/images/hero-bowl.jpg", "Rainbow bowl"],
+/* ═══ PILLARS: four hard columns ═══ */
+function Pillars() {
+  const p = [
+    ["Kitchen", "126 plans cooked daily", "/plans"],
+    ["App", "800+ exercises, full tracking", "/how-it-works"],
+    ["Supplements", "Matched stacks via Nutrabay", "/supplements"],
+    ["Partners", "Gyms, offices, franchise", "/partners/apply"],
   ];
-  const row = [...imgs, ...imgs];
   return (
-    <div style={{ borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}`, overflow: "hidden", background: "#050505", padding: "18px 0" }}>
-      <div className="ff-marquee" style={{ display: "flex", gap: 16, width: "max-content" }}>
-        {row.map(([src, alt], i) => (
-          <div key={i} style={{ position: "relative", width: "clamp(220px,26vw,320px)", height: "clamp(150px,17vw,210px)", borderRadius: 14, overflow: "hidden", flexShrink: 0, border: `1px solid ${HAIR}` }}>
-            <Image src={src} alt={alt} fill sizes="320px" style={{ objectFit: "cover" }} />
-          </div>
+    <section style={{ borderBottom: `1px solid ${RULE}` }}>
+      <div style={{ ...WRAP, display: "grid", gridTemplateColumns: "repeat(4,1fr)", padding: 0 }} className="ff-4col">
+        {p.map(([t, d, href], i) => (
+          <Link key={t} href={href} className="ff-strip" style={{ display: "block", padding: "clamp(26px,3.4vw,44px) clamp(16px,2vw,32px)", borderLeft: i === 0 ? "none" : `1px solid ${RULE}`, textDecoration: "none", transition: "background .2s" }}>
+            <div style={mid("clamp(1.7rem,3vw,2.5rem)")}>{t}</div>
+            <div style={{ ...copy(13.5), marginTop: 9 }}>{d}</div>
+          </Link>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-/* ═══ MOAT / statement ═══ */
-function Moat() {
+/* ═══ STATEMENT: asymmetric, type only ═══ */
+function Statement() {
   return (
-    <section style={SECTION}>
+    <section style={{ padding: "clamp(80px,11vw,150px) 0" }}>
       <div style={WRAP}>
         <Reveal>
-          <span style={kicker()}>The difference</span>
-          <h2 style={{ ...display("clamp(2.3rem,5.5vw,4.2rem)"), maxWidth: "20ch", marginTop: 24 }}>
-            Every app trusts you to log honestly. <span style={{ color: LIME }}>We cook it, so it is measured.</span>
+          <h2 style={{ ...huge("clamp(2.4rem,7.5vw,6.4rem)"), maxWidth: "17ch" }}>
+            Every app trusts you to log it. <span style={{ color: LIME }}>We already know.</span>
           </h2>
-          <p style={{ ...body(18), maxWidth: "60ch", marginTop: 28 }}>
-            A tiffin cooks but never tracks. An app tracks but only what you type. A supplement brand sells pills with no plan. FitFuel runs all three as one system, so what you eat, burn and weigh feed one loop.
-          </p>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "clamp(28px,4vw,54px)" }}>
+            <p style={{ ...copy(16.5), maxWidth: "46ch" }}>
+              A tiffin cooks but never tracks. An app tracks only what you type in. A supplement brand sells pills with no plan. We run all three, so the macros are measured in our kitchen, not guessed at by you.
+            </p>
+          </div>
         </Reveal>
       </div>
     </section>
   );
 }
 
-/* ═══ THREE PRODUCTS ═══ */
-function Products() {
-  const p = [
-    { img: "/images/salad-bowl.jpg", t: "The kitchen", d: "Chef-cooked, macro-portioned meals delivered daily across Pune.", href: "/plans", cta: "See meal plans" },
-    { img: "/images/training.jpg", t: "The app", d: "Net calories, an 800+ exercise library, body metrics and progress.", href: "/how-it-works", cta: "Inside the app" },
-    { img: "/images/supplements.jpg", t: "The supplements", d: "Condition-matched doses, ordered through Nutrabay. Not a wall of pills.", href: "/supplements", cta: "Browse the stack" },
+/* ═══ SERVICE MAP: everything the business runs, linked ═══ */
+function ServiceMap() {
+  const cols: [string, [string, string][]][] = [
+    ["Eat", [
+      ["All 126 meal plans", "/plans"],
+      ["Weight loss", "/plans/weight-loss-veg"],
+      ["Muscle gain", "/plans/muscle-gain-veg"],
+      ["Balanced maintenance", "/plans/balanced-veg"],
+      ["Medical and lifestyle", "/plans?category=LIFESTYLE_MEDICAL"],
+      ["Sports nutrition", "/plans?category=SPORTS"],
+      ["Digital PDF plans", "/plans/digital"],
+      ["Trial day, Rs 400", "/plans?trial=true"],
+    ]],
+    ["Track", [
+      ["How the system works", "/how-it-works"],
+      ["Your dashboard", "/dashboard"],
+      ["Nutrition diary", "/dashboard/nutrition"],
+      ["Exercise library", "/dashboard/exercises"],
+      ["Body metrics", "/dashboard/body-metrics"],
+      ["Progress charts", "/dashboard/progress"],
+      ["TDEE calculator, free", "/tdee-calculator"],
+      ["Member results", "/results"],
+    ]],
+    ["Supplement", [
+      ["The supplement stack", "/supplements"],
+      ["Ordered via Nutrabay", "/supplements"],
+      ["Your stack", "/dashboard/supplements"],
+      ["Our ingredients", "/our-ingredients"],
+      ["Allergen policy", "/allergen-policy"],
+      ["Medical disclaimer", "/medical-disclaimer"],
+    ]],
+    ["Partner", [
+      ["Corporate wellness", "/corporate"],
+      ["Gyms and trainers", "/partners/apply"],
+      ["Partner dashboard", "/dashboard/partners"],
+      ["Franchise enquiry", "/contact"],
+      ["Refer and earn Rs 500", "/dashboard/referrals"],
+      ["Blog", "/blog"],
+    ]],
+    ["Operate", [
+      ["Our kitchen", "/our-kitchen"],
+      ["Our team", "/our-team"],
+      ["Delivery areas in Pune", "/locations"],
+      ["About FitFuel", "/about"],
+      ["Reviews", "/testimonials"],
+      ["FAQ", "/faq"],
+      ["Contact us", "/contact"],
+    ]],
   ];
   return (
-    <section style={{ ...SECTION, background: "#050505", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}` }}>
+    <section style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, background: "#050504" }}>
       <div style={WRAP}>
-        <Reveal><span style={kicker()}>One system</span><h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22, maxWidth: "16ch" }}>Three products, one loop</h2></Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20, marginTop: 52 }}>
-          {p.map((x, i) => (
-            <Reveal key={x.t} delay={i * 0.09}>
-              <Link href={x.href} className="ff-card ff-zoom" style={{ display: "block", border: `1px solid ${HAIR}`, borderRadius: 20, overflow: "hidden", background: PANEL, textDecoration: "none", height: "100%" }}>
-                <div style={{ position: "relative", height: 230 }}>
-                  <Cover src={x.img} alt={x.t} sizes="(max-width: 900px) 100vw, 33vw" />
-                  <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(14,14,14,0.9), transparent 55%)" }} />
-                </div>
-                <div style={{ padding: "24px 26px 28px" }}>
-                  <h3 style={{ fontFamily: BARLOW, fontWeight: 800, fontSize: "clamp(1.7rem,2.6vw,2.1rem)", textTransform: "uppercase", color: TXT, margin: "0 0 12px" }}>{x.t}</h3>
-                  <p style={{ ...body(15), marginBottom: 20 }}>{x.d}</p>
-                  <span className="ff-link" style={{ fontSize: 14 }}>{x.cta} <ArrowUpRight size={15} /></span>
-                </div>
-              </Link>
+        <Reveal>
+          <h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "20ch" }}>Everything we run, end to end</h2>
+        </Reveal>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: "clamp(24px,3vw,44px)", marginTop: "clamp(36px,5vw,64px)" }}>
+          {cols.map(([head, items], i) => (
+            <Reveal key={head} delay={i * 0.05}>
+              <div style={{ ...tag(LIME), paddingBottom: 12, borderBottom: `2px solid ${LIME}`, marginBottom: 6 }}>{head}</div>
+              {items.map(([label, href]) => (
+                <Link key={label + href} href={href} className="ff-svc">{label}</Link>
+              ))}
             </Reveal>
           ))}
         </div>
@@ -289,69 +302,60 @@ function Products() {
   );
 }
 
-/* ═══ DAILY LOOP (compact flow) ═══ */
+/* ═══ LOOP: eight steps as a hard band ═══ */
 function Loop() {
   const steps = ["Onboard", "Cook", "Deliver", "Log", "Train", "Weigh in", "Recalibrate", "Score"];
   return (
-    <section id="loop" style={{ ...SECTION, scrollMarginTop: 70 }}>
+    <section id="loop" style={{ padding: "clamp(70px,9vw,120px) 0", scrollMarginTop: 70 }}>
       <div style={WRAP}>
-        <div className="ff-split" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(30px,5vw,64px)", alignItems: "center" }}>
-          <Reveal>
-            <span style={kicker()}>Every day</span>
-            <h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22, maxWidth: "14ch" }}>The loop that runs your day</h2>
-            <p style={{ ...body(17), marginTop: 24, maxWidth: "44ch" }}>
-              Eight steps, one closed loop. Detect a plateau, drop the target, adapt the plan. It sharpens every week without you counting a thing.
-            </p>
-            <Link href="/how-it-works" className="ff-link" style={{ fontSize: 15, marginTop: 26 }}>See the full method <ArrowRight size={15} /></Link>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {steps.map((s, i) => (
-                <div key={s} className="ff-row" style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", border: `1px solid ${HAIR}`, borderRadius: 12, background: PANEL }}>
-                  <span style={{ fontFamily: BARLOW, fontWeight: 800, fontSize: 20, color: LIME, minWidth: 26 }}>{String(i + 1).padStart(2, "0")}</span>
-                  <span style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: "clamp(1.1rem,2vw,1.35rem)", textTransform: "uppercase", color: TXT }}>{s}</span>
-                </div>
-              ))}
-            </div>
-          </Reveal>
+        <Reveal>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+            <h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "14ch" }}>The loop that runs your day</h2>
+            <Link href="/how-it-works" className="ff-a">The full method <ArrowRight size={17} /></Link>
+          </div>
+        </Reveal>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: "clamp(32px,4vw,54px)", borderTop: `1px solid ${RULE}` }}>
+          {steps.map((s, i) => (
+            <Reveal key={s} delay={(i % 4) * 0.05}>
+              <div className="ff-strip" style={{ padding: "22px 18px 26px", borderBottom: `1px solid ${RULE}`, borderRight: `1px solid ${RULE}`, height: "100%", transition: "background .2s" }}>
+                <div style={{ ...tag(LIME), fontSize: 11.5 }}>{String(i + 1).padStart(2, "0")}</div>
+                <div style={{ ...mid("clamp(1.35rem,2.2vw,1.85rem)"), marginTop: 12 }}>{s}</div>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-/* ═══ APP LAYER (image + features) ═══ */
-function AppLayer() {
-  const feats = [
-    ["Meal logging", "One tap writes exact macros to your diary."],
-    ["Net calories", "Calories in minus out, against your target, live."],
-    ["Workouts", "Sessions linked to your plan, 800+ exercises."],
-    ["Body metrics", "Weight, body fat and muscle, trended."],
-    ["Progress", "Charts that surface a plateau early."],
-    ["Consistency", "One score, zero to a hundred, drives it all."],
-  ];
+/* Reusable full-bleed editorial block. Alternates side, no cards. */
+function Bleed({ src, alt, duo, flip, title, body, href, cta, points }: {
+  src: string; alt: string; duo?: boolean; flip?: boolean; title: string; body: string; href: string; cta: string; points?: string[];
+}) {
   return (
-    <section style={{ ...SECTION, background: "#050505", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}` }}>
-      <div style={WRAP}>
-        <div className="ff-split" style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "clamp(30px,5vw,64px)", alignItems: "center" }}>
-          <Reveal>
-            <div className="ff-zoom" style={{ position: "relative", aspectRatio: "4 / 5", borderRadius: 22, overflow: "hidden", border: `1px solid ${HAIR}` }}>
-              <Cover src="/images/training.jpg" alt="An athlete training, tracked by the FitFuel app" sizes="(max-width: 940px) 100vw, 42vw" />
-              <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(5,5,5,0.6), transparent 45%)" }} />
-            </div>
-          </Reveal>
-          <div>
-            <Reveal><span style={kicker()}>Inside the app</span><h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22, maxWidth: "15ch" }}>Every gram, every rep, tracked</h2></Reveal>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, marginTop: 40, borderTop: `1px solid ${HAIR}`, borderLeft: `1px solid ${HAIR}` }}>
-              {feats.map(([t, d], i) => (
-                <Reveal key={t} delay={(i % 2) * 0.06}>
-                  <div className="ff-row" style={{ padding: "22px 22px", borderRight: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}`, height: "100%" }}>
-                    <div style={{ fontFamily: BARLOW, fontWeight: 700, fontSize: "1.35rem", textTransform: "uppercase", color: TXT, marginBottom: 7 }}>{t}</div>
-                    <div style={body(14)}>{d}</div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
+    <section className="ff-hov" style={{ borderTop: `1px solid ${RULE}` }}>
+      <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: flip ? "1fr 1.1fr" : "1.1fr 1fr", direction: flip ? "rtl" : "ltr" }}>
+        <div className="ff-bleed" style={{ position: "relative", minHeight: "clamp(360px,46vw,620px)", direction: "ltr" }}>
+          <Frame src={src} alt={alt} sizes="(max-width:1000px) 100vw, 52vw" duo={duo} />
+        </div>
+        <div style={{ direction: "ltr", display: "flex", alignItems: "center", padding: "clamp(38px,6vw,84px) clamp(20px,4vw,64px)", background: BG }}>
+          <div style={{ maxWidth: 540 }}>
+            <Reveal>
+              <h2 style={huge("clamp(2.1rem,5.4vw,4.2rem)")}>{title}</h2>
+              <p style={{ ...copy(16), marginTop: 22 }}>{body}</p>
+              {points ? (
+                <div style={{ marginTop: 28, borderTop: `1px solid ${RULE}` }}>
+                  {points.map((p) => (
+                    <div key={p} style={{ display: "flex", gap: 14, padding: "11px 0", borderBottom: `1px solid ${RULE}` }}>
+                      <span style={{ color: LIME, fontFamily: COND, fontWeight: 900, fontSize: 15 }}>/</span>
+                      <span style={copy(14.5)}>{p}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              <div style={{ marginTop: 30 }}><Link href={href} className="ff-a">{cta} <ArrowRight size={17} /></Link></div>
+            </Reveal>
           </div>
         </div>
       </div>
@@ -359,28 +363,45 @@ function AppLayer() {
   );
 }
 
-/* ═══ BUILT FOR (business lines) ═══ */
-function BuiltFor() {
-  const cards = [
-    { img: "/images/produce.jpg", tall: true, t: "Individuals", d: "126 goal and condition plans, cooked and tracked for you every day.", href: "/plans", cta: "Find your plan" },
-    { img: "/images/corporate.jpg", t: "Corporate wellness", d: "Subsidised, condition-specific meal programs and reporting for Pune offices.", href: "/corporate", cta: "For your team" },
-    { img: "/images/gym.jpg", t: "Gyms and trainers", d: "Coaches earn on every member. QR onboarding, live tracking, monthly payouts.", href: "/partners/apply", cta: "Become a partner" },
-    { img: "/images/salmon-plate.jpg", t: "Digital plans", d: "Not in Pune? The full 30-day plan as a designed PDF, anywhere.", href: "/plans/digital", cta: "Browse digital" },
-  ];
+function Kitchen() {
+  return <Bleed src="/images/kitchen.jpg" alt="A chef plating meals in the FitFuel kitchen" title="The kitchen"
+    body="Cooked from 04:00 in our FSSAI-licensed Kharadi kitchen and at your door by 08:00, six days a week. Every portion is weighed to your macros before it is sealed."
+    points={["126 goal and condition plans", "Veg, egg, non-veg and Jain", "Delivery, packaging and GST included"]}
+    href="/our-kitchen" cta="Inside our kitchen" />;
+}
+
+function AppBlock() {
+  return <Bleed src="/images/training.jpg" alt="An athlete training, tracked in the FitFuel app" duo flip title="The app"
+    body="Your meals arrive already logged. Add a workout from an 800+ exercise library and the burn feeds one net-calorie figure, against a target that moves when you plateau."
+    points={["Net calories, water and body metrics", "Progress charts that flag a plateau", "One consistency score, zero to a hundred"]}
+    href="/how-it-works" cta="See the system" />;
+}
+
+function Supplements() {
+  return <Bleed src="/images/supplements.jpg" alt="Preparing a protein shake" title="The supplements"
+    body="A stack matched to your plan and your condition, not a wall of pills. We explain what each one does and why it fits you, then you order it through Nutrabay at their price."
+    points={["Condition-matched doses", "Educational, never pushy", "Ordered via Nutrabay"]}
+    href="/supplements" cta="Browse the stack" />;
+}
+
+function Partners() {
   return (
-    <section style={SECTION}>
+    <section style={{ borderTop: `1px solid ${RULE}`, padding: "clamp(70px,9vw,120px) 0" }}>
       <div style={WRAP}>
-        <Reveal><span style={kicker()}>Built for</span><h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22, maxWidth: "16ch" }}>Many front doors, one kitchen</h2></Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 20, marginTop: 52 }}>
-          {cards.map((c, i) => (
-            <Reveal key={c.t} delay={i * 0.07} style={c.tall ? { gridRow: "span 1" } : undefined}>
-              <Link href={c.href} className="ff-card ff-zoom" style={{ display: "block", position: "relative", borderRadius: 20, overflow: "hidden", border: `1px solid ${HAIR}`, minHeight: 340, height: "100%", textDecoration: "none" }}>
-                <Cover src={c.img} alt={c.t} sizes="(max-width: 900px) 100vw, 25vw" />
-                <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(5,5,5,0.92) 8%, rgba(5,5,5,0.35) 55%, rgba(5,5,5,0.15))" }} />
-                <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "26px 24px" }}>
-                  <h3 style={{ fontFamily: BARLOW, fontWeight: 800, fontSize: "clamp(1.6rem,2.4vw,2rem)", textTransform: "uppercase", color: TXT, margin: "0 0 10px" }}>{c.t}</h3>
-                  <p style={{ ...body(14), color: "#cfcfca", marginBottom: 16 }}>{c.d}</p>
-                  <span className="ff-link" style={{ fontSize: 13.5 }}>{c.cta} <ArrowRight size={14} /></span>
+        <Reveal><h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "16ch" }}>We also feed teams and gyms</h2></Reveal>
+        <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: "clamp(34px,4vw,56px)" }}>
+          {[
+            { src: "/images/corporate.jpg", alt: "A team at work in a Pune office", t: "Corporate wellness", d: "Subsidised, condition-specific meal programs for Pune offices, with reporting your HR team can actually use.", href: "/corporate", cta: "For your team" },
+            { src: "/images/gym.jpg", alt: "A gym floor with dumbbells", t: "Gyms and trainers", d: "Your members eat to their macros and you earn on every one. QR onboarding, live client tracking and monthly payouts.", href: "/partners/apply", cta: "Become a partner" },
+          ].map((c, i) => (
+            <Reveal key={c.t} delay={i * 0.08}>
+              <Link href={c.href} className="ff-hov" style={{ display: "block", position: "relative", minHeight: "clamp(360px,38vw,480px)", height: "100%", textDecoration: "none" }}>
+                <Frame src={c.src} alt={c.alt} sizes="(max-width:1000px) 100vw, 50vw" duo />
+                <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(5,5,4,.94) 6%, rgba(5,5,4,.3) 62%)" }} />
+                <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "clamp(24px,3vw,40px)" }}>
+                  <h3 style={mid("clamp(1.7rem,3.2vw,2.6rem)")}>{c.t}</h3>
+                  <p style={{ ...copy(14.5), color: "#c6c6c0", marginTop: 12, maxWidth: "42ch" }}>{c.d}</p>
+                  <span className="ff-a" style={{ marginTop: 20, fontSize: 16 }}>{c.cta} <ArrowRight size={15} /></span>
                 </div>
               </Link>
             </Reveal>
@@ -389,6 +410,13 @@ function BuiltFor() {
       </div>
     </section>
   );
+}
+
+function Franchise() {
+  return <Bleed src="/images/chef-hands.jpg" alt="Fresh ingredients on a prep board" flip title="Franchise the whole system"
+    body="FitFuel is also the operating system to run a cloud kitchen. Recipe SOPs, batch scaling and a production board that tells any outlet exactly how much to cook tomorrow."
+    points={["Recipe SOPs, portion-scaled", "Production board, auto-computed", "Outlet dispatch and driver boards"]}
+    href="/contact" cta="Talk franchise" />;
 }
 
 /* ═══ MEMBERSHIP ═══ */
@@ -411,68 +439,44 @@ function Membership() {
     ["AI trainer chat", [false, false, false, true]],
     ["Nutritionist consult", [false, false, false, true]],
   ];
-  const gt = "minmax(200px,1.6fr) repeat(4,minmax(88px,1fr))";
+  const gt = "minmax(190px,1.7fr) repeat(4,minmax(84px,1fr))";
   return (
-    <section style={{ ...SECTION, background: "#050505", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}` }}>
+    <section style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
       <div style={WRAP}>
-        <Reveal><span style={kicker()}>Membership</span><h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22 }}>Pick your level</h2></Reveal>
-        <Reveal delay={0.05} style={{ marginTop: 44 }}>
-          <div style={{ border: `1px solid ${HAIR}`, borderRadius: 18, overflowX: "auto", background: PANEL }}>
-            <div style={{ minWidth: 660 }}>
-              <div style={{ display: "grid", gridTemplateColumns: gt, borderBottom: `1px solid ${HAIR}` }}>
+        <Reveal><h2 style={huge("clamp(2.2rem,6vw,4.6rem)")}>Pick your level</h2></Reveal>
+        <Reveal delay={0.05} style={{ marginTop: "clamp(30px,4vw,52px)" }}>
+          <div style={{ overflowX: "auto", borderTop: `1px solid ${RULE}` }}>
+            <div style={{ minWidth: 680 }}>
+              <div style={{ display: "grid", gridTemplateColumns: gt, borderBottom: `1px solid ${RULE}` }}>
                 <span />
                 {tiers.map((t) => (
-                  <div key={t.name} style={{ padding: "22px 14px", borderLeft: `1px solid ${HAIR}`, background: t.on ? "rgba(132,204,22,0.06)" : "transparent" }}>
-                    <div style={{ fontFamily: BARLOW, fontWeight: 800, fontSize: 25, textTransform: "uppercase", color: t.on ? LIME : TXT }}>{t.name}</div>
-                    <div style={{ ...body(12.5), color: DIM, marginTop: 6 }}>{t.price}</div>
+                  <div key={t.name} style={{ padding: "20px 12px", borderLeft: `1px solid ${RULE}`, background: t.on ? "rgba(132,204,22,.07)" : "transparent" }}>
+                    <div style={{ ...mid("1.7rem"), color: t.on ? LIME : INK }}>{t.name}</div>
+                    <div style={{ ...copy(12.5), color: DIM, marginTop: 5 }}>{t.price}</div>
                   </div>
                 ))}
               </div>
               {matrix.map(([label, marks]) => (
-                <div key={label} className="ff-row" style={{ display: "grid", gridTemplateColumns: gt, borderBottom: `1px solid ${HAIR}` }}>
-                  <span style={{ ...body(13.5), padding: "15px 18px" }}>{label}</span>
+                <div key={label} className="ff-strip" style={{ display: "grid", gridTemplateColumns: gt, borderBottom: `1px solid ${RULE}`, transition: "background .2s" }}>
+                  <span style={{ ...copy(14), padding: "14px 16px 14px 0" }}>{label}</span>
                   {marks.map((m, ci) => (
-                    <span key={ci} style={{ padding: "15px 12px", textAlign: "center", borderLeft: `1px solid ${HAIR}`, background: ci === 1 ? "rgba(132,204,22,0.04)" : "transparent", fontSize: 15, color: m ? (ci === 1 ? LIME : MUTE) : "#333" }}>{m ? "✓" : "·"}</span>
+                    <span key={ci} style={{ padding: "14px 12px", textAlign: "center", borderLeft: `1px solid ${RULE}`, background: ci === 1 ? "rgba(132,204,22,.04)" : "transparent", color: m ? (ci === 1 ? LIME : MUTE) : "#2e2e2b", fontSize: 15 }}>{m ? "✓" : "·"}</span>
                   ))}
                 </div>
               ))}
               <div style={{ display: "grid", gridTemplateColumns: gt }}>
                 <span />
                 {tiers.map((t) => (
-                  <div key={t.name} style={{ padding: "16px 12px", borderLeft: `1px solid ${HAIR}` }}>
-                    <Link href={t.href} className={t.on ? "ff-cta" : "ff-link"} style={t.on ? { display: "block", textAlign: "center", background: LIME, color: "#000", fontSize: 12.5, fontWeight: 800, padding: "11px 6px", textDecoration: "none", borderRadius: 9 } : { fontSize: 12.5, justifyContent: "center" }}>{t.cta}</Link>
+                  <div key={t.name} style={{ padding: "16px 10px", borderLeft: `1px solid ${RULE}` }}>
+                    {t.on
+                      ? <Link href={t.href} className="ff-btn" style={{ display: "block", textAlign: "center", fontSize: 14, padding: "12px 8px" }}>{t.cta}</Link>
+                      : <Link href={t.href} style={{ display: "block", textAlign: "center", ...tag(MUTE), fontSize: 12, textDecoration: "none" }}>{t.cta}</Link>}
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ═══ FRANCHISE ═══ */
-function Franchise() {
-  return (
-    <section style={SECTION}>
-      <div style={WRAP}>
-        <div className="ff-split" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "clamp(30px,5vw,64px)", alignItems: "center" }}>
-          <Reveal>
-            <span style={kicker()}>Franchise</span>
-            <h2 style={{ ...display("clamp(2.3rem,5.2vw,4rem)"), marginTop: 22, maxWidth: "11ch" }}>A cloud kitchen in a box</h2>
-            <p style={{ ...body(17.5), marginTop: 26, maxWidth: "46ch" }}>
-              FitFuel is also the operating system to run one. Recipe SOPs, batch scaling, and a production board that tells any outlet exactly how much to cook tomorrow. The system that runs our Pune kitchen is what a partner plugs into.
-            </p>
-            <Link href="/contact" className="ff-cta" style={{ display: "inline-block", marginTop: 30, fontSize: 15, fontWeight: 800, background: LIME, color: "#000", textDecoration: "none", padding: "16px 30px", borderRadius: 12 }}>Talk franchise</Link>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="ff-zoom" style={{ position: "relative", aspectRatio: "3 / 4", borderRadius: 22, overflow: "hidden", border: `1px solid ${HAIR}` }}>
-              <Cover src="/images/kitchen.jpg" alt="A chef plating dishes in the FitFuel kitchen" sizes="(max-width: 940px) 100vw, 42vw" />
-              <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(5,5,5,0.5), transparent 50%)" }} />
-            </div>
-          </Reveal>
-        </div>
       </div>
     </section>
   );
@@ -483,27 +487,22 @@ function Finder() {
   const [goal, setGoal] = useState<string | null>(null);
   const [diet, setDiet] = useState<string | null>(null);
   const ready = goal && diet;
-  const slug = ready ? `${goal}-${diet}` : "";
   const planName = ready ? `${GOAL_NAME[goal!]}, ${DIETS.find((d) => d.key === diet)!.label}` : "";
-  const btn = (active: boolean, big: boolean): CSSProperties => ({ cursor: "pointer", background: active ? LIME : "transparent", color: active ? "#000" : "#cbcbc6", border: `1px solid ${active ? LIME : "#2a2a2a"}`, padding: big ? "14px 26px" : "12px 24px", borderRadius: 11, fontFamily: BARLOW, fontWeight: 700, fontSize: big ? 21 : 18, textTransform: "uppercase", transition: "all .18s", boxShadow: active ? "0 8px 22px rgba(132,204,22,.32)" : "none" });
+  const bs = (a: boolean, big: boolean): CSSProperties => ({ background: a ? LIME : "transparent", color: a ? "#000" : "#d0d0ca", border: `1px solid ${a ? LIME : "#33332f"}`, padding: big ? "15px 30px" : "12px 26px", fontSize: big ? 23 : 19 });
   return (
-    <section id="finder" style={{ ...SECTION, background: "#050505", borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}`, scrollMarginTop: 70 }}>
+    <section id="finder" style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, scrollMarginTop: 70 }}>
       <div style={WRAP}>
-        <Reveal><span style={kicker()}>Plan finder</span><h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22, maxWidth: "16ch" }}>Find your plan in a minute</h2></Reveal>
-        <Reveal delay={0.05} style={{ marginTop: 44 }}>
-          <div style={{ border: `1px solid #2a2a2a`, borderRadius: 20, background: PANEL, padding: "clamp(26px,4vw,46px)" }}>
-            <div style={{ ...kicker(DIM), fontSize: 12, marginBottom: 16 }}>Goal</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 34 }}>
-              {GOALS.map((g) => <button key={g.key} onClick={() => setGoal(g.key)} className="ff-choice" style={btn(goal === g.key, true)}>{g.label}</button>)}
-            </div>
-            <div style={{ ...kicker(DIM), fontSize: 12, marginBottom: 16 }}>Diet</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              {DIETS.map((d) => <button key={d.key} onClick={() => setDiet(d.key)} className="ff-choice" style={btn(diet === d.key, false)}>{d.label}</button>)}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 18, marginTop: 40, paddingTop: 30, borderTop: `1px solid ${HAIR}` }}>
-              <span style={{ fontFamily: BARLOW, fontWeight: 800, fontSize: "clamp(1.6rem,3vw,2.3rem)", textTransform: "uppercase", color: ready ? TXT : "#3a3a3a", transition: "color .2s" }}>{ready ? planName : "Choose a goal and diet"}</span>
-              {ready ? <Link href={`/plans/${slug}`} className="ff-cta" style={{ background: LIME, color: "#000", fontSize: 15, fontWeight: 800, textDecoration: "none", padding: "15px 30px", borderRadius: 11, whiteSpace: "nowrap" }}>See my plan <ArrowRight size={15} style={{ verticalAlign: "-2px" }} /></Link> : null}
-            </div>
+        <Reveal><h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "15ch" }}>Find your plan in a minute</h2></Reveal>
+        <Reveal delay={0.06} style={{ marginTop: "clamp(30px,4vw,52px)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
+            {GOALS.map((g) => <button key={g.key} onClick={() => setGoal(g.key)} className="ff-choice" style={bs(goal === g.key, true)}>{g.label}</button>)}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {DIETS.map((d) => <button key={d.key} onClick={() => setDiet(d.key)} className="ff-choice" style={bs(diet === d.key, false)}>{d.label}</button>)}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20, marginTop: 40, paddingTop: 28, borderTop: `1px solid ${RULE}` }}>
+            <span style={{ ...huge("clamp(1.9rem,4.5vw,3.4rem)"), color: ready ? INK : "#2e2e2b" }}>{ready ? planName : "Choose a goal and diet"}</span>
+            {ready ? <Link href={`/plans/${goal}-${diet}`} className="ff-btn">See my plan</Link> : null}
           </div>
         </Reveal>
       </div>
@@ -511,76 +510,56 @@ function Finder() {
   );
 }
 
-/* ═══ RESULTS ═══ */
-function Results() {
+/* ═══ VOICES ═══ */
+function Voices() {
   const q = [
-    { q: "Down 9 kg in four months and never felt like I was on a diet. The food is genuinely good.", n: "Rhea M.", r: "Weight Loss, Kharadi" },
-    { q: "As a trainer I send clients here. The macros are dialled in and my members actually stick to it.", n: "Aditya K.", r: "Partner, Baner" },
-    { q: "The PCOS plan sorted my energy and cycles. Cooked, delivered, done.", n: "Sneha P.", r: "PCOS, Viman Nagar" },
+    { q: "Down 9 kg in four months and never felt like I was on a diet.", n: "Rhea M.", r: "Weight Loss, Kharadi" },
+    { q: "As a trainer I send clients here. The macros are dialled in and my members stick to it.", n: "Aditya K.", r: "Partner, Baner" },
+    { q: "The PCOS plan sorted my energy and my cycles. Cooked, delivered, done.", n: "Sneha P.", r: "PCOS, Viman Nagar" },
   ];
   return (
-    <section style={SECTION}>
+    <section style={{ padding: "clamp(70px,9vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
       <div style={WRAP}>
-        <Reveal><span style={kicker()}>Results</span><h2 style={{ ...display("clamp(2.2rem,5vw,3.6rem)"), marginTop: 22 }}>What Pune says</h2></Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20, marginTop: 52 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", borderTop: `1px solid ${RULE}` }}>
           {q.map((t, i) => (
-            <Reveal key={t.n} delay={i * 0.09}>
-              <div className="ff-card" style={{ padding: "32px 30px", border: `1px solid ${HAIR}`, borderRadius: 20, background: PANEL, height: "100%", display: "flex", flexDirection: "column" }}>
-                <span style={{ fontFamily: BARLOW, fontWeight: 900, fontSize: 52, color: LIME, lineHeight: 0.5, height: 26 }}>“</span>
-                <p style={{ fontSize: 18.5, lineHeight: 1.5, color: TXT, margin: "0 0 24px", flex: 1 }}>{t.q}</p>
-                <div style={{ ...body(14.5), color: TXT, fontWeight: 600 }}>{t.n}</div>
-                <div style={{ ...body(13), color: DIM }}>{t.r}</div>
+            <Reveal key={t.n} delay={i * 0.08}>
+              <div style={{ padding: "clamp(26px,3vw,40px) clamp(18px,2vw,32px)", borderRight: `1px solid ${RULE}`, borderBottom: `1px solid ${RULE}`, height: "100%", display: "flex", flexDirection: "column" }}>
+                <p style={{ ...mid("clamp(1.35rem,2.2vw,1.8rem)"), lineHeight: 1.12, flex: 1 }}>{t.q}</p>
+                <div style={{ marginTop: 26 }}>
+                  <div style={{ ...copy(14), color: INK }}>{t.n}</div>
+                  <div style={{ ...tag(DIM), fontSize: 11, marginTop: 4 }}>{t.r}</div>
+                </div>
               </div>
             </Reveal>
           ))}
         </div>
-        <Reveal style={{ marginTop: 40 }}><a href="/testimonials" className="ff-link" style={{ fontSize: 15 }}>Read more reviews <ArrowRight size={15} /></a></Reveal>
+        <Reveal style={{ marginTop: 34 }}><Link href="/testimonials" className="ff-a">All reviews <ArrowRight size={17} /></Link></Reveal>
       </div>
     </section>
   );
 }
 
-/* ═══ REFERRAL ═══ */
-function Referral() {
+/* ═══ CLOSE ═══ */
+function Close() {
   return (
-    <section style={{ ...SECTION, paddingTop: 0 }}>
-      <div style={WRAP}>
-        <Reveal>
-          <div className="ff-card" style={{ border: `1px solid ${HAIR}`, borderRadius: 22, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 28, padding: "clamp(32px,5vw,52px)", background: "linear-gradient(120deg, #0f0f0f, #080808)" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 22, flexWrap: "wrap" }}>
-                <span style={display("clamp(2.1rem,5vw,3.2rem)")}>Give <span style={{ color: LIME }}>Rs 200</span></span>
-                <span style={display("clamp(2.1rem,5vw,3.2rem)")}>Get <span style={{ color: LIME }}>Rs 500</span></span>
-              </div>
-              <p style={{ ...body(15.5), marginTop: 14, maxWidth: "48ch" }}>Your friend gets Rs 200 off their first plan. You earn Rs 500 in credit per signup. It stacks.</p>
-            </div>
-            <Link href="/dashboard/referrals" className="ff-cta" style={{ background: LIME, color: "#000", fontSize: 15, fontWeight: 800, textDecoration: "none", padding: "16px 32px", whiteSpace: "nowrap", borderRadius: 12 }}>Get your code</Link>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ═══ FINAL CTA (full-bleed) ═══ */
-function FinalCta() {
-  return (
-    <section style={{ position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "relative", minHeight: "min(70vh, 640px)", display: "flex", alignItems: "center" }}>
-        <Cover src="/images/produce.jpg" alt="Fresh vegetables ready for the kitchen" sizes="100vw" style={{ inset: 0 }} imgClass="ff-cta-bg" />
-        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(5,5,5,0.94), rgba(5,5,5,0.72) 45%, rgba(5,5,5,0.5))" }} />
-        <div style={{ ...WRAP, position: "relative", padding: "clamp(60px,9vw,110px) clamp(22px,5vw,48px)" }}>
+    <section style={{ position: "relative", overflow: "hidden", borderTop: `1px solid ${RULE}` }}>
+      <div style={{ position: "relative", minHeight: "min(78vh,700px)", display: "flex", alignItems: "center" }}>
+        <Frame src="/images/produce.jpg" alt="Fresh vegetables prepared for the kitchen" sizes="100vw" />
+        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(7,7,7,.95) 12%, rgba(7,7,7,.6) 62%, rgba(7,7,7,.4))" }} />
+        <div style={{ ...WRAP, position: "relative", padding: "clamp(60px,9vw,110px) clamp(18px,4vw,56px)" }}>
           <Reveal>
-            <span style={kicker()}>Start today</span>
-            <h2 style={{ ...display("clamp(2.8rem,8vw,6.4rem)"), marginTop: 22 }}>Start the trial day.<br /><span style={{ color: LIME }}>Rs 400.</span></h2>
-            <p style={{ ...body(18.5), maxWidth: "42ch", marginTop: 24 }}>Breakfast plus lunch delivered tomorrow. No lock-in, no commitment.</p>
-            <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginTop: 38 }}>
-              <Link href="/plans?trial=true" className="ff-cta" style={{ fontSize: 16, fontWeight: 800, background: LIME, color: "#000", textDecoration: "none", padding: "18px 36px", borderRadius: 12 }}>Start your trial day</Link>
-              <Link href="/plans" className="ff-link" style={{ fontSize: 15.5 }}>See all plans <ArrowRight size={16} /></Link>
+            <h2 style={huge("clamp(3rem,10vw,8.5rem)")}>Start the trial day.<br /><span style={{ color: LIME }}>Rs 400.</span></h2>
+            <p style={{ ...copy(17), maxWidth: "42ch", marginTop: 26 }}>Breakfast plus lunch, delivered tomorrow. No lock-in, no commitment.</p>
+            <div style={{ display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap", marginTop: 36 }}>
+              <Link href="/plans?trial=true" className="ff-btn">Start your trial day</Link>
+              <Link href="/plans" className="ff-a">All plans <ArrowRight size={17} /></Link>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 30px", marginTop: 42, paddingTop: 26, borderTop: "1px solid rgba(255,255,255,0.12)" }}>
-              {["No lock-in", "Cancel anytime", "FSSAI licensed", "Verified intake"].map((t) => (
-                <span key={t} style={{ ...body(13.5), color: "#cfcfca", display: "inline-flex", alignItems: "center", gap: 8 }}><span style={{ color: LIME }}>✓</span> {t}</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 30px", marginTop: 44, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.14)" }}>
+              {[[<CountUp key="a" to={126} />, "Plans"], [<CountUp key="b" to={800} suffix="+" />, "Exercises"], [<span key="c">04:00</span>, "Cooked from"], [<span key="d">08:00</span>, "At your door"]].map(([v, l], i) => (
+                <span key={i} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
+                  <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, color: INK }}>{v}</span>
+                  <span style={{ ...tag(DIM), fontSize: 11 }}>{l}</span>
+                </span>
               ))}
             </div>
           </Reveal>
