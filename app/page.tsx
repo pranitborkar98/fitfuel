@@ -151,7 +151,7 @@ function Statement() {
                         "lesser" but computed to 3.98:1 and 2.26:1 and
                         failed AA. Both are on the audited ramp now. */}
                     <span aria-hidden style={{ color: DIM, fontSize: 15 }}>&times;</span>
-                    <span style={{ ...copy(15), color: DIM, textDecoration: "line-through", textDecorationColor: "#55554f" }}>{stops}</span>
+                    <span className="ff-strike" style={{ ...copy(15), color: DIM, textDecoration: "line-through", textDecorationColor: "#55554f" }}>{stops}</span>
                   </div>
                 </div>
               </Reveal>
@@ -217,10 +217,10 @@ function ServiceMap() {
         <Reveal>
           <h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "20ch" }}>Everything we run, end to end</h2>
         </Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: "clamp(24px,3vw,44px)", marginTop: "clamp(36px,5vw,64px)" }}>
+        <div className="ff-svcmap" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: "clamp(24px,3vw,44px)", marginTop: "clamp(36px,5vw,64px)" }}>
           {cols.map(([head, items]) => (
-            <div key={head}>
-              <div style={{ ...tag(LIME), paddingBottom: 12, borderBottom: `2px solid ${LIME}`, marginBottom: 6 }}>{head}</div>
+            <div key={head} className="ff-svc-col">
+              <div className="ff-svc-head" style={{ ...tag(LIME), paddingBottom: 12, borderBottom: `2px solid ${LIME}`, marginBottom: 6 }}>{head}</div>
               {items.map(([label, href]) => (
                 <Link key={label + href} href={href} className="ff-svc">{label}</Link>
               ))}
@@ -300,7 +300,7 @@ function Partners() {
           ].map((c, i) => (
             <Reveal key={c.t} delay={i * 0.08}>
               <Link href={c.href} className="ff-hov" style={{ display: "block", position: "relative", minHeight: "clamp(360px,38vw,480px)", height: "100%", textDecoration: "none" }}>
-                <Frame src={c.src} alt={c.alt} sizes="(max-width:1000px) 100vw, 50vw" duo />
+                <Frame src={c.src} alt={c.alt} sizes="(max-width:1000px) 100vw, 50vw" duo className="ff-unveil" />
                 <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(5,5,4,.94) 6%, rgba(5,5,4,.3) 62%)" }} />
                 <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "clamp(24px,3vw,40px)" }}>
                   <h3 style={mid("clamp(1.7rem,3.2vw,2.6rem)")}>{c.t}</h3>
@@ -360,6 +360,10 @@ function Membership() {
 
               tabIndex + role=group make the horizontal scroller keyboard
               reachable, which an overflow container is not by default. */}
+          {/* The scan line lives on this OUTER wrapper, not on the
+              horizontal scroller below it: an overflow container would clip
+              the line's glow and scroll it sideways with the table. */}
+          <div className="ff-tiers-wrap">
           <div
             role="group"
             aria-labelledby="tiers-heading"
@@ -407,6 +411,7 @@ function Membership() {
                 </tr>
               </tfoot>
             </table>
+          </div>
           </div>
           <p style={{ ...copy(13), color: DIM, marginTop: 14 }} className="ff-scroll-hint">Scroll the table sideways to compare all four tiers.</p>
         </Reveal>

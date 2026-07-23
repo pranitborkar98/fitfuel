@@ -720,6 +720,122 @@ main[data-surface="marketing"] {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   SCROLL CHOREOGRAPHY — four sections, four different mechanisms
+   ═══════════════════════════════════════════════════════════════════════
+   The loop dial above uses a named view-timeline driving a 3D rotation.
+   Repeating that trick three more times would read as a tic, so each of
+   these uses a genuinely different technique:
+
+     Statement   · a strike-through that DRAWS itself     (scaleX on a rule)
+     Tier table  · an instrument scan line sweeping down  (position on a bar)
+     Service map · a hover spotlight via :has()           (no scroll at all)
+     Partners    · a cinematic clip-path unveil           (clip-path inset)
+
+   All use ANONYMOUS `view()` timelines rather than named ones: each
+   element is its own subject, so there is no name lookup to get wrong and
+   no scroll-container gotcha to trip over.
+
+   Everything is inside @supports + prefers-reduced-motion guards. Without
+   support, every one of these degrades to the static design that already
+   shipped: the strike is a real text-decoration, the table is a table, the
+   map is a link list, the photos are photos.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+
+    /* ── 1 · STATEMENT: crossing them off ──────────────────────────────
+       The strike-through draws itself left to right as the column scrolls
+       up. You watch each competitor's gap get crossed out, which is the
+       argument the section is making, performed rather than stated. */
+    .ff-strike { position: relative; text-decoration: none !important; }
+    .ff-strike::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 54%;
+      height: 1.5px;
+      background: #6f6f69;
+      /* Base state is DRAWN, not empty. The strike carries meaning (it is
+         how you read the line as a gap), so if the timeline ever fails to
+         activate no effect applies and the line is simply already there.
+         An empty base would have silently deleted the point of the
+         section. The keyframes supply the from-state for the animated
+         case. */
+      transform: scaleX(1);
+      transform-origin: left center;
+      animation: ff-strike-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 55% cover 42%;
+    }
+    @keyframes ff-strike-draw {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+
+    /* ── 2 · TIER TABLE: an instrument reading itself ──────────────────
+       A lime scan line travels down the table as it passes through the
+       viewport, like a readout being measured. The table stays a real
+       <table>; this is a pseudo-element on its wrapper, so semantics and
+       screen-reader output are untouched. */
+    .ff-tiers-wrap { position: relative; }
+    .ff-tiers-wrap::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, var(--ff-lime) 22%, var(--ff-lime) 72%, transparent);
+      box-shadow: 0 0 14px rgba(132, 204, 22, .55);
+      opacity: 0;
+      animation: ff-scan linear both;
+      animation-timeline: view();
+      animation-range: entry 90% exit 10%;
+    }
+    @keyframes ff-scan {
+      0%        { top: 0;    opacity: 0; }
+      8%        {            opacity: .9; }
+      92%       {            opacity: .9; }
+      100%      { top: 100%; opacity: 0; }
+    }
+
+    /* ── 4 · PARTNERS: cinematic unveil ────────────────────────────────
+       The photo is wiped in from the bottom edge rather than fading. A
+       fade is the default everything does; a wipe has a direction and
+       reads as deliberate. */
+    .ff-unveil {
+      animation: ff-unveil linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 92%;
+    }
+    @keyframes ff-unveil {
+      from { clip-path: inset(0 0 100% 0); }
+      to   { clip-path: inset(0 0 0 0); }
+    }
+  }
+}
+
+/* ── 3 · SERVICE MAP: hover spotlight ──────────────────────────────────
+   Not scroll-driven at all. `:has()` lets the column react to its own
+   children: hover any link and its siblings recede, so the index behaves
+   like a thing being read rather than a wall of text. Pure selector, no
+   timeline, works regardless of motion preference (it is a hover state,
+   not an animation). */
+.ff-svcmap:has(.ff-svc:hover) .ff-svc:not(:hover) {
+  opacity: .34;
+  border-color: var(--ff-rule);
+}
+.ff-svcmap .ff-svc { transition: opacity .22s ease, color .18s, padding-left .18s, border-color .18s; }
+
+/* Column headings track the same spotlight. */
+.ff-svcmap:has(.ff-svc:hover) .ff-svc-head { opacity: .5; }
+.ff-svcmap .ff-svc-col:has(.ff-svc:hover) .ff-svc-head { opacity: 1 !important; }
+.ff-svc-head { transition: opacity .22s ease; }
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
