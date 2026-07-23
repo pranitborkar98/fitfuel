@@ -6,6 +6,7 @@ import StructuredData from "@/components/StructuredData";
 import Frame from "./_home/Frame";
 import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
+import LoopDial from "./_home/LoopDial";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -38,7 +39,14 @@ import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from
 
 export default function Home() {
   return (
-    <div style={{ background: BG, color: INK, overflowX: "hidden" }}>
+    // overflow-x is `clip`, NOT `hidden`. `hidden` on one axis forces the
+    // other axis to compute to `auto`, which silently turns this wrapper
+    // into a scroll container. That broke the loop dial: its ViewTimeline
+    // bound to this div as its scroll source instead of the document, and
+    // since the div is sized to its content it never scrolls, so the
+    // timeline stayed inactive and the ring never turned. `clip` clips
+    // without establishing a scroll container.
+    <div style={{ background: BG, color: INK, overflowX: "clip" }}>
       {/* Organization / FoodEstablishment / Service / WebSite graph.
           Server-rendered, so it is in the initial HTML for crawlers and
           answer engines rather than appearing after hydration. */}
@@ -53,7 +61,7 @@ export default function Home() {
       <Kitchen />
       <AppBlock />
       <Supplements />
-      <Loop />
+      <LoopDial />
       <Partners />
       <Franchise />
       <Membership />
@@ -224,52 +232,6 @@ function ServiceMap() {
   );
 }
 
-/* ═══ LOOP: eight steps as a hard band ═══ */
-function Loop() {
-  /* Was eight words in eight cramped equal columns: an outline, not a
-     section. Each step is a real moment in a real day, so it carries the
-     time it happens and what actually occurs. Rows, not a squeezed grid,
-     so the eye has somewhere to travel. */
-  const steps: [string, string, string][] = [
-    ["Onboard", "Once", "Height, weight, goal, condition, diet. We compute your targets."],
-    ["Cook", "04:00", "Your portions are weighed to your macros before they are sealed."],
-    ["Deliver", "08:00", "At your door across east Pune, six days a week."],
-    ["Log", "As you eat", "The meals arrive already logged. Nothing to type in."],
-    ["Train", "Evening", "Pick from 800+ exercises. The burn feeds your net figure."],
-    ["Weigh in", "Morning", "Weight, waist, body fat. Thirty seconds on the app."],
-    ["Recalibrate", "Weekly", "Plateau detected, targets move. You do not have to ask."],
-    ["Score", "Daily", "One consistency figure, zero to a hundred. No vanity metrics."],
-  ];
-  return (
-    <section id="loop" style={{ padding: "clamp(70px,9vw,110px) 0", scrollMarginTop: 70, background: "#050504", borderTop: `1px solid ${RULE}` }}>
-      <div style={WRAP}>
-        <Reveal>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-            <h2 style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "14ch" }}>The loop that runs your day</h2>
-            <Link href="/how-it-works" className="ff-a">The full method <ArrowRight size={17} /></Link>
-          </div>
-        </Reveal>
-
-        {/* An ordered sequence, so it is an <ol>. The lime rail down the left
-            is the thing that makes it read as one continuous day rather than
-            eight disconnected tiles. */}
-        <ol className="ff-loop" style={{ marginTop: "clamp(34px,4vw,56px)", listStyle: "none", margin: 0, padding: 0, position: "relative" }}>
-          {steps.map(([name, when, what], i) => (
-            <li key={name} className="ff-loop-row">
-              <span className="ff-loop-rail" aria-hidden>
-                <span className="ff-loop-dot" />
-              </span>
-              <span aria-hidden className="ff-loop-n" style={tag(DIM)}>{String(i + 1).padStart(2, "0")}</span>
-              <span className="ff-loop-when" style={{ ...mid("clamp(1.05rem,1.5vw,1.3rem)"), color: LIME }}>{when}</span>
-              <h3 className="ff-loop-name" style={mid("clamp(1.5rem,2.6vw,2.2rem)")}>{name}</h3>
-              <p className="ff-loop-what" style={copy(15)}>{what}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
 
 /* Reusable full-bleed editorial block. Alternates side, no cards. */
 function Bleed({ src, alt, duo, flip, title, body, href, cta, points }: {

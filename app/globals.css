@@ -561,6 +561,165 @@ main[data-surface="marketing"] {
   .ff-pillar-go { opacity: 1; transform: none; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   THE LOOP DIAL — 3D scroll-driven rolodex
+   ═══════════════════════════════════════════════════════════════════════
+   Eight steps on a vertical ring in real 3D space. Scrolling turns the
+   ring, so you travel forward through the day rather than reading a list.
+
+   Built on native CSS scroll-driven animations, which run on the
+   COMPOSITOR, not the main thread. That is what makes 3D affordable here:
+   no library, no JS, nothing to hydrate, and scrolling cannot jank because
+   the animation is not competing with React for the main thread.
+
+   Everything below is inside @supports + @media guards. If the browser
+   cannot do it, or the user asked for less motion, or the screen is
+   narrow, the flat list renders instead with identical content.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Default (and final fallback): flat list visible, dial hidden. */
+.ff-dial-runway { display: none; }
+.ff-dial-flat   { display: block; padding: clamp(70px, 9vw, 110px) 0; }
+
+.ff-dial-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+@supports (animation-timeline: view()) {
+  @media (min-width: 1000px) and (prefers-reduced-motion: no-preference) {
+    .ff-dial-flat   { display: none; }
+    .ff-dial-runway { display: block; }
+
+    /* Scroll runway. Its height IS the animation's duration. 8 steps at
+       ~85vh of travel each, plus one viewport for the pin itself: enough
+       dwell to read each step, without making the reader pay 10 screens of
+       scrolling to get past the section. */
+    .ff-dial-runway {
+      height: 780vh;
+      position: relative;
+      /* Names a timeline from this element's own scroll progress through
+         the viewport, which the ring below then animates against. */
+      view-timeline-name: --dial;
+      view-timeline-axis: block;
+    }
+
+    /* The stage pins while the runway scrolls past it. */
+    .ff-dial-stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .ff-dial-head { margin-bottom: clamp(20px, 3vh, 44px); }
+
+    /* The 3D viewport. `perspective` is what turns the transforms below
+       from flat rotations into actual depth. */
+    .ff-dial-scene {
+      position: relative;
+      height: min(52vh, 420px);
+      perspective: 1100px;
+      perspective-origin: 32% 50%;
+      /* Fade the ring out top and bottom so nodes arrive and leave rather
+         than popping at a hard edge. */
+      -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+      mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+    }
+
+    .ff-dial-ring {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      transform-style: preserve-3d;
+      /* Base state, and the safety net. If the timeline ever fails to
+         activate, the ring rests here with step one upright on the mark and
+         the rest turned edge-on (and hidden by backface-visibility) rather
+         than collapsing into a pile of overlapping text. */
+      transform: rotateX(0deg);
+      animation: ff-dial-turn linear both;
+      animation-timeline: --dial;
+      /* `entry 100%` to `exit 0%` is exactly the window in which the sticky
+         stage is pinned: entry 100% is the moment the runway's top edge
+         reaches the top of the scrollport (pinning starts), exit 0% is when
+         its bottom edge reaches the bottom (pinning ends).
+
+         Not `contain`: that range is only meaningful when the subject fits
+         inside the scrollport, and this runway is many viewports tall, so
+         the range is degenerate and the timeline never activates.
+         Not `cover` either: that starts turning the ring while the section
+         is still sliding up, so step one is never at rest on the mark. */
+      animation-range: entry 100% exit 0%;
+      will-change: transform;
+    }
+
+    /* The end angle is computed in TS and passed as --turn.
+       It was `calc(-360deg / var(--n) * (var(--n) - 1))`, which resolved
+       to +45deg rather than -315deg: CSS calc did not apply the precedence
+       this expression assumed. Arithmetic that matters belongs in code
+       where it can be read, not buried in a keyframe. */
+    @keyframes ff-dial-turn {
+      from { transform: rotateX(0deg); }
+      to   { transform: rotateX(var(--turn)); }
+    }
+
+    /* Each node sits at its own angle on the cylinder wall, pushed out by
+       the radius. The ring's counter-rotation brings it upright at front. */
+    .ff-dial-node {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 54px minmax(120px, 170px) minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      align-content: center;
+      column-gap: clamp(16px, 2vw, 34px);
+      transform-style: preserve-3d;
+      /* --step is the per-node angle, also computed in TS. */
+      transform:
+        rotateX(calc(var(--step) * var(--i)))
+        translateZ(clamp(170px, 21vh, 240px));
+      /* Hides the far side of the ring, which is what makes it read as a
+         solid rolodex instead of a transparent wireframe. */
+      backface-visibility: hidden;
+    }
+
+    .ff-dial-num  { grid-column: 1; grid-row: 1; align-self: center; }
+    .ff-dial-when { grid-column: 2; grid-row: 1; align-self: center; white-space: nowrap; }
+    .ff-dial-name { grid-column: 3; grid-row: 1; }
+    .ff-dial-what { grid-column: 3; grid-row: 2; margin-top: 10px; max-width: 54ch; }
+
+    /* The "now" mark: a hairline across the front of the dial. Whatever
+       sits on it is the current step. */
+    .ff-dial-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--ff-lime) 0%, rgba(132, 204, 22, .22) 42%, transparent 82%);
+      transform: translateY(-.5px);
+      pointer-events: none;
+    }
+    .ff-dial-line::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -3px;
+      width: 7px;
+      height: 7px;
+      background: var(--ff-lime);
+    }
+  }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
