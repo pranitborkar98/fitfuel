@@ -985,6 +985,96 @@ main[data-surface="marketing"] {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   CONDITIONS MARQUEE — abundance, running past
+   ═══════════════════════════════════════════════════════════════════════
+   Mechanism 8. A pure-CSS infinite marquee: the track holds two identical
+   copies of the list and translates left by exactly 50%, so the moment the
+   first copy scrolls off, the second is in its place and the loop is
+   seamless. Two rows run opposite directions.
+
+   Unlike the seven scroll-driven mechanisms this is an AMBIENT loop, so it
+   is fully gated on prefers-reduced-motion and pauses on hover. With
+   reduced motion the track holds still and simply shows the first screen of
+   conditions, wrapped.
+   ═══════════════════════════════════════════════════════════════════════ */
+.ff-marq {
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+  /* Fade both edges so items enter and leave rather than snapping at a
+     hard border. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.ff-marq-track {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 100%;
+  white-space: nowrap;
+}
+.ff-marq-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(16px, 2vw, 26px) clamp(20px, 2.6vw, 40px);
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: clamp(1.4rem, 2.6vw, 2.4rem);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--ff-mute);
+}
+.ff-marq-slash { color: var(--ff-lime); font-weight: 900; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .ff-marq-track {
+    animation: ff-marq-scroll 44s linear infinite;
+  }
+  .ff-marq-rev .ff-marq-track { animation-direction: reverse; }
+  .ff-marq:hover .ff-marq-track { animation-play-state: paused; }
+  @keyframes ff-marq-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+  }
+}
+
+/* Reduced motion / no animation: show one static wrapped row, drop the
+   duplicate so nothing is read twice or clipped. */
+@media (prefers-reduced-motion: reduce) {
+  .ff-marq { overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .ff-marq-track { flex-wrap: wrap; white-space: normal; }
+  .ff-marq-track[aria-hidden] { display: none; }
+}
+
+/* ── NUTRITION DIARY strip: a working food-log row ─────────────────────
+   The 154-item food database and the diary that logs against it were
+   absent from the site. This renders a real diary row as evidence rather
+   than a claim. No animation, just a truthful UI fragment. */
+.ff-diary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 15px clamp(16px, 2vw, 24px);
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-diary:first-child { border-top: 1px solid var(--ff-rule); }
+.ff-diary-kcal { font-family: var(--ff-cond); font-weight: 800; font-size: 1.15rem; color: var(--ff-ink); white-space: nowrap; }
+.ff-diary-macros { display: flex; gap: 14px; margin-top: 3px; flex-wrap: wrap; align-items: baseline; }
+
+.ff-diary-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 5vw, 80px);
+  align-items: start;
+}
+@media (max-width: 900px) { .ff-diary-cols { grid-template-columns: 1fr; } }
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed

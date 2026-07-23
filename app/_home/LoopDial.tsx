@@ -35,7 +35,7 @@ export const LOOP_STEPS: Step[] = [
   { name: "Cook",        when: "04:00",      what: "Your portions are weighed to your macros before they are sealed." },
   { name: "Deliver",     when: "08:00",      what: "At your door across east Pune, six days a week." },
   { name: "Log",         when: "As you eat", what: "The meals arrive already logged. Nothing to type in." },
-  { name: "Train",       when: "Evening",    what: "Pick from 800+ exercises. The burn feeds your net figure." },
+  { name: "Train",       when: "Evening",    what: "Pick from 952 exercises. The burn feeds your net figure." },
   { name: "Weigh in",    when: "Morning",    what: "Weight, waist, body fat. Thirty seconds on the app." },
   { name: "Recalibrate", when: "Weekly",     what: "Plateau detected, targets move. You do not have to ask." },
   { name: "Score",       when: "Daily",      what: "One consistency figure, zero to a hundred. No vanity metrics." },

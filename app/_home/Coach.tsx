@@ -36,6 +36,7 @@ import { WRAP, RULE, LIME, INK, MUTE, DIM, huge, mid, copy, tag } from "./theme"
 const TARGET_FROM = 1850;
 const TARGET_TO = 1720;
 
+// Both templates ship on channel BOTH in the DB: WhatsApp and email.
 const SENDS: [string, string, string][] = [
   ["07:00", "Morning preview", "Today's meals, already logged against your targets."],
   ["21:00", "Evening recap", "What you actually ate, and tomorrow's plan."],
@@ -114,7 +115,7 @@ export default function Coach() {
         <div className="ff-coach-cols" style={{ marginTop: "clamp(40px,5vw,70px)" }}>
           {/* ── Twice a day, on a clock ─────────────────────────────── */}
           <div>
-            <h3 style={{ ...mid("clamp(1.5rem,2.6vw,2.1rem)") }}>Twice a day, in your inbox</h3>
+            <h3 style={{ ...mid("clamp(1.5rem,2.6vw,2.1rem)") }}>Twice a day, on WhatsApp and email</h3>
             <ol className="ff-sends">
               {SENDS.map(([t, name, what]) => (
                 <li key={t} className="ff-send">

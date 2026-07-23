@@ -8,6 +8,8 @@ import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
 import LoopDial from "./_home/LoopDial";
 import Coach from "./_home/Coach";
+import Conditions from "./_home/Conditions";
+import Diary from "./_home/Diary";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -59,8 +61,13 @@ export default function Home() {
           conversion step on the page and the hero subhead describes it. */}
       <Finder />
       <Statement />
+      {/* 70 of 126 plans are condition-specific across 38 conditions.
+          The single biggest thing the old homepage did not say. */}
+      <Conditions />
       <Kitchen />
       <AppBlock />
+      {/* 154-food diary + water tracking. A food log nobody knew shipped. */}
+      <Diary />
       <Supplements />
       <LoopDial />
       {/* The coach and the daily comms loop. Both ship; neither was on
@@ -85,8 +92,8 @@ function Pillars() {
      an order of magnitude more weight. */
   const p: [string, string, string, string, string][] = [
     ["Kitchen", "126", "plans", "Cooked daily in Kharadi", "/plans"],
-    ["App", "800", "exercises", "Logged with your meals", "/how-it-works"],
-    ["Supplements", "63", "in the stack", "Matched, bought via Nutrabay", "/supplements"],
+    ["App", "952", "exercises", "Logged with your meals", "/how-it-works"],
+    ["Supplements", "46", "in the stack", "Matched, bought via Nutrabay", "/supplements"],
     ["Partners", "15", "areas served", "Gyms, offices, franchise", "/partners/apply"],
   ];
   return (
@@ -284,7 +291,7 @@ function Kitchen() {
 
 function AppBlock() {
   return <Bleed src="/images/training.jpg" alt="An athlete training, tracked in the FitFuel app" duo flip title="The app"
-    body="Your meals arrive already logged. Add a workout from an 800+ exercise library and the burn feeds one net-calorie figure, against a target that moves when you plateau."
+    body="Your meals arrive already logged. Add a workout from a 952-exercise library and the burn feeds one net-calorie figure, against a target that moves when you plateau."
     points={["Net calories, water and body metrics", "Progress charts that flag a plateau", "One consistency score, zero to a hundred"]}
     href="/how-it-works" cta="See the system" />;
 }
@@ -493,7 +500,7 @@ function Close() {
               <Link href="/plans" className="ff-a">All plans <ArrowRight size={17} /></Link>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 30px", marginTop: 44, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.14)" }}>
-              {[[<CountUp key="a" to={126} />, "Plans"], [<CountUp key="b" to={800} suffix="+" />, "Exercises"], [<span key="c">04:00</span>, "Cooked from"], [<span key="d">08:00</span>, "At your door"]].map(([v, l], i) => (
+              {[[<CountUp key="a" to={126} />, "Plans"], [<CountUp key="b" to={952} />, "Exercises"], [<span key="c">04:00</span>, "Cooked from"], [<span key="d">08:00</span>, "At your door"]].map(([v, l], i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
                   <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, color: INK }}>{v}</span>
                   <span style={{ ...tag(DIM), fontSize: 12 }}>{l}</span>

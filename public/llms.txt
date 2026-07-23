@@ -20,10 +20,26 @@ calorie and protein intake is weighed rather than estimated from a food diary.
 - Cooking starts 04:00; delivery completes by 08:00; six days a week.
 - Catalogue: 126 meal plans across goal, medical/lifestyle, sports,
   corporate and digital categories.
+- 70 of those 126 plans are condition-specific, across 38 conditions:
+  diabetes, pre-diabetes, thyroid, PCOS, PCOD, hypertension, heart health,
+  fatty liver, kidney health, gout, high cholesterol, anaemia, vitamin D
+  and B12 deficiency, obesity, post-surgery, post-COVID, cancer recovery,
+  postpartum, menopause, fertility, PMS, hormonal acne, hair fall, skin,
+  eczema, gut health, liver detox, seniors, kids and teens, quit-smoking
+  and alcohol recovery, and seasonal plans for Ramadan, Navratri, Shravan
+  and the Diwali detox. These are nutrition programs, not medical treatment.
 - Diets supported: vegetarian, eggetarian, non-vegetarian, Jain, vegan.
 - Entry offer: trial day at Rs 400 (breakfast plus lunch, no lock-in).
 - Ongoing pricing: from Rs 112 per meal.
-- Exercise library: 800+ exercises with logged sets, reps and burn.
+- Exercise library: 952 exercises with primary and secondary muscle groups,
+  equipment, difficulty and logged sets, reps and burn.
+- Nutrition diary: a 154-item Indian food database plus water tracking, so
+  members log anything they eat (not only FitFuel meals) against macro goals.
+- Coaching: a deterministic engine reads each week and recalibrates the
+  calorie target against the measured weight trend. It sends a morning meal
+  preview (07:00) and an evening recap (21:00) over WhatsApp and email,
+  a weekly digest, plateau and milestone nudges, and a daily 0-100
+  consistency score. This is NOT an AI chatbot; there is no chat feature.
 - Supplements are advisory only. FitFuel recommends a stack and the customer
   buys it from Nutrabay at Nutrabay's price. FitFuel does not sell supplements.
 - Prices exclude 5% GST, which is applied at checkout.
