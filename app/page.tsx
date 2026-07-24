@@ -13,6 +13,7 @@ import Diary from "./_home/Diary";
 import Refer from "./_home/Refer";
 import Terms from "./_home/Terms";
 import Franchise from "./_home/Franchise";
+import OpenMenu from "./_home/OpenMenu";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -67,6 +68,9 @@ export default function Home() {
       {/* 70 of 126 plans are condition-specific across 38 conditions.
           The single biggest thing the old homepage did not say. */}
       <Conditions />
+      {/* 60-day cycle, 100% public menu (Decision #43). A competitive
+          stance, not a feature: nobody else shows the whole menu. */}
+      <OpenMenu />
       <Kitchen />
       <AppBlock />
       {/* 154-food diary + water tracking. A food log nobody knew shipped. */}
@@ -299,15 +303,15 @@ function Kitchen() {
 
 function AppBlock() {
   return <Bleed src="/images/training.jpg" alt="An athlete training, tracked in the FitFuel app" duo flip title="The app"
-    body="Your meals arrive already logged. Add a workout from a 952-exercise library and the burn feeds one net-calorie figure, against a target that moves when you plateau."
-    points={["Net calories, water and body metrics", "Progress charts that flag a plateau", "One consistency score, zero to a hundred"]}
+    body="Your meals arrive already logged. Train from 59 programs built around your plan, drawing on a 952-exercise library, and the burn feeds one net-calorie figure against a target that moves when you plateau."
+    points={["59 programs, 413 training days, sets and reps set", "Net calories, water and body metrics", "One consistency score, zero to a hundred"]}
     href="/how-it-works" cta="See the system" />;
 }
 
 function Supplements() {
   return <Bleed src="/images/supplements.jpg" alt="Preparing a protein shake" title="The supplements"
-    body="A stack matched to your plan and your condition, not a wall of pills. We explain what each one does and why it fits you, then you order it through Nutrabay at their price."
-    points={["Condition-matched doses", "Educational, never pushy", "Ordered via Nutrabay"]}
+    body="A stack matched to your plan and your condition, not a wall of pills. Each one carries its evidence grade, the trial count behind it, the clinical dose, the interactions to avoid and whether you can actually buy it in India. Then you order through Nutrabay at their price."
+    points={["46 supplements, graded by evidence", "Clinical doses, warnings and interactions", "India availability, ordered via Nutrabay"]}
     href="/supplements" cta="Browse the stack" />;
 }
 

@@ -48,6 +48,17 @@ const WATCHES: [string, string][] = [
   ["Missed sessions", "Training slipped while everything else held. One nudge, not ten."],
 ];
 
+// The exact consistency rubric from lib/consistency-score.ts. Published
+// deliberately: every other app hands you a score and hides the maths.
+// A score you cannot audit is a score you cannot trust or aim at.
+const SCORE: [string, string][] = [
+  ["Meals logged, against meals delivered", "40"],
+  ["Workouts done, against workouts scheduled", "30"],
+  ["Weekly weigh-in", "10"],
+  ["Zero skipped meals", "10"],
+  ["Water logged", "10"],
+];
+
 export default function Coach() {
   return (
     <section
@@ -145,6 +156,35 @@ export default function Coach() {
               ))}
             </dl>
           </div>
+        </div>
+
+        {/* ── The score, with its maths shown ─────────────────────────────
+            Every other app hands you a number and hides how it got there.
+            This is the actual rubric from the scoring engine. */}
+        <div style={{ marginTop: "clamp(44px,5vw,72px)", borderTop: `1px solid ${RULE}`, paddingTop: "clamp(28px,3.4vw,44px)" }}>
+          <div className="ff-score-head">
+            <div>
+              <h3 style={{ ...mid("clamp(1.5rem,2.6vw,2.1rem)") }}>Your consistency score, and its maths</h3>
+              <p style={{ ...copy(15.5), marginTop: 12, maxWidth: "50ch" }}>
+                One number out of a hundred, every week. Here is exactly how it is built.
+                A score you cannot audit is a score you cannot aim at.
+              </p>
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ ...huge("clamp(2.6rem,5vw,4rem)"), color: LIME, lineHeight: 0.8 }}>100</span>
+              <span style={{ ...mid("clamp(1rem,1.4vw,1.2rem)"), color: DIM }}>total</span>
+            </div>
+          </div>
+
+          <ul className="ff-score">
+            {SCORE.map(([label, pts]) => (
+              <li key={label} className="ff-score-row">
+                <span style={{ ...copy(15), color: MUTE }}>{label}</span>
+                <span aria-hidden className="ff-score-bar" style={{ ["--pts" as string]: pts }} />
+                <span style={{ ...mid("clamp(1.1rem,1.6vw,1.4rem)"), color: INK, whiteSpace: "nowrap" }}>{pts} pts</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

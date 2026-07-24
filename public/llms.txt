@@ -31,8 +31,20 @@ calorie and protein intake is weighed rather than estimated from a food diary.
 - Diets supported: vegetarian, eggetarian, non-vegetarian, Jain, vegan.
 - Entry offer: trial day at Rs 400 (breakfast plus lunch, no lock-in).
 - Ongoing pricing: from Rs 112 per meal.
+- Menu cycle: 60 days is the standard rotation (115 of the 126 plans), so a
+  dish does not repeat for two months. The FULL menu of every plan is public:
+  no signup, no email gate, no blurred days. Anyone can read every day and
+  every macro before paying.
 - Exercise library: 952 exercises with primary and secondary muscle groups,
-  equipment, difficulty and logged sets, reps and burn.
+  equipment, difficulty and logged sets, reps and burn, plus 59 structured
+  training programs across 413 program days, each day carrying a focus area,
+  prescribed sets, reps, rest and an estimated burn.
+- Consistency score, published formula: meals logged against meals delivered
+  40 points, workouts done against workouts scheduled 30, weekly weigh-in 10,
+  zero skipped meals 10, water logged 10. Total 100, recomputed weekly.
+- Supplements carry an evidence grade, the trial count behind them (some
+  "500+ RCTs"), the clinical dose, timing, warnings, interactions and whether
+  the product is actually available in India.
 - Nutrition diary: a 154-item Indian food database plus water tracking, so
   members log anything they eat (not only FitFuel meals) against macro goals.
 - Coaching: a deterministic engine reads each week and recalibrates the

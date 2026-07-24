@@ -1242,6 +1242,104 @@ main[data-surface="marketing"] {
   .ff-stack-body { grid-column: 1 / -1; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   OPEN MENU — sixty days, made countable
+   ═══════════════════════════════════════════════════════════════════════
+   Mechanism 13. One cell per menu day. They fill in sequence as the section
+   scrolls, so "sixty days before a dish repeats" stops being a claim and
+   becomes something you watch accumulate. Staggered via --d.
+
+   Base state is filled, so an inactive timeline shows the complete cycle
+   rather than an empty grid, which would read as broken. */
+.ff-menu-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.85fr);
+  gap: clamp(32px, 5vw, 76px);
+  align-items: start;
+}
+.ff-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: clamp(5px, 0.7vw, 9px);
+}
+.ff-menu-cell {
+  aspect-ratio: 1;
+  background: var(--ff-lime);
+  opacity: .82;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+    .ff-menu-cell {
+      animation: ff-menu-fill linear both;
+      animation-timeline: view();
+      /* Each cell starts 0.55% later than the last: 60 cells sweep across
+         roughly a third of the range, so the fill reads as a wave. */
+      animation-range: entry calc(34% + var(--d) * 0.55%) entry calc(44% + var(--d) * 0.55%);
+    }
+    @keyframes ff-menu-fill {
+      from { opacity: 0; transform: scale(.55); }
+      to   { opacity: .82; transform: scale(1); }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .ff-menu-cols { grid-template-columns: 1fr; }
+  .ff-menu-grid { grid-template-columns: repeat(12, 1fr); max-width: 420px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONSISTENCY SCORE — the rubric, drawn to scale
+   ═══════════════════════════════════════════════════════════════════════
+   Mechanism 14. Each line of the scoring formula gets a bar whose width is
+   its actual point weight, so the maths is legible at a glance: meals are
+   40% of the score and the bar is twice the length of the 20-pointers.
+   Bars grow on scroll. Base state is full width, so an inactive timeline
+   shows the true proportions rather than an empty rail. */
+.ff-score-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: clamp(22px, 3vw, 34px);
+}
+.ff-score { list-style: none; margin: 0; padding: 0; }
+.ff-score-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.1fr) minmax(80px, 1.6fr) auto;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 32px);
+  padding: 14px 0;
+  border-top: 1px solid var(--ff-rule);
+}
+.ff-score-row:last-child { border-bottom: 1px solid var(--ff-rule); }
+.ff-score-bar {
+  display: block;
+  height: 10px;
+  /* Width IS the point weight: 40 pts reads twice as long as 20. */
+  width: calc(var(--pts) * 1%);
+  max-width: 100%;
+  background: var(--ff-lime);
+  transform-origin: left center;
+  transform: scaleX(1);
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+    .ff-score-bar {
+      animation: ff-score-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 58% cover 40%;
+    }
+    @keyframes ff-score-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  }
+}
+@media (max-width: 760px) {
+  .ff-score-row { grid-template-columns: 1fr auto; row-gap: 8px; }
+  .ff-score-bar { grid-column: 1 / -1; width: calc(var(--pts) * 2%); }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
