@@ -1,68 +1,125 @@
-"use client";
-
 // app/_home/Hero.tsx
 //
-// Client island: owns the scroll-linked parallax on the background frame
-// and the entrance animation on the headline. Everything below the fold is
-// server-rendered.
+// A REAL 3D HERO.
+//
+// This was a flat image with a framer-motion translateY on it: fake parallax,
+// and it cost a client component plus the motion library at the top of the
+// page. It is now a genuine 3D diorama.
+//
+// Five layers sit at different translateZ depths inside a `perspective`
+// container. Scroll moves the CAMERA (rotateX + translateZ on the scene),
+// and because the layers are at real depths the parallax falls out of the
+// projection maths for free. That is true depth, not a simulated offset:
+// near layers sweep, far layers barely move, exactly as they would through
+// a lens.
+//
+// Per ui-ux-pro-max "3D & Hyperrealism": perspective 1000px, 3-5 parallax
+// layers. That entry scores Poor on performance and Not-accessible because
+// it assumes WebGL/Three.js. Doing the same thing in CSS 3D instead means
+// it is GPU-composited, ships ZERO JavaScript, and degrades cleanly, so we
+// get the look without either penalty.
+//
+// SERVER COMPONENT. The old version was "use client" purely for the
+// parallax; that is gone, and framer-motion no longer loads for the hero.
+//
+// Depth compensation: an element at translateZ(-d) with perspective p is
+// projected smaller by p/(p+d), so each layer carries the inverse scale to
+// stay the intended size. Those numbers are worked out in the CSS.
 
-import { useRef } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import Frame from "./Frame";
-import { WRAP, RULE, LIME, INK, DIM, COND, EASE, huge, copy, tag } from "./theme";
+import { WRAP, RULE, LIME, INK, DIM, COND, huge, copy, tag } from "./theme";
+
+const READOUT: [string, string][] = [
+  ["Intake", "1,842"],
+  ["Burn", "410"],
+  ["Net", "1,432"],
+  ["Target", "1,450"],
+];
 
 export default function Hero() {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 90]);
-
   return (
-    <section ref={ref} style={{ position: "relative", paddingTop: 68 }}>
-      <div className="ff-hero-stage" style={{ position: "relative", minHeight: "min(94vh,940px)", display: "flex", flexDirection: "column", justifyContent: "flex-end", overflow: "hidden" }}>
-        <motion.div style={{ position: "absolute", inset: "-6% 0 0", y }}>
-          <Frame src="/images/hero-bowl.jpg" alt="A FitFuel bowl of fresh vegetables, chickpeas and avocado" sizes="100vw" priority />
-        </motion.div>
-        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(7,7,7,.82) 0%, rgba(7,7,7,.34) 34%, rgba(7,7,7,.86) 76%, #070707 100%)" }} />
+    <section className="ff-hero" aria-labelledby="hero-heading">
+      {/* The lens. Everything inside is projected through this perspective. */}
+      <div className="ff-hero-3d">
+        <div className="ff-hero-scene">
+          {/* L1 · deepest: atmosphere. A slow lime bloom that gives the
+              black somewhere to recede to. */}
+          <div className="ff-hl ff-hl-atmos" aria-hidden />
 
-        <div style={{ ...WRAP, position: "relative", paddingBottom: "clamp(28px,4vw,52px)", paddingTop: 120 }}>
-          <motion.h1
-            initial={reduce ? undefined : { opacity: 0, y: 34 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: EASE }}
-            className="ff-hero-h1"
-            style={huge("clamp(3.6rem,13.5vw,11.5rem)")}
-          >
-            We cook it.<br />We weigh it.<br /><span style={{ color: LIME }}>We track it.</span>
-          </motion.h1>
+          {/* L2 · the food, set back so it reads as environment, not card */}
+          <div className="ff-hl ff-hl-image">
+            <Image
+              src="/images/hero-bowl.jpg"
+              alt="A FitFuel bowl of fresh vegetables, chickpeas and avocado"
+              fill
+              sizes="100vw"
+              priority
+              fetchPriority="high"
+              quality={74}
+              style={{ objectFit: "cover" }}
+            />
+            <span className="ff-hero-grade" aria-hidden />
+          </div>
 
-          <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "clamp(20px,4vw,60px)", alignItems: "end", marginTop: "clamp(28px,4vw,48px)" }}>
-            <p style={{ ...copy(16.5), maxWidth: "46ch" }}>
-              Chef-cooked meals, weighed to your macros and delivered every morning in Pune. The tracking and the coaching are built in. <span style={{ color: INK }}>One health system, not five apps.</span>
-            </p>
-            {/* Trial is the primary action: it is the lowest-friction offer
-                and the thing the whole page closes on. */}
-            <div style={{ display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap" }}>
-              <Link href="/plans?trial=true" className="ff-btn">Start trial day, Rs 400</Link>
-              <Link href="/plans" className="ff-a">All plans <ArrowRight size={17} /></Link>
+          {/* L3 · the readout, floating just behind the type */}
+          <div className="ff-hl ff-hl-readout" aria-hidden>
+            <div className="ff-hero-chip">
+              <span style={tag(LIME)}>Today, verified</span>
+              <div className="ff-hero-chip-rows">
+                {READOUT.map(([k, v], i) => (
+                  <span key={k} className="ff-hero-stat">
+                    <span style={{ ...copy(12.5), color: DIM }}>{k}</span>
+                    <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 22, color: i === 2 ? LIME : INK }}>{v}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* L4 · the headline, at the focal plane */}
+          <div className="ff-hl ff-hl-type">
+            <div style={WRAP}>
+              <h1 id="hero-heading" className="ff-hero-h1" style={huge("clamp(3.2rem,12vw,10.5rem)")}>
+                <span className="ff-hero-l" style={{ ["--i" as string]: 0 }}>We cook it.</span>
+                <span className="ff-hero-l" style={{ ["--i" as string]: 1 }}>We weigh it.</span>
+                <span className="ff-hero-l" style={{ ["--i" as string]: 2, color: LIME }}>We track it.</span>
+              </h1>
+            </div>
+          </div>
+
+          {/* L5 · nearest: the copy and the actions */}
+          <div className="ff-hl ff-hl-fore">
+            <div style={WRAP}>
+              <div className="ff-hero-foot">
+                <p style={{ ...copy(16.5), maxWidth: "44ch" }}>
+                  Chef-cooked meals, weighed to your macros and delivered every morning in Pune.
+                  The tracking and the coaching are built in.{" "}
+                  <span style={{ color: INK }}>One health system, not five apps.</span>
+                </p>
+                <div className="ff-hero-cta">
+                  <Link href="/plans?trial=true" className="ff-btn">Start trial day, Rs 400</Link>
+                  <Link href="/plans" className="ff-a">All plans <ArrowRight size={17} /></Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* readout welded to the bottom edge, square, not a floating card */}
-        <div style={{ position: "relative", borderTop: `1px solid ${RULE}`, background: "rgba(7,7,7,.9)", backdropFilter: "blur(10px)" }}>
-          <div style={{ ...WRAP, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "clamp(18px,4vw,54px)", padding: "16px clamp(18px,4vw,56px)" }}>
-            <span style={tag(LIME)}>Today, verified</span>
-            {[["Intake", "1,842"], ["Burn", "410"], ["Net", "1,432"], ["Target", "1,450"]].map(([k, v], i) => (
-              <span key={k} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
-                <span style={{ ...copy(13), color: DIM }}>{k}</span>
-                <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 27, color: i === 2 ? LIME : INK }}>{v}</span>
-              </span>
-            ))}
-            <span className="ff-hide" style={{ ...copy(13), color: DIM, marginLeft: "auto" }}>Consistency 92 / 100</span>
-          </div>
+      {/* The readout bar stays welded to the bottom edge, outside the 3D
+          space so it never distorts and never loses legibility. */}
+      <div className="ff-hero-bar">
+        <div style={{ ...WRAP, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "clamp(16px,4vw,54px)", padding: "15px clamp(18px,4vw,56px)" }}>
+          <span style={tag(LIME)}>Today, verified</span>
+          {READOUT.map(([k, v], i) => (
+            <span key={k} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
+              <span style={{ ...copy(13), color: DIM }}>{k}</span>
+              <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, color: i === 2 ? LIME : INK }}>{v}</span>
+            </span>
+          ))}
+          <span className="ff-hide" style={{ ...copy(13), color: DIM, marginLeft: "auto" }}>Consistency 92 / 100</span>
         </div>
       </div>
     </section>

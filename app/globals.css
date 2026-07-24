@@ -1495,6 +1495,159 @@ main[data-surface="marketing"] {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   HERO — a real 3D diorama
+   ═══════════════════════════════════════════════════════════════════════
+   Five layers at genuine translateZ depths inside one perspective. Scroll
+   moves the CAMERA (rotateX + translateZ on the scene); the parallax then
+   falls out of the projection maths rather than being faked with offsets.
+
+   DEPTH COMPENSATION: an element at translateZ(-d) under perspective p is
+   projected at scale p/(p+d), so each layer carries the inverse scale to
+   land at its intended size:
+     -700px -> 1000/1700 = 0.588 -> scale(1.70)
+     -400px -> 1000/1400 = 0.714 -> scale(1.40)
+     -120px -> 1000/1120 = 0.893 -> scale(1.12)
+        0px -> 1.000               -> scale(1)
+      +80px -> 1000/ 920 = 1.087 -> scale(0.92)
+
+   Per ui-ux-pro-max "3D & Hyperrealism" (perspective 1000px, 3-5 parallax
+   layers) but implemented in CSS rather than the WebGL that entry assumes,
+   which is why it keeps good performance and accessibility instead of that
+   style's Poor/Not-accessible ratings.
+   ═══════════════════════════════════════════════════════════════════════ */
+.ff-hero { position: relative; padding-top: 68px; }
+
+.ff-hero-3d {
+  position: relative;
+  min-height: min(94vh, 940px);
+  perspective: 1000px;
+  perspective-origin: 50% 42%;
+  overflow: hidden;
+}
+.ff-hero-scene {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* Resting camera. Scroll animates from here. */
+  transform: rotateX(0deg) translateZ(0);
+}
+
+/* Every layer fills the stage; depth comes from translateZ. */
+.ff-hl {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.ff-hl-atmos {
+  transform: translateZ(-700px) scale(1.7);
+  background:
+    radial-gradient(60% 50% at 24% 18%, rgba(132, 204, 22, .16), transparent 62%),
+    radial-gradient(70% 60% at 82% 82%, rgba(132, 204, 22, .07), transparent 66%),
+    #050504;
+}
+
+.ff-hl-image { transform: translateZ(-400px) scale(1.4); }
+.ff-hl-image img { object-fit: cover; }
+.ff-hero-grade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 7, 7, .80) 0%, rgba(7, 7, 7, .30) 34%, rgba(7, 7, 7, .88) 78%, #070707 100%);
+}
+
+.ff-hl-readout {
+  transform: translateZ(-120px) scale(1.12);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: clamp(88px, 13vh, 150px) clamp(20px, 6vw, 90px) 0 0;
+}
+.ff-hero-chip {
+  background: rgba(6, 6, 5, .62);
+  border: 1px solid var(--ff-rule-2);
+  padding: 14px 18px;
+}
+.ff-hero-chip-rows { display: flex; gap: 18px; margin-top: 10px; flex-wrap: wrap; }
+.ff-hero-stat { display: inline-flex; align-items: baseline; gap: 7px; }
+
+.ff-hl-type {
+  transform: translateZ(0);
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: clamp(160px, 24vh, 300px);
+}
+.ff-hero-h1 span { display: block; }
+
+.ff-hl-fore {
+  transform: translateZ(80px) scale(0.92);
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: clamp(30px, 5vh, 64px);
+}
+.ff-hero-foot {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: clamp(20px, 4vw, 60px);
+  align-items: end;
+}
+.ff-hero-cta { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+
+/* The bottom readout bar sits OUTSIDE the 3D space so it never distorts. */
+.ff-hero-bar {
+  position: relative;
+  border-top: 1px solid var(--ff-rule);
+  background: rgba(7, 7, 7, .92);
+  backdrop-filter: blur(10px);
+}
+
+/* ── Camera move + entrance ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  /* Headline lines rise in sequence. Plain CSS, no JS, no library. */
+  .ff-hero-h1 span {
+    animation: ff-hero-rise .9s cubic-bezier(.16, 1, .3, 1) both;
+    animation-delay: calc(var(--i) * .11s + .05s);
+  }
+  @keyframes ff-hero-rise {
+    from { opacity: 0; transform: translate3d(0, 38px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (min-width: 900px) {
+      .ff-hero-scene {
+        animation: ff-hero-camera linear both;
+        animation-timeline: view();
+        animation-range: exit 0% exit 100%;
+        will-change: transform;
+      }
+      /* A camera that tilts down and pushes in as the hero leaves. */
+      @keyframes ff-hero-camera {
+        from { transform: rotateX(0deg) translateZ(0); }
+        to   { transform: rotateX(9deg) translateZ(150px); }
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  /* Phones: keep the depth, drop the readout card so the type owns the
+     frame. Less clutter, same scene. */
+  .ff-hl-readout { display: none; }
+  .ff-hero-foot { grid-template-columns: 1fr; }
+  .ff-hl-type { padding-bottom: clamp(210px, 34vh, 340px); }
+  .ff-hl-fore { transform: translateZ(0) scale(1); }
+}
+
+/* Short viewports: the headline, copy, CTAs and bar all fight for height. */
+@media (max-height: 900px) and (min-width: 1000px) {
+  .ff-hero-h1 { font-size: clamp(3rem, 8vw, 6.4rem) !important; }
+  .ff-hero-3d { min-height: min(90vh, 780px); }
+}
+@media (max-height: 740px) and (min-width: 1000px) {
+  .ff-hero-h1 { font-size: clamp(2.6rem, 6vw, 4.8rem) !important; }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
@@ -1523,8 +1676,7 @@ body::after {
 /* Short viewports (13" laptops, tablets in landscape): the headline,
    subhead, CTAs and readout bar all compete for height. */
 @media (max-height: 900px) and (min-width: 1000px) {
-  .ff-hero-h1    { font-size: clamp(3rem, 8vw, 6.4rem) !important; }
-  .ff-hero-stage { min-height: min(90vh, 780px) !important; }
+  /* superseded by the 3D hero block above */
 }
 @media (max-height: 740px) and (min-width: 1000px) {
   .ff-hero-h1 { font-size: clamp(2.6rem, 6vw, 4.8rem) !important; }
