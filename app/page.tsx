@@ -15,6 +15,7 @@ import Terms from "./_home/Terms";
 import Franchise from "./_home/Franchise";
 import OpenMenu from "./_home/OpenMenu";
 import Chapter from "./_home/Chapter";
+import TheDay from "./_home/TheDay";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -67,6 +68,10 @@ export default function Home() {
           organise the deep dives so the long page has a spine and a reader
           always knows which act they are in. Nothing is cut. */}
       <Hero />
+      {/* ACT ONE: the film. One day, told as a pinned horizontal sequence
+          on desktop and a native swipe carousel on mobile. The page opens
+          as a story before it opens as a catalogue. */}
+      <TheDay />
       <Pillars />
       {/* Finder sits directly under the hero: it is the cheapest
           conversion step on the page and the hero subhead describes it. */}

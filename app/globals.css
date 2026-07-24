@@ -1340,6 +1340,161 @@ main[data-surface="marketing"] {
   .ff-score-bar { grid-column: 1 / -1; width: calc(var(--pts) * 2%); }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   THE DAY — a film, not a section
+   ═══════════════════════════════════════════════════════════════════════
+   Pattern: Horizontal Scroll Journey (ui-ux-pro-max), motion tier Complex.
+   You scroll DOWN, the day moves SIDEWAYS. One protagonist, one thread,
+   time as the spine.
+
+   Desktop: the runway's height is the runtime; the stage pins and the
+   track translates on a scrubbed view-timeline. Zero JS.
+   Mobile: the pinned scrub is REPLACED by a native scroll-snap carousel.
+   Swiping is the right gesture on a phone and needs no hijacking. Same
+   frames, same story.
+   ═══════════════════════════════════════════════════════════════════════ */
+.ff-day { border-top: 1px solid var(--ff-rule); background: #050504; }
+
+.ff-day-title {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(56px, 8vw, 104px) clamp(18px, 4vw, 56px) clamp(28px, 4vw, 48px);
+}
+
+/* ── The frame (shared by both modes) ───────────────────────────────── */
+.ff-day-frame {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  background: #070706;
+}
+.ff-day-media { position: absolute; inset: 0; }
+.ff-day-media img { transition: transform 1.2s cubic-bezier(.16, 1, .3, 1); }
+/* Bottom-weighted scrim so the type always has a floor to sit on. */
+.ff-day-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(4, 4, 3, .95) 4%, rgba(4, 4, 3, .62) 42%, rgba(4, 4, 3, .18) 78%);
+  pointer-events: none;
+}
+.ff-day-copy {
+  position: relative;
+  padding: clamp(26px, 4vw, 66px);
+  max-width: 46ch;
+}
+.ff-day-time { display: block; line-height: .8; }
+.ff-day-line { margin-top: clamp(12px, 1.6vw, 22px); }
+.ff-day-sub { margin-top: clamp(12px, 1.4vw, 18px); }
+
+/* ── DESKTOP: pinned horizontal film ────────────────────────────────── */
+.ff-day-runway { display: none; }
+
+@media (min-width: 900px) {
+  .ff-day-swipe,
+  .ff-day-hint { display: none; }
+  .ff-day-runway { display: block; }
+
+  .ff-day-runway {
+    /* Runtime: one viewport of scroll per frame, plus one to hold the last
+       frame on screen before releasing the pin. */
+    height: calc(var(--frames, 6) * 100vh);
+    position: relative;
+    view-timeline-name: --day;
+    view-timeline-axis: block;
+  }
+
+  .ff-day-stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .ff-day-track {
+    display: flex;
+    height: 100%;
+    width: calc(var(--frames) * 100vw);
+    /* Base state is frame one, so a browser without scroll timelines shows
+       a correct, readable opening frame rather than a blank stage. */
+    transform: translateX(0);
+  }
+  .ff-day-track > .ff-day-frame { width: 100vw; flex: 0 0 100vw; height: 100%; }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .ff-day-track {
+        animation: ff-day-pan linear both;
+        animation-timeline: --day;
+        /* entry 100% = the runway's top hits the viewport top (pin starts).
+           exit 0% = its bottom hits the viewport bottom (pin ends). */
+        animation-range: entry 100% exit 0%;
+        will-change: transform;
+      }
+      @keyframes ff-day-pan {
+        from { transform: translateX(0); }
+        to   { transform: translateX(calc(-100vw * (var(--frames) - 1))); }
+      }
+
+      .ff-day-progress-fill {
+        animation: ff-day-progress linear both;
+        animation-timeline: --day;
+        animation-range: entry 100% exit 0%;
+      }
+      @keyframes ff-day-progress {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+      }
+
+      /* Slow push-in on the active frame's image, so each beat breathes. */
+      .ff-day-track .ff-day-media img { transform: scale(1.06); }
+    }
+  }
+
+  /* Film-strip progress rail. */
+  .ff-day-progress {
+    position: absolute;
+    left: clamp(26px, 4vw, 66px);
+    right: clamp(26px, 4vw, 66px);
+    bottom: clamp(22px, 3vw, 40px);
+    height: 2px;
+    background: rgba(255, 255, 255, .16);
+  }
+  .ff-day-progress-fill {
+    display: block;
+    height: 100%;
+    background: var(--ff-lime);
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* ── MOBILE: native swipe carousel ──────────────────────────────────── */
+@media (max-width: 899px) {
+  .ff-day-swipe {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 clamp(18px, 5vw, 32px) 18px;
+    scrollbar-width: none;
+  }
+  .ff-day-swipe::-webkit-scrollbar { display: none; }
+  .ff-day-swipe > .ff-day-frame {
+    flex: 0 0 86%;
+    scroll-snap-align: center;
+    min-height: 68vh;
+    border: 1px solid var(--ff-rule);
+  }
+  .ff-day-hint {
+    display: block;
+    text-align: center;
+    padding: 4px 0 clamp(44px, 8vw, 64px);
+  }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
