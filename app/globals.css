@@ -540,6 +540,63 @@ main[data-surface="marketing"] {
   .ff-loop-what { grid-column: 2; }
 }
 
+/* ── The loop in 3D, on a phone ─────────────────────────────────────────
+   The dial above needs 1000px: a ring of eight nodes has nowhere to turn
+   in a 375px column, and its 780vh runway would be a punishing amount of
+   scrolling on a phone. So every mobile visitor got the flat list, which
+   had no depth and no motion at all — the section named "the loop" sat
+   there as a static list on the device most people read it on.
+
+   This gives the phone its own version of the argument rather than a
+   consolation prize. The rows share one perspective and each turns on the
+   X axis as it travels: lying back as it rises from the bottom, square to
+   you across the middle of the screen, lying away again as it leaves.
+   Scrolling turns the loop past you. That is what the ring says on the
+   desktop, said in the axis a phone actually scrolls.
+
+   `animation-timeline: view()` drives it, so it is compositor-side and
+   ships no JavaScript.
+
+   Every row's BASE state is upright and fully opaque, which is the load-
+   bearing detail: an animation bound to an inactive timeline applies no
+   effect whatsoever in Chrome, even with `fill: both`. A browser without
+   scroll-driven animation therefore shows the plain readable list, not a
+   stack of rows frozen face-down. */
+@media (max-width: 999px) and (prefers-reduced-motion: no-preference) {
+  .ff-dial-flat ol {
+    perspective: 800px;
+    perspective-origin: 50% 50%;
+  }
+  .ff-loop-row {
+    animation: ff-loop-turn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+  @keyframes ff-loop-turn {
+    0%       { transform: rotateX(38deg)  translateZ(-90px); opacity: .18; }
+    40%, 60% { transform: rotateX(0deg)   translateZ(0);     opacity: 1;   }
+    100%     { transform: rotateX(-38deg) translateZ(-90px); opacity: .18; }
+  }
+
+  /* The dot lights as its row crosses the middle, so exactly one "now"
+     marker travels down the rail. Only the lit keyframe is declared: the
+     ends inherit the element's base style, so this cannot drift out of
+     sync with the dot's resting colours above. */
+  .ff-loop-dot {
+    animation: ff-loop-dot-live linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+  @keyframes ff-loop-dot-live {
+    42%, 58% {
+      transform: scale(1.8);
+      background: var(--ff-lime);
+      border-color: var(--ff-lime);
+      box-shadow: 0 0 16px rgba(132, 204, 22, .55);
+    }
+  }
+}
+
 /* Statement comparison band: three columns of what everyone else stops
    short of. Stacks below the tablet breakpoint. */
 @media (max-width: 860px) {
