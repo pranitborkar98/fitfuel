@@ -39,8 +39,8 @@ export default function Hero() {
           </motion.h1>
 
           <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "clamp(20px,4vw,60px)", alignItems: "end", marginTop: "clamp(28px,4vw,48px)" }}>
-            <p style={{ ...copy(16.5), maxWidth: "50ch" }}>
-              Chef-cooked meals delivered across Pune, a full training and body-metrics app, and a supplement stack that matches your condition. One operating system for what you eat, burn and weigh.
+            <p style={{ ...copy(16.5), maxWidth: "46ch" }}>
+              Chef-cooked meals, weighed to your macros and delivered every morning in Pune. The tracking and the coaching are built in. <span style={{ color: INK }}>One health system, not five apps.</span>
             </p>
             {/* Trial is the primary action: it is the lowest-friction offer
                 and the thing the whole page closes on. */}

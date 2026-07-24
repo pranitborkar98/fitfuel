@@ -14,6 +14,7 @@ import Refer from "./_home/Refer";
 import Terms from "./_home/Terms";
 import Franchise from "./_home/Franchise";
 import OpenMenu from "./_home/OpenMenu";
+import Chapter from "./_home/Chapter";
 import Reveal from "./_home/Reveal";
 import CountUp from "./_home/CountUp";
 import { BG, INK, MUTE, DIM, RULE, LIME, COND, WRAP, huge, mid, copy, tag } from "./_home/theme";
@@ -59,35 +60,52 @@ export default function Home() {
           answer engines rather than appearing after hydration. */}
       <StructuredData />
 
+      {/* ── OPENING: what it is, one clear breath ─────────────────────────
+          Hero states the offer plainly; Pillars is the whole thing in four
+          numbers; Finder lets you try it; Statement is the thesis for why one
+          system beats three separate tools. Then the four chapters below
+          organise the deep dives so the long page has a spine and a reader
+          always knows which act they are in. Nothing is cut. */}
       <Hero />
       <Pillars />
       {/* Finder sits directly under the hero: it is the cheapest
           conversion step on the page and the hero subhead describes it. */}
       <Finder />
       <Statement />
-      {/* 70 of 126 plans are condition-specific across 38 conditions.
-          The single biggest thing the old homepage did not say. */}
+
+      {/* ── 01 · EAT ─────────────────────────────────────────────────── */}
+      <Chapter n="01" label="Eat" line="Food built for your body, cooked and delivered daily" id="eat" />
+      {/* 70 of 126 plans are condition-specific across 38 conditions. */}
       <Conditions />
-      {/* 60-day cycle, 100% public menu (Decision #43). A competitive
-          stance, not a feature: nobody else shows the whole menu. */}
+      {/* 60-day cycle, 100% public menu (Decision #43): nobody else shows
+          the whole menu. */}
       <OpenMenu />
       <Kitchen />
-      <AppBlock />
-      {/* 154-food diary + water tracking. A food log nobody knew shipped. */}
-      <Diary />
+      {/* Supplements are part of what you eat, matched to your plan, so they
+          live in the Eat chapter rather than mid-Track. */}
       <Supplements />
+
+      {/* ── 02 · TRACK ───────────────────────────────────────────────── */}
+      <Chapter n="02" label="Track" line="Every gram measured, not guessed" id="track" />
+      <AppBlock />
+      {/* 154-food diary + water tracking. */}
+      <Diary />
+
+      {/* ── 03 · THE SYSTEM ──────────────────────────────────────────── */}
+      <Chapter n="03" label="The system" line="It watches the week so you do not have to" id="system" />
       <LoopDial />
-      {/* The coach and the daily comms loop. Both ship; neither was on
-          the site before. Sits after the loop because it is what runs it. */}
+      {/* The coach and the daily comms loop. Runs the loop, so it follows it. */}
       <Coach />
+
+      {/* ── 04 · JOIN ────────────────────────────────────────────────── */}
+      <Chapter n="04" label="Join" line="Eat with us, earn with us, build with us" id="join" />
       <Partners />
       <Franchise />
       <Membership />
-      {/* 7 durations, delivery windows, PayU + COD, digital plans. The
-          operational/trust answers, placed next to the pricing decision. */}
+      {/* 7 durations, delivery windows, PayU + COD, digital plans. */}
       <Terms />
       <Voices />
-      {/* Rs 500 referral credit loop. Was one footer link. */}
+      {/* Rs 500 referral credit loop. */}
       <Refer />
       {/* Trimmed index near the foot; the Footer carries full completeness. */}
       <ServiceMap />
