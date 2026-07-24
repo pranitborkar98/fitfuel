@@ -893,6 +893,48 @@ main[data-surface="marketing"] {
 .ff-svcmap .ff-svc-col:has(.ff-svc:hover) .ff-svc-head { opacity: 1 !important; }
 .ff-svc-head { transition: opacity .22s ease; }
 
+/* The spotlight above is the whole mechanism for this section, and it is
+   built on :hover — which means the index had NOTHING on a phone. Every
+   touch visitor got a static wall of forty links.
+
+   The touch version is the same idea on a different trigger: instead of the
+   row you point at, it is the row you have scrolled to. Each link runs its
+   own view() timeline, so the sequencing falls out of the geometry rather
+   than from staggered delays, and the index prints itself down the screen
+   as you read it.
+
+   Scoped to max-width:900px so the desktop spotlight is untouched: a
+   scroll-driven opacity here would otherwise beat the :hover rule, since
+   animations win over normal declarations, and the pointer version would
+   stop dimming its siblings. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (max-width: 900px) {
+    .ff-svc {
+      animation: ff-svc-print linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 62%;
+    }
+    /* Opacity and offset only. Carrying border-color to lime here would end
+       with every one of the forty rows underlined in lime, which is a wall,
+       not a spotlight — the pointer version lights exactly one. */
+    @keyframes ff-svc-print {
+      from { opacity: .22; transform: translateX(-10px); }
+      to   { opacity: 1;   transform: none; }
+    }
+    /* The column rule draws in as its column arrives. */
+    .ff-svc-head {
+      animation: ff-svc-head-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+      transform-origin: left center;
+    }
+    @keyframes ff-svc-head-draw {
+      from { opacity: .3; transform: translateX(-8px); }
+      to   { opacity: 1;  transform: none; }
+    }
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    THE COACH — a number that recalibrates as you scroll
    ═══════════════════════════════════════════════════════════════════════
@@ -1025,7 +1067,12 @@ main[data-surface="marketing"] {
    The frame is overflow-clipped and the image is oversized, so the drift
    never exposes an edge.
    ═══════════════════════════════════════════════════════════════════════ */
-@media (prefers-reduced-motion: no-preference) and (min-width: 1000px) {
+/* No width gate. This was min-width:1000px, which meant the three editorial
+   blocks (kitchen, app, supplements) were flat slabs on every phone — and a
+   phone is where the separation helps most, because the two panels stack and
+   the only thing left to tell them apart is depth. The drift is a compositor
+   transform on an already-decoded image, so it costs a phone nothing. */
+@media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .ff-para .ff-frame {
       /* Oversize so a 9% drift cannot uncover the top or bottom edge. */
@@ -1195,6 +1242,57 @@ main[data-surface="marketing"] {
   .ff-refer-step { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 14px 0; border-top: 1px solid var(--ff-rule); }
   .ff-refer-step h3 { margin-top: 0 !important; }
   .ff-refer-step p { grid-column: 2; }
+
+  /* The loop still has to read as a loop on a phone. Killing the horizontal
+     connector was right, but nothing replaced it, so the three steps became
+     an unrelated list — the one section whose whole point is that the steps
+     connect. The rail is rebuilt on the vertical axis instead: a thread down
+     the centre of the number column, one segment per step.
+
+     Each segment is its own element with its own view() timeline, so the
+     stagger comes from the geometry rather than from hand-tuned delays: a
+     step's segment draws when that step is what you are looking at. The last
+     one stops at its number instead of running past it into the copy. */
+  .ff-refer-step::before,
+  .ff-refer-step::after {
+    content: "";
+    position: absolute;
+    left: 22px;            /* centre of the 46px number tile */
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    z-index: 0;
+  }
+  .ff-refer-step::before { background: var(--ff-rule-2); }
+  .ff-refer-step::after {
+    background: var(--ff-lime);
+    transform-origin: top center;
+    transform: scaleY(1);  /* base state: drawn, so no-timeline reads whole */
+  }
+  .ff-refer-step:last-child::before,
+  .ff-refer-step:last-child::after { bottom: auto; height: 38px; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (max-width: 700px) {
+    .ff-refer-step::after {
+      animation: ff-refer-drop linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 40%;
+    }
+    @keyframes ff-refer-drop { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+    /* The number lands as the thread reaches it. */
+    .ff-refer-dot {
+      animation: ff-refer-pop linear both;
+      animation-timeline: view();
+      animation-range: entry 40% entry 90%;
+    }
+    @keyframes ff-refer-pop {
+      from { transform: scale(.72); opacity: .3; }
+      to   { transform: scale(1);   opacity: 1;  }
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1326,7 +1424,11 @@ main[data-surface="marketing"] {
 }
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+  /* Width gate removed. The grid already reflows to 12 columns on a phone
+     (below), so the wave had a canvas to run on the whole time — it was just
+     switched off. Sixty cells filling in sequence is the entire argument of
+     this section, and it was desktop-only. */
+  @media (prefers-reduced-motion: no-preference) {
     .ff-menu-cell {
       animation: ff-menu-fill linear both;
       animation-timeline: view();
@@ -1845,7 +1947,9 @@ main[data-surface="marketing"] {
    The closing CTA is the final shot of the page, so the image drifts in
    slowly behind it the way a film holds on its last image. */
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+  /* Width gate removed: the last shot of the page was a still photo on
+     mobile, which is the one place the page most needs to end on movement. */
+  @media (prefers-reduced-motion: no-preference) {
     .ff-close-push .ff-frame img {
       animation: ff-close-zoom linear both;
       animation-timeline: view();
