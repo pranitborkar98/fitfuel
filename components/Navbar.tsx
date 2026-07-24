@@ -233,7 +233,9 @@ export default function Navbar() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
 
         {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", flexShrink: 0 }}>
+        {/* minHeight 44 is the touch target, not a layout change: the bar is
+            68px tall and this is centred in it, so nothing moves on screen. */}
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", flexShrink: 0, minHeight: 44 }}>
           <div style={{ width: 36, height: 36, background: LIME, borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Zap style={{ width: 19, height: 19, color: "#000" }} fill="#000" />
           </div>

@@ -1575,6 +1575,19 @@ main[data-surface="marketing"] {
 }
 
 .ff-hl-image { transform: translateZ(-400px) scale(1.4); }
+
+/* The WebGL field. In FRONT of the photo (the atmosphere layer behind it
+   was fully occluded, which is why its ambient drift was invisible), and
+   behind the type. Screen blend so the particles read as light on the
+   photograph rather than as dots stuck on top of it. */
+.ff-hero-canvas {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(-250px) scale(1.25);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.ff-hero-canvas canvas { width: 100%; height: 100%; display: block; }
 .ff-hl-image img { object-fit: cover; }
 .ff-hero-grade {
   position: absolute;
@@ -1666,15 +1679,17 @@ main[data-surface="marketing"] {
     }
   }
 
-  /* Ambient drift so the hero is alive BEFORE any scroll happens. The
-     atmosphere layer breathes on its own; nothing else moves, so it reads
-     as depth rather than as a busy animation. */
-  .ff-hl-atmos {
-    animation: ff-atmos-drift 18s ease-in-out infinite alternate;
+  /* The atmosphere layer sits at Z-700, BEHIND the full-bleed photo at
+     Z-400, so it is completely occluded: animating it moved something
+     nobody could see. It is a colour bed only now. The living element in
+     the hero is the WebGL particle field in front of the photo, plus the
+     grade below which breathes on its own. */
+  .ff-hero-grade {
+    animation: ff-grade-breathe 14s ease-in-out infinite alternate;
   }
-  @keyframes ff-atmos-drift {
-    from { transform: translateZ(-700px) scale(1.70) translate3d(-1.2%, -0.8%, 0); }
-    to   { transform: translateZ(-700px) scale(1.78) translate3d(1.2%, 0.8%, 0); }
+  @keyframes ff-grade-breathe {
+    from { opacity: .96; }
+    to   { opacity: .82; }
   }
 }
 
@@ -1805,6 +1820,75 @@ main[data-surface="marketing"] {
   .ff-finder-result { animation: none; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   FINDER — chips with real depth
+   ═══════════════════════════════════════════════════════════════════════
+   This section was two rows of flat rectangles on flat black: the plainest
+   thing on the page, and it sits at the cheapest conversion step. Now each
+   chip is a small 3D object. It tilts toward you on hover, the lime fill
+   wipes in from the left when it is chosen rather than snapping, and the
+   two groups are labelled so the section reads as an instrument you operate
+   rather than two loose rows of buttons.
+   ═══════════════════════════════════════════════════════════════════════ */
+.ff-pick { margin-bottom: clamp(20px, 3vw, 32px); }
+.ff-pick-label { display: block; margin-bottom: 12px; }
+.ff-pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  perspective: 700px;
+}
+
+.ff-chip {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--ff-rule-2);
+  background: transparent;
+  color: #d0d0ca;
+  min-height: 52px;
+  padding: 0 30px;
+  font-size: 23px;
+  display: inline-flex;
+  align-items: center;
+  transform-style: preserve-3d;
+  transition: transform .22s cubic-bezier(.16, 1, .3, 1),
+              border-color .2s ease, color .2s ease;
+}
+.ff-chip-sm { min-height: 46px; padding: 0 24px; font-size: 19px; }
+
+/* The lime fill lives behind the label and wipes across on selection. */
+.ff-chip-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--ff-lime);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .34s cubic-bezier(.16, 1, .3, 1);
+  z-index: -1;
+}
+.ff-chip-text { position: relative; }
+.ff-chip.is-on { color: #000; border-color: var(--ff-lime); }
+.ff-chip.is-on .ff-chip-fill { transform: scaleX(1); }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* Lifts and tilts toward the viewer. Small angle on purpose: enough to
+     feel physical, not enough to look like a novelty. */
+  .ff-chip:hover {
+    transform: translateZ(18px) rotateX(-7deg);
+    border-color: var(--ff-lime);
+    color: var(--ff-ink);
+  }
+  .ff-chip.is-on:hover { color: #000; }
+}
+.ff-chip:active { transform: translateZ(4px) scale(.98); }
+.ff-chip:focus-visible { outline: 2px solid var(--ff-lime-light); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-chip, .ff-chip-fill { transition: none; }
+  .ff-chip:hover, .ff-chip:active { transform: none; }
+}
+
 /* ── Page surface ──────────────────────────────────────────────────────
    Nine thousand pixels of flat #070707 is what reads as dead on a real
    screen: there is no material, so nothing catches light. A single fixed
@@ -1881,6 +1965,11 @@ body::after {
   border-radius: 6px;
   text-decoration: none;
   transition: transform 0.18s ease;
+  /* 44px target: it is keyboard-reached, but a switch or head-pointer user
+     activates it by pointer, and it costs nothing to size it properly. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 .skip-link:focus {
   transform: translateY(0);

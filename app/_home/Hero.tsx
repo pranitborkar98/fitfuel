@@ -29,14 +29,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { WRAP, RULE, LIME, INK, DIM, COND, huge, copy, tag } from "./theme";
-
-const READOUT: [string, string][] = [
-  ["Intake", "1,842"],
-  ["Burn", "410"],
-  ["Net", "1,432"],
-  ["Target", "1,450"],
-];
+import HeroCanvasMount from "./HeroCanvasMount";
+import { WRAP, LIME, INK, huge, copy } from "./theme";
 
 export default function Hero() {
   return (
@@ -47,6 +41,12 @@ export default function Hero() {
           {/* L1 · deepest: atmosphere. A slow lime bloom that gives the
               black somewhere to recede to. */}
           <div className="ff-hl ff-hl-atmos" aria-hidden />
+
+          {/* L1.5 · the WebGL field. Eight thousand particles, one per
+              gram, drifting and reacting to the cursor. Sits in FRONT of
+              the photo, because the atmosphere layer behind it was fully
+              occluded and its drift was invisible. Desktop only, lazy. */}
+          <HeroCanvasMount />
 
           {/* L2 · the food, set back so it reads as environment, not card */}
           <div className="ff-hl ff-hl-image">
@@ -98,20 +98,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* The readout bar stays welded to the bottom edge, outside the 3D
-          space so it never distorts and never loses legibility. */}
-      <div className="ff-hero-bar">
-        <div style={{ ...WRAP, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "clamp(16px,4vw,54px)", padding: "15px clamp(18px,4vw,56px)" }}>
-          <span style={tag(LIME)}>Today, verified</span>
-          {READOUT.map(([k, v], i) => (
-            <span key={k} style={{ display: "inline-flex", alignItems: "baseline", gap: 9 }}>
-              <span style={{ ...copy(13), color: DIM }}>{k}</span>
-              <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, color: i === 2 ? LIME : INK }}>{v}</span>
-            </span>
-          ))}
-          <span className="ff-hide" style={{ ...copy(13), color: DIM, marginLeft: "auto" }}>Consistency 92 / 100</span>
-        </div>
-      </div>
     </section>
   );
 }

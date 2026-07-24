@@ -73,7 +73,7 @@ function FooterCol({ title, links }: { title: string; links: { label: string; hr
       <div style={{ fontSize: 12, fontWeight: 800, color: "var(--ff-ink)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 20 }}>
         {title}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="ff-fcol-links" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {links.map(link => (
           <Link key={link.href} href={link.href} className="ff-flink" style={{ fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
             {link.label}
@@ -96,7 +96,7 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 11, textDecoration: "none", marginBottom: 20 }}>
+            <Link href="/" className="ff-fbrand" style={{ display: "inline-flex", alignItems: "center", gap: 11, textDecoration: "none", marginBottom: 20 }}>
               <div style={{ width: 34, height: 34, background: "#84cc16", borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Zap style={{ width: 18, height: 18, color: "#000" }} fill="#000" />
               </div>
@@ -109,7 +109,7 @@ export default function Footer() {
               The only health coach that controls the plate. Chef-cooked, condition-specific meals, delivered daily in Pune. Verified intake, not self-reported.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+            <div className="ff-fcol-links" style={{ display: "flex", flexDirection: "column", gap: 13 }}>
               <a href="https://wa.me/918850446348" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
                 <Phone style={{ width: 14, height: 14, flexShrink: 0 }} /> WhatsApp Us
               </a>
@@ -194,6 +194,27 @@ export default function Footer() {
         }
         @media (prefers-reduced-motion: reduce) {
           .ff-trial-cta:hover { transform: none; }
+        }
+
+        /* Touch targets. On a mouse these links are 20px tall, which is the
+           right density for a five-column sitemap. On a finger that is a
+           miss waiting to happen: WCAG 2.5.5 asks for 44px, and a footer of
+           thirty-odd 20px links was the single biggest tap-accuracy problem
+           on the phone.
+
+           Gated on (pointer: coarse) so the desktop layout keeps its density
+           while every touch device gets the bigger target, including tablets
+           in landscape. The max-width arm is there because a narrow window is
+           the one case a phone-sized layout can appear on a fine pointer, and
+           it costs nothing to be right there too. The row gap drops to zero
+           because the padding now does that job, which keeps the footer from
+           growing taller than it needs to. */
+        @media (pointer: coarse), (max-width: 640px) {
+          .ff-fcol-links { gap: 0 !important; }
+          .ff-flink { min-height: 44px; display: flex !important; align-items: center; }
+          .ff-legal { min-height: 44px; display: inline-flex !important; align-items: center; }
+          .ff-social { width: 44px !important; height: 44px !important; }
+          .ff-fbrand, .ff-trial-cta { min-height: 44px; }
         }
       `}</style>
     </footer>
