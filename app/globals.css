@@ -351,6 +351,45 @@ main[data-surface="marketing"] {
   letter-spacing: 0.02em;
 }
 
+/* ── PARTNER TYPES ─────────────────────────────────────────────────────
+   Eight real PartnerType values, each its own entry point into
+   /partners/apply. A hairline grid rather than eight cards: this is an
+   index of ways to earn, not eight competing offers. */
+.ff-ptypes {
+  display: grid;
+  /* Fixed 4 across, not auto-fit: there are exactly eight types, and
+     auto-fit resolved to seven columns, which left a single orphan on the
+     second row. Four gives two clean rows of four. */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin-top: clamp(28px, 3.4vw, 44px);
+  background: var(--ff-rule);
+  border: 1px solid var(--ff-rule);
+}
+.ff-ptype {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 88px;
+  justify-content: center;
+  padding: 18px 18px;
+  background: var(--ff-bg);
+  text-decoration: none;
+  transition: background .18s ease;
+}
+.ff-ptype:hover { background: var(--ff-panel-2); }
+.ff-ptype-t {
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: var(--ff-ink);
+}
+.ff-ptype-d { font-size: 13px; color: var(--ff-dim); line-height: 1.45; }
+
+@media (max-width: 900px) { .ff-ptypes { grid-template-columns: repeat(2, 1fr); } }
+
 /* Directory row — hairline link list, replaces card grids for indexes */
 .ff-svc {
   display: block;

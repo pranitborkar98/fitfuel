@@ -356,6 +356,31 @@ function Partners() {
             with a commission on every member who eats to their macros.
           </p>
         </Reveal>
+        {/* The prose named seven types; the schema has EIGHT (PartnerType:
+            CUSTOMER, GYM, TRAINER, INFLUENCER, DIETICIAN, DOCTOR, CORPORATE,
+            RESIDENCE) and five reward models (PartnerRewardType). The whole
+            programme was represented on the homepage by two photo cards, so
+            six of the eight ways to earn with FitFuel were invisible. Each
+            one below is a real value in prisma/schema.prisma, and each is
+            selectable on /partners/apply. */}
+        <div className="ff-ptypes">
+          {[
+            ["Gyms", "Voucher per member"],
+            ["Trainers", "Cash commission"],
+            ["Influencers", "Cash commission"],
+            ["Dieticians", "Cash commission"],
+            ["Doctors", "Cash commission"],
+            ["Corporates", "Employee discount"],
+            ["Societies", "Hybrid, per building"],
+            ["Customers", "Credit per referral"],
+          ].map(([t, d]) => (
+            <Link key={t} href="/partners/apply" className="ff-ptype">
+              <span className="ff-ptype-t">{t}</span>
+              <span className="ff-ptype-d">{d}</span>
+            </Link>
+          ))}
+        </div>
+
         <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: "clamp(28px,3.4vw,44px)" }}>
           {[
             { src: "/images/corporate.jpg", alt: "A team at work in a Pune office", t: "Corporate wellness", d: "Subsidised, condition-specific meal programs for Pune offices, with reporting your HR team can actually use.", href: "/corporate", cta: "For your team" },
