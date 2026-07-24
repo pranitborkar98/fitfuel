@@ -74,7 +74,6 @@ const cssVars = (o: Record<string, string | number>) => o as unknown as CSSPrope
 // `accentColor` from the DB is deliberately ignored rather than dropped from
 // the query: the column still feeds the admin preview.
 const accentFor = (_p: Plan): string => "#a3e635";
-const glowOf = (_c: string): string => "transparent";
 
 // ─── Selectable chip ─────────────────────────────────────────────────────────
 function Chip({
@@ -131,7 +130,6 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<"ALL" | Plan["category"]>(initialCategory ?? "ALL");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [wlTier, setWlTier] = useState<Tier | null>(null);
   const [wlEmail, setWlEmail] = useState("");
@@ -179,10 +177,6 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
   const categoryOrder: Plan["category"][] = ["STANDARD", "LIFESTYLE_MEDICAL", "SPORTS", "CORPORATE", "DIGITAL"];
   const orderedCategories = categoryOrder.filter((c) => grouped[c]);
 
-  const selected = useMemo(
-    () => browsePlans.find((p) => p.id === selectedId) ?? browsePlans[0] ?? null,
-    [browsePlans, selectedId],
-  );
 
   const pricesForCombo = useMemo(() => {
     for (const p of plans) {
@@ -357,40 +351,45 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
                Square now, and tall enough to hit on a phone. */
             .ffb-cat-pill{ font-family:var(--ff-cond); font-size:13px; letter-spacing:.06em; padding:0 15px; min-height:44px; display:inline-flex; align-items:center; border-radius:0; cursor:pointer; border:1px solid var(--bd); background:transparent; color:#c9c9c2; transition:border-color .18s, background .18s, color .18s; }
             .ffb-cat-pill.on{ background:#a3e635; color:#0a0a0a; border-color:#a3e635; font-weight:700; }
-            .ffb-grid{ display:grid; grid-template-columns:270px 1fr; gap:14px; }
-            @media (max-width:760px){ .ffb-grid{ grid-template-columns:1fr; } .ffb-list{ max-height:260px; } }
-            .ffb-list{ border:1px solid var(--bd); border-radius:0; padding:7px; max-height:520px; overflow:auto; }
-            .ffb-listcat{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#85857e; padding:13px 9px 5px; display:flex; justify-content:space-between; }
-            .ffb-row{ display:grid; grid-template-columns:8px 1fr auto; align-items:center; gap:10px; width:100%; min-height:44px; text-align:left; padding:11px 10px; border:0; background:transparent; border-radius:0; cursor:pointer; transition:background .15s; }
-            .ffb-row:hover{ background:#101010; }
-            .ffb-row.on{ background:color-mix(in srgb, var(--ac) 12%, transparent); }
-            .ffb-dot{ width:7px; height:7px; border-radius:999px; }
-            .ffb-rname{ font-family:var(--ff-cond); font-weight:600; font-size:16px; letter-spacing:.3px; text-transform:uppercase; color:#c9c9c2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-            .ffb-row.on .ffb-rname{ color:#f4f3ee; }
-            .ffb-rk{ font-family:var(--ff-cond); font-size:12px; color:#85857e; }
-            .ffb-panel{ position:relative; border:1px solid var(--bd); border-radius:0; padding:24px; overflow:hidden; min-height:360px; }
             /* Removed a radial-gradient glow wash behind every plan card. */
             .ffb-edge{ position:absolute; top:0; left:0; right:0; height:2px; background:var(--ac); }
-            .ffb-pills{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px; position:relative; }
-            .ffb-pill{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.12em; text-transform:uppercase; padding:5px 10px; border-radius:3px; border:1px solid #262626; color:#85857e; }
-            .ffb-pill.ac{ color:var(--ac); border-color:color-mix(in srgb, var(--ac) 35%, #262626); }
-            .ffb-name{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(32px,5vw,46px); line-height:.9; letter-spacing:.5px; text-transform:uppercase; color:#f4f3ee; position:relative; margin:0 0 12px; }
-            .ffb-who{ font-size:13px; color:#85857e; line-height:1.6; max-width:420px; position:relative; margin:0 0 22px; }
-            .ffb-mid{ display:flex; align-items:center; gap:24px; position:relative; margin-bottom:22px; flex-wrap:wrap; }
-            .ffb-ring{ position:relative; width:108px; height:108px; flex-shrink:0; }
-            .ffb-ringc{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-            .ffb-ringc b{ font-family:var(--ff-cond); font-weight:700; font-size:29px; color:#f4f3ee; line-height:.9; }
-            .ffb-ringc i{ font-family:var(--ff-cond); font-style:normal; font-size:12px; letter-spacing:.13em; color:#85857e; margin-top:3px; }
-            .ffb-mac{ flex:1; min-width:160px; }
-            .ffb-macrow{ display:flex; justify-content:space-between; font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-bottom:8px; }
-            .ffb-macbar{ display:flex; height:6px; border-radius:99px; overflow:hidden; background:#161616; }
-            .ffb-foot{ display:flex; align-items:center; justify-content:space-between; gap:14px; border-top:1px solid var(--bd); padding-top:18px; position:relative; flex-wrap:wrap; }
-            .ffb-price b{ font-family:var(--ff-cond); font-weight:700; font-size:27px; color:#f4f3ee; }
-            .ffb-price span{ font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-left:4px; }
-            .ffb-price small{ display:block; font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-top:3px; }
             .ffb-cta{ font-family:var(--ff-cond); font-size:14px; letter-spacing:.1em; text-transform:uppercase; background:var(--ac); color:#0a0a0a; font-weight:800; padding:0 22px; min-height:44px; display:inline-flex; align-items:center; border-radius:0; text-decoration:none; transition:background .2s; }
             .ffb-cta:hover{ background:#bef264; }
             .ffb-empty{ text-align:center; padding:56px 20px; border:1px solid var(--bd); border-radius:12px; color:#85857e; font-size:13px; }
+
+            /* ── CARDS ────────────────────────────────────────────────────
+               This was a 57-row text list plus ONE detail panel: you could
+               see a single plan at a time, and the page every homepage CTA
+               lands on showed no food, no macros and no price until you
+               clicked something. A catalogue should let you compare.
+
+               There is deliberately no photo slot. All 126 plans have
+               imageUrl = null and only ~3% of recipes carry an image (the
+               tracker's F4 seeding job), so a photo card would render a
+               placeholder 97% of the time — worse than the list it replaced.
+               The card therefore leads on the data we DO have and always
+               have: calories, the macro split, the cycle and the real price
+               for the currently selected duration and meal combo. */
+            .ffb-sec{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:26px 0 12px; padding-bottom:9px; border-bottom:1px solid var(--bd); }
+            .ffb-sec h3{ font-family:var(--ff-cond); font-weight:800; font-size:19px; letter-spacing:.14em; text-transform:uppercase; color:#f4f3ee; margin:0; }
+            .ffb-sec span{ font-family:var(--ff-cond); font-size:12.5px; letter-spacing:.13em; text-transform:uppercase; color:#85857e; }
+            .ffb-cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:12px; }
+            .ffb-card{ position:relative; display:flex; flex-direction:column; gap:13px; padding:19px 18px 17px; border:1px solid var(--bd); background:#0b0b0a; text-decoration:none; transition:border-color .18s, background .18s; }
+            .ffb-card:hover{ background:#0f0f0d; border-color:color-mix(in srgb, var(--ac) 50%, var(--bd)); }
+            .ffb-card:focus-visible{ outline:2px solid var(--ac); outline-offset:2px; }
+            .ffb-cname{ font-family:var(--ff-cond); font-weight:800; font-size:23px; line-height:.95; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; margin:0; }
+            .ffb-ctag{ font-size:12.5px; color:#85857e; line-height:1.55; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+            .ffb-cnums{ display:flex; align-items:flex-end; gap:12px; }
+            .ffb-ckcal{ font-family:var(--ff-cond); font-weight:800; font-size:33px; line-height:.82; color:var(--ac); }
+            .ffb-ckcal i{ font-style:normal; font-family:var(--ff-cond); font-size:11.5px; letter-spacing:.13em; color:#85857e; display:block; margin-top:5px; }
+            .ffb-cmac{ flex:1; min-width:0; }
+            .ffb-cmacrow{ display:flex; justify-content:space-between; font-family:var(--ff-cond); font-size:11.5px; letter-spacing:.06em; color:#85857e; margin-bottom:6px; }
+            .ffb-cbar{ display:flex; height:5px; overflow:hidden; background:#161616; }
+            .ffb-cfoot{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:auto; padding-top:13px; border-top:1px solid var(--bd); }
+            .ffb-cprice b{ font-family:var(--ff-cond); font-weight:800; font-size:21px; color:#f4f3ee; }
+            .ffb-cprice span{ font-family:var(--ff-cond); font-size:11.5px; color:#85857e; margin-left:3px; }
+            .ffb-cprice small{ display:block; font-family:var(--ff-cond); font-size:11.5px; color:#85857e; margin-top:3px; }
+            .ffb-cgo{ font-family:var(--ff-cond); font-weight:800; font-size:12.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ac); white-space:nowrap; }
           `}</style>
 
           <div className="ffb-top">
@@ -414,80 +413,69 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, sta
           {browsePlans.length === 0 ? (
             <div className="ffb-empty">No {dietMeta.label.toLowerCase()} plans match. Try another diet or clear the search.</div>
           ) : (
-            <div className="ffb-grid">
-              {/* LEFT: scannable list */}
-              <div className="ffb-list">
-                {orderedCategories.map((cat) => (
-                  <div key={cat}>
-                    <div className="ffb-listcat"><span>{CATEGORY_LABELS[cat].label}</span><span>{grouped[cat].length}</span></div>
+            <div>
+              {orderedCategories.map((cat) => (
+                <section key={cat}>
+                  <div className="ffb-sec">
+                    <h3>{CATEGORY_LABELS[cat].label}</h3>
+                    <span>{grouped[cat].length} plans</span>
+                  </div>
+                  <div className="ffb-cards">
                     {grouped[cat].map((plan) => {
                       const ac = accentFor(plan);
-                      const on = selected?.id === plan.id;
+                      const price = getTierPrice(pricesByPlan[plan.id] ?? [], "STANDARD", dur, meal);
+                      const days = durMeta.days;
+                      const meals = mealsInCombo(meal);
+                      const perMeal = price !== null ? Math.round(price / Math.max(days * meals, 1)) : null;
+                      const b = price !== null ? decomposePrice({ subtotalRs: price, duration: dur }) : null;
+                      const P = plan.avgProteinGrams, C = plan.avgCarbsGrams, F = plan.avgFatGrams;
+                      const totalCal = P * 4 + C * 4 + F * 9 || 1;
                       return (
-                        <button key={plan.id} className={"ffb-row" + (on ? " on" : "")}
+                        <Link
+                          key={plan.id}
+                          href={`/plans/${plan.slug}`}
+                          className="ffb-card"
                           style={cssVars({ "--ac": ac })}
-                          onMouseEnter={() => setSelectedId(plan.id)}
-                          onClick={() => setSelectedId(plan.id)}>
-                          <span className="ffb-dot" style={{ background: ac }} />
-                          <span className="ffb-rname">{plan.displayName}</span>
-                          <span className="ffb-rk">{plan.avgCaloriesPerDay}</span>
-                        </button>
+                        >
+                          <span className="ffb-edge" />
+                          <div>
+                            <h4 className="ffb-cname">{plan.displayName}</h4>
+                            <p className="ffb-ctag">{plan.tagline || plan.description || `${plan.cycleLengthDays}-day cycle, cooked to your macros.`}</p>
+                          </div>
+
+                          <div className="ffb-cnums">
+                            <div className="ffb-ckcal">
+                              {plan.avgCaloriesPerDay.toLocaleString("en-IN")}
+                              <i>KCAL / DAY</i>
+                            </div>
+                            <div className="ffb-cmac">
+                              <div className="ffb-cmacrow"><span>P {P}g</span><span>C {C}g</span><span>F {F}g</span></div>
+                              {/* Same three-part split as the detail panel, so a
+                                  card and its plan page tell one story. */}
+                              <div className="ffb-cbar">
+                                <span style={{ width: `${(P * 4 / totalCal) * 100}%`, background: ac }} />
+                                <span style={{ width: `${(C * 4 / totalCal) * 100}%`, background: "#6f6d5e" }} />
+                                <span style={{ width: `${(F * 9 / totalCal) * 100}%`, background: "#3a3a35" }} />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="ffb-cfoot">
+                            <div className="ffb-cprice">
+                              {perMeal !== null ? (
+                                <><b>{fmt(perMeal)}</b><span>/ meal</span><small>{b ? fmt(b.baseRs) : ""} · {days}d · {meals} meals</small></>
+                              ) : (
+                                <small>Not sold in this combo</small>
+                              )}
+                            </div>
+                            <span className="ffb-cgo">View →</span>
+                          </div>
+                        </Link>
                       );
                     })}
                   </div>
-                ))}
-              </div>
-
-              {/* RIGHT: live spec panel */}
-              {selected && (() => {
-                const ac = accentFor(selected);
-                const price = getTierPrice(pricesByPlan[selected.id] ?? [], "STANDARD", dur, meal);
-                const days = durMeta.days;
-                const meals = mealsInCombo(meal);
-                const b = price !== null ? decomposePrice({ subtotalRs: price, duration: dur }) : null;
-                const perMeal = price !== null ? Math.round(price / Math.max(days * meals, 1)) : null;
-                const P = selected.avgProteinGrams, C = selected.avgCarbsGrams, F = selected.avgFatGrams;
-                const totalCal = P * 4 + C * 4 + F * 9 || 1;
-                const circ = 2 * Math.PI * 46;
-                return (
-                  <div className="ffb-panel" style={cssVars({ "--ac": ac, "--gl": glowOf(ac) })}>
-                    <span className="ffb-edge" />
-                    <div className="ffb-pills">
-                      <span className="ffb-pill ac">Standard</span>
-                      <span className="ffb-pill">{dietMeta.label}</span>
-                      <span className="ffb-pill">{selected.cycleLengthDays}-day cycle</span>
-                    </div>
-                    <h3 className="ffb-name">{selected.displayName}</h3>
-                    <p className="ffb-who">{selected.description || selected.tagline || ""}</p>
-                    <div className="ffb-mid">
-                      <div className="ffb-ring">
-                        <svg width="108" height="108" viewBox="0 0 108 108">
-                          <circle cx="54" cy="54" r="46" fill="none" stroke="#1a1a1a" strokeWidth="6" />
-                          <circle cx="54" cy="54" r="46" fill="none" stroke={ac} strokeWidth="6" strokeLinecap="round"
-                            strokeDasharray={circ} strokeDashoffset={circ * 0.22} transform="rotate(-90 54 54)" />
-                        </svg>
-                        <div className="ffb-ringc"><b>{selected.avgCaloriesPerDay.toLocaleString("en-IN")}</b><i>KCAL / DAY</i></div>
-                      </div>
-                      <div className="ffb-mac">
-                        <div className="ffb-macrow"><span>P {P}g</span><span>C {C}g</span><span>F {F}g</span></div>
-                        <div className="ffb-macbar">
-                          <span style={{ width: `${(P * 4 / totalCal) * 100}%`, background: ac }} />
-                          <span style={{ width: `${(C * 4 / totalCal) * 100}%`, background: "#6f6d5e" }} />
-                          <span style={{ width: `${(F * 9 / totalCal) * 100}%`, background: "#3a3a35" }} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="ffb-foot">
-                      <div className="ffb-price">
-                        {perMeal !== null ? (
-                          <><b>{fmt(perMeal)}</b><span>/ meal</span><small>{b ? fmt(b.baseRs) : ""} · {days}d · {meals} meals</small></>
-                        ) : <b>N/A</b>}
-                      </div>
-                      <Link href={`/plans/${selected.slug}`} className="ffb-cta">Start plan →</Link>
-                    </div>
-                  </div>
-                );
-              })()}
+                </section>
+              ))}
             </div>
           )}
         </div>
