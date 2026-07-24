@@ -74,8 +74,8 @@ export default function Diary() {
                 <div role="row" className="sr-only">
                   <span role="columnheader">Food</span><span role="columnheader">Calories</span>
                 </div>
-                {ROWS.map(([name, k, p, c, f, src]) => (
-                  <div role="row" key={name} className="ff-diary">
+                {ROWS.map(([name, k, p, c, f, src], i) => (
+                  <div role="row" key={name} className="ff-diary" style={{ ["--i" as string]: i }}>
                     <div>
                       <div style={{ ...copy(15), color: INK }}>{name}</div>
                       <div className="ff-diary-macros">

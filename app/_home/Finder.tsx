@@ -47,7 +47,7 @@ export default function Finder() {
             {/* The idle prompt used to render at #2e2e2b, which is 1.48:1 on
                 this background: the one line telling you what to do was the
                 least visible thing in the section. DIM is 5.4:1. */}
-            <span aria-live="polite" style={{ ...huge("clamp(1.9rem,4.5vw,3.4rem)"), color: ready ? INK : DIM }}>
+            <span key={ready ? planName : "idle"} className={ready ? "ff-finder-result" : undefined} aria-live="polite" style={{ ...huge("clamp(1.9rem,4.5vw,3.4rem)"), color: ready ? INK : DIM }}>
               {ready ? planName : "Choose a goal and diet"}
             </span>
             {ready ? <Link href={`/plans/${goal}-${diet}`} className="ff-btn">See my plan</Link> : null}

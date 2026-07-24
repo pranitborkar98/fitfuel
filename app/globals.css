@@ -466,7 +466,7 @@ main[data-surface="marketing"] {
   font-family: var(--ff-cond);
   font-weight: 800;
   text-transform: uppercase;
-  transition: background .18s, border-color .18s, color .18s;
+  transition: background .18s, border-color .18s, color .18s, transform .12s ease;
 }
 .ff-choice:hover { border-color: #4a4a45 !important; }
 
@@ -1646,6 +1646,115 @@ main[data-surface="marketing"] {
 }
 @media (max-height: 740px) and (min-width: 1000px) {
   .ff-hero-h1 { font-size: clamp(2.6rem, 6vw, 4.8rem) !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THE LAST FLAT SECTIONS — mechanisms 15 to 18
+   ═══════════════════════════════════════════════════════════════════════
+   An audit of every section for animation/3D found six with nothing at all.
+   Four are fixed here (the other two, the service map and the closing CTA,
+   already carry a :has() spotlight and a count-up respectively). Each gets
+   a DIFFERENT mechanism, and each one means something rather than being
+   decoration.
+
+   All base states are the finished state, so an inactive timeline shows the
+   real content rather than an empty or invisible section.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 15 · PILLARS: the four numbers land in sequence ──────────────────
+   The stat columns are the first real content after the film. They now
+   arrive one after another with a lime rule drawing under each, so the
+   eye is walked left to right instead of hit with four things at once. */
+.ff-pillar-rule {
+  display: block;
+  height: 2px;
+  width: 100%;
+  margin-top: 16px;
+  background: var(--ff-lime);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+    .ff-pillar-rule {
+      animation: ff-draw-x linear both;
+      animation-timeline: view();
+      animation-range: entry calc(30% + var(--i) * 7%) entry calc(70% + var(--i) * 7%);
+    }
+  }
+}
+@keyframes ff-draw-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ── 16 · DIARY: the log fills itself, one row at a time ──────────────
+   A food diary is a thing that accumulates through a day, so the rows
+   arrive in sequence rather than as a finished block. The section is
+   showing you logging, not a screenshot of a log. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+    .ff-diary {
+      animation: ff-log-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(34% + var(--i) * 8%) entry calc(62% + var(--i) * 8%);
+    }
+    @keyframes ff-log-in {
+      from { opacity: 0; transform: translate3d(-18px, 0, 0); }
+      to   { opacity: 1; transform: none; }
+    }
+  }
+}
+
+/* ── 17 · VOICES: the result lands before the quote ───────────────────
+   Each card's outcome figure scales up as it enters, so the number (the
+   actual proof) registers first and the quote reads as its evidence. */
+.ff-voice-fig { transform-origin: left bottom; }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+    .ff-voice-fig {
+      animation: ff-fig-land linear both;
+      animation-timeline: view();
+      animation-range: entry calc(36% + var(--i) * 9%) entry calc(72% + var(--i) * 9%);
+    }
+    @keyframes ff-fig-land {
+      from { opacity: 0; transform: scale(.64) translateY(14px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  }
+}
+
+/* ── 18 · CLOSE: a slow push on the last frame ────────────────────────
+   The closing CTA is the final shot of the page, so the image drifts in
+   slowly behind it the way a film holds on its last image. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+    .ff-close-push .ff-frame img {
+      animation: ff-close-zoom linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: transform;
+    }
+    @keyframes ff-close-zoom {
+      from { transform: scale(1.02); }
+      to   { transform: scale(1.16); }
+    }
+  }
+}
+
+/* ── FINDER: make the choice feel physical ────────────────────────────
+   Not scroll-driven, this one is a pure interaction upgrade. The choice
+   chips press in, and the resolved plan name arrives rather than snapping
+   into place, so picking feels like a mechanism engaging. */
+.ff-choice { transform: translateZ(0); }
+.ff-choice:active { transform: scale(.97); }
+.ff-finder-result {
+  animation: ff-result-in .5s cubic-bezier(.16, 1, .3, 1) both;
+}
+@keyframes ff-result-in {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ff-choice:active { transform: none; }
+  .ff-finder-result { animation: none; }
 }
 
 /* ── Page surface ──────────────────────────────────────────────────────

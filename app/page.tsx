@@ -147,7 +147,10 @@ function Pillars() {
               <span style={{ ...mid("clamp(.95rem,1.3vw,1.15rem)"), color: MUTE }}>{unit}</span>
             </div>
             <div style={{ ...copy(13.5), marginTop: 12 }}>{d}</div>
-            <span className="ff-pillar-go" aria-hidden style={{ ...tag(LIME), fontSize: 12, display: "inline-block", marginTop: 16 }}>
+            {/* The rule draws in as the column enters, walking the eye
+                left to right instead of landing all four at once. */}
+            <span className="ff-pillar-rule" aria-hidden style={{ ["--i" as string]: i }} />
+            <span className="ff-pillar-go" aria-hidden style={{ ...tag(LIME), fontSize: 12, display: "inline-block", marginTop: 14 }}>
               View <ArrowRight size={12} style={{ verticalAlign: "-1px" }} />
             </span>
           </Link>
@@ -501,7 +504,7 @@ function Voices() {
                 {/* The result, at display scale. This is the claim the
                     quote underneath is evidence for. */}
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                  <span style={{ ...huge("clamp(3.2rem,6vw,4.8rem)"), color: LIME, lineHeight: 0.8 }}>{t.fig}</span>
+                  <span className="ff-voice-fig" style={{ ...huge("clamp(3.2rem,6vw,4.8rem)"), color: LIME, lineHeight: 0.8, display: "inline-block", ["--i" as string]: i }}>{t.fig}</span>
                   <span style={{ ...mid("clamp(1rem,1.4vw,1.2rem)"), color: MUTE }}>{t.unit}</span>
                 </div>
                 <div style={{ ...copy(13.5), color: DIM, marginTop: 10, paddingBottom: 20, borderBottom: `1px solid ${RULE}` }}>in {t.months}</div>
@@ -526,7 +529,7 @@ function Voices() {
 /* ═══ CLOSE ═══ */
 function Close() {
   return (
-    <section style={{ position: "relative", overflow: "hidden", borderTop: `1px solid ${RULE}` }}>
+    <section className="ff-close-push" style={{ position: "relative", overflow: "hidden", borderTop: `1px solid ${RULE}` }}>
       <div style={{ position: "relative", minHeight: "min(78vh,700px)", display: "flex", alignItems: "center" }}>
         <Frame src="/images/produce.jpg" alt="Fresh vegetables prepared for the kitchen" sizes="100vw" />
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(7,7,7,.95) 12%, rgba(7,7,7,.6) 62%, rgba(7,7,7,.4))" }} />
