@@ -1171,7 +1171,7 @@ main[data-surface="marketing"] {
 }
 .ff-spec-label { align-self: center; }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+  @media (prefers-reduced-motion: no-preference) {
     .ff-spec-rule {
       animation: ff-spec-wipe linear both;
       animation-timeline: view();
@@ -1223,7 +1223,7 @@ main[data-surface="marketing"] {
 .ff-stack-title { align-self: baseline; }
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+  @media (prefers-reduced-motion: no-preference) {
     .ff-stack-layer {
       animation: ff-stack-build linear both;
       animation-timeline: view();
@@ -1326,7 +1326,7 @@ main[data-surface="marketing"] {
   transform: scaleX(1);
 }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+  @media (prefers-reduced-motion: no-preference) {
     .ff-score-bar {
       animation: ff-score-grow linear both;
       animation-timeline: view();
@@ -1482,12 +1482,38 @@ main[data-surface="marketing"] {
     scrollbar-width: none;
   }
   .ff-day-swipe::-webkit-scrollbar { display: none; }
+
+  /* A real card, not a cropped full-bleed. The previous version forced a
+     landscape photograph into a 290x550 portrait box via object-fit:cover,
+     which sliced the middle out of every frame. Now the picture keeps a
+     sane 4:3 and the words sit under it on solid ground. */
   .ff-day-swipe > .ff-day-frame {
     flex: 0 0 86%;
     scroll-snap-align: center;
-    min-height: 68vh;
     border: 1px solid var(--ff-rule);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    background: var(--ff-panel-2);
   }
+  .ff-day-swipe .ff-day-media {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    flex: 0 0 auto;
+  }
+  /* No scrim needed once the type is off the picture. */
+  .ff-day-swipe .ff-day-scrim { display: none; }
+  .ff-day-swipe .ff-day-copy {
+    max-width: none;
+    padding: 20px 20px 26px;
+  }
+  .ff-day-swipe .ff-day-time { font-size: 2.4rem; }
+  .ff-day-swipe .ff-day-line { font-size: 1.75rem; margin-top: 8px; }
+  .ff-day-swipe .ff-day-sub  { margin-top: 10px; }
+
   .ff-day-hint {
     display: block;
     text-align: center;
@@ -1614,19 +1640,41 @@ main[data-surface="marketing"] {
   }
 
   @supports (animation-timeline: view()) {
-    @media (min-width: 900px) {
-      .ff-hero-scene {
-        animation: ff-hero-camera linear both;
-        animation-timeline: view();
-        animation-range: exit 0% exit 100%;
-        will-change: transform;
-      }
-      /* A camera that tilts down and pushes in as the hero leaves. */
+    .ff-hero-scene {
+      animation: ff-hero-camera linear both;
+      animation-timeline: view();
+      /* `cover`, NOT `exit`. Bound to exit, the camera did not move until
+         the hero was already leaving the viewport, so on arrival and for
+         the first screen of scrolling the hero appeared completely dead.
+         `cover` spans the whole time the hero is on screen, so the very
+         first pixel of scroll moves the camera. */
+      animation-range: cover 0% cover 100%;
+      will-change: transform;
+    }
+    @keyframes ff-hero-camera {
+      from { transform: rotateX(-2deg) translateZ(-40px); }
+      to   { transform: rotateX(8deg) translateZ(140px); }
+    }
+
+    /* Phones get the same move at lower amplitude: enough to feel alive,
+       small enough not to cost a frame on a mid-range Android. */
+    @media (max-width: 900px) {
       @keyframes ff-hero-camera {
-        from { transform: rotateX(0deg) translateZ(0); }
-        to   { transform: rotateX(9deg) translateZ(150px); }
+        from { transform: rotateX(-1deg) translateZ(-20px); }
+        to   { transform: rotateX(4deg) translateZ(70px); }
       }
     }
+  }
+
+  /* Ambient drift so the hero is alive BEFORE any scroll happens. The
+     atmosphere layer breathes on its own; nothing else moves, so it reads
+     as depth rather than as a busy animation. */
+  .ff-hl-atmos {
+    animation: ff-atmos-drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes ff-atmos-drift {
+    from { transform: translateZ(-700px) scale(1.70) translate3d(-1.2%, -0.8%, 0); }
+    to   { transform: translateZ(-700px) scale(1.78) translate3d(1.2%, 0.8%, 0); }
   }
 }
 
@@ -1675,7 +1723,7 @@ main[data-surface="marketing"] {
   transform-origin: left center;
 }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+  @media (prefers-reduced-motion: no-preference) {
     .ff-pillar-rule {
       animation: ff-draw-x linear both;
       animation-timeline: view();
@@ -1690,7 +1738,7 @@ main[data-surface="marketing"] {
    arrive in sequence rather than as a finished block. The section is
    showing you logging, not a screenshot of a log. */
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+  @media (prefers-reduced-motion: no-preference) {
     .ff-diary {
       animation: ff-log-in linear both;
       animation-timeline: view();
@@ -1708,7 +1756,7 @@ main[data-surface="marketing"] {
    actual proof) registers first and the quote reads as its evidence. */
 .ff-voice-fig { transform-origin: left bottom; }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (min-width: 760px) {
+  @media (prefers-reduced-motion: no-preference) {
     .ff-voice-fig {
       animation: ff-fig-land linear both;
       animation-timeline: view();

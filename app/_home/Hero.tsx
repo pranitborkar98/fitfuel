@@ -63,20 +63,10 @@ export default function Hero() {
             <span className="ff-hero-grade" aria-hidden />
           </div>
 
-          {/* L3 · the readout, floating just behind the type */}
-          <div className="ff-hl ff-hl-readout" aria-hidden>
-            <div className="ff-hero-chip">
-              <span style={tag(LIME)}>Today, verified</span>
-              <div className="ff-hero-chip-rows">
-                {READOUT.map(([k, v], i) => (
-                  <span key={k} className="ff-hero-stat">
-                    <span style={{ ...copy(12.5), color: DIM }}>{k}</span>
-                    <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 22, color: i === 2 ? LIME : INK }}>{v}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* L3 was a floating "Today, verified" card. It duplicated the
+              readout bar at the foot of the hero word for word, and in the
+              hero it asserted numbers with nothing on screen to back them.
+              Removed: the bar below keeps the device, once. */}
 
           {/* L4 · the headline, at the focal plane */}
           <div className="ff-hl ff-hl-type">
