@@ -19,7 +19,10 @@ const STATIC_ROUTES: { path: string; priority: number; freq: "daily" | "weekly" 
   { path: "/plans/digital",      priority: 0.7,  freq: "weekly"  },
   { path: "/supplements",        priority: 0.7,  freq: "weekly"  },
   { path: "/corporate",          priority: 0.7,  freq: "monthly" },
-  { path: "/partners/apply",     priority: 0.7,  freq: "monthly" },
+  // /partners is the readable programme; /partners/apply is the signed-in
+  // form behind it and redirects to sign-in, so the hub carries the weight.
+  { path: "/partners",           priority: 0.7,  freq: "monthly" },
+  { path: "/partners/apply",     priority: 0.5,  freq: "monthly" },
   // Local SEO and intent
   { path: "/locations",          priority: 0.8,  freq: "weekly"  },
   { path: "/how-it-works",       priority: 0.8,  freq: "monthly" },

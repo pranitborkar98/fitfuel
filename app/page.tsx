@@ -129,7 +129,7 @@ function Pillars() {
     ["Kitchen", "126", "plans", "Cooked daily in Kharadi", "/plans"],
     ["App", "952", "exercises", "Logged with your meals", "/how-it-works"],
     ["Supplements", "46", "in the stack", "Matched, bought via Nutrabay", "/supplements"],
-    ["Partners", "15", "areas served", "Gyms, offices, franchise", "/partners/apply"],
+    ["Partners", "15", "areas served", "Gyms, offices, franchise", "/partners"],
   ];
   return (
     // These four are the top-level map of the business, so they carry
@@ -254,7 +254,7 @@ function ServiceMap() {
     ]],
     ["Partner", [
       ["Corporate wellness", "/corporate"],
-      ["Gyms and trainers", "/partners/apply"],
+      ["Gyms and trainers", "/partners"],
       ["Franchise enquiry", "/contact"],
       ["About FitFuel", "/about"],
       ["The team", "/our-team"],
@@ -362,7 +362,7 @@ function Partners() {
             programme was represented on the homepage by two photo cards, so
             six of the eight ways to earn with FitFuel were invisible. Each
             one below is a real value in prisma/schema.prisma, and each is
-            selectable on /partners/apply. */}
+            readable on /partners and selectable on /partners/apply. */}
         <div className="ff-ptypes">
           {[
             ["Gyms", "Voucher per member"],
@@ -374,7 +374,7 @@ function Partners() {
             ["Societies", "Hybrid, per building"],
             ["Customers", "Credit per referral"],
           ].map(([t, d]) => (
-            <Link key={t} href="/partners/apply" className="ff-ptype">
+            <Link key={t} href="/partners" className="ff-ptype">
               <span className="ff-ptype-t">{t}</span>
               <span className="ff-ptype-d">{d}</span>
             </Link>
@@ -384,7 +384,7 @@ function Partners() {
         <div className="ff-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, marginTop: "clamp(28px,3.4vw,44px)" }}>
           {[
             { src: "/images/corporate.jpg", alt: "A team at work in a Pune office", t: "Corporate wellness", d: "Subsidised, condition-specific meal programs for Pune offices, with reporting your HR team can actually use.", href: "/corporate", cta: "For your team" },
-            { src: "/images/gym.jpg", alt: "A gym floor with dumbbells", t: "Gyms and trainers", d: "Your members eat to their macros and you earn on every one. QR onboarding, live client tracking and monthly payouts.", href: "/partners/apply", cta: "Become a partner" },
+            { src: "/images/gym.jpg", alt: "A gym floor with dumbbells", t: "Gyms and trainers", d: "Your members eat to their macros and you earn on every one. QR onboarding, live client tracking and monthly payouts.", href: "/partners", cta: "Become a partner" },
           ].map((c, i) => (
             <Reveal key={c.t} delay={i * 0.08}>
               <Link href={c.href} className="ff-hov" style={{ display: "block", position: "relative", minHeight: "clamp(360px,38vw,480px)", height: "100%", textDecoration: "none" }}>

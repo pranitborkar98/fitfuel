@@ -58,7 +58,7 @@ const companyLinks = [
   { label: "Reviews",         href: "/testimonials" },
   { label: "FAQ",             href: "/faq" },
   { label: "Corporate",       href: "/corporate" },
-  { label: "Partner With Us", href: "/partners/apply" },
+  { label: "Partner With Us", href: "/partners" },
   { label: "Contact",         href: "/contact" },
 ];
 

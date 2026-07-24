@@ -38,7 +38,7 @@ const toolLinks = [
   { label: "Supplements",         href: "/supplements" },
   { label: "Digital Plans (PDF)", href: "/plans/digital" },
   { label: "Corporate Wellness",  href: "/corporate" },
-  { label: "Partner Program",     href: "/partners/apply" },
+  { label: "Partner Program",     href: "/partners" },
 ];
 
 const legalLinks = [
