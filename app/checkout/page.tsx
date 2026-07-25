@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import DeliveryWindowToggle from "@/components/DeliveryWindowToggle";
 import { decomposePrice, durationKeyFromShort } from "@/lib/pricing-decomposition";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -23,7 +24,9 @@ const T = {
   textMuted:   "#9a9a94",
 };
 
-const WA_NUMBER = "919579738811";
+// Was a local copy of the OLD number that Decision #206 retired, so anyone
+// who hit trouble at checkout messaged a dead line. Imported now.
+const WA_NUMBER = WHATSAPP_NUMBER;
 
 // ─── Plan labels ──────────────────────────────────────────────────────────────
 const DIET_LABELS: Record<string, string> = {

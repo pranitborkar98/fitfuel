@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ const WRAP: React.CSSProperties = {
   paddingRight: 40,
 };
 
-const WA_NUMBER = "918850446348";
+const WA_NUMBER = WHATSAPP_NUMBER;
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 

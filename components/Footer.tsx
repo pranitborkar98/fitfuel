@@ -6,6 +6,7 @@
 
 import Link from "next/link";
 import { Zap, MapPin, Phone, Mail } from "lucide-react";
+import { waLink } from "@/lib/site";
 
 const planLinks = [
   { label: "Weight Loss",         href: "/plans/weight-loss-veg" },
@@ -110,7 +111,7 @@ export default function Footer() {
             </p>
 
             <div className="ff-fcol-links" style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-              <a href="https://wa.me/918850446348" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
+              <a href={waLink()} className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>
                 <Phone style={{ width: 14, height: 14, flexShrink: 0 }} /> WhatsApp Us
               </a>
               <a href="mailto:contact@fitfuel.in" className="ff-flink" style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 13.5, color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s" }}>

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { CheckCircle, MessageCircle, Truck, ChefHat, Clock, Banknote, LogIn } from "lucide-react";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
 const T = {
   bg:          "#0a0a0a",
@@ -16,7 +17,8 @@ const T = {
   textMuted:   "#9a9a94",
 };
 
-const WA_NUMBER = "919579738811";
+// Retired number, kept working here long after Decision #206. Imported now.
+const WA_NUMBER = WHATSAPP_NUMBER;
 function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
 
 function ConfirmationInner() {

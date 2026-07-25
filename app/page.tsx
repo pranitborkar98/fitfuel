@@ -8,6 +8,7 @@ import Frame from "./_home/Frame";
 import Coverage from "./_home/Coverage";
 import Scale from "./_home/Scale";
 import TrialDay from "./_home/TrialDay";
+import Menu from "./_home/Menu";
 import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
 import LoopDial from "./_home/LoopDial";
@@ -100,6 +101,11 @@ export default function Home() {
           day one of weight-loss-veg, pulled from PlanScheduleSlot, with the
           macros it was weighed to. */}
       <TrialDay />
+      {/* The a la carte menu: 48 single dishes the kitchen already sells on the
+          aggregators, which take ~40% of order value and were the ONLY place
+          this menu existed. Selling it here is the margin. No aggregator links
+          anywhere in this section, by design. */}
+      <Menu />
       {/* 70 of 126 plans are condition-specific across 38 conditions. */}
       <Conditions />
       {/* 60-day cycle, 100% public menu (Decision #43): nobody else shows

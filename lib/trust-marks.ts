@@ -76,12 +76,16 @@ export const TRUST_GROUPS: MarkGroup[] = [
   {
     key: "order",
     label: "Order on",
-    note: "Order single meals from the same kitchen on Swiggy and Zomato. Plans, macros and the delivery window live here, on FitFuel, and only here.",
+    /* The note leads with direct ordering on purpose. Swiggy and Zomato take
+       roughly 40% of order value, so the aggregators are listed here as proof
+       that the kitchen is real and findable, NOT as a route we push people
+       down. Deliberately no href on either: see the Mark.href docs above. */
+    note: "Order direct here or on WhatsApp, both single meals and full plans. You will also find us on Swiggy and Zomato, though ordering direct reaches the kitchen without a middleman.",
     marks: [
-      { name: "FitFuel", note: "Plans and subscriptions", status: "LIVE", weight: 900, tracking: "-0.02em" },
-      { name: "Swiggy", note: "Single meals", status: "LIVE", lower: true, weight: 800, tracking: "-0.01em" },
-      { name: "Zomato", note: "Single meals", status: "LIVE", weight: 800, tracking: "-0.01em" },
-      { name: "WhatsApp", note: "Orders and support", status: "LIVE", weight: 800 },
+      { name: "FitFuel", note: "Meals and plans, direct", status: "LIVE", weight: 900, tracking: "-0.02em" },
+      { name: "WhatsApp", note: "Order and support", status: "LIVE", weight: 800 },
+      { name: "Swiggy", note: "Also listed", status: "LIVE", lower: true, weight: 800, tracking: "-0.01em" },
+      { name: "Zomato", note: "Also listed", status: "LIVE", weight: 800, tracking: "-0.01em" },
     ],
   },
   {

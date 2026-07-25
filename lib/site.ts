@@ -32,3 +32,30 @@ export const SITE_URL =
 
 export const abs = (path: string): string =>
   `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
+/* ── The business WhatsApp number ─────────────────────────────────────────
+ *
+ * ONE constant, because eight files had their own copy and they disagreed.
+ *
+ * Decision #206 (Jun 23) replaced 919579738811 with 918850446348 and fixed
+ * the footer and the contact page. It missed four files, which kept the dead
+ * number through to today:
+ *
+ *   app/checkout/page.tsx            <- the money path
+ *   app/auth/signin/page.tsx
+ *   app/locations/LocationsClient.tsx
+ *   app/order/confirmation/page.tsx
+ *
+ * A customer stuck at checkout was messaging a number nobody reads. Every one
+ * of those files now imports from here, so the next change is one line and
+ * cannot go half-applied.
+ */
+export const WHATSAPP_NUMBER = "918850446348";
+
+/** Display form. Matches how the number is already printed on the legal
+ *  pages, so this does not introduce a third formatting convention. */
+export const WHATSAPP_DISPLAY = "+91 8850446348";
+
+/** wa.me deep link, with the message pre-filled and encoded exactly once. */
+export const waLink = (text?: string): string =>
+  `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;

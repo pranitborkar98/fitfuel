@@ -504,6 +504,89 @@ main[data-surface="marketing"] {
   .ff-area { min-height: 66px; padding: 13px 15px; }
 }
 
+/* ── A LA CARTE MENU ───────────────────────────────────────────────────
+   app/_home/Menu.tsx. Menu typography, not another card grid: a dish name,
+   a dotted leader, a price. The one convention worth borrowing from a
+   printed menu, because it survives the name wrapping to two lines. */
+.ff-menu-cats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: clamp(34px, 4.2vw, 56px);
+  background: var(--ff-rule);
+  border: 1px solid var(--ff-rule);
+}
+.ff-menu-cat {
+  height: 100%;
+  padding: clamp(22px, 2.4vw, 32px) clamp(18px, 2vw, 28px);
+  background: var(--ff-bg);
+}
+.ff-menu-cat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ff-menu-items { list-style: none; margin: 20px 0 0; padding: 0; }
+.ff-menu-item { padding: 14px 0; border-top: 1px solid var(--ff-rule); }
+.ff-menu-item-top { display: flex; align-items: baseline; gap: 8px; }
+.ff-menu-item-name {
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -.005em;
+  text-transform: uppercase;
+  color: var(--ff-ink);
+  flex: 0 1 auto;
+}
+/* The leader. A repeating radial gradient rather than a border-bottom so it
+   reads as dots at any width and needs no fixed character count. */
+.ff-menu-dots {
+  flex: 1 1 auto;
+  min-width: 14px;
+  align-self: flex-end;
+  height: 1px;
+  margin-bottom: 4px;
+  background-image: radial-gradient(circle, var(--ff-rule-2) 1px, transparent 1px);
+  background-size: 5px 1px;
+  background-repeat: repeat-x;
+}
+.ff-menu-price {
+  font-family: var(--ff-cond);
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--ff-lime);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+/* Not priced yet. Quieter and NOT lime, so an unpriced dish never reads as a
+   number the customer can hold us to. */
+.ff-menu-price[data-tbd] { color: var(--ff-dim); font-weight: 700; font-size: 12.5px; }
+.ff-menu-blurb { font-size: 13px; line-height: 1.5; color: var(--ff-mute); margin: 7px 0 0; }
+.ff-menu-variant {
+  display: inline-block;
+  margin-top: 7px;
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ff-dim);
+}
+.ff-menu-addons {
+  margin-top: clamp(28px, 3.4vw, 44px);
+  padding: clamp(18px, 2.2vw, 26px) clamp(20px, 2.4vw, 30px);
+  border-left: 2px solid var(--ff-lime);
+  background: rgba(132, 204, 22, .05);
+}
+.ff-menu-addon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 34px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--ff-mute);
+}
+.ff-menu-addon-row strong { color: var(--ff-ink); font-weight: 600; }
+
+@media (max-width: 1000px) { .ff-menu-cats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .ff-menu-cats { grid-template-columns: 1fr; } }
+
 /* ── TRIAL DAY ─────────────────────────────────────────────────────────
    app/_home/TrialDay.tsx. Real dishes from PlanScheduleSlot day 1.
    Menu cards, so unlike every other grid on this page these get room to

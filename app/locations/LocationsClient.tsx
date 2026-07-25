@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, MapPin, CheckCircle, XCircle, MessageCircle, Truck, Clock } from "lucide-react";
+import { WHATSAPP_NUMBER } from "@/lib/site";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,8 @@ const WRAP: React.CSSProperties = {
   paddingRight: 40,
 };
 
-const WA_NUMBER = "919579738811";
+// Three CTAs on this page pointed at the number Decision #206 retired.
+const WA_NUMBER = WHATSAPP_NUMBER;
 
 // ─── Delivery zones — source: fitfuel.in/delivery-locations ──────────────────
 

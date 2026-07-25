@@ -67,11 +67,11 @@ export default function TrustStrip() {
             commit 067dcb6 unified away. A row this load-bearing does not
             whisper. */}
         <h2 id="trust-heading" style={{ ...huge("clamp(2.2rem,6vw,4.6rem)"), maxWidth: "18ch" }}>
-          Order it anywhere. <span style={{ color: LIME }}>Cooked in one kitchen.</span>
+          Order direct. <span style={{ color: LIME }}>Straight from the kitchen.</span>
         </h2>
         <p style={{ ...copy(16), maxWidth: "60ch", margin: "20px 0 clamp(34px,4.4vw,56px)" }}>
-          Swiggy and Zomato for a single meal, FitFuel for the plan behind it. Same kitchen,
-          same licence, same weighed macros.
+          One licensed kitchen in Kharadi, cooking both the single dishes and the meal plans.
+          Here is who takes the payment, who licenses the food, and where else you will find us.
         </p>
 
         {TRUST_GROUPS.map((g) => (

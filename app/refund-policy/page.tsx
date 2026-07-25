@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
+import { waLink, WHATSAPP_DISPLAY } from "@/lib/site";
 
 export const metadata = {
   alternates: { canonical: "/refund-policy" },
@@ -100,7 +101,7 @@ export default function RefundPolicyPage() {
           <P>Contact us with your order number:</P>
           <UL>
             <LI>Email: <a href="mailto:contact@fitfuel.in" style={linkStyle}>contact@fitfuel.in</a></LI>
-            <LI>WhatsApp / Phone: <a href="https://wa.me/918850446348" style={linkStyle}>+91 8850446348</a></LI>
+            <LI>WhatsApp / Phone: <a href={waLink()} style={linkStyle}>{WHATSAPP_DISPLAY}</a></LI>
           </UL>
           <P>We aim to acknowledge every request within one business day.</P>
         </Section>

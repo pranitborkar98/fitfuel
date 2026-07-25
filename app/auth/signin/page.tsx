@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Zap } from "lucide-react";
 import Link from "next/link";
+import { waLink } from "@/lib/site";
 
 const T = {
   bg:          "#0a0a0a",
@@ -110,7 +111,7 @@ function SignInInner() {
         </div>
 
         <a
-          href="https://wa.me/919579738811"
+          href={waLink()}
           target="_blank"
           rel="noopener noreferrer"
           style={{
