@@ -504,11 +504,203 @@ main[data-surface="marketing"] {
   .ff-area { min-height: 66px; padding: 13px 15px; }
 }
 
+/* ── DELIVERY RAIL ─────────────────────────────────────────────────────
+   app/_home/AfterOrder.tsx. The four customer-visible DeliveryStatus
+   states. A rail, because nothing else on this page is linear and the
+   thing being described genuinely is. */
+.ff-rail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin: clamp(34px, 4.2vw, 56px) 0 0;
+  padding: 0;
+  list-style: none;
+  position: relative;
+}
+/* The line runs behind the dots, at dot height. */
+.ff-rail::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: 5px;
+  height: 1px;
+  background: var(--ff-rule);
+}
+.ff-rail-stop { position: relative; padding: 26px clamp(14px, 1.8vw, 28px) 0 0; }
+.ff-rail-dot {
+  position: absolute;
+  top: 0; left: 0;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--ff-bg);
+  border: 1px solid var(--ff-lime);
+}
+/* The last stop is the one that matters, so it is filled rather than open. */
+.ff-rail-stop:last-child .ff-rail-dot { background: var(--ff-lime); }
+
+.ff-loopback {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 3vw, 52px);
+  align-items: center;
+  margin-top: clamp(38px, 4.6vw, 62px);
+  padding: clamp(24px, 3vw, 38px) clamp(22px, 2.6vw, 34px);
+  border-left: 2px solid var(--ff-lime);
+  background: rgba(132, 204, 22, .05);
+}
+
+@media (max-width: 860px) {
+  .ff-rail { grid-template-columns: repeat(2, 1fr); gap: 28px 0; }
+  .ff-rail::before { display: none; }
+  .ff-loopback { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) { .ff-rail { grid-template-columns: 1fr; } }
+
+/* ── RECEIPT ───────────────────────────────────────────────────────────
+   app/_home/Pricing.tsx. Right-aligned marks over a rule with a total
+   underneath: the one layout on this page that is literally a receipt. */
+.ff-price-split {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: clamp(30px, 4vw, 72px);
+  align-items: start;
+}
+.ff-price-extras {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(18px, 2.4vw, 32px);
+  margin-top: clamp(28px, 3.4vw, 42px);
+  padding-top: clamp(24px, 3vw, 34px);
+  border-top: 1px solid var(--ff-rule);
+}
+.ff-receipt { border: 1px solid var(--ff-rule); padding: clamp(20px, 2.4vw, 30px); }
+.ff-receipt-head { padding-bottom: 16px; border-bottom: 1px solid var(--ff-rule); }
+.ff-receipt-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px dotted var(--ff-rule-2);
+}
+.ff-receipt-row[data-sub] { border-bottom: 1px solid var(--ff-rule-2); }
+.ff-receipt-label {
+  display: block;
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+  color: var(--ff-ink);
+}
+.ff-receipt-note { display: block; font-size: 12.5px; color: var(--ff-dim); margin-top: 4px; }
+.ff-receipt-mark {
+  font-family: var(--ff-cond);
+  font-weight: 900;
+  font-size: 17px;
+  color: var(--ff-dim);
+  white-space: nowrap;
+}
+/* The 5% is a real, quotable number. The +/=/base marks are structural. */
+.ff-receipt-mark[data-real] { color: var(--ff-lime); }
+.ff-receipt-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 2px solid var(--ff-lime);
+}
+.ff-receipt-foot { font-size: 12px; line-height: 1.55; color: var(--ff-dim); margin: 18px 0 0; }
+
+@media (max-width: 900px) {
+  .ff-price-split { grid-template-columns: 1fr; }
+  .ff-price-extras { grid-template-columns: 1fr; }
+}
+
+/* ── TWO DOORS ─────────────────────────────────────────────────────────
+   app/_home/FreeStart.tsx. Equal weight, one rule between: these are
+   alternatives to each other, not steps. */
+.ff-doors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: clamp(34px, 4.2vw, 56px);
+  background: var(--ff-rule);
+  border-top: 1px solid var(--ff-rule);
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-door {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: clamp(26px, 3.2vw, 44px) clamp(20px, 2.4vw, 34px);
+  background: var(--ff-bg);
+}
+.ff-door-list { list-style: none; margin: 22px 0 0; padding: 0; }
+.ff-door-list li {
+  position: relative;
+  padding: 9px 0 9px 20px;
+  border-top: 1px solid var(--ff-rule);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ff-mute);
+}
+.ff-door-list li::before {
+  content: "/";
+  position: absolute;
+  left: 0;
+  font-family: var(--ff-cond);
+  font-weight: 900;
+  color: var(--ff-lime);
+}
+@media (max-width: 760px) { .ff-doors { grid-template-columns: 1fr; } }
+
+/* ── SPEC TABLE ────────────────────────────────────────────────────────
+   app/_home/Recalibrate.tsx. The plainest block on the page on purpose:
+   the argument is precision, and decoration would undercut it. */
+.ff-rspec { margin: clamp(34px, 4.2vw, 56px) 0 0; border-top: 1px solid var(--ff-rule); }
+.ff-rspec-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.6fr;
+  gap: clamp(12px, 2vw, 28px);
+  align-items: baseline;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-rspec-k {
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ff-dim);
+}
+.ff-rspec-v {
+  margin: 0;
+  font-family: var(--ff-cond);
+  font-weight: 900;
+  font-size: clamp(1.15rem, 1.9vw, 1.5rem);
+  line-height: 1;
+  color: var(--ff-lime);
+}
+.ff-rspec-why { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ff-mute); }
+.ff-rspec-note {
+  margin-top: clamp(30px, 3.6vw, 46px);
+  padding: clamp(22px, 2.6vw, 32px) clamp(20px, 2.4vw, 30px);
+  border-left: 2px solid var(--ff-rule-2);
+  background: var(--ff-panel);
+}
+@media (max-width: 780px) {
+  .ff-rspec-row { grid-template-columns: 1fr; gap: 6px; padding: 18px 0; }
+  .ff-rspec-v { font-size: 1.35rem; }
+}
+
 /* ── A LA CARTE MENU ───────────────────────────────────────────────────
    app/_home/Menu.tsx. Menu typography, not another card grid: a dish name,
    a dotted leader, a price. The one convention worth borrowing from a
    printed menu, because it survives the name wrapping to two lines. */
-.ff-menu-cats {
+.ff-alc-cats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
@@ -516,16 +708,16 @@ main[data-surface="marketing"] {
   background: var(--ff-rule);
   border: 1px solid var(--ff-rule);
 }
-.ff-menu-cat {
+.ff-alc-cat {
   height: 100%;
   padding: clamp(22px, 2.4vw, 32px) clamp(18px, 2vw, 28px);
   background: var(--ff-bg);
 }
-.ff-menu-cat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.ff-menu-items { list-style: none; margin: 20px 0 0; padding: 0; }
-.ff-menu-item { padding: 14px 0; border-top: 1px solid var(--ff-rule); }
-.ff-menu-item-top { display: flex; align-items: baseline; gap: 8px; }
-.ff-menu-item-name {
+.ff-alc-cat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ff-alc-items { list-style: none; margin: 20px 0 0; padding: 0; }
+.ff-alc-item { padding: 14px 0; border-top: 1px solid var(--ff-rule); }
+.ff-alc-item-top { display: flex; align-items: baseline; gap: 8px; }
+.ff-alc-item-name {
   font-family: var(--ff-cond);
   font-weight: 800;
   font-size: 15px;
@@ -536,7 +728,7 @@ main[data-surface="marketing"] {
 }
 /* The leader. A repeating radial gradient rather than a border-bottom so it
    reads as dots at any width and needs no fixed character count. */
-.ff-menu-dots {
+.ff-alc-dots {
   flex: 1 1 auto;
   min-width: 14px;
   align-self: flex-end;
@@ -546,7 +738,7 @@ main[data-surface="marketing"] {
   background-size: 5px 1px;
   background-repeat: repeat-x;
 }
-.ff-menu-price {
+.ff-alc-price {
   font-family: var(--ff-cond);
   font-weight: 900;
   font-size: 15px;
@@ -556,9 +748,9 @@ main[data-surface="marketing"] {
 }
 /* Not priced yet. Quieter and NOT lime, so an unpriced dish never reads as a
    number the customer can hold us to. */
-.ff-menu-price[data-tbd] { color: var(--ff-dim); font-weight: 700; font-size: 12.5px; }
-.ff-menu-blurb { font-size: 13px; line-height: 1.5; color: var(--ff-mute); margin: 7px 0 0; }
-.ff-menu-variant {
+.ff-alc-price[data-tbd] { color: var(--ff-dim); font-weight: 700; font-size: 12.5px; }
+.ff-alc-blurb { font-size: 13px; line-height: 1.5; color: var(--ff-mute); margin: 7px 0 0; }
+.ff-alc-variant {
   display: inline-block;
   margin-top: 7px;
   font-family: var(--ff-cond);
@@ -568,13 +760,13 @@ main[data-surface="marketing"] {
   text-transform: uppercase;
   color: var(--ff-dim);
 }
-.ff-menu-addons {
+.ff-alc-addons {
   margin-top: clamp(28px, 3.4vw, 44px);
   padding: clamp(18px, 2.2vw, 26px) clamp(20px, 2.4vw, 30px);
   border-left: 2px solid var(--ff-lime);
   background: rgba(132, 204, 22, .05);
 }
-.ff-menu-addon-row {
+.ff-alc-addon-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px 34px;
@@ -582,10 +774,10 @@ main[data-surface="marketing"] {
   font-size: 14px;
   color: var(--ff-mute);
 }
-.ff-menu-addon-row strong { color: var(--ff-ink); font-weight: 600; }
+.ff-alc-addon-row strong { color: var(--ff-ink); font-weight: 600; }
 
-@media (max-width: 1000px) { .ff-menu-cats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px)  { .ff-menu-cats { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .ff-alc-cats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .ff-alc-cats { grid-template-columns: 1fr; } }
 
 /* ── TRIAL DAY ─────────────────────────────────────────────────────────
    app/_home/TrialDay.tsx. Real dishes from PlanScheduleSlot day 1.

@@ -9,6 +9,10 @@ import Coverage from "./_home/Coverage";
 import Scale from "./_home/Scale";
 import TrialDay from "./_home/TrialDay";
 import Menu from "./_home/Menu";
+import AfterOrder from "./_home/AfterOrder";
+import Pricing from "./_home/Pricing";
+import FreeStart from "./_home/FreeStart";
+import Recalibrate from "./_home/Recalibrate";
 import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
 import LoopDial from "./_home/LoopDial";
@@ -117,6 +121,11 @@ export default function Home() {
           previously unlinked from here despite being the highest-intent
           local-SEO surface on the site. */}
       <Coverage />
+      {/* Where it goes, then what happens when it gets there: the five-state
+          DeliveryStatus machine, the named driver, the customer's own
+          "received" tap, and the rating that re-averages onto the recipe the
+          kitchen cooks from. All shipped, none of it mentioned until now. */}
+      <AfterOrder />
       {/* Supplements are part of what you eat, matched to your plan, so they
           live in the Eat chapter rather than mid-Track. */}
       <Supplements />
@@ -139,12 +148,26 @@ export default function Home() {
       <LoopDial />
       {/* The coach and the daily comms loop. Runs the loop, so it follows it. */}
       <Coach />
+      {/* The recalibration engine's actual constants: 7700 kcal/kg, a ±300
+          cap, a 1200 floor, and the case where it refuses to answer. The page
+          claimed "a target that moves when you plateau" in one clause and
+          never showed the mechanism. lib/coach/recalibration.ts */}
+      <Recalibrate />
 
       {/* ── 04 · JOIN ────────────────────────────────────────────────── */}
       <Chapter n="04" label="Join" line="Eat with us, earn with us, build with us" id="join" />
       <Partners />
       <Franchise />
+      {/* The two products that are not a subscription: the free public TDEE
+          tool (cheapest acquisition surface we own, previously one small link)
+          and digital PDF plans, which have no delivery leg and therefore sell
+          outside the fifteen delivery areas entirely. */}
+      <FreeStart />
       <Membership />
+      {/* The price, decomposed, before checkout asks for money: base, delivery,
+          packaging, 5% GST, plus coupons and store credit.
+          lib/pricing-decomposition.ts, Decision #189. */}
+      <Pricing />
       {/* 7 durations, delivery windows, PayU + COD, digital plans. */}
       <Terms />
       <Voices />
@@ -375,7 +398,7 @@ function AppBlock() {
 function Supplements() {
   return <Bleed src="/images/supplements.jpg" alt="Preparing a protein shake" title="The supplements"
     body="A stack matched to your plan and your condition, not a wall of pills. Each one carries its evidence grade, the trial count behind it, the clinical dose, the interactions to avoid and whether you can actually buy it in India. Then you order through Nutrabay at their price."
-    points={["46 supplements, graded by evidence", "Clinical doses, warnings and interactions", "India availability, ordered via Nutrabay"]}
+    points={["Matched by goal and condition, not by margin", "46 supplements, graded by evidence", "Clinical doses, warnings and interactions", "India availability, ordered via Nutrabay"]}
     href="/supplements" cta="Browse the stack" />;
 }
 

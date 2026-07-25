@@ -59,31 +59,31 @@ export default function Menu() {
           </p>
         </Reveal>
 
-        <div className="ff-menu-cats">
+        <div className="ff-alc-cats">
           {MENU.map((cat, ci) => (
             <Reveal key={cat.key} delay={0.08 + ci * 0.04}>
-              <div className="ff-menu-cat">
-                <div className="ff-menu-cat-head">
+              <div className="ff-alc-cat">
+                <div className="ff-alc-cat-head">
                   <h3 style={{ ...mid("clamp(1.4rem,2.2vw,1.8rem)"), color: INK }}>{cat.label}</h3>
                   <span style={{ ...tag(DIM), fontSize: 11.5 }}>{cat.items.length} dishes</span>
                 </div>
                 <p style={{ ...copy(13.5), color: DIM, marginTop: 10 }}>{cat.note}</p>
 
-                <ul className="ff-menu-items">
+                <ul className="ff-alc-items">
                   {cat.items.slice(0, PER_CATEGORY).map((it) => (
-                    <li key={it.name} className="ff-menu-item">
-                      <div className="ff-menu-item-top">
-                        <span className="ff-menu-item-name">{it.name}</span>
+                    <li key={it.name} className="ff-alc-item">
+                      <div className="ff-alc-item-top">
+                        <span className="ff-alc-item-name">{it.name}</span>
                         {/* A dotted leader between dish and price is the one
                             piece of menu typography worth borrowing: it ties
                             the two ends of a wrapping line together. */}
-                        <span className="ff-menu-dots" aria-hidden />
-                        <span className="ff-menu-price" data-tbd={it.price == null ? "" : undefined}>
+                        <span className="ff-alc-dots" aria-hidden />
+                        <span className="ff-alc-price" data-tbd={it.price == null ? "" : undefined}>
                           {it.price == null ? "On request" : `Rs ${it.price}`}
                         </span>
                       </div>
-                      <p className="ff-menu-blurb">{it.blurb}</p>
-                      {it.variantNote && <span className="ff-menu-variant">{it.variantNote}</span>}
+                      <p className="ff-alc-blurb">{it.blurb}</p>
+                      {it.variantNote && <span className="ff-alc-variant">{it.variantNote}</span>}
                     </li>
                   ))}
                 </ul>
@@ -101,9 +101,9 @@ export default function Menu() {
         {/* The add-on ladder, stated once. It is the same on every priced dish,
             so repeating it per card would be noise. */}
         <Reveal delay={0.3}>
-          <div className="ff-menu-addons">
+          <div className="ff-alc-addons">
             <span style={{ ...tag(DIM), fontSize: 11.5 }}>Make it a meal</span>
-            <div className="ff-menu-addon-row">
+            <div className="ff-alc-addon-row">
               <span><strong>Veg</strong> paneer or tofu, from Rs 30</span>
               <span><strong>Egg</strong> boiled or omelette, Rs 50</span>
               <span><strong>Non-veg</strong> grilled chicken, from Rs 80</span>
