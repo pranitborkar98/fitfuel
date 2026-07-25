@@ -15,12 +15,19 @@
 // that takes 40 paise of every rupee. That is the whole commercial point of
 // this file.
 //
-// PRICING IS PARTIAL AND THAT IS DELIBERATE.
-// Salads and keto dishes carry real prices from the owner's menu sheets.
-// Bowls, breakfasts, protein bars and juices DO NOT have prices yet, so their
-// `price` is null and the UI prints "Price on request" rather than a number
-// somebody invented. A wrong price on a food menu is a refund and a bad review.
-// Filling them in later is one field per row.
+// PRICING. Salads and keto carry REAL prices from the owner's menu sheets.
+//
+// The other 32 dishes (bowls, breakfasts, protein bars, juices) are not priced
+// yet. On the owner's instruction they carry a placeholder of Rs 100 to be
+// replaced in the next revision, and each one is flagged `provisional: true`
+// so the whole set is one grep away:
+//
+//     grep -n "provisional: true" lib/menu-alacarte.ts
+//
+// Read that flag before quoting any of these to a customer. Rs 100 sits well
+// under the Rs 200-300 the priced dishes run at, so a provisional row reads as
+// cheap rather than as a typo, and someone WILL try to order at that price.
+// Clearing the flag and setting the real number is one edit per row.
 //
 // Add-on ladder, consistent across every priced dish: veg +Rs 30-40,
 // egg +Rs 50, non-veg +Rs 80-90.
@@ -38,8 +45,14 @@ export type MenuItem = {
   name: string;
   /** The menu-card line. One sentence, sensory, no marketing adjectives. */
   blurb: string;
-  /** Rupees. NULL means not priced yet. Never guess one. */
+  /** Rupees. Null is still permitted and still renders "On request". */
   price: number | null;
+  /**
+   * TRUE means `price` is the Rs 100 placeholder, not a real price. Kept as a
+   * separate flag rather than encoded in the number so the real value can land
+   * without anyone having to remember which rows were fake.
+   */
+  provisional?: true;
   /** Set when a variant of the same dish is sold at a different price. */
   variantNote?: string;
   addOns?: AddOn[];
@@ -96,14 +109,14 @@ export const MENU: MenuCategory[] = [
     label: "Bowls",
     note: "A grain base, a protein, and something green. The format most people actually eat lunch in.",
     items: [
-      { name: "Mediterranean Power Bowl", blurb: "Quinoa, hummus, grilled zucchini and peppers, chickpeas, olives, lemon-olive oil.", price: null },
-      { name: "Thai Buddha Bowl", blurb: "Brown rice or quinoa with grilled tofu or chicken, peanut sauce, crushed peanuts and lime.", price: null },
-      { name: "Indian Detox Bowl", blurb: "Sprouted moong with cucumber, tomato and carrot, lemon, rock salt and roasted cumin.", price: null },
-      { name: "Green Goddess Bowl", blurb: "Millets, green beans, sautéed spinach and avocado under a green tahini dressing.", price: null },
-      { name: "Mexican Fiesta Bowl", blurb: "Brown rice, black beans and corn with sautéed peppers, salsa or guacamole.", price: null },
-      { name: "Protein-Packed Fitness Bowl", blurb: "Quinoa with grilled tofu or chicken, edamame and sautéed greens, lemon-herb dressing.", price: null },
-      { name: "Asian Shiitake Bowl", blurb: "Soba or brown rice with shiitake and bok choy in soy-ginger, sesame seeds.", price: null },
-      { name: "Keto Low-Carb Bowl", blurb: "Cauliflower rice with grilled paneer or chicken, avocado and spinach, olive oil and lemon.", price: null },
+      { name: "Mediterranean Power Bowl", blurb: "Quinoa, hummus, grilled zucchini and peppers, chickpeas, olives, lemon-olive oil.", price: 100, provisional: true },
+      { name: "Thai Buddha Bowl", blurb: "Brown rice or quinoa with grilled tofu or chicken, peanut sauce, crushed peanuts and lime.", price: 100, provisional: true },
+      { name: "Indian Detox Bowl", blurb: "Sprouted moong with cucumber, tomato and carrot, lemon, rock salt and roasted cumin.", price: 100, provisional: true },
+      { name: "Green Goddess Bowl", blurb: "Millets, green beans, sautéed spinach and avocado under a green tahini dressing.", price: 100, provisional: true },
+      { name: "Mexican Fiesta Bowl", blurb: "Brown rice, black beans and corn with sautéed peppers, salsa or guacamole.", price: 100, provisional: true },
+      { name: "Protein-Packed Fitness Bowl", blurb: "Quinoa with grilled tofu or chicken, edamame and sautéed greens, lemon-herb dressing.", price: 100, provisional: true },
+      { name: "Asian Shiitake Bowl", blurb: "Soba or brown rice with shiitake and bok choy in soy-ginger, sesame seeds.", price: 100, provisional: true },
+      { name: "Keto Low-Carb Bowl", blurb: "Cauliflower rice with grilled paneer or chicken, avocado and spinach, olive oil and lemon.", price: 100, provisional: true },
     ],
   },
   {
@@ -111,16 +124,16 @@ export const MENU: MenuCategory[] = [
     label: "Breakfast",
     note: "The meal most people skip or ruin. Cooked and at your door by 08:00.",
     items: [
-      { name: "Avocado Toast with Egg or Tomato", blurb: "Multigrain toast, lemon-mashed avocado, poached egg or tomato, chilli flakes.", price: null },
-      { name: "Almond Banana Overnight Oats", blurb: "Rolled oats soaked in almond milk with banana and chia, almonds and cinnamon. Vegan.", price: null },
-      { name: "Egg White Veggie Omelette", blurb: "Egg whites with peppers and onion. Tofu version for the vegetarian order.", price: null },
-      { name: "Greek Yogurt Parfait", blurb: "Layered Greek yoghurt, granola and berries, seeds on top.", price: null },
-      { name: "High Protein Paneer Bhurji Wrap", blurb: "Paneer or scrambled egg in onion-tomato masala, wholewheat wrap, coriander and lemon.", price: null },
-      { name: "Masala Millet Veggie Upma", blurb: "Millet upma tempered with mustard, curry leaf and green chilli. Vegan and gluten-free.", price: null },
-      { name: "Chia Seed Pudding", blurb: "Chia set overnight in almond milk and vanilla, fruit and nuts. Vegan.", price: null },
-      { name: "Tofu Scramble with Wholegrain Toast", blurb: "Turmeric tofu scramble with onion, tomato and pepper. Egg version on request.", price: null },
-      { name: "Superfood Smoothie Bowl", blurb: "Frozen banana and berries blended thick, topped with fruit, seeds and coconut.", price: null },
-      { name: "Healthy Breakfast Muffins", blurb: "Two oat-flour and banana muffins, walnuts and raisins. Flax egg for the vegan order.", price: null },
+      { name: "Avocado Toast with Egg or Tomato", blurb: "Multigrain toast, lemon-mashed avocado, poached egg or tomato, chilli flakes.", price: 100, provisional: true },
+      { name: "Almond Banana Overnight Oats", blurb: "Rolled oats soaked in almond milk with banana and chia, almonds and cinnamon. Vegan.", price: 100, provisional: true },
+      { name: "Egg White Veggie Omelette", blurb: "Egg whites with peppers and onion. Tofu version for the vegetarian order.", price: 100, provisional: true },
+      { name: "Greek Yogurt Parfait", blurb: "Layered Greek yoghurt, granola and berries, seeds on top.", price: 100, provisional: true },
+      { name: "High Protein Paneer Bhurji Wrap", blurb: "Paneer or scrambled egg in onion-tomato masala, wholewheat wrap, coriander and lemon.", price: 100, provisional: true },
+      { name: "Masala Millet Veggie Upma", blurb: "Millet upma tempered with mustard, curry leaf and green chilli. Vegan and gluten-free.", price: 100, provisional: true },
+      { name: "Chia Seed Pudding", blurb: "Chia set overnight in almond milk and vanilla, fruit and nuts. Vegan.", price: 100, provisional: true },
+      { name: "Tofu Scramble with Wholegrain Toast", blurb: "Turmeric tofu scramble with onion, tomato and pepper. Egg version on request.", price: 100, provisional: true },
+      { name: "Superfood Smoothie Bowl", blurb: "Frozen banana and berries blended thick, topped with fruit, seeds and coconut.", price: 100, provisional: true },
+      { name: "Healthy Breakfast Muffins", blurb: "Two oat-flour and banana muffins, walnuts and raisins. Flax egg for the vegan order.", price: 100, provisional: true },
     ],
   },
   {
@@ -128,12 +141,12 @@ export const MENU: MenuCategory[] = [
     label: "Protein bars",
     note: "Made here, not bought in. The thing to eat at 4pm instead of what you usually eat at 4pm.",
     items: [
-      { name: "Peanut Butter Power Bar", blurb: "Oats and natural peanut butter bound with honey, chia and protein.", price: null },
-      { name: "Chocolate Almond Crunch Bar", blurb: "Chopped almonds and oats with cocoa and almond butter, vanilla.", price: null },
-      { name: "Berry Bliss Protein Bar", blurb: "Dried berries, dates and oats with chia and coconut oil. Vegan.", price: null },
-      { name: "Banana Walnut Energy Bar", blurb: "Baked banana and oat bar with walnuts and cinnamon.", price: null },
-      { name: "Coconut Cashew Keto Bar", blurb: "Shredded coconut, cashews and almond flour, sweetened with stevia.", price: null },
-      { name: "Double Chocolate Protein Bar", blurb: "Oats, cocoa and dark chocolate with chocolate protein and almond butter.", price: null },
+      { name: "Peanut Butter Power Bar", blurb: "Oats and natural peanut butter bound with honey, chia and protein.", price: 100, provisional: true },
+      { name: "Chocolate Almond Crunch Bar", blurb: "Chopped almonds and oats with cocoa and almond butter, vanilla.", price: 100, provisional: true },
+      { name: "Berry Bliss Protein Bar", blurb: "Dried berries, dates and oats with chia and coconut oil. Vegan.", price: 100, provisional: true },
+      { name: "Banana Walnut Energy Bar", blurb: "Baked banana and oat bar with walnuts and cinnamon.", price: 100, provisional: true },
+      { name: "Coconut Cashew Keto Bar", blurb: "Shredded coconut, cashews and almond flour, sweetened with stevia.", price: 100, provisional: true },
+      { name: "Double Chocolate Protein Bar", blurb: "Oats, cocoa and dark chocolate with chocolate protein and almond butter.", price: 100, provisional: true },
     ],
   },
   {
@@ -141,14 +154,14 @@ export const MENU: MenuCategory[] = [
     label: "Detox juices",
     note: "Cold-pressed the morning they go out. No concentrate, no added sugar.",
     items: [
-      { name: "Green Detox Juice", blurb: "Spinach, cucumber, green apple, lemon and ginger.", price: null },
-      { name: "Ironman Juice", blurb: "Beetroot, carrot, spinach and apple with lemon.", price: null },
-      { name: "Magic Juice for Eyes and Skin", blurb: "Carrot and orange with ginger, turmeric and chia.", price: null },
-      { name: "Beet and Carrot Juice", blurb: "Beetroot and carrot pressed with ginger and lemon.", price: null },
-      { name: "Skin Detox Elixir", blurb: "Cucumber, green apple and mint with lemon and coconut water.", price: null },
-      { name: "Ash Gourd Juice", blurb: "Ash gourd with lime and black salt. Drunk fresh, on an empty stomach.", price: null },
-      { name: "Glow-Boosting Juice", blurb: "Orange, carrot, beetroot and apple with flax.", price: null },
-      { name: "Ajwain Period Pain Reliever", blurb: "Carom seed infusion with lemon and honey, served warm.", price: null },
+      { name: "Green Detox Juice", blurb: "Spinach, cucumber, green apple, lemon and ginger.", price: 100, provisional: true },
+      { name: "Ironman Juice", blurb: "Beetroot, carrot, spinach and apple with lemon.", price: 100, provisional: true },
+      { name: "Magic Juice for Eyes and Skin", blurb: "Carrot and orange with ginger, turmeric and chia.", price: 100, provisional: true },
+      { name: "Beet and Carrot Juice", blurb: "Beetroot and carrot pressed with ginger and lemon.", price: 100, provisional: true },
+      { name: "Skin Detox Elixir", blurb: "Cucumber, green apple and mint with lemon and coconut water.", price: 100, provisional: true },
+      { name: "Ash Gourd Juice", blurb: "Ash gourd with lime and black salt. Drunk fresh, on an empty stomach.", price: 100, provisional: true },
+      { name: "Glow-Boosting Juice", blurb: "Orange, carrot, beetroot and apple with flax.", price: 100, provisional: true },
+      { name: "Ajwain Period Pain Reliever", blurb: "Carom seed infusion with lemon and honey, served warm.", price: 100, provisional: true },
     ],
   },
 ];
@@ -158,10 +171,21 @@ export const MENU: MenuCategory[] = [
 export const MENU_STATS = {
   categories: MENU.length,
   items: MENU.reduce((n, c) => n + c.items.length, 0),
-  priced: MENU.reduce((n, c) => n + c.items.filter((i) => i.price != null).length, 0),
+  /** Rows carrying a price the kitchen has actually set. */
+  priced: MENU.reduce((n, c) => n + c.items.filter((i) => i.price != null && !i.provisional).length, 0),
+  /** Rows still on the Rs 100 placeholder. Should reach zero. */
+  provisional: MENU.reduce((n, c) => n + c.items.filter((i) => i.provisional).length, 0),
 };
 
-/** Cheapest real price on the menu, for the "from Rs X" line. */
+/**
+ * Cheapest CONFIRMED price, for the "from Rs X" line on the homepage.
+ *
+ * Provisional rows are excluded on purpose. Including them would make the
+ * headline read "from Rs 100" off the back of a placeholder, which is the one
+ * number on the page a customer is most likely to hold us to.
+ */
 export const MENU_FROM = Math.min(
-  ...MENU.flatMap((c) => c.items.map((i) => i.price).filter((p): p is number => p != null)),
+  ...MENU.flatMap((c) =>
+    c.items.filter((i) => !i.provisional).map((i) => i.price).filter((p): p is number => p != null),
+  ),
 );

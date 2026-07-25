@@ -504,6 +504,118 @@ main[data-surface="marketing"] {
   .ff-area { min-height: 66px; padding: 13px 15px; }
 }
 
+/* ── FAQ + JOURNAL ─────────────────────────────────────────────────────
+   app/_home/Answers.tsx. Built on <details>/<summary>, so open/close,
+   keyboard operation and screen-reader announcement all come free with
+   zero client JS. The only styling trick required is killing the native
+   marker, which needs both the standard and the WebKit pseudo-element. */
+.ff-qa { margin-top: clamp(30px, 3.8vw, 50px); border-top: 1px solid var(--ff-rule); }
+.ff-qa-item { border-bottom: 1px solid var(--ff-rule); }
+.ff-qa-q {
+  display: grid;
+  grid-template-columns: 150px 1fr 24px;
+  align-items: baseline;
+  gap: 18px;
+  padding: 20px 0;
+  cursor: pointer;
+  list-style: none;
+  transition: color .18s ease;
+}
+.ff-qa-q::-webkit-details-marker { display: none; }
+.ff-qa-q:hover .ff-qa-text { color: var(--ff-lime); }
+/* Focus lands on the summary, so it has to be visible. */
+.ff-qa-item:focus-within .ff-qa-text { color: var(--ff-lime); }
+.ff-qa-cat {
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ff-dim);
+}
+.ff-qa-text {
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: -.01em;
+  color: var(--ff-ink);
+  transition: color .18s ease;
+}
+/* A plus that turns into a cross.
+   The rotation is on the MARK ITSELF, not on one of its bars. The first pass
+   built a plus from two pseudo-elements and un-rotated ::after on [open] to
+   make a minus, which did not take: the bar stayed at 90deg with the [open]
+   rule matched and the transition long settled. Rotating the container is
+   also the better test surface, because a transform on a real element is
+   readable with getComputedStyle, and a transform on a pseudo-element is not
+   reliably readable at all. */
+.ff-qa-mark {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 16px;
+  justify-self: end;
+  transition: transform .2s ease;
+}
+.ff-qa-mark::before,
+.ff-qa-mark::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 1.5px;
+  background: var(--ff-lime);
+}
+.ff-qa-mark::after { transform: rotate(90deg); }
+.ff-qa-item[open] .ff-qa-mark { transform: rotate(45deg); }
+.ff-qa-a {
+  padding: 0 0 24px;
+  max-width: 74ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ff-mute);
+}
+.ff-qa-a p { margin: 0 0 12px; }
+.ff-qa-a p:last-child { margin-bottom: 0; }
+.ff-qa-a a { color: var(--ff-lime); text-underline-offset: 3px; }
+.ff-qa-a ul, .ff-qa-a ol { margin: 0 0 12px; padding-left: 20px; }
+.ff-qa-a li { margin-bottom: 6px; }
+
+.ff-journal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: clamp(48px, 6vw, 84px);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-journal {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--ff-rule);
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-post {
+  display: block;
+  height: 100%;
+  padding: clamp(20px, 2.4vw, 30px) clamp(16px, 2vw, 26px);
+  background: var(--ff-bg);
+  text-decoration: none;
+  transition: background .18s ease;
+}
+.ff-post:hover { background: var(--ff-panel-2); }
+.ff-post-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 860px) {
+  .ff-qa-q { grid-template-columns: 1fr 24px; gap: 8px 14px; }
+  .ff-qa-cat { grid-column: 1 / -1; }
+  .ff-journal { grid-template-columns: 1fr; }
+}
+
 /* ── DELIVERY RAIL ─────────────────────────────────────────────────────
    app/_home/AfterOrder.tsx. The four customer-visible DeliveryStatus
    states. A rail, because nothing else on this page is linear and the

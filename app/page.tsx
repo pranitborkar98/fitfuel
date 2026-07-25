@@ -13,6 +13,7 @@ import AfterOrder from "./_home/AfterOrder";
 import Pricing from "./_home/Pricing";
 import FreeStart from "./_home/FreeStart";
 import Recalibrate from "./_home/Recalibrate";
+import Answers from "./_home/Answers";
 import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
 import LoopDial from "./_home/LoopDial";
@@ -173,6 +174,12 @@ export default function Home() {
       <Voices />
       {/* Rs 500 referral credit loop. */}
       <Refer />
+      {/* The last two models with no homepage presence, found by checking all
+          52 in schema.prisma against the rendered page rather than by listing
+          lib files again: Faq and BlogPost. Both DB-driven, both admin-editable
+          at /admin/content. The FAQ is an objection handler, which is why every
+          competitor runs one here and we did not. */}
+      <Answers />
       {/* Trimmed index near the foot; the Footer carries full completeness. */}
       <ServiceMap />
       <Close />
