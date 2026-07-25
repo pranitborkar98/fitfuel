@@ -221,9 +221,14 @@ export default function Navbar() {
     <header style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
       transition: "background 0.35s, border-color 0.35s, backdrop-filter 0.35s",
-      background: scrolled ? "rgba(8,8,8,0.92)" : "transparent",
-      borderBottom: `1px solid ${scrolled ? "#1e1e1e" : "transparent"}`,
-      backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
+      // The bar used to be fully transparent until the first scroll, which only
+      // worked because every page behind it was near-black. Its logo and links
+      // are white, so on any light page the header simply disappeared — the
+      // "Fit" in the wordmark vanished and only "Fuel" was legible. It now
+      // always paints; scrolling deepens it rather than switching it on.
+      background: scrolled ? "rgba(8,8,8,0.94)" : "rgba(8,8,8,0.88)",
+      borderBottom: `1px solid ${scrolled ? "#1e1e1e" : "#141414"}`,
+      backdropFilter: "blur(16px) saturate(180%)",
     }}>
       {/* Scroll progress */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "#1a1a1a" }}>

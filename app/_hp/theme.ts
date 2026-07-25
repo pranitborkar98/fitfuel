@@ -16,16 +16,21 @@
 
 import type { CSSProperties } from "react";
 
-export const PAPER = "#f5f2ec"; // warm off-white, not clinical white
-export const PAPER_2 = "#ebe6dc"; // banded sections
+export const PAPER = "#f7f4ee"; // warm off-white, not clinical white
+export const PAPER_2 = "#efe9dd"; // banded sections
 export const INK = "#171512"; // 15.8:1 on PAPER
 export const INK_2 = "#4a453d"; // 8.3:1 — body copy
 export const INK_3 = "#6f6459"; // 4.9:1 — passes AA at small sizes
-export const RULE = "#d8d1c4";
+export const RULE = "#ded6c7";
 export const GREEN = "#1f5130"; // 8.9:1 on PAPER — accent that reads as food, not neon
+export const GREEN_DEEP = "#12331f"; // dark bands
 export const GREEN_LIGHT = "#2f7a46";
-export const CLAY = "#b4471f"; // 5.1:1 — the single CTA colour, used sparingly
+// Darkened from #b4471f, which landed at exactly 4.5:1 as a 12px label on the
+// banded background — passing by rounding is not passing.
+export const CLAY = "#a33d17";
+export const CLAY_SOFT = "#e8d9c8"; // warm fill behind figures, stops the flatness
 
+export const SERIF = "var(--font-fraunces), Georgia, serif";
 export const COND = "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif";
 
 export const WRAP: CSSProperties = {
@@ -35,13 +40,15 @@ export const WRAP: CSSProperties = {
   padding: "0 clamp(20px,5vw,64px)",
 };
 
-/* Display: condensed, heavy, but sentence case. One of these per section, maximum. */
+/* Display: a warm old-style serif, sentence case. One per section, maximum.
+   The serif is doing most of the work of not looking plain — it carries the
+   editorial, food-magazine register that a condensed grotesque cannot. */
 export const display = (size: string): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 800,
+  fontFamily: SERIF,
+  fontWeight: 600,
   fontSize: size,
-  lineHeight: 0.92,
-  letterSpacing: "-0.015em",
+  lineHeight: 1.02,
+  letterSpacing: "-0.022em",
   color: INK,
   margin: 0,
 });
@@ -49,11 +56,11 @@ export const display = (size: string): CSSProperties => ({
 /* Sub-heads sit clearly BELOW display in the hierarchy — the old page had no
    such step, which is why everything shouted. */
 export const sub = (size: string): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 700,
+  fontFamily: SERIF,
+  fontWeight: 600,
   fontSize: size,
-  lineHeight: 1.05,
-  letterSpacing: "-0.005em",
+  lineHeight: 1.18,
+  letterSpacing: "-0.01em",
   color: INK,
   margin: 0,
 });
@@ -76,15 +83,28 @@ export const label = (color = INK_3): CSSProperties => ({
   color,
 });
 
-/* Figures: tabular so columns of numbers line up. */
+/* Figures: serif and tabular. Big serif numerals are the cheapest editorial
+   signal there is — the same number set in condensed sans reads as a spec sheet. */
 export const figure = (size: string, color = INK): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 800,
+  fontFamily: SERIF,
+  fontWeight: 700,
   fontSize: size,
-  lineHeight: 0.85,
-  letterSpacing: "-0.02em",
+  lineHeight: 0.92,
+  letterSpacing: "-0.03em",
   color,
   fontVariantNumeric: "tabular-nums",
+});
+
+/* Pull-quote / editorial italic, for the one line per section worth slowing on. */
+export const quote = (size: string): CSSProperties => ({
+  fontFamily: SERIF,
+  fontWeight: 400,
+  fontStyle: "italic",
+  fontSize: size,
+  lineHeight: 1.35,
+  letterSpacing: "-0.01em",
+  color: INK,
+  margin: 0,
 });
 
 export const SECTION: CSSProperties = { padding: "clamp(64px,8vw,116px) 0" };
