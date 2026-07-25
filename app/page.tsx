@@ -3,7 +3,11 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import StructuredData from "@/components/StructuredData";
+import TrustStrip from "@/components/TrustStrip";
 import Frame from "./_home/Frame";
+import Coverage from "./_home/Coverage";
+import Scale from "./_home/Scale";
+import TrialDay from "./_home/TrialDay";
 import Hero from "./_home/Hero";
 import Finder from "./_home/Finder";
 import LoopDial from "./_home/LoopDial";
@@ -77,15 +81,36 @@ export default function Home() {
           conversion step on the page and the hero subhead describes it. */}
       <Finder />
       <Statement />
+      {/* The external layer: Swiggy, Zomato, UPI, PayU, FSSAI, Nutrabay.
+          This sits high on purpose. Everything above it is FitFuel talking
+          about FitFuel; this is the first thing on the page a stranger can
+          check without taking our word for it, and in food the licence
+          number does more work than any amount of copy.
+
+          It was written days ago as components/TrustStrip.tsx and never
+          imported by anything, so the whole row shipped as dead code while
+          the page above it was rebuilt nine times. */}
+      <TrustStrip />
 
       {/* ── 01 · EAT ─────────────────────────────────────────────────── */}
       <Chapter n="01" label="Eat" line="Food built for your body, cooked and delivered daily" id="eat" />
+      {/* FOOD FIRST. The Eat chapter used to open with a taxonomy of medical
+          conditions and a grid counting menu days, and a visitor could read
+          the whole page without learning the name of a single dish. This is
+          day one of weight-loss-veg, pulled from PlanScheduleSlot, with the
+          macros it was weighed to. */}
+      <TrialDay />
       {/* 70 of 126 plans are condition-specific across 38 conditions. */}
       <Conditions />
       {/* 60-day cycle, 100% public menu (Decision #43): nobody else shows
           the whole menu. */}
       <OpenMenu />
       <Kitchen />
+      {/* "Do you deliver to me" is the first question a cold visitor has and
+          the page never answered it. Fifteen real areas, and /locations was
+          previously unlinked from here despite being the highest-intent
+          local-SEO surface on the site. */}
+      <Coverage />
       {/* Supplements are part of what you eat, matched to your plan, so they
           live in the Eat chapter rather than mid-Track. */}
       <Supplements />
@@ -95,6 +120,13 @@ export default function Home() {
       <AppBlock />
       {/* 154-food diary + water tracking. */}
       <Diary />
+      {/* The BLE body-composition scale: a hand-written Web Bluetooth stack
+          (FitDays protocol, custom packet parser, BIA engine) that turns two
+          hardware readings into eighteen tracked metrics. It is the single
+          hardest thing in this repository to copy, it has been shipping in
+          /dashboard/body-metrics for weeks, and the homepage had never
+          mentioned it once. See app/_home/Scale.tsx. */}
+      <Scale />
 
       {/* ── 03 · THE SYSTEM ──────────────────────────────────────────── */}
       <Chapter n="03" label="The system" line="It watches the week so you do not have to" id="system" />

@@ -282,10 +282,39 @@ export const PAYOUT_TERMS: [string, string][] = [
   ["Exclusivity", "None. Partnering with FitFuel does not stop you working with anyone else."],
 ];
 
+/* ── Delivery coverage ────────────────────────────────────────────────────
+   The fifteen areas the kitchen actually reaches, in delivery order out from
+   Kharadi. Unlike NETWORK_GROUPS above, NOTHING here is a reserved slot: every
+   name is a zone we deliver to six days a week, and each one is a real place a
+   customer can check themselves.
+
+   app/locations/LocationsClient.tsx holds the same fifteen with their
+   pincodes for the serviceability check. This copy is the public,
+   name-only list. If a zone opens or closes, both change. */
+export const DELIVERY_AREAS: { name: string; base?: true }[] = [
+  { name: "Kharadi", base: true },
+  { name: "Viman Nagar" },
+  { name: "Kalyani Nagar" },
+  { name: "Vadgaon Sheri" },
+  { name: "Wagholi" },
+  { name: "Yerwada" },
+  { name: "Koregaon Park" },
+  { name: "Sangamwadi" },
+  { name: "Magarpatta City" },
+  { name: "Amanora" },
+  { name: "Mundhwa" },
+  { name: "Tingre Nagar" },
+  { name: "Hadpsar" },
+  { name: "Dhanori" },
+  { name: "Lohegaon" },
+];
+
 /** Counts used in the readout bar, computed rather than typed by hand. */
 export const NETWORK_STATS = {
   programmes: PROGRAMS.length,
   rewardModels: new Set(PROGRAMS.map((p) => p.reward)).size,
   liveIntegrations: INTEGRATIONS.filter((i) => i.status === "LIVE").length,
-  areasServed: 15,
+  /* Was the literal 15, sitting three lines under a comment promising these
+     were computed. It is computed now, so opening a zone updates the stat. */
+  areasServed: DELIVERY_AREAS.length,
 };

@@ -390,6 +390,246 @@ main[data-surface="marketing"] {
 
 @media (max-width: 900px) { .ff-ptypes { grid-template-columns: repeat(2, 1fr); } }
 
+/* ── TRUST MARKS ───────────────────────────────────────────────────────
+   The external layer: where you can order, what you can pay with, who
+   licenses the kitchen. components/TrustStrip.tsx + lib/trust-marks.ts.
+
+   These styles did not exist for four days. The component was written,
+   the data file was written, and neither was imported or styled, so the
+   whole row sat on disk unrendered while the homepage was rebuilt around
+   it nine times. If you are reading this because a section vanished
+   again: grep for the class name before rebuilding the section.
+
+   Marks are typographic, never image files. Same hairline-grid language
+   as .ff-ptypes so the two rows read as one system. */
+.ff-markhead {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ff-rule);
+  margin-bottom: 1px;
+}
+.ff-marks {
+  display: grid;
+  /* auto-fit, not a fixed count: the groups are 3, 4 and 6 marks long. */
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 1px;
+  background: var(--ff-rule);
+  border: 1px solid var(--ff-rule);
+}
+.ff-mark {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  min-height: 92px;
+  padding: 18px;
+  background: var(--ff-bg);
+}
+.ff-mark-name {
+  font-family: var(--ff-cond);
+  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  line-height: 1;
+  color: var(--ff-ink);
+}
+.ff-mark-note { font-size: 12.5px; color: var(--ff-dim); line-height: 1.4; }
+
+/* A held slot is dimmed AND labelled. Encoding "not yet live" in contrast
+   alone fails at a glance and fails outright for anyone who cannot see the
+   difference, so .ff-mark-soon prints the words next to it. */
+.ff-mark[data-soon] { background: var(--ff-panel); }
+.ff-mark[data-soon] .ff-mark-name { color: var(--ff-dim); }
+.ff-mark-soon {
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ff-dim);
+  margin-top: 3px;
+}
+/* A mark that links out. Only set once a real URL exists in lib/trust-marks.ts,
+   so this never dresses up a dead cell as clickable. */
+.ff-mark[data-link] { text-decoration: none; transition: background .18s ease; }
+.ff-mark[data-link]:hover { background: var(--ff-panel-2); }
+.ff-mark-soon[data-go] { color: var(--ff-lime); }
+
+@media (max-width: 640px) {
+  .ff-markhead { flex-direction: column; gap: 8px; }
+  .ff-marks { grid-template-columns: repeat(2, 1fr); }
+  .ff-mark { min-height: 84px; padding: 15px; }
+}
+
+/* ── DELIVERY AREAS ────────────────────────────────────────────────────
+   app/_home/Coverage.tsx. Same hairline grid as .ff-marks and .ff-ptypes,
+   one step quieter: these are place names to scan for your own, not marks
+   to weigh. Kharadi carries the kitchen and is lit. */
+.ff-areas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--ff-rule);
+  border: 1px solid var(--ff-rule);
+}
+.ff-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  min-height: 74px;
+  padding: 16px 18px;
+  background: var(--ff-bg);
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: clamp(1.05rem, 1.55vw, 1.3rem);
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.ff-area[data-base] { background: rgba(132, 204, 22, .06); }
+.ff-area-base {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--ff-lime);
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .ff-areas { grid-template-columns: repeat(2, 1fr); }
+  .ff-area { min-height: 66px; padding: 13px 15px; }
+}
+
+/* ── TRIAL DAY ─────────────────────────────────────────────────────────
+   app/_home/TrialDay.tsx. Real dishes from PlanScheduleSlot day 1.
+   Menu cards, so unlike every other grid on this page these get room to
+   breathe: the dish name and its blurb are the content, the macro strip is
+   the proof underneath. */
+.ff-trial-tot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 5vw, 72px);
+  margin-top: clamp(30px, 3.6vw, 46px);
+  padding-bottom: clamp(26px, 3vw, 38px);
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-dishes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  gap: 1px;
+  background: var(--ff-rule);
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-dish {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: clamp(22px, 2.4vw, 32px) clamp(18px, 2vw, 28px) clamp(20px, 2.2vw, 28px);
+  background: var(--ff-bg);
+}
+.ff-dish-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+/* The macro strip is pushed to the card foot so the five figures line up
+   across the row even when dish names wrap to different depths. */
+.ff-dish-macros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.ff-dish-macro { display: flex; flex-direction: column; gap: 3px; }
+.ff-dish-macro-v {
+  font-family: var(--ff-cond);
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ff-ink);
+}
+.ff-dish-macro-l {
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ff-dim);
+}
+@media (max-width: 560px) {
+  .ff-dishes { grid-template-columns: 1fr; }
+}
+
+/* ── BLE SCALE ─────────────────────────────────────────────────────────
+   app/_home/Scale.tsx. Deliberately NOT another hairline box grid: this
+   page already runs that language three times (.ff-ptypes, .ff-marks,
+   .ff-areas) and the house rule is that every block is structured
+   differently. Here the structure is an equation, two cells split by one
+   rule, weighted 1 : 1.6 so the eighteen visibly outweighs the two. */
+.ff-scale-eq {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  margin-top: clamp(34px, 4.4vw, 58px);
+  border-top: 1px solid var(--ff-rule);
+  border-bottom: 1px solid var(--ff-rule);
+}
+.ff-scale-eq-cell { padding: clamp(26px, 3.2vw, 44px) clamp(20px, 2.6vw, 40px); }
+.ff-scale-eq-cell + .ff-scale-eq-cell { border-left: 1px solid var(--ff-rule); }
+
+/* Names, not boxes. An underline per chip keeps the list scannable without
+   adding a fourth grid to the page. */
+.ff-scale-chip {
+  display: inline-block;
+  margin: 0 14px 9px 0;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--ff-rule);
+  font-family: var(--ff-cond);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--ff-mute);
+}
+.ff-scale-chip[data-measured] {
+  color: var(--ff-lime);
+  border-bottom-color: var(--ff-lime);
+}
+
+.ff-scale-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: clamp(34px, 4.2vw, 56px);
+}
+.ff-scale-step {
+  padding: 0 clamp(16px, 2vw, 30px);
+  border-left: 1px solid var(--ff-rule);
+}
+.ff-scale-step:first-child { padding-left: 0; border-left: none; }
+
+/* The browser limit. A lime edge marks it as ours to own rather than a
+   disclaimer hidden in grey at 11px. */
+.ff-scale-note {
+  margin-top: clamp(32px, 4vw, 52px);
+  padding: clamp(18px, 2.2vw, 26px) clamp(20px, 2.4vw, 30px);
+  border-left: 2px solid var(--ff-lime);
+  background: rgba(132, 204, 22, .05);
+}
+
+@media (max-width: 900px) {
+  .ff-scale-eq { grid-template-columns: 1fr; }
+  .ff-scale-eq-cell + .ff-scale-eq-cell {
+    border-left: none;
+    border-top: 1px solid var(--ff-rule);
+  }
+  .ff-scale-steps { grid-template-columns: repeat(2, 1fr); gap: 30px 0; }
+  .ff-scale-step:nth-child(odd) { padding-left: 0; border-left: none; }
+}
+@media (max-width: 560px) {
+  .ff-scale-steps { grid-template-columns: 1fr; gap: 26px 0; }
+  .ff-scale-step { padding-left: 0; border-left: none; }
+}
+
 /* Directory row — hairline link list, replaces card grids for indexes */
 .ff-svc {
   display: block;
