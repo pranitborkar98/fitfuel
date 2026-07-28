@@ -1,6 +1,21 @@
 {
+  "$comment": [
+    "Cron schedules are UTC. IST is UTC+05:30 and India observes no DST.",
+    "generate-deliveries runs TWICE against the same target day, deliberately.",
+    "  30 15 * * *  = 21:00 IST — the main run, fired at the order cutoff itself.",
+    "  30 20 * * *  = 02:00 IST — a safety net, two hours before the 04:00 cook,",
+    "                 so a missed or failed main run cannot leave a morning with",
+    "                 no deliveries generated.",
+    "Two runs are safe because the job is idempotent (it skips deliveries that",
+    "already exist) AND because the cutoff now lives in the subscriber predicate",
+    "in lib/order-cutoff.ts instead of in this schedule. The second run returns",
+    "exactly the same subscriber set and cannot admit an order placed after 21:00.",
+    "Changing these times no longer changes who eats — that is the point.",
+    "snapshot-consistency: 18:00 UTC Saturday = 23:30 IST Saturday."
+  ],
   "crons": [
-    { "path": "/api/cron/generate-deliveries", "schedule": "30 17 * * *" },
+    { "path": "/api/cron/generate-deliveries", "schedule": "30 15 * * *" },
+    { "path": "/api/cron/generate-deliveries", "schedule": "30 20 * * *" },
     { "path": "/api/cron/snapshot-consistency", "schedule": "0 18 * * 6" }
   ]
 }

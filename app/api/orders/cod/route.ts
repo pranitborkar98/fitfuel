@@ -4,6 +4,7 @@
 // 17A: capture ?ref cookie -> Order.referralAttribution + processReferralReward
 // 17C-2: apply credit balance if signed in & opted in; commit spend after order CONFIRMED.
 
+import { firstDeliveryDateFor } from "@/lib/order-cutoff";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -174,7 +175,10 @@ export async function POST(req: NextRequest) {
       } catch (e) { console.error("[COD] coupon redemption record failed", e); }
     }
 
-    const startDate = new Date();
+    // First morning we can actually feed them, not the moment the order is
+    // placed. See the note in the PayU success route: this column feeds both
+    // subscriber selection and menuDayNumber(), and both need the delivery date.
+    const startDate = firstDeliveryDateFor();
     const days = DUR_DAYS[durEnum] ?? 30;
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + days);
