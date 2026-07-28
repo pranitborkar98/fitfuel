@@ -9,6 +9,7 @@ import {
   Banknote, CreditCard, FlaskConical, MapPin, Plus, Pencil,
 } from "lucide-react";
 import DeliveryWindowToggle from "@/components/DeliveryWindowToggle";
+import FirstDeliveryNotice from "@/components/FirstDeliveryNotice";
 import { decomposePrice, durationKeyFromShort } from "@/lib/pricing-decomposition";
 import { WHATSAPP_NUMBER } from "@/lib/site";
 
@@ -561,6 +562,11 @@ function CheckoutInner() {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* When the food actually starts. Sits directly above the window
+                  picker because both answer "when", and this is the one a
+                  customer is silently guessing at otherwise. */}
+              <FirstDeliveryNotice />
 
               {/* Delivery window */}
               <div style={{ marginBottom: 28 }}><DeliveryWindowToggle value={deliveryWindow} onChange={setDeliveryWindow} /></div>

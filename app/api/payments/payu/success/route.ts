@@ -12,6 +12,7 @@ import { activateDigitalPlan } from "@/lib/activate-digital-plan";
 import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
 import { processReferralReward, recordCreditChange } from "@/lib/partners";
 import { resolvePurchasedPlan } from "@/lib/resolve-purchased-plan";
+import { firstDeliveryDateFor } from "@/lib/order-cutoff";
 
 const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
 const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
@@ -178,7 +179,17 @@ export async function POST(req: NextRequest) {
     const mealPlan = await resolvePurchasedPlan({ planSlug: meta.planSlug, diet: meta.diet });
 
     if (mealPlan) {
-      const startDate = new Date();
+      // The plan starts on the first morning we can actually feed them, not at
+      // the instant PayU confirms. Before the 21:00 IST cutoff that is tomorrow;
+      // after it, the day after (lib/order-cutoff.ts).
+      //
+      // This column drives TWO things and both need the delivery date, not the
+      // payment timestamp: getActiveSubscribersForDate() decides who the kitchen
+      // cooks for, and menuDayNumber() counts calendar days from startDate to
+      // pick the menu. Stamping it with the payment time meant a Wednesday-night
+      // buyer whose first delivery is Friday was served menu day 3 and never ate
+      // days 1 and 2 of the plan they paid for.
+      const startDate = firstDeliveryDateFor();
       const days = DUR_DAYS[durEnum] ?? 30;
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + days);

@@ -88,6 +88,22 @@ export async function getActiveSubscribersForDate(date: Date): Promise<ActiveSub
     where: {
       status: "active",
       isDigital: false,
+      // startDate is the customer's FIRST DELIVERY DATE, not their payment
+      // timestamp — the checkout paths resolve it through
+      // firstDeliveryDateFor() at purchase, so the 21:00 IST cutoff is already
+      // baked into this column (lib/order-cutoff.ts).
+      //
+      // An earlier pass applied the cutoff here instead, as
+      // `lte: cutoffInstantFor(date)`. That closed the ordering hole but broke
+      // the menu: menuDayNumber() counts calendar days from startDate, so a
+      // customer who paid on Wednesday and first ate on Friday was served menu
+      // day 3 and never saw days 1 and 2 of the plan they bought. Anchoring
+      // startDate to the first delivery instead fixes both, and leaves this
+      // predicate as the plain range check it should always have been.
+      //
+      // The safety-net cron in vercel.json is still safe: a 22:00 order gets a
+      // startDate of the day after tomorrow at purchase time, so no later run
+      // of this query can pull it into tomorrow.
       startDate: { lte: date },
       endDate: { gte: date },
       orderId: { not: null },
