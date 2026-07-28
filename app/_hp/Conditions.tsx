@@ -1,14 +1,21 @@
 // app/_hp/Conditions.tsx
 //
-// 70 of 126 plans are condition-specific. This is the hardest thing for a tiffin
-// service to copy and the reason a diabetic or PCOS customer picks us over a
-// cheaper box, so it gets a section — but one section, not the scrolling marquee
-// that printed all 38 conditions twice.
+// 70 of 126 plans are condition-specific. This is the hardest thing on the site
+// for a tiffin service to copy and the reason a diabetic or PCOS customer picks
+// us over a cheaper box, so it gets a section — one section, not the scrolling
+// marquee that printed all 38 conditions twice.
+//
+// The chips are square and set in mono so 38 of them read as a manifest rather
+// than as decoration. A pill-shaped tag cloud is the 2021 version of this.
+//
+// SERVER COMPONENT.
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+
 import s from "./hp.module.css";
-import { WRAP, SECTION, INK_3, GREEN, display, body, label, figure } from "./theme";
+import Idx from "./Idx";
+import { WRAP, SECTION, DIM, LIME, display, body, label, figure } from "./theme";
 
 const CONDITIONS = [
   "Diabetes", "Pre-diabetes", "Thyroid", "PCOS", "PCOD", "Hypertension",
@@ -23,42 +30,75 @@ export default function Conditions() {
   return (
     <section aria-labelledby="hp-cond" style={SECTION}>
       <div style={WRAP}>
-        <div className={s.reveal}>
-          <span style={label(GREEN)}>70 of our 126 plans</span>
-          <h2 id="hp-cond" style={{ ...display("clamp(2.1rem,4.6vw,3.5rem)"), marginTop: 14, maxWidth: "20ch" }}>
-            We cook for the condition, not just the calorie
-          </h2>
+        <Idx label="Cooked for a diagnosis" />
 
-          <div style={{ display: "flex", gap: "clamp(24px,4vw,54px)", flexWrap: "wrap", marginTop: 26, alignItems: "flex-start" }}>
-            <div>
-              <div style={figure("clamp(2.4rem,5vw,3.6rem)", GREEN)}>38</div>
-              <div style={{ ...body(14.5), marginTop: 8 }}>conditions cooked for</div>
-            </div>
-            <p style={{ ...body(17), maxWidth: "52ch" }}>
+        <div className={`${s.split} ${s.reveal}`}>
+          <div>
+            <h2 id="hp-cond" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "13ch" }}>
+              We cook for the condition, not just the calorie
+            </h2>
+            <p style={{ ...body(16.5), marginTop: 20 }}>
               A diabetic plan holds the glucose curve. A PCOS plan is built around insulin
               sensitivity. Cancer recovery, postpartum and kidney health are three different
               briefs cooked to three different specs, by a nutritionist, not by swapping rice
               for quinoa and calling it medical.
             </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "clamp(22px,4vw,48px)",
+                marginTop: 28,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div style={figure("clamp(2.2rem,4.4vw,3.4rem)", LIME)}>38</div>
+                <div style={{ ...label(DIM), marginTop: 10 }}>conditions</div>
+              </div>
+              <div>
+                <div style={figure("clamp(2.2rem,4.4vw,3.4rem)")}>70</div>
+                <div style={{ ...label(DIM), marginTop: 10 }}>plans built for one</div>
+              </div>
+              <div>
+                <div style={figure("clamp(2.2rem,4.4vw,3.4rem)")}>4</div>
+                <div style={{ ...label(DIM), marginTop: 10 }}>diet variants each</div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${s.splitMedia} ${s.gradeFood}`}>
+            <Image
+              src="/images/produce.jpg"
+              alt="Ingredients weighed out for a condition-specific plan"
+              fill
+              sizes="(max-width: 820px) 100vw, 46vw"
+              quality={75}
+            />
           </div>
         </div>
 
-        <div className={s.conds}>
+        <div className={s.chips} style={{ marginTop: "clamp(28px,3.6vw,46px)" }}>
           {CONDITIONS.map((c) => (
-            <span key={c} className={s.cond}>{c}</span>
+            <span key={c} className={s.chip}>
+              {c}
+            </span>
           ))}
         </div>
 
-        <div className={s.actions} style={{ marginTop: 30 }}>
-          <Link href="/plans?category=LIFESTYLE_MEDICAL" className={s.btnGhost}>
-            See all 70 condition plans <ArrowRight size={16} />
+        <div className={s.actions} style={{ marginTop: 26 }}>
+          <Link href="/plans?category=LIFESTYLE_MEDICAL" className={s.ghost}>
+            All 70 condition plans
           </Link>
         </div>
 
-        <p style={{ ...body(13.5), color: INK_3, marginTop: 22, maxWidth: "70ch" }}>
+        <p style={{ ...body(13.5), color: DIM, marginTop: 22 }}>
           Condition plans are nutrition programmes, not medical treatment, and they do not
           replace your doctor. Read our{" "}
-          <Link href="/medical-disclaimer" style={{ color: GREEN }}>medical disclaimer</Link>.
+          <Link href="/medical-disclaimer" style={{ color: LIME }}>
+            medical disclaimer
+          </Link>
+          .
         </p>
       </div>
     </section>

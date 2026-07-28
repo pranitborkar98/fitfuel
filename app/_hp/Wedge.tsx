@@ -1,53 +1,134 @@
 // app/_hp/Wedge.tsx
 //
-// The positioning, as a four-column comparison. This was the single best idea on
-// the old page ("every app trusts you to log it, we already know") and it was
-// buried under a wall of feature sections. It is the argument, so it sits third.
+// The positioning, as a comparison you can audit.
+//
+// "Every app trusts you to log it, we already know" was the single best line on
+// the old page and it was buried under a wall of feature sections. It is the
+// argument, so it sits right after the food.
+//
+// It is a <table> rather than four cards because a comparison IS a table: a
+// screen reader can walk rows and columns, and a sighted reader can scan one
+// column instead of reading four paragraphs. The four-card version forced
+// everyone to hold three things in memory to spot the difference.
+//
+// SERVER COMPONENT.
 
 import s from "./hp.module.css";
-import { WRAP, SECTION, PAPER, INK_3, GREEN, display, sub, body, label } from "./theme";
+import Idx from "./Idx";
+import { WRAP, SECTION, MUTE, DIM, LIME, display, body } from "./theme";
 
-const COLS: { who: string; does: string; gap: string }[] = [
-  { who: "A tiffin service", does: "Cooks your food", gap: "Never tracks a gram of it" },
-  { who: "A fitness app", does: "Tracks your food", gap: "Only what you remember to type in" },
-  { who: "A supplement brand", does: "Sells you pills", gap: "With no plan underneath them" },
+type Row = { what: string; tiffin: string; app: string; supp: string; us: string };
+
+const ROWS: Row[] = [
+  {
+    what: "Cooks your food",
+    tiffin: "Yes, to one shared menu",
+    app: "No",
+    supp: "No",
+    us: "Yes, to your macros",
+  },
+  {
+    what: "Weighs the portion",
+    tiffin: "No, ladled by eye",
+    app: "No, you estimate it",
+    supp: "Only the scoop",
+    us: "On a scale, before sealing",
+  },
+  {
+    what: "Logs what you ate",
+    tiffin: "No",
+    app: "Only what you type in",
+    supp: "No",
+    us: "Automatically, it is the same system",
+  },
+  {
+    what: "Programmes your training",
+    tiffin: "No",
+    app: "Sometimes, sold separately",
+    supp: "No",
+    us: "59 programmes, 952 exercises",
+  },
+  {
+    what: "Tracks the body, not the intent",
+    tiffin: "No",
+    app: "If you own the scale and remember",
+    supp: "No",
+    us: "18 metrics, read off your scale",
+  },
+  {
+    what: "Moves the target when you stall",
+    tiffin: "No",
+    app: "No, it just keeps counting",
+    supp: "No",
+    us: "Recalculated from your own numbers",
+  },
+  {
+    what: "Built for a diagnosis",
+    tiffin: "No",
+    app: "Generic macro maths",
+    supp: "No",
+    us: "70 condition plans, 38 conditions",
+  },
 ];
 
 export default function Wedge() {
   return (
-    <section aria-labelledby="hp-wedge" style={{ ...SECTION, background: "#ebe6dc" }}>
+    <section aria-labelledby="hp-wedge" style={SECTION}>
       <div style={WRAP}>
+        <Idx label="Why one system" />
+
         <div className={s.reveal}>
-          <span style={label(GREEN)}>Why this is one system</span>
-          <h2 id="hp-wedge" style={{ ...display("clamp(2.1rem,4.6vw,3.5rem)"), marginTop: 14, maxWidth: "20ch" }}>
+          <h2 id="hp-wedge" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "16ch" }}>
             Every other app trusts you to log it. We already know.
           </h2>
-          <p style={{ ...body(17), marginTop: 18, maxWidth: "56ch" }}>
-            Self-reported food is where every diet app quietly fails: you guess the portion,
-            you forget the chai, and the numbers flatter you. We own the plate, so the
-            measurement happens in the kitchen instead of in your memory.
+          <p style={{ ...body(16.5), marginTop: 20 }}>
+            Self-reported food is where every diet app quietly fails: you guess the
+            portion, you forget the chai, and the numbers flatter you. We own the plate,
+            so the measurement happens in the kitchen instead of in your memory. Here is
+            the same claim as a table, so you can check it rather than believe it.
           </p>
         </div>
 
-        <div className={s.wedge}>
-          {COLS.map((c) => (
-            <div key={c.who} className={s.wedgeCell}>
-              <h3 style={{ ...sub("clamp(1.05rem,1.5vw,1.22rem)") }}>{c.who}</h3>
-              <p style={{ ...body(14.5), marginTop: 12 }}>{c.does}</p>
-              <p style={{ ...body(14.5), color: INK_3, marginTop: 8 }}>{c.gap}</p>
-            </div>
-          ))}
-
-          <div className={`${s.wedgeCell} ${s.wedgeUs}`}>
-            <h3 style={{ ...sub("clamp(1.05rem,1.5vw,1.22rem)"), color: PAPER }}>FitFuel</h3>
-            <p style={{ ...body(14.5), color: "rgba(245,242,236,0.9)", marginTop: 12 }}>
-              Cooks it, weighs it, logs it, and moves your target when you stall.
-            </p>
-            <p style={{ ...body(14.5), color: "rgba(245,242,236,0.72)", marginTop: 8 }}>
-              Measured in our kitchen, not guessed at by you.
-            </p>
-          </div>
+        <div className={s.specWrap} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
+          <table className={s.spec}>
+            <caption className="sr-only">
+              What a tiffin service, a fitness app, a supplement brand and FitFuel each do
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Does it</th>
+                <th scope="col">A tiffin service</th>
+                <th scope="col">A fitness app</th>
+                <th scope="col">A supplement brand</th>
+                <th scope="col" style={{ color: LIME }}>
+                  FitFuel
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {ROWS.map((r) => (
+                <tr key={r.what}>
+                  <th scope="row">{r.what}</th>
+                  <td>{r.tiffin}</td>
+                  <td>{r.app}</td>
+                  <td>{r.supp}</td>
+                  {/* Never a glyph alone: the answer is written out, so it survives a
+                      screen reader and no 1.5:1 dot has to carry meaning. */}
+                  <td style={{ color: "#f7f7f5", background: "#0c0c0a" }}>{r.us}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+
+        <p style={{ ...body(13.5), color: DIM, marginTop: 16 }}>
+          The middle three columns describe categories of service, not any named company.
+        </p>
+
+        <p style={{ ...body(16.5), color: MUTE, marginTop: 26, maxWidth: "60ch" }}>
+          One subscription covers the whole right-hand column. Not a meal box plus an app
+          plus a trainer plus a supplement order that none of them can see.
+        </p>
       </div>
     </section>
   );

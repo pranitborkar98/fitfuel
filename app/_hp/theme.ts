@@ -1,110 +1,120 @@
 // app/_hp/theme.ts
 //
-// The new homepage's visual system.
+// THE INSTRUMENT SYSTEM. This reverses the "dark premium bento" pass.
 //
-// Why it is not the old one: the previous palette was #070707 with an acid lime.
-// That is a supplement-brand skin, and it was wrapped around a food business whose
-// customers include diabetics, postpartum and cancer-recovery clients. Near-black
-// makes cooked food look grey, and the lime fought every photograph on the page.
+// WHY THE REVERSAL. The previous theme used 16–20px radii, 999px pills, radial
+// glow blooms, coloured box-shadows and backdrop-filter glass. That list is,
+// item for item, the "AI-slop audit — reject on sight" list in DESIGN.md. It is
+// also the 2022–2025 house style of every dark SaaS landing page, which is
+// exactly what this page was asked to stop looking like.
 //
-// This is paper, ink and one deep green. Food photography is allowed to be the
-// only saturated thing on screen, which is how food is sold.
+// The 2026 direction is the opposite: sharp geometry, 1px hairlines as the
+// primary structural device, mathematically generated texture (grain) instead of
+// faked depth, and viewport-scaled kinetic type carrying the page instead of a
+// hero image. That is the same system DESIGN.md locked months ago. So this file
+// is not a new invention: it is the locked system, finally pushed hard.
 //
-// Type rule that changed: display type is MIXED CASE. The old page set 35 headlines
-// in 900-weight condensed uppercase, so nothing could rank against anything else.
-// Uppercase is now reserved for small labels, where it earns its keep.
+// Colour, type and radius below match DESIGN.md exactly. Do not add a grey.
 
 import type { CSSProperties } from "react";
 
-export const PAPER = "#f7f4ee"; // warm off-white, not clinical white
-export const PAPER_2 = "#efe9dd"; // banded sections
-export const INK = "#171512"; // 15.8:1 on PAPER
-export const INK_2 = "#4a453d"; // 8.3:1 — body copy
-export const INK_3 = "#6f6459"; // 4.9:1 — passes AA at small sizes
-export const RULE = "#ded6c7";
-export const GREEN = "#1f5130"; // 8.9:1 on PAPER — accent that reads as food, not neon
-export const GREEN_DEEP = "#12331f"; // dark bands
-export const GREEN_LIGHT = "#2f7a46";
-// Darkened from #b4471f, which landed at exactly 4.5:1 as a 12px label on the
-// banded background — passing by rounding is not passing.
-export const CLAY = "#a33d17";
-export const CLAY_SOFT = "#e8d9c8"; // warm fill behind figures, stops the flatness
+/* ── surfaces ────────────────────────────────────────────────────────
+   Recessed bands are DARKER than the page, never lighter. A lighter band
+   reads as a card floating on a page; a darker one reads as a well cut
+   into it, which is the instrument register we want. */
+export const BG = "#070707";
+export const PANEL = "#050504";
+export const PANEL_2 = "#0c0c0a";
 
-export const SERIF = "var(--font-fraunces), Georgia, serif";
-export const COND = "var(--font-barlow-condensed), 'Barlow Condensed', sans-serif";
+export const INK = "#f7f7f5"; // 19.0:1 on BG
+export const MUTE = "#9a9a94"; //  7.1:1 — body copy
+export const DIM = "#85857e"; //  5.4:1 — metadata, fine print
+
+export const RULE = "#232320";
+export const RULE_2 = "#33332f";
+
+export const LIME = "#84cc16";
+export const LIME_LIGHT = "#a3e635";
+
+export const COND = "var(--font-barlow-condensed), 'Arial Narrow', sans-serif";
+export const SANS = "var(--font-archivo), sans-serif";
+export const MONO = "var(--font-mono), ui-monospace, monospace";
 
 export const WRAP: CSSProperties = {
   width: "100%",
-  maxWidth: 1240,
+  maxWidth: 1180,
   margin: "0 auto",
-  padding: "0 clamp(20px,5vw,64px)",
+  padding: "0 clamp(18px,4vw,40px)",
 };
 
-/* Display: a warm old-style serif, sentence case. One per section, maximum.
-   The serif is doing most of the work of not looking plain — it carries the
-   editorial, food-magazine register that a condensed grotesque cannot. */
+/* Display. UPPERCASE, flush left, 900, tight. The size argument is expected to
+   be a clamp() with a vw middle term: type is meant to scale with the viewport,
+   not sit at three fixed breakpoints. */
 export const display = (size: string): CSSProperties => ({
-  fontFamily: SERIF,
-  fontWeight: 600,
+  fontFamily: COND,
+  fontWeight: 900,
   fontSize: size,
-  lineHeight: 1.02,
-  letterSpacing: "-0.022em",
+  lineHeight: 0.86,
+  letterSpacing: "-0.02em",
+  textTransform: "uppercase",
   color: INK,
   margin: 0,
 });
 
-/* Sub-heads sit clearly BELOW display in the hierarchy — the old page had no
-   such step, which is why everything shouted. */
 export const sub = (size: string): CSSProperties => ({
-  fontFamily: SERIF,
-  fontWeight: 600,
+  fontFamily: COND,
+  fontWeight: 800,
   fontSize: size,
-  lineHeight: 1.18,
+  lineHeight: 0.98,
   letterSpacing: "-0.01em",
+  textTransform: "uppercase",
   color: INK,
   margin: 0,
 });
 
-export const body = (size = 16.5): CSSProperties => ({
+export const body = (size = 15.5): CSSProperties => ({
+  fontFamily: SANS,
   fontSize: size,
   fontWeight: 400,
-  color: INK_2,
-  lineHeight: 1.65,
+  color: MUTE,
+  lineHeight: 1.62,
   margin: 0,
+  maxWidth: "62ch",
 });
 
-/* The only place uppercase survives. */
-export const label = (color = INK_3): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 600,
+/* Labels and every number are mono: the measurement voice. 12px floor, because
+   below that it is unreadable on the mid-range Androids our customers order
+   from (DESIGN.md, "minimum type size"). */
+export const label = (color = DIM): CSSProperties => ({
+  fontFamily: MONO,
+  fontWeight: 500,
   fontSize: 12,
-  letterSpacing: "0.2em",
+  letterSpacing: "0.22em",
   textTransform: "uppercase",
   color,
+  display: "block",
 });
 
-/* Figures: serif and tabular. Big serif numerals are the cheapest editorial
-   signal there is — the same number set in condensed sans reads as a spec sheet. */
 export const figure = (size: string, color = INK): CSSProperties => ({
-  fontFamily: SERIF,
-  fontWeight: 700,
+  fontFamily: COND,
+  fontWeight: 900,
   fontSize: size,
-  lineHeight: 0.92,
-  letterSpacing: "-0.03em",
+  lineHeight: 0.82,
+  letterSpacing: "-0.035em",
   color,
   fontVariantNumeric: "tabular-nums",
 });
 
-/* Pull-quote / editorial italic, for the one line per section worth slowing on. */
-export const quote = (size: string): CSSProperties => ({
-  fontFamily: SERIF,
-  fontWeight: 400,
-  fontStyle: "italic",
+/* Numerals that must line up in a column (macros, prices, times) are mono,
+   not condensed: condensed 900 is for headline-scale figures only. */
+export const num = (size: string, color = INK): CSSProperties => ({
+  fontFamily: MONO,
+  fontWeight: 700,
   fontSize: size,
-  lineHeight: 1.35,
-  letterSpacing: "-0.01em",
-  color: INK,
-  margin: 0,
+  lineHeight: 1,
+  letterSpacing: "-0.02em",
+  color,
+  fontVariantNumeric: "tabular-nums",
 });
 
-export const SECTION: CSSProperties = { padding: "clamp(64px,8vw,116px) 0" };
+export const SECTION: CSSProperties = { padding: "clamp(64px,8vw,120px) 0" };

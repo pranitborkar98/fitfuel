@@ -1,15 +1,19 @@
 // app/_hp/Areas.tsx
 //
-// "Do you deliver to me" is the first question a cold visitor has, and on the old
-// page it was answered in section eleven.
+// "Do you deliver to me" is the first question a cold visitor has, and on the
+// old page it was answered in section eleven. It is answered here before the
+// close, with the kitchen's own area first so the geography is legible.
+//
+// SERVER COMPONENT.
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+
 import s from "./hp.module.css";
-import { WRAP, SECTION, GREEN, display, body, label } from "./theme";
+import Idx from "./Idx";
+import { WRAP, SECTION, DIM, display, body } from "./theme";
 
 const AREAS = [
-  "Kharadi", "Viman Nagar", "Kalyani Nagar", "Vadgaon Sheri", "Wagholi",
+  "Viman Nagar", "Kalyani Nagar", "Vadgaon Sheri", "Wagholi",
   "Yerwada", "Koregaon Park", "Sangamwadi", "Magarpatta City", "Amanora",
   "Mundhwa", "Tingre Nagar", "Hadapsar", "Dhanori", "Lohegaon",
 ];
@@ -18,32 +22,41 @@ export default function Areas() {
   return (
     <section aria-labelledby="hp-areas" style={SECTION}>
       <div style={WRAP}>
-        <div className={s.reveal}>
-          <span style={label(GREEN)}>Fifteen areas, one kitchen</span>
-          <h2 id="hp-areas" style={{ ...display("clamp(2.1rem,4.6vw,3.5rem)"), marginTop: 14, maxWidth: "18ch" }}>
+        <Idx label="Coverage" />
+
+        <div className={`${s.duo} ${s.reveal}`}>
+          <h2 id="hp-areas" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "12ch" }}>
             Do we deliver to you?
           </h2>
-          <p style={{ ...body(17), marginTop: 18, maxWidth: "54ch" }}>
-            Cooked from 04:00 in Kharadi and at your door by 08:00, six days a week.
-            We would rather serve east Pune properly than the whole city badly.
+          <p style={{ ...body(16.5) }}>
+            Cooked from 04:00 in Kharadi and at your door by 08:00. Fifteen areas, one
+            kitchen, and no plans to change that this year: we would rather serve east
+            Pune properly than the whole city badly.
           </p>
         </div>
 
-        <div className={s.areas}>
-          <span className={`${s.area} ${s.areaHome}`}>Kharadi &middot; the kitchen</span>
-          {AREAS.filter((a) => a !== "Kharadi").map((a) => (
-            <span key={a} className={s.area}>{a}</span>
+        <div className={s.chips} style={{ marginTop: "clamp(26px,3.4vw,42px)" }}>
+          <span className={`${s.chip} ${s.chipHome}`}>Kharadi · the kitchen</span>
+          {AREAS.map((a) => (
+            <span key={a} className={s.chip}>
+              {a}
+            </span>
           ))}
         </div>
 
-        <div className={s.actions} style={{ marginTop: 28 }}>
-          <Link href="/locations" className={s.btnGhost}>
-            Check your pincode <ArrowRight size={16} />
+        <div className={s.actions} style={{ marginTop: 26 }}>
+          <Link href="/locations" className={s.ghost}>
+            Check your pincode
           </Link>
-          <Link href="/contact" className={s.btnGhost}>
-            Not on the list? Tell us <ArrowRight size={16} />
+          <Link href="/contact" className={s.link}>
+            Not on the list? Tell us where you are
           </Link>
         </div>
+
+        <p style={{ ...body(13.5), color: DIM, marginTop: 20 }}>
+          Two delivery windows, morning and evening, chosen per plan. Digital plans have no
+          delivery at all and are available anywhere in India.
+        </p>
       </div>
     </section>
   );

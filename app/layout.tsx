@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Barlow_Condensed, Fraunces } from "next/font/google";
+import { Archivo, Barlow_Condensed, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -39,6 +39,16 @@ const fraunces = Fraunces({
   style: ["normal", "italic"],
   display: "swap",
   variable: "--font-fraunces",
+});
+
+// Data face. A macro-tracking food brand prints a lot of numbers — grams, kcal,
+// times, licence numbers — and setting those in mono reads as measurement rather
+// than marketing. Third leg of display serif / body sans / data mono.
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-mono",
 });
 
 const barlowCondensed = Barlow_Condensed({
@@ -86,7 +96,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-IN"
-      className={`${archivo.variable} ${barlowCondensed.variable} ${fraunces.variable} scroll-smooth`}
+      className={`${archivo.variable} ${barlowCondensed.variable} ${fraunces.variable} ${mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <head>
