@@ -772,3 +772,85 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   FOOD-FIRST LAYER
+   Added when it became clear the page reads as a document because it is
+   made of words, and it is made of words because there is exactly ONE
+   photograph of a plated dish in /public/images. Everything below is built
+   so that when real food photography lands, it drops into a slot that is
+   already load-bearing rather than being pasted into a small box.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── full-bleed hero ──────────────────────────────────────────────────
+   The photograph is the page, not a column beside the type. Type sits on
+   the image; the wash is what makes that legible without a card. */
+.heroFull {
+  position: relative;
+  min-height: min(92svh, 900px);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  margin-top: -68px; /* cancel the layout's fixed-header reserve: bleed under it */
+  padding-top: 68px;
+}
+.heroFull img { object-fit: cover; }
+.heroWash {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(7,7,7,0.72) 0%, rgba(7,7,7,0.15) 34%, rgba(7,7,7,0.94) 92%),
+    linear-gradient(90deg, rgba(7,7,7,0.72) 0%, rgba(7,7,7,0) 62%);
+  pointer-events: none;
+}
+.heroBody {
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(18px,4vw,40px) clamp(44px,7vh,88px);
+}
+@supports (animation-timeline: view()) {
+  .kenburns { animation: kb linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+}
+@keyframes kb { from { transform: scale(1.1); } to { transform: scale(1); } }
+
+/* ── three steps ──────────────────────────────────────────────────────*/
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #232320; border: 1px solid #232320; }
+.step { background: #070707; padding: clamp(24px,3vw,40px); }
+.stepN {
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.6rem,5vw,4rem);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: #84cc16;
+  display: block;
+  margin-bottom: 18px;
+}
+@media (max-width: 780px) { .steps { grid-template-columns: 1fr; } }
+
+/* ── the everything-else band ─────────────────────────────────────────
+   Breadth without eight more sections. Every service the business runs
+   stays reachable, as a dense link grid instead of a chapter each. */
+.more { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #232320; border: 1px solid #232320; }
+.moreCell { background: #070707; padding: clamp(20px,2.4vw,30px); text-decoration: none; display: block; transition: background 0.16s linear; }
+.moreCell:hover { background: #0c0c0a; }
+.moreCell:focus-visible { outline: 3px solid #a3e635; outline-offset: -3px; }
+@media (max-width: 860px) { .more { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .more { grid-template-columns: 1fr; } }
+
+/* ── photo slot, for when real food photography exists ────────────────
+   Deliberately left visible and labelled rather than filled with another
+   copy of hero-bowl.jpg. A placeholder you can see is a task; a repeated
+   stock photo is a lie you stop noticing. */
+.slot {
+  border: 1px dashed #33332f;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background: #0c0c0a;
+}

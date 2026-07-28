@@ -38,13 +38,13 @@ export default async function TrialDay() {
   const { kcal, protein } = totals(dishes);
 
   return (
-    <section aria-labelledby="hp-trial" style={SECTION}>
+    <section id="hp-trial" aria-labelledby="hp-trial-h" style={SECTION}>
       <div style={WRAP}>
         <Idx label="The trial day" />
 
         <div className={`${s.duo} ${s.reveal}`}>
           <h2
-            id="hp-trial"
+            id="hp-trial-h"
             style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "14ch" }}
           >
             This is what turns up tomorrow morning

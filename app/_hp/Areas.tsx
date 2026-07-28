@@ -10,6 +10,7 @@ import Link from "next/link";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
+import { cutoffLabel } from "@/lib/order-cutoff";
 import { WRAP, SECTION, DIM, display, body } from "./theme";
 
 const AREAS = [
@@ -54,8 +55,9 @@ export default function Areas() {
         </div>
 
         <p style={{ ...body(13.5), color: DIM, marginTop: 20 }}>
-          Two delivery windows, morning and evening, chosen per plan. Digital plans have no
-          delivery at all and are available anywhere in India.
+          Order by {cutoffLabel()} and you eat the next morning; after that, the morning
+          after. Two delivery windows, morning and evening, chosen per plan. Digital plans
+          have no delivery at all and are available anywhere in India.
         </p>
       </div>
     </section>

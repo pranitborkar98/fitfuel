@@ -3,92 +3,78 @@ import type { Metadata } from "next";
 import StructuredData from "@/components/StructuredData";
 import s from "./_hp/hp.module.css";
 import Hero from "./_hp/Hero";
-import Ticker from "./_hp/Ticker";
-import Day from "./_hp/Day";
 import TrialDay from "./_hp/TrialDay";
 import Week from "./_hp/Week";
-import Areas from "./_hp/Areas";
-import Wedge from "./_hp/Wedge";
-import Conditions from "./_hp/Conditions";
-import Loop from "./_hp/Loop";
-import Coach from "./_hp/Coach";
-import Inside from "./_hp/Inside";
-import Supplements from "./_hp/Supplements";
-import Corporate from "./_hp/Corporate";
-import Network from "./_hp/Network";
-import Offers from "./_hp/Offers";
+import Pick from "./_hp/Pick";
+import Steps from "./_hp/Steps";
+import Why from "./_hp/Why";
 import Proof from "./_hp/Proof";
+import Areas from "./_hp/Areas";
+import Offers from "./_hp/Offers";
+import More from "./_hp/More";
 import Faq from "./_hp/Faq";
 import Close from "./_hp/Close";
 import { BG, INK } from "./_hp/theme";
 
 /* ══════════════════════════════════════════════════════════════════════
-   FITFUEL HOMEPAGE
+   FITFUEL HOMEPAGE — twelve sections, food first.
 
-   THE PROBLEM THIS SOLVES. Two failure modes, alternating, for months. The
-   encyclopedia version reached 39,708px — 55 viewports, 35 sections, 35 <h2>s,
-   because every system that shipped got a section on the day it shipped. The
-   correction cut it to ten sections and dropped half the business: coupons,
-   corporate, the affiliate, the partner network and every dashboard screen
-   became a link in a footer. Neither version was the whole company.
+   WHAT WAS ACTUALLY WRONG, after three months of reskinning it.
 
-   The resolution is not a length. It is a DEVICE. Every section opens with one
-   label and a full-width hairline — COOKED FOR A DIAGNOSIS ──────── — so
-   seventeen sections read as one document instead of seventeen landing pages
-   stapled together, and structure varies from block to block (tables, a film,
-   directory rows, chips, a receipt) so nothing repeats the kicker → headline →
-   three-cards rhythm that made the old page feel infinite.
+   Not the palette, and not the corner radius. Two things:
 
-   ANNOTATION IS RATIONED, and this was a correction mid-build. The first pass
-   of this rebuild gave every section a bracketed serial number and a right-hand
-   caption, and hung a mono unit-label under every figure. The owner has already
-   rejected exactly that pattern by name as reading machine-generated. So: one
-   mono label per section, and inside a section mono appears only where it is
-   labelling a real measured value that is ambiguous without it — meal slots,
-   macro names, receipt lines, coupon terms. Everything else that was a caption
-   is now a sentence or a heading.
+   1. ORDER. The page explained our system before it showed anyone food. The
+      first dish name used to sit four screens down, behind a film about our
+      4am kitchen. Everyone who looked at it — the owner, and two independent
+      outside reviews — reached the same verdict without conferring: it sells
+      the system instead of the food.
 
-   THE VISUAL RESET. The previous pass was rounded cards, 999px pills, radial
-   glow blooms, coloured shadows and backdrop-blur glass. That list is, item for
-   item, the "reject on sight" list in DESIGN.md, and it is also the house style
-   of every dark SaaS landing page built between 2022 and 2025. The 2026
-   direction is the opposite and it happens to be what DESIGN.md locked months
-   ago: square corners, 1px hairlines as the only structural device, generated
-   film grain instead of faked depth, viewport-scaled kinetic type carrying the
-   page instead of a hero image, and every number set in mono. See _hp/theme.ts.
+   2. ASSETS. /public/images contains eight photographs and exactly ONE is a
+      plated dish. That is the real reason every version of this page has been
+      made of words: with one food photo there was nothing else to build with.
+      No layout fixes that. Roughly fifteen photographs of real FitFuel boxes
+      would change this page more than anything in this file.
 
-   EVERYTHING IS FROM THE DATABASE OR FROM lib/. The trial day and the week are
-   PlanScheduleSlot joined to Recipe. The coupons are the Coupon table filtered
-   by the same validity rules checkout applies, so an expired code cannot sit
-   here looking live. The receipt is decomposePrice(). The supplement counts are
-   SupplementCategory. The quotes are Testimonial, the questions are Faq. The
-   consistency weights and the 7700 / ±300 / 1200 constants are read off
-   lib/consistency-score.ts and lib/coach/recalibration.ts. Nothing on this page
-   is a number someone typed into a marketing document.
+   So this is short, and the food leads:
 
-   ORDER, and why:
-     Hero        what it is, where, what it costs, plus the licence
-     Ticker      the scale of it, scrubbed by your own scroll
-     Day         the story and the mission, as one day moving sideways
-     TrialDay    day one's real dishes. The trial is the unit you can buy
-     Week        SEVEN days, not thirty. A week is what a person plans against
-     Areas       "do you deliver to me", answered before the pitch continues
-     Wedge       tiffin vs app vs supplement brand vs us, as an auditable table
-     Conditions  70 of 126 plans. The thing nobody can copy quickly
-     Loop        eat, train, measure, adjust, with the score's maths published
-     Coach       the engine, and the constants behind every adjustment
-     Inside      ten dashboard screens that come with the food
-     Supplements 46 researched, bought at Nutrabay, affiliation stated in-section
-     Corporate   the second revenue line, with an honest placeholder logo wall
-     Network     eight partner types and what each one earns
-     Offers      the receipt, the strike-through, and codes that work today
-     Proof       testimonials, from the table
-     Faq         objections, from the table
-     Close       the ask, then a directory of the entire site
+     Hero      full-bleed, one promise, the price, the licence
+     TrialDay  the four real dishes that arrive tomorrow, from the DB
+     Week      seven days of real dish names and macros, from the schedule
+     Pick      which of these is you: fat, muscle, eat well, a condition
+     Steps     three steps, from the customer's side of the counter
+     Why       four claims that survive being checked
+     Proof     the testimonials we actually have
+     Areas     do we reach you
+     Offers    the receipt, the strike-through, live coupon codes
+     More      everything else the business runs, one line each
+     Faq       objections, from the DB
+     Close     the ask, then a directory of the whole site
 
-   The four other audiences (corporate, partners, operators, digital) now have
-   real sections rather than a link each, and the whole site is reachable from
-   the directory in Close.
+   ON CUTTING. The previous version had nineteen sections because the brief was
+   that nothing built should be invisible. That brief was right and the
+   execution was wrong: BREADTH DOES NOT REQUIRE CHAPTERS. The app, the coach,
+   the 952-exercise library, supplements, corporate, partners, franchise and
+   the TDEE tool are all still one click from here — they live in More.tsx as a
+   line each, and each destination is a real page that explains itself. Loop,
+   Coach, Inside, Supplements, Corporate, Network, Wedge, Conditions, Day and
+   Ticker remain on disk and can be re-seated at any time.
+
+   ON WHAT IS NOT HERE. Two outside reviews asked for "Rated 4.8/5 by 500+",
+   "Join 200+ Punekars", "500+ meals weekly", "free delivery" and "no
+   preservatives". The database has 5 users and 8 testimonials, delivery is
+   Rs 50 and itemised on the receipt below, and no preservative test has been
+   run. None of those lines are on this page and none should be: on a licensed
+   food business an invented trust claim is not a growth tactic.
+
+   STILL OPEN, and neither is a code problem:
+   - Real food photography. This is now the critical path.
+   - The order cutoff time ("order by 8pm for next-day") is the cheapest
+     urgency available and nobody has told me what it is.
+
+   EVERY NUMBER COMES FROM POSTGRES. Dishes and the week are PlanScheduleSlot
+   joined to Recipe. Coupons are the Coupon table under the same validity gate
+   checkout applies. The receipt is decomposePrice(). Quotes are Testimonial,
+   questions are Faq.
 ══════════════════════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
@@ -97,32 +83,33 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    /* 68px reserves the fixed 69px <header> from app/layout.tsx, which is
-       position:fixed and would otherwise sit on top of the hero. minHeight
-       keeps the page background covering the viewport on short pages.
-       overflowX:clip contains the film's horizontal track. */
-    <div style={{ background: BG, color: INK, paddingTop: 68, minHeight: "100vh", overflowX: "clip" }}>
-      {/* Fixed grain over the whole page: one generated texture, no requests. */}
+    /* No paddingTop: the hero bleeds under the fixed header on purpose and
+       re-adds the 68px inside itself, so the photograph starts at the top of
+       the viewport instead of below a black bar. */
+    <div style={{ background: BG, color: INK, minHeight: "100vh", overflowX: "clip" }}>
       <div className={s.grain} aria-hidden="true" />
 
       <StructuredData />
 
+      {/* ── the food ─────────────────────────────────────────────── */}
       <Hero />
-      <Ticker />
-      <Day />
       <TrialDay />
       <Week />
-      <Areas />
-      <Wedge />
-      <Conditions />
-      <Loop />
-      <Coach />
-      <Inside />
-      <Supplements />
-      <Corporate />
-      <Network />
-      <Offers />
+      <Pick />
+
+      {/* ── how, why, and who says so ────────────────────────────── */}
+      <Steps />
+      <Why />
       <Proof />
+
+      {/* ── can I get it, what does it cost ──────────────────────── */}
+      <Areas />
+      <Offers />
+
+      {/* ── the rest of the business, one line each ──────────────── */}
+      <More />
+
+      {/* ── close ────────────────────────────────────────────────── */}
       <Faq />
       <Close />
     </div>
