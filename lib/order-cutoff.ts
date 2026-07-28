@@ -24,6 +24,19 @@
 // from lib/production.ts (which pulls in Prisma) would make it server-only.
 //
 // India does not observe DST, so a fixed +05:30 is correct and will stay correct.
+//
+// THE CRON SCHEDULE THAT PAIRS WITH THIS, recorded here because vercel.json
+// cannot hold a comment — its schema rejects any key it does not recognise, and
+// a `$comment` array there failed a deployment outright:
+//
+//   "30 15 * * *"  = 21:00 IST, this cutoff, when generate-deliveries runs.
+//
+// The project is on Vercel's Hobby plan, which caps a project at TWO cron jobs
+// (both slots are taken) and fires them at an approximate time within the hour.
+// Neither constraint matters any more: the job generates two days of lookahead
+// in one run, and because the cutoff is stamped into UserActivePlan.startDate at
+// purchase rather than implied by when the job fires, a late or repeated
+// execution returns the same subscribers and cannot change who eats.
 
 /** 21:00 IST. Change this and the cron, the kitchen and the homepage all move. */
 export const ORDER_CUTOFF_IST_HOUR = 21;
