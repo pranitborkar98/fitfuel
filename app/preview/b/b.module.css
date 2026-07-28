@@ -1,0 +1,211 @@
+/* app/preview/b/b.module.css — DIRECTION B: POSTER
+   Type IS the layout. Nothing is a card, nothing is a column of body copy,
+   and almost nothing is a photograph. Words at 18vw, hard colour fields that
+   run edge to edge, and scale contrast doing all the hierarchy work.
+   Loudest of the three. Built to be shouted, not read. */
+
+.page {
+  background: #000;
+  color: #fff;
+  font-family: var(--font-archivo), sans-serif;
+  overflow-x: clip;
+}
+
+/* ── colour fields ────────────────────────────────────────────────────
+   Acid on black, black on acid, and one bone field to stop the eye dying.
+   #ccff00 on #000 is 18.9:1; #000 on #ccff00 is the same inverted. */
+.fieldBlack { background: #000; color: #fff; }
+.fieldAcid { background: #ccff00; color: #000; }
+.fieldBone { background: #f2f0e9; color: #000; }
+
+.block { padding: clamp(56px, 9vw, 130px) 0; }
+.inner { max-width: 1500px; margin: 0 auto; padding: 0 clamp(16px, 3.4vw, 44px); }
+
+/* ── the shout ────────────────────────────────────────────────────────
+   Barlow Condensed 900 is the only face that survives at this size without
+   filling the screen with counters. Negative tracking, zero leading gap. */
+.shout {
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(3.4rem, 18vw, 18rem);
+  line-height: 0.78;
+  letter-spacing: -0.045em;
+  margin: 0;
+  display: block;
+}
+.shoutSm {
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(2.4rem, 9vw, 8rem);
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+/* Outline type: the second half of the line, so one line has two weights of
+   presence without a second colour. */
+.hollow {
+  color: transparent;
+  -webkit-text-stroke: clamp(1px, 0.22vw, 3px) currentColor;
+  paint-order: stroke fill;
+}
+.acidText { color: #ccff00; }
+
+/* One short line of body copy per screen. Any more and this direction dies. */
+.say {
+  font-size: clamp(16px, 1.6vw, 20px);
+  line-height: 1.5;
+  max-width: 40ch;
+  margin: clamp(22px, 3vw, 36px) 0 0;
+  font-weight: 500;
+}
+.sayDim { opacity: 0.72; }
+
+/* ── kinetic band ─────────────────────────────────────────────────────
+   Scrubbed by your scroll, not looping on a timer. */
+.band {
+  overflow: hidden;
+  border-top: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  padding: clamp(8px, 1.2vw, 16px) 0;
+}
+.bandTrack { display: flex; width: max-content; white-space: nowrap; }
+@supports (animation-timeline: scroll()) {
+  .bandTrack {
+    animation: slide linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes slide {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.bandItem {
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(1.7rem, 4.4vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  padding: 0 clamp(14px, 2vw, 30px);
+}
+
+/* ── the numbers ──────────────────────────────────────────────────────
+   Stacked full-bleed rows. Each one is a headline, not a stat card. */
+.rows { border-top: 3px solid currentColor; }
+.rowLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 44px);
+  padding: clamp(16px, 2.4vw, 32px) 0;
+  border-bottom: 3px solid currentColor;
+  text-decoration: none;
+  color: inherit;
+}
+.rowN {
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.6rem, 8vw, 7rem);
+  line-height: 0.8;
+  letter-spacing: -0.045em;
+  flex: none;
+}
+.rowT {
+  font-size: clamp(15px, 1.5vw, 19px);
+  font-weight: 600;
+  text-align: right;
+  max-width: 34ch;
+  line-height: 1.35;
+}
+
+/* ── the plates ───────────────────────────────────────────────────────
+   Four hard cells with a heavy rule between them. Black on acid so the food
+   names land like a track listing. */
+.cells {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  background: currentColor;
+  border: 3px solid currentColor;
+  margin-top: clamp(30px, 4vw, 52px);
+}
+.cell { background: #ccff00; padding: clamp(18px, 2.2vw, 30px); display: flex; flex-direction: column; }
+.cellSlot {
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  letter-spacing: 0.02em;
+  margin: 0 0 12px;
+}
+.cellDish { font-size: clamp(15px, 1.4vw, 17px); font-weight: 700; line-height: 1.25; margin: 0; }
+.cellMac {
+  margin: auto 0 0;
+  padding-top: 18px;
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.5rem, 2.6vw, 2.3rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+.cellMacSub { font-family: var(--font-archivo), sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: 0; }
+@media (max-width: 900px) { .cells { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .cells { grid-template-columns: 1fr; } }
+
+/* ── actions ──────────────────────────────────────────────────────────*/
+.row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: clamp(28px, 3.4vw, 44px); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--ff-cond), 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(1.05rem, 1.8vw, 1.5rem);
+  letter-spacing: 0.01em;
+  padding: 16px 34px;
+  min-height: 56px;
+  text-decoration: none;
+  border: 3px solid currentColor;
+  transition: transform 0.14s linear;
+}
+.btnFill { background: #ccff00; color: #000; border-color: #ccff00; }
+.btnFillDark { background: #000; color: #ccff00; border-color: #000; }
+.btn:hover { transform: translate(-3px, -3px); }
+.btn:active { transform: none; }
+.btn:focus-visible { outline: 4px solid #ccff00; outline-offset: 4px; }
+.fieldAcid .btn:focus-visible { outline-color: #000; }
+
+/* ── one photograph, hard duotone ─────────────────────────────────────*/
+.plate { position: relative; aspect-ratio: 21 / 9; overflow: hidden; border: 3px solid currentColor; }
+.plate img { object-fit: cover; filter: grayscale(1) contrast(1.5); }
+.plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ccff00;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ── motion ───────────────────────────────────────────────────────────
+   Hard and fast, not filmic: the shout snaps in from a tighter tracking. */
+.snap { opacity: 1; }
+@supports (animation-timeline: view()) {
+  .snap {
+    opacity: 0;
+    animation: snapIn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+  }
+}
+@keyframes snapIn {
+  from { opacity: 0; letter-spacing: 0.02em; transform: translateY(20px); }
+  to   { opacity: 1; letter-spacing: -0.045em; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snap { opacity: 1; animation: none; transform: none; letter-spacing: -0.045em; }
+  .bandTrack { animation: none; transform: none; }
+  .btn { transition: none; }
+}

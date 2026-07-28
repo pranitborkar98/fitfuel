@@ -221,6 +221,11 @@ export default function Navbar() {
     <header style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
       transition: "background 0.35s, border-color 0.35s, backdrop-filter 0.35s",
+      // Transparent at rest so the hero reads full-bleed under it, solid once
+      // scrolled. NOTE: this only works because every page behind it is dark —
+      // the logo and links are white, so on a light background the whole header
+      // disappears (the "Fit" in the wordmark vanishes and only "Fuel" shows).
+      // If a light page is ever added, give it a solid bar.
       background: scrolled ? "rgba(8,8,8,0.92)" : "transparent",
       borderBottom: `1px solid ${scrolled ? "#1e1e1e" : "transparent"}`,
       backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",

@@ -1,0 +1,150 @@
+/* app/preview/c/c.module.css — DIRECTION C: HEAT
+   Near-black is gone. Every section is a saturated field and the page changes
+   colour as you move down it, so scrolling feels like turning pages rather
+   than reading one long dark document.
+   Type is set in near-black ON the colour, which is what keeps a loud palette
+   from turning into a children's app: black on tangerine reads as expensive,
+   white on tangerine reads as a discount banner. */
+
+.page {
+  background: #150f0c;
+  color: #fff6ec;
+  font-family: var(--font-archivo), sans-serif;
+  overflow-x: clip;
+}
+
+/* ── the fields ───────────────────────────────────────────────────────
+   Ink is the only dark one and it is used twice: to open and to close. */
+.ink { background: #150f0c; color: #fff6ec; }
+.tangerine { background: #ff5a1f; color: #150f0c; }
+.acid { background: #c6f24e; color: #150f0c; }
+.rose { background: #ff3d81; color: #150f0c; }
+.cream { background: #fff6ec; color: #150f0c; }
+
+.block { padding: clamp(64px, 10vw, 148px) 0; }
+.inner { max-width: 1320px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px); }
+
+/* ── type ─────────────────────────────────────────────────────────────
+   Fraunces for the display voice so the loudness stays food-shaped rather
+   than sportswear-shaped, and heavy Archivo for anything that has to work
+   small on colour. */
+.mega {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 11vw, 10rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  margin: 0;
+  max-width: 13ch;
+  text-wrap: balance;
+}
+.head {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.032em;
+  margin: 0;
+  max-width: 15ch;
+}
+.italic { font-style: italic; font-weight: 400; }
+.kick {
+  font-size: clamp(14px, 1.4vw, 16px);
+  font-weight: 700;
+  margin: 0 0 clamp(16px, 2vw, 24px);
+  opacity: 0.78;
+}
+.say {
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.58;
+  max-width: 46ch;
+  margin: clamp(20px, 2.6vw, 32px) 0 0;
+  font-weight: 500;
+}
+
+/* ── actions ──────────────────────────────────────────────────────────
+   Fat, soft, unmissable. Colour-inverted against whatever field they sit in. */
+.row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: clamp(28px, 3.4vw, 42px); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #150f0c;
+  color: #fff6ec;
+  font-size: 16.5px;
+  font-weight: 700;
+  padding: 18px 34px;
+  min-height: 54px;
+  border-radius: 14px;
+  text-decoration: none;
+  border: 2px solid #150f0c;
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.btn:hover { transform: translateY(-3px); }
+.btn:focus-visible { outline: 4px solid #150f0c; outline-offset: 4px; }
+.btnLight { background: #fff6ec; color: #150f0c; border-color: #fff6ec; }
+.btnLight:focus-visible { outline-color: #fff6ec; }
+.btnOutline { background: transparent; color: inherit; border-color: currentColor; }
+
+/* ── stacked colour cells ─────────────────────────────────────────────
+   Each cell is its own field. Four different hues in one row is the whole
+   point of this direction. */
+.quad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.quadCell { padding: clamp(24px, 3vw, 44px); display: flex; flex-direction: column; min-height: clamp(230px, 26vw, 320px); }
+.quadSlot { font-size: 14px; font-weight: 800; margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+.quadDish {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.1rem, 1.6vw, 1.4rem);
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.quadMac {
+  margin: auto 0 0;
+  padding-top: 20px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+}
+.quadMacSub { font-family: var(--font-archivo), sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: 0; }
+@media (max-width: 900px) { .quad { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .quad { grid-template-columns: 1fr; } }
+
+/* ── big figures ──────────────────────────────────────────────────────*/
+.figs { display: flex; gap: clamp(28px, 6vw, 88px); flex-wrap: wrap; margin-top: clamp(30px, 4vw, 52px); }
+.fig {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  display: block;
+}
+.figNote { font-size: 15.5px; font-weight: 600; margin-top: 12px; max-width: 20ch; line-height: 1.45; opacity: 0.82; }
+
+/* ── photograph, warm and loud ────────────────────────────────────────*/
+.shot { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 20px; }
+.shot img { object-fit: cover; filter: saturate(1.3) contrast(1.08); }
+
+/* ── motion ───────────────────────────────────────────────────────────
+   The colour field wipes up behind the type as the section enters. */
+.pop { opacity: 1; }
+@supports (animation-timeline: view()) {
+  .pop {
+    opacity: 0;
+    animation: popIn linear both;
+    animation-timeline: view();
+    animation-range: entry 2% cover 30%;
+  }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(26px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop { opacity: 1; animation: none; transform: none; }
+  .btn { transition: none; }
+}

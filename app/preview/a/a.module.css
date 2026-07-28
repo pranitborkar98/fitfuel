@@ -1,0 +1,211 @@
+/* app/preview/a/a.module.css — DIRECTION A: CINEMATIC
+   The page is the photograph. Type sits ON the image, never beside it in a
+   card. No hairlines, no mono, no labels, no spec tables — every device from
+   the instrument look is banned here on purpose.
+   Rounded where it helps, because nothing in this direction is a spec sheet. */
+
+.page {
+  background: #0d0b0a;
+  color: #f6f1e8;
+  font-family: var(--font-archivo), sans-serif;
+  overflow-x: clip;
+}
+
+/* ── full-bleed scene ─────────────────────────────────────────────────
+   Every section is a scene: one image, one line, breathing room. */
+.scene {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.sceneShort { min-height: 78svh; }
+.scene img { object-fit: cover; }
+
+/* One warm cinematic grade for everything, so eight different photographs
+   read as one shoot. */
+.grade img { filter: saturate(1.12) contrast(1.06) brightness(0.92); }
+
+/* The wash is what makes overlaid type legible without a box behind it.
+   Two stops, bottom-heavy, plus a slight left bias for flush-left copy. */
+.wash {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(13,11,10,0.55) 0%, rgba(13,11,10,0) 32%, rgba(13,11,10,0.92) 88%),
+    linear-gradient(90deg, rgba(13,11,10,0.6) 0%, rgba(13,11,10,0) 58%);
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(22px, 5vw, 72px) clamp(52px, 8vh, 104px);
+}
+
+/* ── type ─────────────────────────────────────────────────────────────
+   Fraunces, big, tight, with a real optical size. This is the voice: warm
+   and expensive, not athletic and not clinical. */
+.kicker {
+  font-size: clamp(13px, 1.5vw, 15px);
+  letter-spacing: 0.02em;
+  color: #d8cfc0;
+  margin: 0 0 clamp(14px, 2vw, 22px);
+  font-weight: 500;
+}
+.huge {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(3rem, 9.5vw, 8.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin: 0;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+.big {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(2.1rem, 5.4vw, 4.4rem);
+  line-height: 1;
+  letter-spacing: -0.028em;
+  margin: 0;
+  max-width: 16ch;
+}
+.italic { font-style: italic; font-weight: 400; }
+.lede {
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.62;
+  color: #ddd5c9;
+  max-width: 44ch;
+  margin: clamp(20px, 2.6vw, 30px) 0 0;
+}
+
+/* ── actions ──────────────────────────────────────────────────────────
+   Soft, generous, confident. Pills are fine here: this direction is not
+   pretending to be an instrument. */
+.row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: clamp(28px, 3.4vw, 40px); }
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f6f1e8;
+  color: #14110f;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 18px 34px;
+  border-radius: 999px;
+  min-height: 52px;
+  text-decoration: none;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), background 0.3s;
+}
+.cta:hover { background: #fff; transform: translateY(-2px); }
+.cta:focus-visible { outline: 3px solid #a3e635; outline-offset: 4px; }
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #f6f1e8;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 18px 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(246,241,232,0.34);
+  min-height: 52px;
+  text-decoration: none;
+  transition: border-color 0.3s, background 0.3s;
+}
+.ghost:hover { border-color: #f6f1e8; background: rgba(246,241,232,0.07); }
+.ghost:focus-visible { outline: 3px solid #a3e635; outline-offset: 4px; }
+
+/* ── the day, as plates not cards ─────────────────────────────────────
+   No boxes. Each dish is a column of type with huge breathing room, and the
+   only separator is space. */
+.plates {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(26px, 3.6vw, 56px);
+  margin-top: clamp(44px, 6vw, 88px);
+}
+.plate { display: flex; flex-direction: column; }
+.slot {
+  font-size: 14px;
+  font-weight: 600;
+  color: #a3e635;
+  margin: 0 0 12px;
+  letter-spacing: 0.01em;
+}
+.dish {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  line-height: 1.16;
+  letter-spacing: -0.014em;
+  margin: 0;
+  color: #f6f1e8;
+}
+.dishNote { font-size: 14.5px; line-height: 1.55; color: #b7ada0; margin: 12px 0 0; }
+.macro {
+  font-size: 15px;
+  color: #ddd5c9;
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(246,241,232,0.16);
+}
+.macro b { color: #f6f1e8; font-weight: 600; }
+@media (max-width: 900px) { .plates { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .plates { grid-template-columns: 1fr; } }
+
+/* ── a quiet section between scenes ───────────────────────────────────*/
+.rest { padding: clamp(88px, 13vh, 172px) 0; background: #0d0b0a; }
+.restInner { max-width: 1240px; margin: 0 auto; padding: 0 clamp(22px, 5vw, 72px); }
+
+.figures { display: flex; gap: clamp(34px, 6vw, 92px); flex-wrap: wrap; margin-top: clamp(34px, 5vw, 60px); }
+.figure {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(2.6rem, 5.4vw, 4.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: #a3e635;
+  display: block;
+}
+.figureNote { font-size: 15.5px; color: #b7ada0; margin-top: 12px; max-width: 22ch; line-height: 1.5; }
+
+/* ── motion ───────────────────────────────────────────────────────────
+   Slow and filmic: a long fade with a gentle rise, plus a very slow scale on
+   the scene images so a still photograph breathes like a locked-off shot. */
+.rise { opacity: 1; }
+@supports (animation-timeline: view()) {
+  .rise {
+    opacity: 0;
+    animation: riseIn linear both;
+    animation-timeline: view();
+    animation-range: entry 6% cover 34%;
+  }
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(34px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@supports (animation-timeline: view()) {
+  .kenburns {
+    animation: kb linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
+}
+@keyframes kb {
+  from { transform: scale(1.14); }
+  to   { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; animation: none; transform: none; }
+  .kenburns { animation: none; transform: none; }
+  .cta, .ghost { transition-duration: 0.01ms; }
+}
