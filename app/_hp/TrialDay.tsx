@@ -80,9 +80,13 @@ export default async function TrialDay() {
               </div>
             </div>
 
-            <div className={s.dishes} style={{ marginTop: 1 }}>
-              {dishes.map((d) => (
-                <article key={d.slot + d.name} className={s.dish}>
+            <div className={`${s.dishes} ${s.deep}`} style={{ marginTop: 1 }}>
+              {dishes.map((d, i) => (
+                <article
+                  key={d.slot + d.name}
+                  className={`${s.dish} ${s.stagger} ${s.lift}`}
+                  style={{ "--i": i } as React.CSSProperties}
+                >
                   <div className={s.dishHead}>
                     <span style={label(LIME)}>{SLOT_LABEL[d.slot] ?? d.slot}</span>
                     {d.cuisine && (

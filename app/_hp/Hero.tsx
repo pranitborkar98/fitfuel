@@ -24,6 +24,7 @@ import Image from "next/image";
 
 import s from "./hp.module.css";
 import { cutoffLabel } from "@/lib/order-cutoff";
+import { waLink } from "@/lib/site";
 import { WRAP, INK, MUTE, DIM, LIME, display, body, label, figure } from "./theme";
 
 /* The homepage is prerendered, so it states the RULE rather than a live
@@ -71,7 +72,21 @@ export default function Hero() {
             <Link href="/plans?trial=true" className={s.btn}>
               Start with one day, Rs 400
             </Link>
-            <Link href="#hp-trial" className={s.ghost}>
+            {/* The second-cheapest order path in India, and it was missing
+                from this page entirely. Not only a floating bubble: a real,
+                equal-weight action, because plenty of people will send a
+                message who will never fill in a checkout form. */}
+            <a
+              href={waLink(
+                "Hi FitFuel, I'd like to order the Rs 400 trial day. Do you deliver to my area?",
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={s.ghost}
+            >
+              Order on WhatsApp
+            </a>
+            <Link href="#hp-trial" className={s.link}>
               See tomorrow&rsquo;s food
             </Link>
           </div>
@@ -88,8 +103,8 @@ export default function Hero() {
         </div>
       </div>
 
-      <div style={WRAP}>
-        <div className={s.readout}>
+      <div style={WRAP} className={s.deep}>
+        <div className={`${s.readout} ${s.tipUp}`}>
           {READOUT.map(([big, rest]) => (
             <div key={big} className={s.readoutCell}>
               <div style={figure("clamp(1.5rem,3vw,2.3rem)", LIME)}>{big}</div>

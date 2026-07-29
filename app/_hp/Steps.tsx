@@ -29,9 +29,9 @@ const STEPS: [string, string, string][] = [
     "Your portions hit your numbers on a scale before the box is sealed. At your door by 08:00, six mornings a week.",
   ],
   [
-    "Eat. That is the whole job",
+    "Eat. The system does the rest",
     "No logging, no counting, no deciding",
-    "The meal arrives already in your diary with the macros it was weighed to, because the kitchen and the tracker are the same system.",
+    "The meal arrives already in your diary with the macros it was weighed to, because the kitchen and the tracker are the same system. An engine reads your last thirty days, spots a plateau before you do, and proposes a new calorie target with the arithmetic attached.",
   ],
 ];
 
@@ -51,9 +51,16 @@ export default function Steps() {
           </p>
         </div>
 
-        <div className={s.steps} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
+        <div
+          className={`${s.steps} ${s.deep}`}
+          style={{ marginTop: "clamp(26px,3.4vw,44px)" }}
+        >
           {STEPS.map(([h, sub_, p], i) => (
-            <div key={h} className={s.step}>
+            <div
+              key={h}
+              className={`${s.step} ${s.stagger} ${s.lift}`}
+              style={{ "--i": i } as React.CSSProperties}
+            >
               <span className={s.stepN}>{String(i + 1).padStart(2, "0")}</span>
               <h3 style={sub("clamp(1.2rem,2vw,1.55rem)")}>{h}</h3>
               <p style={{ ...body(15), color: INK, marginTop: 10 }}>{sub_}</p>

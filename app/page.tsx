@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
 import StructuredData from "@/components/StructuredData";
+import WhatsAppOrder from "@/components/WhatsAppOrder";
 import s from "./_hp/hp.module.css";
 import Hero from "./_hp/Hero";
+import Coach from "./_hp/Coach";
 import TrialDay from "./_hp/TrialDay";
 import Week from "./_hp/Week";
 import Pick from "./_hp/Pick";
@@ -99,6 +101,11 @@ export default function Home() {
 
       {/* ── how, why, and who says so ────────────────────────────── */}
       <Steps />
+      {/* The engine, restored to a full section. Demoting it to one line in
+          More.tsx undersold the thing that actually separates this from a
+          tiffin service: nobody else in the category will publish the constant,
+          the cap and the floor their coaching arithmetic runs on. */}
+      <Coach />
       <Why />
       <Proof />
 
@@ -112,6 +119,12 @@ export default function Home() {
       {/* ── close ────────────────────────────────────────────────── */}
       <Faq />
       <Close />
+
+      {/* India orders food on WhatsApp. The page had no WhatsApp path at all
+          outside the footer, which for a Pune food business is the single
+          biggest conversion leak on it. Appears after the first screen so it
+          never covers the hero CTA. */}
+      <WhatsAppOrder />
     </div>
   );
 }

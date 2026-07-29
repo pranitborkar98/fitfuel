@@ -854,3 +854,91 @@
   padding: 20px;
   background: #0c0c0a;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DEPTH LAYER — real 3D, not drop shadows.
+   Everything here is CSS transforms on a perspective, scrubbed by the
+   scroll timeline, so it stays server-rendered and ships no JS. The rule
+   that keeps it from becoming slop: depth is only applied to things that
+   are already a plane in the layout (a card, a table, a frame). Nothing
+   floats for decoration.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* The stage. Perspective must live on the PARENT — putting it on the moving
+   element itself flattens the effect into a scale. */
+.deep { perspective: 1400px; perspective-origin: 50% 40%; }
+
+/* A plane that lifts toward you as it enters the viewport. Starts pitched
+   back and rotates flat, which reads as the page having a floor. */
+.plane { transform-style: preserve-3d; }
+@supports (animation-timeline: view()) {
+  .plane {
+    animation: planeIn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 42%;
+  }
+}
+@keyframes planeIn {
+  from { opacity: 0; transform: translateY(46px) translateZ(-140px) rotateX(9deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Cards that hold their own depth on hover. translateZ rather than
+   translateY so the perspective does the work and the card genuinely
+   approaches the viewer instead of sliding up the page. */
+.lift { transition: transform .34s cubic-bezier(.16,1,.3,1), border-color .2s linear; }
+.deep .lift:hover { transform: translateZ(38px); border-color: #33332f; }
+
+/* Staggered depth for a row of cells: each one sits slightly further back
+   and comes forward in sequence. The variable is set inline per cell. */
+@supports (animation-timeline: view()) {
+  .stagger {
+    animation: staggerIn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover calc(34% + var(--i, 0) * 6%);
+  }
+}
+@keyframes staggerIn {
+  from { opacity: 0; transform: translateZ(-90px) translateY(30px) rotateX(6deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Full-bleed media that recedes as it leaves, so scrolling past a scene
+   feels like moving through it rather than past a flat picture. */
+@supports (animation-timeline: view()) {
+  .recede {
+    animation: recedeOut linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+}
+@keyframes recedeOut {
+  from { transform: none; opacity: 1; }
+  to   { transform: translateZ(-160px) translateY(-30px); opacity: 0.55; }
+}
+
+/* The counter-rotate used on the hero readout: the band tips very slightly
+   the opposite way to the hero above it, which is what sells the two as
+   separate physical surfaces rather than one flat column. */
+@supports (animation-timeline: view()) {
+  .tipUp {
+    animation: tipUp linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 36%;
+  }
+}
+@keyframes tipUp {
+  from { opacity: 0; transform: rotateX(-7deg) translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plane, .stagger, .recede, .tipUp {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .deep { perspective: none; }
+  .lift { transition-duration: .01ms; }
+  .deep .lift:hover { transform: none; }
+}
