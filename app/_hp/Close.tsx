@@ -25,6 +25,7 @@ const DIRECTORY: { head: string; links: [string, string][] }[] = [
     head: "Eat",
     links: [
       ["/plans", "All 126 plans"],
+      ["/menu", "Single meals, no plan"],
       ["/plans?trial=true", "Trial day, Rs 400"],
       ["/plans/digital", "Digital plans, no delivery"],
       ["/our-ingredients", "What is in the food"],

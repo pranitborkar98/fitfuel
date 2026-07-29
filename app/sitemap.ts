@@ -16,6 +16,10 @@ const STATIC_ROUTES: { path: string; priority: number; freq: "daily" | "weekly" 
   { path: "",                    priority: 1.0,  freq: "daily"   },
   // Money pages
   { path: "/plans",              priority: 0.9,  freq: "daily"   },
+  // The à la carte storefront. High priority and daily: "healthy salad
+  // delivery pune" and dish-name searches are the queries a single-meal menu
+  // can actually win, and the plans catalog cannot rank for any of them.
+  { path: "/menu",               priority: 0.9,  freq: "daily"   },
   { path: "/plans/digital",      priority: 0.7,  freq: "weekly"  },
   { path: "/supplements",        priority: 0.7,  freq: "weekly"  },
   { path: "/corporate",          priority: 0.7,  freq: "monthly" },

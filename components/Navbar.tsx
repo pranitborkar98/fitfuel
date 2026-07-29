@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import CartButton from "@/app/_cart/CartButton";
+
 const LIME = "#84cc16";
 const LIME_LIGHT = "#a3e635";
 
@@ -62,7 +64,11 @@ const companyLinks = [
   { label: "Contact",         href: "/contact" },
 ];
 
+// "Menu" leads, ahead of Supplements. It is the only link here that sells a
+// single thing you can buy in one click, and until /menu existed the site had
+// no route at all for the customer who is just hungry tonight.
 const topLinks = [
+  { label: "Menu",         href: "/menu" },
   { label: "Supplements",  href: "/supplements" },
   { label: "How It Works", href: "/how-it-works" },
   { label: "Results",      href: "/results" },
@@ -334,6 +340,8 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="ff-nav-desktop" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Renders nothing until the à la carte basket has something in it. */}
+          <CartButton />
           {isLoggedIn ? (
             <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
               <button
@@ -380,6 +388,13 @@ export default function Navbar() {
           <Link href="/plans" className="ff-cta-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", padding: "9px 20px", borderRadius: 0, background: LIME, letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
             Order Now
           </Link>
+        </div>
+
+        {/* Basket + hamburger, phone only. The basket sits OUTSIDE the
+            hamburger deliberately: an order in progress is not navigation, and
+            burying it one tap deep is how a full cart gets forgotten. */}
+        <div className="ff-nav-mobile" style={{ display: "none", alignItems: "center", gap: 8 }}>
+          <CartButton />
         </div>
 
         {/* Hamburger */}

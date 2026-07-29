@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChromeGate from "@/components/ChromeGate";
+import { CartProvider } from "@/app/_cart/CartProvider";
+import CartDrawer from "@/app/_cart/CartDrawer";
 import { SessionProvider } from "next-auth/react";
 import ReferralCapture from "@/components/ReferralCapture";
 import { Analytics } from "@vercel/analytics/react";
@@ -145,10 +147,17 @@ export default function RootLayout({
         <a href="#main" className="skip-link">Skip to content</a>
         <ReferralCapture />
         <SessionProvider>
-          {/* ChromeGate hides Navbar/Footer on standalone routes like /driver and /admin */}
-          <ChromeGate navbar={<Navbar />} footer={<Footer />}>
-            <div id="main" tabIndex={-1}>{children}</div>
-          </ChromeGate>
+          {/* CartProvider wraps the chrome, not just the page, because the
+              basket trigger lives in the Navbar — a customer who adds a dish
+              on /menu must still see it from /plans or /faq. The drawer is
+              mounted once here rather than per-page for the same reason. */}
+          <CartProvider>
+            {/* ChromeGate hides Navbar/Footer on standalone routes like /driver and /admin */}
+            <ChromeGate navbar={<Navbar />} footer={<Footer />}>
+              <div id="main" tabIndex={-1}>{children}</div>
+            </ChromeGate>
+            <CartDrawer />
+          </CartProvider>
         </SessionProvider>
         <Analytics />
         <SpeedInsights />

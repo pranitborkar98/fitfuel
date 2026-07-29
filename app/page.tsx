@@ -7,6 +7,7 @@ import Hero from "./_hp/Hero";
 import Coach from "./_hp/Coach";
 import TrialDay from "./_hp/TrialDay";
 import Week from "./_hp/Week";
+import Hungry from "./_hp/Hungry";
 import Pick from "./_hp/Pick";
 import Steps from "./_hp/Steps";
 import Why from "./_hp/Why";
@@ -42,6 +43,7 @@ import { BG, INK } from "./_hp/theme";
      Hero      full-bleed, one promise, the price, the licence
      TrialDay  the four real dishes that arrive tomorrow, from the DB
      Week      seven days of real dish names and macros, from the schedule
+     Hungry    single meals, no subscription — the route to /menu
      Pick      which of these is you: fat, muscle, eat well, a condition
      Steps     three steps, from the customer's side of the counter
      Why       four claims that survive being checked
@@ -97,6 +99,11 @@ export default function Home() {
       <Hero />
       <TrialDay />
       <Week />
+      {/* The escape hatch, and it sits BEFORE Pick on purpose. Pick asks which
+          plan you are, which is the wrong question for someone who has not
+          decided to subscribe at all. Everything above this point has been
+          about a plan; this is where the page admits you can just buy dinner. */}
+      <Hungry />
       <Pick />
 
       {/* ── how, why, and who says so ────────────────────────────── */}
