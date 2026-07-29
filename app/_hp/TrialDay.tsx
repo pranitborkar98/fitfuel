@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
+import DishGlyph from "./DishGlyph";
 import { getDayOne, totals, PLAN_SLUG, SLOT_LABEL } from "./menu-data";
 import { WRAP, SECTION, INK, DIM, LIME, display, sub, body, label, figure } from "./theme";
 
@@ -93,7 +94,21 @@ export default async function TrialDay() {
                       <span style={{ ...label(DIM), display: "inline" }}>{d.cuisine}</span>
                     )}
                   </div>
-                  <h3 style={{ ...sub("clamp(1.15rem,1.9vw,1.45rem)"), marginTop: 16 }}>
+
+                  {/* Not a picture of the dish. A fingerprint of it, drawn from
+                      the same weighed macros printed below. See DishGlyph. */}
+                  <div className={s.glyph}>
+                    <DishGlyph
+                      name={d.name}
+                      kcal={d.kcal}
+                      protein={d.protein}
+                      carbs={d.carbs}
+                      fat={d.fat}
+                      size={146}
+                    />
+                  </div>
+
+                  <h3 style={{ ...sub("clamp(1.15rem,1.9vw,1.45rem)"), marginTop: 4 }}>
                     {d.name}
                   </h3>
                   {d.blurb && <p style={{ ...body(14), marginTop: 10 }}>{d.blurb}</p>}
@@ -107,6 +122,25 @@ export default async function TrialDay() {
                 </article>
               ))}
             </div>
+
+            {/* Colour is never the only channel: the ring is explained in
+                words, and every figure it encodes is printed on the card
+                underneath it anyway. */}
+            <p className={s.glyphKey} style={{ marginTop: 18 }}>
+              <span>
+                <i style={{ background: "#84cc16" }} aria-hidden="true" />
+                <b>Protein</b>
+              </span>
+              <span>
+                <i style={{ background: "#9a9a94" }} aria-hidden="true" />
+                <b>Carbohydrate</b>
+              </span>
+              <span>
+                <i style={{ background: "#5f5f59" }} aria-hidden="true" />
+                <b>Fat</b>
+              </span>
+              <span>Ring size = calories. Each mark is drawn from that dish&rsquo;s own weights.</span>
+            </p>
           </>
         )}
 

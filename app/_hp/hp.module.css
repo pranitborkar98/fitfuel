@@ -942,3 +942,42 @@
   .lift { transition-duration: .01ms; }
   .deep .lift:hover { transform: none; }
 }
+
+/* ── dish glyph ───────────────────────────────────────────────────────
+   The generated macro composition that replaced the empty space where a
+   photograph would be. Centred, with room to breathe, and it rotates very
+   slightly as the card comes forward so it reads as a physical dial rather
+   than a printed chart. */
+.glyph {
+  display: flex;
+  justify-content: center;
+  padding: clamp(18px, 2.4vw, 26px) 0 clamp(14px, 2vw, 20px);
+}
+@supports (animation-timeline: view()) {
+  .glyph svg {
+    animation: glyphTurn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 46%;
+  }
+}
+@keyframes glyphTurn {
+  from { opacity: 0; transform: rotate(-24deg) scale(0.86); }
+  to   { opacity: 1; transform: none; }
+}
+/* A legend so three colours are never the only thing carrying meaning. */
+.glyphKey {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #85857e;
+}
+.glyphKey b { font-weight: 500; }
+.glyphKey i { display: inline-block; width: 10px; height: 3px; margin-right: 6px; vertical-align: middle; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph svg { animation: none; opacity: 1; transform: none; }
+}
