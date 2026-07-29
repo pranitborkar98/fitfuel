@@ -18,7 +18,7 @@ import Link from "next/link";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
-import DishGlyph from "./DishGlyph";
+import DishImage from "./DishImage";
 import { getDayOne, totals, PLAN_SLUG, SLOT_LABEL } from "./menu-data";
 import { WRAP, SECTION, INK, DIM, LIME, display, sub, body, label, figure } from "./theme";
 
@@ -95,18 +95,17 @@ export default async function TrialDay() {
                     )}
                   </div>
 
-                  {/* Not a picture of the dish. A fingerprint of it, drawn from
-                      the same weighed macros printed below. See DishGlyph. */}
-                  <div className={s.glyph}>
-                    <DishGlyph
-                      name={d.name}
-                      kcal={d.kcal}
-                      protein={d.protein}
-                      carbs={d.carbs}
-                      fat={d.fat}
-                      size={146}
-                    />
-                  </div>
+                  {/* A photograph if one has been dropped in for this dish,
+                      otherwise a fingerprint drawn from the same weighed macros
+                      printed below. Adding photography needs no code change:
+                      see DishImage for the lookup order. */}
+                  <DishImage
+                    name={d.name}
+                    kcal={d.kcal}
+                    protein={d.protein}
+                    carbs={d.carbs}
+                    fat={d.fat}
+                  />
 
                   <h3 style={{ ...sub("clamp(1.15rem,1.9vw,1.45rem)"), marginTop: 4 }}>
                     {d.name}

@@ -981,3 +981,30 @@
 @media (prefers-reduced-motion: reduce) {
   .glyph svg { animation: none; opacity: 1; transform: none; }
 }
+
+/* ── dish photograph ──────────────────────────────────────────────────
+   Occupies the same slot the generated glyph does, so a card looks
+   deliberate whether or not a photograph exists for that dish yet. */
+.dishShot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid #232320;
+  background: #050504;
+  margin: clamp(14px, 2vw, 20px) 0 clamp(12px, 1.6vw, 16px);
+}
+.dishShot img { object-fit: cover; filter: saturate(1.06) contrast(1.07); }
+@supports (animation-timeline: view()) {
+  .dishShot img {
+    animation: shotIn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 44%;
+  }
+}
+@keyframes shotIn {
+  from { opacity: 0; transform: scale(1.08); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dishShot img { animation: none; opacity: 1; transform: none; }
+}
