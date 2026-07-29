@@ -138,6 +138,20 @@ export default function Footer() {
             <p style={{ fontSize: 12.5, color: "var(--ff-dim)", marginTop: 24, lineHeight: 1.6 }}>
               FSSAI Lic. No. 21523035002815
             </p>
+
+            {/* Imagery disclosure. Sits here rather than only inside the Terms
+                because a claim about what our photographs are should be
+                readable without opening a legal page. The detail is in
+                Terms 13A; this is the pointer, not the fine print.
+                The dishes, macros and prices are NOT illustrative and the line
+                says so, because that distinction is the whole point. */}
+            <p style={{ fontSize: 12.5, color: "var(--ff-dim)", marginTop: 12, lineHeight: 1.6, maxWidth: "46ch" }}>
+              Food photographs on this site are illustrative and include stock and
+              AI-generated imagery. Dish names, macros, ingredients and prices are real.{" "}
+              <a href="/terms#imagery" style={{ color: "var(--ff-mute)", textDecoration: "underline" }}>
+                How we use images
+              </a>
+            </p>
           </div>
 
           <FooterCol title="Meal Plans" links={planLinks} />

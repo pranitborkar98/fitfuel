@@ -113,6 +113,15 @@ export default function TermsPage() {
           <P>The Services rely on third parties such as payment processors and delivery and infrastructure providers. We are not responsible for the acts, omissions or terms of these third parties, and your use of their services may be governed by their own terms and policies.</P>
         </Section>
 
+        <span id="imagery" style={{ display: "block", scrollMarginTop: 90 }} />
+        <Section title="13A. Images and Illustrations">
+          <P>We want you to know exactly what you are looking at, so we state this plainly rather than in a caption you would never find.</P>
+          <P><B>Photographs on this site are illustrative.</B> Some images are licensed stock photography, and some are generated using artificial intelligence. They are used to convey the style, freshness and general character of our food and our kitchen. They are <B>not</B> photographs of the specific portion that will be delivered to you, and the meal you receive will differ in plating, garnish, colour and arrangement.</P>
+          <P><B>What is never illustrative is the data.</B> Every dish name, calorie figure, macronutrient value, ingredient list, allergen note, plan duration and price shown on this site is real, comes from our own kitchen records, and is what we cook and weigh to. Where you see a circular macro mark beside a dish, it is drawn directly from that dish&rsquo;s own weighed protein, carbohydrate and fat values rather than from any image.</P>
+          <P>If any image ever conflicts with the written macros, ingredients or allergen information for a dish, <B>the written information governs</B>. If you believe an image has misled you about an order you received, contact us and we will make it right under our refund policy.</P>
+          <P>We are working towards photographing every dish we cook. As real photographs of our own meals replace illustrative imagery, this section will be updated to reflect that.</P>
+        </Section>
+
         <Section title="14. Limitation of Liability">
           <P>To the maximum extent permitted by law, FitFuel is not liable for any indirect, incidental or consequential loss arising from your use of the Services. Our total liability for any claim relating to the Services is limited to the amount you paid to us for the relevant order or subscription in the three months preceding the claim. Nothing in these Terms excludes liability that cannot be excluded under Indian law.</P>
         </Section>
