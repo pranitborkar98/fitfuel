@@ -14,6 +14,8 @@ import Why from "./_hp/Why";
 import Proof from "./_hp/Proof";
 import Areas from "./_hp/Areas";
 import Offers from "./_hp/Offers";
+import Corporate from "./_hp/Corporate";
+import Network from "./_hp/Network";
 import More from "./_hp/More";
 import Faq from "./_hp/Faq";
 import Close from "./_hp/Close";
@@ -119,6 +121,17 @@ export default function Home() {
       {/* ── can I get it, what does it cost ──────────────────────── */}
       <Areas />
       <Offers />
+
+      {/* ── the two B2B revenue lines, re-seated as full sections ──
+          These were consolidated into More.tsx as one line each. The owner's
+          standing brief is that corporate and the partner network are real
+          moats that must be visible, not a footnote — so they run as full
+          sections here. They stay one click from More too, which is fine: the
+          coach and the engine are handled the same way. Corporate is PANEL,
+          Network is BG, so the Offers→Corporate→Network→More run alternates
+          dark/light/dark and no two wells sit flush. */}
+      <Corporate />
+      <Network />
 
       {/* ── the rest of the business, one line each ──────────────── */}
       <More />

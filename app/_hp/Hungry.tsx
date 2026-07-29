@@ -27,7 +27,7 @@ import s from "./hp.module.css";
 import Idx from "./Idx";
 import { MENU } from "@/lib/menu-alacarte";
 import { ORDERABLE_COUNT } from "@/lib/menu-cart";
-import { WRAP, SECTION, RULE, INK, DIM, LIME, MONO, display, body } from "./theme";
+import { WRAP, SECTION, RULE, INK, DIM, LIME, MONO, display, sub, label, body } from "./theme";
 
 /** Per course: how many dishes, and the cheapest price the kitchen has
  *  actually confirmed. Null when nothing in the course is priced yet. */
@@ -100,6 +100,30 @@ export default function Hungry() {
           <Link href="/menu" className={s.btn}>
             See the whole menu
           </Link>
+        </div>
+
+        {/* Aggregator channel. The owner confirmed FitFuel is live on both
+            platforms today. It sits UNDER the direct-order CTA on purpose:
+            ordering direct takes no platform cut (tracker Decision #77 —
+            aggregators are an acquisition channel, not the model), but a
+            customer already inside those apps should still find us. No store
+            URL is hardcoded yet: when the Zomato and Swiggy store links exist,
+            wrap each name in a Link to turn it live. */}
+        <div
+          style={{
+            marginTop: "clamp(26px,3.4vw,40px)", paddingTop: 24,
+            borderTop: `1px solid ${RULE}`, display: "flex", flexWrap: "wrap",
+            alignItems: "center", gap: "14px clamp(18px,3vw,32px)",
+          }}
+        >
+          <span style={{ ...label(), color: DIM }}>Also on</span>
+          <span style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK }}>Zomato</span>
+          <span aria-hidden style={{ color: RULE }}>/</span>
+          <span style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK }}>Swiggy</span>
+          <span style={{ ...body(14), color: DIM, maxWidth: "34ch" }}>
+            Search <span style={{ color: INK }}>FitFuel</span> in either app. Ordering direct just
+            means more of it reaches the kitchen.
+          </span>
         </div>
 
         <p style={{ ...body(13.5), color: DIM, marginTop: 20 }}>

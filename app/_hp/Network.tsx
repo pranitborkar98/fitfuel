@@ -64,6 +64,25 @@ const ROWS: Row[] = [
     gets: "The production system, the recipe tree and the plan catalogue behind it",
     href: "/contact",
   },
+  {
+    who: "Events & exhibitions",
+    what: "Invite us to your expo, society mela or wellness fair",
+    gets: "A staffed FitFuel stall, live sampling and on-the-spot onboarding",
+    href: "/contact",
+  },
+];
+
+/* Fictional. Not a client list — the same honest-placeholder rule the corporate
+   wall runs on: an invented-but-plausible gym name is a fabricated partner list,
+   so each tile is captioned PLACEHOLDER until a real one arrives with written
+   permission. Swap the array and drop the caption line when they do. */
+const GYM_MARKS = [
+  "Iron Yard",
+  "Pulse Strength",
+  "Kinetic Studio",
+  "Summit Fitness",
+  "Baseline Gym",
+  "Cadence Cross-Training",
 ];
 
 export default function Network() {
@@ -130,6 +149,35 @@ export default function Network() {
               Every partner code gets one at fitfuel.in/p/YOURCODE
             </div>
           </div>
+        </div>
+
+        {/* Gym / studio wall. Same honest-placeholder pattern as the corporate
+            page: real marks only go up with written permission, so these six
+            are captioned placeholders the owner swaps as gyms sign. */}
+        <div style={{ marginTop: "clamp(30px,4vw,50px)" }}>
+          <h3 style={{ ...sub("clamp(1.2rem,2vw,1.5rem)"), marginBottom: 16 }}>
+            Gyms and studios already talking to us
+          </h3>
+
+          <div className={s.logos}>
+            {GYM_MARKS.map((m) => (
+              <div key={m} className={s.logo}>
+                <span className={s.logoMark}>{m}</span>
+                <span className={s.logoSub}>Placeholder</span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...body(13.5), color: DIM, marginTop: 14, maxWidth: "76ch" }}>
+            Layout placeholders, not partners. We will not print a gym&rsquo;s name or mark here
+            until they have signed and agreed to it, because a partner wall is a claim about who
+            works with you and an invented one is worth less than an empty grid. To put your gym
+            in one of these,{" "}
+            <Link href="/partners/apply" style={{ color: LIME }}>
+              apply to partner
+            </Link>
+            .
+          </p>
         </div>
 
         <div className={s.actions} style={{ marginTop: 26 }}>
