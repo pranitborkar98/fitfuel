@@ -124,6 +124,14 @@ export default function Home() {
           about a plan; this is where the page admits you can just buy dinner. */}
       <Hungry />
       <Pick />
+      {/* THE AI COACH, moved up from position nine. It used to sit behind
+          Steps and the film, which meant a visitor looking for the AI — and
+          the owner did, repeatedly — had to get eight sections deep to find a
+          band labelled "The engine". Both problems are fixed: it is labelled
+          for what people scan for, and it sits directly after the question
+          "which one of these is you?", where "here is what decides your
+          number" is the natural next answer. */}
+      <Coach />
       {/* Ticker REMOVED at the owner's instruction. It ran "952 exercises /
           46 supplements / 38 conditions / 59 programmes / 154 foods" as a
           scrolling band, and his verdict was that it is ugly and says nothing
@@ -141,11 +149,6 @@ export default function Home() {
           someone has decided theirs. It is also the only section that shows
           the kitchen instead of describing it, which two reviews asked for. */}
       <Day />
-      {/* The engine, restored to a full section. Demoting it to one line in
-          More.tsx undersold the thing that actually separates this from a
-          tiffin service: nobody else in the category will publish the constant,
-          the cap and the floor their coaching arithmetic runs on. */}
-      <Coach />
       <Why />
       <Proof />
 

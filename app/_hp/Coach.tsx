@@ -67,17 +67,23 @@ export default function Coach() {
   return (
     <section aria-labelledby="hp-coach" style={SECTION}>
       <div style={WRAP}>
-        <Idx label="The engine" />
+        {/* WAS "The engine". The owner looked for the AI section repeatedly and
+            reported it missing, which was a correct reading: the word "AI"
+            appeared on this page exactly once, inside a sentence distancing us
+            from it. A section can be honest about not shipping a chatbot AND
+            still be findable by the name everyone scans for. */}
+        <Idx label="The AI coach" />
 
         <div className={s.reveal}>
-          <h2 id="hp-coach" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "15ch" }}>
-            The intelligence is arithmetic, and we will show you all of it
+          <h2 id="hp-coach" style={{ ...display("clamp(2.4rem,6.4vw,5rem)"), maxWidth: "14ch" }}>
+            Your <span style={{ color: LIME }}>AI coach</span> shows its working
           </h2>
           <p style={{ ...body(16.5), marginTop: 20 }}>
-            Everyone in this category says AI. Almost nobody will tell you the constant,
-            the cap or the floor. Here they are. The engine reads a snapshot of your last
-            thirty days, decides whether you are actually stalled, and proposes one number
-            with the reasoning attached. It never changes your target behind your back.
+            Everyone in this category says AI and stops there. Ours reads a snapshot of your
+            last thirty days — every meal, every session, every weigh-in — decides whether
+            you are actually stalled, and proposes one number with the arithmetic attached.
+            Drag the weigh-ins below and watch it run. It never changes your target behind
+            your back.
           </p>
         </div>
 

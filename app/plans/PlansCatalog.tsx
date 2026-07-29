@@ -48,6 +48,9 @@ interface Props {
   plans: Plan[];
   pricesByPlan: Record<string, PriceRow[]>;
   initialCategory?: Plan["category"];
+  /** Seeds the search box, so /plans?goal=weight_loss opens filtered to the
+   *  goal the homepage card promised. Matches subCategory, same as typing. */
+  initialSearch?: string;
   startTrial?: boolean;
 }
 
@@ -123,12 +126,12 @@ function Step({ label }: { label: string }) {
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
-export default function PlansCatalog({ plans, pricesByPlan, initialCategory, startTrial }: Props) {
+export default function PlansCatalog({ plans, pricesByPlan, initialCategory, initialSearch, startTrial }: Props) {
   const [diet, setDiet] = useState<DietKey>("VEG");
   const [dur, setDur]   = useState<DurationKey>(startTrial ? "TRIAL_DAY" : "ONE_MONTH");
   const [meal, setMeal] = useState<MealKey>("ALL_FOUR");
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch ?? "");
   const [activeCategory, setActiveCategory] = useState<"ALL" | Plan["category"]>(initialCategory ?? "ALL");
 
   const [wlTier, setWlTier] = useState<Tier | null>(null);

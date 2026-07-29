@@ -23,9 +23,16 @@ type CategoryParam = (typeof VALID_CATEGORIES)[number];
 export default async function PlansPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; trial?: string }>;
+  searchParams: Promise<{ category?: string; trial?: string; goal?: string }>;
 }) {
-  const { category, trial } = await searchParams;
+  /* `goal` seeds the catalogue's search box, which already matches against
+     subCategory. The homepage's goal cards used to link to
+     ?category=WEIGHT_LOSS / MUSCLE_GAIN / BALANCED — none of which are members
+     of VALID_CATEGORIES, so all three were silently dropped and three of the
+     four doors landed on an unfiltered list of 126 plans. The real goal
+     taxonomy lives in subCategory (weight_loss, muscle_gain, balanced, ...),
+     and this is the smallest correct bridge to it. */
+  const { category, trial, goal } = await searchParams;
   const initialCategory: CategoryParam | undefined = VALID_CATEGORIES.includes(
     (category ?? "") as CategoryParam
   )
@@ -71,6 +78,7 @@ export default async function PlansPage({
       plans={plans as any}
       pricesByPlan={pricesByPlan}
       initialCategory={initialCategory}
+      initialSearch={goal}
       startTrial={startTrial}
     />
   );

@@ -26,6 +26,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 
+import { prisma } from "@/lib/prisma";
 import s from "./hp.module.css";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import Idx from "./Idx";
@@ -39,52 +40,94 @@ type Door = {
   what: string;
   href: string;
   accent: string;
-  count: string;
+  /** subCategory token the door filters on. Null = filtered by category. */
+  token: string | null;
   /** Name in public/images/[ai/]goals/. Renders nothing until the file lands,
       so this block is safe to ship before any image is generated. */
   img: string;
 };
 
+/* THE HREFS WERE BROKEN. Three of these four pointed at
+   ?category=WEIGHT_LOSS / MUSCLE_GAIN / BALANCED. VALID_CATEGORIES in
+   app/plans/page.tsx is STANDARD | LIFESTYLE_MEDICAL | SPORTS | CORPORATE |
+   DIGITAL, so all three were silently discarded and three of the four doors
+   dropped the visitor on an unfiltered list of 126 plans — the exact
+   "useless information" this section's own copy promises to solve.
+
+   The real goal taxonomy is MealPlan.subCategory (weight_loss, muscle_gain,
+   balanced, ...), which the catalogue already searches. `?goal=` now seeds
+   that search, so every door lands filtered. */
 const DOORS: Door[] = [
   {
     goal: "Lose fat",
     who: "You want the weight down without living on boiled eggs.",
     what: "Calorie-controlled, protein held high so you keep muscle while the weight comes off.",
-    href: "/plans?category=WEIGHT_LOSS",
+    href: "/plans?goal=weight_loss",
     accent: "#a3e635",
-    count: "Weight loss plans",
+    token: "weight_loss",
     img: "lose-fat",
   },
   {
     goal: "Build muscle",
     who: "You train, and eating enough is the part that keeps failing.",
     what: "Higher calories, protein spread across four meals so you actually hit the number.",
-    href: "/plans?category=MUSCLE_GAIN",
+    href: "/plans?goal=muscle_gain",
     accent: "#f59e0b",
-    count: "Muscle gain plans",
+    token: "muscle_gain",
     img: "build-muscle",
   },
   {
     goal: "Just eat well",
     who: "No target. You are tired of deciding what is for dinner.",
     what: "Balanced macros, varied cuisines, cooked properly. Nothing about it feels like a diet.",
-    href: "/plans?category=BALANCED",
+    href: "/plans?goal=balanced",
     accent: "#38bdf8",
-    count: "Balanced plans",
+    token: "balanced",
     img: "eat-well",
   },
   {
     goal: "Eat for a condition",
     who: "Diabetes, PCOS, thyroid, fatty liver, postpartum, and 33 more.",
-    what: "Seventy plans written for a diagnosis by a nutritionist, not a generic plan with the rice taken out.",
+    what: "Written for a diagnosis by a nutritionist, not a generic plan with the rice taken out.",
     href: "/plans?category=LIFESTYLE_MEDICAL",
     accent: "#2dd4bf",
-    count: "70 condition plans",
+    token: null,
     img: "condition",
   },
 ];
 
-export default function Pick() {
+/** Real counts, queried. The card used to assert "70 condition plans" as a
+ *  typed string; every number below is now the count of plans the door's own
+ *  link will actually show, so the card cannot promise a number the next page
+ *  contradicts.
+ *
+ *  NOT filtered by diet, deliberately, and this is worth knowing: the 126 plans
+ *  are one row per goal PER DIET VARIANT, so `weight_loss` is 5 rows of which
+ *  exactly 1 is VEG. Counting on the catalogue's default VEG filter would put
+ *  "1 plan" on a card sitting under the sentence "there are 126 plans", which
+ *  is true and useless. The door is about the goal; diet is a switch the
+ *  visitor controls on the next page. */
+async function doorCounts(): Promise<Record<string, number>> {
+  const db = prisma as unknown as {
+    mealPlan: {
+      count: (a: unknown) => Promise<number>;
+    };
+  };
+
+  const out: Record<string, number> = {};
+  for (const d of DOORS) {
+    out[d.goal] = await db.mealPlan.count({
+      where: d.token
+        ? { subCategory: { contains: d.token } }
+        : { category: "LIFESTYLE_MEDICAL" },
+    });
+  }
+  return out;
+}
+
+export default async function Pick() {
+  const counts = await doorCounts();
+
   return (
     <section aria-labelledby="hp-pick" style={SECTION}>
       <div style={WRAP}>
@@ -156,7 +199,7 @@ export default function Pick() {
                   fontWeight: 600,
                 }}
               >
-                {d.count} <span className={s.doorArrow}>&rarr;</span>
+                {counts[d.goal]} {counts[d.goal] === 1 ? "plan" : "plans"} <span className={s.doorArrow}>&rarr;</span>
               </span>
             </Link>
           ))}
