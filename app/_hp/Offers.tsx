@@ -20,6 +20,7 @@
 //
 // SERVER COMPONENT.
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
@@ -206,9 +207,13 @@ export default async function Offers() {
               Codes that work today
             </h3>
 
-            <div className={s.offers}>
-              {offers.map((o) => (
-                <div key={o.code} className={s.offer}>
+            <div className={`${s.offers} ${s.deep}`}>
+              {offers.map((o, i) => (
+                <div
+                  key={o.code}
+                  className={`${s.offer} ${s.stagger} ${s.lift}`}
+                  style={{ "--i": i } as CSSProperties}
+                >
                   <span className={s.code}>{o.code}</span>
                   <div style={{ ...sub("clamp(1.05rem,1.6vw,1.2rem)"), color: INK }}>
                     {o.headline}

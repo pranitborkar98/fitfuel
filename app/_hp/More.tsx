@@ -19,6 +19,7 @@
 //
 // SERVER COMPONENT.
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import s from "./hp.module.css";
@@ -99,9 +100,14 @@ export default function More() {
           </p>
         </div>
 
-        <div className={s.more} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
-          {CELLS.map((c) => (
-            <Link key={c.href} href={c.href} className={s.moreCell}>
+        <div className={`${s.more} ${s.deep}`} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
+          {CELLS.map((c, i) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className={`${s.moreCell} ${s.stagger} ${s.lift}`}
+              style={{ "--i": i % 3 } as CSSProperties}
+            >
               <h3 style={{ ...sub("clamp(1.05rem,1.6vw,1.25rem)") }}>{c.name}</h3>
               <p style={{ ...body(14), marginTop: 9 }}>{c.what}</p>
               <span style={{ ...body(14), color: LIME, marginTop: 12, display: "block", fontWeight: 600 }}>

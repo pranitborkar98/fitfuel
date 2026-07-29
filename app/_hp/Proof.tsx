@@ -12,6 +12,7 @@
 //
 // SERVER COMPONENT.
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
@@ -94,9 +95,13 @@ export default async function Proof() {
           </h2>
         </div>
 
-        <div className={s.quotes} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
-          {quotes.map((q) => (
-            <figure key={q.id} className={s.quote} style={{ margin: 0 }}>
+        <div className={`${s.quotes} ${s.deep}`} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
+          {quotes.map((q, i) => (
+            <figure
+              key={q.id}
+              className={`${s.quote} ${s.stagger} ${s.lift}`}
+              style={{ margin: 0, "--i": i } as CSSProperties}
+            >
               <div className={s.quoteResult}>{q.resultLabel}</div>
               <blockquote style={{ margin: 0 }}>
                 <p style={{ ...body(15.5), color: INK }}>&ldquo;{q.quote}&rdquo;</p>

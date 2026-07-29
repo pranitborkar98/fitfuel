@@ -18,6 +18,7 @@
 //
 // SERVER COMPONENT.
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import s from "./hp.module.css";
@@ -80,9 +81,13 @@ export default function Coach() {
         </div>
 
         {/* The maths, as four published constants. */}
-        <div className={s.stats} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
-          {MATHS.map(([n, unit, note]) => (
-            <div key={n} className={s.stat}>
+        <div className={`${s.stats} ${s.deep}`} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
+          {MATHS.map(([n, unit, note], i) => (
+            <div
+              key={n}
+              className={`${s.stat} ${s.stagger} ${s.lift}`}
+              style={{ "--i": i } as CSSProperties}
+            >
               <div style={{ ...sub("clamp(1.7rem,3.2vw,2.5rem)"), color: LIME }}>{n}</div>
               <div style={{ ...body(14.5), color: INK, marginTop: 9, fontWeight: 500 }}>{unit}</div>
               <p style={{ ...body(13.5), marginTop: 10 }}>{note}</p>

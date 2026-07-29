@@ -19,6 +19,7 @@
 //
 // SERVER COMPONENT.
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import s from "./hp.module.css";
@@ -61,9 +62,13 @@ export default function Why() {
           </p>
         </div>
 
-        <div className={s.stats} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
-          {REASONS.map(([h, p]) => (
-            <div key={h} className={s.stat}>
+        <div className={`${s.stats} ${s.deep}`} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
+          {REASONS.map(([h, p], i) => (
+            <div
+              key={h}
+              className={`${s.stat} ${s.stagger} ${s.lift}`}
+              style={{ "--i": i } as CSSProperties}
+            >
               <h3 style={{ ...sub("clamp(1.1rem,1.8vw,1.4rem)"), color: LIME }}>{h}</h3>
               <p style={{ ...body(14.5), color: INK, marginTop: 12 }}>{p}</p>
             </div>
