@@ -68,6 +68,42 @@ export default async function Week() {
           </div>
         </div>
 
+        {/* THE RHYTHM. The table below is correct and accessible and reads as
+            a spreadsheet, which is the complaint. This is the same seven days
+            as a shape you can take in at a glance: one column per day, the
+            four meals stacked in their real proportion, the day's protein as
+            a lime cap. Nothing here is decoration — every band is a dish's
+            actual calories, and the table underneath is the accessible
+            expression of the identical data. */}
+        <div className={s.rhythm} aria-hidden="true">
+          {days.map((d) => {
+            const dayDishes = SLOT_ORDER.map((slot) => byDay(d, slot)).filter(Boolean) as Dish[];
+            const t = totals(dayDishes);
+            const peak = Math.max(
+              ...days.map((x) => totals(week.filter((y) => y.day === x)).kcal),
+            );
+
+            return (
+              <div key={d} className={s.rhythmCol} style={{ "--h": `${(t.kcal / peak) * 100}%` } as React.CSSProperties}>
+                <div className={s.rhythmBar}>
+                  {dayDishes.map((dish, i) => (
+                    <span
+                      key={dish.slot}
+                      className={s.rhythmSeg}
+                      style={{
+                        flexGrow: Number(dish.kcal ?? 0),
+                        opacity: 0.42 + i * 0.19,
+                      }}
+                    />
+                  ))}
+                </div>
+                <b>{Math.round(t.kcal)}</b>
+                <span>D{d}</span>
+              </div>
+            );
+          })}
+        </div>
+
         <div className={s.specWrap}>
           <table className={`${s.spec} ${s.week}`}>
             <caption className="sr-only">

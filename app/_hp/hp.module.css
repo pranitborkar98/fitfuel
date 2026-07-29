@@ -1264,17 +1264,31 @@
    Tomorrow's day, drawn, in the half of the hero that was empty photograph.
    Hidden below 900px: the hero type takes the full width there and a dial
    competing with it would win, which is the wrong outcome on a phone. */
+/* MOBILE FIRST. The dial is a normal flow child of .heroBody, so on a phone it
+   sits under the copy at a readable size instead of being display:none — the
+   previous version hid it under 900px and left the hero with no visual at all
+   on the device most of this traffic arrives on. */
 .dial {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  right: clamp(24px, 6vw, 96px);
-  top: 50%;
-  transform: translateY(-46%);
-  width: clamp(230px, 26vw, 330px);
+  width: min(238px, 64vw);
   aspect-ratio: 1;
+  margin: clamp(26px, 5vw, 36px) auto 0;
   display: grid;
   place-items: center;
   pointer-events: none;
+}
+/* From 900px there is empty photograph to the right of the type, so the dial
+   is lifted out of the flow and into it. */
+@media (min-width: 900px) {
+  .dial {
+    position: absolute;
+    right: clamp(24px, 6vw, 96px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: clamp(230px, 26vw, 330px);
+    margin: 0;
+  }
 }
 .dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .dialTrack { fill: none; stroke: rgba(247, 247, 245, 0.07); stroke-width: 13; }
@@ -1336,7 +1350,6 @@
   margin-top: 5px;
 }
 
-@media (max-width: 900px) { .dial { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .dialOn .dialArc, .dialOn .dialTick { animation: none; opacity: 1; }
   .dialArc { stroke-dasharray: var(--len) 9999; }
@@ -1445,4 +1458,87 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .engineLine, .engineDot, .engineVal { transition: none; }
+}
+
+/* ── week rhythm ──────────────────────────────────────────────────────────
+   The seven days as a shape. One column per day, the four meals stacked in
+   their real calorie proportion. The table below is the accessible expression
+   of the same data, so this carries aria-hidden and adds no reading burden. */
+.rhythm {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: clamp(6px, 1vw, 14px);
+  align-items: end;
+  margin: clamp(26px, 3.4vw, 44px) 0 clamp(20px, 2.6vw, 30px);
+  height: clamp(140px, 18vw, 210px);
+}
+.rhythmCol { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 8px; }
+.rhythmBar {
+  display: flex;
+  flex-direction: column;
+  height: var(--h, 60%);
+  min-height: 20px;
+  gap: 2px;
+  border-top: 2px solid #84cc16;
+  transform-origin: bottom;
+  animation: rhythmRise 780ms cubic-bezier(.16, 1, .3, 1) both;
+}
+.rhythmSeg { display: block; background: #84cc16; min-height: 3px; }
+.rhythmCol b {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: #f7f7f5;
+  font-variant-numeric: tabular-nums;
+}
+.rhythmCol > span {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #85857e;
+}
+.rhythmCol:hover .rhythmSeg { background: #a3e635; }
+@keyframes rhythmRise { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+@supports (animation-timeline: view()) {
+  .rhythmBar { animation-timeline: view(); animation-range: entry 0% cover 34%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rhythmBar { animation: none; transform: none; opacity: 1; }
+}
+
+/* ── goal cards: make the hover actually read ─────────────────────────────
+   These carried .lift, whose only effect was translateZ(38px) inside a
+   perspective — real, but invisible on a card with no depth cues. The accent
+   rule now grows from a hairline to a bar, the whole card warms, and the
+   link's arrow travels. Three channels instead of one imperceptible one. */
+.doorCard { position: relative; overflow: hidden; }
+.doorCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--accent, #84cc16);
+  transform: scaleX(0.18);
+  transform-origin: left;
+  transition: transform 420ms cubic-bezier(.16, 1, .3, 1);
+}
+.doorCard:hover::before, .doorCard:focus-within::before { transform: scaleX(1); }
+.doorCard::after {
+  content: attr(data-mono);
+  position: absolute;
+  right: -6px;
+  bottom: -22px;
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: 108px;
+  line-height: 1;
+  color: var(--accent, #84cc16);
+  opacity: 0.055;
+  pointer-events: none;
+  transition: opacity 420ms ease, transform 420ms cubic-bezier(.16, 1, .3, 1);
+}
+.doorCard:hover::after { opacity: 0.12; transform: translateY(-6px); }
+.doorArrow { display: inline-block; transition: transform 320ms cubic-bezier(.16, 1, .3, 1); }
+.doorCard:hover .doorArrow { transform: translateX(6px); }
+@media (prefers-reduced-motion: reduce) {
+  .doorCard::before, .doorCard::after, .doorArrow { transition: none; }
 }

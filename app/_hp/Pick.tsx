@@ -105,13 +105,21 @@ export default function Pick() {
             <Link
               key={d.goal}
               href={d.href}
-              className={`${s.stat} ${s.stagger} ${s.lift}`}
+              className={`${s.stat} ${s.stagger} ${s.lift} ${s.doorCard}`}
+              /* The monogram the ::after paints as a ghost numeral behind the
+                 card, so the four doors are countable at a glance and the card
+                 has something in it besides three paragraphs. */
+              data-mono={String(i + 1).padStart(2, "0")}
               style={
                 {
                   textDecoration: "none",
                   display: "flex",
                   flexDirection: "column",
-                  borderTop: `2px solid ${d.accent}`,
+                  /* The top rule is now painted by .doorCard::before, which
+                     grows from a stub to the full width on hover — the card's
+                     only previous hover was translateZ(38px), which is real
+                     but invisible without a depth cue to read it against. */
+                  "--accent": d.accent,
                   "--i": i,
                 } as CSSProperties
               }
@@ -148,7 +156,7 @@ export default function Pick() {
                   fontWeight: 600,
                 }}
               >
-                {d.count} &rarr;
+                {d.count} <span className={s.doorArrow}>&rarr;</span>
               </span>
             </Link>
           ))}

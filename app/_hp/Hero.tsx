@@ -86,20 +86,6 @@ export default async function Hero() {
         )}
         <div className={s.heroWash} />
 
-        {/* The right half was empty photograph. It now carries tomorrow's
-            actual day as a drawn dial — four arcs for four meals, sized by
-            their real calories. See HeroDial for why this is SVG and not a
-            canvas particle field. */}
-        {dial.meals.length > 0 && dial.kcal > 0 && (
-          <HeroDial
-            meals={dial.meals}
-            kcal={dial.kcal}
-            protein={dial.protein}
-            carbs={dial.carbs}
-            fat={dial.fat}
-          />
-        )}
-
         <div className={s.heroBody}>
           <span style={label(LIME)}>Pune · cooked this morning</span>
 
@@ -149,6 +135,25 @@ export default async function Hero() {
             Cooked in our own FSSAI-licensed kitchen in Kharadi. Every plan&rsquo;s full menu
             is public before you pay.
           </p>
+
+          {/* Tomorrow's actual day, drawn — four arcs for four meals, sized by
+              their real calories.
+
+              INSIDE heroBody on purpose. The first version of this sat as an
+              absolutely-positioned sibling and was hidden under 900px, which
+              meant the hero had no visual at all on a phone — the single worst
+              place to have none. Here it is a normal flow child: it sits under
+              the copy on a phone and is lifted into the empty right half of
+              the photograph on a desktop. Same markup, no duplication. */}
+          {dial.meals.length > 0 && dial.kcal > 0 && (
+            <HeroDial
+              meals={dial.meals}
+              kcal={dial.kcal}
+              protein={dial.protein}
+              carbs={dial.carbs}
+              fat={dial.fat}
+            />
+          )}
         </div>
       </div>
 
