@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 import CartButton from "@/app/_cart/CartButton";
+import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 
 const LIME = "#84cc16";
 const LIME_LIGHT = "#a3e635";
@@ -294,7 +295,7 @@ export default function Navbar() {
                     borderRadius: 0, padding: "12px 16px", textDecoration: "none",
                   }}>
                     <span style={{ fontSize: 13, color: "#d1d5db" }}>
-                      <b style={{ color: LIME_LIGHT }}>Trial Day, Rs 400.</b> Breakfast plus lunch delivered tomorrow. No lock-in.
+                      <b style={{ color: LIME_LIGHT }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch delivered tomorrow. No lock-in.
                     </span>
                     <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "6px 14px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start Trial</span>
                   </Link>
@@ -438,7 +439,7 @@ export default function Navbar() {
                 padding: "12px 14px", textDecoration: "none", marginBottom: 14, minHeight: 44,
               }}>
                 <span style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.4 }}>
-                  <b style={{ color: LIME_LIGHT }}>Trial Day, Rs 400.</b> Breakfast plus lunch, no lock-in.
+                  <b style={{ color: LIME_LIGHT }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch, no lock-in.
                 </span>
                 <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "7px 12px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start</span>
               </Link>

@@ -23,12 +23,19 @@ import Image from "next/image";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
+import { resolveImage } from "@/lib/site-images";
 import { WRAP, INK, MUTE, DIM, LIME, sub, body, label } from "./theme";
 
 type Frame = {
   time: string;
   line: string;
   copy: string;
+  /** Name in public/images/[ai/]film/ — see IMAGE-BRIEF-V2.md §3. */
+  slotName: string;
+  /** Legacy file under public/images/, used until the real frame lands. Three
+      of these are stand-ins whose subject does not match the beat (the 08:00
+      doorstep beat is currently illustrated with produce, and SUNDAY with
+      supplements), which is exactly what §3 replaces. */
   src: string;
   alt: string;
   duo?: boolean;
@@ -39,6 +46,7 @@ const FRAMES: Frame[] = [
     time: "04:00",
     line: "The kitchen wakes",
     copy: "Before the city does. Tonight's cook sheet was computed from every active plan, portion by portion, so nothing is cooked to an average.",
+    slotName: "0400-kitchen",
     src: "/images/kitchen.jpg",
     alt: "The FitFuel kitchen before dawn",
     duo: true,
@@ -47,6 +55,7 @@ const FRAMES: Frame[] = [
     time: "06:30",
     line: "Your food is weighed",
     copy: "Not estimated, not eyeballed. Every portion hits your macros on a scale before the compartment is sealed. That single act is the whole product.",
+    slotName: "0630-weighing",
     src: "/images/chef-hands.jpg",
     alt: "Ingredients being weighed on a prep board",
     duo: true,
@@ -55,6 +64,7 @@ const FRAMES: Frame[] = [
     time: "08:00",
     line: "It is at your door",
     copy: "Across fifteen areas of east Pune, six days a week, tracked from the kitchen to your hand by the driver's own app.",
+    slotName: "0800-doorstep",
     src: "/images/produce.jpg",
     alt: "Fresh produce prepared for the day's cooking",
   },
@@ -62,6 +72,7 @@ const FRAMES: Frame[] = [
     time: "08:02",
     line: "It logs itself",
     copy: "The meal lands in your diary with the macros it was weighed to. You did not open an app, you did not guess a portion, you did not forget.",
+    slotName: "0802-logged",
     src: "/images/hero-bowl.jpg",
     alt: "A sealed FitFuel bowl, macros already logged",
   },
@@ -69,6 +80,7 @@ const FRAMES: Frame[] = [
     time: "18:30",
     line: "You train to the programme",
     copy: "Your plan carries a training block drawn from a 952-exercise library. Sets and reps go in, the burn comes back out as one net-calorie figure.",
+    slotName: "1830-training",
     src: "/images/training.jpg",
     alt: "A training session in progress",
     duo: true,
@@ -77,6 +89,7 @@ const FRAMES: Frame[] = [
     time: "21:00",
     line: "The day closes itself",
     copy: "Eaten against target, trained against scheduled, water, weight. One recap, on WhatsApp, without you asking for it.",
+    slotName: "2100-evening",
     src: "/images/gym.jpg",
     alt: "The end of a training day",
     duo: true,
@@ -85,6 +98,7 @@ const FRAMES: Frame[] = [
     time: "SUNDAY",
     line: "The target moves",
     copy: "Flat for a week against the rate your goal needs? The calorie target is recalculated from energy-balance arithmetic on numbers we already hold. You do not have to notice the plateau. We already did.",
+    slotName: "sunday-review",
     src: "/images/supplements.jpg",
     alt: "Weekly review and recalibration",
     duo: true,
@@ -111,15 +125,25 @@ export default function Day() {
       <div className={s.runway}>
         <div className={s.stage}>
           <div className={s.track}>
-            {FRAMES.map((f) => (
+            {FRAMES.map((f) => {
+              /* film/<slotName> wins; the legacy stand-in holds the frame until
+                 it lands, so this section is correct today and improves one
+                 file at a time. */
+              const img = resolveImage("film", f.slotName);
+              return (
               <figure key={f.time} className={`${s.frame} ${f.duo ? s.gradeDuo : s.gradeFood}`}>
                 <Image
-                  src={f.src}
+                  src={img?.src ?? f.src}
                   alt={f.alt}
                   fill
                   sizes="(max-width: 900px) 84vw, 520px"
                   quality={75}
                 />
+                {img?.ai && (
+                  <figcaption className="sr-only">
+                    Illustrative AI-generated image. Not a photograph of our kitchen.
+                  </figcaption>
+                )}
                 <figcaption className={s.frameBody}>
                   <span style={label(LIME)}>{f.time}</span>
                   <div style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK, marginTop: 10 }}>
@@ -128,7 +152,8 @@ export default function Day() {
                   <p style={{ ...body(14.5), color: MUTE, marginTop: 10 }}>{f.copy}</p>
                 </figcaption>
               </figure>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

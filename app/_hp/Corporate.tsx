@@ -2,13 +2,12 @@
 //
 // CORPORATE. The second revenue line, which the homepage had never once shown.
 //
-// ON THE LOGO WALL. Every professional B2B page carries one, and the pattern is
-// worth having, so the grid is here. But the marks are drawn as generic
-// wordmarks and each one is captioned PLACEHOLDER in the tile itself, because an
-// invented-but-plausible company name on a logo wall is a fabricated client
-// list, not a mockup — and it is the kind of thing that ends up in a screenshot
-// long after anyone remembers it was a placeholder. When real logos arrive with
-// written permission, swap the array and delete the caption line.
+// ON THE LOGO WALL. There is no longer one. Six invented wordmarks captioned
+// PLACEHOLDER were meant to be honest, and the caption was — but the grid read
+// as a fabricated client list for the half-second before anyone got to the
+// caption, and that is the half-second a screenshot captures. An empty wall
+// states the same fact and cannot be misread. When real marks arrive with
+// written permission, the grid comes back with them in it.
 //
 // SERVER COMPONENT.
 
@@ -17,17 +16,8 @@ import Image from "next/image";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
-import { WRAP, SECTION, PANEL, INK, DIM, LIME, display, sub, body } from "./theme";
-
-/* Fictional. Not a client list. See the header note. */
-const MARKS = [
-  "Meridian Systems",
-  "Altitude Labs",
-  "Northbridge",
-  "Parabola",
-  "Sixth Avenue",
-  "Karve Works",
-];
+import { slot } from "@/lib/site-images";
+import { WRAP, SECTION, PANEL, INK, LIME, display, sub, body } from "./theme";
 
 const OFFER: [string, string][] = [
   [
@@ -49,6 +39,8 @@ const OFFER: [string, string][] = [
 ];
 
 export default function Corporate() {
+  const corporate = slot("sections", "corporate");
+
   return (
     <section aria-labelledby="hp-corp" style={{ ...SECTION, background: PANEL }}>
       <div style={WRAP}>
@@ -57,12 +49,17 @@ export default function Corporate() {
         <div className={s.split}>
           <div className={`${s.splitMedia} ${s.gradeDuo}`}>
             <Image
-              src="/images/corporate.jpg"
-              alt="An office team at lunch"
+              src={corporate?.src ?? "/images/corporate.jpg"}
+              alt="Sealed FitFuel meal boxes set out for a team lunch"
               fill
               sizes="(max-width: 820px) 100vw, 46vw"
               quality={75}
             />
+            {corporate?.ai && (
+              <p className="sr-only">
+                Illustrative AI-generated image. Not a photograph of a FitFuel delivery.
+              </p>
+            )}
           </div>
 
           <div className={s.reveal}>
@@ -94,27 +91,24 @@ export default function Corporate() {
           ))}
         </div>
 
+        {/* THE LOGO WALL IS GONE, DELIBERATELY.
+            Six invented company names under a "Placeholder" caption was the
+            worst of both worlds: at a glance it reads as a fabricated client
+            list, and on a careful read it advertises that we have no clients.
+            The caption was doing honest work that the grid itself undid. An
+            empty wall states the same fact without the first half-second of
+            misreading, so what stands here is the invitation alone. */}
         <div style={{ marginTop: "clamp(30px,4vw,50px)" }}>
-          <h3 style={{ ...sub("clamp(1.2rem,2vw,1.5rem)"), marginBottom: 16 }}>
-            Where a client wall goes, once there is one
+          <h3 style={{ ...sub("clamp(1.2rem,2vw,1.5rem)"), marginBottom: 14 }}>
+            No client wall yet
           </h3>
-
-          <div className={s.logos}>
-            {MARKS.map((m) => (
-              <div key={m} className={s.logo}>
-                <span className={s.logoMark}>{m}</span>
-                <span className={s.logoSub}>Placeholder</span>
-              </div>
-            ))}
-          </div>
-
-          <p style={{ ...body(13.5), color: DIM, marginTop: 14, maxWidth: "76ch" }}>
-            These are layout placeholders, not customers. We will not print a company&rsquo;s
-            name or mark here until they have given us written permission to, because a logo
-            wall is a claim about who trusts you and an invented one is worth less than an
-            empty grid. If you would like your mark in one of these six,{" "}
+          <p style={{ ...body(15), maxWidth: "68ch" }}>
+            We will not print a company&rsquo;s name or mark here until they have given us
+            written permission to, and no one has yet, so there is nothing to show. A logo
+            wall is a claim about who trusts you; an invented one is worth less than an empty
+            space. Be the first mark on it &mdash;{" "}
             <Link href="/contact" style={{ color: LIME }}>
-              talk to us
+              talk to us about a team programme
             </Link>
             .
           </p>

@@ -27,7 +27,10 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import s from "./hp.module.css";
+import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import Idx from "./Idx";
+import Image from "next/image";
+import { slot } from "@/lib/site-images";
 import { WRAP, SECTION, INK, DIM, LIME, display, sub, body } from "./theme";
 
 type Door = {
@@ -37,6 +40,9 @@ type Door = {
   href: string;
   accent: string;
   count: string;
+  /** Name in public/images/[ai/]goals/. Renders nothing until the file lands,
+      so this block is safe to ship before any image is generated. */
+  img: string;
 };
 
 const DOORS: Door[] = [
@@ -47,6 +53,7 @@ const DOORS: Door[] = [
     href: "/plans?category=WEIGHT_LOSS",
     accent: "#a3e635",
     count: "Weight loss plans",
+    img: "lose-fat",
   },
   {
     goal: "Build muscle",
@@ -55,6 +62,7 @@ const DOORS: Door[] = [
     href: "/plans?category=MUSCLE_GAIN",
     accent: "#f59e0b",
     count: "Muscle gain plans",
+    img: "build-muscle",
   },
   {
     goal: "Just eat well",
@@ -63,6 +71,7 @@ const DOORS: Door[] = [
     href: "/plans?category=BALANCED",
     accent: "#38bdf8",
     count: "Balanced plans",
+    img: "eat-well",
   },
   {
     goal: "Eat for a condition",
@@ -71,6 +80,7 @@ const DOORS: Door[] = [
     href: "/plans?category=LIFESTYLE_MEDICAL",
     accent: "#2dd4bf",
     count: "70 condition plans",
+    img: "condition",
   },
 ];
 
@@ -106,6 +116,26 @@ export default function Pick() {
                 } as CSSProperties
               }
             >
+              {/* Renders only once the file exists. Until then the card is
+                  exactly what it is today, so this ships safely ahead of the
+                  artwork instead of leaving four grey boxes on the page. */}
+              {(() => {
+                const g = slot("goals", d.img);
+                return g ? (
+                  <div className={s.cardMedia}>
+                    <Image
+                      src={g.src}
+                      alt=""
+                      fill
+                      sizes="(max-width: 780px) 50vw, 25vw"
+                      quality={72}
+                    />
+                    {g.ai && (
+                      <p className="sr-only">Illustrative AI-generated image.</p>
+                    )}
+                  </div>
+                ) : null;
+              })()}
               <h3 style={{ ...sub("clamp(1.2rem,2vw,1.6rem)"), color: d.accent }}>{d.goal}</h3>
               <p style={{ ...body(15), color: INK, marginTop: 12 }}>{d.who}</p>
               <p style={{ ...body(14), marginTop: 10 }}>{d.what}</p>
@@ -129,7 +159,7 @@ export default function Pick() {
           <Link href="/tdee-calculator" style={{ color: LIME }}>
             TDEE calculator
           </Link>{" "}
-          is free and needs no account, and the trial day is Rs 400 with nothing to cancel.
+          is free and needs no account, and the trial day is {TRIAL_TOTAL_LABEL} with nothing to cancel.
         </p>
       </div>
     </section>

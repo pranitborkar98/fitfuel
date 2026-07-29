@@ -18,6 +18,7 @@
 import Link from "next/link";
 
 import s from "./hp.module.css";
+import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import { WRAP, INK, MUTE, DIM, LIME, display, body, label } from "./theme";
 
 const DIRECTORY: { head: string; links: [string, string][] }[] = [
@@ -26,7 +27,7 @@ const DIRECTORY: { head: string; links: [string, string][] }[] = [
     links: [
       ["/plans", "All 126 plans"],
       ["/menu", "Single meals, no plan"],
-      ["/plans?trial=true", "Trial day, Rs 400"],
+      ["/plans?trial=true", `Trial day, ${TRIAL_TOTAL_LABEL}`],
       ["/plans/digital", "Digital plans, no delivery"],
       ["/our-ingredients", "What is in the food"],
       ["/allergen-policy", "Allergen policy"],
@@ -75,7 +76,7 @@ export default function Close() {
         <div style={WRAP}>
           <div className={s.closeGrid}>
             <div>
-              <span style={label(LIME)}>One day. Rs 400. Tomorrow morning.</span>
+              <span style={label(LIME)}>One day. {TRIAL_TOTAL_LABEL}. Tomorrow morning.</span>
               <h2
                 id="hp-close"
                 className={s.kin}

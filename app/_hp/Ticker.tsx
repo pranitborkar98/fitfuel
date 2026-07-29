@@ -14,26 +14,27 @@
 // SERVER COMPONENT.
 
 import s from "./hp.module.css";
+import { tickerCounts } from "@/lib/site-counts";
 
-const ITEMS: [string, string][] = [
-  ["126", "meal plans"],
-  ["3,614", "published prices"],
+/* Figures with no table behind them yet. These are counted by hand from source
+   files rather than rows, so they stay literals — but they are segregated here
+   so it is obvious at a glance which numbers are measured and which are
+   asserted. Anything that CAN be counted is, below. */
+const ASSERTED: [string, string][] = [
   ["38", "conditions cooked for"],
-  ["952", "exercises"],
   ["59", "training programmes"],
-  ["46", "supplements researched"],
   ["154", "Indian foods per gram"],
   ["18", "body metrics tracked"],
   ["15", "delivery areas"],
 ];
 
-function Row({ ariaHidden }: { ariaHidden?: boolean }) {
+function Row({ items, ariaHidden }: { items: [string, string][]; ariaHidden?: boolean }) {
   return (
     <div
       style={{ display: "flex", alignItems: "baseline" }}
       aria-hidden={ariaHidden ? "true" : undefined}
     >
-      {ITEMS.map(([n, t]) => (
+      {items.map(([n, t]) => (
         <span key={n + t} className={s.tickItem}>
           {n}
           <span>{t}</span>
@@ -46,14 +47,29 @@ function Row({ ariaHidden }: { ariaHidden?: boolean }) {
   );
 }
 
-export default function Ticker() {
+export default async function Ticker() {
+  const c = await tickerCounts();
+
+  /* Counted first, asserted after. A count that failed to read is dropped
+     rather than back-filled with a remembered number. */
+  const counted: [string, string][] = [
+    [c.plans, "meal plans"],
+    [c.prices, "published prices"],
+    [c.exercises, "exercises"],
+    [c.supplements, "supplements researched"],
+  ]
+    .filter((x): x is [number, string] => x[0] !== null)
+    .map(([n, t]) => [n.toLocaleString("en-IN"), t]);
+
+  const items: [string, string][] = [...counted, ...ASSERTED];
+
   return (
     <section className={s.tick} aria-label="FitFuel by the numbers">
       <div className={s.tickTrack}>
-        <Row />
+        <Row items={items} />
         {/* The duplicate exists only so the -50% travel wraps seamlessly.
             It is hidden from assistive tech so the figures are not read twice. */}
-        <Row ariaHidden />
+        <Row items={items} ariaHidden />
       </div>
     </section>
   );

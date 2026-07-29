@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { type ReactNode } from "react";
+
+import BeforeAfterSlot, { type Story } from "@/components/BeforeAfter";
+
+/* Real stories go here as they are consented. An empty array renders three
+   honest reserved frames; adding one entry replaces a frame with a story and
+   needs no other edit. Photographs live in public/images/people/<slug>-before
+   and -after — real directory only, never the AI one. See BeforeAfter.tsx. */
+const STORIES: Story[] = [];
 
 export const metadata = {
   alternates: { canonical: "/results" },
@@ -16,23 +23,6 @@ const measures = [
   { t: "Macro adherence", d: "How closely your protein, carbs and fat tracked to your personalised target." },
   { t: "Body metrics", d: "Weight, body composition and measurements over time, beyond just the scale." },
 ];
-
-function PlaceholderStory() {
-  return (
-    <div style={{ background: "#0e0e0e", border: `1px dashed ${C.border}`, borderRadius: 16, padding: "26px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#141414", border: `1px solid ${C.border}` }} />
-        <div>
-          <div style={{ height: 11, width: 110, background: "#1a1a1a", borderRadius: 4, marginBottom: 7 }} />
-          <div style={{ height: 9, width: 70, background: "#161616", borderRadius: 4 }} />
-        </div>
-      </div>
-      <div style={{ height: 9, width: "92%", background: "#161616", borderRadius: 4 }} />
-      <div style={{ height: 9, width: "78%", background: "#161616", borderRadius: 4 }} />
-      <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>Real story slot, coming soon</div>
-    </div>
-  );
-}
 
 export default function ResultsPage() {
   return (
@@ -63,10 +53,14 @@ export default function ResultsPage() {
         </div>
 
         <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>Transformation stories</h2>
+        {/* Was three grey skeleton bars, which read as a page still loading
+            rather than as a promise being kept. These are before/after frames
+            at the real aspect ratio, so the shape of what goes here is legible
+            before anything fills it. */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, marginBottom: 64 }}>
-          <PlaceholderStory />
-          <PlaceholderStory />
-          <PlaceholderStory />
+          {(STORIES.length > 0 ? STORIES : [undefined, undefined, undefined]).map((st, i) => (
+            <BeforeAfterSlot key={st?.slug ?? `reserved-${i}`} story={st} />
+          ))}
         </div>
 
         <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: `1px solid ${C.accent}33`, borderRadius: 18, padding: "36px 32px", textAlign: "center" }}>

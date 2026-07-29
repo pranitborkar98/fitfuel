@@ -19,6 +19,8 @@ import Network from "./_hp/Network";
 import More from "./_hp/More";
 import Faq from "./_hp/Faq";
 import Close from "./_hp/Close";
+import Day from "./_hp/Day";
+import Ticker from "./_hp/Ticker";
 import { BG, INK } from "./_hp/theme";
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -47,7 +49,9 @@ import { BG, INK } from "./_hp/theme";
      Week      seven days of real dish names and macros, from the schedule
      Hungry    single meals, no subscription — the route to /menu
      Pick      which of these is you: fat, muscle, eat well, a condition
+     Ticker    the catalogue's scale, scroll-scrubbed, counted from Postgres
      Steps     three steps, from the customer's side of the counter
+     Day       the film: 04:00 to the next morning, our side of the counter
      Why       four claims that survive being checked
      Proof     the testimonials we actually have
      Areas     do we reach you
@@ -61,9 +65,20 @@ import { BG, INK } from "./_hp/theme";
    execution was wrong: BREADTH DOES NOT REQUIRE CHAPTERS. The app, the coach,
    the 952-exercise library, supplements, corporate, partners, franchise and
    the TDEE tool are all still one click from here — they live in More.tsx as a
-   line each, and each destination is a real page that explains itself. Loop,
-   Coach, Inside, Supplements, Corporate, Network, Wedge, Conditions, Day and
-   Ticker remain on disk and can be re-seated at any time.
+   line each, and each destination is a real page that explains itself.
+
+   RE-SEATED SINCE: Coach, Corporate and Network (real moats, see below), then
+   Day and Ticker. Day was the accidental one — Steps.tsx asserts "the film is
+   still on the page", which stopped being true at the 19→13 cut and was never
+   noticed because nothing errors when a component is merely never imported.
+
+   STILL ON DISK, DELIBERATELY: Loop, Inside, Supplements, Wedge, Conditions.
+   The first three are covered by More.tsx, which links to /supplements,
+   /dashboard/nutrition, /dashboard/exercises and /dashboard/body-metrics —
+   re-seating them would duplicate content that is already one click away.
+   Wedge (the tiffin/app/supplement comparison) and Conditions (the 38-condition
+   manifest) are the two with no equivalent on the page and are the first
+   candidates if this page ever grows again.
 
    ON WHAT IS NOT HERE. Two outside reviews asked for "Rated 4.8/5 by 500+",
    "Join 200+ Punekars", "500+ meals weekly", "free delivery" and "no
@@ -73,7 +88,10 @@ import { BG, INK } from "./_hp/theme";
    food business an invented trust claim is not a growth tactic.
 
    STILL OPEN, and neither is a code problem:
-   - Real food photography. This is now the critical path.
+   - Real food photography. This is now the critical path. Every slot is wired
+     (lib/site-images.ts) and every prompt is written (IMAGE-BRIEF-V2.md, 104
+     of them); what is missing is the files. `node scripts/image-status.mjs`
+     prints what has landed.
    - The order cutoff time ("order by 8pm for next-day") is the cheapest
      urgency available and nobody has told me what it is.
 
@@ -107,9 +125,24 @@ export default function Home() {
           about a plan; this is where the page admits you can just buy dinner. */}
       <Hungry />
       <Pick />
+      {/* The catalogue's scale, as one scroll-scrubbed line, immediately after
+          the question "which one of these is you?" — where 126 plans and 3,614
+          prices are an answer rather than a boast. Counts are queried, not
+          typed: see lib/site-counts.ts. Deliberately a thin band and NOT placed
+          under the hero, because nothing gets to stand between the hero and the
+          first dish name. */}
+      <Ticker />
 
       {/* ── how, why, and who says so ────────────────────────────── */}
       <Steps />
+      {/* THE FILM, re-seated. Steps.tsx has always claimed "the film is still
+          on the page" and it was not — it was cut with the 19→13 reduction and
+          the comment went stale. It earns its place here rather than earlier:
+          Steps is THEIR day (choose, receive, eat), this is OURS (04:00 cook
+          sheet, the scale, dispatch), and our day is only interesting once
+          someone has decided theirs. It is also the only section that shows
+          the kitchen instead of describing it, which two reviews asked for. */}
+      <Day />
       {/* The engine, restored to a full section. Demoting it to one line in
           More.tsx undersold the thing that actually separates this from a
           tiffin service: nobody else in the category will publish the constant,

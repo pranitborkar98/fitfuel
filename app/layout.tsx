@@ -8,6 +8,7 @@ import { CartProvider } from "@/app/_cart/CartProvider";
 import CartDrawer from "@/app/_cart/CartDrawer";
 import { SessionProvider } from "next-auth/react";
 import ReferralCapture from "@/components/ReferralCapture";
+import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -65,7 +66,7 @@ const TITLE = "FitFuel: Chef-Cooked Macro-Tracked Meal Plans Delivered in Pune";
 const DESCRIPTION =
   "Chef-cooked meals weighed to your macros and delivered across Pune by 8am, " +
   "plus a training and body-metrics app that logs them for you. 126 goal and " +
-  "condition plans. Trial day Rs 400.";
+  `condition plans. Trial day ${TRIAL_TOTAL_LABEL}.`;
 
 export const metadata: Metadata = {
   // Was "FitFuel - Verified Nutrition": no city, no product, no intent.

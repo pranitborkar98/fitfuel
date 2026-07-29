@@ -24,12 +24,11 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
-import { decomposePrice } from "@/lib/pricing-decomposition";
+import { TRIAL } from "@/lib/trial-price";
+import { countPublishedPrices } from "@/lib/site-counts";
 import s from "./hp.module.css";
 import Idx from "./Idx";
 import { WRAP, SECTION, INK, MUTE, DIM, LIME, display, sub, body, figure } from "./theme";
-
-const TRIAL_SUBTOTAL_RS = 400;
 
 type Offer = {
   code: string;
@@ -118,8 +117,8 @@ async function getOffers(): Promise<Offer[]> {
 }
 
 export default async function Offers() {
-  const offers = await getOffers();
-  const p = decomposePrice({ subtotalRs: TRIAL_SUBTOTAL_RS, duration: "TRIAL_DAY" });
+  const [offers, priceCount] = await Promise.all([getOffers(), countPublishedPrices()]);
+  const p = TRIAL;
 
   return (
     <section aria-labelledby="hp-offers" style={SECTION}>
@@ -246,17 +245,25 @@ export default async function Offers() {
               Get your code
             </Link>
           </div>
-          <div className={s.stat}>
-            <div style={sub("clamp(1.2rem,2vw,1.5rem)")}>3,614 published prices</div>
-            <p style={{ ...body(14), marginTop: 10 }}>
-              Seven durations from one day to three months, four diets, three tiers, two
-              delivery windows. Every combination has a real price on the plan page, with
-              this same breakdown behind it.
-            </p>
-            <Link href="/plans" className={s.link} style={{ marginTop: 10 }}>
-              See real prices
-            </Link>
-          </div>
+          {/* Counted from PlanPrice at build time, not typed in. If the count
+              cannot be read the tile disappears rather than printing a number
+              we cannot stand behind — which is the whole argument of this
+              section applied to the section itself. */}
+          {priceCount !== null && (
+            <div className={s.stat}>
+              <div style={sub("clamp(1.2rem,2vw,1.5rem)")}>
+                {priceCount.toLocaleString("en-IN")} published prices
+              </div>
+              <p style={{ ...body(14), marginTop: 10 }}>
+                Seven durations from one day to three months, four diets, three tiers, two
+                delivery windows. Every combination has a real price on the plan page, with
+                this same breakdown behind it.
+              </p>
+              <Link href="/plans" className={s.link} style={{ marginTop: 10 }}>
+                See real prices
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { Zap, MapPin, Phone, Mail } from "lucide-react";
 import { waLink } from "@/lib/site";
+import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 
 const planLinks = [
   { label: "Weight Loss",         href: "/plans/weight-loss-veg" },
@@ -167,7 +168,7 @@ export default function Footer() {
                 Try Today
               </span>
               <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ff-ink)", marginBottom: 8, letterSpacing: "-0.01em" }}>
-                Trial Day at Rs 400
+                Trial Day at {TRIAL_TOTAL_LABEL}
               </div>
               <p style={{ color: "var(--ff-mute)", fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>
                 Breakfast plus Lunch delivered tomorrow. No commitment, no lock-in.

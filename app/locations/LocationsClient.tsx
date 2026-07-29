@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, MapPin, CheckCircle, XCircle, MessageCircle, Truck, Clock } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/lib/site";
+import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -535,7 +536,7 @@ export default function LocationsPage() {
                     color: "#f9fafb", lineHeight: 1, letterSpacing: "-0.01em",
                     marginBottom: 12,
                   }}>
-                    We deliver to you.<br />Start for ₹400.
+                    We deliver to you.<br />Start for {TRIAL_TOTAL_GLYPH}.
                   </h2>
                   <p style={{ fontSize: 15, color: "#9a9a94", maxWidth: 400, lineHeight: 1.7 }}>
                     Trial day, no commitment, no subscription. Just fresh food at your door tomorrow morning.

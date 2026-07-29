@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, Shield, ChefHat, Heart, Truck, Star, Users, Zap } from "lucide-react";
+import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 
 // ─── Constants — matching page.tsx ───────────────────────────────────────────
 
@@ -621,7 +622,7 @@ export default function AboutPage() {
                     color: "#f9fafb", lineHeight: 1, letterSpacing: "-0.01em",
                     marginBottom: 12,
                   }}>
-                    Try a day for ₹400.
+                    Try a day for {TRIAL_TOTAL_GLYPH}.
                   </h2>
                   <p style={{ fontSize: 15, color: "#9a9a94", maxWidth: 420, lineHeight: 1.7 }}>
                     No commitment, no subscription. One trial day to experience fresh, goal-based meals delivered to your door.
