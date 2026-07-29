@@ -23,6 +23,7 @@ import Link from "next/link";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
+import CoachEngine from "./CoachEngine";
 import { WRAP, SECTION, INK, DIM, LIME, display, sub, body } from "./theme";
 
 /* The real fields of TrainerContext (lib/ai-trainer/types.ts), grouped. */
@@ -79,6 +80,11 @@ export default function Coach() {
             with the reasoning attached. It never changes your target behind your back.
           </p>
         </div>
+
+        {/* THE ENGINE RUNNING. This section had four hundred words and no
+            visual, which is why it read as absent. The recalibration is now a
+            control you can drag — real formula, real cap, real floor. */}
+        <CoachEngine />
 
         {/* The maths, as four published constants. */}
         <div className={`${s.stats} ${s.deep}`} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>

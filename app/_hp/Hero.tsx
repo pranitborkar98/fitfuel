@@ -23,6 +23,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 import s from "./hp.module.css";
+import HeroDial from "./HeroDial";
+import { getDayOne } from "./menu-data";
 import { cutoffLabel } from "@/lib/order-cutoff";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import { resolveFirst } from "@/lib/site-images";
@@ -45,7 +47,18 @@ const READOUT: [string, string][] = [
   ["FSSAI", "21523035002815, our own licence"],
 ];
 
-export default function Hero() {
+export default async function Hero() {
+  /* Same cache()d query TrialDay uses, so the dial costs no extra round trip
+     and can never disagree with the cards further down the page. */
+  const dayOne = await getDayOne();
+  const dial = {
+    meals: dayOne.map((d) => ({ slot: d.slot, kcal: Number(d.kcal ?? 0) })),
+    kcal: dayOne.reduce((n, d) => n + Number(d.kcal ?? 0), 0),
+    protein: dayOne.reduce((n, d) => n + Number(d.protein ?? 0), 0),
+    carbs: dayOne.reduce((n, d) => n + Number(d.carbs ?? 0), 0),
+    fat: dayOne.reduce((n, d) => n + Number(d.fat ?? 0), 0),
+  };
+
   /* Was hardcoded to /images/hero-bowl.jpg, which meant the brief's four hero
      generations had nowhere to land. Now the best available hero wins:
      an opened four-compartment box beats an overhead bowl beats the original
@@ -72,6 +85,20 @@ export default function Hero() {
           </p>
         )}
         <div className={s.heroWash} />
+
+        {/* The right half was empty photograph. It now carries tomorrow's
+            actual day as a drawn dial — four arcs for four meals, sized by
+            their real calories. See HeroDial for why this is SVG and not a
+            canvas particle field. */}
+        {dial.meals.length > 0 && dial.kcal > 0 && (
+          <HeroDial
+            meals={dial.meals}
+            kcal={dial.kcal}
+            protein={dial.protein}
+            carbs={dial.carbs}
+            fat={dial.fat}
+          />
+        )}
 
         <div className={s.heroBody}>
           <span style={label(LIME)}>Pune · cooked this morning</span>
