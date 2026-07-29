@@ -1038,3 +1038,85 @@
   .cardMedia img { transition: none; }
   .lift:hover .cardMedia img { transform: none; }
 }
+
+/* ── product shelf ────────────────────────────────────────────────────────
+   The homepage's one merchandising surface (ShopRow.tsx). A snapping scroll
+   rail rather than a grid: it is the storefront idiom, it holds any number of
+   dishes without reflowing the band, and — the practical reason — it lets a
+   dish card be a real product tile at a fixed size instead of a cell that has
+   to agree with three siblings about its height.
+
+   Square corners and a single hairline, per DESIGN.md. The only lift is the
+   border going lime on hover; nothing floats and nothing glows. */
+.shelf {
+  display: flex;
+  gap: 1px;
+  list-style: none;
+  margin: clamp(26px, 3.4vw, 42px) 0 0;
+  padding: 0 0 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  background: #232320;
+  border: 1px solid #232320;
+  /* The rail scrolls; the page must not scroll sideways with it. */
+  scrollbar-width: thin;
+  scrollbar-color: #33332f #070707;
+}
+.shelf::-webkit-scrollbar { height: 6px; }
+.shelf::-webkit-scrollbar-track { background: #070707; }
+.shelf::-webkit-scrollbar-thumb { background: #33332f; }
+
+.shelfItem {
+  flex: 0 0 clamp(232px, 25vw, 276px);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  background: #0c0c0a;
+  padding: 0 0 16px;
+  transition: background 240ms ease;
+}
+.shelfItem:hover { background: #111110; }
+
+/* DishImage renders either .dishShot (a photograph) or .glyph (the macro
+   fingerprint). Both carry their own margins for the contexts they were
+   written for; inside a shelf tile the media is flush to the top edge. */
+.shelfMedia > :global(figure),
+.shelfMedia > :global(div) { margin: 0; padding: 0; border: 0; }
+.shelfMedia > :global(figure) { border-bottom: 1px solid #232320; aspect-ratio: 4 / 3; }
+.shelfMedia > :global(div) {
+  aspect-ratio: 4 / 3;
+  border-bottom: 1px solid #232320;
+  align-items: center;
+}
+
+.shelfBody { padding: 16px 16px 0; flex: 1; }
+
+.shelfFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 0;
+  margin-top: 14px;
+  border-top: 1px solid #232320;
+}
+
+.shelfAdd {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f7f7f5;
+  background: transparent;
+  border: 1px solid #33332f;
+  padding: 9px 15px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 200ms ease, color 200ms ease, background 200ms ease;
+}
+.shelfAdd:hover { border-color: #84cc16; color: #84cc16; }
+.shelfAdd:focus-visible { outline: 3px solid #a3e635; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .shelfItem, .shelfAdd { transition: none; }
+}
