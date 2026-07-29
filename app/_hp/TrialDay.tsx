@@ -20,6 +20,7 @@ import s from "./hp.module.css";
 import Idx from "./Idx";
 import DishImage from "./DishImage";
 import { getDayOne, totals, PLAN_SLUG, SLOT_LABEL } from "./menu-data";
+import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import { WRAP, SECTION, INK, DIM, LIME, display, sub, body, label, figure } from "./theme";
 
 function Macro({ v, unit, name }: { v: number | null; unit: string; name: string }) {
@@ -43,18 +44,21 @@ export default async function TrialDay() {
       <div style={WRAP}>
         <Idx label="The trial day" />
 
-        <div className={`${s.duo} ${s.reveal}`}>
+        {/* Title only. The explanatory paragraph is gone: it argued the food
+            was real instead of showing it, which is the page's whole problem in
+            miniature. The price and the CTA carry the offer now. */}
+        <div className={s.trialHead}>
           <h2
             id="hp-trial-h"
-            style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "14ch" }}
+            style={{ ...display("clamp(2.4rem,6.4vw,5rem)"), maxWidth: "13ch" }}
           >
             This is what turns up tomorrow morning
           </h2>
-          <p style={{ ...body(16.5) }}>
-            Not a render and not a stock photo. Day one of Weight Loss Vegetarian,
-            pulled live from the kitchen&rsquo;s own schedule, with the macros each
-            dish was weighed to. Buy the one day. Decide after you have eaten it.
-          </p>
+
+          <Link href="/plans?trial=true" className={s.btnBig}>
+            Order the trial day
+            <b>{TRIAL_TOTAL_GLYPH}</b>
+          </Link>
         </div>
 
         {dishes.length > 0 && (
@@ -81,45 +85,65 @@ export default async function TrialDay() {
               </div>
             </div>
 
-            <div className={`${s.dishes} ${s.deep}`} style={{ marginTop: 1 }}>
-              {dishes.map((d, i) => (
-                <article
-                  key={d.slot + d.name}
-                  className={`${s.dish} ${s.stagger} ${s.lift}`}
-                  style={{ "--i": i } as React.CSSProperties}
-                >
-                  <div className={s.dishHead}>
-                    <span style={label(LIME)}>{SLOT_LABEL[d.slot] ?? d.slot}</span>
-                    {d.cuisine && (
-                      <span style={{ ...label(DIM), display: "inline" }}>{d.cuisine}</span>
-                    )}
-                  </div>
+            {/* Cards 1 and 4 are wide and lay the media beside the copy; 2 and
+                3 are narrow and stack it above. Two shapes, not one shape at
+                two widths — the layout carries the size of the meal. */}
+            <div className={`${s.dishesAsym} ${s.deep}`} style={{ marginTop: 1 }}>
+              {dishes.map((d, i) => {
+                const wide = i === 0 || i === 3;
 
-                  {/* A photograph if one has been dropped in for this dish,
-                      otherwise a fingerprint drawn from the same weighed macros
-                      printed below. Adding photography needs no code change:
-                      see DishImage for the lookup order. */}
-                  <DishImage
-                    name={d.name}
-                    kcal={d.kcal}
-                    protein={d.protein}
-                    carbs={d.carbs}
-                    fat={d.fat}
-                  />
+                return (
+                  <article
+                    key={d.slot + d.name}
+                    className={`${s.dish} ${s.stagger} ${s.lift}`}
+                    style={{ "--i": i } as React.CSSProperties}
+                  >
+                    <div className={s.dishHead}>
+                      <span style={label(LIME)}>{SLOT_LABEL[d.slot] ?? d.slot}</span>
+                      {d.cuisine && (
+                        <span style={{ ...label(DIM), display: "inline" }}>{d.cuisine}</span>
+                      )}
+                    </div>
 
-                  <h3 style={{ ...sub("clamp(1.15rem,1.9vw,1.45rem)"), marginTop: 4 }}>
-                    {d.name}
-                  </h3>
-                  {d.blurb && <p style={{ ...body(14), marginTop: 10 }}>{d.blurb}</p>}
-                  <div className={s.macros}>
-                    <Macro v={d.kcal} unit="" name="kcal" />
-                    <Macro v={d.protein} unit="g" name="Pro" />
-                    <Macro v={d.carbs} unit="g" name="Carb" />
-                    <Macro v={d.fat} unit="g" name="Fat" />
-                    <Macro v={d.fibre} unit="g" name="Fib" />
-                  </div>
-                </article>
-              ))}
+                    <div className={wide ? s.dishWide : undefined}>
+                      {/* A photograph if one has been dropped in for this dish,
+                          otherwise a fingerprint drawn from the same weighed
+                          macros printed below. Adding photography needs no code
+                          change: see DishImage for the lookup order. */}
+                      <DishImage
+                        name={d.name}
+                        kcal={d.kcal}
+                        protein={d.protein}
+                        carbs={d.carbs}
+                        fat={d.fat}
+                      />
+
+                      <div className={s.dishCopy}>
+                        {/* Explicit `margin` rather than spreading a style that
+                            sets `margin: 0` and then adding `marginTop` — React
+                            warns when a rerender drops one of a shorthand/
+                            longhand pair for the same property. */}
+                        <h3
+                          style={{
+                            ...sub(wide ? "clamp(1.3rem,2.3vw,1.75rem)" : "clamp(1.15rem,1.9vw,1.45rem)"),
+                            margin: "4px 0 0",
+                          }}
+                        >
+                          {d.name}
+                        </h3>
+                        {d.blurb && <p style={{ ...body(14), margin: "10px 0 0" }}>{d.blurb}</p>}
+                        <div className={s.macros}>
+                          <Macro v={d.kcal} unit="" name="kcal" />
+                          <Macro v={d.protein} unit="g" name="Pro" />
+                          <Macro v={d.carbs} unit="g" name="Carb" />
+                          <Macro v={d.fat} unit="g" name="Fat" />
+                          <Macro v={d.fibre} unit="g" name="Fib" />
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
 
             {/* Colour is never the only channel: the ring is explained in

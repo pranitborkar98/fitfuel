@@ -1120,3 +1120,142 @@
 @media (prefers-reduced-motion: reduce) {
   .shelfItem, .shelfAdd { transition: none; }
 }
+
+/* ── trial day: title + the offer, side by side ───────────────────────────
+   The explanatory paragraph that used to sit here is gone. What replaces it
+   is the thing the paragraph was talking around: the price, as a button. */
+.trialHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(20px, 4vw, 56px);
+  flex-wrap: wrap;
+}
+
+/* The big offer button. Bigger than .btn because this is the page's primary
+   commercial ask and it was previously a link of the same weight as "read
+   this plan in full". */
+.btnBig {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: #84cc16;
+  color: #070707;
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: clamp(15px, 1.7vw, 19px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  border: 1px solid #84cc16;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 200ms ease, transform 200ms cubic-bezier(.16,1,.3,1), box-shadow 200ms ease;
+}
+.btnBig b {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.92em;
+  font-weight: 700;
+  padding-left: 14px;
+  border-left: 1px solid rgba(7, 7, 7, 0.28);
+}
+.btnBig:hover {
+  background: #a3e635;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(132, 204, 22, 0.35);
+}
+.btnBig:focus-visible { outline: 3px solid #a3e635; outline-offset: 3px; }
+
+/* ── trial day: four cards, deliberately NOT four identical boxes ─────────
+   A 2x2 with alternating weights — wide, narrow / narrow, wide. The wide
+   cards lay their media beside the copy instead of above it, so the two
+   shapes are genuinely different cards rather than the same card at two
+   widths. Breakfast and dinner get the wide treatment; the snack, which is
+   a 195 kcal makhana chaat, gets the small one. The layout carries the
+   size of the meal. */
+.dishesAsym {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.dishesAsym > :nth-child(1) { grid-column: span 7; }
+.dishesAsym > :nth-child(2) { grid-column: span 5; }
+.dishesAsym > :nth-child(3) { grid-column: span 5; }
+.dishesAsym > :nth-child(4) { grid-column: span 7; }
+
+/* The wide pair: media left, copy right. */
+.dishWide { display: grid; grid-template-columns: minmax(150px, 38%) 1fr; gap: clamp(16px, 2vw, 26px); align-items: start; }
+.dishWide > :global(figure), .dishWide > :global(.glyphSlot) { margin: 0; }
+.dishWide .dishCopy { min-width: 0; }
+
+@media (max-width: 900px) {
+  .dishesAsym > :nth-child(n) { grid-column: span 6; }
+  .dishWide { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .dishesAsym > :nth-child(n) { grid-column: span 12; }
+}
+
+/* ── week: three figures beside the heading ───────────────────────────────
+   Replaces the sentence "1434 kcal on an average day, 26 distinct dishes..."
+   which made three scannable numbers into prose. */
+.weekFigs { display: flex; gap: clamp(20px, 3.4vw, 44px); flex-wrap: wrap; }
+.weekFigs > div { display: flex; flex-direction: column; gap: 4px; }
+.weekFigs b {
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #84cc16;
+  font-variant-numeric: tabular-nums;
+}
+.weekFigs span {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+
+/* ── a la carte: one rail per course ──────────────────────────────────────
+   Six courses, five dishes each. The head is a course name and its real
+   count, so the rails read as a menu rather than as a carousel. */
+.course { margin-top: clamp(28px, 3.6vw, 46px); }
+.courseHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #232320;
+}
+.course .shelf { margin-top: 0; border-top: 0; }
+
+/* ── aggregator chips ─────────────────────────────────────────────────────
+   Each brand in its own colour so the channel is recognisable at a glance.
+   See Aggregators.tsx for why these are drawn rather than the official art. */
+.aggro { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.aggroChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 800;
+  font-size: clamp(15px, 1.8vw, 19px);
+  letter-spacing: 0.01em;
+  color: var(--brand);
+  border: 1px solid color-mix(in srgb, var(--brand) 42%, transparent);
+  background: color-mix(in srgb, var(--brand) 9%, transparent);
+  padding: 9px 15px;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.aggroChip svg { width: 17px; height: 17px; flex: none; }
+.aggroLink { text-decoration: none; }
+.aggroLink:hover .aggroChip {
+  background: color-mix(in srgb, var(--brand) 20%, transparent);
+  border-color: var(--brand);
+}
+.aggroLink:focus-visible { outline: 3px solid #a3e635; outline-offset: 3px; }

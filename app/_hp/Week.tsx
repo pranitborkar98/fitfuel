@@ -20,7 +20,7 @@ import Link from "next/link";
 import s from "./hp.module.css";
 import Idx from "./Idx";
 import { getWeek, totals, PLAN_SLUG, SLOT_ORDER, SLOT_LABEL, WEEK_DAYS, type Dish } from "./menu-data";
-import { WRAP, SECTION, PANEL, INK, DIM, display, body } from "./theme";
+import { WRAP, SECTION, PANEL, DIM, display, body } from "./theme";
 
 const DAY_LABEL = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
 
@@ -44,26 +44,29 @@ export default async function Week() {
       <div style={WRAP}>
         <Idx label="The week" />
 
-        <div className={`${s.duo} ${s.reveal}`}>
-          <h2 id="hp-week" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "13ch" }}>
+        {/* Title only — both paragraphs removed at the owner's instruction.
+            The three facts they carried are now three figures beside the
+            heading, where they read in a glance instead of in a sentence. */}
+        <div className={s.trialHead}>
+          <h2 id="hp-week" style={{ ...display("clamp(2.4rem,6.4vw,5rem)"), maxWidth: "12ch" }}>
             A week you can actually picture
           </h2>
-          <p style={{ ...body(16.5) }}>
-            Seven days of Weight Loss Vegetarian, exactly as the kitchen has them
-            scheduled. Not a sample menu written for a website: this is the table the
-            cook sheet is generated from, so if it changes on Tuesday it changes here.
-          </p>
-        </div>
 
-        {/* One sentence, not three mono-captioned stat cards. Same three facts. */}
-        <p style={{ ...body(16), margin: "clamp(22px,3vw,34px) 0", maxWidth: "76ch" }}>
-          <b style={{ color: INK, fontWeight: 600 }}>{avg} kcal</b> on an average day,{" "}
-          <b style={{ color: INK, fontWeight: 600 }}>
-            {new Set(week.map((d) => d.name)).size} distinct dishes
-          </b>{" "}
-          across the seven, and the schedule keeps going to{" "}
-          <b style={{ color: INK, fontWeight: 600 }}>30 days</b> on the plan page.
-        </p>
+          <div className={s.weekFigs}>
+            <div>
+              <b>{avg}</b>
+              <span>kcal average day</span>
+            </div>
+            <div>
+              <b>{new Set(week.map((d) => d.name)).size}</b>
+              <span>distinct dishes</span>
+            </div>
+            <div>
+              <b>30</b>
+              <span>days on the plan</span>
+            </div>
+          </div>
+        </div>
 
         <div className={s.specWrap}>
           <table className={`${s.spec} ${s.week}`}>

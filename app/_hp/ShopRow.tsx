@@ -31,21 +31,24 @@ export type ShelfDish = {
   id: string;
   name: string;
   blurb: string;
-  price: number;
+  /** Null when the kitchen has not set a price. Those dishes are cooked and
+   *  listed, so they get an enquiry toggle rather than being hidden. */
+  price: number | null;
   categoryLabel: string;
   media: ReactNode;
 };
 
-export default function ShopRow({ dishes }: { dishes: ShelfDish[] }) {
+export default function ShopRow({ dishes, label }: { dishes: ShelfDish[]; label: string }) {
   // `hydrated` is false until localStorage has been read. Gating the basket
   // count on it keeps the server render and the first client paint identical,
   // so a returning customer's basket does not cause a hydration mismatch.
-  const { add, qtyOf, hydrated } = useCart();
+  const { add, qtyOf, hydrated, toggleEnquiry, hasEnquiry } = useCart();
 
   return (
-    <ul className={s.shelf} aria-label="Order a single dish">
+    <ul className={s.shelf} aria-label={label}>
       {dishes.map((d) => {
         const inCart = hydrated ? qtyOf(d.id) : 0;
+        const asking = hydrated ? hasEnquiry(d.id) : false;
 
         return (
           <li key={d.id} className={s.shelfItem}>
@@ -85,29 +88,51 @@ export default function ShopRow({ dishes }: { dishes: ShelfDish[] }) {
             <div className={s.shelfFoot}>
               <span
                 style={{
-                  fontFamily: MONO, fontSize: 16, fontWeight: 600,
-                  color: INK, fontVariantNumeric: "tabular-nums",
+                  fontFamily: MONO, fontSize: d.price == null ? 11.5 : 16, fontWeight: 600,
+                  color: d.price == null ? DIM : INK, fontVariantNumeric: "tabular-nums",
+                  letterSpacing: d.price == null ? "0.1em" : undefined,
+                  textTransform: d.price == null ? "uppercase" : undefined,
                 }}
               >
-                ₹{d.price}
+                {d.price == null ? "On request" : `₹${d.price}`}
               </span>
 
               {/* The whole reason this component exists. One tap, no navigation,
-                  no second decision screen. */}
-              <button
-                type="button"
-                onClick={() => add(d.id)}
-                className={s.shelfAdd}
-                aria-label={`Add ${d.name} to basket, ₹${d.price}`}
-              >
-                {inCart > 0 ? (
-                  <>
-                    <span aria-hidden style={{ color: LIME }}>✓</span> {inCart} in basket
-                  </>
-                ) : (
-                  "Add"
-                )}
-              </button>
+                  no second decision screen. Unpriced dishes are cooked and on
+                  the menu, so they get an enquiry toggle instead of a price we
+                  would not stand behind. */}
+              {d.price == null ? (
+                <button
+                  type="button"
+                  onClick={() => toggleEnquiry(d.id)}
+                  className={s.shelfAdd}
+                  aria-pressed={asking}
+                  aria-label={`Ask about ${d.name}`}
+                >
+                  {asking ? (
+                    <>
+                      <span aria-hidden style={{ color: LIME }}>✓</span> Asking
+                    </>
+                  ) : (
+                    "Ask"
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => add(d.id)}
+                  className={s.shelfAdd}
+                  aria-label={`Add ${d.name} to basket, ₹${d.price}`}
+                >
+                  {inCart > 0 ? (
+                    <>
+                      <span aria-hidden style={{ color: LIME }}>✓</span> {inCart} in basket
+                    </>
+                  ) : (
+                    "Add"
+                  )}
+                </button>
+              )}
             </div>
           </li>
         );

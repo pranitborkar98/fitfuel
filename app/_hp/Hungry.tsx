@@ -40,10 +40,11 @@ import Image from "next/image";
 import s from "./hp.module.css";
 import Idx from "./Idx";
 import ShopRow, { type ShelfDish } from "./ShopRow";
+import Aggregators from "./Aggregators";
 import { findDishImage, dishSlug } from "./DishImage";
 import { MENU } from "@/lib/menu-alacarte";
-import { DISHES, ORDERABLE_COUNT, isOrderable } from "@/lib/menu-cart";
-import { WRAP, SECTION, RULE, INK, DIM, LIME, MONO, display, sub, label, body } from "./theme";
+import { DISHES, dishId, isOrderable } from "@/lib/menu-cart";
+import { WRAP, SECTION, RULE, DIM, LIME, display, sub, label } from "./theme";
 
 /** Per course: how many dishes, and the cheapest price the kitchen has
  *  actually confirmed. Null when nothing in the course is priced yet. */
@@ -57,29 +58,24 @@ const COURSES = MENU.map((c) => {
   };
 });
 
-/* THE SHELF: one dish from each course, cheapest first, then filled out to
-   eight from whatever else is priced. Cheapest-per-course is deliberate — this
-   band's whole argument is "no plan, no minimum", and the lowest real number in
-   each course is the most honest possible demonstration of that. Provisional
-   and unpriced rows are excluded by isOrderable, so nothing on the shelf can
-   show a price the kitchen has not confirmed. */
-const SHELF_SIZE = 8;
+/* FIVE DISHES FROM EVERY COURSE, one rail each — the owner asked for this
+   explicitly and the previous version shipped eight dishes total, which read as
+   a token sample of a 48-dish menu rather than a menu.
 
-const ORDERABLE = DISHES.filter(isOrderable);
+   Priced dishes lead within each course, so the first thing in every rail can
+   go straight into a basket; the unpriced ones follow with an enquiry toggle
+   rather than being hidden, because they are cooked and on the menu. */
+const PER_COURSE = 5;
 
-const SHELF_DISHES = (() => {
-  const byCourse = new Map<string, (typeof ORDERABLE)[number]>();
-  for (const d of [...ORDERABLE].sort((a, b) => a.price! - b.price!)) {
-    if (!byCourse.has(d.category)) byCourse.set(d.category, d);
-  }
-  const picked = [...byCourse.values()];
-  const seen = new Set(picked.map((d) => d.id));
-  for (const d of ORDERABLE) {
-    if (picked.length >= SHELF_SIZE) break;
-    if (!seen.has(d.id)) { picked.push(d); seen.add(d.id); }
-  }
-  return picked.slice(0, SHELF_SIZE);
-})();
+const COURSE_SHELVES = MENU.map((c) => {
+  const items = [...c.items].sort((a, b) => {
+    const ao = isOrderable(a) ? 0 : 1;
+    const bo = isOrderable(b) ? 0 : 1;
+    if (ao !== bo) return ao - bo;
+    return (a.price ?? Infinity) - (b.price ?? Infinity);
+  });
+  return { key: c.key, label: c.label, note: c.note, items: items.slice(0, PER_COURSE) };
+});
 
 /* The media for one tile, resolved on the server.
    A photograph when one exists; otherwise a typographic plate.
@@ -136,13 +132,18 @@ function media(name: string) {
   );
 }
 
-const SHELF: ShelfDish[] = SHELF_DISHES.map((d) => ({
-  id: d.id,
-  name: d.name,
-  blurb: d.blurb,
-  price: d.price!,
-  categoryLabel: d.categoryLabel,
-  media: media(d.name),
+const SHELVES = COURSE_SHELVES.map((c) => ({
+  key: c.key,
+  label: c.label,
+  note: c.note,
+  dishes: c.items.map<ShelfDish>((d) => ({
+    id: dishId(d.name),
+    name: d.name,
+    blurb: d.blurb,
+    price: isOrderable(d) ? d.price : null,
+    categoryLabel: c.label,
+    media: media(d.name),
+  })),
 }));
 
 export default function Hungry() {
@@ -151,43 +152,37 @@ export default function Hungry() {
       <div style={WRAP}>
         <Idx label="No subscription" />
 
-        <div className={`${s.duo} ${s.reveal}`}>
-          <h2 id="hp-hungry" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "13ch" }}>
+        {/* Title only, per the owner. The paragraph listed the six courses in
+            prose; the shelf below shows them. */}
+        <div className={s.trialHead}>
+          <h2 id="hp-hungry" style={{ ...display("clamp(2.4rem,6.4vw,5rem)"), maxWidth: "11ch" }}>
             Just hungry? <span style={{ color: LIME }}>Order one meal.</span>
           </h2>
-          <p style={{ ...body(16.5) }}>
-            The same kitchen runs a single-dish menu — salads, keto, bowls, breakfast, protein
-            bars and cold-pressed juice. No plan, no minimum, no commitment. Order it from the
-            people who cook it rather than through an app that takes a cut of it.
-          </p>
-        </div>
 
-        {/* The merchandise. Adding from here puts the dish straight in the
-            basket — no navigation, no second decision screen. */}
-        <ShopRow dishes={SHELF} />
-
-        {/* The course summary, demoted from a table to one line. It was never
-            carrying more than this: what exists, and the floor price. */}
-        <p
-          style={{
-            ...body(13.5), color: DIM, marginTop: 16,
-            display: "flex", flexWrap: "wrap", gap: "6px 16px",
-          }}
-        >
-          {COURSES.map((c) => (
-            <span key={c.key} style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em" }}>
-              <span style={{ color: INK }}>{c.label}</span>{" "}
-              {c.count}
-              {c.from != null ? ` · ₹${c.from}+` : " · on request"}
-            </span>
-          ))}
-        </p>
-
-        <div className={s.actions} style={{ marginTop: 26 }}>
-          <Link href="/menu" className={s.btn}>
-            See all {DISHES.length} dishes
+          <Link href="/menu" className={s.btnBig}>
+            Browse the menu
+            <b>{DISHES.length}</b>
           </Link>
         </div>
+
+        {/* Six rails, one per course, five dishes each. Adding from any of
+            them puts the dish straight in the basket. */}
+        {SHELVES.map((c, i) => {
+          const meta = COURSES.find((x) => x.key === c.key);
+
+          return (
+            <section key={c.key} className={s.course} style={{ "--i": i } as React.CSSProperties}>
+              <div className={s.courseHead}>
+                <h3 style={{ ...sub("clamp(1.35rem,2.4vw,1.9rem)") }}>{c.label}</h3>
+                <span style={{ ...label(DIM) }}>
+                  {meta?.count} dishes
+                  {meta?.from != null ? ` · from ₹${meta.from}` : ""}
+                </span>
+              </div>
+              <ShopRow dishes={c.dishes} label={`${c.label} — order a single dish`} />
+            </section>
+          );
+        })}
 
         {/* Aggregator channel. The owner confirmed FitFuel is live on both
             platforms today. It sits UNDER the direct-order CTA on purpose:
@@ -204,20 +199,8 @@ export default function Hungry() {
           }}
         >
           <span style={{ ...label(), color: DIM }}>Also on</span>
-          <span style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK }}>Zomato</span>
-          <span aria-hidden style={{ color: RULE }}>/</span>
-          <span style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK }}>Swiggy</span>
-          <span style={{ ...body(14), color: DIM, maxWidth: "34ch" }}>
-            Search <span style={{ color: INK }}>FitFuel</span> in either app. Ordering direct just
-            means more of it reaches the kitchen.
-          </span>
+          <Aggregators />
         </div>
-
-        <p style={{ ...body(13.5), color: DIM, marginTop: 20 }}>
-          {ORDERABLE_COUNT} dishes are priced and orderable now. The rest are cooked and listed,
-          but the kitchen has not set their price yet, so they say so instead of showing a number
-          we would not stand behind.
-        </p>
       </div>
     </section>
   );

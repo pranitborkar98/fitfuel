@@ -20,7 +20,6 @@ import More from "./_hp/More";
 import Faq from "./_hp/Faq";
 import Close from "./_hp/Close";
 import Day from "./_hp/Day";
-import Ticker from "./_hp/Ticker";
 import { BG, INK } from "./_hp/theme";
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -125,13 +124,12 @@ export default function Home() {
           about a plan; this is where the page admits you can just buy dinner. */}
       <Hungry />
       <Pick />
-      {/* The catalogue's scale, as one scroll-scrubbed line, immediately after
-          the question "which one of these is you?" — where 126 plans and 3,614
-          prices are an answer rather than a boast. Counts are queried, not
-          typed: see lib/site-counts.ts. Deliberately a thin band and NOT placed
-          under the hero, because nothing gets to stand between the hero and the
-          first dish name. */}
-      <Ticker />
+      {/* Ticker REMOVED at the owner's instruction. It ran "952 exercises /
+          46 supplements / 38 conditions / 59 programmes / 154 foods" as a
+          scrolling band, and his verdict was that it is ugly and says nothing
+          — which is right: every number in it was a capability count, not a
+          reason to buy dinner. The counts still exist in lib/site-counts.ts
+          and the destinations are all one line away in More.tsx. */}
 
       {/* ── how, why, and who says so ────────────────────────────── */}
       <Steps />
