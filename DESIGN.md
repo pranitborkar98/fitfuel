@@ -9,7 +9,7 @@ So these are stated as hard negatives. Breaking one is a bug.
 **Never:**
 - ❌ `Inter`, Roboto, or system-ui as the body face. It is the single most
   recognisable AI-generated-site tell. Body is **Archivo**; display is
-  **Barlow Condensed**.
+  **Barlow Condensed**; data and labels are **JetBrains Mono**.
 - ❌ Border-radius ≥ 8px. Corners are square (radius 0). No rounded cards.
 - ❌ Uniform 3-up card grids as a section's whole layout.
 - ❌ The rhythm `small kicker label → headline → paragraph → three cards`,
@@ -41,7 +41,26 @@ So these are stated as hard negatives. Breaking one is a bug.
 > pages, legal pages, chrome.
 >
 > Deleted from the vocabulary entirely: **Syne**, **DM Sans**, **Space Mono**.
-> Display is Barlow Condensed. Body is Archivo. Nothing else.
+> Display is Barlow Condensed. Body is Archivo. Data is JetBrains Mono.
+> Nothing else.
+
+> **2026-07-30 — Fraunces rejected, the face list is three.**
+> `app/layout.tsx` had been loading a fourth face, Fraunces, on the argument
+> that Barlow Condensed "reads as athletic utility, the wrong voice for food."
+> It was used only in the `app/preview/a` and `app/preview/c` experiments while
+> shipping to every visitor on every page.
+>
+> Rejected. The Instrument System's thesis — hairlines, grain, radius 0, kinetic
+> type at ~10x scale — is coherent with a condensed grotesque; a warm old-style
+> serif with a wonky optical axis is a different thesis, and hybridising the two
+> satisfies neither. Swapping the display face would also rebuild all 30
+> homepage components for a preference rather than a defect, which is how a
+> direction swings a third time.
+>
+> The observation behind it stands: the page does read cold for a food brand.
+> That is an **image-grade problem**, and the fix is the art-directed
+> photography this file has specified since rev 2 and which has never shipped.
+> Warmth lives in the grade, not the headline face.
 
 Direction: **editorial precision** for a *verified-intake* health OS. It should
 read like a precision instrument, never like a generic dark-SaaS landing page.
@@ -79,16 +98,24 @@ label and rule weight, not hue. Lime is the only chromatic value on the site.
 
 ## Type
 
-Two faces, both loaded once via `next/font` in the root layout. No `@import`
+Three faces, all loaded once via `next/font` in the root layout. No `@import`
 inside `<style>` tags, ever: it blocks render and forces a second round trip.
 
 - **Display** — Barlow Condensed 800/900, UPPERCASE, flush-LEFT, tight leading
   (0.83–0.95). Ragged right. Never centered as a block. Every `<h1>`/`<h2>` on
   every page uses this. Helper: `.ff-display`.
-- **Labels** — Barlow Condensed 700, 12–13px, UPPERCASE, letter-spacing 0.28em,
-  colour `dim`. Helper: `.ff-tag`.
 - **Body** — Archivo, 15–16px, colour `mute`, line-height 1.6, max-width ~62ch,
   flush-left.
+- **Data** — JetBrains Mono 500/700. Labels, and every number that sits in a
+  column (macros, prices, times, licence numbers). Setting figures in mono reads
+  as measurement rather than marketing. `font-variant-numeric: tabular-nums`.
+  Condensed 900 is for headline-scale figures only.
+
+**Labels are mono**, 12px, UPPERCASE, letter-spacing 0.22em, colour `dim` — one
+per section, per `app/_hp/theme.ts` `label()`. The `.ff-tag` helper in
+`globals.css` still sets labels in Barlow Condensed 700 at 0.28em; that is the
+older interior-page treatment and is a **migration target**, not a second
+sanctioned style.
 
 **Minimum type size is 12px.** Below that it is unreadable on the mid-range
 Android phones our customers actually order from.
@@ -131,7 +158,7 @@ Android phones our customers actually order from.
 - ❌ **Any** border-radius. Radius is 0. Not 2px, not 6px, and never 999px pills.
 - ❌ Emoji. Decorative sparkles. Fake dashboards with lots of fake charts.
 - ❌ Accent colour used decoratively. Lime is a scalpel: one purpose per section.
-- ❌ Syne, DM Sans, Space Mono, Inter, Roboto, system-ui. Two faces only.
+- ❌ Syne, DM Sans, Space Mono, Fraunces, Inter, Roboto, system-ui. Three faces only.
 
 ## Machine readability (this is design work too)
 Discovery increasingly runs through answer engines, and they read structure,
