@@ -305,6 +305,19 @@
   padding: clamp(18px, 2.4vw, 30px);
   background: linear-gradient(180deg, transparent, rgba(7, 7, 7, 0.94) 46%);
 }
+/* A beat with no honest photograph of its own subject. Not a placeholder and
+   not an empty box: the hour is set at headline scale against a hairline, so
+   the frame carries the same weight as a photographed one and the runway keeps
+   its rhythm. See the LEGACY note in lib/site-images.ts. */
+.framePlate { background: #050504; }
+.framePlateMark {
+  position: absolute;
+  inset: 0 0 auto 0;
+  padding: clamp(18px, 2.4vw, 30px);
+  border-bottom: 1px solid #232320;
+}
+/* No photograph underneath, so the scrim has nothing to lift the type off. */
+.framePlate .frameBody { background: none; }
 @media (max-width: 900px), (prefers-reduced-motion: reduce) {
   .runway { height: auto; }
   .stage {
@@ -714,6 +727,10 @@
    Full-bleed alternating editorial block: image one side, type the other,
    sides alternate down the page. Replaces the 3-up card grid. */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: center; }
+/* The media half has no honest photograph yet, so the type takes the column
+   rather than sitting beside an empty box. Held to 62ch so it stays a measured
+   editorial block instead of running the full 1180px. */
+.splitSolo { grid-template-columns: minmax(0, 62ch); }
 .splitFlip > *:first-child { order: 2; }
 .splitMedia { position: relative; aspect-ratio: 5 / 4; overflow: hidden; border: 1px solid #232320; background: #050504; }
 .splitMedia img { object-fit: cover; }

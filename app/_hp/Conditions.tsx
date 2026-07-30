@@ -15,6 +15,7 @@ import Image from "next/image";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
+import { slot } from "@/lib/site-images";
 import { WRAP, SECTION, DIM, LIME, display, body, label, figure } from "./theme";
 
 const CONDITIONS = [
@@ -27,12 +28,21 @@ const CONDITIONS = [
 ];
 
 export default function Conditions() {
+  /* Was hardcoded to /images/produce.jpg, which bypassed the resolver entirely
+     — the sections/conditions asset could have landed and this section would
+     never have shown it, which is the exact bug lib/site-images.ts exists to
+     kill. It also put produce.jpg on the homepage a third time, captioned as
+     ingredients weighed for a condition-specific plan, which is not what that
+     photograph shows. Until the real frame lands the type carries the section
+     on its own. */
+  const img = slot("sections", "conditions");
+
   return (
     <section aria-labelledby="hp-cond" style={SECTION}>
       <div style={WRAP}>
         <Idx label="Cooked for a diagnosis" />
 
-        <div className={`${s.split} ${s.reveal}`}>
+        <div className={`${s.split} ${img ? "" : s.splitSolo} ${s.reveal}`}>
           <div>
             <h2 id="hp-cond" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "13ch" }}>
               We cook for the condition, not just the calorie
@@ -67,15 +77,22 @@ export default function Conditions() {
             </div>
           </div>
 
-          <div className={`${s.splitMedia} ${s.gradeFood}`}>
-            <Image
-              src="/images/produce.jpg"
-              alt="Ingredients weighed out for a condition-specific plan"
-              fill
-              sizes="(max-width: 820px) 100vw, 46vw"
-              quality={75}
-            />
-          </div>
+          {img && (
+            <figure className={`${s.splitMedia} ${s.gradeFood}`} style={{ margin: 0 }}>
+              <Image
+                src={img.src}
+                alt="Ingredients for a condition-specific plan, weighed out"
+                fill
+                sizes="(max-width: 820px) 100vw, 46vw"
+                quality={75}
+              />
+              {img.ai && (
+                <figcaption className="sr-only">
+                  Illustrative AI-generated image. The plan counts shown are real.
+                </figcaption>
+              )}
+            </figure>
+          )}
         </div>
 
         <div className={s.chips} style={{ marginTop: "clamp(28px,3.6vw,46px)" }}>

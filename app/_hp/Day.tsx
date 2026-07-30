@@ -23,20 +23,20 @@ import Image from "next/image";
 
 import s from "./hp.module.css";
 import Idx from "./Idx";
-import { resolveImage } from "@/lib/site-images";
-import { WRAP, INK, MUTE, DIM, LIME, sub, body, label } from "./theme";
+import { slot } from "@/lib/site-images";
+import { WRAP, INK, MUTE, DIM, LIME, sub, body, label, figure as fig } from "./theme";
 
 type Frame = {
   time: string;
   line: string;
   copy: string;
-  /** Name in public/images/[ai/]film/ — see IMAGE-BRIEF-V2.md §3. */
+  /** Name in public/images/[ai/]film/ — see IMAGE-BRIEF-V2.md §3.
+      Resolution goes through slot(), so a beat shows a photograph only when
+      one of the actual subject exists. Four of these seven have no honest
+      legacy stand-in and render as type until §3 is generated: illustrating
+      the doorstep beat with a bowl of vegetables was worse than illustrating
+      it with nothing. The honesty rule lives in LEGACY, not here. */
   slotName: string;
-  /** Legacy file under public/images/, used until the real frame lands. Three
-      of these are stand-ins whose subject does not match the beat (the 08:00
-      doorstep beat is currently illustrated with produce, and SUNDAY with
-      supplements), which is exactly what §3 replaces. */
-  src: string;
   alt: string;
   duo?: boolean;
 };
@@ -47,7 +47,6 @@ const FRAMES: Frame[] = [
     line: "The kitchen wakes",
     copy: "Before the city does. Tonight's cook sheet was computed from every active plan, portion by portion, so nothing is cooked to an average.",
     slotName: "0400-kitchen",
-    src: "/images/kitchen.jpg",
     alt: "The FitFuel kitchen before dawn",
     duo: true,
   },
@@ -56,7 +55,6 @@ const FRAMES: Frame[] = [
     line: "Your food is weighed",
     copy: "Not estimated, not eyeballed. Every portion hits your macros on a scale before the compartment is sealed. That single act is the whole product.",
     slotName: "0630-weighing",
-    src: "/images/chef-hands.jpg",
     alt: "Ingredients being weighed on a prep board",
     duo: true,
   },
@@ -65,7 +63,6 @@ const FRAMES: Frame[] = [
     line: "It is at your door",
     copy: "Across fifteen areas of east Pune, six days a week, tracked from the kitchen to your hand by the driver's own app.",
     slotName: "0800-doorstep",
-    src: "/images/produce.jpg",
     alt: "Fresh produce prepared for the day's cooking",
   },
   {
@@ -73,7 +70,6 @@ const FRAMES: Frame[] = [
     line: "It logs itself",
     copy: "The meal lands in your diary with the macros it was weighed to. You did not open an app, you did not guess a portion, you did not forget.",
     slotName: "0802-logged",
-    src: "/images/hero-bowl.jpg",
     alt: "A sealed FitFuel bowl, macros already logged",
   },
   {
@@ -81,7 +77,6 @@ const FRAMES: Frame[] = [
     line: "You train to the programme",
     copy: "Your plan carries a training block drawn from a 952-exercise library. Sets and reps go in, the burn comes back out as one net-calorie figure.",
     slotName: "1830-training",
-    src: "/images/training.jpg",
     alt: "A training session in progress",
     duo: true,
   },
@@ -90,7 +85,6 @@ const FRAMES: Frame[] = [
     line: "The day closes itself",
     copy: "Eaten against target, trained against scheduled, water, weight. One recap, on WhatsApp, without you asking for it.",
     slotName: "2100-evening",
-    src: "/images/gym.jpg",
     alt: "The end of a training day",
     duo: true,
   },
@@ -99,7 +93,6 @@ const FRAMES: Frame[] = [
     line: "The target moves",
     copy: "Flat for a week against the rate your goal needs? The calorie target is recalculated from energy-balance arithmetic on numbers we already hold. You do not have to notice the plateau. We already did.",
     slotName: "sunday-review",
-    src: "/images/supplements.jpg",
     alt: "Weekly review and recalibration",
     duo: true,
   },
@@ -126,27 +119,41 @@ export default function Day() {
         <div className={s.stage}>
           <div className={s.track}>
             {FRAMES.map((f) => {
-              /* film/<slotName> wins; the legacy stand-in holds the frame until
-                 it lands, so this section is correct today and improves one
-                 file at a time. */
-              const img = resolveImage("film", f.slotName);
+              /* A photograph only when one of this beat's actual subject
+                 exists. Otherwise the beat is set as type: the hour at
+                 headline scale over a hairline, which is the readout register
+                 this system already speaks in, and it varies the rhythm of the
+                 runway instead of showing seven identical photo boxes. */
+              const img = slot("film", f.slotName);
+              const grade = img ? (f.duo ? s.gradeDuo : s.gradeFood) : s.framePlate;
               return (
-              <figure key={f.time} className={`${s.frame} ${f.duo ? s.gradeDuo : s.gradeFood}`}>
-                <Image
-                  src={img?.src ?? f.src}
-                  alt={f.alt}
-                  fill
-                  sizes="(max-width: 900px) 84vw, 520px"
-                  quality={75}
-                />
+              <figure key={f.time} className={`${s.frame} ${grade}`}>
+                {img ? (
+                  <Image
+                    src={img.src}
+                    alt={f.alt}
+                    fill
+                    sizes="(max-width: 900px) 84vw, 520px"
+                    quality={75}
+                  />
+                ) : (
+                  /* Not aria-hidden: with the caption's time label dropped
+                     below, this IS the hour for a screen reader too. */
+                  <div className={s.framePlateMark}>
+                    <span style={fig("clamp(3.4rem,7vw,5.6rem)")}>{f.time}</span>
+                  </div>
+                )}
                 {img?.ai && (
                   <figcaption className="sr-only">
                     Illustrative AI-generated image. Not a photograph of our kitchen.
                   </figcaption>
                 )}
                 <figcaption className={s.frameBody}>
-                  <span style={label(LIME)}>{f.time}</span>
-                  <div style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK, marginTop: 10 }}>
+                  {/* On a plate the hour is already the dominant mark at the
+                      top of the frame. Repeating it here would be the
+                      over-annotation habit DESIGN.md rejects by name. */}
+                  {img && <span style={label(LIME)}>{f.time}</span>}
+                  <div style={{ ...sub("clamp(1.4rem,2.6vw,2rem)"), color: INK, marginTop: img ? 10 : 0 }}>
                     {f.line}
                   </div>
                   <p style={{ ...body(14.5), color: MUTE, marginTop: 10 }}>{f.copy}</p>

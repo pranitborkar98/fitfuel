@@ -19,6 +19,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import s from "./hp.module.css";
 import Idx from "./Idx";
+import { slot } from "@/lib/site-images";
 import { WRAP, SECTION, PANEL, INK, DIM, LIME, display, sub, body, label, figure } from "./theme";
 
 type Cat = { slug: string; name: string; n: number };
@@ -50,6 +51,7 @@ const GOALS: [string, string][] = [
 
 export default async function Supplements() {
   const { cats, total } = await getCats();
+  const supps = slot("sections", "supplements");
 
   return (
     <section aria-labelledby="hp-supp" style={{ ...SECTION, background: PANEL }}>
@@ -85,15 +87,27 @@ export default async function Supplements() {
             </div>
           </div>
 
-          <div className={`${s.splitMedia} ${s.gradeFood}`}>
-            <Image
-              src="/images/supplements.jpg"
-              alt="Supplement containers on a bench"
-              fill
-              sizes="(max-width: 820px) 100vw, 46vw"
-              quality={75}
-            />
-          </div>
+          {/* Was hardcoded, so sections/supplements could have landed and this
+              section would never have shown it. Its legacy stand-in is honest
+              — it is a photograph of supplements — so unlike the conditions
+              slot this one keeps its picture today and simply upgrades itself
+              when the real frame arrives. */}
+          {supps && (
+            <figure className={`${s.splitMedia} ${s.gradeFood}`} style={{ margin: 0 }}>
+              <Image
+                src={supps.src}
+                alt="Supplement containers on a bench"
+                fill
+                sizes="(max-width: 820px) 100vw, 46vw"
+                quality={75}
+              />
+              {supps.ai && (
+                <figcaption className="sr-only">
+                  Illustrative AI-generated image. The counts shown are real.
+                </figcaption>
+              )}
+            </figure>
+          )}
         </div>
 
         {cats.length > 0 && (
