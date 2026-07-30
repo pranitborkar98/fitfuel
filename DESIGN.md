@@ -62,6 +62,21 @@ So these are stated as hard negatives. Breaking one is a bug.
 > photography this file has specified since rev 2 and which has never shipped.
 > Warmth lives in the grade, not the headline face.
 
+> **2026-07-30 — section serial numbers are dead.**
+> The Layout section of this file prescribed an index header of the form
+> `[ 001 ]  SECTION LABEL ───` from rev 2 onward. That was the one instruction in
+> here that contradicted the standing rule against decorative micro-labels and
+> spec codes, and it kept regenerating: the Claude Design homepage v2 opened ten
+> consecutive sections `01 — The trial day`, `02 — The week`, through
+> `10 — Questions`.
+>
+> A section gets **one** mono label. No serial, no bracket, no right-hand
+> caption. Numbering every section is the over-annotation habit the owner has
+> rejected by name, and a page that counts itself out loud reads as a document
+> template rather than a shop. `app/_hp/Idx.tsx` already ships the corrected
+> marker and is the reference: one label, one hairline, no number. This file was
+> the only place still asking for the serial.
+
 Direction: **editorial precision** for a *verified-intake* health OS. It should
 read like a precision instrument, never like a generic dark-SaaS landing page.
 
@@ -122,8 +137,11 @@ Android phones our customers actually order from.
 
 ## Layout
 - Content max-width 1180px, but compositions are **asymmetric** — offset columns, not centered stacks.
-- Every major section opens with an **index header**: `[ 001 ]  SECTION LABEL ───────────────────`
-  (mono number + mono label + a full-width hairline). This is the spine of the page.
+- Every major section opens with **one** mono label and a full-width hairline:
+  `SECTION LABEL ───────────────────`. One label per section and nothing else at
+  section level. This is the spine of the page.
+  **No serial numbers.** Not `[ 001 ]`, not `01 —`, and no right-hand caption
+  beside the label. See the 2026-07-30 note on section numbering below.
 - Full-bleed hairline rules separate sections. Vertical rhythm: 96–140px section padding.
 - Data shown as **spec tables** (hairline-separated rows, mono values) and **readout panels**
   (nutrition-label / instrument styling), not as uniform icon cards.
