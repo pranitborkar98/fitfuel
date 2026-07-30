@@ -50,3 +50,7 @@ prisma.zip
 progress.json
 seed-progress.json
 seed-supplements.ts.bak
+
+# Python bytecode (vendored skill scripts)
+__pycache__/
+*.pyc
