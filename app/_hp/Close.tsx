@@ -19,6 +19,7 @@ import Link from "next/link";
 
 import s from "./hp.module.css";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
+import { waLink } from "@/lib/site";
 import { WRAP, INK, MUTE, DIM, LIME, display, body, label } from "./theme";
 
 const DIRECTORY: { head: string; links: [string, string][] }[] = [
@@ -97,9 +98,20 @@ export default function Close() {
                 <Link href="/plans?trial=true" className={s.btn}>
                   Book your trial day
                 </Link>
-                <Link href="/plans" className={s.ghost}>
-                  Browse all plans
-                </Link>
+                {/* India orders food on WhatsApp, and plenty of people will
+                    send a message who will never fill in a checkout form. The
+                    prototype puts this beside the close CTA and it is right to:
+                    it is the second-cheapest order path we have. */}
+                <a
+                  href={waLink(
+                    `Hi FitFuel, I'd like to book the ${TRIAL_TOTAL_LABEL} trial day. Do you deliver to my area?`,
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={s.ghost}
+                >
+                  Order on WhatsApp
+                </a>
               </div>
             </div>
           </div>

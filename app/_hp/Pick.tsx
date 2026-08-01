@@ -1,80 +1,60 @@
 // app/_hp/Pick.tsx
 //
-// SELF-SEGMENTATION, now colour-coded and on the depth layer.
+// THE FINDER. Which of these is you, and what number does it produce.
 //
-// A person cutting weight and a person managing PCOS have nothing in common
-// except the delivery van, and the page listed 126 plans and 38 conditions and
-// left the visitor to work out which row was theirs.
+// This is the section's third shape and the first one that answers its own
+// question. It began as four cards and a link, which told a visitor which row
+// was theirs but nothing about what they would get. The prototype's improvement
+// is that picking a door runs the arithmetic in front of you, so the section
+// stops asserting "personalised" and demonstrates it.
 //
-// The accents come from the locked design system's tier/category table, which
-// already colour-codes goals and conditions across the plan surfaces (muscle
-// #f59e0b, diabetic #2dd4bf, PCOS #f472b6 and the rest). Using them here is
-// consistency rather than decoration: a visitor who met amber on the muscle
-// plan page meets amber again here. This is the one place the homepage departs
-// from DESIGN.md's "lime is the only chromatic value" rule, and deliberately —
-// that rule was written for a page with no category structure, and this block
-// IS category structure.
+// The calculator lives in Finder.tsx because it is a control. Everything this
+// file does is server-side: query the real plan counts and hand them down. No
+// count on this page is typed by hand, which is the rule that stopped
+// "70 condition plans" sitting on a card whose own link showed a different
+// number.
 //
-// Each card sits on the shared perspective and comes forward in sequence via
-// --i, so the row reads as four physical planes rather than four rectangles.
+// THE HREFS. MealPlan.subCategory is the real goal taxonomy (weight_loss,
+// muscle_gain, balanced), which the catalogue searches on. `?goal=` seeds that
+// search, so every door lands filtered. Three of these four once pointed at
+// ?category=WEIGHT_LOSS and friends, none of which are valid categories, so they
+// were silently discarded and dropped the visitor on an unfiltered list of 126.
 //
-// NO INVENTED PRICES. PlanPrice has 3,614 rows across durations and tiers, so
-// a single "from Rs X" headline would be wrong for most of them.
+// NOT filtered by diet when counting, deliberately: the 126 plans are one row
+// per goal PER DIET VARIANT, so weight_loss is 5 rows of which exactly 1 is VEG.
+// Counting on the VEG default would print "1 plan" under a sentence that says
+// there are 126. The door is about the goal; diet is a switch on the next page.
 //
 // SERVER COMPONENT.
 
-import type { CSSProperties } from "react";
-import Link from "next/link";
-
 import { prisma } from "@/lib/prisma";
-import s from "./hp.module.css";
-import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
+import v from "./v2.module.css";
 import Idx from "./Idx";
-import Image from "next/image";
-import { slot } from "@/lib/site-images";
-import { WRAP, SECTION, INK, DIM, LIME, display, sub, body } from "./theme";
+import Finder, { type DoorSpec } from "./Finder";
+import { WRAP, display, body } from "./theme";
 
-type Door = {
-  goal: string;
-  who: string;
-  what: string;
-  href: string;
-  accent: string;
-  /** subCategory token the door filters on. Null = filtered by category. */
-  token: string | null;
-  /** Name in public/images/[ai/]goals/. Renders nothing until the file lands,
-      so this block is safe to ship before any image is generated. */
-  img: string;
-};
-
-/* THE HREFS WERE BROKEN. Three of these four pointed at
-   ?category=WEIGHT_LOSS / MUSCLE_GAIN / BALANCED. VALID_CATEGORIES in
-   app/plans/page.tsx is STANDARD | LIFESTYLE_MEDICAL | SPORTS | CORPORATE |
-   DIGITAL, so all three were silently discarded and three of the four doors
-   dropped the visitor on an unfiltered list of 126 plans — the exact
-   "useless information" this section's own copy promises to solve.
-
-   The real goal taxonomy is MealPlan.subCategory (weight_loss, muscle_gain,
-   balanced, ...), which the catalogue already searches. `?goal=` now seeds
-   that search, so every door lands filtered. */
-const DOORS: Door[] = [
+/* accent: the catalogue's goal taxonomy, unchanged since the plan surfaces were
+   built. See the note in Finder.tsx on why this is the one non-lime hue here. */
+const DOORS: (Omit<DoorSpec, "count"> & { token: string | null })[] = [
   {
     goal: "Lose fat",
     who: "You want the weight down without living on boiled eggs.",
-    what: "Calorie-controlled, protein held high so you keep muscle while the weight comes off.",
+    what: "Calorie-controlled with protein held high, so the weight comes off and the muscle does not.",
     href: "/plans?goal=weight_loss",
     accent: "#a3e635",
+    fitnessGoal: "weight_loss",
+    split: [["Protein", 30], ["Carbohydrate", 43], ["Fat", 27]],
     token: "weight_loss",
-    img: "lose-fat",
   },
   {
     goal: "Build muscle",
     who: "You train, and eating enough is the part that keeps failing.",
-    what: "Higher calories, protein spread across four meals so you actually hit the number.",
+    what: "Higher calories with protein spread across four meals, so you actually hit the number.",
     href: "/plans?goal=muscle_gain",
     accent: "#f59e0b",
+    fitnessGoal: "muscle_gain",
+    split: [["Protein", 28], ["Carbohydrate", 45], ["Fat", 27]],
     token: "muscle_gain",
-    img: "build-muscle",
   },
   {
     goal: "Just eat well",
@@ -82,8 +62,9 @@ const DOORS: Door[] = [
     what: "Balanced macros, varied cuisines, cooked properly. Nothing about it feels like a diet.",
     href: "/plans?goal=balanced",
     accent: "#38bdf8",
+    fitnessGoal: "maintenance",
+    split: [["Protein", 22], ["Carbohydrate", 51], ["Fat", 27]],
     token: "balanced",
-    img: "eat-well",
   },
   {
     goal: "Eat for a condition",
@@ -91,127 +72,71 @@ const DOORS: Door[] = [
     what: "Written for a diagnosis by a nutritionist, not a generic plan with the rice taken out.",
     href: "/plans?category=LIFESTYLE_MEDICAL",
     accent: "#2dd4bf",
+    fitnessGoal: "manage_condition",
+    split: [["Protein", 25], ["Carbohydrate", 48], ["Fat", 27]],
     token: null,
-    img: "condition",
   },
 ];
 
-/** Real counts, queried. The card used to assert "70 condition plans" as a
- *  typed string; every number below is now the count of plans the door's own
- *  link will actually show, so the card cannot promise a number the next page
- *  contradicts.
- *
- *  NOT filtered by diet, deliberately, and this is worth knowing: the 126 plans
- *  are one row per goal PER DIET VARIANT, so `weight_loss` is 5 rows of which
- *  exactly 1 is VEG. Counting on the catalogue's default VEG filter would put
- *  "1 plan" on a card sitting under the sentence "there are 126 plans", which
- *  is true and useless. The door is about the goal; diet is a switch the
- *  visitor controls on the next page. */
 async function doorCounts(): Promise<Record<string, number>> {
-  const db = prisma as unknown as {
-    mealPlan: {
-      count: (a: unknown) => Promise<number>;
-    };
-  };
-
   const out: Record<string, number> = {};
   for (const d of DOORS) {
-    out[d.goal] = await db.mealPlan.count({
-      where: d.token
-        ? { subCategory: { contains: d.token } }
-        : { category: "LIFESTYLE_MEDICAL" },
-    });
+    try {
+      out[d.goal] = await prisma.mealPlan.count({
+        where: d.token ? { subCategory: { contains: d.token } } : { category: "LIFESTYLE_MEDICAL" },
+      });
+    } catch {
+      out[d.goal] = 0;
+    }
   }
   return out;
 }
 
+/* The catalogue total, counted. NOT the sum of the four doors: the doors are
+   goal filters that neither partition nor cover MealPlan, so adding them gave
+   "85 plans" in the headline under a catalogue of 126. */
+async function planTotal(): Promise<number | null> {
+  try {
+    return await prisma.mealPlan.count();
+  } catch {
+    return null;
+  }
+}
+
 export default async function Pick() {
-  const counts = await doorCounts();
+  const [counts, total] = await Promise.all([doorCounts(), planTotal()]);
+  /* Fields listed rather than spread-minus-token: `token` is a query detail and
+     has no business crossing into the client component. */
+  const doors: DoorSpec[] = DOORS.map((d) => ({
+    goal: d.goal,
+    who: d.who,
+    what: d.what,
+    href: d.href,
+    accent: d.accent,
+    fitnessGoal: d.fitnessGoal,
+    split: d.split,
+    count: counts[d.goal] ?? 0,
+  }));
 
   return (
-    <section aria-labelledby="hp-pick" style={SECTION}>
+    <section id="hp-finder" aria-labelledby="hp-finder-h" style={{ padding: "clamp(48px,6.5vw,90px) 0" }}>
       <div style={WRAP}>
         <Idx label="Find yours" />
 
-        <div className={`${s.duo} ${s.reveal}`}>
-          <h2 id="hp-pick" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "13ch" }}>
-            Which one of these is you?
+        <div className={v.rise}>
+          <h2 id="hp-finder-h" style={{ ...display("clamp(2.4rem,6.6vw,5.4rem)"), maxWidth: "16ch" }}>
+            {total === null ? "Every plan we run" : `${total} plans`} is useless until you know
+            which are yours
           </h2>
-          <p style={{ ...body(16.5) }}>
-            There are 126 plans, which is useless information until you know which four are
-            yours. Pick the row that sounds like your life and the catalogue opens filtered.
-          </p>
         </div>
 
-        <div className={`${s.stats} ${s.deep}`} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
-          {DOORS.map((d, i) => (
-            <Link
-              key={d.goal}
-              href={d.href}
-              className={`${s.stat} ${s.stagger} ${s.lift} ${s.doorCard}`}
-              /* The monogram the ::after paints as a ghost numeral behind the
-                 card, so the four doors are countable at a glance and the card
-                 has something in it besides three paragraphs. */
-              data-mono={String(i + 1).padStart(2, "0")}
-              style={
-                {
-                  textDecoration: "none",
-                  display: "flex",
-                  flexDirection: "column",
-                  /* The top rule is now painted by .doorCard::before, which
-                     grows from a stub to the full width on hover — the card's
-                     only previous hover was translateZ(38px), which is real
-                     but invisible without a depth cue to read it against. */
-                  "--accent": d.accent,
-                  "--i": i,
-                } as CSSProperties
-              }
-            >
-              {/* Renders only once the file exists. Until then the card is
-                  exactly what it is today, so this ships safely ahead of the
-                  artwork instead of leaving four grey boxes on the page. */}
-              {(() => {
-                const g = slot("goals", d.img);
-                return g ? (
-                  <div className={s.cardMedia}>
-                    <Image
-                      src={g.src}
-                      alt=""
-                      fill
-                      sizes="(max-width: 780px) 50vw, 25vw"
-                      quality={72}
-                    />
-                    {g.ai && (
-                      <p className="sr-only">Illustrative AI-generated image.</p>
-                    )}
-                  </div>
-                ) : null;
-              })()}
-              <h3 style={{ ...sub("clamp(1.2rem,2vw,1.6rem)"), color: d.accent }}>{d.goal}</h3>
-              <p style={{ ...body(15), color: INK, marginTop: 12 }}>{d.who}</p>
-              <p style={{ ...body(14), marginTop: 10 }}>{d.what}</p>
-              <span
-                style={{
-                  ...body(14),
-                  color: d.accent,
-                  marginTop: "auto",
-                  paddingTop: 18,
-                  fontWeight: 600,
-                }}
-              >
-                {counts[d.goal]} {counts[d.goal] === 1 ? "plan" : "plans"} <span className={s.doorArrow}>&rarr;</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        <p style={{ ...body(15), marginTop: 22, color: DIM }}>
-          Not sure yet? Every plan&rsquo;s full menu is public before you pay, the{" "}
-          <Link href="/tdee-calculator" style={{ color: LIME }}>
-            TDEE calculator
-          </Link>{" "}
-          is free and needs no account, and the trial day is {TRIAL_TOTAL_LABEL} with nothing to cancel.
+        <p className={v.rise} style={{ ...body(16.5), margin: "clamp(18px,2.4vw,26px) 0 0", maxWidth: "60ch" }}>
+          Pick a goal, set your numbers, and watch the target it produces. This is the same
+          arithmetic the plan builder runs: Mifflin St Jeor for the resting figure, your
+          activity multiplier, then the goal adjustment, held above the calorie floor.
         </p>
+
+        <Finder doors={doors} />
       </div>
     </section>
   );

@@ -1,0 +1,1531 @@
+/* app/_hp/v2.module.css
+   ═══════════════════════════════════════════════════════════════════════════
+   V2 — the Claude Design homepage, ported.
+
+   This implements design/FitFuel Homepage v2.dc.html. Four things in that file
+   are deliberately NOT ported, and it is the same reason each time:
+   DESIGN-FEEDBACK-HOMEPAGE-V2.md rejected them by name in round 2, the file
+   passed, and they came back when round 3 (the image layer) was applied.
+
+     border-radius:50%   two concentric rings behind the film drum
+     box-shadow          0 24px 60px on the floating chat dock
+     twelve infinite     v2Pulse, v2Spin, v2Float, v2Scan, v2Travel, v2Blink,
+       animations        v2Needle, v2Sweep. "Nothing on this page should
+                         breathe forever" (feedback 2.5, which deleted
+                         v2Pulse and v2Spin by name).
+     PLATE_ACCENT        amber and sky on breakfast and lunch. A meal slot is
+                         not category structure, so it gets no hue.
+
+   The goal doors DO keep their accents. Those encode the catalogue's own goal
+   taxonomy and Pick.tsx has shipped them with a written carve-out since the
+   plan surfaces were built, so dropping them here would put the homepage out
+   of step with every page it links to.
+
+   What IS ported is the geometry, which was the part worth having: the welded
+   readout, the instrumented cells, the plate grid, the week picker, the
+   duration chips, the frame switcher, the moat grid.
+
+   Motion is the one reveal DESIGN.md allows (opacity + 16px, .6s,
+   cubic-bezier(.16,1,.3,1)) plus one scaleX for meters that draw themselves
+   once on entry. Both are scroll-driven, so this ships no JavaScript for
+   animation, and both stop dead under prefers-reduced-motion.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.rise {
+  opacity: 1;
+}
+@supports (animation-timeline: view()) {
+  .rise {
+    opacity: 0;
+    animation: riseIn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+  }
+}
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A meter that draws itself once as its row enters. Every bar this is used on
+   is a real measurement, so drawing it is the datum arriving rather than
+   decoration. Where view() is unsupported it is simply full width. */
+.meter {
+  display: block;
+  height: 100%;
+  transform-origin: left;
+}
+@supports (animation-timeline: view()) {
+  .meter {
+    animation: grow linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+}
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .meter {
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ── section furniture ─────────────────────────────────────────────────────
+   Idx already prints the one mono label and its hairline. These are the
+   heading/deck pair that sits under it. */
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: end;
+}
+.subHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #232320;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+.figs {
+  display: flex;
+  gap: clamp(18px, 3vw, 36px);
+  flex-wrap: wrap;
+}
+.figs > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+@media (max-width: 900px) {
+  .head {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── the hero, as a split ──────────────────────────────────────────────────
+   Type left, the one good photograph right. The prototype's 3D box spinning
+   in the deck is dropped: a 26s infinite rotation is exactly what feedback
+   2.5 deleted, and the dial beside it is already the real figure. */
+.hero {
+  position: relative;
+  border-bottom: 1px solid #232320;
+  overflow: hidden;
+}
+.heroGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: stretch;
+  min-height: calc(100svh - 68px);
+}
+.heroMesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.75;
+  background-image: linear-gradient(#131311 1px, transparent 1px),
+    linear-gradient(90deg, #131311 1px, transparent 1px);
+  background-size: 88px 88px;
+}
+.heroType {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(44px, 8vh, 96px) clamp(24px, 3.4vw, 56px) clamp(36px, 6vh, 64px)
+    max(clamp(18px, 4vw, 40px), calc((100vw - 1180px) / 2));
+}
+.heroKicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: clamp(20px, 3vh, 32px);
+}
+.heroKicker i {
+  width: 7px;
+  height: 7px;
+  background: #84cc16;
+  display: block;
+  flex: none;
+}
+.heroKicker span:last-child {
+  flex: 1;
+  height: 1px;
+  background: #232320;
+  max-width: 120px;
+}
+.heroCut {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: clamp(26px, 4vh, 40px);
+  padding-top: 20px;
+  border-top: 1px solid #232320;
+}
+.heroMedia {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #232320;
+  min-height: 52vh;
+}
+.heroFig {
+  position: relative;
+  margin: 0;
+  flex: 1;
+  min-height: 38vh;
+  overflow: hidden;
+  background: #050504;
+}
+.heroFig img {
+  object-fit: cover;
+  object-position: 76% 54%;
+  filter: saturate(1.06) contrast(1.07);
+}
+.heroScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(200deg, rgba(7, 7, 7, 0) 40%, rgba(7, 7, 7, 0.72));
+}
+.heroStamp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #070707;
+  border-right: 1px solid #232320;
+  border-bottom: 1px solid #232320;
+  padding: 10px 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+.heroStamp i {
+  width: 6px;
+  height: 6px;
+  background: #84cc16;
+  display: block;
+}
+.heroDeck {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.8vw, 22px);
+  background: #070707;
+  border-top: 1px solid #232320;
+  padding: clamp(18px, 2.4vw, 30px);
+}
+.heroDial {
+  position: relative;
+  width: clamp(88px, 8.4vw, 124px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.heroDial svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.heroDeckText {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+@media (max-width: 980px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+  }
+  .heroMedia {
+    border-left: 0;
+    border-top: 1px solid #232320;
+  }
+}
+
+/* ── the welded readout ────────────────────────────────────────────────────
+   Signature device 1, and the section that breaks the alternating-band rhythm
+   feedback 2.8 asked for: it is full-bleed with no top gap against the hero.
+   The padding is max(gutter, half the overflow) so the cells line up with the
+   1180px column while the rules still run to both viewport edges. */
+.readout {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #050504;
+  border-bottom: 1px solid #232320;
+  padding: 0 max(clamp(18px, 4vw, 40px), calc((100vw - 1180px) / 2));
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(18px, 2.4vw, 28px) clamp(14px, 2.2vw, 26px);
+  border-left: 1px solid #232320;
+  transition: background 0.25s linear;
+}
+.cell:hover {
+  background: #0c0c0a;
+}
+.readout > :first-child {
+  border-left: 0;
+}
+.cellFoot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+.scale b {
+  color: #f7f7f5;
+  font-weight: 500;
+}
+@media (max-width: 900px) {
+  .readout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .readout > :nth-child(3) {
+    border-left: 0;
+  }
+  .readout > :nth-child(n + 3) {
+    border-top: 1px solid #232320;
+  }
+}
+@media (max-width: 520px) {
+  .readout {
+    grid-template-columns: 1fr;
+  }
+  .readout > * {
+    border-left: 0;
+  }
+  .readout > :nth-child(n + 2) {
+    border-top: 1px solid #232320;
+  }
+}
+
+/* The delivery day as a 24h rule, with the cook and door windows marked. */
+.day24 {
+  position: relative;
+  height: 18px;
+  border-left: 1px solid #33332f;
+  border-right: 1px solid #33332f;
+}
+.day24 i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8px;
+  height: 1px;
+  background: #232320;
+}
+.day24 b {
+  position: absolute;
+  top: 3px;
+  height: 12px;
+  background: #84cc16;
+}
+
+/* The receipt as one stacked bar. Widths are decomposePrice() shares. */
+.stack {
+  display: flex;
+  height: 12px;
+  gap: 1px;
+}
+.stack > span {
+  display: block;
+}
+
+/* Fourteen delivered areas against the kitchen's own mark. */
+.ticks {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+.ticks > span {
+  flex: 1;
+  background: #3a3a36;
+}
+.ticks > :first-child {
+  background: #f7f7f5;
+}
+
+/* The licence, digit by digit. A real number, set as one. */
+.licence {
+  display: flex;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.licence > span {
+  flex: 1;
+  text-align: center;
+  padding: 3px 0;
+  background: #070707;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: #f7f7f5;
+}
+
+/* ── the counts strip ──────────────────────────────────────────────────────
+   Six cells, full bleed to both edges. The Ticker this replaces was killed
+   for scrolling and saying nothing; these do not move, and each figure is a
+   count from Postgres with its unit named underneath. */
+.strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  background: #050504;
+  border-bottom: 1px solid #232320;
+}
+.strip > * {
+  border-left: 1px solid #232320;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.25s linear;
+}
+.strip > :first-child {
+  border-left: 0;
+}
+.strip > :hover {
+  background: #0c0c0a;
+}
+.stripGlyph {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #070707;
+  border-bottom: 1px solid #232320;
+  padding: clamp(12px, 1.6vw, 20px);
+}
+.stripGlyph svg {
+  position: absolute;
+  inset: clamp(12px, 1.6vw, 20px);
+  width: auto;
+  height: auto;
+}
+.stripBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: clamp(16px, 2vw, 24px) clamp(12px, 1.8vw, 20px);
+}
+@media (max-width: 980px) {
+  .strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── the four plates ───────────────────────────────────────────────────────
+   The first plate is wider than the other three: two shapes, not one shape at
+   four widths, so the layout carries which meal is the anchor. */
+.plates {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.plate {
+  position: relative;
+  background: #070707;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+  transition: border-color 0.25s linear;
+}
+.plate:hover {
+  border-color: #4a4a45;
+}
+.plateMedia {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #0a0a09;
+}
+.plateMedia img {
+  object-fit: cover;
+}
+.plateSlot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  padding: 7px 11px;
+  background: #84cc16;
+  color: #070707;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.plateNum {
+  position: absolute;
+  right: 10px;
+  bottom: 2px;
+  z-index: 2;
+  pointer-events: none;
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: clamp(3.4rem, 6vw, 5.4rem);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: #84cc16;
+  opacity: 0.28;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.plate:hover .plateNum {
+  transform: translateY(-5px);
+}
+.plateBody {
+  padding: clamp(18px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.plateBars {
+  margin-top: auto;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.barHead {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #85857e;
+  margin-bottom: 5px;
+}
+.barHead b {
+  color: #f7f7f5;
+  font-weight: 500;
+}
+.barTrack {
+  height: 4px;
+  background: #1c1c1a;
+}
+.plateFoot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 13px;
+  border-top: 1px solid #232320;
+}
+@media (max-width: 980px) {
+  .plates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .plates {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── the week, as a picker ─────────────────────────────────────────────────
+   The one interaction DESIGN-FEEDBACK 5 approved, because it shows the real
+   data the customer is buying. Columns are scaled from a floor rather than
+   from zero, and the floor is printed beside them so the scale is not a lie. */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(6px, 1vw, 14px);
+  align-items: end;
+  height: clamp(170px, 19vw, 250px);
+}
+.weekBtn {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.weekBtn:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 3px;
+}
+.weekColWrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  min-height: 0;
+}
+.weekCol {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 26px;
+  gap: 1px;
+  transform-origin: bottom;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.weekBtn:hover .weekCol {
+  transform: scaleY(1.035);
+}
+.weekSeg {
+  display: block;
+  min-height: 4px;
+}
+.weekKcal {
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: clamp(14px, 1.5vw, 19px);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.weekLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(12px, 2vw, 26px);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+.legend > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend i {
+  width: 11px;
+  height: 11px;
+  display: block;
+}
+.dayPanel {
+  border: 1px solid #232320;
+  background: #070707;
+}
+.dayPanelHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: clamp(16px, 2vw, 22px) clamp(16px, 2.2vw, 26px);
+  border-bottom: 1px solid #232320;
+}
+@media (max-width: 640px) {
+  .weekLabel {
+    display: none;
+  }
+}
+
+/* A hairline row that shifts right and takes a lime edge on hover: signature
+   device 3, used for the day's dishes, the goal doors, the ledger and the
+   film's hour list. */
+.row {
+  display: grid;
+  align-items: baseline;
+  gap: clamp(12px, 2vw, 26px);
+  width: 100%;
+  text-align: left;
+  background: #070707;
+  border: 0;
+  border-top: 1px solid #232320;
+  border-left: 2px solid transparent;
+  padding: clamp(16px, 1.8vw, 22px) clamp(16px, 2.2vw, 26px);
+  transition: background 0.2s linear, padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s linear;
+}
+.row:hover {
+  background: #0c0c0a;
+  padding-left: calc(clamp(16px, 2.2vw, 26px) + 6px);
+  border-left-color: #84cc16;
+}
+.rowBtn {
+  cursor: pointer;
+}
+.rowBtn:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.dishRow {
+  grid-template-columns: 104px minmax(0, 1fr) minmax(0, 1.35fr) auto;
+}
+.macros {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: #85857e;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.macros b {
+  color: #f7f7f5;
+  font-weight: 500;
+}
+.hideSm {
+  display: block;
+}
+@media (max-width: 980px) {
+  .dishRow,
+  .doorRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: clamp(10px, 2vw, 18px);
+    row-gap: 8px;
+  }
+  .dishRow > p,
+  .doorRow > p {
+    order: 9;
+    flex: 1 0 100%;
+  }
+  .dishRow > :last-child:not(p),
+  .doorRow > :last-child:not(p) {
+    margin-left: auto;
+  }
+  .hideSm {
+    display: none;
+  }
+}
+
+/* ── the finder ────────────────────────────────────────────────────────────
+   Four doors, then the arithmetic. The door accents are the catalogue's goal
+   taxonomy, which Pick.tsx has shipped and documented since the plan surfaces
+   were built. They are the one non-lime hue on this page and they encode
+   structure rather than decorate it. */
+.doorRow {
+  grid-template-columns: 52px minmax(0, 0.9fr) minmax(0, 1.5fr) 120px auto;
+  align-items: center;
+  min-height: 68px;
+  border-top: 0;
+  border-bottom: 1px solid #232320;
+}
+.mini {
+  display: flex;
+  height: 6px;
+  gap: 1px;
+  background: #1c1c1a;
+}
+.mini > span {
+  display: block;
+}
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  border-top: 0;
+}
+.panelIn {
+  background: #0c0c0a;
+  padding: clamp(22px, 3vw, 38px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 2.6vw, 30px);
+}
+.panelOut {
+  background: #070707;
+  display: flex;
+  flex-direction: column;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.seg button {
+  flex: 1 1 auto;
+  min-width: 92px;
+  cursor: pointer;
+  border: 0;
+  padding: 12px 8px;
+  min-height: 46px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.18s linear, color 0.18s linear;
+}
+.seg button:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.dialHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* 44px tall to clear DESIGN.md's touch minimum. The visible track is 4px; the
+   height is the hit area around it, which is exactly the "pad the hit area if
+   the visual needs to stay small" case. */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #232320;
+}
+.range::-moz-range-track {
+  height: 4px;
+  background: #232320;
+}
+.range::-moz-range-progress {
+  height: 4px;
+  background: #84cc16;
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 26px;
+  margin-top: -11px;
+  border: 0;
+  background: #f7f7f5;
+  transition: background 0.15s linear;
+}
+.range::-moz-range-thumb {
+  width: 15px;
+  height: 26px;
+  border: 0;
+  border-radius: 0;
+  background: #f7f7f5;
+}
+.range:hover::-webkit-slider-thumb,
+.range:focus-visible::-webkit-slider-thumb {
+  background: #84cc16;
+}
+.range:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 4px;
+}
+.rangeEnds {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #85857e;
+}
+.ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ledgerRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: baseline;
+  padding: 13px clamp(22px, 3vw, 38px);
+  border-bottom: 1px solid #232320;
+  border-left: 2px solid transparent;
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+.ledgerRow:hover {
+  background: #0c0c0a;
+  border-left-color: #84cc16;
+}
+.mealSplit {
+  display: flex;
+  gap: 1px;
+  height: 34px;
+  background: #232320;
+}
+.mealSplit > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+@media (max-width: 900px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── the price builder ─────────────────────────────────────────────────── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.chips button {
+  flex: 1 1 auto;
+  min-width: 120px;
+  cursor: pointer;
+  border: 0;
+  padding: 15px 14px;
+  min-height: 52px;
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 0.2s linear, color 0.2s linear;
+}
+.chips button:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.priceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  border-top: 0;
+}
+.priceMain {
+  background: #070707;
+  padding: clamp(24px, 3.2vw, 42px);
+}
+.priceSide {
+  background: #0c0c0a;
+  padding: clamp(24px, 3.2vw, 42px);
+}
+.rows {
+  border: 1px solid #232320;
+}
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px clamp(14px, 2vw, 20px);
+  border-bottom: 1px solid #232320;
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 14.5px;
+  color: #9a9a94;
+}
+.priceRow:last-child {
+  border-bottom: 0;
+  background: #0c0c0a;
+  color: #f7f7f5;
+}
+.priceRow b {
+  font-family: var(--font-mono), monospace;
+  color: #f7f7f5;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coupons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.coupon {
+  flex: 1 1 auto;
+  min-width: 150px;
+  background: #070707;
+  padding: 14px 16px;
+}
+.couponCode {
+  display: block;
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: #84cc16;
+}
+@media (max-width: 900px) {
+  .priceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── the film ──────────────────────────────────────────────────────────────
+   Seven beats and an hour list. The prototype turns these on a 3D drum that
+   auto-rotates every six seconds: that is perspective, plus an infinite
+   timer, plus motion the reader did not ask for. The frame swaps instead and
+   the list is the control. Same seven stops, same copy, one moving part. */
+.film {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: clamp(26px, 4vw, 60px);
+  align-items: start;
+}
+.frame {
+  position: relative;
+  margin: 0;
+  height: min(62vh, 540px);
+  min-height: 420px;
+  overflow: hidden;
+  background: #050504;
+  border: 1px solid #232320;
+}
+.frame img {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+}
+.frameDuo {
+  position: absolute;
+  inset: 0;
+  background: #84cc16;
+  mix-blend-mode: color;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.frameScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 7, 7, 0.15), rgba(7, 7, 7, 0.96) 64%);
+}
+.frameHour {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: clamp(16px, 2vw, 22px);
+  font-family: var(--ff-cond), sans-serif;
+  font-weight: 900;
+  font-size: clamp(3.4rem, 7vw, 5.6rem);
+  line-height: 0.82;
+  letter-spacing: -0.035em;
+  color: #f7f7f5;
+}
+/* A beat with no honest photograph is a plate: the hour at headline scale over
+   a hairline. lib/site-images.ts resolves four of the seven to null on
+   purpose, and this is what those four render. */
+.framePlate {
+  position: absolute;
+  inset: 0 0 auto 0;
+  padding: clamp(18px, 2.4vw, 30px);
+  border-bottom: 1px solid #232320;
+}
+.frameBody {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: clamp(18px, 2.4vw, 24px);
+}
+.hourList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hour {
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 56px;
+  padding: 15px 12px;
+  border-top: 0;
+  border-bottom: 1px solid #232320;
+}
+.hour:hover {
+  padding-left: 18px;
+}
+@media (max-width: 980px) {
+  .film {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .hour {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+  .hour > :last-child {
+    display: none;
+  }
+}
+
+/* ── evidence tiles, the coach console, the moat grid ─────────────────── */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.tile {
+  background: #070707;
+  padding: clamp(20px, 2.6vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: background 0.2s linear;
+}
+.tile:hover {
+  background: #0c0c0a;
+}
+.inset {
+  background: #0c0c0a;
+  border: 1px solid #1b1b19;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.insetRow {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 34px;
+  gap: 10px;
+  align-items: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+.insetRow b {
+  color: #c6c6c0;
+  font-weight: 400;
+  text-align: right;
+}
+.insetTrack {
+  display: block;
+  height: 9px;
+  background: #151513;
+}
+.insetLine {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #85857e;
+  border-bottom: 1px solid #1b1b19;
+  padding-bottom: 5px;
+}
+.insetLine b {
+  color: #84cc16;
+  font-weight: 400;
+}
+.console {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.consoleMain {
+  background: #0c0c0a;
+  padding: clamp(18px, 2.4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.consoleSide {
+  background: #070707;
+  padding: clamp(18px, 2.2vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.feedTrack {
+  display: block;
+  height: 3px;
+  background: #1b1b19;
+  margin-top: 8px;
+}
+.jobs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  border-top: 0;
+}
+.job {
+  background: #070707;
+  padding: clamp(18px, 2.2vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: background 0.2s linear;
+}
+.job:hover {
+  background: #0c0c0a;
+}
+.consts {
+  margin: 0;
+  border: 1px solid #232320;
+  border-bottom: 0;
+}
+.constRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.5fr) minmax(150px, 0.7fr) minmax(0, 2fr);
+  gap: clamp(14px, 2vw, 26px);
+  align-items: baseline;
+  padding: clamp(14px, 1.7vw, 20px);
+  border-bottom: 1px solid #232320;
+  border-left: 2px solid transparent;
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+.constRow:hover {
+  background: #0c0c0a;
+  border-left-color: #84cc16;
+}
+.moat {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  border-top: 0;
+}
+.moatCard {
+  background: #070707;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s linear;
+}
+.moatCard:hover {
+  background: #0c0c0a;
+}
+.moatTop {
+  background: #0c0c0a;
+  border-bottom: 1px solid #232320;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 212px;
+}
+.moatBody {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex: 1;
+}
+.moatLine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #171715;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: #c6c6c0;
+}
+.moatLine b {
+  font-weight: 400;
+  white-space: nowrap;
+  color: #84cc16;
+}
+.band {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.bandFig {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #050504;
+}
+.bandFig img {
+  object-fit: cover;
+}
+.bandScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 7, 7, 0.08), rgba(7, 7, 7, 0.92) 70%);
+}
+.bandBody {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: clamp(14px, 1.8vw, 22px);
+}
+@media (max-width: 1080px) {
+  .moat {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 980px) {
+  .tiles,
+  .console,
+  .jobs {
+    grid-template-columns: 1fr;
+  }
+  .band {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 720px) {
+  .moat {
+    grid-template-columns: 1fr;
+  }
+  .constRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+/* ── coverage map ──────────────────────────────────────────────────────────
+   Plotted from the coordinates in Areas.tsx, not traced. Rings at 3, 6 and
+   9 km from the Kharadi kitchen. */
+.map {
+  margin: 0;
+  border: 1px solid #232320;
+  background: #070707;
+  padding: clamp(14px, 2.2vw, 30px);
+}
+.map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mapKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(14px, 2.4vw, 30px);
+  margin-top: clamp(12px, 1.6vw, 20px);
+  padding-top: clamp(12px, 1.6vw, 18px);
+  border-top: 1px solid #232320;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+
+/* ── the faq panel ─────────────────────────────────────────────────────── */
+.faq {
+  display: grid;
+  grid-template-columns: 288px minmax(0, 1fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.faqSide {
+  background: #0c0c0a;
+  padding: clamp(18px, 2.2vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #232320;
+  background: #070707;
+  padding: 0 12px;
+  min-height: 48px;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #f7f7f5;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+}
+.search input::placeholder {
+  color: #85857e;
+}
+.search input:focus-visible {
+  outline: none;
+}
+.cat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+  border: 0;
+  border-bottom: 1px solid #1b1b19;
+  border-left: 2px solid transparent;
+  padding: 13px 12px;
+  min-height: 48px;
+  text-align: left;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+.cat:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.faqList {
+  background: #070707;
+}
+.faqItem {
+  border-bottom: 1px solid #232320;
+}
+.faqQ {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-left: 2px solid transparent;
+  padding: 20px clamp(16px, 2vw, 24px);
+  min-height: 56px;
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+.faqQ:hover {
+  background: #0c0c0a;
+  border-left-color: #84cc16;
+}
+.faqQ:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.faqMark {
+  justify-self: end;
+  font-family: var(--font-mono), monospace;
+  font-size: 20px;
+  line-height: 1;
+  color: #84cc16;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.faqOpen .faqMark {
+  transform: rotate(45deg);
+}
+.faqA {
+  padding: 0 clamp(16px, 2vw, 24px) 24px;
+  border-left: 2px solid #84cc16;
+}
+.faqA p {
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: #9a9a94;
+  margin: 0;
+  max-width: 70ch;
+}
+.faqA a {
+  color: #84cc16;
+}
+@media (max-width: 980px) {
+  .faq {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── the sticky order bar ──────────────────────────────────────────────────
+   Solid #070707 and a hairline, never frosted glass: feedback 2.3 killed the
+   backdrop-filter on this exact element and it is not coming back. */
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: #070707;
+  border-top: 1px solid #232320;
+}
+.barIn {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 11px clamp(14px, 4vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.barText {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  min-width: 0;
+}
+.barCta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+@media (max-width: 620px) {
+  .barText {
+    display: none;
+  }
+}

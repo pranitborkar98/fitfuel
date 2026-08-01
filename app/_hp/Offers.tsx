@@ -1,47 +1,121 @@
 // app/_hp/Offers.tsx
 //
-// THE PRICE, AND EVERY WAY TO LOWER IT.
+// THE PRICE, BUILDABLE.
 //
-// Two things had never appeared on this homepage, and both cost real money:
+// Two things had never appeared on this homepage and both cost real money:
 //
-//  1. The coupon codes. They are seeded, live and validated at checkout by
+//  1. The coupon codes. They are seeded, live, and validated at checkout by
 //     lib/coupons.ts, and no visitor could discover one without an email from
-//     us. They are read from the Coupon table with the same validity rules
-//     checkout applies, so an expired code can never sit here looking live.
-//     FREEDEL expired on 23 July and is filtered out by the query, not by hand.
+//     us. They are read here with the same validity gate checkout applies, so an
+//     expired code can never sit on the page looking live.
 //
-//  2. The strike-through. lib/pricing-decomposition.ts already computes an MRP
-//     at 1.85x base, smoothed to a Rs X99 ending, and the plan cards use it. The
-//     homepage was quoting a bare "Rs 400" with nothing to anchor it against.
+//  2. Every duration but one. The receipt was demonstrated on the trial day and
+//     the other six durations were left to the plan pages, which made the
+//     section's own claim — delivery and packaging are named, not buried —
+//     something a visitor had to take on trust six times out of seven.
 //
-// NO INVENTED NUMBERS ANYWHERE. Rs 400 is the real trial subtotal used site
-// wide; every other figure in the receipt is decomposePrice() called on it, so
-// this block and the checkout cannot drift apart.
+// SUBTOTALS ARE QUERIED, NOT EXTRAPOLATED. Every chip is a real PlanPrice row
+// for the reference plan at ALL_FOUR meals, VEGETARIAN. A duration with no
+// seeded price does not get a chip. That matters more than completeness here:
+// this is the section that argues the numbers are checkable, so inventing the
+// three-month figure by multiplying the weekly one would undo it.
 //
-// SERVER COMPONENT.
+// The trial day is always present, from lib/trial-price, because it is the offer
+// the rest of the page is selling and it is derived rather than seeded.
+//
+// SERVER COMPONENT. The chips are a control and live in PriceBuilder.
 
-import type { CSSProperties } from "react";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
-import { TRIAL } from "@/lib/trial-price";
+import { TRIAL_SUBTOTAL_RS } from "@/lib/trial-price";
 import { countPublishedPrices } from "@/lib/site-counts";
 import s from "./hp.module.css";
+import v from "./v2.module.css";
 import Idx from "./Idx";
-import { WRAP, SECTION, INK, MUTE, DIM, LIME, display, sub, body, figure } from "./theme";
+import PriceBuilder, { type Duration, type Coupon } from "./PriceBuilder";
+import { PLAN_SLUG } from "./menu-data";
+import { WRAP, PANEL, DIM, display, body } from "./theme";
+import type { PlanDurationKey } from "@/lib/pricing-decomposition";
 
-type Offer = {
-  code: string;
-  headline: string;
-  terms: string[];
+const money = (n: number) => `Rs ${n.toLocaleString("en-IN")}`;
+
+/* Label and one line of copy per duration. The FIGURES come from Postgres; only
+   the words are here. */
+const COPY: Record<PlanDurationKey, { label: string; blurb: string }> = {
+  TRIAL_DAY: {
+    label: "One day",
+    blurb:
+      "Four meals, cooked and delivered, weighed to your macros. No subscription, no card kept on file, nothing to cancel.",
+  },
+  WEEKLY: {
+    label: "One week",
+    blurb: "Six delivered mornings and a Sunday off. Long enough to know whether you want the month.",
+  },
+  BI_WEEKLY: {
+    label: "Two weeks",
+    blurb: "Twelve delivered mornings. The point at which the diary stops being something you think about.",
+  },
+  MONTHLY_EXCL_WEEKENDS: {
+    label: "Weekdays only",
+    blurb: "Twenty-two deliveries, Monday to Friday. For people who cook at the weekend and not otherwise.",
+  },
+  ONE_MONTH: {
+    label: "One month",
+    blurb: "The full rotation: thirty days, no dish twice running, the whole schedule published before you pay.",
+  },
+  TWO_MONTH: {
+    label: "Two months",
+    blurb: "Long enough for the coach to see a trend, call a plateau and move your target on real weigh-ins.",
+  },
+  THREE_MONTH: {
+    label: "Three months",
+    blurb: "The lowest per-day figure we publish, and the horizon body composition actually changes over.",
+  },
 };
 
-function money(n: number): string {
-  return `Rs ${n.toLocaleString("en-IN")}`;
+const ORDER: PlanDurationKey[] = [
+  "TRIAL_DAY",
+  "WEEKLY",
+  "BI_WEEKLY",
+  "MONTHLY_EXCL_WEEKENDS",
+  "ONE_MONTH",
+  "TWO_MONTH",
+  "THREE_MONTH",
+];
+
+async function getDurations(): Promise<Duration[]> {
+  const seeded = new Map<string, number>();
+  try {
+    const plan = await prisma.mealPlan.findUnique({
+      where: { slug: PLAN_SLUG },
+      select: { id: true },
+    });
+    if (plan) {
+      const rows = await prisma.planPrice.findMany({
+        where: {
+          mealPlanId: plan.id,
+          isActive: true,
+          isDigital: false,
+          diet: "VEGETARIAN",
+          mealsPerDay: "ALL_FOUR",
+        },
+        select: { duration: true, priceRs: true },
+      });
+      for (const r of rows) seeded.set(String(r.duration), r.priceRs);
+    }
+  } catch {
+    /* Fall through: the trial day below is derived and always available, so the
+       section still renders its argument with one real receipt. */
+  }
+
+  return ORDER.flatMap((key) => {
+    const subtotalRs = key === "TRIAL_DAY" ? TRIAL_SUBTOTAL_RS : seeded.get(key);
+    if (!subtotalRs) return [];
+    return [{ key, subtotalRs, label: COPY[key].label, blurb: COPY[key].blurb }];
+  });
 }
 
-/* Only the columns this section reads. Narrower than the Prisma row on
-   purpose: it documents exactly what a coupon has to expose to be printable. */
 type CouponRow = {
   code: string;
   discountType: "PERCENT" | "FLAT" | "FREE_DELIVERY";
@@ -61,27 +135,25 @@ function headlineFor(c: CouponRow): string {
   return "Free delivery";
 }
 
-function termsFor(c: CouponRow): string[] {
+function termsFor(c: CouponRow): string {
   const t: string[] = [];
-  if (c.minOrderRs) t.push(`Orders over ${money(c.minOrderRs)}`);
-  if (c.firstOrderOnly) t.push("First order only");
-  if (c.appliesTo === "DIGITAL") t.push("Digital plans");
-  else if (c.appliesTo === "PHYSICAL") t.push("Delivered plans");
-  else t.push("Any plan");
+  if (c.minOrderRs) t.push(`orders over ${money(c.minOrderRs)}`);
+  if (c.firstOrderOnly) t.push("first order only");
+  if (c.appliesTo === "DIGITAL") t.push("digital plans");
+  else if (c.appliesTo === "PHYSICAL") t.push("delivered plans");
+  else t.push("any plan");
   if (c.validUntil) {
     t.push(
-      `Until ${new Date(c.validUntil).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-      })}`,
+      `until ${new Date(c.validUntil).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`,
     );
   }
-  return t;
+  return t.join(", ");
 }
 
-/* Same validity gate lib/coupons.ts applies, so nothing can be listed here that
-   checkout would then reject. */
-async function getOffers(): Promise<Offer[]> {
+/* The same validity gate lib/coupons.ts applies, so nothing listed here can be
+   rejected at checkout. FREEDEL expired in July and is filtered out by the
+   query rather than by us remembering to. */
+async function getCoupons(): Promise<Coupon[]> {
   try {
     const now = new Date();
     const rows: CouponRow[] = await prisma.coupon.findMany({
@@ -94,7 +166,7 @@ async function getOffers(): Promise<Offer[]> {
         ],
       },
       orderBy: { createdAt: "asc" },
-      take: 4,
+      take: 3,
       select: {
         code: true,
         discountType: true,
@@ -106,165 +178,55 @@ async function getOffers(): Promise<Offer[]> {
         validUntil: true,
       },
     });
-    return rows.map((c) => ({
-      code: c.code,
-      headline: headlineFor(c),
-      terms: termsFor(c),
-    }));
+    return rows.map((c) => ({ code: c.code, headline: headlineFor(c), terms: termsFor(c) }));
   } catch {
     return [];
   }
 }
 
 export default async function Offers() {
-  const [offers, priceCount] = await Promise.all([getOffers(), countPublishedPrices()]);
-  const p = TRIAL;
+  const [durations, coupons, priceCount] = await Promise.all([
+    getDurations(),
+    getCoupons(),
+    countPublishedPrices(),
+  ]);
+
+  if (!durations.length) return null;
 
   return (
-    <section aria-labelledby="hp-offers" style={SECTION}>
+    <section
+      id="hp-price"
+      aria-labelledby="hp-price-h"
+      style={{ padding: "clamp(80px,11vw,160px) 0", background: PANEL, borderTop: "1px solid #232320" }}
+    >
       <div style={WRAP}>
         <Idx label="Price and offers" />
 
-        <div className={s.reveal}>
-          <h2 id="hp-offers" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "14ch" }}>
-            The receipt, before you pay
-          </h2>
-          <p style={{ ...body(16.5), marginTop: 20 }}>
-            Delivery and packaging are separated out and named rather than buried inside a
-            headline price, and GST is stated at 5% instead of appearing on the last screen.
-            Every code below is live in the database right now, with the terms checkout will
-            apply. Expired codes are filtered out by the query, not by us remembering to.
+        <div className={v.head}>
+          <div className={v.rise}>
+            <h2 id="hp-price-h" style={{ ...display("clamp(2.4rem,6.6vw,5.4rem)"), maxWidth: "13ch" }}>
+              Build the receipt before you pay
+            </h2>
+          </div>
+          <p className={v.rise} style={{ ...body(16.5), maxWidth: "48ch" }}>
+            Delivery and packaging are named, not buried. GST is stated at 5% instead of
+            appearing on the last screen. Pick a duration: this is the same arithmetic
+            checkout runs.
           </p>
         </div>
 
-        {/* The anchor: the real trial day, with the real strike. */}
-        <div
-          className={s.split}
-          style={{ marginTop: "clamp(28px,3.6vw,46px)", alignItems: "start" }}
-        >
-          <div>
-            <h3 style={sub("clamp(1.2rem,2vw,1.5rem)")}>The trial day</h3>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginTop: 14 }}>
-              <s className={s.slash} style={{ fontSize: "clamp(1.3rem,2.4vw,1.9rem)" }}>
-                {money(p.mrpRs)}
-              </s>
-              <span style={figure("clamp(2.8rem,6vw,4.6rem)", LIME)}>{money(p.baseRs)}</span>
-            </div>
-            <p style={{ ...body(15), marginTop: 16 }}>
-              Four meals, cooked and delivered, weighed to your macros. No subscription, no
-              card kept on file, nothing to cancel. {money(p.baseRs)} is the food;
-              delivery and packaging are added below at cost rather than smuggled into it.
-            </p>
-            <div className={s.actions} style={{ marginTop: 22 }}>
-              <Link href="/plans?trial=true" className={s.btn}>
-                Book the trial day
-              </Link>
-            </div>
-          </div>
+        <PriceBuilder durations={durations} coupons={coupons} />
 
-          <div>
-            <h3 style={sub("clamp(1.2rem,2vw,1.5rem)")}>What you actually pay</h3>
-            <div className={s.receipt} style={{ marginTop: 14 }}>
-              <div className={s.receiptRow}>
-                <span>The food</span>
-                <span className={s.receiptVal}>{money(p.baseRs)}</span>
-              </div>
-              <div className={s.receiptRow}>
-                <span>Delivery, to your door by 08:00</span>
-                <span className={s.receiptVal}>{money(p.deliveryRs)}</span>
-              </div>
-              <div className={s.receiptRow}>
-                <span>Sealed compartment packaging</span>
-                <span className={s.receiptVal}>{money(p.packagingRs)}</span>
-              </div>
-              <div className={s.receiptRow}>
-                <span>Subtotal</span>
-                <span className={s.receiptVal}>{money(p.subtotalRs)}</span>
-              </div>
-              <div className={s.receiptRow}>
-                <span>GST at {p.gstPercent}%</span>
-                <span className={s.receiptVal}>{money(p.gstRs)}</span>
-              </div>
-              <div className={s.receiptRow}>
-                <span style={{ fontWeight: 600 }}>Total collected</span>
-                <span className={s.receiptVal} style={{ fontWeight: 700 }}>
-                  {money(p.totalRs)}
-                </span>
-              </div>
-            </div>
-            <p style={{ ...body(13.5), color: DIM, marginTop: 14 }}>
-              Cards, UPI and net banking clear through PayU. Cash on delivery is handled by
-              us. Coupons and referral credit are applied and shown before you commit.
-            </p>
-          </div>
-        </div>
-
-        {/* Live codes. */}
-        {offers.length > 0 && (
-          <div style={{ marginTop: "clamp(34px,4.6vw,60px)" }}>
-            <h3 style={{ ...sub("clamp(1.3rem,2.4vw,1.8rem)"), marginBottom: 18 }}>
-              Codes that work today
-            </h3>
-
-            <div className={`${s.offers} ${s.deep}`}>
-              {offers.map((o, i) => (
-                <div
-                  key={o.code}
-                  className={`${s.offer} ${s.stagger} ${s.lift}`}
-                  style={{ "--i": i } as CSSProperties}
-                >
-                  <span className={s.code}>{o.code}</span>
-                  <div style={{ ...sub("clamp(1.05rem,1.6vw,1.2rem)"), color: INK }}>
-                    {o.headline}
-                  </div>
-                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
-                    {o.terms.map((t) => (
-                      <li
-                        key={t}
-                        style={{ ...body(13), color: MUTE, maxWidth: "none" }}
-                      >
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* The two offers that are not codes. */}
-        <div className={`${s.stats} ${s.stats2}`} style={{ marginTop: 1 }}>
-          <div className={s.stat}>
-            <div style={sub("clamp(1.2rem,2vw,1.5rem)")}>Rs 500 to you, Rs 500 to them</div>
-            <p style={{ ...body(14), marginTop: 10 }}>
-              Credit lands when their first order completes, tracked in a ledger you can
-              read. No application, no approval queue.
-            </p>
-            <Link href="/dashboard/referrals" className={s.link} style={{ marginTop: 10 }}>
-              Get your code
+        {priceCount !== null && (
+          <p style={{ ...body(13.5), color: DIM, marginTop: 20, maxWidth: "78ch" }}>
+            {priceCount.toLocaleString("en-IN")} published prices across seven durations, four
+            diets, three tiers and two delivery windows. Every combination has a real price on
+            its plan page with this same breakdown behind it.{" "}
+            <Link href="/plans" className={s.link} style={{ display: "inline" }}>
+              See real prices
             </Link>
-          </div>
-          {/* Counted from PlanPrice at build time, not typed in. If the count
-              cannot be read the tile disappears rather than printing a number
-              we cannot stand behind — which is the whole argument of this
-              section applied to the section itself. */}
-          {priceCount !== null && (
-            <div className={s.stat}>
-              <div style={sub("clamp(1.2rem,2vw,1.5rem)")}>
-                {priceCount.toLocaleString("en-IN")} published prices
-              </div>
-              <p style={{ ...body(14), marginTop: 10 }}>
-                Seven durations from one day to three months, four diets, three tiers, two
-                delivery windows. Every combination has a real price on the plan page, with
-                this same breakdown behind it.
-              </p>
-              <Link href="/plans" className={s.link} style={{ marginTop: 10 }}>
-                See real prices
-              </Link>
-            </div>
-          )}
-        </div>
+          </p>
+        )}
       </div>
     </section>
   );

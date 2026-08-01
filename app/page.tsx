@@ -1,103 +1,86 @@
 import type { Metadata } from "next";
 
 import StructuredData from "@/components/StructuredData";
-import WhatsAppOrder from "@/components/WhatsAppOrder";
 import s from "./_hp/hp.module.css";
 import Hero from "./_hp/Hero";
-import Coach from "./_hp/Coach";
+import Readout from "./_hp/Readout";
+import Counts from "./_hp/Counts";
 import TrialDay from "./_hp/TrialDay";
 import Week from "./_hp/Week";
-import Hungry from "./_hp/Hungry";
 import Pick from "./_hp/Pick";
-import Steps from "./_hp/Steps";
-import Why from "./_hp/Why";
-import Proof from "./_hp/Proof";
-import Areas from "./_hp/Areas";
 import Offers from "./_hp/Offers";
-import Corporate from "./_hp/Corporate";
-import Network from "./_hp/Network";
+import Day from "./_hp/Day";
+import Coach from "./_hp/Coach";
+import Why from "./_hp/Why";
+import Areas from "./_hp/Areas";
 import More from "./_hp/More";
 import Faq from "./_hp/Faq";
 import Close from "./_hp/Close";
-import Day from "./_hp/Day";
+import OrderBar from "./_hp/OrderBar";
 import { BG, INK } from "./_hp/theme";
 
 /* ══════════════════════════════════════════════════════════════════════
-   FITFUEL HOMEPAGE — twelve sections, food first.
+   FITFUEL HOMEPAGE — the Claude Design v2 structure, on real data.
 
-   WHAT WAS ACTUALLY WRONG, after three months of reskinning it.
+   WHAT THIS IS. design/FitFuel Homepage v2.dc.html, implemented. That file
+   is the third round of a design that has been through two written reviews
+   in this repo (DESIGN-FEEDBACK-HOMEPAGE-V2.md, DESIGN-PROMPT-HOMEPAGE-V3.md),
+   and this page is its geometry wired to Postgres.
 
-   Not the palette, and not the corner radius. Two things:
+   WHAT CHANGED FROM THE PREVIOUS HOMEPAGE. Not the palette and not the
+   corner radius. The shape:
 
-   1. ORDER. The page explained our system before it showed anyone food. The
-      first dish name used to sit four screens down, behind a film about our
-      4am kitchen. Everyone who looked at it — the owner, and two independent
-      outside reviews — reached the same verdict without conferring: it sells
-      the system instead of the food.
+     WELDED, NOT STACKED. The readout bar has no top gap against the hero
+       and runs to both viewport edges, and the counts strip does the same
+       under it. Three sections now break the alternating-band rhythm that
+       feedback §2.8 called out as twelve identical containers in a row.
+     INSTRUMENTS, NOT STAT TILES. Every figure that used to be a number and
+       a caption now carries the thing that proves it: the delivery day as a
+       24h rule, the receipt as a stacked bar, the coverage as a plotted map,
+       the licence as its own digits.
+     ONE INTERACTION EARNED, THREE REFUSED. Feedback §5 said pick one and
+       cut the rest. The week picker is the one, because it shows the real
+       data the customer is buying. The finder and the price builder survived
+       too — both run the SHIPPED functions (lib/tdee, decomposePrice)
+       against real rows rather than demonstrating an idea.
 
-   2. ASSETS. /public/images contains eight photographs and exactly ONE is a
-      plated dish. That is the real reason every version of this page has been
-      made of words: with one food photo there was nothing else to build with.
-      No layout fixes that. Roughly fifteen photographs of real FitFuel boxes
-      would change this page more than anything in this file.
+   FOUR THINGS IN THE PROTOTYPE ARE DELIBERATELY NOT HERE. Each was rejected
+   by name in round 2, and each came back when round 3 was applied:
 
-   So this is short, and the food leads:
+     the 3D drum       perspective + a 6s auto-advance, on the film section.
+                       Flat frame switcher instead, same seven beats.
+     the chat console  an input box with no model behind it. Coach.tsx keeps
+                       the console shape and loses the dead half.
+     twelve infinite   v2Pulse and v2Spin were deleted by name in §2.5.
+       animations      Motion here is one reveal and one meter, both
+                       scroll-driven, both dead under reduced-motion.
+     nineteen empty    before/after customer photos, six supplement shots,
+       image slots     twelve partner logos. No files exist for any of them,
+                       and a slot with no honest photograph renders type.
 
-     Hero      full-bleed, one promise, the price, the licence
-     TrialDay  the four real dishes that arrive tomorrow, from the DB
-     Week      seven days of real dish names and macros, from the schedule
-     Hungry    single meals, no subscription — the route to /menu
-     Pick      which of these is you: fat, muscle, eat well, a condition
-     Ticker    the catalogue's scale, scroll-scrubbed, counted from Postgres
-     Steps     three steps, from the customer's side of the counter
-     Day       the film: 04:00 to the next morning, our side of the counter
-     Why       four claims that survive being checked
-     Proof     the testimonials we actually have
-     Areas     do we reach you
-     Offers    the receipt, the strike-through, live coupon codes
-     More      everything else the business runs, one line each
-     Faq       objections, from the DB
-     Close     the ask, then a directory of the whole site
+   PER-CATEGORY ACCENT, ONE PLACE ONLY. The prototype spreads #f59e0b,
+   #38bdf8 and #2dd4bf across meal slots, counts glyphs, coach feeds and
+   supplement grades. DESIGN.md bans those by hex. They survive on the four
+   goal doors and nowhere else, because there they encode the catalogue's own
+   taxonomy and Pick.tsx has shipped them with a written carve-out since the
+   plan surfaces were built.
 
-   ON CUTTING. The previous version had nineteen sections because the brief was
-   that nothing built should be invisible. That brief was right and the
-   execution was wrong: BREADTH DOES NOT REQUIRE CHAPTERS. The app, the coach,
-   the 952-exercise library, supplements, corporate, partners, franchise and
-   the TDEE tool are all still one click from here — they live in More.tsx as a
-   line each, and each destination is a real page that explains itself.
+   STILL ON DISK, NOT IMPORTED: Proof (merged into Why), Corporate and
+   Network (tiles in More), Hungry, Steps, Ticker, Loop, Inside, Supplements,
+   Wedge, Conditions, Aggregators, ShopRow, HeroDial. Nothing is deleted;
+   every destination is a real page one click away.
 
-   RE-SEATED SINCE: Coach, Corporate and Network (real moats, see below), then
-   Day and Ticker. Day was the accidental one — Steps.tsx asserts "the film is
-   still on the page", which stopped being true at the 19→13 cut and was never
-   noticed because nothing errors when a component is merely never imported.
+   EVERY NUMBER COMES FROM POSTGRES. Dishes and the week are
+   PlanScheduleSlot joined to Recipe. Durations are PlanPrice rows and the
+   receipt is decomposePrice(). Coupons are the Coupon table under the same
+   validity gate checkout applies. Quotes are Testimonial, questions are Faq,
+   counts are lib/site-counts. Anything that cannot be read fails soft: the
+   section drops rather than printing a figure we cannot stand behind.
 
-   STILL ON DISK, DELIBERATELY: Loop, Inside, Supplements, Wedge, Conditions.
-   The first three are covered by More.tsx, which links to /supplements,
-   /dashboard/nutrition, /dashboard/exercises and /dashboard/body-metrics —
-   re-seating them would duplicate content that is already one click away.
-   Wedge (the tiffin/app/supplement comparison) and Conditions (the 38-condition
-   manifest) are the two with no equivalent on the page and are the first
-   candidates if this page ever grows again.
-
-   ON WHAT IS NOT HERE. Two outside reviews asked for "Rated 4.8/5 by 500+",
-   "Join 200+ Punekars", "500+ meals weekly", "free delivery" and "no
-   preservatives". The database has 5 users and 8 testimonials, delivery is
-   Rs 50 and itemised on the receipt below, and no preservative test has been
-   run. None of those lines are on this page and none should be: on a licensed
-   food business an invented trust claim is not a growth tactic.
-
-   STILL OPEN, and neither is a code problem:
-   - Real food photography. This is now the critical path. Every slot is wired
-     (lib/site-images.ts) and every prompt is written (IMAGE-BRIEF-V2.md, 104
-     of them); what is missing is the files. `node scripts/image-status.mjs`
-     prints what has landed.
-   - The order cutoff time ("order by 8pm for next-day") is the cheapest
-     urgency available and nobody has told me what it is.
-
-   EVERY NUMBER COMES FROM POSTGRES. Dishes and the week are PlanScheduleSlot
-   joined to Recipe. Coupons are the Coupon table under the same validity gate
-   checkout applies. The receipt is decomposePrice(). Quotes are Testimonial,
-   questions are Faq.
+   STILL OPEN, and it is not a code problem: real food photography. Every
+   slot is wired (lib/site-images.ts) and all 104 prompts are written
+   (IMAGE-BRIEF-V2.md). What is missing is the files.
+   `node scripts/image-status.mjs` prints what has landed.
 ══════════════════════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
@@ -106,79 +89,59 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    /* No paddingTop: the hero bleeds under the fixed header on purpose and
-       re-adds the 68px inside itself, so the photograph starts at the top of
-       the viewport instead of below a black bar. */
     <div style={{ background: BG, color: INK, minHeight: "100vh", overflowX: "clip" }}>
       <div className={s.grain} aria-hidden="true" />
 
       <StructuredData />
 
-      {/* ── the food ─────────────────────────────────────────────── */}
+      {/* ── the offer, welded ────────────────────────────────────────
+          Hero, readout and counts are one continuous band: no section
+          padding between them and no gap where a rule would normally sit.
+          This is the run that breaks the twelve-identical-containers
+          rhythm, and it is why the readout reads as part of the promise
+          rather than as a stat strip underneath it. */}
       <Hero />
+      <Readout />
+      <Counts />
+
+      {/* ── the food ─────────────────────────────────────────────────
+          Four plates, then the week. The trial day is the unit you can
+          buy without a subscription, so it leads; the week comes next,
+          once the reader has agreed the day is real. */}
       <TrialDay />
       <Week />
-      {/* The escape hatch, and it sits BEFORE Pick on purpose. Pick asks which
-          plan you are, which is the wrong question for someone who has not
-          decided to subscribe at all. Everything above this point has been
-          about a plan; this is where the page admits you can just buy dinner. */}
-      <Hungry />
+
+      {/* ── which one is you, and what does it cost ──────────────────
+          The finder runs lib/tdee's own Mifflin St Jeor and prints the
+          ledger; the price builder runs decomposePrice() across every
+          seeded duration. Both are controls rather than claims. */}
       <Pick />
-      {/* THE AI COACH, moved up from position nine. It used to sit behind
-          Steps and the film, which meant a visitor looking for the AI — and
-          the owner did, repeatedly — had to get eight sections deep to find a
-          band labelled "The engine". Both problems are fixed: it is labelled
-          for what people scan for, and it sits directly after the question
-          "which one of these is you?", where "here is what decides your
-          number" is the natural next answer. */}
-      <Coach />
-      {/* Ticker REMOVED at the owner's instruction. It ran "952 exercises /
-          46 supplements / 38 conditions / 59 programmes / 154 foods" as a
-          scrolling band, and his verdict was that it is ugly and says nothing
-          — which is right: every number in it was a capability count, not a
-          reason to buy dinner. The counts still exist in lib/site-counts.ts
-          and the destinations are all one line away in More.tsx. */}
-
-      {/* ── how, why, and who says so ────────────────────────────── */}
-      <Steps />
-      {/* THE FILM, re-seated. Steps.tsx has always claimed "the film is still
-          on the page" and it was not — it was cut with the 19→13 reduction and
-          the comment went stale. It earns its place here rather than earlier:
-          Steps is THEIR day (choose, receive, eat), this is OURS (04:00 cook
-          sheet, the scale, dispatch), and our day is only interesting once
-          someone has decided theirs. It is also the only section that shows
-          the kitchen instead of describing it, which two reviews asked for. */}
-      <Day />
-      <Why />
-      <Proof />
-
-      {/* ── can I get it, what does it cost ──────────────────────── */}
-      <Areas />
       <Offers />
 
-      {/* ── the two B2B revenue lines, re-seated as full sections ──
-          These were consolidated into More.tsx as one line each. The owner's
-          standing brief is that corporate and the partner network are real
-          moats that must be visible, not a footnote — so they run as full
-          sections here. They stay one click from More too, which is fine: the
-          coach and the engine are handled the same way. Corporate is PANEL,
-          Network is BG, so the Offers→Corporate→Network→More run alternates
-          dark/light/dark and no two wells sit flush. */}
-      <Corporate />
-      <Network />
+      {/* ── how, and who says so ─────────────────────────────────────
+          Day is OUR side of the counter (the 04:00 cook sheet, the scale,
+          dispatch) and it only earns its place after someone has decided
+          about theirs. Coach then shows the arithmetic nobody else
+          publishes, and Why carries the four checkable claims. */}
+      <Day />
+      <Coach />
+      <Why />
 
-      {/* ── the rest of the business, one line each ──────────────── */}
+      {/* ── can I get it, and what else is there ─────────────────────
+          Areas is the plotted map: one kitchen, a tight cluster, and the
+          decision not to serve the whole city badly. More is the other
+          eight products as tiles rather than eight more sections. */}
+      <Areas />
       <More />
 
-      {/* ── close ────────────────────────────────────────────────── */}
+      {/* ── close ────────────────────────────────────────────────────── */}
       <Faq />
       <Close />
 
-      {/* India orders food on WhatsApp. The page had no WhatsApp path at all
-          outside the footer, which for a Pune food business is the single
-          biggest conversion leak on it. Appears after the first screen so it
-          never covers the hero CTA. */}
-      <WhatsAppOrder />
+      {/* The price and both order paths, always in reach. Replaces the
+          floating WhatsApp bubble on this page: two fixed elements in the
+          same corner is how a phone loses its bottom 140px. */}
+      <OrderBar />
     </div>
   );
 }

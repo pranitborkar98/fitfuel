@@ -1,24 +1,24 @@
 // app/_hp/Faq.tsx
 //
 // Objection handling, from the Faq table (admin-editable at /admin/content).
-// Native <details>, so it works with zero JavaScript and is keyboard accessible
-// for free. Capped at eight; the other nine live on /faq.
+// Capped at eight; the other nine live on /faq.
 //
-// answerHtml is owner-authored light HTML from the admin panel, the same trust
-// boundary the existing /faq surface uses.
+// The panel below is a client island because it searches and filters, but every
+// question and every answer is server-rendered into the DOM and merely hidden
+// when filtered out. So this section works without JavaScript, it is crawlable,
+// and the FAQPage JSON-LD on the page describes exactly what is rendered.
 //
 // SERVER COMPONENT.
 
-import Link from "next/link";
-
 import { prisma } from "@/lib/prisma";
-import s from "./hp.module.css";
+import v from "./v2.module.css";
 import Idx from "./Idx";
-import { WRAP, SECTION, display, body } from "./theme";
+import FaqPanel, { type FaqRow } from "./FaqPanel";
+import { WRAP, PANEL, display, body } from "./theme";
 
 const MAX = 8;
 
-async function getFaqs() {
+async function getFaqs(): Promise<FaqRow[]> {
   try {
     return await prisma.faq.findMany({
       where: { isActive: true },
@@ -36,37 +36,24 @@ export default async function Faq() {
   if (!faqs.length) return null;
 
   return (
-    <section aria-labelledby="hp-faq" style={SECTION}>
+    <section
+      aria-labelledby="hp-faq"
+      style={{ padding: "clamp(56px,7vw,104px) 0", background: PANEL, borderTop: "1px solid #232320" }}
+    >
       <div style={WRAP}>
         <Idx label="Questions" />
 
-        <div className={`${s.duo} ${s.reveal}`}>
-          <h2 id="hp-faq" style={{ ...display("clamp(2.1rem,5.6vw,4.2rem)"), maxWidth: "14ch" }}>
+        <div className={v.head}>
+          <h2 id="hp-faq" className={v.rise} style={{ ...display("clamp(2.4rem,6.6vw,5.4rem)"), maxWidth: "14ch" }}>
             The questions you were going to ask
           </h2>
-          <p style={{ ...body(16.5) }}>
-            Answered here rather than after you have paid. If yours is not below, the full
-            list is on the FAQ page and we answer on WhatsApp within the working day.
+          <p className={v.rise} style={{ ...body(16.5), maxWidth: "46ch" }}>
+            Search them or filter them. Answered here rather than after you have paid, and the
+            full list is one click away.
           </p>
         </div>
 
-        <div className={s.faq} style={{ marginTop: "clamp(26px,3.4vw,44px)" }}>
-          {faqs.map((f) => (
-            <details key={f.id} className={s.faqItem}>
-              <summary>{f.question}</summary>
-              <div className={s.faqBody} dangerouslySetInnerHTML={{ __html: f.answerHtml }} />
-            </details>
-          ))}
-        </div>
-
-        <div className={s.actions} style={{ marginTop: 26 }}>
-          <Link href="/faq" className={s.ghost}>
-            Every question we get
-          </Link>
-          <Link href="/contact" className={s.link}>
-            Ask us directly
-          </Link>
-        </div>
+        <FaqPanel faqs={faqs} />
       </div>
     </section>
   );

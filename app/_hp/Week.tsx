@@ -1,28 +1,37 @@
 // app/_hp/Week.tsx
 //
-// THE WEEK. Seven days, from the database, as a real table.
+// THE WEEK. Seven days, from the database, pickable.
 //
-// A MONTH WAS THE WRONG UNIT. The previous versions of this page printed a
-// sixty-cell grid counting menu days, and a thirty-day schedule nobody can hold
-// in their head. Neither told a visitor what Thursday looks like. A week is the
-// unit a person actually plans against — one shop, one gym cycle, one payday —
-// so the homepage shows exactly seven days and links to the full schedule on the
-// plan page for anyone who wants all thirty.
+// A MONTH WAS THE WRONG UNIT. Earlier versions printed a sixty-cell grid and a
+// thirty-day schedule nobody can hold in their head, and neither told a visitor
+// what Thursday looks like. A week is the unit a person plans against: one shop,
+// one gym cycle, one payday. Thirty days publish on the plan page.
 //
-// It is a real <table>: seven rows, four meal columns and a day total. Tabular
-// data rendered as a grid of divs cannot be parsed by assistive tech, and this
-// is about as tabular as data gets.
+// TWO EXPRESSIONS OF ONE DATASET, on purpose:
+//
+//   WeekPicker   seven columns you can tap, the active day's dishes below. The
+//                one interactive device on this page, and the one
+//                DESIGN-FEEDBACK §5 said earns its keep.
+//   the table    a real <table>, seven rows, four meal columns and a day total.
+//                Server-rendered, always present. This is what a screen reader
+//                and a crawler read, and it is why the picker is allowed to be
+//                a client component at all: nothing depends on JavaScript to
+//                reach the data.
+//
+// Tabular data rendered as a grid of divs cannot be parsed by assistive tech and
+// this is about as tabular as data gets, so the table is not a fallback. It is
+// the primary rendering; the picker is the view on top of it.
 //
 // SERVER COMPONENT. Shares one query with TrialDay via menu-data's cache().
 
 import Link from "next/link";
 
 import s from "./hp.module.css";
+import v from "./v2.module.css";
 import Idx from "./Idx";
+import WeekPicker from "./WeekPicker";
 import { getWeek, totals, PLAN_SLUG, SLOT_ORDER, SLOT_LABEL, WEEK_DAYS, type Dish } from "./menu-data";
-import { WRAP, SECTION, PANEL, DIM, display, body } from "./theme";
-
-const DAY_LABEL = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
+import { WRAP, PANEL, DIM, display, body } from "./theme";
 
 export default async function Week() {
   const week = await getWeek();
@@ -36,79 +45,51 @@ export default async function Week() {
   const byDay = (d: number, slot: string): Dish | undefined =>
     week.find((x) => x.day === d && x.slot === slot);
 
-  const weekKcal = totals(week).kcal;
-  const avg = Math.round(weekKcal / days.length);
+  const avg = Math.round(totals(week).kcal / days.length);
+  const distinct = new Set(week.map((d) => d.name)).size;
 
   return (
-    <section aria-labelledby="hp-week" style={{ ...SECTION, background: PANEL }}>
+    <section
+      aria-labelledby="hp-week"
+      style={{ padding: "clamp(72px,10vw,150px) 0", background: PANEL, borderTop: "1px solid #232320" }}
+    >
       <div style={WRAP}>
         <Idx label="The week" />
 
-        {/* Title only — both paragraphs removed at the owner's instruction.
-            The three facts they carried are now three figures beside the
-            heading, where they read in a glance instead of in a sentence. */}
-        <div className={s.trialHead}>
-          <h2 id="hp-week" style={{ ...display("clamp(2.4rem,6.4vw,5rem)"), maxWidth: "12ch" }}>
-            A week you can actually picture
-          </h2>
-
-          <div className={s.weekFigs}>
-            <div>
-              <b>{avg}</b>
-              <span>kcal average day</span>
-            </div>
-            <div>
-              <b>{new Set(week.map((d) => d.name)).size}</b>
-              <span>distinct dishes</span>
-            </div>
-            <div>
-              <b>30</b>
-              <span>days on the plan</span>
-            </div>
+        <div className={v.head}>
+          <div className={v.rise}>
+            <h2 id="hp-week" style={{ ...display("clamp(2.4rem,6.6vw,5.4rem)"), maxWidth: "13ch" }}>
+              Pick a day. See exactly what you eat.
+            </h2>
           </div>
+          <p className={v.rise} style={{ ...body(16.5), maxWidth: "48ch" }}>
+            Seven days, {distinct} distinct dishes, an average of {avg.toLocaleString("en-IN")} kcal.
+            The bars are real calories: tap one and the day below changes. Thirty days publish
+            on the plan page.
+          </p>
         </div>
 
-        {/* THE RHYTHM. The table below is correct and accessible and reads as
-            a spreadsheet, which is the complaint. This is the same seven days
-            as a shape you can take in at a glance: one column per day, the
-            four meals stacked in their real proportion, the day's protein as
-            a lime cap. Nothing here is decoration — every band is a dish's
-            actual calories, and the table underneath is the accessible
-            expression of the identical data. */}
-        <div className={s.rhythm} aria-hidden="true">
-          {days.map((d) => {
-            const dayDishes = SLOT_ORDER.map((slot) => byDay(d, slot)).filter(Boolean) as Dish[];
-            const t = totals(dayDishes);
-            const peak = Math.max(
-              ...days.map((x) => totals(week.filter((y) => y.day === x)).kcal),
-            );
+        <WeekPicker week={week} days={days} />
 
-            return (
-              <div key={d} className={s.rhythmCol} style={{ "--h": `${(t.kcal / peak) * 100}%` } as React.CSSProperties}>
-                <div className={s.rhythmBar}>
-                  {dayDishes.map((dish, i) => (
-                    <span
-                      key={dish.slot}
-                      className={s.rhythmSeg}
-                      style={{
-                        flexGrow: Number(dish.kcal ?? 0),
-                        opacity: 0.42 + i * 0.19,
-                      }}
-                    />
-                  ))}
-                </div>
-                <b>{Math.round(t.kcal)}</b>
-                <span>D{d}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className={s.specWrap}>
+        {/* The same seven days as a real table. Not a fallback: this is the
+            accessible expression of the identical data, and it is server
+            rendered whether or not the picker above ever hydrates. */}
+        <details className={s.specWrap} style={{ marginTop: "clamp(20px,2.6vw,30px)" }}>
+          <summary
+            style={{
+              ...body(13.5),
+              color: DIM,
+              cursor: "pointer",
+              padding: "14px clamp(14px,2vw,20px)",
+              maxWidth: "none",
+            }}
+          >
+            All seven days as a table
+          </summary>
           <table className={`${s.spec} ${s.week}`}>
             <caption className="sr-only">
-              Days 1 to {days.length} of the Weight Loss Vegetarian schedule, with each
-              meal and its calories
+              Days 1 to {days.length} of the Weight Loss Vegetarian schedule, with each meal
+              and its calories
             </caption>
             <thead>
               <tr>
@@ -123,12 +104,11 @@ export default async function Week() {
             </thead>
             <tbody>
               {days.map((d) => {
-                const dayDishes = week.filter((x) => x.day === d);
-                const t = totals(dayDishes);
+                const t = totals(week.filter((x) => x.day === d));
                 return (
                   <tr key={d}>
                     <th scope="row" className={s.weekDay}>
-                      {DAY_LABEL[d - 1] ?? `Day ${d}`}
+                      Day {d}
                     </th>
                     {SLOT_ORDER.map((slot) => {
                       const dish = byDay(d, slot);
@@ -138,12 +118,12 @@ export default async function Week() {
                             <>
                               <span className={s.weekDish}>{dish.name}</span>
                               <span className={s.weekKcal}>
-                                {dish.kcal == null ? "—" : Math.round(dish.kcal)} kcal
+                                {dish.kcal == null ? "not stated" : `${Math.round(dish.kcal)} kcal`}
                                 {dish.protein != null && ` · ${Math.round(dish.protein)}g P`}
                               </span>
                             </>
                           ) : (
-                            <span style={{ color: "#85857e" }}>Not scheduled</span>
+                            <span style={{ color: DIM }}>Not scheduled</span>
                           )}
                         </td>
                       );
@@ -157,13 +137,7 @@ export default async function Week() {
               })}
             </tbody>
           </table>
-        </div>
-
-        <p style={{ ...body(13.5), color: DIM, marginTop: 18 }}>
-          One plan of 126 is fully seeded today. The other 125 publish their duration,
-          macros and price, and their schedules land as the kitchen finishes them. We
-          would rather show you one real week than 126 invented ones.
-        </p>
+        </details>
 
         <div className={s.actions} style={{ marginTop: 26 }}>
           <Link href={`/plans/${PLAN_SLUG}`} className={s.ghost}>

@@ -31,29 +31,20 @@ import { prisma } from "@/lib/prisma";
 export const PLAN_SLUG = "weight-loss-veg";
 export const WEEK_DAYS = 7;
 
-/** The order a day is actually eaten in, not the order Postgres returns. */
-export const SLOT_ORDER = ["BREAKFAST", "LUNCH", "SNACK", "DINNER"] as const;
-export type Slot = (typeof SLOT_ORDER)[number];
+/* The slot vocabulary, the Dish shape and totals() live in menu-types.ts, which
+   imports nothing. WeekPicker is a client component and needs SLOT_ORDER as a
+   value; importing it from here would pull prisma, and therefore pg, into the
+   browser bundle. Re-exported so every existing import of this module keeps
+   working and there is still one definition of the eating order. */
+export {
+  SLOT_ORDER,
+  SLOT_LABEL,
+  totals,
+  type Slot,
+  type Dish,
+} from "./menu-types";
 
-export const SLOT_LABEL: Record<string, string> = {
-  BREAKFAST: "Breakfast",
-  LUNCH: "Lunch",
-  SNACK: "Snack",
-  DINNER: "Dinner",
-};
-
-export type Dish = {
-  day: number;
-  slot: string;
-  name: string;
-  blurb: string | null;
-  cuisine: string | null;
-  kcal: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-  fibre: number | null;
-};
+import { SLOT_ORDER, type Dish, type Slot } from "./menu-types";
 
 /* Recipe macro columns are Prisma Decimal, not number. Summing them with `+`
    coerces each to a string and concatenates the day into "24.538.2...", which
@@ -131,11 +122,3 @@ export const getDayOne = cache(async function getDayOne(): Promise<Dish[]> {
   const week = await getWeek();
   return week.filter((d) => d.day === 1);
 });
-
-/** Total a day's kcal / protein without tripping over nulls. */
-export function totals(dishes: Dish[]) {
-  return {
-    kcal: dishes.reduce((n, d) => n + (d.kcal ?? 0), 0),
-    protein: dishes.reduce((n, d) => n + (d.protein ?? 0), 0),
-  };
-}
