@@ -132,8 +132,14 @@
    Type left, the one good photograph right. The prototype's 3D box spinning
    in the deck is dropped: a 26s infinite rotation is exactly what feedback
    2.5 deleted, and the dial beside it is already the real figure. */
+/* THE SITE NAVBAR IS position:fixed AND 69px TALL. The hero has to make room
+   for it or the nav lands on top of the kicker and the photo's stamp, which is
+   exactly what shipped in the first deploy of this page. The prototype does the
+   same thing with its own slimmer header (padding-top:66px on the hero
+   section); this is that, measured against the header this repo actually has. */
 .hero {
   position: relative;
+  padding-top: var(--ff-nav-h, 69px);
   border-bottom: 1px solid #232320;
   overflow: hidden;
 }
@@ -142,7 +148,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   align-items: stretch;
-  min-height: calc(100svh - 68px);
+  min-height: calc(100svh - var(--ff-nav-h, 69px));
 }
 .heroMesh {
   position: absolute;
