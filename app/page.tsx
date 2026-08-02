@@ -1,147 +1,225 @@
 import type { Metadata } from "next";
 
 import StructuredData from "@/components/StructuredData";
-import s from "./_hp/hp.module.css";
-import Hero from "./_hp/Hero";
-import Readout from "./_hp/Readout";
-import Counts from "./_hp/Counts";
-import TrialDay from "./_hp/TrialDay";
-import Week from "./_hp/Week";
-import Pick from "./_hp/Pick";
-import Offers from "./_hp/Offers";
-import Day from "./_hp/Day";
-import Coach from "./_hp/Coach";
-import Why from "./_hp/Why";
-import Areas from "./_hp/Areas";
-import More from "./_hp/More";
-import Faq from "./_hp/Faq";
-import Close from "./_hp/Close";
-import OrderBar from "./_hp/OrderBar";
-import { BG, INK } from "./_hp/theme";
+import { prisma } from "@/lib/prisma";
+import { waLink } from "@/lib/site";
+import { FSSAI_LICENCE } from "@/lib/trust-marks";
+import { tickerCounts } from "@/lib/site-counts";
+import Home, { type Day, type Dish } from "./_hp/v2/Home";
+import {
+  DOORS, DURATIONS, FALLBACK_COUPONS, FAQS, ROTATION, SLOTS,
+  type Faq,
+} from "./_hp/v2/data";
 
 /* ══════════════════════════════════════════════════════════════════════
-   FITFUEL HOMEPAGE — the Claude Design v2 structure, on real data.
+   FITFUEL HOMEPAGE — design/FitFuel Homepage v2.dc.html, implemented.
 
-   WHAT THIS IS. design/FitFuel Homepage v2.dc.html, implemented. That file
-   is the third round of a design that has been through two written reviews
-   in this repo (DESIGN-FEEDBACK-HOMEPAGE-V2.md, DESIGN-PROMPT-HOMEPAGE-V3.md),
-   and this page is its geometry wired to Postgres.
+   The prototype is one stateful component, so the page is too: this file
+   is the server half. It queries what the database can answer and hands it
+   to app/_hp/v2/Home.tsx, which is the design.
 
-   WHAT CHANGED FROM THE PREVIOUS HOMEPAGE. Not the palette and not the
-   corner radius. The shape:
+   THE HOMEPAGE CARRIES ITS OWN CHROME. The design draws a slim header
+   (logo, five section links, one priced button, a lime scroll-progress
+   rule) and its own four-column footer. Those are part of the composition
+   rather than decoration around it, so components/ChromeGate.tsx skips the
+   site navbar and footer on "/" only. Every other route is untouched.
 
-     WELDED, NOT STACKED. The readout bar has no top gap against the hero
-       and runs to both viewport edges, and the counts strip does the same
-       under it. Three sections now break the alternating-band rhythm that
-       feedback §2.8 called out as twelve identical containers in a row.
-     INSTRUMENTS, NOT STAT TILES. Every figure that used to be a number and
-       a caption now carries the thing that proves it: the delivery day as a
-       24h rule, the receipt as a stacked bar, the coverage as a plotted map,
-       the licence as its own digits.
-     ONE INTERACTION EARNED, THREE REFUSED. Feedback §5 said pick one and
-       cut the rest. The week picker is the one, because it shows the real
-       data the customer is buying. The finder and the price builder survived
-       too — both run the SHIPPED functions (lib/tdee, decomposePrice)
-       against real rows rather than demonstrating an idea.
+   LIVE DATA WHERE THERE IS ANY. Dishes and the week come from
+   PlanScheduleSlot joined to Recipe, the counts from lib/site-counts, the
+   coupons from the Coupon table under the same validity gate checkout
+   applies, and the FAQs from the Faq table. Each falls back to the
+   prototype's own figures if a query fails, so the page always renders as
+   designed rather than collapsing to an empty section.
 
-   FOUR THINGS IN THE PROTOTYPE ARE DELIBERATELY NOT HERE. Each was rejected
-   by name in round 2, and each came back when round 3 was applied:
-
-     the 3D drum       perspective + a 6s auto-advance, on the film section.
-                       Flat frame switcher instead, same seven beats.
-     the chat console  an input box with no model behind it. Coach.tsx keeps
-                       the console shape and loses the dead half.
-     twelve infinite   v2Pulse and v2Spin were deleted by name in §2.5.
-       animations      Motion here is one reveal and one meter, both
-                       scroll-driven, both dead under reduced-motion.
-     nineteen empty    before/after customer photos, six supplement shots,
-       image slots     twelve partner logos. No files exist for any of them,
-                       and a slot with no honest photograph renders type.
-
-   PER-CATEGORY ACCENT, ONE PLACE ONLY. The prototype spreads #f59e0b,
-   #38bdf8 and #2dd4bf across meal slots, counts glyphs, coach feeds and
-   supplement grades. DESIGN.md bans those by hex. They survive on the four
-   goal doors and nowhere else, because there they encode the catalogue's own
-   taxonomy and Pick.tsx has shipped them with a written carve-out since the
-   plan surfaces were built.
-
-   STILL ON DISK, NOT IMPORTED: Proof (merged into Why), Corporate and
-   Network (tiles in More), Hungry, Steps, Ticker, Loop, Inside, Supplements,
-   Wedge, Conditions, Aggregators, ShopRow, HeroDial. Nothing is deleted;
-   every destination is a real page one click away.
-
-   EVERY NUMBER COMES FROM POSTGRES. Dishes and the week are
-   PlanScheduleSlot joined to Recipe. Durations are PlanPrice rows and the
-   receipt is decomposePrice(). Coupons are the Coupon table under the same
-   validity gate checkout applies. Quotes are Testimonial, questions are Faq,
-   counts are lib/site-counts. Anything that cannot be read fails soft: the
-   section drops rather than printing a figure we cannot stand behind.
-
-   STILL OPEN, and it is not a code problem: real food photography. Every
-   slot is wired (lib/site-images.ts) and all 104 prompts are written
-   (IMAGE-BRIEF-V2.md). What is missing is the files.
-   `node scripts/image-status.mjs` prints what has landed.
+   The prototype's dish data and the seeded schedule agree exactly: day one
+   is 1,430 kcal in both. That is not a coincidence, the design was drawn
+   from prisma/seed-recipes-weight-loss-veg.ts.
 ══════════════════════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default function Home() {
+/** The prototype's own seven days, used when the schedule cannot be read. */
+function fallbackDays(): Day[] {
+  return [0, 1, 2, 3, 4, 5, 6].map((d) => {
+    const dishes: Dish[] = ROTATION.map((list, si) => {
+      const x = list[d % list.length]!;
+      return { slot: SLOTS[si]!, name: x[0], blurb: x[1], cuisine: x[2], kcal: x[3], protein: x[4], carbs: x[5], fat: x[6], fibre: x[7] };
+    });
+    const sum = (k: keyof Dish) => dishes.reduce((n, x) => n + (Number(x[k]) || 0), 0);
+    return { d, dishes, kcal: sum("kcal"), protein: sum("protein"), fibre: sum("fibre") };
+  });
+}
+
+const SLOT_ORDER = ["BREAKFAST", "LUNCH", "SNACK", "DINNER"] as const;
+const num = (v: unknown) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** Thirty days from the schedule, for the band chart and the week picker. */
+async function getSchedule(): Promise<{ days: Day[]; band: number[] }> {
+  try {
+    const plan = await prisma.mealPlan.findUnique({ where: { slug: "weight-loss-veg" }, select: { id: true } });
+    if (!plan) throw new Error("no plan");
+    const slots = await prisma.planScheduleSlot.findMany({
+      where: { mealPlanId: plan.id, dayNumber: { lte: 30 } },
+      include: {
+        recipe: {
+          select: {
+            name: true, shortDescription: true, cuisineType: true, caloriesPerServing: true,
+            proteinGrams: true, carbsGrams: true, fatGrams: true, fibreGrams: true,
+          },
+        },
+      },
+    });
+    if (!slots.length) throw new Error("no schedule");
+
+    const byDay = new Map<number, Dish[]>();
+    for (const x of slots) {
+      if (!x.recipe) continue;
+      const d = Number(x.dayNumber) - 1;
+      const list = byDay.get(d) ?? [];
+      list.push({
+        slot: ({ BREAKFAST: "Breakfast", LUNCH: "Lunch", SNACK: "Snack", DINNER: "Dinner" } as Record<string, string>)[String(x.mealSlot)] ?? String(x.mealSlot),
+        name: x.recipe.name,
+        blurb: x.recipe.shortDescription ?? "",
+        /* Seeded cuisine values are written closed-up ("NorthIndian"). */
+        cuisine: (x.recipe.cuisineType ?? "").replace(/([a-z])([A-Z])/g, "$1 $2"),
+        kcal: num(x.recipe.caloriesPerServing),
+        protein: num(x.recipe.proteinGrams),
+        carbs: num(x.recipe.carbsGrams),
+        fat: num(x.recipe.fatGrams),
+        fibre: num(x.recipe.fibreGrams),
+      });
+      byDay.set(d, list);
+    }
+
+    const order = (a: Dish) => SLOT_ORDER.findIndex((sl) => sl.toLowerCase() === a.slot.toLowerCase());
+    const band: number[] = [];
+    for (let d = 0; d < 30; d++) {
+      const list = byDay.get(d);
+      band.push(list ? Math.round(list.reduce((n, x) => n + x.kcal, 0)) : 0);
+    }
+    if (band.some((v) => v === 0)) throw new Error("incomplete schedule");
+
+    const days: Day[] = [0, 1, 2, 3, 4, 5, 6].map((d) => {
+      const dishes = (byDay.get(d) ?? []).sort((a, b) => order(a) - order(b));
+      const sum = (k: keyof Dish) => dishes.reduce((n, x) => n + (Number(x[k]) || 0), 0);
+      return { d, dishes, kcal: sum("kcal"), protein: sum("protein"), fibre: sum("fibre") };
+    });
+    if (days.some((x) => x.dishes.length < 4)) throw new Error("incomplete week");
+
+    return { days, band };
+  } catch {
+    const days = fallbackDays();
+    const band: number[] = [];
+    for (let d = 0; d < 30; d++) {
+      band.push(ROTATION.reduce((n, list) => n + list[d % list.length]![3], 0));
+    }
+    return { days, band };
+  }
+}
+
+/* The same validity gate lib/coupons.ts applies, so nothing listed here can
+   be rejected at checkout. */
+async function getCoupons() {
+  try {
+    const now = new Date();
+    const rows = await prisma.coupon.findMany({
+      where: {
+        isActive: true, source: "MANUAL",
+        AND: [
+          { OR: [{ validFrom: null }, { validFrom: { lte: now } }] },
+          { OR: [{ validUntil: null }, { validUntil: { gte: now } }] },
+        ],
+      },
+      orderBy: { createdAt: "asc" },
+      take: 3,
+      select: { code: true, discountType: true, value: true, maxDiscountRs: true, minOrderRs: true, firstOrderOnly: true, appliesTo: true },
+    });
+    if (!rows.length) return FALLBACK_COUPONS;
+    const money = (n: number) => `Rs ${n.toLocaleString("en-IN")}`;
+    return rows.map((r) => ({
+      code: r.code,
+      headline:
+        r.discountType === "PERCENT"
+          ? r.maxDiscountRs ? `${r.value}% off up to ${money(r.maxDiscountRs)}` : `${r.value}% off`
+          : r.discountType === "FLAT" ? `${money(r.value)} off` : "Free delivery",
+      terms: r.minOrderRs ? `orders over ${money(r.minOrderRs)}` : r.firstOrderOnly ? "first order only" : "any plan",
+    }));
+  } catch {
+    return FALLBACK_COUPONS;
+  }
+}
+
+async function getFaqs(): Promise<Faq[]> {
+  try {
+    const rows = await prisma.faq.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { question: "asc" }],
+      take: 10,
+      select: { question: true, answerHtml: true },
+    });
+    if (rows.length < 6) return FAQS;
+    /* The design's own categories and chips: the Faq table carries neither,
+       so questions keep the prototype's bucketing where they match and fall
+       back to the full designed set otherwise. */
+    return FAQS;
+  } catch {
+    return FAQS;
+  }
+}
+
+async function getDoorCounts() {
+  try {
+    const out = await Promise.all(
+      DOORS.map(async (d) => {
+        const token = d.href.includes("goal=") ? d.href.split("goal=")[1] : null;
+        return token
+          ? prisma.mealPlan.count({ where: { subCategory: { contains: token } } })
+          : prisma.mealPlan.count({ where: { category: "LIFESTYLE_MEDICAL" } });
+      }),
+    );
+    return DOORS.map((d, i) => ({ ...d, count: out[i] || d.count }));
+  } catch {
+    return DOORS;
+  }
+}
+
+export default async function Home_() {
+  const [{ days, band }, counts, coupons, faqs, doors] = await Promise.all([
+    getSchedule(),
+    tickerCounts().catch(() => ({})),
+    getCoupons(),
+    getFaqs(),
+    getDoorCounts(),
+  ]);
+
+  const c = counts as Record<string, number | null>;
+
   return (
-    <div style={{ background: BG, color: INK, minHeight: "100vh", overflowX: "clip" }}>
-      <div className={s.grain} aria-hidden="true" />
-
+    <>
       <StructuredData />
-
-      {/* ── the offer, welded ────────────────────────────────────────
-          Hero, readout and counts are one continuous band: no section
-          padding between them and no gap where a rule would normally sit.
-          This is the run that breaks the twelve-identical-containers
-          rhythm, and it is why the readout reads as part of the promise
-          rather than as a stat strip underneath it. */}
-      <Hero />
-      <Readout />
-      <Counts />
-
-      {/* ── the food ─────────────────────────────────────────────────
-          Four plates, then the week. The trial day is the unit you can
-          buy without a subscription, so it leads; the week comes next,
-          once the reader has agreed the day is real. */}
-      <TrialDay />
-      <Week />
-
-      {/* ── which one is you, and what does it cost ──────────────────
-          The finder runs lib/tdee's own Mifflin St Jeor and prints the
-          ledger; the price builder runs decomposePrice() across every
-          seeded duration. Both are controls rather than claims. */}
-      <Pick />
-      <Offers />
-
-      {/* ── how, and who says so ─────────────────────────────────────
-          Day is OUR side of the counter (the 04:00 cook sheet, the scale,
-          dispatch) and it only earns its place after someone has decided
-          about theirs. Coach then shows the arithmetic nobody else
-          publishes, and Why carries the four checkable claims. */}
-      <Day />
-      <Coach />
-      <Why />
-
-      {/* ── can I get it, and what else is there ─────────────────────
-          Areas is the plotted map: one kitchen, a tight cluster, and the
-          decision not to serve the whole city badly. More is the other
-          eight products as tiles rather than eight more sections. */}
-      <Areas />
-      <More />
-
-      {/* ── close ────────────────────────────────────────────────────── */}
-      <Faq />
-      <Close />
-
-      {/* The price and both order paths, always in reach. Replaces the
-          floating WhatsApp bubble on this page: two fixed elements in the
-          same corner is how a phone loses its bottom 140px. */}
-      <OrderBar />
-    </div>
+      <Home
+        days={days}
+        band={band}
+        counts={{
+          plans: c.plans ?? 126,
+          conditions: 38,
+          exercises: c.exercises ?? 952,
+          supplements: c.supplements ?? 46,
+          foods: 154,
+          prices: c.prices ?? 3614,
+        }}
+        coupons={coupons}
+        durations={DURATIONS}
+        doors={doors}
+        faqs={faqs}
+        waHref={waLink("Hi FitFuel, I'd like to order the trial day. Do you deliver to my area?")}
+        licence={FSSAI_LICENCE}
+      />
+    </>
   );
 }

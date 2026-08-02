@@ -1,0 +1,599 @@
+/* app/_hp/v2/home.module.css
+   ═══════════════════════════════════════════════════════════════════════════
+   The <style> block of design/FitFuel Homepage v2.dc.html, ported verbatim.
+
+   Every rule, every keyframe and every media query from the prototype is here
+   unchanged, including the sixteen keyframes, the 3D drum and hero box, the
+   pointer tilt, and the infinite loops. Class names keep the prototype's own
+   `v2-*` spelling so this file can be diffed against the source line by line;
+   the component reads them through a `c()` helper.
+
+   The only differences are the ones a CSS Module requires:
+     - element and pseudo-element selectors are wrapped in :global()
+     - `body.v2-on` becomes `.v2-on` on the component's own root element
+     - `image-slot {}` is dropped; the port renders <ImageSlot> instead
+
+   Fonts are NOT loaded here. The prototype pulls three faces from
+   fonts.googleapis.com via <link>; in this repo the same three load once
+   through next/font in app/layout.tsx, per DESIGN-FEEDBACK 6.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.root :global(a) {
+  color: #84cc16;
+  text-decoration: none;
+}
+.root :global(a:hover) {
+  color: #a3e635;
+}
+.root :global(::selection) {
+  background: rgba(132, 204, 22, 0.18);
+  color: #a3e635;
+}
+
+@keyframes v2Rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes v2Slice {
+  from { transform: translateY(105%); }
+  to { transform: none; }
+}
+@keyframes v2Spin {
+  from { transform: rotateX(-21deg) rotateY(0deg); }
+  to { transform: rotateX(-21deg) rotateY(360deg); }
+}
+@keyframes v2Float {
+  0%, 100% { transform: translateY(-5px); }
+  50% { transform: translateY(5px); }
+}
+@keyframes v2Scan {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(1100%); }
+}
+@keyframes v2Travel {
+  0% { transform: translateX(0); }
+  45%, 55% { transform: translateX(calc(100% - 6px)); }
+  100% { transform: translateX(0); }
+}
+@keyframes v2Mark {
+  from { opacity: 0; transform: scaleY(0.2); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes v2Grow {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+@keyframes v2Flip {
+  from { opacity: 0; transform: translateY(-60%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes v2Wipe {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+@keyframes v2Pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+@keyframes v2Blink {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0; }
+}
+@keyframes v2Needle {
+  0%, 8% { transform: rotate(-52deg); }
+  46%, 62% { transform: rotate(18deg); }
+  96%, 100% { transform: rotate(-52deg); }
+}
+@keyframes v2Sweep {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(560%); }
+}
+@keyframes v2Bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes v2Stack {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.v2-line {
+  display: block;
+  overflow: hidden;
+}
+.v2-line > span {
+  display: inline-block;
+  position: relative;
+}
+.v2-on .v2-line > span {
+  animation: v2Slice 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.v2-on .v2-in {
+  animation: v2Rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.v2-on .v2-wipe {
+  transform-origin: left;
+  animation: v2Wipe 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.v2-hero {
+  perspective: 1200px;
+}
+.v2-tilt {
+  transform: rotateY(calc(var(--mx, 0) * -3.2deg)) rotateX(calc(var(--my, 0) * 2.4deg));
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.v2-box {
+  transform-style: preserve-3d;
+}
+.v2-on .v2-box {
+  animation: v2Spin 26s linear infinite;
+}
+.v2-box-face {
+  position: absolute;
+  background: #0e0e0c;
+  border: 1px solid #2b2b26;
+}
+/* Infinite decorative motion is paused whenever its section is off-screen. */
+.v2-idle .v2-loop,
+.v2-idle .v2-box {
+  animation-play-state: paused !important;
+}
+.v2-idle .v2-tilt {
+  transition: none !important;
+}
+.v2-cell {
+  transition: background 0.25s linear, border-color 0.25s linear;
+}
+.v2-cell:hover {
+  background: #0c0c0a;
+}
+
+.v2-rise {
+  animation: v2Rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@supports (animation-timeline: view()) {
+  .v2-rise {
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+  }
+}
+.v2-plate {
+  transition: border-color 0.25s linear;
+}
+.v2-plate:hover {
+  border-color: #4a4a45;
+}
+
+.v2-btn {
+  position: relative;
+  overflow: hidden;
+}
+.v2-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #f7f7f5;
+  transform: translateY(101%);
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-btn:hover::after {
+  transform: translateY(0);
+}
+.v2-btn > span {
+  position: relative;
+  z-index: 1;
+  transition: color 0.34s linear;
+}
+.v2-btn:hover > span {
+  color: #070707;
+}
+
+.v2-ghost {
+  transition: border-color 0.2s linear, color 0.2s linear, background 0.2s linear;
+}
+.v2-ghost:hover {
+  border-color: #84cc16;
+  color: #84cc16;
+  background: rgba(132, 204, 22, 0.06);
+}
+
+.v2-chip {
+  transition: background 0.2s linear, color 0.2s linear, border-color 0.2s linear;
+}
+.v2-chip:hover {
+  background: #0c0c0a;
+  color: #f7f7f5;
+}
+
+.v2-underline {
+  position: relative;
+}
+.v2-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-underline:hover::after {
+  transform: scaleX(1);
+}
+
+.v2-row {
+  transition: background 0.2s linear, padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s linear;
+}
+.v2-row:hover {
+  background: #0c0c0a;
+  padding-left: 16px;
+  border-left-color: #84cc16;
+}
+
+.v2-readout > :first-child {
+  border-left: 0 !important;
+}
+.v2-strip > :first-child {
+  border-left: 0 !important;
+}
+
+.v2-on .v2-bar {
+  animation: v2Grow 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.v2-bar {
+  transform-origin: left;
+}
+.v2-col {
+  transform-origin: bottom;
+}
+:global(button):hover .v2-col {
+  transform: scaleY(1.035);
+}
+.v2-idx {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s linear;
+}
+.v2-plate:hover .v2-idx {
+  transform: translateY(-5px);
+  opacity: 1;
+}
+.v2-plate:hover .v2-rule {
+  transform: scaleX(1) !important;
+}
+.v2-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 34%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(132, 204, 22, 0.1), transparent);
+}
+.v2-on .v2-plate:hover .v2-scan {
+  animation: v2Scan 1.6s linear;
+}
+
+.v2-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 34px;
+  background: transparent;
+  cursor: grab;
+  display: block;
+}
+.v2-range:active {
+  cursor: grabbing;
+}
+.v2-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #232320;
+}
+.v2-range::-moz-range-track {
+  height: 4px;
+  background: #232320;
+}
+.v2-range::-moz-range-progress {
+  height: 4px;
+  background: #84cc16;
+}
+.v2-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 26px;
+  margin-top: -11px;
+  background: #f7f7f5;
+  border: 0;
+  transition: background 0.15s linear, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-range::-moz-range-thumb {
+  width: 15px;
+  height: 26px;
+  border-radius: 0;
+  border: 0;
+  background: #f7f7f5;
+}
+.v2-range:hover::-webkit-slider-thumb,
+.v2-range:focus-visible::-webkit-slider-thumb {
+  background: #84cc16;
+  transform: scaleY(1.12);
+}
+.v2-range:focus-visible {
+  outline: 1px solid #84cc16;
+  outline-offset: 4px;
+}
+.root :global(button:focus-visible),
+.root :global(a:focus-visible),
+.root :global(summary:focus-visible),
+.root :global(input:focus-visible) {
+  outline: 1px solid #84cc16;
+  outline-offset: 3px;
+}
+.v2-seg {
+  transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear;
+}
+.v2-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── the day, as a rotating drum ── */
+.v2-stage {
+  perspective: 1500px;
+  perspective-origin: 50% 44%;
+}
+.v2-drum {
+  transform-style: preserve-3d;
+  transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.v2-face {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 340px;
+  margin-left: -170px;
+  height: 100%;
+  backface-visibility: hidden;
+  overflow: hidden;
+  background: #0c0c0a;
+  border: 1px solid #2b2b26;
+  margin-top: 0;
+}
+.v2-face-in {
+  transition: opacity 0.6s linear;
+}
+.v2-idle .v2-loop {
+  animation-play-state: paused !important;
+}
+.v2-fab {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s linear,
+    color 0.2s linear;
+}
+.v2-fab:hover {
+  transform: translateY(-3px);
+}
+.v2-tile {
+  transition: background 0.2s linear, border-color 0.2s linear,
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-tile:hover {
+  background: #0c0c0a;
+  border-color: #3d3d37;
+  transform: translateY(-3px);
+}
+.v2-slotwrap {
+  position: relative;
+  transition: border-color 0.2s linear;
+}
+.v2-slotwrap:hover {
+  border-color: #4a4a45;
+}
+
+/* The typographic stand-in an <image-slot> renders while no file exists. The
+   prototype's custom element draws exactly this: a hairline box, the slot's
+   name in mono, and nothing pretending to be a photograph. */
+.v2-slot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  text-align: center;
+  background: #0a0a09;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5f5f59;
+}
+
+@media (max-width: 1080px) {
+  .v2-nav-desk {
+    display: none !important;
+  }
+  .v2-moat {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 980px) {
+  .v2-hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-dial-wrap {
+    justify-self: start !important;
+  }
+  .v2-g4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .v2-g3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .v2-plates {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .v2-split {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-strip {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .v2-mini {
+    display: none !important;
+  }
+  .v2-band {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .v2-daygrid {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-proof {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-ai {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-shelf {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .v2-faq {
+    grid-template-columns: 1fr !important;
+  }
+  /* Three row families with 3, 4 and 5 children share this class, so the
+     narrow layout wraps instead of assuming a track count. */
+  .v2-dir-row {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: clamp(10px, 2vw, 18px);
+    row-gap: 8px !important;
+  }
+  .v2-dir-row > h3,
+  .v2-dir-row > h4 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .v2-dir-row > p {
+    order: 9;
+    flex: 1 0 100% !important;
+  }
+  .v2-dir-row > :last-child:not(p) {
+    margin-left: auto;
+  }
+}
+@media (max-width: 900px) {
+  .v2-film-frame {
+    width: min(84vw, 420px) !important;
+    height: 60vh !important;
+    min-height: 400px;
+  }
+}
+@media (max-width: 760px) {
+  .v2-hero-deck {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 720px) {
+  .v2-face {
+    width: 260px;
+    margin-left: -130px;
+  }
+  .v2-moat {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 700px) {
+  .v2-const {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  .v2-g4,
+  .v2-g3,
+  .v2-plates {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-readout {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .v2-readout > :nth-child(3) {
+    border-left: 0 !important;
+  }
+  .v2-readout > :nth-child(n + 3) {
+    border-top: 1px solid #232320;
+  }
+  .v2-day-body {
+    grid-template-columns: 1fr !important;
+  }
+  .v2-eng {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .v2-bar-label {
+    display: none;
+  }
+  .v2-hide-sm {
+    display: none !important;
+  }
+  .v2-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 620px) {
+  .v2-shelf {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 560px) {
+  .v2-eng-step {
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
+  }
+  .v2-hourbtn {
+    grid-template-columns: 62px minmax(0, 1fr) !important;
+  }
+  .v2-hourbtn > :last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root :global(*),
+  .root :global(*::before),
+  .root :global(*::after) {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .v2-rise {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── animation utilities ──────────────────────────────────────────────────
+   The prototype sets `animation:` inline on individual elements. A CSS Module
+   hashes @keyframes names, so an inline `animation: v2Float ...` would name a
+   keyframe that does not exist at runtime, and Lightning CSS rejects both
+   `:global(@keyframes x)` and `@keyframes :global(x)`. So each inline
+   animation from the prototype becomes a class here, with the same keyframe,
+   duration, easing and iteration count. Per-element delays stay inline via
+   `animationDelay`, which is just a value and needs no name. */
+.aScan9 { animation: v2Scan 9s linear infinite; }
+.aFloat24 { animation: v2Float 2.4s ease-in-out infinite; }
+.aFloat8 { animation: v2Float 8s ease-in-out infinite; }
+.aTravel6 { animation: v2Travel 6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.aSweep32 { animation: v2Sweep 3.2s linear infinite; }
+.aPulse24 { animation: v2Pulse 2.4s ease-out infinite; }
+.aBlink1 { animation: v2Blink 1s steps(1) infinite; }
+.aBlink16 { animation: v2Blink 1.6s steps(1) infinite; }
+.aNeedle5 { animation: v2Needle 5s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+/* One-shot reveals. The delay is set inline per element. */
+.aGrow9 { animation: v2Grow 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.aGrow7 { animation: v2Grow 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.aMark5 { animation: v2Mark 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.aFlip4 { animation: v2Flip 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
