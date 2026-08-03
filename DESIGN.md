@@ -50,6 +50,13 @@ So these are stated as hard negatives. Breaking one is a bug.
 > It was used only in the `app/preview/a` and `app/preview/c` experiments while
 > shipping to every visitor on every page.
 >
+> **Actioned 2026-08-03.** The note above was written on 2026-07-30 and the code
+> was not changed: `app/layout.tsx` kept importing Fraunces and kept applying
+> `--font-fraunces` to `<html>` for four more days. It is now removed, along with
+> the whole `/preview` tree (the chooser and experiments a, b and c), which was
+> the only consumer. Nothing linked to those routes and they were never in the
+> sitemap. The face list is three, in code as well as in this file.
+>
 > Rejected. The Instrument System's thesis — hairlines, grain, radius 0, kinetic
 > type at ~10x scale — is coherent with a condensed grotesque; a warm old-style
 > serif with a wonky optical axis is a different thesis, and hybridising the two

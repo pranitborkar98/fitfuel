@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Barlow_Condensed, Fraunces, JetBrains_Mono } from "next/font/google";
+import { Archivo, Barlow_Condensed, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -31,18 +31,21 @@ const archivo = Archivo({
   variable: "--font-archivo",
 });
 
-// The homepage display face. Barlow Condensed reads as athletic utility — gym
-// signage, supplement tubs — which is the wrong voice for food. Fraunces is a
-// warm old-style serif with a soft, slightly wonky axis; it is what premium food
-// brands use, and it is the difference between "plain" and "appetising" without
-// changing a single layout.
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "900"],
-  style: ["normal", "italic"],
-  display: "swap",
-  variable: "--font-fraunces",
-});
+// FRAUNCES IS GONE. It was loaded here on the argument above: that Barlow
+// Condensed reads as athletic utility and a warm old-style serif is the
+// difference between "plain" and "appetising". DESIGN.md rejected that on
+// 2026-07-30 and the reasoning stands. The Instrument System's thesis is
+// hairlines, grain, radius 0 and kinetic type at ~10x scale, which is coherent
+// with a condensed grotesque; a serif with a wonky optical axis is a different
+// thesis, and hybridising the two satisfies neither.
+//
+// It was also only ever used by app/preview/a and app/preview/c, two rejected
+// experiments, while shipping a fourth typeface to every visitor on every page
+// against a locked list of three. Those routes are deleted with it.
+//
+// The observation behind it stands and is not solved here: the page does read
+// cold for a food brand. That is an image-grade problem, and the fix is the
+// art-directed photography DESIGN.md has specified since rev 2.
 
 // Data face. A macro-tracking food brand prints a lot of numbers — grams, kcal,
 // times, licence numbers — and setting those in mono reads as measurement rather
@@ -99,7 +102,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-IN"
-      className={`${archivo.variable} ${barlowCondensed.variable} ${fraunces.variable} ${mono.variable} scroll-smooth`}
+      className={`${archivo.variable} ${barlowCondensed.variable} ${mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <head>

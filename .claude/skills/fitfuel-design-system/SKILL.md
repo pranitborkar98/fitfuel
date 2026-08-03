@@ -109,11 +109,13 @@ round trip.
 
 Inter is the single most recognisable AI-generated-site tell. Syne, DM Sans and
 Space Mono are the pre-rev-2 generations that produced five typefaces on one
-page. Fraunces was a display-serif experiment (`app/preview/a`, `app/preview/c`)
-proposing a warmer voice for food; it was **rejected 2026-07-30** — the warmth
-belongs in the photography grade, not the headline face, and swapping the
-display face would rebuild all 30 homepage components for a preference rather
-than a defect.
+page. Fraunces was a display-serif experiment proposing a warmer voice for food;
+it was **rejected 2026-07-30** — the warmth belongs in the photography grade, not
+the headline face, and swapping the display face would rebuild all 30 homepage
+components for a preference rather than a defect. **Deleted from the code
+2026-08-03**, together with the `/preview` tree that was its only consumer; the
+rejection had sat in the docs for four days while `app/layout.tsx` went on
+serving it to every visitor.
 
 ---
 
