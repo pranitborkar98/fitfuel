@@ -28,7 +28,7 @@ import s from "./home.module.css";
 import { Ring, Marks, PuneMap, BandChart, bandActiveLeft, barcodeBars } from "./graphics";
 import {
   FinderSection, PriceSection, FilmSection, CoachSection, ChecksSection,
-  CoverageSection, MoreSection, FaqSection, SiteFooter, AiDock, ImageSlot,
+  CoverageSection, MoreSection, FaqSection, AiDock, ImageSlot,
 } from "./Sections";
 import {
   ACTS, AREA_TICKS, DIETS, FLOOR, FOOD, GOAL_ADJ as ADJ, GOAL_RATE, KCAL_PER_KG,
@@ -38,6 +38,11 @@ import {
 
 const c = (...names: (string | false | undefined)[]) =>
   names.filter(Boolean).map((n) => s[n as string] ?? "").join(" ");
+
+/* components/Navbar.tsx: a 68px inner row plus its 1px bottom hairline. The
+   navbar is position:fixed, so the hero has to reserve exactly this or the bar
+   lands on the photo stamp. Measured, not guessed. */
+const NAV_H = 69;
 
 const MONO = "var(--font-mono), monospace";
 const COND = "var(--ff-cond), sans-serif";
@@ -67,7 +72,8 @@ export default function Home(props: HomeProps) {
   const [day, setDay] = useState(0);
   const [door, setDoor] = useState(0);
   const [dur, setDur] = useState(0);
-  const [scrollPct, setScrollPct] = useState(0);
+  /* No scrollPct here: the prototype's header drew the progress rule and the
+     site navbar now draws its own. showBar is still ours, for the order bar. */
   const [showBar, setShowBar] = useState(false);
   const [now, setNow] = useState<number | null>(null);
   const [rev, setRev] = useState(0);
@@ -127,9 +133,7 @@ export default function Home(props: HomeProps) {
   useEffect(() => {
     const onScroll = () => {
       const el = document.scrollingElement || document.documentElement;
-      const docH = el.scrollHeight - window.innerHeight;
       const y = window.scrollY;
-      setScrollPct(docH > 0 ? (y / docH) * 100 : 0);
       setShowBar(y > window.innerHeight * 0.7 && y + window.innerHeight < el.scrollHeight - 260);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -390,35 +394,26 @@ export default function Home(props: HomeProps) {
         }}
       />
 
-      {/* ══ NAV ══ */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "#070707", borderBottom: "1px solid #232320" }}>
-        <div style={{ position: "absolute", bottom: -1, left: 0, height: 1, width: `${scrollPct.toFixed(2)}%`, background: "#84cc16" }} />
-        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 clamp(18px,4vw,40px)", height: 66, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
-          <a href="#v2-top" style={{ display: "flex", alignItems: "center", gap: 11, minHeight: 44 }}>
-            <span style={{ width: 34, height: 34, border: "1px solid #232320", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="#f7f7f5" stroke="#f7f7f5" strokeWidth="2" strokeLinejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-            </span>
-            <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.03em", color: "#f7f7f5" }}>FitFuel</span>
-          </a>
-          <nav className={c("v2-nav-desk")} style={{ display: "flex", alignItems: "center", gap: "clamp(14px,2vw,26px)" }}>
-            {[["#v2-plates", "Tomorrow"], ["#v2-week", "The week"], ["#v2-finder", "Find your plan"], ["#v2-price", "Price"], ["#v2-coach", "The coach"]].map(([href, t]) => (
-              <a key={href} href={href} className={c("v2-underline")} style={{ fontFamily: MONO, fontSize: 11.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9a9a94" }}>{t}</a>
-            ))}
-          </nav>
-          <a href="#v2-price" className={c("v2-btn")} style={{ display: "inline-flex", alignItems: "center", background: "transparent", color: "#f7f7f5", fontFamily: COND, fontWeight: 900, fontSize: 13.5, letterSpacing: "0.08em", textTransform: "uppercase", padding: "11px 20px", minHeight: 44, border: "1px solid #232320" }}>
-            <span>Order · ₹{decompose(400, 1).total}</span>
-          </a>
-        </div>
-      </header>
+      {/* ══ NAV ══
+          The site navbar (components/Navbar.tsx) is the header on this page,
+          as it is on every other. The prototype drew its own, and the two are
+          the same object: logo left, links centre, a priced order button
+          right, and a lime scroll-progress rule along the bottom edge. Yours
+          additionally knows whether you are signed in, carries the Plans and
+          Company dropdowns, and has a mobile overlay, so keeping both would
+          have meant two fixed bars and 134px of chrome above the hero.
+
+          What went with it are the five section anchors (Tomorrow, The week,
+          Find your plan, Price, The coach). On a page this long they are
+          worth having; say the word and they come back as a slim strip under
+          the navbar rather than inside it. */}
 
       {/* ══ HERO ══ */}
-      <section ref={heroRef as React.RefObject<HTMLElement>} aria-labelledby="v2-h1" className={c("v2-hero")} style={{ position: "relative", paddingTop: 66, borderBottom: "1px solid #232320", overflow: "hidden" }}>
+      <section ref={heroRef as React.RefObject<HTMLElement>} aria-labelledby="v2-h1" className={c("v2-hero")} style={{ position: "relative", paddingTop: NAV_H, borderBottom: "1px solid #232320", overflow: "hidden" }}>
         <div aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(#131311 1px,transparent 1px),linear-gradient(90deg,#131311 1px,transparent 1px)", backgroundSize: "88px 88px", opacity: 0.75, pointerEvents: "none" }} />
         <div aria-hidden="true" className={c("v2-loop", "aScan9")} style={{ position: "absolute", left: 0, right: 0, top: 0, height: "9%", background: "linear-gradient(180deg,transparent,rgba(132,204,22,0.07),transparent)", willChange: "transform", pointerEvents: "none" }} />
 
-        <div className={c("v2-hero-grid")} style={{ position: "relative", display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,0.95fr)", alignItems: "stretch", minHeight: "calc(100svh - 66px)" }}>
+        <div className={c("v2-hero-grid")} style={{ position: "relative", display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,0.95fr)", alignItems: "stretch", minHeight: `calc(100svh - ${NAV_H}px)` }}>
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "clamp(44px,8vh,96px) clamp(24px,3.4vw,56px) clamp(36px,6vh,64px) max(clamp(18px,4vw,40px),calc((100vw - 1240px) / 2))" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "clamp(20px,3vh,32px)" }}>
               <span aria-hidden="true" className={c("v2-loop", "aFloat24")} style={{ width: 7, height: 7, background: "#84cc16" }} />
@@ -781,7 +776,10 @@ export default function Home(props: HomeProps) {
         </div>
       </section>
 
-      <SiteFooter licence={licence} />
+      {/* The site footer (components/Footer.tsx) closes this page, same as the
+          navbar opens it. The prototype's own four-column footer would have
+          stacked directly on top of it. SiteFooter is still exported from
+          Sections.tsx if the design's version is ever wanted instead. */}
 
       <AiDock
         open={aiOpen} toggle={() => setAiOpen((v) => !v)} chat={chat} draft={draft} setDraft={setDraft} ask={ask}
