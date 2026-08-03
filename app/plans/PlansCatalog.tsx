@@ -9,6 +9,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { decomposePrice } from "@/lib/pricing-decomposition";
+import { LIME } from "@/app/_ui/theme";
 import {
   TIERS,
   MEALS,
@@ -100,7 +101,7 @@ function Chip({
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {dot && <span style={{ width: 7, height: 7, background: dot, borderRadius: 999, flexShrink: 0 }} />}
+        {dot && <span style={{ width: 7, height: 7, background: dot, borderRadius: 0, flexShrink: 0 }} />}
         <span style={{ fontSize: 15, fontWeight: 600, color: active ? "var(--lime-light)" : "var(--text-primary)" }}>
           {label}
         </span>
@@ -222,7 +223,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
         {/* Configurator */}
         <div style={{
           background: "var(--bg-card)", border: "1px solid var(--border)",
-          borderRadius: 16, padding: 28, marginBottom: 28,
+          borderRadius: 0, padding: 28, marginBottom: 28,
         }}>
           <div style={{ marginBottom: 24 }}>
             <Step label="Diet" />
@@ -272,18 +273,22 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
             return (
               <div key={tier.key} style={{
                 background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: 16, padding: 24, display: "flex", flexDirection: "column",
+                borderRadius: 0, padding: 24, display: "flex", flexDirection: "column",
                 position: "relative",
-                ...(isStandard ? { boxShadow: "0 0 0 1px rgba(132,204,22,0.2)" } : {}),
+                /* A 1px lime hairline, not a glow. This was a coloured
+                   box-shadow, which is on DESIGN.md's reject-on-sight list;
+                   the border says the same thing with the system's own
+                   structural device. */
+                ...(isStandard ? { borderColor: LIME } : {}),
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ width: 8, height: 8, background: tier.accent, borderRadius: 999 }} />
+                  <span style={{ width: 8, height: 8, background: tier.accent, borderRadius: 0 }} />
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>{tier.label}</h3>
                   {!tier.available && (
                     <span style={{
                       fontSize: 12, fontWeight: 700, color: "var(--text-dim)",
                       background: "var(--bg-elevated)", border: "1px solid var(--border-mid)",
-                      padding: "3px 9px", borderRadius: 999, marginLeft: "auto",
+                      padding: "3px 9px", borderRadius: 0, marginLeft: "auto",
                       letterSpacing: "0.06em", textTransform: "uppercase",
                     }}>Soon</span>
                   )}
@@ -316,7 +321,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
                     <a href="#browse" style={{
                       display: "block", textAlign: "center", textDecoration: "none",
                       background: "var(--lime)", color: "#000", fontWeight: 800,
-                      fontSize: 13, padding: "12px 0", borderRadius: 9,
+                      fontSize: 13, padding: "12px 0", borderRadius: 0,
                       letterSpacing: "0.06em", textTransform: "uppercase",
                     }}>
                       Choose a plan
@@ -326,7 +331,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
                       style={{
                         width: "100%", textAlign: "center",
                         background: "rgba(132,204,22,0.06)", color: "var(--lime-light)",
-                        fontWeight: 800, fontSize: 13, padding: "12px 0", borderRadius: 9,
+                        fontWeight: 800, fontSize: 13, padding: "12px 0", borderRadius: 0,
                         border: "1px solid rgba(132,204,22,0.28)", cursor: "pointer",
                         letterSpacing: "0.06em", textTransform: "uppercase",
                       }}>
@@ -358,7 +363,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
             .ffb-edge{ position:absolute; top:0; left:0; right:0; height:2px; background:var(--ac); }
             .ffb-cta{ font-family:var(--ff-cond); font-size:14px; letter-spacing:.1em; text-transform:uppercase; background:var(--ac); color:#0a0a0a; font-weight:800; padding:0 22px; min-height:44px; display:inline-flex; align-items:center; border-radius:0; text-decoration:none; transition:background .2s; }
             .ffb-cta:hover{ background:#bef264; }
-            .ffb-empty{ text-align:center; padding:56px 20px; border:1px solid var(--bd); border-radius:12px; color:#85857e; font-size:13px; }
+            .ffb-empty{ text-align:center; padding:56px 20px; border:1px solid var(--bd); border-radius:0; color:#85857e; font-size:13px; }
 
             /* ── CARDS ────────────────────────────────────────────────────
                This was a 57-row text list plus ONE detail panel: you could
@@ -384,14 +389,14 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
             .ffb-ctag{ font-size:12.5px; color:#85857e; line-height:1.55; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
             .ffb-cnums{ display:flex; align-items:flex-end; gap:12px; }
             .ffb-ckcal{ font-family:var(--ff-cond); font-weight:800; font-size:33px; line-height:.82; color:var(--ac); }
-            .ffb-ckcal i{ font-style:normal; font-family:var(--ff-cond); font-size:11.5px; letter-spacing:.13em; color:#85857e; display:block; margin-top:5px; }
+            .ffb-ckcal i{ font-style:normal; font-family:var(--ff-cond); font-size:12px; letter-spacing:.13em; color:#85857e; display:block; margin-top:5px; }
             .ffb-cmac{ flex:1; min-width:0; }
-            .ffb-cmacrow{ display:flex; justify-content:space-between; font-family:var(--ff-cond); font-size:11.5px; letter-spacing:.06em; color:#85857e; margin-bottom:6px; }
+            .ffb-cmacrow{ display:flex; justify-content:space-between; font-family:var(--ff-cond); font-size:12px; letter-spacing:.06em; color:#85857e; margin-bottom:6px; }
             .ffb-cbar{ display:flex; height:5px; overflow:hidden; background:#161616; }
             .ffb-cfoot{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:auto; padding-top:13px; border-top:1px solid var(--bd); }
             .ffb-cprice b{ font-family:var(--ff-cond); font-weight:800; font-size:21px; color:#f4f3ee; }
-            .ffb-cprice span{ font-family:var(--ff-cond); font-size:11.5px; color:#85857e; margin-left:3px; }
-            .ffb-cprice small{ display:block; font-family:var(--ff-cond); font-size:11.5px; color:#85857e; margin-top:3px; }
+            .ffb-cprice span{ font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-left:3px; }
+            .ffb-cprice small{ display:block; font-family:var(--ff-cond); font-size:12px; color:#85857e; margin-top:3px; }
             .ffb-cgo{ font-family:var(--ff-cond); font-weight:800; font-size:12.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ac); white-space:nowrap; }
           `}</style>
 
@@ -485,7 +490,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
 
         {/* Digital link */}
         <div style={{
-          background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 14,
+          background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 0,
           padding: "20px 24px", marginTop: 32, display: "flex",
           alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
         }}>
@@ -514,7 +519,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
           <div onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: 440, width: "100%", background: "var(--bg-card)",
-              border: "1px solid var(--border-mid)", borderRadius: 20, padding: 28, position: "relative",
+              border: "1px solid var(--border-mid)", borderRadius: 0, padding: 28, position: "relative",
             }}>
             <button onClick={() => setWlTier(null)}
               style={{
@@ -538,7 +543,7 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
             ) : (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <span style={{ width: 8, height: 8, background: TIERS.find((t) => t.key === wlTier)!.accent, borderRadius: 999 }} />
+                  <span style={{ width: 8, height: 8, background: TIERS.find((t) => t.key === wlTier)!.accent, borderRadius: 0 }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                     {wlTier} tier
                   </span>
@@ -553,14 +558,14 @@ export default function PlansCatalog({ plans, pricesByPlan, initialCategory, ini
                   onChange={(e) => setWlEmail(e.target.value)} disabled={wlStatus === "submitting"}
                   style={{
                     width: "100%", padding: "12px 14px", background: "var(--bg-elevated)",
-                    border: "1px solid var(--border-mid)", borderRadius: 10,
+                    border: "1px solid var(--border-mid)", borderRadius: 0,
                     color: "var(--text-primary)", fontSize: 14, outline: "none",
                     marginBottom: 12, boxSizing: "border-box",
                   }} />
                 <button onClick={submitWaitlist} disabled={wlStatus === "submitting"}
                   style={{
                     width: "100%", background: "var(--lime)", color: "#000",
-                    fontWeight: 800, fontSize: 13, padding: "12px 0", borderRadius: 10,
+                    fontWeight: 800, fontSize: 13, padding: "12px 0", borderRadius: 0,
                     border: "none", cursor: wlStatus === "submitting" ? "wait" : "pointer",
                     letterSpacing: "0.07em", textTransform: "uppercase",
                     opacity: wlStatus === "submitting" ? 0.7 : 1,

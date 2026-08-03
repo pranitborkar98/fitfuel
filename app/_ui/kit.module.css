@@ -1,0 +1,471 @@
+/* app/_ui/kit.module.css
+   ═══════════════════════════════════════════════════════════════════════════
+   The homepage's vocabulary, made reusable.
+
+   Every device here is lifted from the shipped homepage rather than invented:
+   the section marker, the directory row, the spec table, the tile grid, the
+   chip rail, the segmented control and the two buttons. DESIGN.md names four
+   of them as the signature devices that exist to replace generic patterns, so
+   a page built out of these cannot drift back into card grids.
+
+   Radius is 0 throughout, structure is 1px #232320 hairlines, and the only
+   chromatic value is lime. Motion is the one reveal DESIGN.md allows: opacity
+   plus 16px, scroll-driven, dead under prefers-reduced-motion.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── the one reveal ────────────────────────────────────────────────────── */
+.rise {
+  opacity: 1;
+}
+@supports (animation-timeline: view()) {
+  .rise {
+    opacity: 0;
+    animation: kitRise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+  }
+}
+@keyframes kitRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ── the section marker: one mono label, one hairline ──────────────────────
+   The spine of every page. NO serial number, no right-hand caption: that is
+   the over-annotation habit DESIGN.md rejects by name. */
+.idx {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: clamp(20px, 3vw, 32px);
+}
+.idxLabel {
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #85857e;
+  white-space: nowrap;
+}
+.idxRule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: #232320;
+}
+
+/* The heading-and-deck pair that opens a section. Asymmetric on purpose:
+   compositions are offset columns, never centred stacks. */
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: end;
+}
+@media (max-width: 900px) {
+  .head {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A secondary rule with a label on it, for a block inside a section. */
+.subHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #232320;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+
+/* ── signature device 3: the directory row ────────────────────────────────
+   A hairline-separated list that shifts right and takes a lime edge on hover.
+   This is what replaces a card grid for an index. */
+.rows {
+  border-top: 1px solid #232320;
+}
+.row {
+  display: grid;
+  align-items: center;
+  gap: clamp(12px, 2vw, 26px);
+  width: 100%;
+  text-align: left;
+  background: #070707;
+  border: 0;
+  border-bottom: 1px solid #232320;
+  border-left: 2px solid transparent;
+  padding: clamp(16px, 1.8vw, 22px) clamp(14px, 2vw, 20px);
+  min-height: 68px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.2s linear, padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s linear;
+}
+.row:hover {
+  background: #0c0c0a;
+  padding-left: calc(clamp(14px, 2vw, 20px) + 6px);
+  border-left-color: #84cc16;
+}
+.row:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.rowBtn {
+  cursor: pointer;
+}
+/* The arrow that leans out on hover. */
+.rowGo {
+  display: inline-block;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.row:hover .rowGo {
+  transform: translateX(6px);
+}
+
+/* ── signature device 2: the spec table ───────────────────────────────────
+   A real <table>. If it is tabular data it is a table, not a grid of divs:
+   assistive tech cannot parse the latter. */
+.specWrap {
+  overflow-x: auto;
+  border: 1px solid #232320;
+}
+.spec {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-archivo), sans-serif;
+}
+.spec th,
+.spec td {
+  padding: 13px 14px;
+  text-align: left;
+  font-size: 13.5px;
+  border-bottom: 1px solid #232320;
+  border-right: 1px solid #232320;
+  color: #9a9a94;
+  vertical-align: top;
+}
+.spec th:last-child,
+.spec td:last-child {
+  border-right: 0;
+}
+.spec tbody tr:last-child td,
+.spec tbody tr:last-child th {
+  border-bottom: 0;
+}
+.spec thead th {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #85857e;
+  background: #050504;
+}
+.spec tbody th {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #f7f7f5;
+  white-space: nowrap;
+}
+.specNum {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  color: #f7f7f5;
+  white-space: nowrap;
+}
+
+/* ── tiles ────────────────────────────────────────────────────────────────
+   A hairline grid where the gap IS the rule: 1px gap over a #232320 ground.
+   Set --cols to change the track count. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.tile {
+  background: #070707;
+  padding: clamp(18px, 2.4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.2s linear;
+}
+.tile:hover {
+  background: #0c0c0a;
+}
+.tile:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+@media (max-width: 980px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── chips: a hairline-jointed rail, never pills ──────────────────────── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.chip {
+  flex: 1 1 auto;
+  min-width: 120px;
+  text-align: center;
+  padding: 14px 15px;
+  min-height: 48px;
+  background: #070707;
+  color: #9a9a94;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  transition: background 0.2s linear, color 0.2s linear;
+}
+.chip:hover {
+  background: #0c0c0a;
+  color: #f7f7f5;
+}
+.chip:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.chipOn {
+  background: #84cc16;
+  color: #070707;
+}
+.chipOn:hover {
+  background: #84cc16;
+  color: #070707;
+}
+
+/* A segmented control: the same rail, condensed, for a small option set. */
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.seg button {
+  flex: 1 1 auto;
+  min-width: 92px;
+  min-height: 46px;
+  padding: 12px 8px;
+  border: 0;
+  cursor: pointer;
+  background: #070707;
+  color: #9a9a94;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.18s linear, color 0.18s linear;
+}
+.seg button:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.segOn {
+  background: #f7f7f5 !important;
+  color: #070707 !important;
+}
+
+/* ── buttons ──────────────────────────────────────────────────────────────
+   The fill wipes up from the bottom on hover. No radius, no shadow, no glow. */
+.btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #84cc16;
+  color: #070707;
+  border: 1px solid #84cc16;
+  padding: 16px 28px;
+  min-height: 52px;
+  cursor: pointer;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #f7f7f5;
+  transform: translateY(101%);
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn > span {
+  position: relative;
+  z-index: 1;
+}
+.btn:hover::after {
+  transform: translateY(0);
+}
+.btn:focus-visible {
+  outline: 2px solid #a3e635;
+  outline-offset: 3px;
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #f7f7f5;
+  border: 1px solid #33332f;
+  padding: 15px 26px;
+  min-height: 52px;
+  cursor: pointer;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 0.2s linear, color 0.2s linear, background 0.2s linear;
+}
+.ghost:hover {
+  border-color: #84cc16;
+  color: #84cc16;
+  background: rgba(132, 204, 22, 0.06);
+}
+.ghost:focus-visible {
+  outline: 2px solid #a3e635;
+  outline-offset: 3px;
+}
+
+/* A plain lime text link with a rule that draws on hover. */
+.link {
+  position: relative;
+  display: inline-block;
+  color: #84cc16;
+  text-decoration: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding-bottom: 3px;
+}
+.link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link:hover::after {
+  transform: scaleX(1);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 20px);
+  flex-wrap: wrap;
+}
+
+/* ── signature device 1: the readout bar ──────────────────────────────────
+   A full-bleed band welded to a section edge, hairline rules, condensed 900
+   numerals against dim labels. */
+.readout {
+  display: grid;
+  grid-template-columns: repeat(var(--cells, 4), minmax(0, 1fr));
+  background: #050504;
+  border-top: 1px solid #232320;
+  border-bottom: 1px solid #232320;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(18px, 2.4vw, 28px) clamp(14px, 2.2vw, 26px);
+  border-left: 1px solid #232320;
+  transition: background 0.25s linear;
+}
+.cell:hover {
+  background: #0c0c0a;
+}
+.readout > :first-child {
+  border-left: 0;
+}
+@media (max-width: 900px) {
+  .readout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .readout > :nth-child(3) {
+    border-left: 0;
+  }
+  .readout > :nth-child(n + 3) {
+    border-top: 1px solid #232320;
+  }
+}
+@media (max-width: 520px) {
+  .readout {
+    grid-template-columns: 1fr;
+  }
+  .readout > * {
+    border-left: 0;
+  }
+  .readout > :nth-child(n + 2) {
+    border-top: 1px solid #232320;
+  }
+}
+
+/* A macro split as one stacked bar. Widths are real shares; the figures are
+   always printed alongside, so colour is never the only channel. */
+.split {
+  display: flex;
+  height: 5px;
+  gap: 1px;
+  overflow: hidden;
+  background: #161616;
+}
+.split > span {
+  display: block;
+}
