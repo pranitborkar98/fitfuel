@@ -1,0 +1,281 @@
+/* app/tdee-calculator/tdee.module.css
+   ═══════════════════════════════════════════════════════════════════════════
+   The calculator, on the Instrument System.
+
+   This page was the clearest per-category-accent violation in the codebase:
+   each goal carried its own hue, piped through a --ac custom property that
+   then coloured the eyebrow, the segmented buttons, the ring, the protein bar,
+   the input focus ring and the CTA. Lose fat was #a3e635, Maintain was sky
+   #38bdf8 and Build muscle was orange #f97316 — two of the three named in
+   DESIGN.md's reject list, and the whole mechanism is what "no per-category
+   accent hues" exists to stop.
+
+   There is one accent now and it does one job: marking the active choice.
+
+   Also gone: the radial-gradient glow behind the results panel, radius 6/7/10,
+   the 99px macro bar, and the 124px circular progress ring. The calorie figure
+   is the hero, at display scale, which is what "data is the hero" means.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: #070707;
+  padding: clamp(20px, 2.8vw, 32px);
+}
+/* The results half is recessed: darker than the page, a well cut into it. */
+.panelOut {
+  background: #050504;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 3vw, 32px);
+}
+
+.lbl {
+  display: block;
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #85857e;
+  padding-bottom: 11px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #232320;
+}
+
+/* ── the segmented rail ───────────────────────────────────────────────── */
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  margin-bottom: 26px;
+}
+.seg button {
+  flex: 1 1 auto;
+  min-width: 88px;
+  min-height: 46px;
+  padding: 12px 10px;
+  border: 0;
+  cursor: pointer;
+  background: #070707;
+  color: #9a9a94;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.18s linear, color 0.18s linear;
+}
+.seg button:hover {
+  background: #0c0c0a;
+  color: #f7f7f5;
+}
+.seg button.on {
+  background: #84cc16;
+  color: #070707;
+}
+.seg button:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+
+/* ── numeric fields ───────────────────────────────────────────────────── */
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #232320;
+}
+.field label {
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 14.5px;
+  color: #9a9a94;
+}
+.field input {
+  width: 104px;
+  min-height: 44px;
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: #f7f7f5;
+  background: #050504;
+  border: 1px solid #232320;
+  border-radius: 0;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.2s linear;
+}
+.field input:focus-visible {
+  border-color: #84cc16;
+  outline: 2px solid #84cc16;
+  outline-offset: 1px;
+}
+
+/* ── the option list ──────────────────────────────────────────────────── */
+.opt {
+  display: grid;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  margin-bottom: 26px;
+}
+.opt button {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  text-align: left;
+  padding: 13px 15px;
+  min-height: 50px;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: #070707;
+  color: #9a9a94;
+  cursor: pointer;
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 14.5px;
+  transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear;
+}
+.opt button:hover {
+  background: #0c0c0a;
+  color: #f7f7f5;
+}
+.opt button.on {
+  border-left-color: #84cc16;
+  background: #0c0c0a;
+  color: #f7f7f5;
+}
+.opt button:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.opt small {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: #85857e;
+  white-space: nowrap;
+}
+
+/* ── the result ───────────────────────────────────────────────────────── */
+.figure {
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-weight: 900;
+  font-size: clamp(4rem, 12vw, 8rem);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: #f7f7f5;
+  font-variant-numeric: tabular-nums;
+  display: block;
+}
+.figureUnit {
+  display: block;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #85857e;
+  margin-top: 12px;
+}
+
+/* BMR and TDEE as a two-cell readout under the target. */
+.reads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.read {
+  background: #050504;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.readVal {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  color: #f7f7f5;
+}
+
+/* ── macros ───────────────────────────────────────────────────────────── */
+.macbar {
+  display: flex;
+  height: 6px;
+  gap: 1px;
+  overflow: hidden;
+  background: #161616;
+  margin-bottom: 14px;
+}
+.macbar > span {
+  display: block;
+}
+.macrow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+}
+.mac {
+  background: #050504;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.macVal {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  color: #f7f7f5;
+}
+.macName {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #85857e;
+}
+/* The share is printed as a percentage as well as drawn as a width, so the
+   bar is never the only channel carrying the split. */
+.macPct {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: #85857e;
+  font-variant-numeric: tabular-nums;
+}
+
+.cta {
+  border-top: 1px solid #232320;
+  padding-top: 20px;
+  margin-top: auto;
+}
+.note {
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #85857e;
+  margin: 16px 0 0;
+  max-width: 56ch;
+}
