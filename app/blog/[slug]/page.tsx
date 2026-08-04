@@ -1,24 +1,34 @@
+// app/blog/[slug]/page.tsx
+//
+// A single article, on the Instrument System.
+//
+// The article body is the one place on this site where long-form prose is the
+// whole point, so the measure is the constraint: 66ch, flush left. It reuses
+// the shared .prose block rather than redefining a .ff-prose in a style tag.
+//
+// Removed: radius 16/18 and three border-radius:999px runs (the tag row, the
+// CTA button and the related cards), the #111111 CTA card, and `MONO` declared
+// as "var(--ff-cond), monospace" — the fourth file carrying that same
+// copy-paste, so the byline and every tag were set in the display face rather
+// than in JetBrains Mono.
+//
+// The related posts were a three-up card grid; they are directory rows now,
+// which is what an index of articles is.
+//
+// JSON-LD (BlogPosting) is unchanged: this page states facts about a published
+// work, so it keeps its structured data. A canonical was added, because
+// DESIGN.md requires one on every public page and this one did not have it.
+
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
 import { prisma } from "@/lib/prisma";
+import { Go, Idx, Row, k } from "@/app/_ui/Kit";
+import { Band, Shell, Wrap, p as pg } from "@/app/_ui/Page";
+import { DIM, INK, SECTION, body, display, label, num } from "@/app/_ui/theme";
 
 export const dynamic = "force-dynamic";
-
-const C = {
-  bg: "#080808",
-  accent: "#a3e635",
-  accent2: "#84cc16",
-  text: "#ffffff",
-  sub: "#a3a3a3",
-  muted: "#9a9a94",
-  border: "#1f1f1f",
-  card: "#111111",
-};
-
-const DISPLAY = "var(--ff-cond)";
-const BODY = "inherit";
-const MONO = "var(--ff-cond), monospace";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-IN", {
@@ -41,6 +51,7 @@ export async function generateMetadata({
   return {
     title: `${post.title}`,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       title: post.title,
       description: post.excerpt,
@@ -58,16 +69,11 @@ export default async function BlogArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-
   const post = await prisma.blogPost.findUnique({ where: { slug } });
   if (!post || post.status !== "PUBLISHED") notFound();
 
   const related = await prisma.blogPost.findMany({
-    where: {
-      status: "PUBLISHED",
-      category: post.category,
-      id: { not: post.id },
-    },
+    where: { status: "PUBLISHED", category: post.category, id: { not: post.id } },
     orderBy: { publishedAt: "desc" },
     take: 3,
   });
@@ -85,237 +91,143 @@ export default async function BlogArticlePage({
   };
 
   return (
-    <main
-      style={{
-        background: C.bg,
-        color: C.text,
-        minHeight: "100vh",
-        fontFamily: BODY,
-        WebkitFontSmoothing: "antialiased",
-      }}
-    >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <Shell>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <style>{`
-        .ff-prose { color:${C.sub}; font-size:17px; line-height:1.8; }
-        .ff-prose p { margin:0 0 20px; }
-        .ff-prose h2 { font-family:${DISPLAY}; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; color:${C.text}; font-size:28px; line-height:1.1; margin:42px 0 16px; }
-        .ff-prose h3 { font-family:${DISPLAY}; font-weight:700; text-transform:uppercase; color:${C.text}; font-size:21px; margin:32px 0 12px; }
-        .ff-prose ul, .ff-prose ol { margin:0 0 22px; padding-left:22px; }
-        .ff-prose li { margin:0 0 10px; }
-        .ff-prose strong { color:${C.text}; font-weight:600; }
-        .ff-prose a { color:${C.accent}; text-decoration:none; border-bottom:1px solid ${C.accent}40; }
-        .ff-prose a:hover { border-bottom-color:${C.accent}; }
-        .ff-prose blockquote { border-left:3px solid ${C.accent2}; margin:24px 0; padding:4px 0 4px 18px; color:${C.muted}; font-style:italic; }
-        .ff-prose em { color:${C.muted}; }
-        .ff-related-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-        .ff-rel-card { transition:border-color .2s ease, transform .2s ease; }
-        .ff-rel-card:hover { border-color:${C.accent2}66 !important; transform:translateY(-3px); }
-        @media (max-width:760px){ .ff-related-grid { grid-template-columns:1fr; } }
-      `}</style>
-
-      <article style={{ maxWidth: 760, margin: "0 auto", padding: "120px 24px 40px" }}>
-        <Link
-          href="/blog"
-          style={{
-            fontFamily: MONO,
-            fontSize: 12,
-            color: C.muted,
-            textDecoration: "none",
-            display: "inline-block",
-            marginBottom: 28,
-          }}
-        >
-          ← All articles
-        </Link>
-
-        <div
-          style={{
-            fontFamily: MONO,
-            fontSize: 12,
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-            color: C.accent2,
-            marginBottom: 16,
-          }}
-        >
-          {post.category}
-        </div>
-
-        <h1
-          style={{
-            fontFamily: DISPLAY,
-            fontWeight: 800,
-            fontSize: "clamp(32px, 5.2vw, 52px)",
-            lineHeight: 1.02,
-            letterSpacing: "-0.015em",
-            textTransform: "uppercase",
-            margin: "0 0 22px",
-          }}
-        >
-          {post.title}
-        </h1>
-
-        <div
-          style={{
-            fontFamily: MONO,
-            fontSize: 12.5,
-            color: C.muted,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-            paddingBottom: 28,
-            marginBottom: 36,
-            borderBottom: `1px solid ${C.border}`,
-          }}
-        >
-          <span>{post.authorName}</span>
-          <span>·</span>
-          <span>{fmtDate(post.publishedAt)}</span>
-          <span>·</span>
-          <span>{post.readMinutes} min read</span>
-        </div>
-
-        {post.coverImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.coverImageUrl}
-            alt={post.title}
-            style={{
-              width: "100%",
-              borderRadius: 16,
-              border: `1px solid ${C.border}`,
-              marginBottom: 36,
-              display: "block",
-            }}
-          />
-        )}
-
-        <div
-          className="ff-prose"
-          dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-        />
-
-        {post.tags.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 36 }}>
-            {post.tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  fontFamily: MONO,
-                  fontSize: 12,
-                  color: C.muted,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 999,
-                  padding: "5px 12px",
-                }}
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* CTA */}
-        <div
-          style={{
-            marginTop: 48,
-            padding: "32px 30px",
-            borderRadius: 18,
-            background: C.card,
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: DISPLAY,
-              fontWeight: 800,
-              textTransform: "uppercase",
-              fontSize: 26,
-              margin: "0 0 10px",
-            }}
-          >
-            Stop guessing. <span style={{ color: C.accent }}>Start eating right.</span>
-          </h3>
-          <p style={{ color: C.sub, fontSize: 15.5, lineHeight: 1.7, margin: "0 0 20px", maxWidth: 480 }}>
-            We do the calculation and the cooking. You eat, log, and watch the trend.
-          </p>
-          <Link
-            href="/plans"
-            style={{
-              display: "inline-block",
-              fontFamily: MONO,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: 0.5,
-              textTransform: "uppercase",
-              color: "#080808",
-              background: C.accent,
-              padding: "13px 26px",
-              borderRadius: 999,
-              textDecoration: "none",
-            }}
-          >
-            Browse plans →
+      <article>
+        <Wrap style={{ paddingTop: "clamp(96px,13vw,150px)" }}>
+          <Link href="/blog" className={k.link} style={{ marginBottom: 28, display: "inline-block" }}>
+            &larr; All articles
           </Link>
-        </div>
+
+          <div style={{ maxWidth: 900 }}>
+            <span style={label("#84cc16")}>{post.category}</span>
+            <h1 style={{ ...display("clamp(2.2rem,6.4vw,5rem)"), margin: "18px 0 24px", maxWidth: "20ch" }}>
+              {post.title}
+            </h1>
+            <p style={{ ...body(17.5), maxWidth: "58ch", marginBottom: 26 }}>{post.excerpt}</p>
+          </div>
+
+          {/* Byline as a mono metadata line on a hairline, matching the meta
+              row every other page's masthead opens with. */}
+          <div style={BYLINE}>
+            <span>{post.authorName}</span>
+            <span style={{ color: DIM }}>/</span>
+            <span>{fmtDate(post.publishedAt)}</span>
+            <span style={{ color: DIM }}>/</span>
+            <span style={num("12px", INK)}>{post.readMinutes} min read</span>
+          </div>
+
+          {post.coverImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.coverImageUrl}
+              alt=""
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                border: "1px solid #232320",
+                margin: "clamp(28px,4vw,44px) 0",
+                /* The house grade: food keeps its colour, lifted slightly. */
+                filter: "saturate(1.06) contrast(1.07)",
+              }}
+            />
+          )}
+
+          <div
+            className={pg.prose}
+            style={{ marginTop: post.coverImageUrl ? 0 : "clamp(28px,4vw,44px)" }}
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          />
+
+          {post.tags.length > 0 && (
+            <div style={TAGS}>
+              {post.tags.map((tag) => (
+                <span key={tag} style={TAG}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </Wrap>
       </article>
 
-      {/* Related */}
       {related.length > 0 && (
-        <section style={{ maxWidth: 1120, margin: "0 auto", padding: "20px 24px 96px" }}>
-          <div
-            style={{
-              fontFamily: MONO,
-              fontSize: 12,
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
-              color: C.accent2,
-              marginBottom: 22,
-            }}
-          >
-            More in {post.category}
-          </div>
-          <div className="ff-related-grid">
-            {related.map((r) => (
-              <Link
-                key={r.id}
-                href={`/blog/${r.slug}`}
-                className="ff-rel-card"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  textDecoration: "none",
-                  color: "inherit",
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 16,
-                  background: C.card,
-                  padding: "24px 22px",
-                }}
-              >
-                <h4
-                  style={{
-                    fontFamily: DISPLAY,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    fontSize: 20,
-                    lineHeight: 1.1,
-                    margin: "0 0 10px",
-                  }}
-                >
-                  {r.title}
-                </h4>
-                <p style={{ color: C.sub, fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-                  {r.excerpt}
-                </p>
-              </Link>
-            ))}
-          </div>
+        <section style={{ ...SECTION, paddingBottom: 0 }}>
+          <Wrap>
+            <Idx label={`More in ${post.category}`} />
+            <div className={k.rows}>
+              {related.map((r) => (
+                <Row key={r.id} href={`/blog/${r.slug}`} cols="minmax(0,1.5fr) minmax(0,1.5fr) 78px 28px">
+                  <h2
+                    style={{
+                      fontFamily: "var(--font-barlow-condensed), sans-serif",
+                      fontWeight: 800,
+                      fontSize: "clamp(1.1rem,2vw,1.45rem)",
+                      lineHeight: 1.02,
+                      letterSpacing: "-0.01em",
+                      textTransform: "uppercase",
+                      color: INK,
+                      margin: 0,
+                    }}
+                  >
+                    {r.title}
+                  </h2>
+                  <p style={{ ...body(14), maxWidth: "46ch" }}>{r.excerpt}</p>
+                  <span style={num("13px", DIM)}>{r.readMinutes} min</span>
+                  <Go />
+                </Row>
+              ))}
+            </div>
+          </Wrap>
         </section>
       )}
-    </main>
+
+      <Band
+        title="Stop guessing, start eating right"
+        body="We do the calculation and the cooking. You eat, log, and watch the trend."
+        href="/plans"
+        cta="Browse plans"
+        secondary={{ href: "/tdee-calculator", label: "Find your numbers" }}
+      />
+    </Shell>
   );
 }
+
+const BYLINE = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "10px 14px",
+  alignItems: "baseline",
+  paddingTop: 14,
+  borderTop: "1px solid #232320",
+  fontFamily: "var(--font-mono), monospace",
+  fontSize: 12,
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  color: "#85857e",
+} as const;
+
+/* Tags were border-radius:999px chips. They are a hairline-jointed mono rail
+   now: square, and the leading # is dropped because the word is the tag. */
+const TAGS = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 1,
+  background: "#232320",
+  border: "1px solid #232320",
+  marginTop: "clamp(34px,4.5vw,52px)",
+} as const;
+
+const TAG = {
+  flex: "1 1 auto",
+  textAlign: "center",
+  background: "#070707",
+  padding: "12px 15px",
+  fontFamily: "var(--font-mono), monospace",
+  fontSize: 12,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  color: "#85857e",
+} as const;
