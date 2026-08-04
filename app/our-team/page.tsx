@@ -1,5 +1,20 @@
-import Link from "next/link";
-import { type ReactNode } from "react";
+// app/our-team/page.tsx
+//
+// The team, on the Instrument System.
+//
+// The two people were radius-16 cards each opening with a 76px rounded avatar
+// holding lime initials. Initials-in-a-square is a stand-in for a photograph
+// that does not exist, and dressing it in lime made a placeholder the loudest
+// thing on the page. Both people are now set as editorial entries: name at
+// display scale, role as a mono label, biography in a measured column.
+//
+// The nutritionist entry is still unfilled. It says so in words, in the entry
+// itself, rather than shipping "[Nutritionist name]" inside a card that looks
+// finished.
+
+import { Masthead, Note, Prose, Shell, Stack, Wrap, A, p } from "@/app/_ui/Page";
+import { Idx } from "@/app/_ui/Kit";
+import { SECTION, display, label } from "@/app/_ui/theme";
 
 export const metadata = {
   alternates: { canonical: "/our-team" },
@@ -7,64 +22,78 @@ export const metadata = {
   description: "The people behind FitFuel and the nutrition principles that shape every plan.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
-const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
-
-function Avatar({ initials }: { initials: string }) {
-  return (
-    <div style={{ width: 76, height: 76, borderRadius: 16, background: "#0e0e0e", border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.accent, flexShrink: 0 }}>
-      {initials}
-    </div>
-  );
-}
-function H2({ children }: { children: ReactNode }) {
-  return <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 24, color: C.text, margin: "0 0 22px", letterSpacing: "-0.02em" }}>{children}</h2>;
-}
-
 export default function OurTeamPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
-      <div style={{ maxWidth: 880, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Team</p>
-        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
-          The people behind your plate<span style={{ color: C.accent }}>.</span>
-        </h1>
-        <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 600, margin: "0 0 56px" }}>
-          FitFuel was built by people who got tired of choosing between food that tastes good and food that works. So we built a system that does both.
-        </p>
+    <Shell>
+      <Masthead
+        label="Our team"
+        title="The people behind your plate"
+        deck="FitFuel was built by people who got tired of choosing between food that tastes good and food that works. So we built a system that does both."
+      />
 
-        <H2>Founder</H2>
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "26px 24px", display: "flex", gap: 22, alignItems: "flex-start", marginBottom: 48, flexWrap: "wrap" }}>
-          <Avatar initials="PB" />
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 19, fontWeight: 700, color: C.text }}>Pranit Borkar</div>
-            <div style={{ fontSize: 13, color: C.accent, fontWeight: 600, letterSpacing: "0.04em", marginBottom: 12, textTransform: "uppercase" }}>Founder</div>
-            <p style={{ color: C.sub, fontSize: 15, lineHeight: 1.7, margin: 0 }}>
-              Pranit founded FitFuel in Pune to turn meal delivery into something more than a tiffin service: a personal health system that cooks for you, tracks every gram, and adapts as your body changes. He leads product, kitchen and technology, and personally tests every part of the experience.
-            </p>
-          </div>
-        </div>
+      <Stack>
+        <section style={SECTION}>
+          <Wrap>
+            <Idx label="Founder" />
+            <div className={p.pair}>
+              <div>
+                <h2 style={display("clamp(2.2rem,5.4vw,4rem)")}>Pranit Borkar</h2>
+                <span style={{ ...label("#84cc16"), marginTop: 14 }}>Founder</span>
+              </div>
+              <Prose>
+                <p>
+                  Pranit founded FitFuel in Pune to turn meal delivery into something more than a
+                  tiffin service: a personal health system that cooks for you, tracks every gram,
+                  and adapts as your body changes.
+                </p>
+                <p>
+                  He leads product, kitchen and technology, and personally tests every part of the
+                  experience before it reaches a customer.
+                </p>
+              </Prose>
+            </div>
+          </Wrap>
+        </section>
 
-        <H2>Nutrition</H2>
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "26px 24px", display: "flex", gap: 22, alignItems: "flex-start", marginBottom: 40, flexWrap: "wrap" }}>
-          <Avatar initials="FF" />
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 19, fontWeight: 700, color: C.text }}>[Nutritionist name]</div>
-            <div style={{ fontSize: 13, color: C.accent, fontWeight: 600, letterSpacing: "0.04em", marginBottom: 12, textTransform: "uppercase" }}>[Qualified Nutritionist / Dietitian, credentials]</div>
-            <p style={{ color: C.sub, fontSize: 15, lineHeight: 1.7, margin: 0 }}>
-              Our plans are built on established nutrition principles. Full nutritionist details and credentials will be published here, and are required before any condition-specific medical plan goes live.
-            </p>
-          </div>
-        </div>
+        <section style={SECTION}>
+          <Wrap>
+            <Idx label="Nutrition" />
+            <div className={p.pair}>
+              <div>
+                {/* Deliberately not a name in brackets. The role exists, the
+                    appointment is not announced, and the page says which. */}
+                <h2 style={display("clamp(2.2rem,5.4vw,4rem)")}>Not yet appointed</h2>
+                <span style={{ ...label(), marginTop: 14 }}>Qualified nutritionist / dietitian</span>
+              </div>
+              <Prose>
+                <p>
+                  Our plans are built on established nutrition principles, and every calorie and
+                  macro figure on this site comes from weighed kitchen records.
+                </p>
+                <p>
+                  A qualified nutritionist has not yet been appointed. Their name and credentials
+                  will be published here, and that appointment is a hard requirement before any
+                  condition-specific medical plan goes live.
+                </p>
+              </Prose>
+            </div>
+          </Wrap>
+        </section>
 
-        <div style={{ background: "rgba(132,204,22,0.06)", border: `1px solid ${C.accent}33`, borderRadius: 14, padding: "18px 22px" }}>
-          <p style={{ color: C.sub, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
-            FitFuel provides food and general nutrition guidance, not medical advice. Please read our <Link href="/medical-disclaimer" style={link}>Medical Disclaimer</Link> before starting a condition-specific plan.
-          </p>
-        </div>
-
-        <div style={{ marginTop: 32 }}><Link href="/" style={link}>&larr; Back to home</Link></div>
-      </div>
-    </main>
+        <section style={{ paddingBottom: "clamp(40px,6vw,80px)" }}>
+          <Wrap>
+            <Note>
+              <Prose>
+                <p>
+                  FitFuel provides food and general nutrition guidance, not medical advice. Please
+                  read our <A href="/medical-disclaimer">Medical Disclaimer</A> before starting a
+                  condition-specific plan.
+                </p>
+              </Prose>
+            </Note>
+          </Wrap>
+        </section>
+      </Stack>
+    </Shell>
   );
 }

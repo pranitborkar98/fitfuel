@@ -9,7 +9,7 @@
 // labelled stand-in for food that genuinely exists. A before/after does not
 // work that way. It is not decoration of a claim, it IS the claim: the image is
 // the evidence that the programme changes bodies. An AI-generated before/after
-// is therefore not an illustration of a result, it is a fabricated result — and
+// is therefore not an illustration of a result, it is a fabricated result, and
 // no sr-only disclosure repairs that, because the visual is doing the
 // persuading and the caption is not. In India it would also put a health-
 // outcome claim on the page with nothing behind it.
@@ -28,15 +28,20 @@
 //      lighting result, not a nutrition one.
 //
 // Until then the empty frame is the honest render, and it is built to look
-// deliberate rather than broken — the /results page already promises "we would
-// rather show you nothing than show you stock photos and invented numbers",
-// and this is that sentence as a component.
+// deliberate rather than broken.
+//
+// STYLING. Migrated onto the Instrument System. It carried its own palette
+// (#1f1f1f, #0e0e0e, radius 12/16, and a #3a3a3a "Before" label at 1.5:1 that
+// failed AA outright). Radius is 0 throughout now, structure is hairlines, and
+// every label sits on a grey from the ramp.
 //
 // SERVER COMPONENT.
 
 import fs from "node:fs";
 import path from "node:path";
 import Image from "next/image";
+
+import { DIM, INK, MUTE, PANEL, RULE, body, label } from "@/app/_ui/theme";
 
 const PUBLIC = path.join(process.cwd(), "public");
 const EXT = [".jpg", ".jpeg", ".png", ".webp", ".avif"];
@@ -64,53 +69,33 @@ export interface Story {
   quote?: string;
 }
 
-const C = {
-  border: "#1f1f1f",
-  card: "#0e0e0e",
-  ink: "#ffffff",
-  sub: "#a3a3a3",
-  muted: "#9a9a94",
-  accent: "#a3e635",
-};
+/* The two frames, side by side, separated by a 1px rule rather than a gap. */
+const FRAMES = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 1,
+  background: RULE,
+  border: `1px solid ${RULE}`,
+} as const;
 
 /** The reserved frame: correct aspect ratio, labelled halves, no fake body. */
 function EmptyFrame() {
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 2,
-        background: C.border,
-        border: `1px dashed ${C.border}`,
-        borderRadius: 12,
-        overflow: "hidden",
-      }}
-    >
-      {(["Before", "After"] as const).map((label) => (
+    <div aria-hidden="true" style={FRAMES}>
+      {(["Before", "After"] as const).map((phase) => (
         <div
-          key={label}
+          key={phase}
           style={{
             aspectRatio: "3 / 4",
-            background: "#0b0b0b",
+            background: PANEL,
             display: "flex",
             alignItems: "flex-end",
-            justifyContent: "center",
             padding: 12,
           }}
         >
-          <span
-            style={{
-              fontFamily: "var(--ff-cond)",
-              textTransform: "uppercase",
-              letterSpacing: "0.18em",
-              fontSize: 11,
-              color: "#3a3a3a",
-            }}
-          >
-            {label}
-          </span>
+          {/* On the ramp at 5.4:1. The old #3a3a3a was 1.5:1, which meant the
+              one word in the frame was effectively invisible. */}
+          <span style={label()}>{phase}</span>
         </div>
       ))}
     </div>
@@ -126,34 +111,26 @@ export function BeforeAfterSlot({ story }: { story?: Story }) {
     <figure
       style={{
         margin: 0,
-        background: C.card,
-        border: `1px solid ${C.border}`,
-        borderRadius: 16,
-        padding: 16,
+        background: "#070707",
+        border: `1px solid ${RULE}`,
+        padding: 14,
         display: "flex",
         flexDirection: "column",
         gap: 14,
       }}
     >
       {complete && story ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 2,
-            background: C.border,
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
-        >
-          {([
-            ["Before", before!],
-            ["After", after!],
-          ] as const).map(([label, src]) => (
-            <div key={label} style={{ position: "relative", aspectRatio: "3 / 4" }}>
+        <div style={FRAMES}>
+          {(
+            [
+              ["Before", before!],
+              ["After", after!],
+            ] as const
+          ).map(([phase, src]) => (
+            <div key={phase} style={{ position: "relative", aspectRatio: "3 / 4" }}>
               <Image
                 src={src}
-                alt={`${story.name}, ${label.toLowerCase()} ${story.weeks} weeks on the ${story.plan} plan`}
+                alt={`${story.name}, ${phase.toLowerCase()} ${story.weeks} weeks on the ${story.plan} plan`}
                 fill
                 sizes="(max-width: 700px) 50vw, 220px"
                 quality={78}
@@ -161,20 +138,15 @@ export function BeforeAfterSlot({ story }: { story?: Story }) {
               />
               <span
                 style={{
+                  ...label(INK),
                   position: "absolute",
-                  left: 8,
-                  bottom: 8,
-                  fontFamily: "var(--ff-cond)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.16em",
-                  fontSize: 10.5,
-                  color: "#fff",
-                  background: "rgba(0,0,0,0.62)",
-                  padding: "3px 8px",
-                  borderRadius: 4,
+                  left: 0,
+                  bottom: 0,
+                  background: "rgba(7,7,7,0.78)",
+                  padding: "5px 9px",
                 }}
               >
-                {label}
+                {phase}
               </span>
             </div>
           ))}
@@ -183,37 +155,44 @@ export function BeforeAfterSlot({ story }: { story?: Story }) {
         <EmptyFrame />
       )}
 
-      <figcaption style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <figcaption style={{ display: "flex", flexDirection: "column", gap: 7 }}>
         {complete && story ? (
           <>
-            <div style={{ fontSize: 15.5, fontWeight: 700, color: C.ink }}>
+            <div
+              style={{
+                fontFamily: "var(--font-barlow-condensed), sans-serif",
+                fontWeight: 900,
+                fontSize: 22,
+                lineHeight: 0.95,
+                letterSpacing: "-0.02em",
+                textTransform: "uppercase",
+                color: INK,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {story.change}
-              <span style={{ color: C.muted, fontWeight: 500 }}> in {story.weeks} weeks</span>
             </div>
-            <div style={{ fontSize: 13, color: C.sub }}>
-              {story.name} · {story.area} · {story.plan}
+            <span style={label()}>In {story.weeks} weeks</span>
+            <div style={{ ...body(13.5), color: MUTE, marginTop: 2 }}>
+              {story.name} &middot; {story.area} &middot; {story.plan}
             </div>
             {story.quote && (
-              <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.65, margin: "6px 0 0" }}>
-                &ldquo;{story.quote}&rdquo;
-              </p>
+              <p style={{ ...body(14), marginTop: 6 }}>&ldquo;{story.quote}&rdquo;</p>
             )}
             {/* Stated once per story rather than as a page-wide disclaimer under
                 the strongest number, where it reads as a retraction. */}
-            <p style={{ fontSize: 11.5, color: "#6b6b6b", margin: "4px 0 0", lineHeight: 1.5 }}>
-              Published with written consent. Figures from this member&rsquo;s own logged
-              data. Results depend on adherence and vary between people.
+            <p style={{ ...body(12.5), color: DIM, marginTop: 6 }}>
+              Published with written consent. Figures from this member&rsquo;s own logged data.
+              Results depend on adherence and vary between people.
             </p>
           </>
         ) : (
           <>
-            <div style={{ fontSize: 14.5, fontWeight: 600, color: C.sub }}>
-              Reserved for a real member
-            </div>
-            <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
-              Two photographs, same framing and light, taken weeks apart, with numbers from
-              their own logged data and their written permission to publish. We will not
-              fill this with a stock body or a generated one.
+            <span style={label()}>Reserved for a real member</span>
+            <p style={{ ...body(13.5), marginTop: 4 }}>
+              Two photographs, same framing and light, taken weeks apart, with numbers from their
+              own logged data and their written permission to publish. We will not fill this with a
+              stock body or a generated one.
             </p>
           </>
         )}

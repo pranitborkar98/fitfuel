@@ -1,23 +1,44 @@
-import Link from "next/link";
-import { type ReactNode } from "react";
+// app/our-ingredients/page.tsx
+//
+// What goes in, and what deliberately does not. On the Instrument System now:
+// the four "what goes in" cards were a radius-14 auto-fit grid, and the
+// exclusion list used a lime × as its bullet, which encoded meaning in a glyph.
+//
+// The two halves are set differently on purpose. What goes in is a hairline
+// tile grid; what we leave out is a plain measured list. A page where every
+// block has the same shape is the rhythm DESIGN.md rejects.
+
+import { Head, Tiles, Tile } from "@/app/_ui/Kit";
+import { Band, Masthead, Note, Prose, Shell, Stack, Wrap, A } from "@/app/_ui/Page";
+import { SECTION, body, label } from "@/app/_ui/theme";
 
 export const metadata = {
   alternates: { canonical: "/our-ingredients" },
   title: "Our Ingredients",
-  description: "What goes into a FitFuel meal: fresh local sourcing, clean oils, real proteins, and what we deliberately leave out.",
+  description:
+    "What goes into a FitFuel meal: fresh local sourcing, clean oils, real proteins, and what we deliberately leave out.",
 };
 
-const C = { bg: "#080808", accent: "#a3e635", accent2: "#84cc16", text: "#ffffff", sub: "#a3a3a3", muted: "#9a9a94", border: "#1f1f1f", card: "#111111" };
-const link = { color: C.accent, textDecoration: "none", borderBottom: `1px solid ${C.accent}40` };
-
-const groups = [
-  { t: "Fresh, locally sourced", d: "Vegetables and produce sourced in Pune and chosen for each day's menu, so they reach you fresh rather than stored for weeks." },
-  { t: "Real proteins", d: "Paneer, dals and legumes, eggs, chicken and fish depending on your plan. Lean cuts, measured for your macro target." },
-  { t: "Clean oils, used sparingly", d: "Cold-pressed and heart-friendly oils in measured amounts. No deep frying, no reused oil." },
-  { t: "Whole grains and complex carbs", d: "Rotis, millets, brown and hand-pounded rice and oats, chosen to keep energy steady through the day." },
+const GROUPS = [
+  {
+    t: "Fresh, locally sourced",
+    d: "Vegetables and produce sourced in Pune and chosen for each day's menu, so they reach you fresh rather than stored for weeks.",
+  },
+  {
+    t: "Real proteins",
+    d: "Paneer, dals and legumes, eggs, chicken and fish depending on your plan. Lean cuts, measured for your macro target.",
+  },
+  {
+    t: "Clean oils, used sparingly",
+    d: "Cold-pressed and heart-friendly oils in measured amounts. No deep frying, no reused oil.",
+  },
+  {
+    t: "Whole grains and complex carbs",
+    d: "Rotis, millets, brown and hand-pounded rice and oats, chosen to keep energy steady through the day.",
+  },
 ];
 
-const avoid = [
+const AVOID = [
   "No deep frying, anywhere on the menu",
   "No reused or hydrogenated oils",
   "No added refined sugar where it can be avoided; natural sweeteners in moderation",
@@ -25,50 +46,75 @@ const avoid = [
   "No mystery portions: every ingredient is weighed and reflected in your macros",
 ];
 
-function H2({ children }: { children: ReactNode }) {
-  return <h2 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 26, color: C.text, margin: "0 0 24px", letterSpacing: "-0.02em" }}>{children}</h2>;
-}
-
 export default function OurIngredientsPage() {
   return (
-    <main style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "inherit", WebkitFontSmoothing: "antialiased" }}>
-      <div style={{ maxWidth: 920, margin: "0 auto", padding: "120px 24px 96px" }}>
-        <p style={{ fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "0.18em", fontSize: 13, color: C.accent, margin: "0 0 14px" }}>Our Ingredients</p>
-        <h1 style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: "clamp(34px,6vw,56px)", lineHeight: 1.04, margin: "0 0 18px", letterSpacing: "-0.025em" }}>
-          Real food, nothing hidden<span style={{ color: C.accent }}>.</span>
-        </h1>
-        <p style={{ color: C.sub, fontSize: 17, lineHeight: 1.7, maxWidth: 640, margin: "0 0 56px" }}>
-          Good macros start with good ingredients. We keep the list simple, fresh and honest, so the food on your plate matches the numbers on your dashboard.
-        </p>
+    <Shell>
+      <Masthead
+        label="Our ingredients"
+        title="Real food, nothing hidden"
+        deck="Good macros start with good ingredients. We keep the list simple, fresh and honest, so the food on your plate matches the numbers on your dashboard."
+      />
 
-        <H2>What goes in</H2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, marginBottom: 72 }}>
-          {groups.map((g) => (
-            <div key={g.t} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "22px 22px" }}>
-              <div style={{ fontSize: 16.5, fontWeight: 700, color: C.text, marginBottom: 7 }}>{g.t}</div>
-              <p style={{ color: C.sub, fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>{g.d}</p>
-            </div>
-          ))}
-        </div>
+      <Stack>
+        <section style={SECTION}>
+          <Wrap>
+            <Head
+              label="What goes in"
+              title="Four things, sourced properly"
+              deck="Every plan is built from these. The proportions change with your target; the sourcing does not."
+              size="clamp(1.9rem,4.6vw,3.4rem)"
+              max="16ch"
+            />
+            <Tiles cols={2} style={{ marginTop: "clamp(28px,4vw,46px)" }}>
+              {GROUPS.map((g) => (
+                <Tile key={g.t}>
+                  <span style={label()}>{g.t}</span>
+                  <p style={{ ...body(15.5), marginTop: 4 }}>{g.d}</p>
+                </Tile>
+              ))}
+            </Tiles>
+          </Wrap>
+        </section>
 
-        <H2>What we leave out</H2>
-        <ul style={{ listStyle: "none", padding: 0, margin: "0 0 64px" }}>
-          {avoid.map((a) => (
-            <li key={a} style={{ position: "relative", paddingLeft: 26, marginBottom: 13, color: C.sub, fontSize: 15.5, lineHeight: 1.6 }}>
-              <span style={{ position: "absolute", left: 0, top: 0, color: C.accent, fontWeight: 800 }}>&times;</span>
-              {a}
-            </li>
-          ))}
-        </ul>
+        {/* The exclusions read as running copy, not as tiles. Each line states
+            its own negative in words, so nothing depends on a glyph. */}
+        <section style={SECTION}>
+          <Wrap>
+            <Head
+              label="What we leave out"
+              title="And five things that never do"
+              size="clamp(1.9rem,4.6vw,3.4rem)"
+              max="18ch"
+            />
+            <Prose style={{ marginTop: "clamp(26px,3.6vw,40px)" }}>
+              <ul>
+                {AVOID.map((a) => (
+                  <li key={a}>{a}</li>
+                ))}
+              </ul>
+            </Prose>
 
-        <div style={{ background: "rgba(132,204,22,0.06)", border: `1px solid ${C.accent}33`, borderRadius: 14, padding: "20px 22px" }}>
-          <p style={{ color: C.sub, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
-            <strong style={{ color: C.text }}>A note on allergens:</strong> our meals are prepared in a shared kitchen that handles common allergens, so cross-contact is possible. Please read our <Link href="/allergen-policy" style={link}>Allergen Policy</Link> and declare any allergies in your profile.
-          </p>
-        </div>
+            <Note style={{ marginTop: "clamp(30px,4vw,48px)" }}>
+              <Prose>
+                <p>
+                  <strong>A note on allergens.</strong> Our meals are prepared in a shared kitchen
+                  that handles common allergens, so cross-contact is possible. Please read our{" "}
+                  <A href="/allergen-policy">Allergen Policy</A> and declare any allergies in your
+                  profile before your first delivery.
+                </p>
+              </Prose>
+            </Note>
+          </Wrap>
+        </section>
+      </Stack>
 
-        <div style={{ marginTop: 32 }}><Link href="/" style={link}>&larr; Back to home</Link></div>
-      </div>
-    </main>
+      <Band
+        title="See it on a plate"
+        body="Every dish on the menu prints its own weighed calories, protein, carbs and fat."
+        href="/menu"
+        cta="See the menu"
+        secondary={{ href: "/our-kitchen", label: "Our kitchen" }}
+      />
+    </Shell>
   );
 }

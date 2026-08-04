@@ -70,10 +70,13 @@ function YoutubeIcon() {
   );
 }
 
+/* Column heads are the mono label device, sitting on a hairline. They were
+   set in the body face at weight 800, which made four bold ink-coloured
+   headings compete with the brand mark for the top of the footer. */
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
-      <div style={{ fontSize: 12, fontWeight: 800, color: "var(--ff-ink)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 20 }}>
+      <div style={{ fontFamily: "var(--font-mono), monospace", fontWeight: 500, fontSize: 12, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.22em", paddingBottom: 12, marginBottom: 16, borderBottom: "1px solid var(--ff-rule)" }}>
         {title}
       </div>
       <div className="ff-fcol-links" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -89,9 +92,12 @@ function FooterCol({ title, links }: { title: string; links: { label: string; hr
 
 export default function Footer() {
   return (
-    <footer style={{ background: "#060606", borderTop: "1px solid #181818" }}>
-
-      <div style={{ height: 1, background: "linear-gradient(90deg, transparent, #84cc16, transparent)", opacity: 0.35 }} />
+    /* Recessed: darker than the page, which is how a band reads as a well cut
+       into the site rather than a card floating on it. The fading lime
+       gradient hairline that used to sit on top of it is gone — a gradient
+       fill is on the reject list, and the accent does not get to be
+       decoration. A plain 1px rule does the same structural job. */
+    <footer style={{ background: "var(--ff-panel)", borderTop: "1px solid var(--ff-rule)" }}>
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "72px 40px 44px" }}>
 
@@ -130,7 +136,7 @@ export default function Footer() {
                 { href: "https://youtube.com/@fitfuel",     label: "YouTube",   Icon: YoutubeIcon },
               ].map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="ff-social"
-                  style={{ width: 38, height: 38, borderRadius: 0, background: "#111", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s, border-color 0.2s, box-shadow 0.2s" }}>
+                  style={{ width: 38, height: 38, borderRadius: 0, background: "var(--ff-bg)", border: "1px solid var(--ff-rule)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ff-dim)", textDecoration: "none", transition: "color 0.2s, border-color 0.2s" }}>
                   <Icon />
                 </a>
               ))}
@@ -160,28 +166,36 @@ export default function Footer() {
           <FooterCol title="Company"    links={companyLinks} />
           <FooterCol title="Programs"   links={toolLinks} />
 
-          {/* Trial CTA */}
+          {/* Trial CTA.
+              Was the densest concentration of rejected patterns in the
+              codebase: a 145deg gradient ground, an inset highlight shadow
+              faking a lit top edge, a second gradient bar above it, and a
+              "TRY TODAY" eyebrow chip in lime-light. Four devices to sell one
+              link.
+
+              It is now a panel with a hairline and one lime top edge, the
+              price set as a condensed figure because that is the thing being
+              stated, and the house button under it. */}
           <div>
-            <div style={{ background: "linear-gradient(145deg, #111, #0e0e0e)", border: "1px solid rgba(132,204,22,0.22)", borderRadius: 0, padding: 24, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}>
-              <div style={{ height: 2, background: "linear-gradient(90deg, #84cc16, transparent)", margin: "-24px -24px 20px", borderTopLeftRadius: 0, borderTopRightRadius: 0 }} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(132,204,22,0.09)", color: "#a3e635", fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", padding: "4px 12px", borderRadius: 0, border: "1px solid rgba(132,204,22,0.22)", textTransform: "uppercase", marginBottom: 14 }}>
-                Try Today
+            <div style={{ background: "var(--ff-bg)", border: "1px solid var(--ff-rule)", borderTop: "2px solid var(--ff-lime)", borderRadius: 0, padding: 24 }}>
+              <span style={{ display: "block", fontFamily: "var(--font-mono), monospace", fontWeight: 500, fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ff-dim)", marginBottom: 14 }}>
+                Trial day
               </span>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "var(--ff-ink)", marginBottom: 8, letterSpacing: "-0.01em" }}>
-                Trial Day at {TRIAL_TOTAL_LABEL}
+              <div style={{ fontFamily: "var(--ff-cond)", fontWeight: 900, fontSize: 40, lineHeight: 0.86, letterSpacing: "-0.035em", color: "var(--ff-ink)", fontVariantNumeric: "tabular-nums", marginBottom: 12 }}>
+                {TRIAL_TOTAL_LABEL}
               </div>
               <p style={{ color: "var(--ff-mute)", fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>
                 Breakfast plus Lunch delivered tomorrow. No commitment, no lock-in.
               </p>
-              <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#84cc16", color: "#000", fontSize: 13, fontWeight: 900, padding: "11px 0", borderRadius: 0, textDecoration: "none", letterSpacing: "0.07em", textTransform: "uppercase", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
-                Start Trial
+              <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "var(--ff-lime)", color: "#070707", fontFamily: "var(--ff-cond)", fontSize: 15, fontWeight: 900, padding: "14px 0", minHeight: 48, borderRadius: 0, textDecoration: "none", letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s linear, color 0.2s linear" }}>
+                Start trial
               </Link>
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div style={{ marginTop: 56, paddingTop: 28, borderTop: "1px solid #181818", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+        <div style={{ marginTop: 56, paddingTop: 28, borderTop: "1px solid var(--ff-rule)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <p style={{ fontSize: 12, color: "var(--ff-dim)", margin: 0, lineHeight: 1.6 }}>
             © {new Date().getFullYear()} FitFuel. All rights reserved. · GST 5% applicable on all meal plans.
           </p>
@@ -196,10 +210,13 @@ export default function Footer() {
       </div>
 
       <style>{`
-        .ff-flink:hover  { color: #a3e635 !important; }
+        /* Hover resolves to ink, not to lime-light. Thirty-odd footer links
+           that each turn accent on hover is the accent used decoratively. */
+        .ff-flink:hover  { color: var(--ff-ink) !important; }
         .ff-legal:hover  { color: var(--ff-mute) !important; }
-        .ff-social:hover { color: #84cc16 !important; border-color: rgba(132,204,22,0.35) !important;  }
-        .ff-trial-cta:hover { background: #a3e635 !important; transform: translateY(-1px);  }
+        .ff-social:hover { color: var(--ff-lime) !important; border-color: var(--ff-rule-2) !important; }
+        /* The button inverts rather than lifting: no transform, no shadow. */
+        .ff-trial-cta:hover { background: var(--ff-ink) !important; }
         @media (max-width: 1080px) {
           .ff-footer-grid { grid-template-columns: 1fr 1fr 1fr !important; gap: 40px !important; }
         }
@@ -208,9 +225,6 @@ export default function Footer() {
         }
         @media (max-width: 460px) {
           .ff-footer-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .ff-trial-cta:hover { transform: none; }
         }
 
         /* Touch targets. On a mouse these links are 20px tall, which is the

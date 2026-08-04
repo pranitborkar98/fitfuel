@@ -19,7 +19,6 @@ import CartButton from "@/app/_cart/CartButton";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 
 const LIME = "#84cc16";
-const LIME_LIGHT = "#a3e635";
 
 // Category icons were previously colour-coded teal / purple / sky / amber /
 // pink. That leaked a five-hue secondary palette into the global chrome, so
@@ -98,7 +97,7 @@ function MenuItem({ href, label, note, icon, onNavigate }: {
 
 function ColHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.14em", padding: "0 12px", marginBottom: 8 }}>
+    <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 12, fontWeight: 500, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.22em", padding: "0 12px", marginBottom: 10 }}>
       {children}
     </div>
   );
@@ -219,27 +218,32 @@ export default function Navbar() {
 
   const panelStyle: React.CSSProperties = {
     position: "absolute", top: "calc(100% + 10px)",
-    background: "#0d0d0d", border: "1px solid #1f1f1f", borderRadius: 0,
-    
+    background: "var(--ff-panel)", border: "1px solid var(--ff-rule)", borderRadius: 0,
     zIndex: 100, overflow: "hidden",
   };
 
   return (
     <header style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-      transition: "background 0.35s, border-color 0.35s, backdrop-filter 0.35s",
+      transition: "background 0.35s, border-color 0.35s",
       // Transparent at rest so the hero reads full-bleed under it, solid once
       // scrolled. NOTE: this only works because every page behind it is dark —
       // the logo and links are white, so on a light background the whole header
       // disappears (the "Fit" in the wordmark vanishes and only "Fuel" shows).
       // If a light page is ever added, give it a solid bar.
-      background: scrolled ? "rgba(8,8,8,0.92)" : "transparent",
-      borderBottom: `1px solid ${scrolled ? "#1e1e1e" : "transparent"}`,
-      backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
+      //
+      // The scrolled state was rgba(8,8,8,0.92) under blur(16px) saturate(180%),
+      // which is frosted glass — on the reject list, and the saturate boost was
+      // pushing the lime under the bar off its own token. It is the flat page
+      // colour now, fully opaque, separated by a hairline. Cheaper to composite
+      // too: a fixed backdrop-filter repaints the strip under it every frame.
+      background: scrolled ? "var(--ff-bg)" : "transparent",
+      borderBottom: `1px solid ${scrolled ? "var(--ff-rule)" : "transparent"}`,
     }}>
-      {/* Scroll progress */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "#1a1a1a" }}>
-        <div style={{ height: "100%", width: `${scrollPct}%`, background: `linear-gradient(90deg, ${LIME}, ${LIME_LIGHT})` }} />
+      {/* Scroll progress. A solid lime rule: the gradient that faded it into
+          lime-light was a gradient fill on the one accent the site has. */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "var(--ff-rule)" }}>
+        <div style={{ height: "100%", width: `${scrollPct}%`, background: LIME }} />
       </div>
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
@@ -283,7 +287,7 @@ export default function Navbar() {
                     <div>
                       <ColHeader>Browse by category</ColHeader>
                       {planCategories.map(c => <MenuItem key={c.href} {...c} onNavigate={closeAll} />)}
-                      <div style={{ height: 1, background: "#1a1a1a", margin: "10px 12px" }} />
+                      <div style={{ height: 1, background: "var(--ff-rule)", margin: "10px 12px" }} />
                       <ColHeader>Free tools</ColHeader>
                       {planTools.map(t => <MenuItem key={t.href} {...t} onNavigate={closeAll} />)}
                     </div>
@@ -295,7 +299,7 @@ export default function Navbar() {
                     borderRadius: 0, padding: "12px 16px", textDecoration: "none",
                   }}>
                     <span style={{ fontSize: 13, color: "#d1d5db" }}>
-                      <b style={{ color: LIME_LIGHT }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch delivered tomorrow. No lock-in.
+                      <b style={{ color: LIME }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch delivered tomorrow. No lock-in.
                     </span>
                     <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "6px 14px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start Trial</span>
                   </Link>
@@ -349,12 +353,16 @@ export default function Navbar() {
                 onClick={() => setOpenMenu(m => m === "user" ? null : "user")}
                 aria-expanded={openMenu === "user"} aria-haspopup="true"
                 className="ff-outline-btn"
-                style={{ display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "1px solid #242424", borderRadius: 0, padding: "6px 12px 6px 6px", cursor: "pointer", transition: "border-color 0.2s" }}
+                style={{ display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "1px solid var(--ff-rule-2)", borderRadius: 0, padding: "6px 12px 6px 6px", cursor: "pointer", transition: "border-color 0.2s" }}
               >
-                <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {/* Square. This was the last border-radius:50% on the site's
+                    chrome, and a circular avatar beside a square wordmark and
+                    a square button reads as a component borrowed from
+                    somewhere else. #737373 was also 4.0:1 and failed AA. */}
+                <div style={{ width: 28, height: 28, borderRadius: 0, overflow: "hidden", background: "var(--ff-panel)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {user?.image
                     ? <img src={user.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <User size={14} color="#737373" />}
+                    : <User size={14} color="var(--ff-dim)" />}
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ff-ink)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user?.name?.split(" ")[0] ?? "Account"}
@@ -365,11 +373,14 @@ export default function Navbar() {
                   <motion.div
                     initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#111111", border: "1px solid #1f1f1f", borderRadius: 0, padding: 8, minWidth: 190, boxShadow: "0 16px 40px rgba(0,0,0,0.5)", zIndex: 100 }}
+                    /* The drop shadow is gone: hairlines do the structural
+                       work, and a 40px black bloom under a menu is the depth
+                       this system does not fake. */
+                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "var(--ff-panel)", border: "1px solid var(--ff-rule)", borderRadius: 0, padding: 8, minWidth: 190, zIndex: 100 }}
                   >
                     <MenuItem href="/dashboard"         label="Dashboard"    icon={<LayoutDashboard size={14} color="var(--ff-mute)" />} onNavigate={closeAll} />
                     <MenuItem href="/dashboard/profile" label="Edit Profile" icon={<User size={14} color="var(--ff-mute)" />}            onNavigate={closeAll} />
-                    <div style={{ height: 1, background: "#1a1a1a", margin: "6px 0" }} />
+                    <div style={{ height: 1, background: "var(--ff-rule)", margin: "6px 0" }} />
                     <button
                       onClick={() => { closeAll(); signOut({ callbackUrl: "/" }); }}
                       className="ff-signout"
@@ -382,11 +393,11 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            <Link href="/auth/signin" className="ff-outline-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", textDecoration: "none", padding: "8px 18px", borderRadius: 0, border: "1px solid #242424", background: "transparent", transition: "color 0.2s, border-color 0.2s", letterSpacing: "0.01em" }}>
+            <Link href="/auth/signin" className="ff-outline-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", textDecoration: "none", padding: "8px 18px", borderRadius: 0, border: "1px solid var(--ff-rule-2)", background: "transparent", transition: "color 0.2s, border-color 0.2s", letterSpacing: "0.01em" }}>
               Sign In
             </Link>
           )}
-          <Link href="/plans" className="ff-cta-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", padding: "9px 20px", borderRadius: 0, background: LIME, letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}>
+          <Link href="/plans" className="ff-cta-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", padding: "9px 20px", borderRadius: 0, background: LIME, letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s linear, color 0.2s linear" }}>
             Order Now
           </Link>
         </div>
@@ -403,7 +414,7 @@ export default function Navbar() {
           ref={hamburger}
           onClick={() => setMobileOpen(o => !o)}
           className="ff-nav-mobile ff-outline-btn"
-          style={{ background: "none", border: "1px solid #242424", cursor: "pointer", padding: 10, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", color: "var(--ff-mute)", borderRadius: 0, display: "none", transition: "border-color 0.2s, color 0.2s" }}
+          style={{ background: "none", border: "1px solid var(--ff-rule-2)", cursor: "pointer", padding: 10, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", color: "var(--ff-mute)", borderRadius: 0, display: "none", transition: "border-color 0.2s, color 0.2s" }}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           aria-controls="ff-mobile-menu"
@@ -427,7 +438,7 @@ export default function Navbar() {
             aria-label="Site menu"
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            style={{ overflow: "hidden", background: "rgba(8,8,8,0.97)", borderBottom: "1px solid #1e1e1e", backdropFilter: "blur(16px)", maxHeight: "calc(100dvh - 68px)", overflowY: "auto" }}
+            style={{ overflow: "hidden", background: "var(--ff-bg)", borderBottom: "1px solid var(--ff-rule)", maxHeight: "calc(100dvh - 68px)", overflowY: "auto" }}
           >
             <div style={{ padding: "14px 24px 28px" }}>
 
@@ -439,7 +450,7 @@ export default function Navbar() {
                 padding: "12px 14px", textDecoration: "none", marginBottom: 14, minHeight: 44,
               }}>
                 <span style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.4 }}>
-                  <b style={{ color: LIME_LIGHT }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch, no lock-in.
+                  <b style={{ color: LIME }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch, no lock-in.
                 </span>
                 <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "7px 12px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start</span>
               </Link>
@@ -463,14 +474,14 @@ export default function Navbar() {
                 {companyLinks.map(l => <MobileLink key={l.href} href={l.href} label={l.label} onNavigate={closeAll} />)}
               </MobileSection>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 16, borderTop: "1px solid #1a1a1a", marginTop: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 16, borderTop: "1px solid var(--ff-rule)", marginTop: 8 }}>
                 {isLoggedIn ? (
                   <>
                     <MobileButtonLink href="/dashboard" onNavigate={closeAll} icon={<LayoutDashboard size={14} />} label="Dashboard" />
                     <MobileButtonLink href="/dashboard/profile" onNavigate={closeAll} icon={<User size={14} />} label="Edit Profile" />
                     <button
                       onClick={() => { closeAll(); signOut({ callbackUrl: "/" }); }}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", background: "transparent", border: "1px solid #242424", borderRadius: 0, cursor: "pointer" }}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", background: "transparent", border: "1px solid var(--ff-rule-2)", borderRadius: 0, cursor: "pointer" }}
                     >
                       <LogOut size={14} /> Sign Out
                     </button>
@@ -490,8 +501,15 @@ export default function Navbar() {
       <style>{`
         .ff-menu-item:hover, .ff-top-link:hover { background: rgba(255,255,255,0.05); }
         .ff-top-link:hover { color: var(--ff-ink) !important; }
-        .ff-outline-btn:hover { border-color: #3a3a3a !important; color: var(--ff-ink) !important; }
-        .ff-cta-btn:hover { background: ${LIME_LIGHT} !important; transform: translateY(-1px);  }
+        .ff-outline-btn:hover { border-color: var(--ff-rule-2) !important; color: var(--ff-ink) !important; }
+        /* Inverts to ink instead of lifting on lime-light. The translate was
+           the only transform on the site's chrome, and lime-light is reserved
+           for a single live value, not a hover state. */
+        .ff-cta-btn:hover { background: var(--ff-ink) !important; }
+        /* Sign out is the one destructive action in the chrome, so it keeps a
+           warning colour. #fca5a5 on the tint clears AA; the tint itself is
+           the only non-lime value allowed anywhere, and it means "this ends
+           your session" rather than decorating anything. */
         .ff-signout:hover { background: rgba(239,68,68,0.08); color: #fca5a5 !important; }
         a:focus-visible, button:focus-visible { outline: 2px solid ${LIME}; outline-offset: 2px; border-radius: 0; }
         @media (max-width: 1020px) {
@@ -500,9 +518,6 @@ export default function Navbar() {
         }
         @media (min-width: 1021px) {
           .ff-nav-mobile { display: none !important; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .ff-cta-btn:hover { transform: none; }
         }
       `}</style>
     </header>
@@ -535,7 +550,7 @@ function MobileSection({ title, children, defaultOpen = false }: { title: string
 }
 
 function MobileDivider() {
-  return <div style={{ height: 1, background: "#1a1a1a", margin: "10px 14px" }} />;
+  return <div style={{ height: 1, background: "var(--ff-rule)", margin: "10px 14px" }} />;
 }
 
 function MobileLink({ href, label, note, onNavigate }: { href: string; label: string; note?: string; onNavigate: () => void }) {
@@ -550,7 +565,7 @@ function MobileLink({ href, label, note, onNavigate }: { href: string; label: st
 
 function MobileButtonLink({ href, label, icon, onNavigate }: { href: string; label: string; icon?: React.ReactNode; onNavigate: () => void }) {
   return (
-    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, minHeight: 44, fontSize: 14, fontWeight: 600, color: "var(--ff-ink)", textDecoration: "none", borderRadius: 0, border: "1px solid #242424" }}>
+    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, minHeight: 44, fontSize: 14, fontWeight: 600, color: "var(--ff-ink)", textDecoration: "none", borderRadius: 0, border: "1px solid var(--ff-rule-2)" }}>
       {icon}{label}
     </Link>
   );
