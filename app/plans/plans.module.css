@@ -1,0 +1,429 @@
+/* app/plans/plans.module.css
+   ═══════════════════════════════════════════════════════════════════════════
+   /plans, narrowed.
+
+   The catalogue used to be a configurator, a three-tier price table and a
+   114-card grid: everything the kitchen sells, in one scroll, priced per card.
+   The design this implements makes the opposite bet. Diet, length and meals are
+   the only three inputs that move the number, so they sit in one hairline-
+   jointed block at the top, the number sits directly under it, and the food is
+   four columns underneath at that one price.
+
+   Devices come from app/_ui/kit.module.css wherever the shape matches (both
+   buttons, the ghost, the split bar). What lives here is the page's own
+   furniture: the setter rail, the price readout, the four columns and the
+   index. Radius is 0 throughout, structure is 1px #232320 hairlines, and lime
+   is the only chromatic value apart from the FSSAI diet dots, which carry
+   regulated meaning and are paired with their text label everywhere they
+   appear.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.wrap {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(38px, 6vw, 72px) clamp(18px, 4vw, 36px) clamp(56px, 7vw, 96px);
+}
+
+/* ── the reveal ───────────────────────────────────────────────────────────
+   Opacity plus 14px, 0.6s, the one easing DESIGN.md names. Nothing parallaxes
+   and nothing bounces. Delays are set inline so the three elements of the
+   masthead arrive in reading order. */
+@keyframes planRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.in {
+  animation: planRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── masthead ─────────────────────────────────────────────────────────── */
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: end;
+}
+
+/* ── the setter: three rows, one hairline joint ───────────────────────────
+   Not a card and not a form. A single block whose 1px gaps are the rules,
+   welded to the price readout below it so the two read as one instrument. */
+.setter {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  margin-top: clamp(32px, 4.4vw, 56px);
+}
+.setRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(12px, 2vw, 22px);
+  background: #070707;
+  padding: clamp(16px, 2vw, 22px) clamp(16px, 2.2vw, 24px);
+}
+.setLabel {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #85857e;
+  min-width: 74px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid #33332f;
+  background: #0c0c0a;
+  color: #9a9a94;
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 15px;
+  min-height: 46px;
+  transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear;
+}
+.chip:hover {
+  color: #f7f7f5;
+  border-color: #33332f;
+}
+.chip:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 2px;
+}
+.chipOn,
+.chipOn:hover {
+  background: #a3e635;
+  border-color: #a3e635;
+  color: #070707;
+}
+/* 7px square, never a circle, and never the only channel: every dot sits
+   beside its own text label. */
+.dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+}
+
+/* ── the price readout ────────────────────────────────────────────────────
+   Signature device 1, welded to the bottom edge of the setter: the number is
+   a consequence of the three chips above it, so there is no rule between. */
+.price {
+  border: 1px solid #232320;
+  border-top: 0;
+  background: #0c0c0a;
+  padding: clamp(22px, 3vw, 34px) clamp(16px, 2.2vw, 24px);
+  scroll-margin-top: 24px;
+}
+.priceTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(18px, 3vw, 32px);
+}
+.priceMain {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.priceSide {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(18px, 3vw, 34px);
+  flex-wrap: wrap;
+}
+
+/* The receipt. Four figures that add up to the one above them, which is the
+   whole claim of the page: nothing is added after this screen. */
+.receipt {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  margin-top: clamp(20px, 2.6vw, 28px);
+}
+.receiptCell {
+  background: #0c0c0a;
+  padding: 14px 16px;
+}
+
+/* ── the four columns ─────────────────────────────────────────────────── */
+.colsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: clamp(44px, 5.6vw, 80px);
+  padding-bottom: 12px;
+  border-bottom: 1px solid #232320;
+  scroll-margin-top: 24px;
+}
+.cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  border-top: 0;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #070707;
+  padding: clamp(18px, 2.2vw, 26px);
+  transition: background 0.18s linear;
+}
+.col:hover {
+  background: #0c0c0a;
+}
+/* The plan name is the way into the plan's own page, so it is a link. At rest
+   it is indistinguishable from the heading the design drew; the rule draws on
+   hover, the way every other link on the site behaves. */
+.colTitle {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(#84cc16, #84cc16);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 1px;
+  transition: background-size 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s linear;
+}
+.colTitle:hover {
+  color: #84cc16;
+  background-size: 100% 1px;
+}
+.colTitle:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 3px;
+}
+.colFoot {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #232320;
+}
+.kcal {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+.macros {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #85857e;
+  font-variant-numeric: tabular-nums;
+}
+.bar {
+  display: flex;
+  height: 6px;
+  background: #161616;
+  margin-top: 14px;
+}
+.bar > span {
+  display: block;
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.select {
+  width: 100%;
+  background: #0c0c0a;
+  border: 1px solid #33332f;
+  border-radius: 0;
+  color: #f7f7f5;
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 12px;
+  min-height: 48px;
+  transition: border-color 0.2s linear;
+}
+.select:hover {
+  border-color: #84cc16;
+}
+.select:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 2px;
+}
+
+/* A link inside a running sentence: lime, with the rule already drawn, because
+   at 13.5px in dim grey a rule that only appears on hover is invisible. */
+.inlineLink {
+  color: #84cc16;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.18s linear;
+}
+.inlineLink:hover {
+  color: #a3e635;
+}
+.inlineLink:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 3px;
+}
+
+/* ── the full index ───────────────────────────────────────────────────── */
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1px;
+  background: #232320;
+  border: 1px solid #232320;
+  border-top: 0;
+}
+.group {
+  background: #070707;
+  padding: clamp(16px, 2vw, 22px);
+}
+.items {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #9a9a94;
+  text-decoration: none;
+  padding: 5px 0;
+  min-height: 30px;
+  border-bottom: 1px solid transparent;
+  transition: color 0.16s linear, border-color 0.16s linear;
+}
+.item:hover {
+  color: #f7f7f5;
+  border-bottom-color: #232320;
+}
+.item:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: 2px;
+}
+.itemKcal {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: #85857e;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── the trial band ───────────────────────────────────────────────────────
+   The one place lime is allowed to wash a surface, because it is the one
+   offer on the page that is not the thing above it: a 5% tint and a hairline,
+   not a glow and not a gradient. */
+.trial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(18px, 3vw, 32px);
+  border: 1px solid rgba(132, 204, 22, 0.24);
+  background: rgba(132, 204, 22, 0.05);
+  padding: clamp(24px, 3.4vw, 40px);
+  margin-top: clamp(44px, 5.6vw, 80px);
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #232320;
+  margin-top: clamp(28px, 3.4vw, 44px);
+  padding-top: 16px;
+}
+
+/* ── breakpoints ──────────────────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .top {
+    grid-template-columns: 1fr;
+  }
+  .receipt {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .cols {
+    grid-template-columns: 1fr;
+  }
+  .receipt {
+    grid-template-columns: 1fr;
+  }
+  .setLabel {
+    min-width: 100%;
+  }
+}
+
+/* Touch targets. The plan name and the index row are the two links on this
+   page whose visual height is set by their type, 29px and 30px, so on a phone
+   the hit area is padded up to 44 rather than the type being grown to meet it.
+   .colTitle stays `inline` while it does that: inline-block would stop a long
+   name like "Post-Pregnancy & Lactation" wrapping and push it out of its
+   column, and vertical padding on an inline box grows the hit area without
+   moving the line. The underline follows the padding down. */
+@media (max-width: 620px), (pointer: coarse) {
+  .colTitle {
+    padding: 8px 0;
+    background-position: 0 calc(100% - 8px);
+  }
+  .item {
+    min-height: 44px;
+    padding: 12px 0;
+  }
+  .items {
+    gap: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in {
+    animation: none;
+  }
+  .chip,
+  .col,
+  .colTitle,
+  .item,
+  .select {
+    transition-duration: 0.01ms;
+  }
+}
