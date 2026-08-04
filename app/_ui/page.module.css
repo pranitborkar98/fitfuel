@@ -298,6 +298,112 @@
   outline-offset: 2px;
 }
 
+/* ── the question list ────────────────────────────────────────────────────
+   A <details> accordion set as directory rows: hairline-separated, shifting
+   right and taking a lime edge when open. It replaces a stack of radius-14
+   cards with 12px gaps between them, which read as twelve separate objects
+   rather than as one list you scan.
+
+   The marker is a + that becomes a × by rotating 45deg. That is a glyph, so
+   the real state is carried by <details open> for assistive tech, and the
+   marker is aria-hidden. */
+.qa {
+  border-top: 1px solid #232320;
+}
+.qa details {
+  border-bottom: 1px solid #232320;
+  border-left: 2px solid transparent;
+  background: #070707;
+  transition: border-color 0.2s linear, background 0.2s linear;
+}
+.qa details[open] {
+  border-left-color: #84cc16;
+  background: #050504;
+}
+.qa summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(16px, 2vw, 22px) clamp(14px, 2vw, 20px);
+  min-height: 60px;
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.05rem, 1.9vw, 1.35rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #f7f7f5;
+}
+.qa summary::-webkit-details-marker {
+  display: none;
+}
+.qa summary:focus-visible {
+  outline: 2px solid #84cc16;
+  outline-offset: -2px;
+}
+.qaMark {
+  flex-shrink: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  color: #85857e;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s linear;
+}
+.qa details[open] .qaMark {
+  transform: rotate(45deg);
+  color: #84cc16;
+}
+.qaBody {
+  padding: 0 clamp(14px, 2vw, 20px) clamp(20px, 2.4vw, 26px);
+  max-width: 68ch;
+}
+.qaBody,
+.qaBody p {
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 15px;
+  line-height: 1.72;
+  color: #9a9a94;
+}
+.qaBody p {
+  margin: 0 0 12px;
+}
+.qaBody p:last-child {
+  margin-bottom: 0;
+}
+.qaBody a {
+  color: #84cc16;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(132, 204, 22, 0.4);
+}
+.qaBody a:hover {
+  border-bottom-color: #84cc16;
+}
+.qaBody strong {
+  color: #f7f7f5;
+  font-weight: 600;
+}
+.qaBody ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.qaBody li {
+  position: relative;
+  padding-left: 26px;
+  margin-bottom: 8px;
+}
+.qaBody li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 12px;
+  height: 1px;
+  background: #84cc16;
+}
+
 /* ── pair ─────────────────────────────────────────────────────────────────
    The generic asymmetric two-column block: a title in the wide column, its
    copy offset into the narrow one. Collapses to one column on a phone, which
