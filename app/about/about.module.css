@@ -1,0 +1,58 @@
+/* app/about/about.module.css
+   ═══════════════════════════════════════════════════════════════════════════
+   The three blocks on /about that need their own shape.
+
+   This file exists mainly because the page's responsive rules were dead. The
+   old version declared `.about-story-grid`, `.about-values-grid` and
+   `.about-stats-grid` in a trailing <style> block, with sensible breakpoints
+   in each, and then never applied any of the three class names to an element.
+   Three media queries that had never once fired.
+
+   The stats row and the values grid are kit devices now (the readout and the
+   tile grid), both of which carry their own breakpoints. What is left is the
+   pull quote, its byline, and the story's two-column split.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── the mission quote ────────────────────────────────────────────────────
+   Set at display scale rather than as a card with a glow orb behind it. The
+   quotation marks are typographic, in the margin, so the measure of the text
+   itself stays flush with everything above it. */
+.quote {
+  margin: 0;
+  max-width: 22ch;
+  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.9rem, 5.2vw, 4rem);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #f7f7f5;
+}
+
+.byline {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: clamp(22px, 3vw, 32px);
+  padding-top: 14px;
+  border-top: 1px solid #232320;
+  max-width: 520px;
+}
+
+/* ── the story split ──────────────────────────────────────────────────────
+   Copy in the wide column, the kitchen spec table offset into the narrow one.
+   The breakpoint the old page meant to have. */
+.story {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: start;
+  margin-top: clamp(24px, 3.4vw, 40px);
+}
+@media (max-width: 860px) {
+  .story {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
