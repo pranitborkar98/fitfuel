@@ -99,9 +99,18 @@ export function Masthead({
  * A callout. Replaces the rounded lime-tinted box that had propagated onto
  * most interior pages: recessed, square, one 2px lime edge.
  */
-export function Note({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+export function Note({
+  children,
+  style,
+  tone = "accent",
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  /** `warn` is for safety copy only: allergens, medical scope. Not emphasis. */
+  tone?: "accent" | "warn";
+}) {
   return (
-    <div className={p.note} style={style}>
+    <div className={tone === "warn" ? `${p.note} ${p.noteWarn}` : p.note} style={style}>
       {children}
     </div>
   );

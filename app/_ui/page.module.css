@@ -135,6 +135,18 @@
 .note p + p {
   margin-top: 12px;
 }
+
+/* The one non-lime edge on the site. A shared-kitchen allergen warning and a
+   "this is not medical advice" notice are the cases where colour is carrying
+   meaning rather than decorating, which is the exception DESIGN.md's
+   accessibility rule is written around. The word "Important" leads the copy
+   regardless, so the meaning never rests on the colour alone. */
+.noteWarn {
+  border-left-color: #f87171;
+}
+.noteWarn p {
+  color: #f7f7f5;
+}
 .note strong {
   color: #f7f7f5;
   font-weight: 600;
