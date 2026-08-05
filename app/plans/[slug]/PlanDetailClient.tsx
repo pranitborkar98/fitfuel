@@ -165,11 +165,21 @@ const IconWhats = ({ size = 18, style }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style}><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.7 1.7c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.1.3.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.3.1.5.1.6-.1l.6-.7c.2-.3.4-.2.6-.1l1.6.8c.3.1.5.2.5.4.1.1.1.7-.1 1.3Z" /></svg>
 )
 
-// Indian veg / non-veg mark (square + dot) — culturally precise, not an emoji
+// Indian veg / non-veg mark (square + dot) — culturally precise, not an emoji.
+//
+// EXEMPT FROM THE DESIGN SYSTEM, deliberately. This is the FSSAI food mark,
+// and its geometry and colour are prescribed by regulation: a filled circle
+// inside a square outline, green for vegetarian and brown-red for non-
+// vegetarian. The radius-0 rule and the lime-only rule do not apply to a
+// statutory symbol, and squaring the dot or recolouring it would make the mark
+// non-compliant and, worse, misleading about what is in the food.
+//
+// This is the only border-radius:50% and the only non-lime hue left on the
+// page. Leave both alone.
 const DietMark = ({ veg }: { veg: boolean }) => {
   const c = veg ? '#3da35a' : '#c0392b'
   return (
-    <span style={{ display: 'inline-grid', placeItems: 'center', width: 14, height: 14, border: `1.5px solid ${c}`, borderRadius: 2 }}>
+    <span style={{ display: 'inline-grid', placeItems: 'center', width: 14, height: 14, border: `1.5px solid ${c}`, borderRadius: 0 }}>
       <span style={{ width: 6, height: 6, borderRadius: '50%', background: c }} />
     </span>
   )
@@ -230,7 +240,7 @@ function useInViewOnce<T extends Element>() {
 
 // ─── Small composed pieces ────────────────────────────────────────────────────
 
-function Eyebrow({ index, label, color = '#a3e635' }: { index?: string; label: string; color?: string }) {
+function Eyebrow({ index, label, color = '#84cc16' }: { index?: string; label: string; color?: string }) {
   void index; // section markers removed — numbers belong only to real sequences
   return (
     <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12.5, letterSpacing: '0.18em', color, textTransform: 'uppercase', marginBottom: 18 }}>
@@ -247,8 +257,8 @@ function MacroBar({ p, c, f, height = 8 }: { p: number; c: number; f: number; he
     <div key={key} style={{ width: `${(v / total) * 100}%`, background: col, height: '100%' }} />
   )
   return (
-    <div style={{ display: 'flex', height, borderRadius: 99, overflow: 'hidden', background: '#161616', border: '1px solid #1f1f1f' }}>
-      {seg(pk, '#a3e635', 'p')}{seg(ck, '#c9c3ac', 'c')}{seg(fk, '#85857e', 'f')}
+    <div style={{ display: 'flex', height, borderRadius: 0, overflow: 'hidden', background: '#161616', border: '1px solid #1f1f1f' }}>
+      {seg(pk, '#84cc16', 'p')}{seg(ck, '#5c5c56', 'c')}{seg(fk, '#33332f', 'f')}
     </div>
   )
 }
@@ -266,17 +276,17 @@ function CalorieRing({ kcal }: { kcal: number }) {
           cx="98" cy="98" r={R} fill="none" stroke="url(#ring)" strokeWidth="10" strokeLinecap="round"
           strokeDasharray={C}
           strokeDashoffset={seen ? C * (1 - pct) : C}
-          style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(.16,1,.3,1)', filter: 'drop-shadow(0 0 8px rgba(163,230,53,0.35))' }}
+          style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(.16,1,.3,1)' }}
         />
         <defs>
           <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#a3e635" /><stop offset="100%" stopColor="#65a30d" />
+            <stop offset="0%" stopColor="#84cc16" /><stop offset="100%" stopColor="#84cc16" />
           </linearGradient>
         </defs>
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'grid', placeContent: 'center', textAlign: 'center' }}>
         <div className="cond" style={{ fontSize: 52, lineHeight: 0.9, color: '#fff', fontWeight: 600 }}>{kcal.toLocaleString('en-IN')}</div>
-        <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.22em', color: '#a3e635', marginTop: 6 }}>KCAL / DAY</div>
+        <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.22em', color: '#84cc16', marginTop: 6 }}>KCAL / DAY</div>
       </div>
     </div>
   )
@@ -354,7 +364,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
   ]
 
   const card = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-    background: '#0c0c0c', border: '1px solid #191919', borderRadius: 4, ...extra,
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 0, ...extra,
   })
 
   return (
@@ -363,24 +373,29 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
 
         .ff-root {
-          --bg:#080808; --panel:#0c0c0c; --line:#191919; --line-2:#262626;
-          --lime:#a3e635; --lime-d:#84cc16; --ink:#f4f3ee; --dim:#85857e; --faint:#85857e;
-          --bone:#efece3; --bone-ink:#16160f; --ember:#e7643c;
+          /* The locked ramp. --lime was #a3e635 (lime-LIGHT), which DESIGN.md
+             reserves for a single live value; here it drove every accent on
+             the page. --bone and --ember were a second and third palette: a
+             cream inverted card and an orange 'what we leave out' accent. The
+             inversion survives as ink-on-bg, which is the house way to flip a
+             panel; the orange is gone, because category is never carried by
+             hue. */
+          --bg:#070707; --panel:#050504; --line:#232320; --line-2:#33332f;
+          --lime:#84cc16; --lime-d:#84cc16; --ink:#f7f7f5; --dim:#85857e; --faint:#85857e;
+          --bone:#f7f7f5; --bone-ink:#070707; --ember:#85857e;
           background:var(--bg); color:var(--ink); min-height:100vh; position:relative; padding-top:68px;
           overflow-x:hidden; font-family:inherit;
           -webkit-font-smoothing:antialiased;
         }
         .ff-root .syne{ font-family:var(--ff-cond); }
         .ff-root .cond{ font-family:var(--ff-cond); font-variant-numeric:tabular-nums; }
-        .ff-root .mono{ font-family:var(--ff-cond); }
+        .ff-root .mono{ font-family:var(--font-mono),monospace; font-variant-numeric:tabular-nums; }
 
         .grain{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
           background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
         .gridlines{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
           background-image:linear-gradient(#ffffff05 1px,transparent 1px),linear-gradient(90deg,#ffffff05 1px,transparent 1px);
           background-size:64px 64px; mask-image:radial-gradient(ellipse 100% 70% at 50% 0%, #000 0%, transparent 75%); }
-        .glow-tl{ position:fixed; top:-15%; left:-10%; width:55vw; height:55vw; z-index:0; pointer-events:none;
-          background:radial-gradient(circle, rgba(163,230,53,.10) 0%, transparent 60%); filter:blur(20px); }
 
         .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; position:relative; z-index:2; }
         .sec{ padding:104px 0; border-top:1px solid var(--line); position:relative; z-index:2; }
@@ -398,9 +413,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         .h2{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(30px,4vw,52px); line-height:1.02; letter-spacing:-.025em; }
         .h3{ font-family:var(--ff-cond); font-weight:700; font-size:clamp(22px,2.4vw,30px); line-height:1.08; letter-spacing:-.02em; }
 
-        .btn{ display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14.5px; text-decoration:none; border-radius:3px; transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, background .25s, border-color .25s; cursor:pointer; }
-        .btn-lime{ background:var(--lime); color:#0a0a0a; padding:15px 30px; box-shadow:0 0 0 1px rgba(163,230,53,.4), 0 10px 30px -8px rgba(163,230,53,.5); }
-        .btn-lime:hover{ transform:translateY(-2px); box-shadow:0 0 0 1px rgba(163,230,53,.6), 0 16px 44px -8px rgba(163,230,53,.65); }
+        .btn{ display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14.5px; text-decoration:none; border-radius:0; transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, background .25s, border-color .25s; cursor:pointer; }
+        .btn-lime{ background:var(--lime); color:#070707; padding:15px 30px; border:1px solid var(--lime); }
+        .btn-lime:hover{ background:var(--ink); border-color:var(--ink); }
         .btn-ghost{ background:transparent; color:var(--ink); padding:15px 26px; border:1px solid var(--line-2); }
         .btn-ghost:hover{ border-color:#3a3a3a; background:#101010; }
         .btn-wa{ background:#101512; color:#dcf2e3; padding:15px 24px; border:1px solid #1f3a2a; }
@@ -413,13 +428,13 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         @keyframes tick{ to{ transform:translateX(-50%); } }
 
         .ledger-row{ display:grid; grid-template-columns:96px repeat(4,1fr); border:1px solid var(--line); border-top:none; transition:background .25s; }
-        .ledger-row:first-child{ border-top:1px solid var(--line); border-radius:4px 4px 0 0; }
+        .ledger-row:first-child{ border-top:1px solid var(--line); border-radius:0 4px 0 0; }
         .ledger-row:last-child{ border-radius:0 0 4px 4px; }
         .ledger-row:hover{ background:#0d0d0d; }
         .ledger-cell{ padding:16px 18px; border-left:1px solid var(--line); }
         .ledger-cell:first-child{ border-left:none; }
 
-        .seg{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.05em; padding:11px 20px; border:1px solid var(--line-2); border-radius:3px; background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:uppercase; }
+        .seg{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.05em; padding:11px 20px; border:1px solid var(--line-2); border-radius:0; background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:uppercase; }
         .seg:hover{ color:var(--ink); border-color:#3a3a3a; }
         .seg.on{ background:var(--lime); color:#0a0a0a; border-color:var(--lime); font-weight:700; }
 
@@ -451,7 +466,6 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
       `}</style>
 
       <div className="gridlines" />
-      <div className="glow-tl" />
       <div className="grain" />
 
       {/* ── Document header bar ─────────────────────────────────────────── */}
@@ -478,9 +492,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
           <div className="hero-grid">
             <div>
               <div className="enter e1" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
-                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--lime)', border: '1px solid #2c3a14', background: '#121807', padding: '6px 13px', borderRadius: 3 }}>{tierLabel}</span>
-                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 3, display: 'inline-flex', gap: 8, alignItems: 'center' }}><DietMark veg={isVeg} />{dietLabel}</span>
-                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 3 }}>{plan.cycleLengthDays || 30}-Day Cycle</span>
+                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--lime)', border: '1px solid #2c3a14', background: '#121807', padding: '6px 13px', borderRadius: 0 }}>{tierLabel}</span>
+                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 0, display: 'inline-flex', gap: 8, alignItems: 'center' }}><DietMark veg={isVeg} />{dietLabel}</span>
+                <span className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '6px 13px', borderRadius: 0 }}>{plan.cycleLengthDays || 30}-Day Cycle</span>
               </div>
 
               <h1 className="h1 enter e2">{plan.name}</h1>
@@ -490,7 +504,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               </p>
 
               {/* Spec strip — instrument readout */}
-              <div className="enter e4" style={{ display: 'flex', flexWrap: 'wrap', marginTop: 40, border: '1px solid var(--line)', borderRadius: 4, background: '#0a0a0a' }}>
+              <div className="enter e4" style={{ display: 'flex', flexWrap: 'wrap', marginTop: 40, border: '1px solid var(--line)', borderRadius: 0, background: '#0a0a0a' }}>
                 {heroStats.map((s, i) => (
                   <div key={i} ref={(s as { ref?: React.RefObject<HTMLDivElement> }).ref} style={{ flex: '1 1 130px', padding: '20px 22px', borderLeft: i === 0 ? 'none' : '1px solid var(--line)' }}>
                     <div className="cond" style={{ fontSize: 46, lineHeight: 0.85, color: 'var(--ink)', fontWeight: 600 }}>
@@ -509,7 +523,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
             {/* Daily readout instrument card */}
             <div className="enter e4" style={{ ...card({ padding: 28, position: 'relative', overflow: 'hidden' }) }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,var(--lime),transparent)' }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'var(--lime)' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
                 <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.2em', color: 'var(--faint)' }}>FITFUEL // DAILY SPEC</div>
                 <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.12em', color: 'var(--lime)' }}>LIVE</div>
@@ -520,8 +534,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <div style={{ marginTop: 26 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }} className="mono">
                   {[
-                    { k: 'P', v: plan.avgProteinGrams, c: '#a3e635' },
-                    { k: 'C', v: plan.avgCarbsGrams, c: '#c9c3ac' },
+                    { k: 'P', v: plan.avgProteinGrams, c: '#84cc16' },
+                    { k: 'C', v: plan.avgCarbsGrams, c: '#5c5c56' },
                     { k: 'F', v: plan.avgFatGrams, c: '#85857e' },
                   ].map((m) => (
                     <span key={m.k} style={{ fontSize: 12, color: 'var(--dim)' }}>
@@ -597,7 +611,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               const Icon = SLOT_ICON[slot]
               return (
                 <div key={slot} style={{ ...card({ padding: '26px 22px', display: 'flex', flexDirection: 'column', gap: 14, transition: 'border-color .3s, transform .3s' }) }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#2f3a18'; e.currentTarget.style.transform = 'translateY(-3px)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--lime)' }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <span style={{ color: 'var(--lime)' }}><Icon size={26} /></span>
@@ -670,13 +684,13 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     const s = byKey[sk]
                     const CellIcon = SLOT_ICON[sk]
                     return (
-                      <div key={sk} className="ledger-cell" onClick={s ? () => setSel(s.recipe) : undefined} onMouseEnter={(e) => { if (s) e.currentTarget.style.background = '#0c0c0c' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }} style={s ? { cursor: 'pointer' } : undefined}>
+                      <div key={sk} className="ledger-cell" onClick={s ? () => setSel(s.recipe) : undefined} onMouseEnter={(e) => { if (s) e.currentTarget.style.background = 'var(--panel)' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }} style={s ? { cursor: 'pointer' } : undefined}>
                         {s ? (
                           <>
-                            <div style={{ width: '100%', height: 84, borderRadius: 5, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,#161616,#0b0b0b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '100%', height: 84, borderRadius: 0, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,#161616,#0b0b0b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               {s.recipe.imageUrl
                                 ? <img src={s.recipe.imageUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                                : <span style={{ color: '#262626' }}><CellIcon size={22} /></span>}
+                                : <span style={{ color: 'var(--line-2)' }}><CellIcon size={22} /></span>}
                             </div>
                             <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{s.recipe.name}</div>
                             <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
@@ -708,7 +722,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 const r = slot.recipe
                 return (
                   <div key={slot.id} className={`reveal d${Math.min(i + 1, 4)}`} style={{ ...card({ padding: 26, transition: 'border-color .3s' }) }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#2f3a18' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--lime)' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)' }}>
                     {r.imageUrl && <div style={{ margin: '-26px -26px 18px', height: 160, overflow: 'hidden', borderRadius: '3px 3px 0 0' }}><img src={r.imageUrl} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, paddingBottom: 16, borderBottom: '1px solid var(--line)' }}>
@@ -729,12 +743,12 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
                     <div className="four" style={{ gap: 8, marginBottom: 14 }}>
                       {[
-                        { l: 'Protein', v: `${r.proteinGrams}g`, c: '#a3e635' },
-                        { l: 'Carbs', v: `${r.carbsGrams}g`, c: '#c9c3ac' },
+                        { l: 'Protein', v: `${r.proteinGrams}g`, c: '#84cc16' },
+                        { l: 'Carbs', v: `${r.carbsGrams}g`, c: '#5c5c56' },
                         { l: 'Fat', v: `${r.fatGrams}g`, c: '#85857e' },
                         { l: 'Fibre', v: r.fibreGrams != null ? `${r.fibreGrams}g` : '—', c: '#85857e' },
                       ].map((m) => (
-                        <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid var(--line)', borderRadius: 3, padding: '11px 8px', textAlign: 'center' }}>
+                        <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid var(--line)', borderRadius: 0, padding: '11px 8px', textAlign: 'center' }}>
                           <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>
                           <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
                         </div>
@@ -758,13 +772,13 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
       <section className="sec">
         <div className="wrap grid-2-top">
           {/* The bone document — the unexpected light panel */}
-          <div className="reveal" style={{ background: 'var(--bone)', color: 'var(--bone-ink)', borderRadius: 5, padding: '34px 32px', position: 'relative', boxShadow: '0 30px 80px -30px rgba(0,0,0,.8)' }}>
+          <div className="reveal" style={{ background: 'var(--bone)', color: 'var(--bone-ink)', borderRadius: 0, padding: '34px 32px', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1.5px solid rgba(20,20,15,.18)', paddingBottom: 16, marginBottom: 22 }}>
               <div>
                 <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.18em', color: '#4a5a22' }}>NUTRITIONAL SPEC</div>
                 <div className="syne" style={{ fontWeight: 800, fontSize: 23, marginTop: 6, letterSpacing: '-0.02em' }}>In every meal</div>
               </div>
-              <div className="mono" style={{ fontSize: 12, letterSpacing: '0.1em', textAlign: 'right', color: '#5c5c50', border: '1px solid rgba(20,20,15,.25)', padding: '6px 9px', borderRadius: 3, lineHeight: 1.5 }}>
+              <div className="mono" style={{ fontSize: 12, letterSpacing: '0.1em', textAlign: 'right', color: '#5c5c50', border: '1px solid rgba(20,20,15,.25)', padding: '6px 9px', borderRadius: 0, lineHeight: 1.5 }}>
                 FITFUEL<br />VERIFIED
               </div>
             </div>
@@ -781,7 +795,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                 'Sourced from Pune APMC, no imported ingredients',
               ]).map((item, i, arr) => (
                 <div key={item} style={{ display: 'grid', gridTemplateColumns: '26px 1fr', gap: 12, alignItems: 'start', padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(20,20,15,.1)' : 'none' }}>
-                  <span style={{ width: 20, height: 20, borderRadius: 3, background: '#1c2b07', color: 'var(--lime)', display: 'grid', placeItems: 'center', marginTop: 1 }}><IconCheck size={13} stroke={2.6} /></span>
+                  <span style={{ width: 20, height: 20, borderRadius: 0, background: '#1c2b07', color: 'var(--lime)', display: 'grid', placeItems: 'center', marginTop: 1 }}><IconCheck size={13} stroke={2.6} /></span>
                   <span style={{ fontSize: 13.5, lineHeight: 1.55, color: 'var(--bone-ink)' }}>{item}</span>
                 </div>
               ))}
@@ -792,7 +806,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
           <div className="reveal d2">
             <Eyebrow index="06" label="What we leave out" color="var(--ember)" />
             <h2 className="h2" style={{ fontSize: 'clamp(26px,3vw,38px)', marginBottom: 24 }}>Deliberately not on the plate.</h2>
-            <div style={{ ...card({ borderRadius: 5, overflow: 'hidden' }) }}>
+            <div style={{ ...card({ borderRadius: 0, overflow: 'hidden' }) }}>
               {(plan.whatIsAvoided?.length ? plan.whatIsAvoided : [
                 'International-only ingredients (tahini, miso, couscous)',
                 'Deep-fried foods of any kind',
@@ -816,7 +830,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         <div className="wrap grid-2">
           {/* Product UI mockup */}
           <div className="reveal" style={{ ...card({ padding: 24, position: 'relative', overflow: 'hidden' }) }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,var(--lime),transparent)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'var(--lime)' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--line)', paddingBottom: 16, marginBottom: 16 }}>
               <div>
                 <div className="mono" style={{ fontSize: 12, letterSpacing: '0.16em', color: 'var(--faint)' }}>TODAY · DAY 03 / 30</div>
@@ -845,7 +859,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   </div>
                   {m.done
                     ? <span className="mono" style={{ fontSize: 12, color: 'var(--lime)', display: 'flex', alignItems: 'center', gap: 5 }}><IconCheck size={12} /> LOGGED</span>
-                    : <span className="mono" style={{ fontSize: 12, color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '5px 11px', borderRadius: 3 }}>I ATE THIS</span>}
+                    : <span className="mono" style={{ fontSize: 12, color: 'var(--dim)', border: '1px solid var(--line-2)', padding: '5px 11px', borderRadius: 0 }}>I ATE THIS</span>}
                 </div>
               )
             })}
@@ -853,8 +867,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--faint)', marginBottom: 8 }}>
                 <span>NET PROGRESS</span><span style={{ color: 'var(--lime)' }}>42%</span>
               </div>
-              <div style={{ height: 6, background: '#161616', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ width: '42%', height: '100%', background: 'linear-gradient(90deg,var(--lime),var(--lime-d))', boxShadow: '0 0 10px rgba(163,230,53,.4)' }} />
+              <div style={{ height: 6, background: '#161616', borderRadius: 0, overflow: 'hidden' }}>
+                <div style={{ width: '42%', height: '100%', background: 'var(--lime)' }} />
               </div>
             </div>
           </div>
@@ -904,7 +918,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     flex: '1 1 140px',
                     background: active ? '#101807' : '#0a0a0a',
                     border: active ? '1px solid var(--lime)' : '1px solid var(--line)',
-                    borderRadius: 4, padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
+                    borderRadius: 0, padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
                     transition: 'all .25s cubic-bezier(.16,1,.3,1)',
                     boxShadow: active ? '0 0 0 1px var(--lime)' : 'none',
                   }}
@@ -931,10 +945,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
               return (
                 <div key={tier.key} style={{
-                  background: '#0c0c0c',
+                  background: 'var(--panel)',
                   border: '1px solid #1f1f1f',
                   borderLeft: `3px solid ${tier.accent}`,
-                  borderRadius: 4,
+                  borderRadius: 0,
                   padding: 22,
                   position: 'relative',
                   opacity: tier.available ? 1 : 0.95,
@@ -946,7 +960,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                       </div>
                       {!tier.available && (
                         <span className="mono" style={{
-                          fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 2,
+                          fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 0,
                           background: `${tier.accent}1f`, color: tier.accent, letterSpacing: '0.08em',
                         }}>
                           WAITLIST
@@ -973,7 +987,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                           style={{
                             background: isActiveDur ? `${tier.accent}1a` : '#0a0a0a',
                             border: isActiveDur ? `1px solid ${tier.accent}` : '1px solid #1a1a1a',
-                            borderRadius: 3,
+                            borderRadius: 0,
                             padding: '10px 12px',
                             cursor: available ? 'pointer' : 'not-allowed',
                             opacity: available ? 1 : 0.4,
@@ -1073,10 +1087,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                maxWidth: 460, width: '100%', background: '#0c0c0c',
-                border: '1px solid #262626',
+                maxWidth: 460, width: '100%', background: 'var(--panel)',
+                border: '1px solid var(--line-2)',
                 borderLeft: `3px solid ${TIER_META.find((t) => t.key === wlTier)!.accent}`,
-                borderRadius: 4, padding: 28, position: 'relative',
+                borderRadius: 0, padding: 28, position: 'relative',
               }}
             >
               <button
@@ -1105,7 +1119,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                   textAlign: 'center', padding: '14px 16px',
                   background: `${TIER_META.find((t) => t.key === wlTier)!.accent}1a`,
                   color: TIER_META.find((t) => t.key === wlTier)!.accent,
-                  borderRadius: 4, fontSize: 14, fontWeight: 600,
+                  borderRadius: 0, fontSize: 14, fontWeight: 600,
                 }}>
                   ✓ You&apos;re on the {wlTier === 'PREMIUM' ? 'Premium' : 'Luxury'} waitlist
                 </div>
@@ -1119,7 +1133,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     disabled={wlStatus === 'submitting'}
                     style={{
                       flex: '1 1 200px', padding: '12px 14px', background: '#0a0a0a',
-                      border: '1px solid #1a1a1a', borderRadius: 4,
+                      border: '1px solid #1a1a1a', borderRadius: 0,
                       color: 'var(--ink)', fontSize: 14, outline: 'none',
                       fontFamily: "inherit",
                     }}
@@ -1130,7 +1144,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     style={{
                       padding: '12px 22px',
                       background: TIER_META.find((t) => t.key === wlTier)!.accent,
-                      color: '#0a0a0a', border: 'none', borderRadius: 4,
+                      color: '#0a0a0a', border: 'none', borderRadius: 0,
                       fontSize: 14, fontWeight: 700,
                       cursor: wlStatus === 'submitting' ? 'wait' : 'pointer',
                       opacity: wlStatus === 'submitting' ? 0.7 : 1,
@@ -1165,7 +1179,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               { Icon: IconCycle, t: 'Menu improves', d: 'Sub-3.0 recipes replaced monthly' },
             ].map(({ Icon, t, d }, i) => (
               <div key={t} style={{ ...card({ padding: '32px 24px' }) }}>
-                <div style={{ width: 48, height: 48, borderRadius: 4, border: '1px solid #2c3a18', background: '#101807', color: 'var(--lime)', display: 'grid', placeItems: 'center', margin: '0 auto 18px' }}><Icon size={22} /></div>
+                <div style={{ width: 48, height: 48, borderRadius: 0, border: '1px solid #2c3a18', background: '#101807', color: 'var(--lime)', display: 'grid', placeItems: 'center', margin: '0 auto 18px' }}><Icon size={22} /></div>
                 <div className="mono" style={{ fontSize: 12, color: 'var(--faint)', letterSpacing: '0.14em', marginBottom: 8 }}>STEP 0{i + 1}</div>
                 <div className="syne" style={{ fontWeight: 700, fontSize: 18, marginBottom: 6 }}>{t}</div>
                 <div style={{ color: 'var(--faint)', fontSize: 13 }}>{d}</div>
@@ -1196,7 +1210,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
                     <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>{t.name}</div>
                     <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 3, letterSpacing: '0.04em' }}>{t.location}</div>
                   </div>
-                  <span className="mono" style={{ fontSize: 12, color: 'var(--lime)', border: '1px solid #2c3a18', background: '#101807', padding: '6px 12px', borderRadius: 3, fontWeight: 700 }}>{t.result}</span>
+                  <span className="mono" style={{ fontSize: 12, color: 'var(--lime)', border: '1px solid #2c3a18', background: '#101807', padding: '6px 12px', borderRadius: 0, fontWeight: 700 }}>{t.result}</span>
                 </div>
               </div>
             ))}
@@ -1254,12 +1268,12 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
       {sel && (
         <div onClick={() => setSel(null)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.78)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: 14, maxWidth: 480, width: '100%', maxHeight: '88vh', overflow: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: 0, maxWidth: 480, width: '100%', maxHeight: '88vh', overflow: 'auto' }}>
             {sel.imageUrl && <img src={sel.imageUrl} alt={sel.name} style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block', borderRadius: '14px 14px 0 0' }} />}
             <div style={{ padding: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                 <h3 className="syne" style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2, margin: 0 }}>{sel.name}</h3>
-                <button onClick={() => setSel(null)} style={{ background: 'transparent', border: '1px solid #222', color: 'var(--dim)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{'\u00D7'}</button>
+                <button onClick={() => setSel(null)} style={{ background: 'transparent', border: '1px solid #222', color: 'var(--dim)', borderRadius: 0, width: 32, height: 32, cursor: 'pointer', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{'\u00D7'}</button>
               </div>
               <div className="mono" style={{ fontSize: 12, color: 'var(--faint)', marginTop: 8, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 {sel.cuisineType && <span>{sel.cuisineType}</span>}
@@ -1270,11 +1284,11 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 18 }}>
                 {[
                   { l: 'Kcal', v: String(sel.caloriesPerServing), c: 'var(--lime)' },
-                  { l: 'Protein', v: `${sel.proteinGrams}g`, c: '#a3e635' },
-                  { l: 'Carbs', v: `${sel.carbsGrams}g`, c: '#c9c3ac' },
+                  { l: 'Protein', v: `${sel.proteinGrams}g`, c: '#84cc16' },
+                  { l: 'Carbs', v: `${sel.carbsGrams}g`, c: '#5c5c56' },
                   { l: 'Fat', v: `${sel.fatGrams}g`, c: '#85857e' },
                 ].map((m) => (
-                  <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 6, padding: '12px 8px', textAlign: 'center' }}>
+                  <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 0, padding: '12px 8px', textAlign: 'center' }}>
                     <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>
                     <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>{m.l}</div>
                   </div>
