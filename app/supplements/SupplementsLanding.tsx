@@ -1,23 +1,54 @@
 "use client";
-// app/supplements/SupplementsLanding.tsx
-// Public marketing page — fully open, no premium gates
-// All supplements visible, personalised stack preview, drives sign-in
 
-import { useState, useMemo, useRef, useEffect } from "react";
+// app/supplements/SupplementsLanding.tsx
+//
+// The public supplements catalogue, on the Instrument System.
+//
+// THIS PAGE WAS THE ARCHETYPE. DESIGN.md's reject list names, as a single
+// item, "centered hero with a chip, a headline and two pill buttons". This
+// page had exactly that, over a 700x500 radial-gradient ellipse glow, with
+// gradient text on the headline and a `pulse-glow` keyframe animating a lime
+// box-shadow from 20px to 40px on the primary CTA on a 3s loop, forever.
+//
+// It also failed AA badly on its own subject matter: body copy ran at
+// rgba(255,255,255,0.45) (~3.4:1) and the trust row at rgba(255,255,255,0.3)
+// (~2.2:1), on a page making dosage and contraindication claims.
+//
+// THE ACCENT FIELD IS GONE. `supp.accent` was threaded through eighteen call
+// sites here: a top border, a background tint, a chip, two buttons, a price, a
+// tick, two panels. It had already been flattened to a single constant in the
+// data layer, so all eighteen were painting the same colour through a field
+// that no longer varied. The field is removed from the type; lime is applied
+// directly where it means something, which is one thing per section.
+//
+// Evidence strength is filled segments on a hairline scale now, rather than a
+// five-hue green-to-slate ramp, and the label is printed beside it so the
+// meaning never rests on the segments alone.
+//
+// The modal also gained the three things DESIGN.md requires of an overlay and
+// it had none of: body scroll lock, focus moved in, focus restored on close.
+
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { CheckCircle2, X, Shield, Truck, Star } from "lucide-react";
+
 import {
-  Zap, ChevronRight, CheckCircle2,
-  ArrowRight, Sparkles, Shield, Truck, Star,
-  X, Leaf,
-} from "lucide-react";
-import {
-  STACKS, GOAL_META, CATEGORY_META,
-  type Supplement, type SupplementGoal, type SupplementCategory,
+  STACKS,
+  GOAL_META,
+  CATEGORY_META,
+  EVIDENCE_META,
+  RANK_MAX,
+  type Supplement,
+  type SupplementGoal,
+  type SupplementCategory,
 } from "@/lib/supplements-data";
 import { NETWORK_LABEL, type SupplementBuyLink } from "@/lib/supplements-types";
+import type { SupplementRecommendation } from "@/lib/supplement-recommender";
+import { Head, Idx, Tile, Tiles, k } from "@/app/_ui/Kit";
+import { Band, Masthead, Shell, Wrap } from "@/app/_ui/Page";
+import { DIM, INK, SECTION, body, figure, label, num, sub } from "@/app/_ui/theme";
+import s from "./supplements.module.css";
 
-// Phase 18-1: supplement may carry buy links from DB.
-// Phase 18-3: also surface DB-only fields (imageUrl, brandName, isFeatured)
 type SupplementWithLinks = Supplement & {
   links?: SupplementBuyLink[];
   imageUrl?: string | null;
@@ -33,13 +64,10 @@ const CATEGORIES: Array<"all" | SupplementCategory> = [
 ];
 
 /**
- * Placeholder shown when a supplement has no product photo.
- *
- * This was the raw emoji from the data file, rendered at 44px and 64px as the
- * primary product visual. DESIGN.md rejects emoji on sight, and a 💊 standing
- * in for a product shot reads as a missing asset either way. A condensed
- * monogram of the supplement name is in-system, scales cleanly, and still
- * distinguishes one card from the next.
+ * Shown when a supplement has no product photo. This was the raw emoji from
+ * the data file rendered at 44px and 64px as the primary product visual;
+ * DESIGN.md rejects emoji on sight, and a pill glyph standing in for a product
+ * shot reads as a missing asset either way.
  */
 function Monogram({ name, size }: { name: string; size: number }) {
   const initials = name
@@ -50,267 +78,185 @@ function Monogram({ name, size }: { name: string; size: number }) {
     .map((w) => w[0]!.toUpperCase())
     .join("");
   return (
-    <span
-      aria-hidden
-      style={{
-        fontFamily: "var(--ff-cond)",
-        fontWeight: 900,
-        fontSize: size,
-        lineHeight: 1,
-        letterSpacing: "-0.03em",
-        color: "rgba(163,230,53,0.55)",
-        userSelect: "none",
-      }}
-    >
+    <span aria-hidden="true" style={{ ...figure(`${size}px`, "#33332f"), userSelect: "none" }}>
       {initials || "FF"}
     </span>
   );
 }
 
-// ── Supplement Detail Modal ───────────────────────────────────────────────────
+/** Ordinal strength as segments. The label is always printed alongside. */
+function Scale({ rank, max = RANK_MAX }: { rank: number; max?: number }) {
+  return (
+    <span className={s.scale} aria-hidden="true">
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={i < rank ? `${s.seg} ${s.segOn}` : s.seg} />
+      ))}
+    </span>
+  );
+}
+
+function Thumb({ supp, size }: { supp: SupplementWithLinks; size: number }) {
+  return (
+    <span className={s.thumb} style={{ width: size, height: size }}>
+      {supp.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={supp.imageUrl} alt="" />
+      ) : (
+        <Monogram name={supp.name} size={Math.round(size * 0.42)} />
+      )}
+    </span>
+  );
+}
+
+// ── detail modal ─────────────────────────────────────────────────────────────
+
 function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose: () => void }) {
-  const catMeta = CATEGORY_META[supp.category];
-  const panel = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const evidence = EVIDENCE_META[supp.evidenceLevel];
 
-  const primary = supp.links && supp.links.length > 0 ? supp.links[0] : null;
-  const livePrice = primary?.priceRs ?? null;
-  const liveMrp = primary?.mrpRs ?? null;
-  const discount = livePrice && liveMrp && liveMrp > livePrice
-    ? Math.round(((liveMrp - livePrice) / liveMrp) * 100) : 0;
-
-  // This was a click-to-dismiss div with no keyboard path in or out: Escape
-  // did nothing, focus stayed on the page behind it, and the body kept
-  // scrolling under the sheet. Same treatment as the mobile nav.
   useEffect(() => {
-    const { body } = document;
-    const prevOverflow = body.style.overflow;
-    body.style.overflow = "hidden";
-
-    const focusables = () => Array.from(
-      panel.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      ) ?? [],
-    ).filter((el) => el.offsetParent !== null);
-    focusables()[0]?.focus();
-
+    const prev = document.body.style.overflow;
+    const opener = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
-      if (e.key !== "Tab") return;
-      const items = focusables();
-      if (!items.length) return;
-      const first = items[0], last = items[items.length - 1];
-      if (e.shiftKey && (document.activeElement === first || !panel.current?.contains(document.activeElement))) {
-        e.preventDefault(); last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus();
-      }
+      if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => {
-      body.style.overflow = prevOverflow;
+      document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
+      opener?.focus?.();
     };
   }, [onClose]);
 
+  const facts = [
+    { k: "Dosage", v: supp.dosage },
+    { k: "Timing", v: supp.timing },
+    { k: "Onset", v: supp.onsetTime },
+    { k: "Typical price", v: supp.priceRange },
+  ].filter((f) => f.v);
+
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.88)" }} />
-      <div
-        ref={panel}
-        role="dialog"
-        aria-modal="true"
-        aria-label={supp.name}
-        style={{
-          position: "relative", width: "100%", maxWidth: 560,
-          // Was radius 24px with a frosted backdrop-blur scrim: rounded
-          // corners and glassmorphism are both DESIGN.md rejects.
-          background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 0, maxHeight: "92dvh", overflowY: "auto",
-        }}
-      >
-        {/* Accent top bar */}
-        <div style={{ height: 3, background: supp.accent }} />
-
-        {/* Hero: image + meta + BUY CTA */}
-        <div style={{
-          padding: "24px 24px 20px",
-          // Was a lime gradient wash. Flat panel instead.
-          background: "transparent",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
-          position: "relative",
-        }}>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            style={{ position: "absolute", top: 12, right: 12, width: 44, height: 44, borderRadius: 0, background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", color: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}
-          >
-            <X size={16} />
-          </button>
-
-          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: primary ? 16 : 0 }}>
-            {/* Image / emoji block */}
-            <div style={{
-              width: 96, height: 96, flexShrink: 0,
-              background: supp.imageUrl ? "#000" : `linear-gradient(135deg, ${supp.accent}25, ${supp.accent}08)`,
-              border: `1px solid ${supp.accent}30`, borderRadius: 14,
-              display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
-            }}>
-              {supp.imageUrl ? (
-                <img src={supp.imageUrl} alt={supp.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 8 }} />
-              ) : (
-                <Monogram name={supp.name} size={40} />
-              )}
-            </div>
-
-            <div style={{ flex: 1, minWidth: 0, paddingRight: 30 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: supp.accent, background: `${supp.accent}15`, border: `1px solid ${supp.accent}30`, borderRadius: 6, padding: "3px 9px", fontFamily: "inherit" }}>
-                {catMeta.label}
-              </span>
-              <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "10px 0 4px", lineHeight: 1.2 }}>{supp.name}</h2>
-              <p style={{ fontFamily: "inherit", fontSize: 12, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.5 }}>{supp.tagline}</p>
+    <div
+      className={s.backdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-label={supp.name}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className={s.modal}>
+        <div className={s.modalHead}>
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", minWidth: 0 }}>
+            <Thumb supp={supp} size={64} />
+            <div style={{ minWidth: 0 }}>
+              <span style={label()}>{CATEGORY_META[supp.category].label}</span>
+              <h2 style={{ ...sub("clamp(1.6rem,3.4vw,2.4rem)"), margin: "10px 0 8px" }}>
+                {supp.name}
+              </h2>
+              <p style={body(14.5)}>{supp.tagline}</p>
             </div>
           </div>
-
-          {/* BUY CTA — top, big, prominent */}
-          {primary && (
-            <a
-              href={primary.clickUrl}
-              target="_blank"
-              rel="noopener sponsored noreferrer"
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                background: supp.accent, color: "#000",
-                textDecoration: "none", borderRadius: 12, padding: "14px 18px",
-                fontFamily: "inherit", fontWeight: 800,
-                transition: "filter 0.15s",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1)"; }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 12, opacity: 0.65, letterSpacing: "0.05em" }}>Buy on Nutrabay</span>
-                {livePrice != null ? (
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                    <span style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800 }}>
-                      {'\u20B9'}{livePrice.toLocaleString("en-IN")}
-                    </span>
-                    {liveMrp && liveMrp > livePrice && (
-                      <>
-                        <span style={{ fontSize: 12, opacity: 0.5, textDecoration: "line-through" }}>
-                          {'\u20B9'}{liveMrp.toLocaleString("en-IN")}
-                        </span>
-                        <span style={{ fontSize: 12, fontWeight: 800, background: "#000", color: supp.accent, padding: "2px 6px", borderRadius: 4 }}>
-                          {discount}% OFF
-                        </span>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <span style={{ fontFamily: "var(--ff-cond)", fontSize: 16 }}>View product {'\u2192'}</span>
-                )}
-                {primary.notes && (
-                  <span style={{ fontSize: 12, opacity: 0.65 }}>{primary.notes}</span>
-                )}
-              </div>
-              <span style={{ fontSize: 22 }}>{'\u2192'}</span>
-            </a>
-          )}
+          <button ref={closeRef} type="button" className={s.close} onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
         </div>
 
-        <div style={{ padding: "20px 24px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
-          <p style={{ fontFamily: "inherit", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: 0 }}>
-            {supp.description}
-          </p>
+        <div className={s.modalBody}>
+          <p style={body(15.5)}>{supp.description}</p>
 
-          {/* Benefits */}
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px" }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "inherit" }}>Key Benefits</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {supp.benefits.map((b) => (
-                <div key={b} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <CheckCircle2 size={13} color={supp.accent} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "inherit", lineHeight: 1.5 }}>{b}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Dosage + Timing */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {[
-              { label: "Dosage", value: supp.dosage },
-              { label: "Timing", value: supp.timing },
-              { label: "Onset", value: supp.onsetTime },
-              { label: "Evidence", value: `${supp.evidenceLevel.replace("_", " ")} (${supp.studyCount})` },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>{label}</p>
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", fontFamily: "inherit", lineHeight: 1.4 }}>{value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Key study findings */}
-          {supp.keyStudyFindings?.length > 0 && (
-            <div style={{ background: `${supp.accent}06`, border: `1px solid ${supp.accent}15`, borderRadius: 14, padding: "14px 16px" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: supp.accent, letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 10px", fontFamily: "inherit" }}>Research Findings</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {supp.keyStudyFindings.map((f, i) => (
-                  <p key={i} style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "inherit", lineHeight: 1.6 }}>• {f}</p>
+          {facts.length > 0 && (
+            <div>
+              <span style={{ ...label(), marginBottom: 12 }}>How to take it</span>
+              <div className={s.facts}>
+                {facts.map((f) => (
+                  <div key={f.k} className={s.fact}>
+                    <span style={label()}>{f.k}</span>
+                    <span className={s.factVal}>{f.v}</span>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Estimated price range + vegan badge */}
-          <div style={{ display: "flex", gap: 10 }}>
-            <div style={{ flex: 1, background: `${supp.accent}08`, border: `1px solid ${supp.accent}20`, borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>Typical Range</p>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: supp.accent, fontFamily: "var(--ff-cond)" }}>{supp.priceRange}</p>
+          <div>
+            <span style={{ ...label(), marginBottom: 12 }}>Evidence</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+              <Scale rank={evidence.rank} />
+              <span style={num("14px", INK)}>{evidence.label}</span>
+              {supp.studyCount && <span style={num("13px", DIM)}>{supp.studyCount}</span>}
             </div>
-            {supp.veganFriendly && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.06)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 12, padding: "12px 16px" }}>
-                <Leaf size={15} color="#a3e635" aria-hidden />
-                <span style={{ fontSize: 12.5, color: "#a3e635", fontFamily: "inherit", fontWeight: 600 }}>Vegan-friendly</span>
-              </div>
+            {supp.keyStudyFindings.length > 0 && (
+              <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}>
+                {supp.keyStudyFindings.map((f) => (
+                  <li key={f} style={{ display: "flex", gap: 10, marginBottom: 9 }}>
+                    <CheckCircle2 size={13} color="#84cc16" style={{ flexShrink: 0, marginTop: 3 }} />
+                    <span style={body(14)}>{f}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 
-          {/* Bottom BUY CTA — repeat for users who scrolled */}
-          {primary && (
-            <a
-              href={primary.clickUrl}
-              target="_blank"
-              rel="noopener sponsored noreferrer"
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                background: supp.accent, color: "#000",
-                textDecoration: "none", borderRadius: 12, padding: "14px 18px",
-                fontFamily: "inherit", fontWeight: 800, fontSize: 14,
-                letterSpacing: "0.04em",
-              }}
-            >
-              {livePrice != null ? (
-                <>Buy on Nutrabay {'\u2014'} {'\u20B9'}{livePrice.toLocaleString("en-IN")} {'\u2192'}</>
-              ) : (
-                <>View on Nutrabay {'\u2192'}</>
-              )}
-            </a>
+          {supp.benefits.length > 0 && (
+            <div>
+              <span style={{ ...label(), marginBottom: 12 }}>Benefits</span>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {supp.benefits.map((b) => (
+                  <li key={b} style={{ display: "flex", gap: 10, marginBottom: 9 }}>
+                    <CheckCircle2 size={13} color="#84cc16" style={{ flexShrink: 0, marginTop: 3 }} />
+                    <span style={body(14)}>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
-          {/* India note */}
           {supp.indiaNote && (
-            <div style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(251,191,36,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>🇮🇳 India Note</p>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "inherit", lineHeight: 1.6 }}>{supp.indiaNote}</p>
+            <div>
+              <span style={{ ...label(), marginBottom: 10 }}>In India</span>
+              <p style={body(14.5)}>{supp.indiaNote}</p>
             </div>
           )}
 
-          {/* Warnings */}
+          {/* `warnings` is a single string on the type, not a list. */}
           {supp.warnings && (
-            <div style={{ background: "rgba(251,113,133,0.06)", border: "1px solid rgba(251,113,133,0.15)", borderRadius: 12, padding: "12px 16px" }}>
-              <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(251,113,133,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "inherit" }}>⚠️ Cautions</p>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "inherit", lineHeight: 1.6 }}>{supp.warnings}</p>
+            <div className={s.warn}>
+              <span style={{ ...label("#f87171"), marginBottom: 10 }}>Before you take this</span>
+              <p style={{ ...body(14), color: INK }}>{supp.warnings}</p>
+            </div>
+          )}
+
+          {supp.links && supp.links.length > 0 && (
+            <div>
+              <span style={{ ...label(), marginBottom: 12 }}>Where to buy</span>
+              <div className={s.buys}>
+                {supp.links.map((l) => (
+                  <a
+                    key={l.id}
+                    href={l.clickUrl}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className={s.buy}
+                  >
+                    <span>
+                      <span style={{ ...sub("1.1rem"), display: "block" }}>
+                        {l.merchantLabel || NETWORK_LABEL[l.network] || l.network}
+                      </span>
+                      {l.notes && <span style={{ ...body(13), marginTop: 4 }}>{l.notes}</span>}
+                    </span>
+                    <span style={num("15px", INK)}>
+                      {l.priceRs ? `Rs ${l.priceRs.toLocaleString("en-IN")}` : "See price"}
+                    </span>
+                  </a>
+                ))}
+              </div>
+              <p style={{ ...body(13), color: DIM, marginTop: 12 }}>
+                We may earn a commission on these links. It does not change what you pay, and it
+                does not decide what is listed here.
+              </p>
             </div>
           )}
         </div>
@@ -319,441 +265,245 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
   );
 }
 
-// ── Supplement Card ───────────────────────────────────────────────────────────
+// ── card ─────────────────────────────────────────────────────────────────────
+
 function SupplementCard({ supp, onClick }: { supp: SupplementWithLinks; onClick: () => void }) {
-  const [hovered, setHovered] = useState(false);
-  const catMeta = CATEGORY_META[supp.category];
-
-  // Phase 18-3 — surface real price from active link when available.
-  const primary = supp.links && supp.links.length > 0 ? supp.links[0] : null;
-  const livePrice = primary?.priceRs ?? null;
-  const liveMrp = primary?.mrpRs ?? null;
-  const hasBuy = !!primary;
-
-  function buyClick(e: React.MouseEvent) {
-    // Don't open the modal — go straight to checkout.
-    e.stopPropagation();
-    e.preventDefault();
-    if (!primary) return;
-    window.open(primary.clickUrl, "_blank", "noopener,sponsored");
-  }
-
   return (
-    // Was a plain <div onClick>. That made every card in a 50+ item catalogue
-    // unreachable by keyboard and invisible to assistive tech. role/tabIndex/
-    // key handling turn it into a real control without restructuring the card.
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={`${supp.name}, view details`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); }
-      }}
-      style={{
-        background: "#0f0f0f",
-        border: `1px solid ${hovered ? "rgba(163,230,53,0.45)" : "rgba(255,255,255,0.06)"}`,
-        // Was radius 16 with a 3px lift and a coloured glow shadow on hover.
-        borderRadius: 0, cursor: "pointer",
-        transition: "border-color 0.18s ease, background 0.18s ease",
-        position: "relative", overflow: "hidden",
-        display: "flex", flexDirection: "column",
-      }}
-    >
-      {/* Product image, or a monogram when there is no photo */}
-      <div style={{
-        position: "relative",
-        // Was a lime gradient wash behind every card.
-        background: supp.imageUrl ? "#000" : "#0b0b0b",
-        height: 160,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        borderBottom: `1px solid rgba(255,255,255,0.04)`,
-      }}>
-        {supp.imageUrl ? (
-          <img
-            src={supp.imageUrl}
-            alt={supp.name}
-            style={{ width: "100%", height: "100%", objectFit: "contain", padding: 16 }}
-            onError={(e) => {
-              // Fall back to the monogram if the image 404s.
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-              const next = e.currentTarget.nextElementSibling as HTMLElement | null;
-              if (next) next.style.display = "block";
-            }}
-          />
-        ) : null}
-        {/* Rendered but hidden when an image exists, so the onError handler
-            above has a sibling to reveal. */}
-        <span style={{ display: supp.imageUrl ? "none" : "block" }}>
-          <Monogram name={supp.name} size={58} />
+    <button type="button" className={s.card} onClick={onClick}>
+      <span className={s.cardTop}>
+        <span style={{ minWidth: 0 }}>
+          <span style={label()}>{CATEGORY_META[supp.category].label}</span>
+          <h3 className={s.name} style={{ marginTop: 10 }}>
+            {supp.name}
+          </h3>
         </span>
+        <Thumb supp={supp} size={52} />
+      </span>
 
-        {/* Popular badge. Was amber #fbbf24, the last off-palette hue on a
-            public surface. Lime is the only accent (DESIGN.md). */}
-        {supp.popular && (
-          <div style={{
-            position: "absolute", top: 10, right: 10,
-            background: "rgba(0,0,0,0.72)",
-            border: "1px solid rgba(163,230,53,0.4)",
-            borderRadius: 0, padding: "4px 8px",
-            fontSize: 12, fontWeight: 800, color: "#a3e635",
-            letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "var(--ff-cond)",
-          }}>Popular</div>
-        )}
+      <p style={{ ...body(14), maxWidth: "36ch" }}>{supp.tagline}</p>
 
-        {/* Category badge (overlay on image) */}
-        <div style={{
-          position: "absolute", bottom: 10, left: 10,
-          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
-          border: `1px solid ${supp.accent}40`,
-          borderRadius: 6, padding: "3px 8px",
-          fontSize: 12, fontWeight: 700, color: supp.accent,
-          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "inherit",
-        }}>
-          {catMeta.label}
-        </div>
-
-        {/* Vegan icon */}
-        {supp.veganFriendly && (
-          <div style={{
-            position: "absolute", bottom: 8, right: 8,
-            display: "inline-flex", alignItems: "center", gap: 5,
-            background: "rgba(0,0,0,0.72)", border: "1px solid rgba(163,230,53,0.3)",
-            padding: "4px 8px",
-            fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 12,
-            letterSpacing: "0.1em", textTransform: "uppercase", color: "#a3e635",
-          }}>
-            <Leaf size={12} aria-hidden /> Vegan
-          </div>
-        )}
-      </div>
-
-      {/* Content block */}
-      <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", flex: 1 }}>
-        <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: "inherit", lineHeight: 1.3 }}>
-          {supp.name}
-        </p>
-        <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "inherit", lineHeight: 1.45, minHeight: 30 }}>
-          {supp.tagline}
-        </p>
-
-        {/* Price block */}
-        <div style={{ marginBottom: 12, marginTop: "auto" }}>
-          {livePrice != null ? (
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 800, color: supp.accent, fontFamily: "var(--ff-cond)" }}>
-                {'\u20B9'}{livePrice.toLocaleString("en-IN")}
-              </span>
-              {liveMrp && liveMrp > livePrice && (
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textDecoration: "line-through" }}>
-                  {'\u20B9'}{liveMrp.toLocaleString("en-IN")}
-                </span>
-              )}
-              {liveMrp && liveMrp > livePrice && (
-                <span style={{
-                  fontSize: 12, fontWeight: 700, color: "#22c55e",
-                  background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
-                  borderRadius: 4, padding: "1px 6px", letterSpacing: "0.05em",
-                }}>
-                  {Math.round(((liveMrp - livePrice) / liveMrp) * 100)}% OFF
-                </span>
-              )}
-            </div>
-          ) : (
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "inherit", fontWeight: 500 }}>
-              {supp.priceRange}
-            </span>
-          )}
-        </div>
-
-        {/* Buy CTA (only renders when an active link exists) */}
-        {hasBuy ? (
-          <button
-            onClick={buyClick}
-            style={{
-              width: "100%", background: supp.accent, color: "#000",
-              border: "none", borderRadius: 10, padding: "11px 14px",
-              fontSize: 13, fontWeight: 800, cursor: "pointer",
-              fontFamily: "inherit", letterSpacing: "0.04em",
-              transition: "filter 0.15s",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1)"; }}
-          >
-            Buy on Nutrabay {'\u2192'}
-          </button>
-        ) : (
-          <div style={{
-            width: "100%", background: "transparent", color: "rgba(255,255,255,0.4)",
-            border: `1px dashed ${supp.accent}30`, borderRadius: 10, padding: "10px 14px",
-            fontSize: 12, fontWeight: 600, textAlign: "center",
-            fontFamily: "inherit", letterSpacing: "0.04em",
-          }}>
-            View details {'\u2192'}
-          </div>
-        )}
-      </div>
-    </div>
+      <span className={s.flags}>
+        {supp.priceRange && <span className={s.price}>{supp.priceRange}</span>}
+        {supp.popular && <span className={s.flagOn}>Popular</span>}
+        {supp.veganFriendly && <span>Vegan</span>}
+      </span>
+    </button>
   );
 }
 
-// ── Root ──────────────────────────────────────────────────────────────────────
+// ── page ─────────────────────────────────────────────────────────────────────
+
 export default function SupplementsLanding({
   isLoggedIn,
   supplements,
+  recommended = null,
 }: {
   isLoggedIn: boolean;
   supplements: SupplementWithLinks[];
+  /** Signed-in shortlist. Rendered inside the flow, under the readout. */
+  recommended?: SupplementRecommendation | null;
 }) {
   const [activeGoal, setActiveGoal] = useState<SupplementGoal>("muscle_gain");
   const [catFilter, setCatFilter] = useState<"all" | SupplementCategory>("all");
-  const [selectedSupp, setSelectedSupp] = useState<SupplementWithLinks | null>(null);
+  const [selected, setSelected] = useState<SupplementWithLinks | null>(null);
 
   const previewStack = STACKS[activeGoal]
-    .map((id) => supplements.find((s) => s.id === id)!)
+    .map((id) => supplements.find((x) => x.id === id)!)
     .filter(Boolean);
 
-  const filteredCatalogue = useMemo(() => {
-    if (catFilter === "all") return supplements;
-    return supplements.filter((s) => s.category === catFilter);
-  }, [catFilter, supplements]);
+  const filtered = useMemo(
+    () => (catFilter === "all" ? supplements : supplements.filter((x) => x.category === catFilter)),
+    [catFilter, supplements],
+  );
 
   const goalMeta = GOAL_META[activeGoal];
 
   return (
-    <>
-      <style>{`
-        * { box-sizing: border-box; }
-        @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(163,230,53,0.2)} 50%{box-shadow:0 0 40px rgba(163,230,53,0.4)} }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-      `}</style>
+    <Shell>
+      <Masthead
+        label="Supplements"
+        title="Built for your goal, not for a shelf"
+        deck="Science-backed supplements with clinical dosages, India-specific pricing, and the evidence behind each one stated plainly."
+        meta={[
+          { k: "Catalogued", v: String(supplements.length) },
+          { k: "Categories", v: String(CATEGORIES.length - 1) },
+          { k: "Paywalled", v: "None" },
+        ]}
+      />
 
-      <div style={{ background: "#080808", minHeight: "100vh", color: "#fff" }}>
+      <div className={k.readout} style={{ ["--cells" as string]: 3 }}>
+        {[
+          { Icon: Shield, l: "Sourcing", v: "Lab-tested" },
+          { Icon: Truck, l: "Delivery", v: "With your meals" },
+          { Icon: Star, l: "Pricing", v: "India context" },
+        ].map(({ Icon, l, v }) => (
+          <div key={l} className={k.cell}>
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon size={13} color="#85857e" aria-hidden="true" />
+              <span style={label()}>{l}</span>
+            </span>
+            <span style={sub("clamp(1.3rem,2.6vw,1.9rem)")}>{v}</span>
+          </div>
+        ))}
+      </div>
 
-        {/* ── Hero ── */}
-        <section style={{ position: "relative", padding: "120px 24px 80px", textAlign: "center", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 700, height: 500, background: "radial-gradient(ellipse, rgba(163,230,53,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
-
-          <div style={{ maxWidth: 800, margin: "0 auto", position: "relative" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(163,230,53,0.08)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 20, padding: "6px 16px", marginBottom: 28 }}>
-              <Sparkles size={13} color="#a3e635" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#a3e635", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "inherit" }}>
-                Science-backed · India-specific · 50 supplements
-              </span>
+      {/* ── picked for you ─────────────────────────────────────────────────
+          Only for a signed-in visitor with a goal on file. Directory rows, so
+          it reads as a shortlist rather than a second hero. */}
+      {recommended && (
+        <section style={{ ...SECTION, paddingBottom: 0 }}>
+          <Wrap>
+            <Idx label={`Picked for you, built for ${recommended.goalLabel}`} />
+            <div className={k.rows}>
+              {recommended.items.map((it) => (
+                <a
+                  key={it.slug}
+                  className={k.row}
+                  href={it.buyUrl ?? `/supplements#${it.slug}`}
+                  style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1.4fr) 28px" }}
+                  {...(it.buyUrl
+                    ? { target: "_blank", rel: "noopener noreferrer sponsored" }
+                    : {})}
+                >
+                  <span style={sub("clamp(1.15rem,2vw,1.5rem)")}>{it.name}</span>
+                  <span style={{ ...body(14), maxWidth: "48ch" }}>{it.tagline ?? ""}</span>
+                  <span className={k.rowGo} aria-hidden="true">
+                    &rarr;
+                  </span>
+                </a>
+              ))}
             </div>
+          </Wrap>
+        </section>
+      )}
 
-            <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(2.4rem, 6vw, 4.5rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.03em", margin: "0 0 20px", color: "#fff" }}>
-              Supplements built for{" "}
-              <span style={{ background: "linear-gradient(135deg, #a3e635 0%, #84cc16 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                your goal
-              </span>
-            </h1>
+      {/* ── the stack preview ──────────────────────────────────────────── */}
+      <section style={SECTION}>
+        <Wrap>
+          <Head
+            label="Personalised stack"
+            title="Start from a goal"
+            deck={goalMeta.description}
+            size="clamp(2rem,5vw,3.6rem)"
+          />
 
-            <p style={{ fontFamily: "inherit", fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 36px" }}>
-              Stop guessing. Browse 50 science-backed supplements with clinical dosages, India-specific pricing, and personalised stack recommendations.
-            </p>
-
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link
-                href={isLoggedIn ? "/dashboard/supplements" : "/auth/signin?callbackUrl=/dashboard/supplements"}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  background: "#a3e635", color: "#000",
-                  fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 14,
-                  padding: "14px 28px", borderRadius: 14, textDecoration: "none",
-                  letterSpacing: "0.03em",
-                  animation: "pulse-glow 3s ease-in-out infinite",
-                }}
+          <div className={k.seg} style={{ margin: "clamp(24px,3.4vw,38px) 0" }}>
+            {GOALS.map((g) => (
+              <button
+                key={g}
+                type="button"
+                className={activeGoal === g ? k.segOn : undefined}
+                aria-pressed={activeGoal === g}
+                onClick={() => setActiveGoal(g)}
               >
-                Get My Personalised Stack <ArrowRight size={16} />
-              </Link>
-              <a
-                href="#catalogue"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.7)", fontFamily: "inherit", fontWeight: 500, fontSize: 14,
-                  padding: "14px 24px", borderRadius: 14, textDecoration: "none",
-                }}
-              >
-                Browse All 50 ↓
-              </a>
-            </div>
+                {GOAL_META[g].label}
+              </button>
+            ))}
+          </div>
 
-            <div style={{ display: "flex", justifyContent: "center", gap: 28, marginTop: 36, flexWrap: "wrap" }}>
-              {[
-                { icon: <Shield size={13} />, text: "Lab-tested sources" },
-                { icon: <Truck size={13} />, text: "Delivered with your meals" },
-                { icon: <Star size={13} />, text: "India pricing & context" },
-              ].map(({ icon, text }) => (
-                <div key={text} style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: "inherit" }}>
-                  {icon}<span>{text}</span>
-                </div>
+          <div className={s.stack}>
+            {previewStack.map((x) => (
+              <SupplementCard key={x.id} supp={x} onClick={() => setSelected(x)} />
+            ))}
+          </div>
+
+          <div className={k.actions} style={{ marginTop: "clamp(24px,3vw,34px)" }}>
+            <Link
+              href={
+                isLoggedIn ? "/dashboard/supplements" : "/auth/signin?callbackUrl=/dashboard/supplements"
+              }
+              className={k.btn}
+            >
+              <span>Get my personalised stack</span>
+            </Link>
+            <a href="#catalogue" className={k.ghost}>
+              Browse all {supplements.length}
+            </a>
+          </div>
+        </Wrap>
+      </section>
+
+      {/* ── the catalogue ──────────────────────────────────────────────── */}
+      <section style={SECTION} id="catalogue">
+        <Wrap>
+          <Head
+            label="Full catalogue"
+            title="Everything, nothing locked"
+            deck="No premium gate and no sign-in wall. Every entry lists its dosage, timing, evidence and typical India price."
+            size="clamp(2rem,5vw,3.6rem)"
+          />
+
+          <div style={{ margin: "clamp(24px,3.4vw,38px) 0" }}>
+            <Idx label="Filter by category" />
+            <div className={k.chips}>
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={catFilter === c ? `${k.chip} ${k.chipOn}` : k.chip}
+                  aria-pressed={catFilter === c}
+                  onClick={() => setCatFilter(c)}
+                >
+                  {c === "all" ? "All" : CATEGORY_META[c].label}
+                </button>
               ))}
             </div>
           </div>
-        </section>
 
-        {/* ── Goal-based stack preview ── */}
-        <section style={{ padding: "60px 24px", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, fontFamily: "inherit", marginBottom: 12 }}>
-              Your Goal · Your Stack
-            </p>
-            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>
-              Personalised for what you're working toward
-            </h2>
-            <p style={{ fontFamily: "inherit", fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0 }}>
-              Sign in to take the full quiz and get a stack tuned to your diet, budget, and challenges
-            </p>
-          </div>
-
-          {/* Goal tabs */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 36, flexWrap: "wrap" }}>
-            {GOALS.map((goal) => {
-              const meta = GOAL_META[goal];
-              const active = goal === activeGoal;
-              return (
-                <button key={goal} onClick={() => setActiveGoal(goal)} style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "0 18px", minHeight: 44, borderRadius: 0,
-                  background: active ? meta.accent : "transparent",
-                  border: `1px solid ${active ? meta.accent : "rgba(255,255,255,0.12)"}`,
-                  color: active ? "#000" : "#c9c9c2",
-                  fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 14, cursor: "pointer",
-                  letterSpacing: "0.04em", textTransform: "uppercase",
-                  transition: "border-color 0.18s ease, background 0.18s ease, color 0.18s ease",
-                }}>
-                  <span>{meta.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Stack cards — clickable, full detail */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
-            {previewStack.map((supp) => (
-              <SupplementCard key={supp.id} supp={supp} onClick={() => setSelectedSupp(supp)} />
-            ))}
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <Link
-              href={isLoggedIn ? "/dashboard/supplements" : "/auth/signin?callbackUrl=/dashboard/supplements"}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#a3e635", fontFamily: "inherit", fontWeight: 600, fontSize: 13, textDecoration: "none" }}
-            >
-              Take the full quiz to personalise your stack <ChevronRight size={14} />
-            </Link>
-          </div>
-        </section>
-
-        {/* ── Full Catalogue — ALL 50, no locks ── */}
-        <section id="catalogue" style={{ padding: "60px 24px 80px", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
-              <div>
-                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, fontFamily: "inherit", margin: "0 0 8px" }}>
-                  Full Catalogue
-                </p>
-                <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
-                  {filteredCatalogue.length} supplement{filteredCatalogue.length !== 1 ? "s" : ""}, tap any for full details
-                </h2>
-              </div>
+          {filtered.length === 0 ? (
+            <p style={body(15.5)}>Nothing in this category yet.</p>
+          ) : (
+            <div className={s.grid}>
+              {filtered.map((x) => (
+                <SupplementCard key={x.id} supp={x} onClick={() => setSelected(x)} />
+              ))}
             </div>
+          )}
+        </Wrap>
+      </section>
 
-            {/* Category filter tabs */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {CATEGORIES.map((cat) => {
-                const active = cat === catFilter;
-                const meta = cat === "all" ? null : CATEGORY_META[cat];
-                const accent = meta?.accent ?? "#a3e635";
-                return (
-                  <button key={cat} onClick={() => setCatFilter(cat)} style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "0 14px", minHeight: 44, borderRadius: 0,
-                    background: active ? `${accent}15` : "transparent",
-                    border: `1px solid ${active ? `${accent}55` : "rgba(255,255,255,0.12)"}`,
-                    color: active ? accent : "#c9c9c2",
-                    fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 13,
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                    cursor: "pointer", transition: "border-color 0.15s ease, background 0.15s ease, color 0.15s ease",
-                  }}>
-                    <span>{cat === "all" ? "All" : meta?.label ?? cat}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 10 }}>
-            {filteredCatalogue.map((supp) => (
-              <SupplementCard key={supp.id} supp={supp} onClick={() => setSelectedSupp(supp)} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Why FitFuel Supplements ── */}
-        <section style={{ padding: "40px 24px 60px", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 2.5vw, 2rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
-              Why supplement with FitFuel?
-            </h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-            {/* Emoji icons removed: DESIGN.md rejects them on sight, and a
-                🎯/🚚/🔬 row on top of a 3-up card grid is the exact template
-                the house style exists to avoid. A numbered rule carries the
-                same structure without the decoration. */}
+      {/* ── how we pick ────────────────────────────────────────────────── */}
+      <section style={SECTION}>
+        <Wrap>
+          <Head
+            label="How we pick"
+            title="Three rules for this list"
+            size="clamp(1.9rem,4.6vw,3.2rem)"
+            max="16ch"
+          />
+          <Tiles cols={3} style={{ marginTop: "clamp(26px,3.6vw,42px)" }}>
             {[
-              { title: "Goal-matched, not generic", body: "Your stack is built around your specific goal: muscle gain, fat loss, or peak performance. Each recommendation includes clinical dosage and timing." },
-              { title: "Delivered with your meals", body: "No extra orders. Your supplements arrive packaged with your daily FitFuel meal box, so they are convenient, consistent and trackable." },
-              { title: "Science-backed, no fluff", body: "Every supplement is backed by clinical research. We include study counts, effect sizes and India-specific availability, so you know exactly what and why." },
-              { title: "India-first pricing", body: "Every supplement includes INR pricing estimates and local availability: widely available, available, limited, or import only." },
-            ].map(({ title, body }, i) => (
-              <div key={title} style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, padding: 24 }}>
-                <div aria-hidden style={{ fontFamily: "var(--ff-cond)", fontWeight: 800, fontSize: 12.5, letterSpacing: "0.28em", color: "#a3e635", marginBottom: 14 }}>
-                  {String(i + 1).padStart(2, "0")}
-                </div>
-                <p style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 800, color: "#fff", fontFamily: "var(--ff-cond)", textTransform: "uppercase", letterSpacing: "-0.01em" }}>{title}</p>
-                <p style={{ margin: 0, fontSize: 13.5, color: "#9a9a94", fontFamily: "inherit", lineHeight: 1.7 }}>{body}</p>
-              </div>
+              {
+                t: "Evidence first",
+                d: "Every entry carries its evidence tier and study count. Where the research is thin, the page says so rather than leaving it out.",
+              },
+              {
+                t: "Clinical dosages",
+                d: "The dose listed is the one the studies used, not the one that fits a claim on a tub.",
+              },
+              {
+                t: "India pricing",
+                d: "Rupee ranges and local availability, because a US price beside an import-only note is not a recommendation.",
+              },
+            ].map((x) => (
+              <Tile key={x.t}>
+                <span style={label()}>{x.t}</span>
+                <p style={{ ...body(14.5), marginTop: 2 }}>{x.d}</p>
+              </Tile>
             ))}
-          </div>
-        </section>
+          </Tiles>
+        </Wrap>
+      </section>
 
-        {/* ── CTA Banner ── */}
-        <section style={{ padding: "20px 24px 80px", maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ background: "rgba(163,230,53,0.05)", border: "1px solid rgba(163,230,53,0.15)", borderRadius: 0, padding: "48px 32px" }}>
-            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 800, color: "#fff", margin: "0 0 12px" }}>
-              Ready to fuel smarter?
-            </h2>
-            <p style={{ fontFamily: "inherit", fontSize: 14, color: "rgba(255,255,255,0.4)", margin: "0 0 28px", lineHeight: 1.6 }}>
-              Sign in to take the personalised quiz and get a stack built around your goal, training frequency, diet, and budget.
-            </p>
-            <Link
-              href={isLoggedIn ? "/dashboard/supplements" : "/auth/signin?callbackUrl=/dashboard/supplements"}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                background: "#a3e635", color: "#000",
-                fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 14,
-                padding: "14px 28px", borderRadius: 14, textDecoration: "none",
-                boxShadow: "0 6px 24px rgba(163,230,53,0.25)",
-              }}
-            >
-              {isLoggedIn ? "Go to My Dashboard" : "Sign In to Get Your Stack"} <ArrowRight size={16} />
-            </Link>
-          </div>
-        </section>
-      </div>
+      <Band
+        title="Food first, supplements second"
+        body="Supplements fill gaps. The plan closes them. Start with meals cooked to your macros, then add only what your intake is actually missing."
+        href="/plans"
+        cta="See the plans"
+        secondary={{ href: "/medical-disclaimer", label: "Medical disclaimer" }}
+      />
 
-      {/* Detail modal */}
-      {selectedSupp && (
-        <SupplementModal supp={selectedSupp} onClose={() => setSelectedSupp(null)} />
-      )}
-    </>
+      {selected && <SupplementModal supp={selected} onClose={() => setSelected(null)} />}
+    </Shell>
   );
 }

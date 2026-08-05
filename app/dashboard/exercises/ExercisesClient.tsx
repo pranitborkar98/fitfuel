@@ -141,7 +141,7 @@ function CatChip({ category }: { category: string }) {
         border: `1px solid ${c.accent}30`,
         borderRadius: 6,
         padding: "2px 7px",
-        fontFamily: "DM Sans, sans-serif",
+        fontFamily: "var(--font-archivo), sans-serif",
       }}
     >
       {c.label}
@@ -230,7 +230,7 @@ function ExerciseCard({
           margin: 0,
           marginBottom: 4,
           lineHeight: 1.35,
-          fontFamily: "DM Sans, sans-serif",
+          fontFamily: "var(--font-archivo), sans-serif",
           overflow: "hidden",
           display: "-webkit-box",
           WebkitLineClamp: 2,
@@ -239,13 +239,13 @@ function ExerciseCard({
           {exercise.name}
         </p>
         {exercise.primaryMuscles.length > 0 && (
-          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", margin: 0, fontFamily: "DM Sans, sans-serif", textTransform: "capitalize" }}>
+          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", margin: 0, fontFamily: "var(--font-archivo), sans-serif", textTransform: "capitalize" }}>
             {exercise.primaryMuscles.slice(0, 2).join(" · ")}
             {exercise.primaryMuscles.length > 2 && ` +${exercise.primaryMuscles.length - 2}`}
           </p>
         )}
         {exercise.equipment && (
-          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", margin: "5px 0 0", fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", margin: "5px 0 0", fontFamily: "var(--font-archivo), sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             {exercise.equipment}
           </p>
         )}
@@ -368,12 +368,12 @@ function ExerciseModal({
         <div style={{ padding: "0 22px 28px", marginTop: -8, position: "relative", zIndex: 1 }}>
           {/* Title row */}
           <div style={{ marginBottom: 16 }}>
-            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
+            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 20, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
               {detail.name}
             </h2>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <CatChip category={detail.category} />
-              <span style={{ fontSize: 11, color: lvl.color, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>
+              <span style={{ fontSize: 11, color: lvl.color, fontWeight: 600, fontFamily: "var(--font-archivo), sans-serif" }}>
                 {lvl.label}
               </span>
             </div>
@@ -389,7 +389,7 @@ function ExerciseModal({
               <span key={label as string} style={{
                 fontSize: 11, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)",
                 border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 10px",
-                fontFamily: "DM Sans, sans-serif", textTransform: "capitalize",
+                fontFamily: "var(--font-archivo), sans-serif", textTransform: "capitalize",
               }}>
                 {label}
               </span>
@@ -398,7 +398,7 @@ function ExerciseModal({
 
           {/* Muscles */}
           <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px", marginBottom: 18 }}>
-            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 10px", fontFamily: "DM Sans, sans-serif" }}>
+            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
               Primary Muscles
             </p>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -408,7 +408,7 @@ function ExerciseModal({
                   color: cat?.accent ?? "#a3e635",
                   border: `1px solid ${cat?.accent ?? "#a3e635"}30`,
                   borderRadius: 20, padding: "3px 10px", textTransform: "capitalize",
-                  fontFamily: "DM Sans, sans-serif", fontWeight: 500,
+                  fontFamily: "var(--font-archivo), sans-serif", fontWeight: 500,
                 }}>
                   {m}
                 </span>
@@ -416,7 +416,7 @@ function ExerciseModal({
             </div>
             {detail.secondaryMuscles.length > 0 && (
               <>
-                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "14px 0 10px", fontFamily: "DM Sans, sans-serif" }}>
+                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "14px 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
                   Secondary
                 </p>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -425,7 +425,7 @@ function ExerciseModal({
                       fontSize: 11, background: "rgba(255,255,255,0.04)",
                       color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.07)",
                       borderRadius: 20, padding: "3px 10px", textTransform: "capitalize",
-                      fontFamily: "DM Sans, sans-serif",
+                      fontFamily: "var(--font-archivo), sans-serif",
                     }}>
                       {m}
                     </span>
@@ -437,7 +437,7 @@ function ExerciseModal({
 
           {/* Instructions */}
           <div style={{ marginBottom: 20 }}>
-            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 14px", fontFamily: "DM Sans, sans-serif" }}>
+            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 14px", fontFamily: "var(--font-archivo), sans-serif" }}>
               Instructions
             </p>
             {loading ? (
@@ -457,11 +457,11 @@ function ExerciseModal({
                       color: cat?.accent ?? "#a3e635",
                       fontSize: 10, fontWeight: 700,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "DM Sans, sans-serif",
+                      fontFamily: "var(--font-archivo), sans-serif",
                     }}>
                       {i + 1}
                     </span>
-                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
                       {step}
                     </p>
                   </li>
@@ -482,7 +482,7 @@ function ExerciseModal({
                 padding: "14px",
                 fontSize: 13,
                 fontWeight: 700,
-                fontFamily: "Syne, sans-serif",
+                fontFamily: "var(--ff-cond)",
                 letterSpacing: "0.05em",
                 cursor: "pointer",
                 transition: "background 0.15s",
@@ -589,7 +589,7 @@ function BrowseTab({
               padding: "10px 36px 10px 38px",
               fontSize: 13,
               color: "#fff",
-              fontFamily: "DM Sans, sans-serif",
+              fontFamily: "var(--font-archivo), sans-serif",
               outline: "none",
               boxSizing: "border-box",
             }}
@@ -614,7 +614,7 @@ function BrowseTab({
             color: showFilters || hasFilters ? "#a3e635" : "rgba(255,255,255,0.4)",
             cursor: "pointer",
             fontSize: 13,
-            fontFamily: "DM Sans, sans-serif",
+            fontFamily: "var(--font-archivo), sans-serif",
             fontWeight: 500,
             position: "relative",
           }}
@@ -648,7 +648,7 @@ function BrowseTab({
               { label: "Muscle",   value: muscle,   set: setMuscle,   options: muscles },
             ].map(({ label, value, set, options }) => (
               <div key={label}>
-                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 6px", fontFamily: "DM Sans, sans-serif" }}>
+                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 6px", fontFamily: "var(--font-archivo), sans-serif" }}>
                   {label}
                 </p>
                 <select
@@ -664,7 +664,7 @@ function BrowseTab({
                     color: "rgba(255,255,255,0.7)",
                     outline: "none",
                     appearance: "none",
-                    fontFamily: "DM Sans, sans-serif",
+                    fontFamily: "var(--font-archivo), sans-serif",
                     cursor: "pointer",
                   }}
                 >
@@ -679,7 +679,7 @@ function BrowseTab({
           {hasFilters && (
             <button
               onClick={() => { setCategory(""); setLevel(""); setEquip(""); setMuscle(""); setOffset(0); }}
-              style={{ marginTop: 12, width: "100%", background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}
+              style={{ marginTop: 12, width: "100%", background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif" }}
             >
               Clear all filters
             </button>
@@ -689,11 +689,11 @@ function BrowseTab({
 
       {/* Meta row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
           {loading ? "Searching…" : `${total.toLocaleString()} result${total !== 1 ? "s" : ""}`}
         </p>
         {totalPages > 1 && (
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
             {currentPage} / {totalPages}
           </p>
         )}
@@ -709,8 +709,8 @@ function BrowseTab({
       ) : exercises.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: "rgba(255,255,255,0.18)" }}>
           <Dumbbell size={36} style={{ margin: "0 auto 12px" }} />
-          <p style={{ fontSize: 14, margin: 0, fontFamily: "DM Sans, sans-serif" }}>No exercises found</p>
-          <p style={{ fontSize: 12, margin: "4px 0 0", color: "rgba(255,255,255,0.12)", fontFamily: "DM Sans, sans-serif" }}>Try adjusting your filters</p>
+          <p style={{ fontSize: 14, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>No exercises found</p>
+          <p style={{ fontSize: 12, margin: "4px 0 0", color: "rgba(255,255,255,0.12)", fontFamily: "var(--font-archivo), sans-serif" }}>Try adjusting your filters</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
@@ -745,7 +745,7 @@ function BrowseTab({
           >
             <ChevronLeft size={15} />
           </button>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif", fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums" }}>
             {currentPage} / {totalPages}
           </span>
           <button
@@ -797,7 +797,7 @@ function SetRow({
     color: "#fff",
     textAlign: "center" as const,
     outline: "none",
-    fontFamily: "DM Sans, sans-serif",
+    fontFamily: "var(--font-archivo), sans-serif",
   };
 
   return (
@@ -883,14 +883,14 @@ function WorkoutExerciseCard({
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "DM Sans, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "var(--font-archivo), sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {we.exercise.name}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
             <div style={{ flex: 1, maxWidth: 80, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ width: `${progress * 100}%`, height: "100%", background: "#a3e635", borderRadius: 2, transition: "width 0.3s" }} />
             </div>
-            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", fontFamily: "DM Sans, sans-serif" }}>
+            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-archivo), sans-serif" }}>
               {sets.length === 0 ? "No sets" : `${completedSets}/${sets.length}`}
             </p>
           </div>
@@ -904,7 +904,7 @@ function WorkoutExerciseCard({
       {!collapsed && (
         <div style={{ padding: "0 12px 12px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           {sets.length > 0 && (
-            <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 2, paddingLeft: 26, fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "DM Sans, sans-serif" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 2, paddingLeft: 26, fontSize: 9, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "var(--font-archivo), sans-serif" }}>
               {isTimeBase ? <span style={{ width: 60, textAlign: "center" }}>Duration</span> : (
                 <>
                   <span style={{ width: 60, textAlign: "center" }}>Weight</span>
@@ -926,7 +926,7 @@ function WorkoutExerciseCard({
               background: "none",
               border: "1px dashed rgba(255,255,255,0.08)",
               borderRadius: 10, fontSize: 12, color: "rgba(255,255,255,0.22)",
-              cursor: "pointer", fontFamily: "DM Sans, sans-serif",
+              cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif",
             }}
           >
             <Plus size={13} /> Add Set
@@ -1014,7 +1014,7 @@ function WorkoutTab({
   const btnPrimary: React.CSSProperties = {
     background: "#a3e635", color: "#000", border: "none", borderRadius: 14,
     padding: "14px", fontSize: 13, fontWeight: 700,
-    fontFamily: "Syne, sans-serif", letterSpacing: "0.04em",
+    fontFamily: "var(--ff-cond)", letterSpacing: "0.04em",
     cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
   };
 
@@ -1024,10 +1024,10 @@ function WorkoutTab({
         <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
           <Zap size={32} color="#a3e635" />
         </div>
-        <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
+        <h3 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
           Start a Workout
         </h3>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", margin: "0 0 28px", maxWidth: 280, lineHeight: 1.6, fontFamily: "DM Sans, sans-serif" }}>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", margin: "0 0 28px", maxWidth: 280, lineHeight: 1.6, fontFamily: "var(--font-archivo), sans-serif" }}>
           Log exercises, track sets and reps, and crush your goals.
         </p>
         <input
@@ -1041,7 +1041,7 @@ function WorkoutTab({
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 14, padding: "12px 16px",
             fontSize: 13, color: "#fff",
-            fontFamily: "DM Sans, sans-serif",
+            fontFamily: "var(--font-archivo), sans-serif",
             textAlign: "center", outline: "none", marginBottom: 14, boxSizing: "border-box",
           }}
         />
@@ -1063,8 +1063,8 @@ function WorkoutTab({
             <ArrowLeft size={15} />
           </button>
           <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#fff", fontFamily: "Syne, sans-serif" }}>Add Exercise</p>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>{addedIds.size} added</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#fff", fontFamily: "var(--ff-cond)" }}>Add Exercise</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif" }}>{addedIds.size} added</p>
           </div>
         </div>
         <BrowseTab
@@ -1085,8 +1085,8 @@ function WorkoutTab({
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(163,230,53,0.05) 0%, transparent 60%)", pointerEvents: "none" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "Syne, sans-serif" }}>{activeSession.name ?? "Workout"}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>In progress</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "var(--ff-cond)" }}>{activeSession.name ?? "Workout"}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif" }}>In progress</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 20, padding: "6px 12px" }}>
             <Clock size={12} color="#a3e635" />
@@ -1100,8 +1100,8 @@ function WorkoutTab({
             { val: `~${Math.round(elapsed / 60 * 5 + totalCompletedSets * 3)}`, label: "kcal est." },
           ].map(({ val, label }) => (
             <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "10px 0", textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "Syne, sans-serif" }}>{val}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</p>
+              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "var(--ff-cond)" }}>{val}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-archivo), sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</p>
             </div>
           ))}
         </div>
@@ -1112,7 +1112,7 @@ function WorkoutTab({
         {workoutExercises.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.18)" }}>
             <Target size={28} style={{ margin: "0 auto 8px" }} />
-            <p style={{ margin: 0, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>No exercises yet</p>
+            <p style={{ margin: 0, fontSize: 13, fontFamily: "var(--font-archivo), sans-serif" }}>No exercises yet</p>
           </div>
         ) : workoutExercises.map((we) => (
           <WorkoutExerciseCard
@@ -1130,7 +1130,7 @@ function WorkoutTab({
           padding: "12px", background: "none",
           border: "1px dashed rgba(255,255,255,0.08)",
           borderRadius: 14, fontSize: 13, color: "rgba(255,255,255,0.28)",
-          cursor: "pointer", fontFamily: "DM Sans, sans-serif", marginBottom: 10,
+          cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif", marginBottom: 10,
         }}
       >
         <Plus size={15} /> Add Exercise
@@ -1166,8 +1166,8 @@ function HistoryTab() {
     return (
       <div style={{ textAlign: "center", padding: "80px 0", color: "rgba(255,255,255,0.18)" }}>
         <TrendingUp size={36} style={{ margin: "0 auto 12px" }} />
-        <p style={{ margin: 0, fontSize: 14, fontFamily: "DM Sans, sans-serif" }}>No workouts yet</p>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.12)", fontFamily: "DM Sans, sans-serif" }}>Complete your first workout to see history</p>
+        <p style={{ margin: 0, fontSize: 14, fontFamily: "var(--font-archivo), sans-serif" }}>No workouts yet</p>
+        <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.12)", fontFamily: "var(--font-archivo), sans-serif" }}>Complete your first workout to see history</p>
       </div>
     );
   }
@@ -1183,7 +1183,7 @@ function HistoryTab() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {Object.entries(grouped).map(([date, daySessions]) => (
         <div key={date}>
-          <p style={{ margin: "0 0 10px", fontSize: 9, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 700, fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+          <p style={{ margin: "0 0 10px", fontSize: 9, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 700, fontFamily: "var(--font-archivo), sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
             <Calendar size={11} />
             {new Date(date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
           </p>
@@ -1198,8 +1198,8 @@ function HistoryTab() {
                     <Activity size={16} color="#a3e635" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "DM Sans, sans-serif" }}>{s.name ?? "Workout"}</p>
-                    <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "DM Sans, sans-serif" }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "var(--font-archivo), sans-serif" }}>{s.name ?? "Workout"}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif" }}>
                       {s.exercises.length} exercise{s.exercises.length !== 1 ? "s" : ""}
                       {s.durationMins ? ` · ${formatDuration(s.durationMins)}` : ""}
                     </p>
@@ -1208,9 +1208,9 @@ function HistoryTab() {
                     <div style={{ textAlign: "right", marginRight: 6 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#fb923c", justifyContent: "flex-end" }}>
                         <Flame size={12} />
-                        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif" }}>{s.caloriesBurned}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--ff-cond)" }}>{s.caloriesBurned}</span>
                       </div>
-                      <p style={{ margin: 0, fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: "DM Sans, sans-serif" }}>kcal</p>
+                      <p style={{ margin: 0, fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: "var(--font-archivo), sans-serif" }}>kcal</p>
                     </div>
                   ) : null}
                   <ChevronDown size={15} color="rgba(255,255,255,0.2)" style={{ transform: expanded === s.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -1229,8 +1229,8 @@ function HistoryTab() {
                               <Dumbbell size={12} color="rgba(255,255,255,0.2)" />
                             </div>
                           )}
-                          <p style={{ flex: 1, margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{we.exercise.name}</p>
-                          <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.22)", fontFamily: "DM Sans, sans-serif" }}>{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
+                          <p style={{ flex: 1, margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", fontWeight: 500, fontFamily: "var(--font-archivo), sans-serif" }}>{we.exercise.name}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.22)", fontFamily: "var(--font-archivo), sans-serif" }}>{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
                         </div>
                       );
                     })}
@@ -1296,10 +1296,10 @@ export default function ExercisesClient({
               <Dumbbell size={18} color="#a3e635" />
             </div>
             <div>
-              <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
+              <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
                 Exercise Library
               </h1>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "DM Sans, sans-serif" }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
                 {initialTotal.toLocaleString()} exercises · browse, log, track
               </p>
             </div>
@@ -1328,7 +1328,7 @@ export default function ExercisesClient({
                 border: "none",
                 background: tab === t.id ? "#a3e635" : "transparent",
                 color: tab === t.id ? "#000" : "rgba(255,255,255,0.3)",
-                fontFamily: tab === t.id ? "Syne, sans-serif" : "DM Sans, sans-serif",
+                fontFamily: tab === t.id ? "var(--ff-cond)" : "var(--font-archivo), sans-serif",
                 fontSize: 13,
                 fontWeight: 700,
                 cursor: "pointer",

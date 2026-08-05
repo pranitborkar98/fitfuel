@@ -52,14 +52,6 @@ export interface Supplement {
   studyCount: string;
   keyStudyFindings: string[];     // 2-3 specific % outcomes from studies
   goals: SupplementGoal[];
-  /**
-   * Kept on the type so per-item theming stays possible, but every entry is
-   * now lime. This field previously held twelve different hues (purple, sky,
-   * orange, amber, pink, indigo, slate...) which rendered as a twelve-colour
-   * palette on /supplements, against DESIGN.md's lime-only rule. Category is
-   * carried by the label and the section it sits in, not by hue.
-   */
-  accent: string;
   priceRange: string;
   valueRating: ValueRating;       // bang per rupee
   popular: boolean;
@@ -115,7 +107,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Post-workout whey increased 24hr MPS by 31% compared to carbohydrate alone",
     ],
     goals: ["muscle_gain", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹1,500–2,500/mo",
     valueRating: "exceptional",
     popular: true,
@@ -162,7 +153,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Faster plasma amino acid peak (Tmax 45 vs. 90 min) compared to casein",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹2,000–3,500/mo",
     valueRating: "good",
     popular: false,
@@ -210,7 +200,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Casein outperformed whey for overnight leucine balance in 24hr protein turnover studies",
     ],
     goals: ["muscle_gain"],
-    accent: "#a3e635",
     priceRange: "₹1,800–2,800/mo",
     valueRating: "good",
     popular: false,
@@ -257,7 +246,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Plant protein blends reduce LDL cholesterol vs. animal protein as secondary benefit",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹1,200–2,200/mo",
     valueRating: "good",
     popular: false,
@@ -304,7 +292,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Egg white protein preserved lean mass equally to whey during 12-week caloric restriction study",
     ],
     goals: ["muscle_gain", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹2,000–3,000/mo",
     valueRating: "moderate",
     popular: false,
@@ -361,7 +348,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Cognitive study (Rae et al., 2003): 5g/day for 6 weeks improved working memory by 15% in vegetarians",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "exceptional",
     popular: true,
@@ -416,7 +402,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Beta-alanine (3.2g/day) increased time to exhaustion in HIIT by 12.6% after 4 weeks",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹800–1,500/mo",
     valueRating: "moderate",
     popular: false,
@@ -472,7 +457,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Caffeine + L-theanine improved sustained attention and reaction time more than either alone",
     ],
     goals: ["performance", "weight_loss"],
-    accent: "#a3e635",
     priceRange: "₹200–400/mo",
     valueRating: "exceptional",
     popular: true,
@@ -521,7 +505,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Beta-alanine improved 2,000m rowing performance by 4.3s on average",
     ],
     goals: ["performance", "muscle_gain"],
-    accent: "#a3e635",
     priceRange: "₹400–700/mo",
     valueRating: "good",
     popular: false,
@@ -567,7 +550,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "However, EAAs produce greater MPS than BCAAs alone when matched doses are compared",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹600–1,200/mo",
     valueRating: "moderate",
     popular: false,
@@ -613,7 +595,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Citrulline reduces blood ammonia during exercise by ~15%, reducing fatigue",
     ],
     goals: ["performance", "muscle_gain"],
-    accent: "#a3e635",
     priceRange: "₹500–900/mo",
     valueRating: "good",
     popular: false,
@@ -659,7 +640,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "10g EAAs post-workout produced equivalent MPS to 25g whey protein",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹800–1,500/mo",
     valueRating: "moderate",
     popular: false,
@@ -707,7 +687,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "HMB reduced muscle loss during 10 days of bed rest by 58% vs. placebo in elderly subjects",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹600–1,200/mo",
     valueRating: "moderate",
     popular: false,
@@ -757,7 +736,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Effective in 800m running, rowing, swimming, and repeated sprint sports",
     ],
     goals: ["performance"],
-    accent: "#a3e635",
     priceRange: "₹50–150/mo",
     valueRating: "exceptional",
     popular: false,
@@ -807,7 +785,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Beetroot supplementation improved 10km running time by 48 seconds on average",
     ],
     goals: ["performance"],
-    accent: "#a3e635",
     priceRange: "₹300–600/mo",
     valueRating: "good",
     popular: false,
@@ -865,7 +842,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Meta-analysis (2016): omega-3 reduced triglycerides by 15–20% and improved endothelial function",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "exceptional",
     popular: true,
@@ -918,7 +894,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Athletes supplementing magnesium reduced cortisol response to exercise by 23%",
     ],
     goals: ["muscle_gain", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹400–700/mo",
     valueRating: "exceptional",
     popular: false,
@@ -965,7 +940,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Glutamine + carbohydrate combination accelerated glycogen resynthesis after depletion",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹500–900/mo",
     valueRating: "good",
     popular: false,
@@ -1015,7 +989,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Curcumin reduced CRP (inflammatory marker) by 16–58% across multiple meta-analyses",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "good",
     popular: false,
@@ -1062,7 +1035,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Tart cherry reduced post-exercise CK (muscle damage) by 22% vs. placebo in cyclists",
     ],
     goals: ["performance", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹600–1,000/mo",
     valueRating: "moderate",
     popular: false,
@@ -1112,7 +1084,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "1.8g/day NAC reduced muscle fatigue markers during exhaustive cycling",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹300–600/mo",
     valueRating: "good",
     popular: false,
@@ -1159,7 +1130,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "In heart failure, 300mg/day CoQ10 reduced major adverse cardiovascular events by 43% (Q-SYMBIO trial)",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹500–1,200/mo",
     valueRating: "moderate",
     popular: false,
@@ -1215,7 +1185,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "4,000 IU/day reduced cold and flu incidence by 42% in deficient individuals",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹300–500/mo",
     valueRating: "exceptional",
     popular: true,
@@ -1266,7 +1235,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Vitamin C supplementation increases non-heme iron absorption from plant foods by 67%",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹150–300/mo",
     valueRating: "exceptional",
     popular: false,
@@ -1314,7 +1282,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "High-dose B12 (1mg/day) reduced homocysteine by 33% in vegans, cardiovascular risk marker normalisation",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹150–300/mo",
     valueRating: "exceptional",
     popular: false,
@@ -1365,7 +1332,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Consistent multivitamin use in women associated with reduced iron deficiency anaemia risk",
     ],
     goals: ["muscle_gain", "weight_loss", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹300–600/mo",
     valueRating: "good",
     popular: true,
@@ -1420,7 +1386,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Athletes with low serum zinc show significantly impaired immune function vs. zinc-sufficient controls",
     ],
     goals: ["muscle_gain", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹200–400/mo",
     valueRating: "exceptional",
     popular: false,
@@ -1473,7 +1438,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "53% of Indian women of reproductive age are anaemic (NFHS-5, 2021)",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹150–300/mo",
     valueRating: "exceptional",
     popular: false,
@@ -1523,7 +1487,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Note: benefits are most pronounced in zinc/magnesium-deficient athletes; less clear in replete individuals",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹300–600/mo",
     valueRating: "good",
     popular: false,
@@ -1569,7 +1532,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Cramping athletes showed lower serum sodium and magnesium than non-cramping matched controls",
     ],
     goals: ["performance", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹200–500/mo",
     valueRating: "good",
     popular: false,
@@ -1626,7 +1588,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Ashwagandha improved VO2 max by 7.5% in elite cyclists after 8 weeks (Choudhary et al., 2015)",
     ],
     goals: ["muscle_gain", "balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "exceptional",
     popular: true,
@@ -1678,7 +1639,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "4-week trial reduced cortisol area-under-curve during acute stress by 24%",
     ],
     goals: ["performance", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹400–700/mo",
     valueRating: "good",
     popular: false,
@@ -1724,7 +1684,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "L-theanine reduced anxiety during psychological stress tasks by 45% vs. placebo",
     ],
     goals: ["performance", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹300–500/mo",
     valueRating: "exceptional",
     popular: false,
@@ -1770,7 +1729,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "NGF synthesis increased by 60% in vitro in rat cortical neurons with erinacine A exposure",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹500–900/mo",
     valueRating: "moderate",
     popular: false,
@@ -1821,7 +1779,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "400mg/day reduced cortisol by 16% and increased testosterone by 37% in moderately stressed adults (Talbott et al., 2013)",
     ],
     goals: ["muscle_gain", "performance"],
-    accent: "#a3e635",
     priceRange: "₹500–1,000/mo",
     valueRating: "moderate",
     popular: false,
@@ -1871,7 +1828,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Alpha-GPC enhanced power output during bench press vs. placebo in double-blind crossover",
     ],
     goals: ["performance", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹500–1,000/mo",
     valueRating: "moderate",
     popular: false,
@@ -1925,7 +1881,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "ALCAR (acetyl form) improved cognitive function in elderly adults independently of physical performance",
     ],
     goals: ["weight_loss"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "moderate",
     popular: true,
@@ -1974,7 +1929,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "CLA combined with exercise produced greater fat loss than exercise alone (0.45kg additional over 12 weeks)",
     ],
     goals: ["weight_loss"],
-    accent: "#a3e635",
     priceRange: "₹500–900/mo",
     valueRating: "moderate",
     popular: false,
@@ -2024,7 +1978,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Green tea extract improved cardiovascular risk markers (LDL, endothelial function) in multiple RCTs",
     ],
     goals: ["weight_loss"],
-    accent: "#a3e635",
     priceRange: "₹300–600/mo",
     valueRating: "good",
     popular: false,
@@ -2075,7 +2028,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Berberine reduced body weight by 5lbs and waist circumference by 2cm vs. placebo in 12-week RCT",
     ],
     goals: ["weight_loss", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹500–900/mo",
     valueRating: "good",
     popular: false,
@@ -2126,7 +2078,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Collagen supplementation improved skin elasticity by 12% and reduced wrinkles vs. placebo",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹600–1,200/mo",
     valueRating: "moderate",
     popular: false,
@@ -2177,7 +2128,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Meta-analysis: glucosamine sulfate reduced pain VAS by 28% vs. placebo in knee OA",
     ],
     goals: ["balanced"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "good",
     popular: false,
@@ -2226,7 +2176,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "MSM combined with glucosamine showed additive effect on pain reduction vs. either alone",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹300–600/mo",
     valueRating: "good",
     popular: false,
@@ -2279,7 +2228,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Probiotic supplementation reduced GI distress during ultramarathon running by 40%",
     ],
     goals: ["balanced", "muscle_gain"],
-    accent: "#a3e635",
     priceRange: "₹400–800/mo",
     valueRating: "good",
     popular: false,
@@ -2330,7 +2278,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "FDA authorises health claim: adequate fibre from psyllium may reduce heart disease risk",
     ],
     goals: ["weight_loss", "balanced"],
-    accent: "#a3e635",
     priceRange: "₹100–200/mo",
     valueRating: "exceptional",
     popular: false,
@@ -2388,7 +2335,6 @@ export const SUPPLEMENTS: Supplement[] = [
       "Nightly melatonin in elderly adults improved sleep efficiency from 78% to 86% over 4 weeks",
     ],
     goals: ["balanced", "performance"],
-    accent: "#a3e635",
     priceRange: "₹200–400/mo",
     valueRating: "good",
     popular: false,
@@ -2477,44 +2423,59 @@ export function getSupplementById(id: string): Supplement | undefined {
 
 export const CATEGORY_META: Record<
   SupplementCategory,
-  { label: string; accent: string; emoji: string; description: string }
+  { label: string; description: string }
 > = {
-  protein:     { label: "Protein",            accent: "#a3e635", emoji: "🥛", description: "Build and repair muscle tissue" },
-  performance: { label: "Performance",        accent: "#a3e635", emoji: "⚡", description: "Enhance strength, power, and endurance" },
-  recovery:    { label: "Recovery",           accent: "#a3e635", emoji: "🔄", description: "Faster repair, less soreness" },
-  health:      { label: "Health",             accent: "#a3e635", emoji: "💊", description: "General wellbeing and longevity" },
-  vitamins:    { label: "Vitamins",           accent: "#a3e635", emoji: "☀️", description: "Essential micronutrients for function" },
-  minerals:    { label: "Minerals",           accent: "#a3e635", emoji: "🔩", description: "Trace minerals for hormones and health" },
-  adaptogens:  { label: "Adaptogens",         accent: "#a3e635", emoji: "🌿", description: "Stress resilience and mental performance" },
-  joints:      { label: "Joints & Structure", accent: "#a3e635", emoji: "🦴", description: "Cartilage, tendons, and connective tissue" },
-  gut:         { label: "Gut Health",         accent: "#a3e635", emoji: "🦠", description: "Microbiome, digestion, and immunity" },
-  weight:      { label: "Weight Management",  accent: "#a3e635", emoji: "⚖️", description: "Fat loss support and metabolism" },
-  hormones:    { label: "Hormones",           accent: "#a3e635", emoji: "🧪", description: "Testosterone and hormonal balance" },
-  cognitive:   { label: "Cognitive",          accent: "#a3e635", emoji: "🧠", description: "Focus, memory, and brain health" },
-  sleep:       { label: "Sleep",              accent: "#a3e635", emoji: "🌛", description: "Sleep quality and circadian health" },
+  protein:     { label: "Protein", description: "Build and repair muscle tissue" },
+  performance: { label: "Performance", description: "Enhance strength, power, and endurance" },
+  recovery:    { label: "Recovery", description: "Faster repair, less soreness" },
+  health:      { label: "Health", description: "General wellbeing and longevity" },
+  vitamins:    { label: "Vitamins", description: "Essential micronutrients for function" },
+  minerals:    { label: "Minerals", description: "Trace minerals for hormones and health" },
+  adaptogens:  { label: "Adaptogens", description: "Stress resilience and mental performance" },
+  joints:      { label: "Joints & Structure", description: "Cartilage, tendons, and connective tissue" },
+  gut:         { label: "Gut Health", description: "Microbiome, digestion, and immunity" },
+  weight:      { label: "Weight Management", description: "Fat loss support and metabolism" },
+  hormones:    { label: "Hormones", description: "Testosterone and hormonal balance" },
+  cognitive:   { label: "Cognitive", description: "Focus, memory, and brain health" },
+  sleep:       { label: "Sleep", description: "Sleep quality and circadian health" },
 };
 
 export const GOAL_META: Record<
   SupplementGoal,
-  { label: string; emoji: string; accent: string; description: string }
+  { label: string; description: string }
 > = {
-  muscle_gain:  { label: "Muscle Gain",      emoji: "💪", accent: "#a3e635", description: "Build size, strength, and lean mass" },
-  weight_loss:  { label: "Fat Loss",         emoji: "🔥", accent: "#a3e635", description: "Burn fat while preserving muscle" },
-  balanced:     { label: "Balanced Health",  emoji: "⚖️", accent: "#a3e635", description: "Optimise health, energy, and wellbeing" },
-  performance:  { label: "Peak Performance", emoji: "⚡", accent: "#a3e635", description: "Push your athletic limits further" },
+  muscle_gain:  { label: "Muscle Gain", description: "Build size, strength, and lean mass" },
+  weight_loss:  { label: "Fat Loss", description: "Burn fat while preserving muscle" },
+  balanced:     { label: "Balanced Health", description: "Optimise health, energy, and wellbeing" },
+  performance:  { label: "Peak Performance", description: "Push your athletic limits further" },
 };
 
-export const EVIDENCE_META: Record<EvidenceLevel, { label: string; color: string; description: string }> = {
-  very_high:   { label: "Very High Evidence", color: "#22c55e", description: "500+ RCTs; scientific consensus" },
-  high:        { label: "High Evidence",       color: "#86efac", description: "Multiple consistent RCTs" },
-  moderate:    { label: "Moderate Evidence",   color: "#fbbf24", description: "Some RCTs; promising data" },
-  low:         { label: "Low Evidence",        color: "#fb923c", description: "Limited RCTs; mostly observational" },
-  preliminary: { label: "Preliminary",         color: "#94a3b8", description: "Early-stage research; in vitro/animal" },
+/**
+ * Evidence strength as an ORDINAL RANK, not a hue.
+ *
+ * These two tables used to carry a five-step colour ramp: #22c55e green for the
+ * strongest, through #86efac, #fbbf24 amber and #fb923c orange, to #94a3b8
+ * slate. That is a five-colour secondary palette in a codebase whose only
+ * chromatic value is lime, and it was encoding the whole meaning in hue.
+ *
+ * `rank` out of `RANK_MAX` renders as filled segments on a hairline scale, so
+ * the strength reads as a quantity and the label states it in words either
+ * way. Neither table is consumed yet; ranking them now means the first thing
+ * that renders them cannot reintroduce the ramp.
+ */
+export const RANK_MAX = 5;
+
+export const EVIDENCE_META: Record<EvidenceLevel, { label: string; rank: number; description: string }> = {
+  very_high:   { label: "Very High Evidence", rank: 5, description: "500+ RCTs; scientific consensus" },
+  high:        { label: "High Evidence",      rank: 4, description: "Multiple consistent RCTs" },
+  moderate:    { label: "Moderate Evidence",  rank: 3, description: "Some RCTs; promising data" },
+  low:         { label: "Low Evidence",       rank: 2, description: "Limited RCTs; mostly observational" },
+  preliminary: { label: "Preliminary",        rank: 1, description: "Early-stage research; in vitro/animal" },
 };
 
-export const VALUE_META: Record<ValueRating, { label: string; color: string; description: string }> = {
-  exceptional: { label: "Exceptional Value", color: "#22c55e", description: "Highest evidence per rupee spent" },
-  good:        { label: "Good Value",        color: "#86efac", description: "Strong benefit for reasonable cost" },
-  moderate:    { label: "Moderate Value",    color: "#fbbf24", description: "Useful but consider priorities" },
-  expensive:   { label: "Premium Cost",      color: "#fb923c", description: "High cost; situational benefit" },
+export const VALUE_META: Record<ValueRating, { label: string; rank: number; description: string }> = {
+  exceptional: { label: "Exceptional Value", rank: 4, description: "Highest evidence per rupee spent" },
+  good:        { label: "Good Value",        rank: 3, description: "Strong benefit for reasonable cost" },
+  moderate:    { label: "Moderate Value",    rank: 2, description: "Useful but consider priorities" },
+  expensive:   { label: "Premium Cost",      rank: 1, description: "High cost; situational benefit" },
 };

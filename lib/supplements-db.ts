@@ -112,14 +112,16 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       studyCount: r.studyCount || "",
       keyStudyFindings: deDashList(r.keyStudyFindings),
       goals: goalsBackToLower(r.recommendedFor),
-      // Was `r.accentColor || "#a3e635"`. The DB carries a per-supplement
-      // accent, and the live rows hold amber, purple, sky and indigo, which
-      // rendered a four-hue palette on the public /supplements page even
-      // after the static fallbacks in supplements-data.ts were unified.
-      // Lime is the only chromatic value on marketing surfaces (DESIGN.md),
-      // so the column is ignored here rather than being migrated: it stays
-      // available to the admin UI, which is not bound by the marketing rules.
-      accent: "#a3e635",
+      // NOTE ON `accentColor`. The DB still carries a per-supplement accent
+      // column, and the live rows hold amber, purple, sky and indigo. It is
+      // not read here and no longer exists on the Supplement type: it was
+      // first neutralised to a hardcoded "#a3e635", which removed the palette
+      // but left a dead field being threaded through eighteen call sites on
+      // the public page. Lime is the only chromatic value on marketing
+      // surfaces (DESIGN.md), and category is carried by label and position.
+      //
+      // The column stays in the database for the admin UI, which is not bound
+      // by the marketing rules. Nothing on a public surface reads it.
       priceRange: r.priceRange || "",
       valueRating: (r.valueRating || "good") as any,
       popular: !!r.popular,

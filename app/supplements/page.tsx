@@ -1,11 +1,26 @@
 // app/supplements/page.tsx
-// Phase 18-1 — Server-side fetch supplements from DB, pass to client renderer.
-// Replaces direct static-import pattern.
+//
+// Server half of the public supplements catalogue: the live catalogue, plus a
+// personalised shortlist when someone is signed in.
+//
+// WHAT CHANGED. The personalised strip used to render ABOVE the landing
+// component as its own <section>, with `padding: 104px 24px 24px` to clear the
+// fixed navbar. That put a second full-width band in front of the page's own
+// masthead, so a signed-in visitor met two stacked headers before any content.
+// It is passed into the landing as a prop now and rendered inside the page
+// flow, directly under the readout, which is where a "picked for you" block
+// belongs: after the page has said what it is.
+//
+// It also piped `it.accentColor` from the DB into a `--ac` custom property on
+// every card. Those rows hold amber, purple, sky and indigo, so a signed-in
+// user saw a four-hue palette that a signed-out user did not. Removed, along
+// with the emoji, the radius-8 cards and the translateY lift.
 
 import { auth } from "@/lib/auth";
 import SupplementsLanding from "./SupplementsLanding";
 import { getAllSupplements } from "@/lib/supplements-db";
-import { getRecommendedSupplements, type SupplementRecommendation } from "@/lib/supplement-recommender";
+import { getRecommendedSupplements } from "@/lib/supplement-recommender";
+import { Wrap } from "@/app/_ui/Page";
 
 export const metadata = {
   alternates: { canonical: "/supplements" },
@@ -24,85 +39,73 @@ export default async function SupplementsPage() {
 
   return (
     <>
-      {rec && rec.items.length > 0 && <RecommendedStrip rec={rec} />}
       <SupplementsLanding
         isLoggedIn={!!session?.user}
         supplements={supplements}
+        recommended={rec && rec.items.length > 0 ? rec : null}
       />
       <AffiliateDisclosure />
     </>
   );
 }
 
-function RecommendedStrip({ rec }: { rec: SupplementRecommendation }) {
-  return (
-    <section style={{ background: "#080808", borderBottom: "1px solid #1c1c1c", padding: "104px 24px 24px" }}>
-      <style>{`
-
-        .rec-wrap{ max-width:1000px; margin:0 auto; }
-        .rec-eyebrow{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#a3e635; margin-bottom:8px; }
-        .rec-h{ font-family:var(--ff-cond); font-weight:800; font-size:26px; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; margin:0 0 18px; }
-        .rec-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
-        .rec-card{ display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid #1c1c1c; border-radius:8px; background:#0d0d0d; text-decoration:none; color:inherit; transition:border-color .2s, transform .2s; position:relative; overflow:hidden; }
-        .rec-card:hover{ transform:translateY(-2px); border-color:var(--ac,#a3e635); }
-        .rec-emoji{ font-size:24px; }
-        .rec-name{ font-family:var(--ff-cond); font-weight:700; font-size:18px; letter-spacing:.3px; text-transform:uppercase; color:#f4f3ee; }
-        .rec-tag{ font-size:12px; color:#85857e; line-height:1.5; }
-        .rec-go{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ac,#a3e635); margin-top:auto; }
-      `}</style>
-      <div className="rec-wrap">
-        <div className="rec-eyebrow">Picked for you</div>
-        <h2 className="rec-h">Built for {rec.goalLabel}</h2>
-        <div className="rec-grid">
-          {rec.items.map((it) => {
-            const inner = (
-              <>
-                {it.emoji && <span className="rec-emoji">{it.emoji}</span>}
-                <span className="rec-name">{it.name}</span>
-                {it.tagline && <span className="rec-tag">{it.tagline}</span>}
-                <span className="rec-go">{it.buyUrl ? "View product \u2192" : "Learn more \u2192"}</span>
-              </>
-            );
-            const style = { ["--ac" as never]: it.accentColor || "#a3e635" } as React.CSSProperties;
-            return it.buyUrl ? (
-              <a key={it.slug} className="rec-card" style={style} href={it.buyUrl} target="_blank" rel="noopener noreferrer sponsored">{inner}</a>
-            ) : (
-              <a key={it.slug} className="rec-card" style={style} href={`/supplements#${it.slug}`}>{inner}</a>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
+/**
+ * The affiliate note. Sits below the page as a recessed band rather than a
+ * centred grey paragraph: it is a legal statement, so it is set flush left at
+ * a readable size on a grey that clears AA.
+ */
 function AffiliateDisclosure() {
   return (
     <section
       style={{
-        background: "#080808",
-        borderTop: "1px solid #1c1c1c",
-        padding: "28px 24px",
+        background: "#050504",
+        borderTop: "1px solid #232320",
+        padding: "clamp(28px,4vw,44px) 0",
       }}
     >
-      <p
-        style={{
-          maxWidth: 760,
-          margin: "0 auto",
-          fontSize: 12.5,
-          lineHeight: 1.7,
-          color: "#9a9a94",  // was #9a9a94 (4.22:1), just under AA
-          textAlign: "center",
-        }}
-      >
-        <strong style={{ color: "#a3a3a3", fontWeight: 600 }}>Affiliate disclosure.</strong>{" "}
-        FitFuel recommends supplements from trusted third-party retailers. Some links on this
-        page are affiliate links. If you buy through them, FitFuel may earn a small commission
-        at no extra cost to you. We only recommend products we believe in; commissions never
-        change what we suggest. Supplements are sold, shipped and supported by the retailer, and
-        their returns and refund terms apply. See our{" "}
-        <a href="/terms" style={{ color: "#a3e635", textDecoration: "none" }}>Terms</a>.
-      </p>
+      <Wrap>
+        <span
+          style={{
+            display: "block",
+            fontFamily: "var(--font-mono), monospace",
+            fontWeight: 500,
+            fontSize: 12,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "#85857e",
+            marginBottom: 12,
+          }}
+        >
+          Affiliate disclosure
+        </span>
+        <p
+          style={{
+            maxWidth: "78ch",
+            margin: 0,
+            fontFamily: "var(--font-archivo), sans-serif",
+            fontSize: 13.5,
+            lineHeight: 1.7,
+            color: "#9a9a94",
+          }}
+        >
+          FitFuel recommends supplements from trusted third-party retailers. Some links on this
+          page are affiliate links. If you buy through them, FitFuel may earn a small commission at
+          no extra cost to you. We only recommend products we believe in, and commissions never
+          change what we suggest. Supplements are sold, shipped and supported by the retailer, and
+          their returns and refund terms apply. See our{" "}
+          <a
+            href="/terms"
+            style={{
+              color: "#84cc16",
+              textDecoration: "none",
+              borderBottom: "1px solid rgba(132,204,22,0.4)",
+            }}
+          >
+            Terms
+          </a>
+          .
+        </p>
+      </Wrap>
     </section>
   );
 }
