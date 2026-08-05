@@ -140,20 +140,20 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
       {/* Sheet */}
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "#141414", borderRadius: "20px 20px 0 0",
+        background: "#141414", borderRadius: 0,
         border: `1px solid ${T.border}`, borderBottom: "none",
         zIndex: 1001, padding: "28px 24px 40px",
         maxHeight: "85vh", overflowY: "auto",
         maxWidth: 640, margin: "0 auto",
       }}>
         {/* Handle */}
-        <div style={{ width: 36, height: 4, background: "#333", borderRadius: 2, margin: "0 auto 24px" }} />
+        <div style={{ width: 36, height: 4, background: "#333", borderRadius: 0, margin: "0 auto 24px" }} />
 
         {/* Close */}
         <button onClick={onClose} style={{
           position: "absolute", top: 20, right: 20,
           background: "#1a1a1a", border: `1px solid ${T.border}`,
-          borderRadius: 8, padding: 6, cursor: "pointer", color: T.textMuted,
+          borderRadius: 0, padding: 6, cursor: "pointer", color: T.textMuted,
           display: "flex", alignItems: "center",
         }}>
           <X size={16} />
@@ -163,7 +163,7 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <span style={{ fontSize: 28 }}>{meal.emoji}</span>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 8px", textTransform: "uppercase" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 0, padding: "2px 8px", textTransform: "uppercase" }}>
               {meal.label}
             </span>
             <p style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{meal.time}</p>
@@ -183,7 +183,7 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
             { label: "Carbs",    value: Number(meal.recipe.carbsGrams).toFixed(1),   unit: "g", color: "#facc15" },
             { label: "Fat",      value: Number(meal.recipe.fatGrams).toFixed(1),     unit: "g", color: "#a78bfa" },
           ].map(m => (
-            <div key={m.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
+            <div key={m.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 10px", textAlign: "center" }}>
               <p style={{ fontSize: 18, fontWeight: 800, color: m.color, lineHeight: 1 }}>{m.value}</p>
               <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{m.unit}</p>
               <p style={{ fontSize: 10, color: T.textMuted }}>{m.label}</p>
@@ -213,7 +213,7 @@ function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
           onClick={() => { onLog(); onClose(); }}
           disabled={isLogged || isLogging}
           style={{
-            width: "100%", padding: "15px 0", borderRadius: 12,
+            width: "100%", padding: "15px 0", borderRadius: 0,
             background: isLogged ? "#1a2e05" : T.accent,
             border: `1px solid ${isLogged ? "#365314" : T.accent}`,
             color: isLogged ? T.accent : "#000",
@@ -291,7 +291,7 @@ function CalorieRing({ balance }: {
             { label: "Burned", value: `${balance.caloriesOut}`, unit: "kcal", color: "#22c55e" },
             { label: "Target", value: `${balance.target}`, unit: "kcal", color: T.textMuted },
           ].map(s => (
-            <div key={s.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 6px", textAlign: "center" }}>
+            <div key={s.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 6px", textAlign: "center" }}>
               <p style={{ fontSize: 13, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</p>
               <p style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{s.unit}</p>
               <p style={{ fontSize: 9, color: T.textMuted }}>{s.label}</p>
@@ -299,14 +299,14 @@ function CalorieRing({ balance }: {
           ))}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px" }}>
+          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "7px 10px" }}>
             <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Protein today</p>
             <p style={{ fontSize: 13, fontWeight: 800, color: "#60a5fa" }}>
               {balance.proteinIn}g
               <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}> / {balance.proteinTarget}g</span>
             </p>
           </div>
-          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px" }}>
+          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "7px 10px" }}>
             <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Remaining</p>
             <p style={{ fontSize: 13, fontWeight: 800, color: T.text }}>
               {total - logged} meal{total - logged !== 1 ? "s" : ""}
@@ -331,11 +331,11 @@ function WorkoutCard({ workout, completing, onComplete }: {
     return (
       <div style={{
         marginBottom: 20, background: T.card, border: `1px solid ${T.border}`,
-        borderRadius: 14, padding: "16px 18px",
+        borderRadius: 0, padding: "16px 18px",
         display: "flex", alignItems: "center", gap: 12,
       }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 10, background: "#0f0f0f",
+          width: 40, height: 40, borderRadius: 0, background: "#0f0f0f",
           border: `1px solid ${T.border}`, display: "flex",
           alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
@@ -360,13 +360,13 @@ function WorkoutCard({ workout, completing, onComplete }: {
     <div style={{
       marginBottom: 20, background: T.card,
       border: `1px solid ${done ? "#365314" : T.border}`,
-      borderRadius: 14, padding: "16px 18px",
+      borderRadius: 0, padding: "16px 18px",
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
-            width: 36, height: 36, borderRadius: 9, background: "#1a2e05",
+            width: 36, height: 36, borderRadius: 0, background: "#1a2e05",
             border: "1px solid #365314", display: "flex",
             alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
@@ -393,7 +393,7 @@ function WorkoutCard({ workout, completing, onComplete }: {
           <div key={e.exerciseId} style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             background: "#0f0f0f", border: `1px solid ${T.border}`,
-            borderRadius: 9, padding: "9px 12px",
+            borderRadius: 0, padding: "9px 12px",
           }}>
             <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: 12.5, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -414,7 +414,7 @@ function WorkoutCard({ workout, completing, onComplete }: {
       {done ? (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          background: "#1a2e05", border: "1px solid #365314", borderRadius: 10,
+          background: "#1a2e05", border: "1px solid #365314", borderRadius: 0,
           padding: "11px", color: T.accent, fontSize: 13, fontWeight: 700,
         }}>
           <CheckCircle2 size={16} /> Workout complete · {workout.estimatedCalories} kcal logged
@@ -426,7 +426,7 @@ function WorkoutCard({ workout, completing, onComplete }: {
           style={{
             width: "100%", background: completing ? "#1a1a1a" : T.accent,
             color: completing ? T.textMuted : "#0a0a0a",
-            border: "none", borderRadius: 10, padding: "11px",
+            border: "none", borderRadius: 0, padding: "11px",
             fontSize: 13, fontWeight: 800, cursor: completing ? "default" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             transition: "background 0.2s ease",
@@ -448,7 +448,7 @@ function ConsistencyCard({ data }: { data: ConsistencyBreakdown }) {
   return (
     <div style={{
       marginBottom: 20, background: T.card, border: `1px solid ${T.border}`,
-      borderRadius: 14, padding: "16px 18px",
+      borderRadius: 0, padding: "16px 18px",
     }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Consistency this week</p>
@@ -456,8 +456,8 @@ function ConsistencyCard({ data }: { data: ConsistencyBreakdown }) {
           <span style={{ fontSize: 18, fontWeight: 800, color: barColor }}>{pct}</span> / 100 · {data.label}
         </p>
       </div>
-      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 4, transition: "width 0.6s ease" }} />
+      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 0, overflow: "hidden", marginBottom: 12 }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 0, transition: "width 0.6s ease" }} />
       </div>
       <p style={{ fontSize: 12, color: T.textSecond }}>
         You logged {data.meals.logged}/{data.meals.delivered} meals
@@ -515,7 +515,7 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
         {/* Sheet */}
         <div style={{
           width: "100%", maxWidth: 460,
-          background: "#141414", borderRadius: 20,
+          background: "#141414", borderRadius: 0,
           border: `1px solid ${T.border}`,
           padding: "28px 28px 36px",
           textAlign: "center",
@@ -597,7 +597,7 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
             style={{
               width: "100%", background: "#0f0f0f",
               border: `1px solid ${note ? T.accent + "55" : T.border}`,
-              borderRadius: 10, padding: "10px 12px",
+              borderRadius: 0, padding: "10px 12px",
               fontSize: 13, color: T.text, resize: "none",
               outline: "none", marginBottom: 16,
               fontFamily: "inherit", lineHeight: 1.5,
@@ -612,7 +612,7 @@ function StarRatingModal({ meal, onClose, onSubmit }: {
               onClick={handleSubmitWithNote}
               disabled={submitting}
               style={{
-                width: "100%", padding: "13px 0", borderRadius: 10,
+                width: "100%", padding: "13px 0", borderRadius: 0,
                 background: T.accent, border: "none",
                 color: "#000", fontSize: 14, fontWeight: 800,
                 cursor: submitting ? "default" : "pointer",
@@ -786,7 +786,7 @@ export default function DashboardClient({
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", border: `2px solid ${T.border}`, overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 0, border: `2px solid ${T.border}`, overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {user?.image
                 ? <img src={user.image} alt={user.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : <User size={22} color={T.textMuted} />}
@@ -800,7 +800,7 @@ export default function DashboardClient({
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 600, color: T.textMuted, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 16px", fontSize: 13, fontWeight: 600, color: T.textMuted, cursor: "pointer" }}
           >
             <LogOut size={14} /> Sign Out
           </button>
@@ -811,7 +811,7 @@ export default function DashboardClient({
 
         {/* Active Plan Card */}
         {activePlan ? (
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
 
             {/* Plan header */}
@@ -820,7 +820,7 @@ export default function DashboardClient({
                 <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active Plan</p>
                 <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{activePlan.mealPlan?.name}</h2>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 4, padding: "2px 7px", fontWeight: 700 }}>
+                  <span style={{ fontSize: 11, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 0, padding: "2px 7px", fontWeight: 700 }}>
                     {activePlan.mealPlan?.tier}
                   </span>
                   <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
@@ -852,7 +852,7 @@ export default function DashboardClient({
                   fontWeight: 800,
                   fontSize: 14,
                   padding: "12px 0",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   textDecoration: "none",
                   marginBottom: 20,
                 }}
@@ -871,8 +871,8 @@ export default function DashboardClient({
                 <span style={{ fontSize: 12, color: T.textMuted }}>Plan progress</span>
                 <span style={{ fontSize: 12, color: T.textMuted }}>{dayProgress}%</span>
               </div>
-              <div style={{ height: 4, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${dayProgress}%`, background: T.accent, borderRadius: 2, transition: "width 0.6s ease" }} />
+              <div style={{ height: 4, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${dayProgress}%`, background: T.accent, borderRadius: 0, transition: "width 0.6s ease" }} />
               </div>
             </div>
 
@@ -913,11 +913,11 @@ export default function DashboardClient({
               {mealsLoading ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[1, 2, 3, 4].map(i => (
-                    <div key={i} style={{ height: 56, background: "#0f0f0f", borderRadius: 10, border: `1px solid ${T.border}` }} />
+                    <div key={i} style={{ height: 56, background: "#0f0f0f", borderRadius: 0, border: `1px solid ${T.border}` }} />
                   ))}
                 </div>
               ) : meals.length === 0 ? (
-                <div style={{ background: "#0f0f0f", border: `1px dashed ${T.border}`, borderRadius: 10, padding: "20px 24px", textAlign: "center" }}>
+                <div style={{ background: "#0f0f0f", border: `1px dashed ${T.border}`, borderRadius: 0, padding: "20px 24px", textAlign: "center" }}>
                   <p style={{ fontSize: 13, color: T.textMuted }}>No meals scheduled for today. Your plan may not have a schedule set up yet.</p>
                 </div>
               ) : (
@@ -932,7 +932,7 @@ export default function DashboardClient({
                         style={{
                           background: "#0f0f0f",
                           border: `1px solid ${isLogged ? "#365314" : T.border}`,
-                          borderRadius: 10,
+                          borderRadius: 0,
                           padding: "12px 14px",
                           display: "flex",
                           alignItems: "center",
@@ -979,7 +979,7 @@ export default function DashboardClient({
                             gap: 5,
                             background: isLogged ? "#1a2e05" : "transparent",
                             border: `1px solid ${isLogged ? "#365314" : T.border}`,
-                            borderRadius: 6,
+                            borderRadius: 0,
                             padding: "6px 10px",
                             fontSize: 11,
                             fontWeight: 700,
@@ -1004,8 +1004,8 @@ export default function DashboardClient({
               {/* Calorie progress bar */}
               {loggedCalories > 0 && (
                 <div style={{ marginTop: 12 }}>
-                  <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${progressPct}%`, background: progressPct >= 100 ? "#ef4444" : T.accent, borderRadius: 2, transition: "width 0.4s ease" }} />
+                  <div style={{ height: 3, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${progressPct}%`, background: progressPct >= 100 ? "#ef4444" : T.accent, borderRadius: 0, transition: "width 0.4s ease" }} />
                   </div>
                 </div>
               )}
@@ -1013,7 +1013,7 @@ export default function DashboardClient({
           </div>
         ) : hasPendingOrder ? (
           /* Confirmed order exists but no active plan — needs onboarding */
-          <div style={{ background: T.card, border: `1px solid #365314`, borderRadius: 16, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+          <div style={{ background: T.card, border: `1px solid #365314`, borderRadius: 0, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div>
@@ -1024,7 +1024,7 @@ export default function DashboardClient({
                 </p>
               </div>
               <div>
-                <Link href="/onboarding" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "13px 28px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                <Link href="/onboarding" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "13px 28px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
                   <Zap size={14} fill="currentColor" /> Set Up My Plan
                 </Link>
               </div>
@@ -1032,7 +1032,7 @@ export default function DashboardClient({
           </div>
         ) : (
           /* No active plan, no confirmed order */
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
               <div>
@@ -1043,7 +1043,7 @@ export default function DashboardClient({
                 </p>
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link href="/plans" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "11px 22px", borderRadius: 8, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                <Link href="/plans" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "11px 22px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
                   <Zap size={14} fill="currentColor" /> Order Now
                 </Link>
               </div>
@@ -1052,7 +1052,7 @@ export default function DashboardClient({
         )}
 
         {/* Recent Orders */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 20px", marginBottom: 24 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
             <ShoppingBag size={18} color={T.accent} />
             <h2 style={{ fontSize: 16, fontWeight: 700 }}>Recent Orders</h2>
@@ -1060,7 +1060,7 @@ export default function DashboardClient({
           </div>
 
           {orders.length === 0 ? (
-            <div style={{ border: `1px dashed ${T.border}`, borderRadius: 10, padding: "32px 24px", textAlign: "center" }}>
+            <div style={{ border: `1px dashed ${T.border}`, borderRadius: 0, padding: "32px 24px", textAlign: "center" }}>
               <ShoppingBag size={32} color={T.border} style={{ margin: "0 auto 12px" }} />
               <p style={{ fontSize: 14, color: T.textMuted }}>No orders yet. Your order history will appear here.</p>
             </div>
@@ -1069,7 +1069,7 @@ export default function DashboardClient({
               {orders.map((order: any) => {
                 const item = order.items?.[0];
                 return (
-                  <div key={order.id} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                  <div key={order.id} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{order.orderNumber}</p>
                       <p style={{ fontSize: 12, color: T.textMuted }}>
@@ -1081,7 +1081,7 @@ export default function DashboardClient({
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <p style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>₹{order.totalRs.toLocaleString("en-IN")}</p>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLOR[order.status] ?? T.textMuted, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 4, padding: "2px 8px" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLOR[order.status] ?? T.textMuted, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 8px" }}>
                         {order.status}
                       </span>
                     </div>
@@ -1097,17 +1097,17 @@ export default function DashboardClient({
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14, marginBottom: 32 }}>
 
           <Link href="/dashboard/body-metrics" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Activity size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Body Metrics</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Track 18 body composition parameters — quick manual logging, FitDays BLE scale sync coming soon.</p>
               </div>
@@ -1116,17 +1116,17 @@ export default function DashboardClient({
           </Link>
 
           <Link href="/dashboard/nutrition" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Utensils size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Nutrition Tracker</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Log meals, track calories, macros and water daily.</p>
               </div>
@@ -1135,17 +1135,17 @@ export default function DashboardClient({
           </Link>
 
           <Link href="/dashboard/exercises" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Dumbbell size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Exercise Library</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>873 exercises {'\u2014'} browse, log workouts, track sets and burned kcal.</p>
               </div>
@@ -1154,17 +1154,17 @@ export default function DashboardClient({
           </Link>
 
           <Link href="/dashboard/progress" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <TrendingUp size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Progress</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Weight trend, body composition charts and plateau detection over time.</p>
               </div>
@@ -1173,17 +1173,17 @@ export default function DashboardClient({
           </Link>
 
           <Link href="/dashboard/supplements" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Pill size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Supplements</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>LIVE</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Your goal-matched stack with doses, plus the full educational catalogue.</p>
               </div>
@@ -1192,11 +1192,11 @@ export default function DashboardClient({
           </Link>
 
           <Link href="/dashboard/notification-settings" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Bell size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1211,17 +1211,17 @@ export default function DashboardClient({
 
           {/* Phase 17B {'\u2014'} Customer P2P referrals (always visible) */}
           <Link href="/dashboard/referrals" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                 <Gift size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Refer + Earn</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>NEW</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>NEW</span>
                 </div>
                 <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Share your code. Friends get {'\u20B9'}200 off, you earn {'\u20B9'}500 credit per signup.</p>
               </div>
@@ -1232,17 +1232,17 @@ export default function DashboardClient({
           {/* Phase 17B {'\u2014'} Partner dashboard (only if user owns a non-CUSTOMER Partner) */}
           {isPartnerOwner && (
             <Link href="/dashboard/partners" style={{ textDecoration: "none" }}>
-              <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
+              <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
               >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
                   <Briefcase size={20} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                     <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Partner Dashboard</p>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 4, padding: "2px 6px" }}>PARTNER</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>PARTNER</span>
                   </div>
                   <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Conversions, payouts, and your tracking code.</p>
                 </div>
@@ -1254,7 +1254,7 @@ export default function DashboardClient({
         </div>
 
         {/* Account */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 20px" }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700 }}>Account</h2>
             <Link href="/dashboard/profile" style={{ fontSize: 13, fontWeight: 600, color: T.accent, textDecoration: "none" }}>

@@ -15,7 +15,7 @@ const T = {
   cardHover: "#161616",
   border: "#1f1f1f",
   accent: "#84cc16",
-  accentLight: "#a3e635",
+  accentLight: "#84cc16",
   text: "#ffffff",
   textSecond: "#a3a3a3",
   textMuted: "#737373",
@@ -42,7 +42,7 @@ function Card({ children, delay = 0 }: { children: React.ReactNode; delay?: numb
       style={{
         background: T.card,
         border: `1px solid ${T.border}`,
-        borderRadius: 16,
+        borderRadius: 0,
         padding: "22px 22px",
       }}
     >
@@ -181,8 +181,8 @@ function MacroBar({ label, value, target, color }: { label: string; value: numbe
           {target > 0 ? ` / ${target}g · ${pct}%` : " avg/day"}
         </span>
       </div>
-      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 4, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${barPct}%`, background: color, borderRadius: 4, transition: "width 0.6s ease" }} />
+      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${barPct}%`, background: color, borderRadius: 0, transition: "width 0.6s ease" }} />
       </div>
     </div>
   );
@@ -195,7 +195,7 @@ function ConsistencyBars({ data }: { data: NonNullable<ProgressData["consistency
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
-        <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 34, fontWeight: 800, color: barColor, lineHeight: 1 }}>
+        <span style={{ fontFamily: "var(--ff-cond)", fontSize: 34, fontWeight: 800, color: barColor, lineHeight: 1 }}>
           {data.score}
         </span>
         <span style={{ fontSize: 13, color: T.textMuted }}>/ 100 · {data.label}</span>
@@ -209,8 +209,8 @@ function ConsistencyBars({ data }: { data: NonNullable<ProgressData["consistency
                 <span style={{ fontSize: 12, color: T.textSecond }}>{c.label}</span>
                 <span style={{ fontSize: 11, color: T.textMuted }}>{c.points}/{c.max}</span>
               </div>
-              <div style={{ height: 6, background: "#1a1a1a", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 3, opacity: 0.85, transition: "width 0.6s ease" }} />
+              <div style={{ height: 6, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 0, opacity: 0.85, transition: "width 0.6s ease" }} />
               </div>
             </div>
           );
@@ -223,9 +223,9 @@ function ConsistencyBars({ data }: { data: NonNullable<ProgressData["consistency
 // ── Stat tile ──
 function Stat({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color?: string }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 18px" }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "16px 18px" }}>
       <div style={{ color: color ?? T.textMuted, marginBottom: 8, display: "flex" }}>{icon}</div>
-      <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, color: color ?? T.text, lineHeight: 1 }}>{value}</p>
+      <p style={{ fontFamily: "var(--ff-cond)", fontSize: 24, fontWeight: 800, color: color ?? T.text, lineHeight: 1 }}>{value}</p>
       <p style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{label}</p>
     </div>
   );
@@ -243,7 +243,7 @@ export default function ProgressClient({ data, userName }: { data: ProgressData;
         background: T.bg,
         minHeight: "100vh",
         color: T.text,
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: "var(--font-archivo), sans-serif",
         paddingTop: 96,
         paddingBottom: 80,
       }}
@@ -255,10 +255,10 @@ export default function ProgressClient({ data, userName }: { data: ProgressData;
             <ArrowLeft size={14} /> Back to dashboard
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 1 }} />
+            <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 0 }} />
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>Your Progress</span>
           </div>
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(2rem, 6vw, 3rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>
+          <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(2rem, 6vw, 3rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>
             The Transformation
           </h1>
           {data.planName && (
@@ -291,9 +291,9 @@ export default function ProgressClient({ data, userName }: { data: ProgressData;
                       key={m}
                       onClick={() => setMetric(m)}
                       style={{
-                        fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 8, cursor: "pointer",
+                        fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 0, cursor: "pointer",
                         background: metric === m ? "rgba(132,204,22,0.12)" : "transparent",
-                        border: `1px solid ${metric === m ? "rgba(132,204,22,0.4)" : T.border}`,
+                        border: `1px solid ${metric === m ? "#84cc16" : T.border}`,
                         color: metric === m ? T.accentLight : T.textMuted,
                       }}
                     >
@@ -349,21 +349,21 @@ export default function ProgressClient({ data, userName }: { data: ProgressData;
               <Heading icon={<Activity size={18} />} title="Adherence" sub="How closely you followed the plan" />
               <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
                 <div>
-                  <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800 }}>
+                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800 }}>
                     {data.adherence.mealsLogged}<span style={{ color: T.textMuted, fontWeight: 600 }}> / {data.adherence.mealsScheduled || "—"}</span>
                   </p>
                   <p style={{ fontSize: 12, color: T.textMuted }}>Plan meals eaten</p>
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: T.accent }}>{data.adherence.workoutsCompleted}</p>
+                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: T.accent }}>{data.adherence.workoutsCompleted}</p>
                   <p style={{ fontSize: 12, color: T.textMuted }}>Workouts completed</p>
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: T.accentLight }}>{data.adherence.streakDays} days</p>
+                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: T.accentLight }}>{data.adherence.streakDays} days</p>
                   <p style={{ fontSize: 12, color: T.textMuted }}>Current logging streak</p>
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800 }}>{data.adherence.daysActive}</p>
+                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800 }}>{data.adherence.daysActive}</p>
                   <p style={{ fontSize: 12, color: T.textMuted }}>Active days (30d window)</p>
                 </div>
               </div>

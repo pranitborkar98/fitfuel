@@ -93,7 +93,7 @@ export default function WeeklyReviewCard() {
   const shell: React.CSSProperties = {
     background: T.card,
     border: `1px solid ${T.border}`,
-    borderRadius: 16,
+    borderRadius: 0,
     padding: 20,
   };
 
@@ -171,7 +171,7 @@ export default function WeeklyReviewCard() {
             padding: 14,
             background: "rgba(132,204,22,0.06)",
             border: `1px solid rgba(132,204,22,0.25)`,
-            borderRadius: 12,
+            borderRadius: 0,
           }}
         >
           {appliedTarget !== null ? (
@@ -210,7 +210,7 @@ export default function WeeklyReviewCard() {
                   background: T.accent,
                   color: "#0a0a0a",
                   border: "none",
-                  borderRadius: 9,
+                  borderRadius: 0,
                   padding: "9px 16px",
                   fontSize: 13,
                   fontWeight: 700,

@@ -13,10 +13,6 @@ import {
 } from "lucide-react";
 
 // ─── Google Fonts injection ─────────────────────────────────────────────────
-const FONT_LINK = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
-`;
-
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface Exercise {
@@ -80,7 +76,7 @@ const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
 const CAT: Record<string, { accent: string; label: string; glow: string }> = {
-  strength:              { accent: "#a3e635", label: "Strength",    glow: "rgba(163,230,53,0.15)" },
+  strength:              { accent: "#84cc16", label: "Strength",    glow: "rgba(163,230,53,0.15)" },
   cardio:                { accent: "#fb923c", label: "Cardio",      glow: "rgba(251,146,60,0.15)" },
   stretching:            { accent: "#38bdf8", label: "Stretching",  glow: "rgba(56,189,248,0.15)" },
   plyometrics:           { accent: "#c084fc", label: "Plyometrics", glow: "rgba(192,132,252,0.15)" },
@@ -117,7 +113,7 @@ function LevelBars({ level }: { level: string }) {
           style={{
             width: 4,
             height: 6 + b * 3,
-            borderRadius: 2,
+            borderRadius: 0,
             background: b <= cfg.bars ? cfg.color : "rgba(255,255,255,0.12)",
           }}
         />
@@ -139,7 +135,7 @@ function CatChip({ category }: { category: string }) {
         color: c.accent,
         background: `${c.accent}18`,
         border: `1px solid ${c.accent}30`,
-        borderRadius: 6,
+        borderRadius: 0,
         padding: "2px 7px",
         fontFamily: "var(--font-archivo), sans-serif",
       }}
@@ -178,10 +174,10 @@ function ExerciseCard({
       style={{
         background: hovered ? "#161616" : "#101010",
         border: `1px solid ${hovered ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.055)"}`,
-        borderRadius: 16,
+        borderRadius: 0,
         overflow: "hidden",
         cursor: "pointer",
-        transform: hovered ? "translateY(-2px)" : "none",
+        transform: "none",
         transition: "all 0.18s ease",
         boxShadow: hovered ? "0 12px 40px rgba(0,0,0,0.6)" : "none",
         position: "relative",
@@ -261,8 +257,8 @@ function ExerciseCard({
             right: 10,
             width: 26,
             height: 26,
-            borderRadius: "50%",
-            background: added ? "#a3e635" : "rgba(255,255,255,0.08)",
+            borderRadius: 0,
+            background: added ? "#84cc16" : "rgba(255,255,255,0.08)",
             border: "none",
             cursor: "pointer",
             display: "flex",
@@ -322,13 +318,13 @@ function ExerciseModal({
         maxWidth: 520,
         background: "#0d0d0d",
         border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "24px 24px 0 0",
+        borderRadius: 0,
         maxHeight: "92vh",
         overflowY: "auto",
         boxShadow: "0 -20px 80px rgba(0,0,0,0.8)",
       }}>
         {/* Hero */}
-        <div style={{ position: "relative", height: 220, background: "#080808", borderRadius: "24px 24px 0 0", overflow: "hidden" }}>
+        <div style={{ position: "relative", height: 220, background: "#080808", borderRadius: 0, overflow: "hidden" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", height: "100%", gap: 2 }}>
             {[0, 1].map((i) => {
               const src = detail.images[i] ? `${IMG_BASE}${detail.images[i]}` : null;
@@ -353,7 +349,7 @@ function ExerciseModal({
             style={{
               position: "absolute", top: 14, right: 14,
               width: 32, height: 32,
-              borderRadius: "50%",
+              borderRadius: 0,
               background: "rgba(0,0,0,0.6)",
               border: "1px solid rgba(255,255,255,0.1)",
               color: "rgba(255,255,255,0.7)",
@@ -388,7 +384,7 @@ function ExerciseModal({
             ].filter(Boolean).map((label) => (
               <span key={label as string} style={{
                 fontSize: 11, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)",
-                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 10px",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 0, padding: "4px 10px",
                 fontFamily: "var(--font-archivo), sans-serif", textTransform: "capitalize",
               }}>
                 {label}
@@ -397,17 +393,17 @@ function ExerciseModal({
           </div>
 
           {/* Muscles */}
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px", marginBottom: 18 }}>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, padding: "14px 16px", marginBottom: 18 }}>
             <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
               Primary Muscles
             </p>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {detail.primaryMuscles.map((m) => (
                 <span key={m} style={{
-                  fontSize: 11, background: `${cat?.accent ?? "#a3e635"}15`,
-                  color: cat?.accent ?? "#a3e635",
-                  border: `1px solid ${cat?.accent ?? "#a3e635"}30`,
-                  borderRadius: 20, padding: "3px 10px", textTransform: "capitalize",
+                  fontSize: 11, background: `${cat?.accent ?? "#84cc16"}15`,
+                  color: cat?.accent ?? "#84cc16",
+                  border: `1px solid ${cat?.accent ?? "#84cc16"}30`,
+                  borderRadius: 0, padding: "3px 10px", textTransform: "capitalize",
                   fontFamily: "var(--font-archivo), sans-serif", fontWeight: 500,
                 }}>
                   {m}
@@ -424,7 +420,7 @@ function ExerciseModal({
                     <span key={m} style={{
                       fontSize: 11, background: "rgba(255,255,255,0.04)",
                       color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.07)",
-                      borderRadius: 20, padding: "3px 10px", textTransform: "capitalize",
+                      borderRadius: 0, padding: "3px 10px", textTransform: "capitalize",
                       fontFamily: "var(--font-archivo), sans-serif",
                     }}>
                       {m}
@@ -443,7 +439,7 @@ function ExerciseModal({
             {loading ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[1, 2, 3].map((i) => (
-                  <div key={i} style={{ height: 14, background: "rgba(255,255,255,0.05)", borderRadius: 8, animation: "pulse 1.5s infinite" }} />
+                  <div key={i} style={{ height: 14, background: "rgba(255,255,255,0.05)", borderRadius: 0, animation: "pulse 1.5s infinite" }} />
                 ))}
               </div>
             ) : (
@@ -451,10 +447,10 @@ function ExerciseModal({
                 {(detail.instructions ?? []).map((step, i) => (
                   <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                     <span style={{
-                      flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
-                      background: `${cat?.accent ?? "#a3e635"}15`,
-                      border: `1px solid ${cat?.accent ?? "#a3e635"}30`,
-                      color: cat?.accent ?? "#a3e635",
+                      flexShrink: 0, width: 22, height: 22, borderRadius: 0,
+                      background: `${cat?.accent ?? "#84cc16"}15`,
+                      border: `1px solid ${cat?.accent ?? "#84cc16"}30`,
+                      color: cat?.accent ?? "#84cc16",
                       fontSize: 10, fontWeight: 700,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontFamily: "var(--font-archivo), sans-serif",
@@ -475,10 +471,10 @@ function ExerciseModal({
               onClick={() => { onAddToWorkout(); onClose(); }}
               style={{
                 width: "100%",
-                background: "#a3e635",
+                background: "#84cc16",
                 color: "#000",
                 border: "none",
-                borderRadius: 14,
+                borderRadius: 0,
                 padding: "14px",
                 fontSize: 13,
                 fontWeight: 700,
@@ -585,7 +581,7 @@ function BrowseTab({
               width: "100%",
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 12,
+              borderRadius: 0,
               padding: "10px 36px 10px 38px",
               fontSize: 13,
               color: "#fff",
@@ -610,8 +606,8 @@ function BrowseTab({
             padding: "10px 14px",
             background: showFilters || hasFilters ? "rgba(163,230,53,0.1)" : "rgba(255,255,255,0.04)",
             border: `1px solid ${showFilters || hasFilters ? "rgba(163,230,53,0.3)" : "rgba(255,255,255,0.08)"}`,
-            borderRadius: 12,
-            color: showFilters || hasFilters ? "#a3e635" : "rgba(255,255,255,0.4)",
+            borderRadius: 0,
+            color: showFilters || hasFilters ? "#84cc16" : "rgba(255,255,255,0.4)",
             cursor: "pointer",
             fontSize: 13,
             fontFamily: "var(--font-archivo), sans-serif",
@@ -624,8 +620,8 @@ function BrowseTab({
             <span style={{
               position: "absolute", top: -4, right: -4,
               width: 8, height: 8,
-              borderRadius: "50%",
-              background: "#a3e635",
+              borderRadius: 0,
+              background: "#84cc16",
             }} />
           )}
         </button>
@@ -638,7 +634,7 @@ function BrowseTab({
           padding: 16,
           background: "rgba(255,255,255,0.025)",
           border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 16,
+          borderRadius: 0,
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {[
@@ -658,7 +654,7 @@ function BrowseTab({
                     width: "100%",
                     background: "rgba(255,255,255,0.05)",
                     border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 10,
+                    borderRadius: 0,
                     padding: "8px 10px",
                     fontSize: 12,
                     color: "rgba(255,255,255,0.7)",
@@ -703,7 +699,7 @@ function BrowseTab({
       {loading ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
           {Array.from({ length: 15 }).map((_, i) => (
-            <div key={i} style={{ height: 190, background: "rgba(255,255,255,0.03)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.05)" }} />
+            <div key={i} style={{ height: 190, background: "rgba(255,255,255,0.03)", borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)" }} />
           ))}
         </div>
       ) : exercises.length === 0 ? (
@@ -734,7 +730,7 @@ function BrowseTab({
             onClick={() => setOffset(offset - LIMIT)}
             disabled={offset === 0}
             style={{
-              width: 36, height: 36, borderRadius: 10,
+              width: 36, height: 36, borderRadius: 0,
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
               color: "rgba(255,255,255,0.5)",
@@ -752,7 +748,7 @@ function BrowseTab({
             onClick={() => setOffset(offset + LIMIT)}
             disabled={offset + LIMIT >= total}
             style={{
-              width: 36, height: 36, borderRadius: 10,
+              width: 36, height: 36, borderRadius: 0,
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
               color: "rgba(255,255,255,0.5)",
@@ -791,7 +787,7 @@ function SetRow({
     width: 60,
     background: "rgba(255,255,255,0.05)",
     border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 8,
+    borderRadius: 0,
     padding: "6px 8px",
     fontSize: 12,
     color: "#fff",
@@ -804,7 +800,7 @@ function SetRow({
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
       padding: "8px 6px",
-      borderRadius: 10,
+      borderRadius: 0,
       background: set.completed ? "rgba(163,230,53,0.04)" : "transparent",
     }}>
       <span style={{ width: 18, textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: "monospace" }}>{setNum}</span>
@@ -817,7 +813,7 @@ function SetRow({
           <input type="number" placeholder="reps" value={set.reps ?? ""} onChange={(e) => onUpdate({ reps: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
         </>
       )}
-      <button onClick={() => onUpdate({ completed: !set.completed })} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: set.completed ? "#a3e635" : "rgba(255,255,255,0.2)", transform: set.completed ? "scale(1.1)" : "none", transition: "all 0.15s" }}>
+      <button onClick={() => onUpdate({ completed: !set.completed })} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: set.completed ? "#84cc16" : "rgba(255,255,255,0.2)", transform: set.completed ? "scale(1.1)" : "none", transition: "all 0.15s" }}>
         {set.completed ? <CheckCircle2 size={15} /> : <Circle size={15} />}
       </button>
       <button onClick={onDelete} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.15)" }}>
@@ -870,15 +866,15 @@ function WorkoutExerciseCard({
   }
 
   return (
-    <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden" }}>
+    <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, overflow: "hidden" }}>
       <div
         onClick={() => setCollapsed(!collapsed)}
         style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, cursor: "pointer" }}
       >
         {imgSrc ? (
-          <img src={imgSrc} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+          <img src={imgSrc} alt="" style={{ width: 40, height: 40, borderRadius: 0, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
         ) : (
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 0, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Dumbbell size={18} color="rgba(255,255,255,0.2)" />
           </div>
         )}
@@ -887,8 +883,8 @@ function WorkoutExerciseCard({
             {we.exercise.name}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-            <div style={{ flex: 1, maxWidth: 80, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
-              <div style={{ width: `${progress * 100}%`, height: "100%", background: "#a3e635", borderRadius: 2, transition: "width 0.3s" }} />
+            <div style={{ flex: 1, maxWidth: 80, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 0, overflow: "hidden" }}>
+              <div style={{ width: `${progress * 100}%`, height: "100%", background: "#84cc16", borderRadius: 0, transition: "width 0.3s" }} />
             </div>
             <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-archivo), sans-serif" }}>
               {sets.length === 0 ? "No sets" : `${completedSets}/${sets.length}`}
@@ -925,7 +921,7 @@ function WorkoutExerciseCard({
               padding: "8px",
               background: "none",
               border: "1px dashed rgba(255,255,255,0.08)",
-              borderRadius: 10, fontSize: 12, color: "rgba(255,255,255,0.22)",
+              borderRadius: 0, fontSize: 12, color: "rgba(255,255,255,0.22)",
               cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif",
             }}
           >
@@ -1012,7 +1008,7 @@ function WorkoutTab({
   }
 
   const btnPrimary: React.CSSProperties = {
-    background: "#a3e635", color: "#000", border: "none", borderRadius: 14,
+    background: "#84cc16", color: "#000", border: "none", borderRadius: 0,
     padding: "14px", fontSize: 13, fontWeight: 700,
     fontFamily: "var(--ff-cond)", letterSpacing: "0.04em",
     cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -1021,8 +1017,8 @@ function WorkoutTab({
   if (!activeSession) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 16px", textAlign: "center" }}>
-        <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-          <Zap size={32} color="#a3e635" />
+        <div style={{ width: 72, height: 72, borderRadius: 0, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <Zap size={32} color="#84cc16" />
         </div>
         <h3 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
           Start a Workout
@@ -1039,13 +1035,13 @@ function WorkoutTab({
             width: "100%", maxWidth: 320,
             background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14, padding: "12px 16px",
+            borderRadius: 0, padding: "12px 16px",
             fontSize: 13, color: "#fff",
             fontFamily: "var(--font-archivo), sans-serif",
             textAlign: "center", outline: "none", marginBottom: 14, boxSizing: "border-box",
           }}
         />
-        <button onClick={startSession} style={{ ...btnPrimary, maxWidth: 320, boxShadow: "0 8px 30px rgba(163,230,53,0.2)" }}>
+        <button onClick={startSession} style={{ ...btnPrimary, maxWidth: 320 }}>
           <Play size={15} style={{ fill: "#000" }} /> Start Workout
         </button>
       </div>
@@ -1058,7 +1054,7 @@ function WorkoutTab({
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <button
             onClick={() => setShowBrowse(false)}
-            style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 36, height: 36, borderRadius: 0, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <ArrowLeft size={15} />
           </button>
@@ -1081,16 +1077,16 @@ function WorkoutTab({
   return (
     <div>
       {/* Session header */}
-      <div style={{ position: "relative", background: "#101010", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: 16, marginBottom: 14, overflow: "hidden" }}>
+      <div style={{ position: "relative", background: "#101010", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 0, padding: 16, marginBottom: 14, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(163,230,53,0.05) 0%, transparent 60%)", pointerEvents: "none" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
             <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "var(--ff-cond)" }}>{activeSession.name ?? "Workout"}</p>
             <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif" }}>In progress</p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 20, padding: "6px 12px" }}>
-            <Clock size={12} color="#a3e635" />
-            <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: "#a3e635" }}>{formatElapsed(elapsed)}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.2)", borderRadius: 0, padding: "6px 12px" }}>
+            <Clock size={12} color="#84cc16" />
+            <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: "#84cc16" }}>{formatElapsed(elapsed)}</span>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
@@ -1099,7 +1095,7 @@ function WorkoutTab({
             { val: totalCompletedSets, label: "Sets Done" },
             { val: `~${Math.round(elapsed / 60 * 5 + totalCompletedSets * 3)}`, label: "kcal est." },
           ].map(({ val, label }) => (
-            <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "10px 0", textAlign: "center" }}>
+            <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 0, padding: "10px 0", textAlign: "center" }}>
               <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "var(--ff-cond)" }}>{val}</p>
               <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-archivo), sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</p>
             </div>
@@ -1129,14 +1125,14 @@ function WorkoutTab({
           width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           padding: "12px", background: "none",
           border: "1px dashed rgba(255,255,255,0.08)",
-          borderRadius: 14, fontSize: 13, color: "rgba(255,255,255,0.28)",
+          borderRadius: 0, fontSize: 13, color: "rgba(255,255,255,0.28)",
           cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif", marginBottom: 10,
         }}
       >
         <Plus size={15} /> Add Exercise
       </button>
 
-      <button onClick={finishSession} disabled={finishing} style={{ ...btnPrimary, opacity: finishing ? 0.5 : 1, boxShadow: "0 6px 24px rgba(163,230,53,0.15)" }}>
+      <button onClick={finishSession} disabled={finishing} style={{ ...btnPrimary, opacity: finishing ? 0.5 : 1 }}>
         {finishing ? "Saving…" : "Finish Workout"}
       </button>
     </div>
@@ -1157,7 +1153,7 @@ function HistoryTab() {
   if (loading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {[1, 2, 3].map((i) => <div key={i} style={{ height: 72, background: "rgba(255,255,255,0.03)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.05)" }} />)}
+        {[1, 2, 3].map((i) => <div key={i} style={{ height: 72, background: "rgba(255,255,255,0.03)", borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)" }} />)}
       </div>
     );
   }
@@ -1189,13 +1185,13 @@ function HistoryTab() {
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {daySessions.map((s) => (
-              <div key={s.id} style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, overflow: "hidden" }}>
+              <div key={s.id} style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, overflow: "hidden" }}>
                 <div
                   onClick={() => setExpanded(expanded === s.id ? null : s.id)}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", cursor: "pointer" }}
                 >
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Activity size={16} color="#a3e635" />
+                  <div style={{ width: 38, height: 38, borderRadius: 0, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Activity size={16} color="#84cc16" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "var(--font-archivo), sans-serif" }}>{s.name ?? "Workout"}</p>
@@ -1223,9 +1219,9 @@ function HistoryTab() {
                       return (
                         <div key={we.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                           {imgSrc ? (
-                            <img src={imgSrc} alt="" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+                            <img src={imgSrc} alt="" style={{ width: 30, height: 30, borderRadius: 0, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
                           ) : (
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 0, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                               <Dumbbell size={12} color="rgba(255,255,255,0.2)" />
                             </div>
                           )}
@@ -1262,7 +1258,6 @@ export default function ExercisesClient({
 
   return (
     <>
-      <style>{FONT_LINK}</style>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.7} }
         * { box-sizing: border-box; }
@@ -1271,7 +1266,7 @@ export default function ExercisesClient({
         select option { background: #111; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:0; }
       `}</style>
 
       <div style={{
@@ -1288,12 +1283,12 @@ export default function ExercisesClient({
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
             <div style={{
-              width: 40, height: 40, borderRadius: 13,
+              width: 40, height: 40, borderRadius: 0,
               background: "rgba(163,230,53,0.1)",
               border: "1px solid rgba(163,230,53,0.18)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Dumbbell size={18} color="#a3e635" />
+              <Dumbbell size={18} color="#84cc16" />
             </div>
             <div>
               <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
@@ -1311,7 +1306,7 @@ export default function ExercisesClient({
           display: "flex",
           background: "rgba(255,255,255,0.03)",
           border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 16,
+          borderRadius: 0,
           padding: 4,
           marginBottom: 22,
           gap: 4,
@@ -1324,9 +1319,9 @@ export default function ExercisesClient({
                 flex: 1,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                 padding: "10px 0",
-                borderRadius: 12,
+                borderRadius: 0,
                 border: "none",
-                background: tab === t.id ? "#a3e635" : "transparent",
+                background: tab === t.id ? "#84cc16" : "transparent",
                 color: tab === t.id ? "#000" : "rgba(255,255,255,0.3)",
                 fontFamily: tab === t.id ? "var(--ff-cond)" : "var(--font-archivo), sans-serif",
                 fontSize: 13,

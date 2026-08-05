@@ -96,7 +96,7 @@ export default function NotificationSettingsClient({
 
         <h1
           style={{
-            fontFamily: "'Syne', system-ui, sans-serif",
+            fontFamily: "var(--ff-cond)",
             fontSize: 32,
             fontWeight: 800,
             letterSpacing: -1,
@@ -116,7 +116,7 @@ export default function NotificationSettingsClient({
             style={{
               background: T.card,
               border: `1px solid ${T.border}`,
-              borderRadius: 8,
+              borderRadius: 0,
               padding: "8px 0",
               marginBottom: 20,
             }}
@@ -155,7 +155,7 @@ export default function NotificationSettingsClient({
               color: "#000",
               border: "none",
               padding: "12px 28px",
-              borderRadius: 6,
+              borderRadius: 0,
               fontWeight: 700,
               cursor: saving ? "default" : "pointer",
               fontSize: 14,
@@ -211,7 +211,7 @@ function ToggleRow({
           width: 48,
           height: 28,
           minWidth: 48,
-          borderRadius: 14,
+          borderRadius: 0,
           background: on ? T.accent : "#2a2a2a",
           border: "none",
           position: "relative",
@@ -227,7 +227,7 @@ function ToggleRow({
             left: on ? 22 : 2,
             width: 24,
             height: 24,
-            borderRadius: "50%",
+            borderRadius: 0,
             background: on ? "#000" : "#fff",
             transition: "left 0.15s",
           }}

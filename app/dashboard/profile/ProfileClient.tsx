@@ -85,7 +85,7 @@ export default function ProfileClient({ user }: { user: any }) {
             <ArrowLeft size={14} /> Back to Dashboard
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 48, height: 48, borderRadius: "50%", border: `2px solid ${T.border}`, overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 0, border: `2px solid ${T.border}`, overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               {user?.image
                 ? <img src={user.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : <User size={20} color={T.textMuted} />}
@@ -101,18 +101,18 @@ export default function ProfileClient({ user }: { user: any }) {
 
         {/* Toast */}
         {success && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#0f1f05", border: `1px solid ${T.accent}`, borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 14, color: T.accent }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#0f1f05", border: `1px solid ${T.accent}`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, fontSize: 14, color: T.accent }}>
             <CheckCircle size={16} /> Profile saved successfully.
           </div>
         )}
         {error && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1f0505", border: "1px solid #ef4444", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 14, color: "#ef4444" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1f0505", border: "1px solid #ef4444", borderRadius: 0, padding: "12px 16px", marginBottom: 20, fontSize: 14, color: "#ef4444" }}>
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
         {/* Basic Info */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 28px", marginBottom: 16, position: "relative", overflow: "hidden" }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px", marginBottom: 16, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
           <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: T.textMuted, marginBottom: 20 }}>Basic Info</h2>
 
@@ -151,19 +151,19 @@ export default function ProfileClient({ user }: { user: any }) {
         </div>
 
         {/* Gender */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 28px", marginBottom: 16 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px", marginBottom: 16 }}>
           <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: T.textMuted, marginBottom: 20 }}>Gender</h2>
           <PillGroup options={GENDER_OPTIONS} selected={gender} onSelect={setGender} />
         </div>
 
         {/* Diet Preference */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 28px", marginBottom: 16 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px", marginBottom: 16 }}>
           <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: T.textMuted, marginBottom: 20 }}>Diet Preference</h2>
           <PillGroup options={DIET_OPTIONS} selected={dietPref} onSelect={setDietPref} />
         </div>
 
         {/* Fitness Goal */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "28px 28px", marginBottom: 28 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px", marginBottom: 28 }}>
           <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: T.textMuted, marginBottom: 20 }}>Fitness Goal</h2>
           <PillGroup options={GOAL_OPTIONS} selected={fitnessGoal} onSelect={setFitnessGoal} />
         </div>
@@ -176,7 +176,7 @@ export default function ProfileClient({ user }: { user: any }) {
             width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             background: saving ? "#4a7a0a" : T.accent, color: "#000",
             fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.07em",
-            border: "none", borderRadius: 10, padding: "14px 24px", cursor: saving ? "not-allowed" : "pointer",
+            border: "none", borderRadius: 0, padding: "14px 24px", cursor: saving ? "not-allowed" : "pointer",
             transition: "all 0.2s",
           }}
         >
@@ -193,7 +193,7 @@ export default function ProfileClient({ user }: { user: any }) {
 
 const inputStyle: React.CSSProperties = {
   width: "100%", background: "#0f0f0f", border: "1px solid #1f1f1f",
-  borderRadius: 8, padding: "11px 14px", fontSize: 14, color: "#f9fafb",
+  borderRadius: 0, padding: "11px 14px", fontSize: 14, color: "#f9fafb",
   outline: "none", transition: "border-color 0.2s", boxSizing: "border-box",
 };
 
@@ -219,7 +219,7 @@ function PillGroup({ options, selected, onSelect }: { options: { value: string; 
             key={opt.value}
             onClick={() => onSelect(active ? "" : opt.value)}
             style={{
-              padding: "9px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              padding: "9px 16px", borderRadius: 0, fontSize: 13, fontWeight: 600, cursor: "pointer",
               border: `1px solid ${active ? "#84cc16" : "#1f1f1f"}`,
               background: active ? "#0f1f05" : "#0f0f0f",
               color: active ? "#84cc16" : "#737373",

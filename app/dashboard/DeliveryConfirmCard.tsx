@@ -99,7 +99,7 @@ export default function DeliveryConfirmCard() {
       style={{
         background: T.card,
         border: `1px solid ${T.border}`,
-        borderRadius: 16,
+        borderRadius: 0,
         padding: "20px",
         marginBottom: 24,
         position: "relative",
@@ -127,7 +127,7 @@ export default function DeliveryConfirmCard() {
               key={d.id}
               style={{
                 border: `1px solid ${T.border}`,
-                borderRadius: 12,
+                borderRadius: 0,
                 padding: "14px 16px",
                 background: "#0d0d0d",
               }}
@@ -172,7 +172,7 @@ export default function DeliveryConfirmCard() {
                     placeholder="What went wrong? (missing meal, late, quality…)"
                     rows={2}
                     maxLength={500}
-                    style={{ width: "100%", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 11px", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
+                    style={{ width: "100%", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 11px", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
                   />
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button
@@ -221,7 +221,7 @@ const primaryBtn: React.CSSProperties = {
   background: T.accent,
   color: "#080808",
   border: "none",
-  borderRadius: 8,
+  borderRadius: 0,
   padding: "9px 16px",
   fontSize: 13,
   fontWeight: 700,
@@ -232,7 +232,7 @@ const ghostBtn: React.CSSProperties = {
   background: "transparent",
   color: T.textSecond,
   border: `1px solid ${T.border}`,
-  borderRadius: 8,
+  borderRadius: 0,
   padding: "9px 16px",
   fontSize: 13,
   fontWeight: 600,

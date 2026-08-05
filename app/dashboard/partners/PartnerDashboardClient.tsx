@@ -12,7 +12,7 @@ const T = {
   border: "#1f1f1f",
   text: "#f5f5f4",
   dim: "#888",
-  accent: "#a3e635",
+  accent: "#84cc16",
   ok: "#22c55e",
   warn: "#f59e0b",
   pending: "#f59e0b",
@@ -70,7 +70,7 @@ export default function PartnerDashboardClient({ origin }: { origin: string }) {
           <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700 }}>
             {p.type} partner · <StatusPill s={p.status} />
           </div>
-          <h1 style={{ fontFamily: '"Syne", system-ui', fontSize: 32, fontWeight: 800, margin: "6px 0 0" }}>{p.name}</h1>
+          <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 32, fontWeight: 800, margin: "6px 0 0" }}>{p.name}</h1>
           <div style={{ color: T.dim, fontSize: 13, marginTop: 6 }}>
             Reward: {rewardLabel(p.rewardType, p.rewardValueRs)} per conversion · Referee discount: {RUPEE}{p.refereeDiscountRs}
           </div>
@@ -80,7 +80,7 @@ export default function PartnerDashboardClient({ origin }: { origin: string }) {
 
       {/* Status banner */}
       {p.status !== "ACTIVE" && (
-        <div style={{ background: "#1a1505", border: `1px solid ${T.warn}`, color: T.warn, padding: "12px 16px", borderRadius: 10, marginBottom: 24, fontSize: 13 }}>
+        <div style={{ background: "#1a1505", border: `1px solid ${T.warn}`, color: T.warn, padding: "12px 16px", borderRadius: 0, marginBottom: 24, fontSize: 13 }}>
           {p.status === "PENDING" && "Your partner account is under review. You'll be notified once approved."}
           {p.status === "PAUSED" && "Your partner account is currently paused. Contact us to reactivate."}
           {p.status === "REJECTED" && "Your partner application was not approved. Contact us for details."}
@@ -97,18 +97,18 @@ export default function PartnerDashboardClient({ origin }: { origin: string }) {
       </div>
 
       {/* Share link */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24, marginBottom: 24 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24, marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Your tracking link</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
           <code style={{
             background: "#000", border: `1px solid ${T.border}`, padding: "10px 14px",
-            borderRadius: 8, fontFamily: 'ui-monospace, monospace', fontSize: 13,
+            borderRadius: 0, fontFamily: 'ui-monospace, monospace', fontSize: 13,
             color: T.accent, flex: "1 1 280px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>{shareLink}</code>
           <button onClick={copyLink} style={{
             background: copied ? T.ok : "transparent", color: copied ? "#000" : T.text,
             border: `1px solid ${copied ? T.ok : T.border}`, padding: "10px 16px",
-            borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer",
+            borderRadius: 0, fontWeight: 700, fontSize: 13, cursor: "pointer",
             textTransform: "uppercase", letterSpacing: "0.06em",
           }}>{copied ? "Copied" : "Copy link"}</button>
         </div>
@@ -119,14 +119,14 @@ export default function PartnerDashboardClient({ origin }: { origin: string }) {
       </div>
 
       {/* Conversions table */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24, marginBottom: 24 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24, marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Conversions</div>
         {data.referrals.length === 0 ? (
           <div style={{ color: T.dim, fontSize: 14 }}>No conversions yet. Share your link to start earning.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {data.referrals.map((r) => (
-              <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{r.refereeName}</div>
                   <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
@@ -149,7 +149,7 @@ export default function PartnerDashboardClient({ origin }: { origin: string }) {
       </div>
 
       {/* Payouts */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24 }}>
         <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Payouts (monthly)</div>
         {data.payouts.length === 0 ? (
           <div style={{ color: T.dim, fontSize: 14 }}>
@@ -162,7 +162,7 @@ export default function PartnerDashboardClient({ origin }: { origin: string }) {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {data.payouts.map((py) => (
-              <div key={py.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div key={py.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{formatPeriod(py.periodYearMonth)}</div>
                   <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
@@ -207,9 +207,9 @@ function Pane({ children }: { children: any }) {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 12, padding: 16 }}>
+    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 0, padding: 16 }}>
       <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: '"Barlow Condensed", "Syne", system-ui', fontSize: 30, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
+      <div style={{ fontFamily: '"Barlow Condensed", var(--ff-cond)', fontSize: 30, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
     </div>
   );
 }

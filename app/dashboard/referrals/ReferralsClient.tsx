@@ -13,7 +13,7 @@ const T = {
   border: "#1f1f1f",
   text: "#f5f5f4",
   dim: "#888",
-  accent: "#a3e635",
+  accent: "#84cc16",
   accent2: "#84cc16",
   ok: "#22c55e",
   warn: "#f59e0b",
@@ -79,7 +79,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
         <div>
           <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700 }}>Referrals</div>
-          <h1 style={{ fontFamily: '"Syne", system-ui', fontSize: 32, fontWeight: 800, margin: "6px 0 0" }}>Refer friends, earn credit</h1>
+          <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 32, fontWeight: 800, margin: "6px 0 0" }}>Refer friends, earn credit</h1>
           <div style={{ color: T.dim, fontSize: 14, marginTop: 8 }}>
             They get {RUPEE}200 off their first plan. You get {RUPEE}500 credit when they order.
           </div>
@@ -95,20 +95,20 @@ export default function ReferralsClient({ origin }: { origin: string }) {
       </div>
 
       {/* Share card */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24, marginBottom: 24 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24, marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Your share link</div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 18 }}>
           <code style={{
             background: "#000", border: `1px solid ${T.border}`, padding: "10px 14px",
-            borderRadius: 8, fontFamily: 'ui-monospace, monospace', fontSize: 13,
+            borderRadius: 0, fontFamily: 'ui-monospace, monospace', fontSize: 13,
             color: T.accent, flex: "1 1 280px", overflow: "hidden", textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}>{shareLink}</code>
           <button onClick={copyLink} style={{
             background: copied ? T.ok : "transparent", color: copied ? "#000" : T.text,
             border: `1px solid ${copied ? T.ok : T.border}`, padding: "10px 16px",
-            borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer",
+            borderRadius: 0, fontWeight: 700, fontSize: 13, cursor: "pointer",
             textTransform: "uppercase", letterSpacing: "0.06em",
           }}>{copied ? "Copied" : "Copy link"}</button>
         </div>
@@ -116,7 +116,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           <a href={waHref} target="_blank" rel="noopener" style={{
             background: "#25D366", color: "#000", fontWeight: 800, fontSize: 13,
-            padding: "12px 20px", borderRadius: 8, textDecoration: "none",
+            padding: "12px 20px", borderRadius: 0, textDecoration: "none",
             textTransform: "uppercase", letterSpacing: "0.06em",
             display: "inline-flex", alignItems: "center", gap: 8,
           }}>
@@ -124,7 +124,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
           </a>
           <button onClick={copyLink} style={{
             background: "transparent", color: T.text, border: `1px solid ${T.border}`,
-            padding: "12px 20px", borderRadius: 8, fontWeight: 700, fontSize: 13,
+            padding: "12px 20px", borderRadius: 0, fontWeight: 700, fontSize: 13,
             cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.06em",
           }}>{copied ? "Copied!" : "Copy"}</button>
         </div>
@@ -135,7 +135,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
       </div>
 
       {/* How it works */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24, marginBottom: 24 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24, marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>How it works</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
           <Step n={1} t="Share your link" b="WhatsApp, message, or just copy it." />
@@ -145,7 +145,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
       </div>
 
       {/* Referees list */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24 }}>
         <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Friends you've referred</div>
         {data.referees.length === 0 ? (
           <div style={{ color: T.dim, fontSize: 14, padding: "12px 0" }}>
@@ -156,7 +156,7 @@ export default function ReferralsClient({ origin }: { origin: string }) {
             {data.referees.map((r) => (
               <div key={r.id} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
-                background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 10,
+                background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 0,
                 padding: "12px 14px",
               }}>
                 <div>
@@ -193,9 +193,9 @@ function Pane({ children }: { children: any }) {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 12, padding: 16 }}>
+    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 0, padding: 16 }}>
       <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: '"Barlow Condensed", "Syne", system-ui', fontSize: 30, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
+      <div style={{ fontFamily: '"Barlow Condensed", var(--ff-cond)', fontSize: 30, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
     </div>
   );
 }
@@ -203,7 +203,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 function Step({ n, t, b }: { n: number; t: string; b: string }) {
   return (
     <div>
-      <div style={{ width: 28, height: 28, borderRadius: 99, background: "#000", border: `1px solid ${T.accent}`, color: T.accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, marginBottom: 8 }}>{n}</div>
+      <div style={{ width: 28, height: 28, borderRadius: 0, background: "#000", border: `1px solid ${T.accent}`, color: T.accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, marginBottom: 8 }}>{n}</div>
       <div style={{ fontWeight: 700, fontSize: 14 }}>{t}</div>
       <div style={{ color: T.dim, fontSize: 12, lineHeight: 1.5, marginTop: 4 }}>{b}</div>
     </div>

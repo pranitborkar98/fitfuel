@@ -101,10 +101,10 @@ function SupplementCard({
       style={{
         background: hovered ? "#161616" : "#101010",
         border: `1px solid ${highlight ? "#84cc16" : "#232320"}`,
-        borderRadius: 16,
+        borderRadius: 0,
         padding: 18,
         cursor: "pointer",
-        transform: hovered ? "translateY(-2px)" : "none",
+        transform: "none",
         transition: "all 0.18s ease",
         position: "relative",
         overflow: "hidden",
@@ -115,7 +115,7 @@ function SupplementCard({
         <div style={{
           position: "absolute", top: 10, right: 10,
           background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
-          borderRadius: 6, padding: "2px 7px",
+          borderRadius: 0, padding: "2px 7px",
           fontSize: 12, fontWeight: 700, color: "#fbbf24",
           letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-archivo), sans-serif",
         }}>
@@ -129,7 +129,7 @@ function SupplementCard({
         fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
         color: "#85857e", background: "transparent",
         border: "1px solid #232320",
-        borderRadius: 6, padding: "2px 7px", fontFamily: "var(--font-archivo), sans-serif",
+        borderRadius: 0, padding: "2px 7px", fontFamily: "var(--font-archivo), sans-serif",
       }}>
         {catMeta.label}
       </span>
@@ -159,7 +159,7 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
       <div style={{
         position: "relative", width: "100%", maxWidth: 500,
         background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "24px 24px 0 0", maxHeight: "88vh", overflowY: "auto",
+        borderRadius: 0, maxHeight: "88vh", overflowY: "auto",
         boxShadow: "0 -20px 60px rgba(0,0,0,0.8)",
       }}>
         {/* Hero */}
@@ -170,7 +170,7 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
         }}>
           <button
             onClick={onClose}
-            style={{ position: "absolute", top: 16, right: 16, width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ position: "absolute", top: 16, right: 16, width: 30, height: 30, borderRadius: 0, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <X size={14} />
           </button>
@@ -188,7 +188,7 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
           </p>
 
           {/* Benefits */}
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px", marginBottom: 16 }}>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 0, padding: "14px 16px", marginBottom: 16 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "var(--font-archivo), sans-serif" }}>Key Benefits</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {supp.benefits.map((b) => (
@@ -203,7 +203,7 @@ function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => v
           {/* Dosage + Timing */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
             {[{ label: "Dosage", value: supp.dosage }, { label: "Timing", value: supp.timing }].map(({ label, value }) => (
-              <div key={label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px" }}>
+              <div key={label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 0, padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "var(--font-archivo), sans-serif" }}>{label}</p>
                 <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", fontFamily: "var(--font-archivo), sans-serif" }}>{value}</p>
               </div>
@@ -251,10 +251,10 @@ function QuizModal({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => vo
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 480, background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 80px rgba(0,0,0,0.9)" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 480, background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 0, overflow: "hidden", boxShadow: "0 20px 80px rgba(0,0,0,0.9)" }}>
         {/* Progress */}
         <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
-          <div style={{ height: "100%", width: `${progress}%`, background: "#a3e635", transition: "width 0.3s ease" }} />
+          <div style={{ height: "100%", width: `${progress}%`, background: "#84cc16", transition: "width 0.3s ease" }} />
         </div>
 
         <div style={{ padding: "28px 28px 24px" }}>
@@ -279,17 +279,17 @@ function QuizModal({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => vo
                   onClick={() => handleSelect(opt.value)}
                   style={{
                     display: "flex", alignItems: "center", gap: 12,
-                    padding: "12px 16px", borderRadius: 12,
+                    padding: "12px 16px", borderRadius: 0,
                     background: selected ? "rgba(163,230,53,0.1)" : "rgba(255,255,255,0.04)",
                     border: `1px solid ${selected ? "rgba(163,230,53,0.35)" : "rgba(255,255,255,0.08)"}`,
                     cursor: "pointer", textAlign: "left", transition: "all 0.15s ease",
                   }}
                 >
                   <span style={{ fontSize: 20 }}>{opt.emoji}</span>
-                  <span style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 13, fontWeight: 500, color: selected ? "#a3e635" : "rgba(255,255,255,0.6)" }}>
+                  <span style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 13, fontWeight: 500, color: selected ? "#84cc16" : "rgba(255,255,255,0.6)" }}>
                     {opt.label}
                   </span>
-                  {selected && <CheckCircle2 size={15} color="#a3e635" style={{ marginLeft: "auto" }} />}
+                  {selected && <CheckCircle2 size={15} color="#84cc16" style={{ marginLeft: "auto" }} />}
                 </button>
               );
             })}
@@ -299,7 +299,7 @@ function QuizModal({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => vo
             {step > 0 && (
               <button
                 onClick={() => setStep(step - 1)}
-                style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ width: 40, height: 40, borderRadius: 0, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
                 <ChevronLeft size={16} />
               </button>
@@ -308,8 +308,8 @@ function QuizModal({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => vo
               onClick={handleNext}
               disabled={!canProceed}
               style={{
-                flex: 1, padding: "12px", borderRadius: 12,
-                background: canProceed ? "#a3e635" : "rgba(255,255,255,0.06)",
+                flex: 1, padding: "12px", borderRadius: 0,
+                background: canProceed ? "#84cc16" : "rgba(255,255,255,0.06)",
                 border: "none", cursor: canProceed ? "pointer" : "not-allowed",
                 fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 13,
                 color: canProceed ? "#000" : "rgba(255,255,255,0.2)",
@@ -366,8 +366,8 @@ export default function SupplementsClient({
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 13, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={18} color="#a3e635" />
+            <div style={{ width: 40, height: 40, borderRadius: 0, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={18} color="#84cc16" />
             </div>
             <div>
               <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
@@ -381,7 +381,7 @@ export default function SupplementsClient({
         </div>
 
         {/* ── Your Stack ── */}
-        <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px 20px 24px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+        <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, padding: "20px 20px 24px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
             <div>
@@ -391,7 +391,7 @@ export default function SupplementsClient({
                   fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
                   color: "#84cc16", background: "transparent",
                   border: "1px solid #232320",
-                  borderRadius: 6, padding: "2px 8px", fontFamily: "var(--font-archivo), sans-serif",
+                  borderRadius: 0, padding: "2px 8px", fontFamily: "var(--font-archivo), sans-serif",
                 }}>
                   {goalMeta.label}
                 </span>
@@ -405,7 +405,7 @@ export default function SupplementsClient({
               style={{
                 display: "flex", alignItems: "center", gap: 7,
                 background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10, padding: "8px 14px",
+                borderRadius: 0, padding: "8px 14px",
                 fontSize: 12, color: "rgba(255,255,255,0.5)",
                 cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif", fontWeight: 500,
               }}
@@ -445,7 +445,7 @@ export default function SupplementsClient({
                   onClick={() => setCatFilter(cat)}
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 14px", borderRadius: 10,
+                    padding: "7px 14px", borderRadius: 0,
                     background: active ? `${accent}15` : "rgba(255,255,255,0.04)",
                     border: `1px solid ${active ? `${accent}35` : "rgba(255,255,255,0.07)"}`,
                     color: active ? accent : "rgba(255,255,255,0.35)",
@@ -467,7 +467,7 @@ export default function SupplementsClient({
         </div>
 
         {/* Price note */}
-        <div style={{ marginTop: 28, padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14 }}>
+        <div style={{ marginTop: 28, padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 0 }}>
           <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-archivo), sans-serif", lineHeight: 1.6 }}>
             💡 <strong style={{ color: "rgba(255,255,255,0.4)" }}>Prices are estimates</strong> — final pricing will be confirmed once our supplier partnership is live. You'll be notified first.
           </p>

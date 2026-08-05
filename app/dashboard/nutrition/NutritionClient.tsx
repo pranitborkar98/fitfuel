@@ -20,7 +20,7 @@ const T = {
   borderMid:    "#2a2a2a",
   borderHover:  "#3a3a3a",
   accent:       "#84cc16",
-  accentLight:  "#a3e635",
+  accentLight:  "#84cc16",
   accentBg:     "#1a2e05",
   accentBorder: "#365314",
   accentGlow:   "rgba(132,204,22,0.18)",
@@ -103,7 +103,7 @@ function CalorieRing({ consumed, goal }: { consumed: number; goal: number }) {
           marginTop: 6, display: "inline-flex", alignItems: "center",
           background: over ? T.redBg : T.accentBg,
           border: `1px solid ${over ? "rgba(248,113,113,0.2)" : T.accentBorder}`,
-          borderRadius: 999, padding: "3px 10px",
+          borderRadius: 0, padding: "3px 10px",
         }}>
           <span style={{ fontSize: 10, fontWeight: 900, color: over ? T.red : T.accentLight, letterSpacing: "0.04em" }}>
             {over ? `+${Math.round(consumed - goal)} OVER` : `${Math.round(goal - consumed)} LEFT`}
@@ -120,9 +120,9 @@ function MacroCard({ icon: Icon, label, consumed, goal, color, bg, unit = "g" }:
 }) {
   const p = pct(consumed, goal);
   return (
-    <div style={{ background: "#0e0e0e", border: `1px solid ${T.border}`, borderRadius: 12, padding: "12px 14px" }}>
+    <div style={{ background: "#0e0e0e", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: bg, border: `1px solid ${color}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 26, height: 26, borderRadius: 0, background: bg, border: `1px solid ${color}28`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon size={12} style={{ color }} />
         </div>
         <span style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
@@ -133,8 +133,8 @@ function MacroCard({ icon: Icon, label, consumed, goal, color, bg, unit = "g" }:
         </span>
         <span style={{ fontSize: 11, color: T.textGhost }}>/{goal}{unit}</span>
       </div>
-      <div style={{ height: 4, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${p}%`, background: color, borderRadius: 999, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
+      <div style={{ height: 4, background: "#1c1c1c", borderRadius: 0, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${p}%`, background: color, borderRadius: 0, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
       </div>
     </div>
   );
@@ -331,7 +331,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           </div>
           <button
             onClick={() => { setGoalDraft(currentGoal); setShowGoals(true); }}
-            style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 18px", fontSize: 13, fontWeight: 600, color: T.textMuted, cursor: "pointer", transition: "all 0.2s" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 0, padding: "10px 18px", fontSize: 13, fontWeight: 600, color: T.textMuted, cursor: "pointer", transition: "all 0.2s" }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
           >
@@ -345,7 +345,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
             const disabled = delta === 1 && isToday;
             return (
               <button key={delta} onClick={() => !disabled && goDay(delta)}
-                style={{ width: 40, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: disabled ? T.textGhost : T.textMuted, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.25 : 1, transition: "all 0.2s" }}
+                style={{ width: 40, height: 40, borderRadius: 0, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: disabled ? T.textGhost : T.textMuted, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.25 : 1, transition: "all 0.2s" }}
                 onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; } }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
               >
@@ -365,7 +365,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           
           {/* LEFT: Calorie Ring + Energy */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px 20px", textAlign: "center" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px", textAlign: "center" }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 16 }}>Daily Energy Goal</p>
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <CalorieRing consumed={totals.calories} goal={currentGoal.calories} />
@@ -390,8 +390,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   <span style={{ fontSize: 11, color: T.textMuted }}>Daily Progress</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.text }}>{Math.round(calPct)}%</span>
                 </div>
-                <div style={{ height: 6, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${calPct}%`, background: calPct > 100 ? T.red : T.accent, borderRadius: 999, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
+                <div style={{ height: 6, background: "#1c1c1c", borderRadius: 0, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${calPct}%`, background: calPct > 100 ? T.red : T.accent, borderRadius: 0, transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
                 </div>
               </div>
             </div>
@@ -399,12 +399,12 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
           {/* CENTER: Nutrition Summary + Trends */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px", position: "relative", overflow: "hidden" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Nutrition Summary</p>
                 <button
                   onClick={() => { setGoalDraft(currentGoal); setShowGoals(true); }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, color: T.textMuted, cursor: "pointer", transition: "all 0.2s" }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 0, padding: "6px 12px", fontSize: 12, fontWeight: 600, color: T.textMuted, cursor: "pointer", transition: "all 0.2s" }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
                 >
@@ -437,8 +437,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                         <span style={{ fontSize: 11, color: T.textMuted }}>{trend.label}</span>
                         <span style={{ fontSize: 11, fontWeight: 700, color: trend.color }}>{trend.value}<span style={{ color: T.textMuted, fontWeight: 400 }}> / {trend.goal}</span></span>
                       </div>
-                      <div style={{ height: 3, background: "#1c1c1c", borderRadius: 999, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pct(trend.value, trend.goal)}%`, background: trend.color, borderRadius: 999, opacity: 0.6 }} />
+                      <div style={{ height: 3, background: "#1c1c1c", borderRadius: 0, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct(trend.value, trend.goal)}%`, background: trend.color, borderRadius: 0, opacity: 0.6 }} />
                       </div>
                     </div>
                   ))}
@@ -449,7 +449,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
           {/* RIGHT: Water Intake */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "24px 20px" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <Droplets size={18} style={{ color: T.blue }} />
                 <p style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Water Intake</p>
@@ -465,7 +465,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               {/* Water % + Quick buttons */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
                 <button onClick={() => adjustWater(-250)}
-                  style={{ width: 36, height: 36, borderRadius: 8, background: T.cardDeep, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer" }}
+                  style={{ width: 36, height: 36, borderRadius: 0, background: T.cardDeep, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer" }}
                 >
                   <Minus size={14} />
                 </button>
@@ -473,7 +473,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   <p style={{ fontSize: 20, fontWeight: 900, color: T.blue }}>{Math.round((waterMl / currentGoal.waterMl) * 100)}%</p>
                 </div>
                 <button onClick={() => adjustWater(250)}
-                  style={{ width: 36, height: 36, borderRadius: 8, background: T.blueBg, border: `1px solid ${T.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.blue, cursor: "pointer" }}
+                  style={{ width: 36, height: 36, borderRadius: 0, background: T.blueBg, border: `1px solid ${T.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.blue, cursor: "pointer" }}
                 >
                   <Plus size={14} />
                 </button>
@@ -481,8 +481,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               <p style={{ fontSize: 10, color: T.textGhost, textAlign: "center", marginBottom: 12 }}>250 ml per drink</p>
 
               {/* Thick progress bar */}
-              <div style={{ height: 8, background: "#181818", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
-                <div style={{ height: "100%", width: `${Math.min(100, (waterMl / currentGoal.waterMl) * 100)}%`, background: `linear-gradient(90deg, ${T.blue}, #93c5fd)`, borderRadius: 999, transition: "width 0.6s cubic-bezier(.4,0,.2,1)" }} />
+              <div style={{ height: 8, background: "#181818", borderRadius: 0, overflow: "hidden", marginBottom: 16 }}>
+                <div style={{ height: "100%", width: `${Math.min(100, (waterMl / currentGoal.waterMl) * 100)}%`, background: `linear-gradient(90deg, ${T.blue}, #93c5fd)`, borderRadius: 0, transition: "width 0.6s cubic-bezier(.4,0,.2,1)" }} />
               </div>
 
               {/* Glass buttons */}
@@ -491,7 +491,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   const filled = i < filledGlasses;
                   return (
                     <button key={i} onClick={() => logWater(i)} title={`${(i + 1) * glassMl}ml`}
-                      style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${filled ? T.blueBorder : T.border}`, background: filled ? T.blueBg : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: filled ? T.blue : T.textGhost, cursor: "pointer", transition: "all 0.15s" }}
+                      style={{ width: 40, height: 40, borderRadius: 0, border: `1px solid ${filled ? T.blueBorder : T.border}`, background: filled ? T.blueBg : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: filled ? T.blue : T.textGhost, cursor: "pointer", transition: "all 0.15s" }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = T.blueBorder; e.currentTarget.style.color = T.blue; e.currentTarget.style.background = T.blueBg; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = filled ? T.blueBorder : T.border; e.currentTarget.style.color = filled ? T.blue : T.textGhost; e.currentTarget.style.background = filled ? T.blueBg : "transparent"; }}
                     >
@@ -506,7 +506,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
         {/* ── MEAL SLOTS ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div style={{ width: 3, height: 18, borderRadius: 999, background: T.accent }} />
+          <div style={{ width: 3, height: 18, borderRadius: 0, background: T.accent }} />
           <p style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>Today&apos;s Meals</p>
         </div>
 
@@ -524,14 +524,14 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               const hasFood = slotEntries.length > 0;
 
               return (
-                <div key={mt.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, overflow: "hidden" }}>
+                <div key={mt.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
                   {/* Header */}
                   <div style={{ display: "flex", alignItems: "center", padding: "16px 18px", gap: 12 }}>
                     <button
                       style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}
                       onClick={() => setCollapsed(c => ({ ...c, [mt.id]: !c[mt.id] }))}
                     >
-                      <div style={{ width: 40, height: 40, borderRadius: 11, background: "#161616", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 0, background: "#161616", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
                         {mt.emoji ?? "🍽️"}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -561,7 +561,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
                     <button
                       onClick={() => { setActiveSlot(mt); setSearchQ(""); setSelectedFood(null); setQuantity("100"); }}
-                      style={{ width: 36, height: 36, borderRadius: 9, background: T.accentBg, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}
+                      style={{ width: 36, height: 36, borderRadius: 0, background: T.accentBg, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}
                       onMouseEnter={e => { e.currentTarget.style.background = "rgba(132,204,22,0.2)"; }}
                       onMouseLeave={e => { e.currentTarget.style.background = T.accentBg; }}
                     >
@@ -576,7 +576,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                         <div key={e.id} className="ff-entry-row"
                           style={{ display: "flex", alignItems: "center", padding: "12px 18px", gap: 10, borderTop: idx > 0 ? "1px solid #161616" : "none", flexWrap: "wrap" }}
                         >
-                          <div style={{ width: 6, height: 6, borderRadius: 999, background: T.accentBg, border: `1px solid ${T.accentBorder}`, flexShrink: 0 }} />
+                          <div style={{ width: 6, height: 6, borderRadius: 0, background: T.accentBg, border: `1px solid ${T.accentBorder}`, flexShrink: 0 }} />
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                               <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.foodItem.name}</p>
@@ -600,7 +600,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                                   type="number"
                                   value={editQuantity}
                                   onChange={ev => setEditQuantity(ev.target.value)}
-                                  style={{ width: 60, background: T.bg, border: `1px solid ${T.accentBorder}`, borderRadius: 6, padding: "6px 8px", fontSize: 13, fontWeight: 700, color: T.text, outline: "none", textAlign: "right" }}
+                                  style={{ width: 60, background: T.bg, border: `1px solid ${T.accentBorder}`, borderRadius: 0, padding: "6px 8px", fontSize: 13, fontWeight: 700, color: T.text, outline: "none", textAlign: "right" }}
                                   autoFocus
                                   onKeyDown={ev => {
                                     if (ev.key === "Enter") updateEntry(e.id, Number(editQuantity));
@@ -608,7 +608,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                                   }}
                                 />
                                 <button onClick={() => updateEntry(e.id, Number(editQuantity))}
-                                  style={{ width: 28, height: 28, borderRadius: 6, background: T.accentBg, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, cursor: "pointer" }}
+                                  style={{ width: 28, height: 28, borderRadius: 0, background: T.accentBg, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, cursor: "pointer" }}
                                 >
                                   <Check size={12} />
                                 </button>
@@ -616,14 +616,14 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                             ) : (
                               <>
                                 <button className="ff-edit-btn" onClick={() => { setEditingEntry(e.id); setEditQuantity(String(e.quantity)); }}
-                                  style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer", transition: "all 0.15s", opacity: 0 }}
+                                  style={{ width: 30, height: 30, borderRadius: 0, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer", transition: "all 0.15s", opacity: 0 }}
                                   onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
                                   onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
                                 >
                                   <Pencil size={13} />
                                 </button>
                                 <button className="ff-delete-btn" onClick={() => deleteEntry(e.id)}
-                                  style={{ width: 30, height: 30, borderRadius: 8, background: T.redBg, border: "1px solid rgba(248,113,113,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: T.red, cursor: "pointer", transition: "all 0.15s", opacity: 0 }}
+                                  style={{ width: 30, height: 30, borderRadius: 0, background: T.redBg, border: "1px solid rgba(248,113,113,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: T.red, cursor: "pointer", transition: "all 0.15s", opacity: 0 }}
                                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.18)"; }}
                                   onMouseLeave={e => { e.currentTarget.style.background = T.redBg; }}
                                 >
@@ -652,7 +652,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           {/* Top bar */}
           <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 24px", borderBottom: `1px solid ${T.border}`, flexShrink: 0, background: T.card }}>
             <button onClick={() => { setActiveSlot(null); setSelectedFood(null); setSearchQ(""); }}
-              style={{ width: 40, height: 40, borderRadius: 10, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
+              style={{ width: 40, height: 40, borderRadius: 0, background: "transparent", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
             >
@@ -670,7 +670,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: T.textMuted }} />
               <input autoFocus value={searchQ} onChange={e => setSearchQ(e.target.value)}
                 placeholder="Search food (rice, dal, paneer, egg, chicken…)"
-                style={{ width: "100%", background: "#161616", border: `1px solid ${T.border}`, borderRadius: 10, paddingLeft: 44, paddingRight: 44, paddingTop: 12, paddingBottom: 12, fontSize: 15, color: T.text, outline: "none", transition: "border-color 0.2s", boxSizing: "border-box" }}
+                style={{ width: "100%", background: "#161616", border: `1px solid ${T.border}`, borderRadius: 0, paddingLeft: 44, paddingRight: 44, paddingTop: 12, paddingBottom: 12, fontSize: 15, color: T.text, outline: "none", transition: "border-color 0.2s", boxSizing: "border-box" }}
                 onFocus={e => { e.currentTarget.style.borderColor = T.accentBorder; }}
                 onBlur={e => { e.currentTarget.style.borderColor = T.border; }}
               />
@@ -692,7 +692,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>Quantity</label>
-                  <div style={{ display: "flex", alignItems: "center", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
                     <input type="number" min="1" max="5000" value={quantity} onChange={e => setQuantity(e.target.value)}
                       style={{ flex: 1, background: "transparent", border: "none", padding: "12px 14px", fontSize: 17, fontWeight: 700, color: T.text, outline: "none", width: "100%" }}
                     />
@@ -702,7 +702,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 <div style={{ display: "flex", gap: 6, paddingBottom: 1, flexWrap: "wrap" }}>
                   {[50, 100, 150, 200].map(q => (
                     <button key={q} onClick={() => setQuantity(String(q))}
-                      style={{ padding: "12px 10px", borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s", background: quantity === String(q) ? T.accent : "transparent", color: quantity === String(q) ? "#000" : T.textMuted, border: `1px solid ${quantity === String(q) ? T.accent : T.border}` }}
+                      style={{ padding: "12px 10px", borderRadius: 0, fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s", background: quantity === String(q) ? T.accent : "transparent", color: quantity === String(q) ? "#000" : T.textMuted, border: `1px solid ${quantity === String(q) ? T.accent : T.border}` }}
                     >{q}g</button>
                   ))}
                 </div>
@@ -717,7 +717,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     { label: "Fat", value: preview.fat, color: T.red, bg: T.redBg },
                     { label: "Fiber", value: preview.fiber, color: T.green, bg: T.greenBg },
                   ].map(m => (
-                    <div key={m.label} style={{ background: m.bg, border: `1px solid ${m.color}20`, borderRadius: 10, padding: "12px 8px", textAlign: "center" }}>
+                    <div key={m.label} style={{ background: m.bg, border: `1px solid ${m.color}20`, borderRadius: 0, padding: "12px 8px", textAlign: "center" }}>
                       <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 20, fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</p>
                       <p style={{ fontSize: 10, color: T.textMuted, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</p>
                     </div>
@@ -726,7 +726,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               )}
 
               <button onClick={logFood} disabled={logging || !quantity || Number(quantity) <= 0}
-                style={{ width: "100%", padding: "14px", background: T.accent, color: "#000", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", border: "none", borderRadius: 10, cursor: logging ? "not-allowed" : "pointer", opacity: logging || !quantity || Number(quantity) <= 0 ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "14px", background: T.accent, color: "#000", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", border: "none", borderRadius: 0, cursor: logging ? "not-allowed" : "pointer", opacity: logging || !quantity || Number(quantity) <= 0 ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", boxSizing: "border-box" }}
                 onMouseEnter={e => { if (!logging) e.currentTarget.style.background = T.accentLight; }}
                 onMouseLeave={e => { e.currentTarget.style.background = T.accent; }}
               >
@@ -753,7 +753,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{food.name}</p>
-                      {food.isCustom && <span style={{ fontSize: 9, fontWeight: 800, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentBorder}`, borderRadius: 4, padding: "2px 7px", flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>custom</span>}
+                      {food.isCustom && <span style={{ fontSize: 9, fontWeight: 800, color: T.accent, background: T.accentBg, border: `1px solid ${T.accentBorder}`, borderRadius: 0, padding: "2px 7px", flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>custom</span>}
                     </div>
                     <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>per 100g</p>
                   </div>
@@ -774,9 +774,9 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
       {showGoals && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end" }} onClick={() => setShowGoals(false)}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }} />
-          <div style={{ position: "relative", width: "100%", maxWidth: 580, margin: "0 auto", background: T.card, border: `1px solid ${T.border}`, borderTop: `2px solid ${T.accent}`, borderRadius: "22px 22px 0 0", padding: "28px 28px 44px", boxShadow: "0 -40px 100px rgba(0,0,0,0.7)" }}
+          <div style={{ position: "relative", width: "100%", maxWidth: 580, margin: "0 auto", background: T.card, border: `1px solid ${T.border}`, borderTop: `2px solid ${T.accent}`, borderRadius: 0, padding: "28px 28px 44px", boxShadow: "0 -40px 100px rgba(0,0,0,0.7)" }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ width: 36, height: 3, borderRadius: 999, background: T.borderMid, margin: "0 auto 24px" }} />
+            <div style={{ width: 36, height: 3, borderRadius: 0, background: T.borderMid, margin: "0 auto 24px" }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
               <div>
                 <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>Nutrition</p>
@@ -797,13 +797,13 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 { key: "waterMl", label: "Water", unit: "ml", color: T.blue },
               ].map(({ key, label, unit, color }) => (
                 <div key={key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 4, height: 36, borderRadius: 999, background: color, flexShrink: 0 }} />
+                  <div style={{ width: 4, height: 36, borderRadius: 0, background: color, flexShrink: 0 }} />
                   <label style={{ fontSize: 13, color: T.textSecond, width: 76, flexShrink: 0 }}>{label}</label>
                   <div style={{ flex: 1, position: "relative" }}>
                     <input type="number"
                       value={(goalDraft as unknown as Record<string, number>)[key]}
                       onChange={e => setGoalDraft(p => ({ ...p, [key]: Number(e.target.value) }))}
-                      style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "11px 46px 11px 14px", fontSize: 15, fontWeight: 700, color: T.text, outline: "none", textAlign: "right", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                      style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 0, padding: "11px 46px 11px 14px", fontSize: 15, fontWeight: 700, color: T.text, outline: "none", textAlign: "right", boxSizing: "border-box", transition: "border-color 0.2s" }}
                       onFocus={e => { e.currentTarget.style.borderColor = color; }}
                       onBlur={e => { e.currentTarget.style.borderColor = T.border; }}
                     />
@@ -814,7 +814,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
             </div>
 
             <button onClick={saveGoals} disabled={savingGoals}
-              style={{ width: "100%", padding: "15px", background: T.accent, color: "#000", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 19, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", border: "none", borderRadius: 12, cursor: savingGoals ? "not-allowed" : "pointer", opacity: savingGoals ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s" }}
+              style={{ width: "100%", padding: "15px", background: T.accent, color: "#000", fontFamily: "'Barlow Condensed', sans-serif", fontSize: 19, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em", border: "none", borderRadius: 0, cursor: savingGoals ? "not-allowed" : "pointer", opacity: savingGoals ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s" }}
               onMouseEnter={e => { if (!savingGoals) e.currentTarget.style.background = T.accentLight; }}
               onMouseLeave={e => { e.currentTarget.style.background = T.accent; }}
             >
@@ -831,7 +831,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         .ff-entry-row:hover .ff-delete-btn { opacity: 1 !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius:0; }
       `}</style>
     </div>
   );

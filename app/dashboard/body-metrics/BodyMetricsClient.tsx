@@ -518,8 +518,8 @@ function MiniBar({ value, min, max, color, label }: { value: number; min: number
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.textMuted, marginBottom: 3 }}>
         <span>{label}</span><span style={{ color }}>{value}</span>
       </div>
-      <div style={{ height: 4, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
-        <div style={{ height: 4, width: `${pct}%`, background: color, borderRadius: 2, transition: "width 0.6s ease" }} />
+      <div style={{ height: 4, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+        <div style={{ height: 4, width: `${pct}%`, background: color, borderRadius: 0, transition: "width 0.6s ease" }} />
       </div>
     </div>
   );
@@ -534,7 +534,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
     background: "#0f0f0f", border: `1px solid ${T.border}`,
-    borderRadius: 8, padding: "10px 12px", fontSize: 15, fontWeight: 600,
+    borderRadius: 0, padding: "10px 12px", fontSize: 15, fontWeight: 600,
     color: T.text, outline: "none",
   };
   function handleConfirm() {
@@ -545,9 +545,9 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
   }
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 20, padding: "32px", width: "100%", maxWidth: 420 }}>
+      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 420 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accentDim + "44", border: `1px solid ${T.accent}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 36, height: 36, borderRadius: 0, background: T.accentDim + "44", border: `1px solid ${T.accent}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <User size={18} color={T.accent} />
           </div>
           <h2 style={{ fontSize: 17, fontWeight: 800 }}>Quick Setup</h2>
@@ -570,7 +570,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
             <div style={{ display: "flex", gap: 8 }}>
               {(["male", "female"] as const).map(g => (
                 <button key={g} onClick={() => setGender(g)} style={{
-                  flex: 1, padding: "10px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
+                  flex: 1, padding: "10px", borderRadius: 0, fontSize: 13, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
                   background: gender === g ? T.accent + "22" : "#0f0f0f",
                   border: `1px solid ${gender === g ? T.accent : T.border}`,
                   color: gender === g ? T.accent : T.textMuted,
@@ -580,7 +580,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
           </div>
           {err && <p style={{ fontSize: 12, color: T.danger }}>{err}</p>}
           <button onClick={handleConfirm} style={{
-            background: T.accent, color: "#000", border: "none", borderRadius: 9,
+            background: T.accent, color: "#000", border: "none", borderRadius: 0,
             padding: "12px", fontSize: 14, fontWeight: 800, cursor: "pointer",
             textTransform: "uppercase", letterSpacing: "0.05em",
           }}>
@@ -864,7 +864,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* BLE error banner */}
         {bleError && (
-          <div style={{ background: "#450a0a22", border: `1px solid ${T.danger}44`, borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
+          <div style={{ background: "#450a0a22", border: `1px solid ${T.danger}44`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
             <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
               <p style={{ fontWeight: 700, marginBottom: 2 }}>Scale connection issue</p>
@@ -876,7 +876,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* BLE connected banner */}
         {bleStatus === "connected" && !showManual && !showBioPrompt && (
-          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 10, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 0, padding: "14px 18px", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.success }}>
               <Bluetooth size={15} />
               <div style={{ flex: 1 }}>
@@ -898,18 +898,18 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* Saved flash */}
         {savedFlash && (
-          <div style={{ background: "#14532d", border: `1px solid #16a34a`, borderRadius: 10, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: T.success }}>
+          <div style={{ background: "#14532d", border: `1px solid #16a34a`, borderRadius: 0, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: T.success }}>
             <Check size={16} /> Metrics saved successfully!
           </div>
         )}
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 28, background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 4, width: "fit-content" }}>
+        <div style={{ display: "flex", gap: 4, marginBottom: 28, background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 4, width: "fit-content" }}>
           {(["overview", "history"] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               background: tab === t ? T.accent : "transparent",
               color:      tab === t ? "#000" : T.textMuted,
-              border: "none", borderRadius: 7, padding: "7px 18px", fontSize: 13, fontWeight: 700,
+              border: "none", borderRadius: 0, padding: "7px 18px", fontSize: 13, fontWeight: 700,
               cursor: "pointer", textTransform: "capitalize", letterSpacing: "0.03em",
               transition: "all 0.15s",
             }}>{t}</button>
@@ -968,7 +968,7 @@ function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status:
         display: "flex", alignItems: "center", gap: 8,
         background: c.bg, color: c.color,
         border: `1px solid ${status === "idle" ? "transparent" : T.border}`,
-        borderRadius: 9, padding: "10px 20px", fontSize: 13, fontWeight: 700,
+        borderRadius: 0, padding: "10px 20px", fontSize: 13, fontWeight: 700,
         cursor: status === "scanning" ? "not-allowed" : "pointer",
         letterSpacing: "0.04em", textTransform: "uppercase",
       }}>
@@ -979,7 +979,7 @@ function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status:
           display: "flex", alignItems: "center", gap: 8,
           background: "transparent", color: T.textMuted,
           border: `1px solid ${T.border}`,
-          borderRadius: 9, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+          borderRadius: 0, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer",
         }}>
           <Plus size={14} /> Manual Entry
         </button>
@@ -992,9 +992,9 @@ function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status:
 function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => void; onManual: () => void; bleStatus: BleStatus; firstName: string }) {
   return (
     <div>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "48px 40px", marginBottom: 24, textAlign: "center", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "48px 40px", marginBottom: 24, textAlign: "center", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${T.accent}, #38bdf8, #f472b6, ${T.accent})` }} />
-        <div style={{ width: 64, height: 64, borderRadius: 18, background: "#1a1a1a", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
+        <div style={{ width: 64, height: 64, borderRadius: 0, background: "#1a1a1a", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
           <Scale size={28} />
         </div>
         <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, textTransform: "uppercase", marginBottom: 10 }}>
@@ -1004,10 +1004,10 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
           Connect your MEDITIVE BLE scale via Bluetooth, or log your first reading manually. All 18 body composition parameters will be tracked here.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onBle} style={{ display: "flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", border: "none", borderRadius: 9, padding: "12px 24px", fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          <button onClick={onBle} style={{ display: "flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", border: "none", borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.05em", textTransform: "uppercase" }}>
             <Bluetooth size={15} /> Connect Scale
           </button>
-          <button onClick={onManual} style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 9, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={onManual} style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
             <Plus size={15} /> Enter Manually
           </button>
         </div>
@@ -1015,7 +1015,7 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
       <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>18 parameters you'll track</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
         {PARAM_DEFS.map(def => (
-          <div key={def.key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, opacity: 0.55 }}>
+          <div key={def.key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, opacity: 0.55 }}>
             <div style={{ color: def.color, flexShrink: 0 }}>{def.icon}</div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700 }}>{def.label}</p>
@@ -1037,7 +1037,7 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
         const rangeInfo = getRangeInfo(def, value);
         return (
           <div key={def.key} onClick={() => onInfoClick(def.key)} style={{
-            background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 22px",
+            background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 22px",
             cursor: "pointer", position: "relative", overflow: "hidden", transition: "border-color 0.15s",
           }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = T.borderHover)}
@@ -1056,7 +1056,7 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
                   <span style={{ fontSize: 13, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>{def.unit}</span>
                 </p>
                 {rangeInfo && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: rangeInfo.color, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 4, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: rangeInfo.color, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                     {rangeInfo.label}
                   </span>
                 )}
@@ -1104,7 +1104,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
 
   if (loading) {
     return (
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "60px 28px", textAlign: "center" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "60px 28px", textAlign: "center" }}>
         <p style={{ color: T.textMuted, fontSize: 14 }}>Loading your history…</p>
       </div>
     );
@@ -1112,7 +1112,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
 
   if (history.length === 0) {
     return (
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "60px 40px", textAlign: "center" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "60px 40px", textAlign: "center" }}>
         <Scale size={32} color={T.textMuted} style={{ margin: "0 auto 16px" }} />
         <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>No history yet</p>
         <p style={{ color: T.textMuted, fontSize: 14 }}>Save your first measurement to start tracking progress.</p>
@@ -1136,7 +1136,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* ── Chart ── */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 28px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <BarChart3 size={16} color={T.accent} />
@@ -1145,7 +1145,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {(Object.entries(metricLabels) as [ChartKey, string][]).map(([k, label]) => (
               <button key={k} onClick={() => setChartMetric(k)} style={{
-                fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 6, cursor: "pointer",
+                fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 0, cursor: "pointer",
                 background: chartMetric === k ? chartColors[k] + "22" : "transparent",
                 color: chartMetric === k ? chartColors[k] : T.textMuted,
                 border: `1px solid ${chartMetric === k ? chartColors[k] : T.border}`,
@@ -1196,7 +1196,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
       </div>
 
       {/* ── All Readings (clickable, expandable) ── */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: "24px 28px" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 28px" }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>All Readings</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[...history].reverse().map((row) => {
@@ -1222,7 +1222,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
               <div key={row.id} style={{
                 background: isOpen ? "#141414" : "#0f0f0f",
                 border: `1px solid ${isOpen ? T.borderHover : T.border}`,
-                borderRadius: 10, overflow: "hidden",
+                borderRadius: 0, overflow: "hidden",
                 transition: "border-color 0.15s",
               }}>
                 {/* Summary row — always visible, click to expand */}
@@ -1231,7 +1231,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                   style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, cursor: "pointer" }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 0, background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Scale size={14} color={T.accent} />
                     </div>
                     <div>
@@ -1260,7 +1260,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                     <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>All recorded metrics</p>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
                       {expandedStats.map(s => (
-                        <div key={s.label} style={{ background: "#111", border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
+                        <div key={s.label} style={{ background: "#111", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
                           <p style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
                           <p style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: s.color, lineHeight: 1 }}>
                             {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "—"}
@@ -1289,7 +1289,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: "20px 20px 0 0", padding: "28px 28px 44px", width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px 44px", width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -1308,7 +1308,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
             </span>
             <span style={{ fontSize: 16, color: T.textMuted }}>{def.unit}</span>
             {rangeInfo && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: rangeInfo.color, background: rangeInfo.color + "18", border: `1px solid ${rangeInfo.color}44`, borderRadius: 5, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: rangeInfo.color, background: rangeInfo.color + "18", border: `1px solid ${rangeInfo.color}44`, borderRadius: 0, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {rangeInfo.label}
               </span>
             )}
@@ -1320,7 +1320,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
 
         {/* Personalised insight */}
         {personalInsight && (
-          <div style={{ background: def.color + "12", border: `1px solid ${def.color}33`, borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10 }}>
+          <div style={{ background: def.color + "12", border: `1px solid ${def.color}33`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10 }}>
             <Lightbulb size={15} color={def.color} style={{ flexShrink: 0, marginTop: 1 }} />
             <p style={{ fontSize: 13, color: def.color, lineHeight: 1.6 }}>{personalInsight}</p>
           </div>
@@ -1339,7 +1339,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
                 return (
                   <div key={r.label} style={{
                     padding: "10px 14px", background: isActive ? r.color + "15" : "#1a1a1a",
-                    border: `1px solid ${isActive ? r.color : T.border}`, borderRadius: 8,
+                    border: `1px solid ${isActive ? r.color : T.border}`, borderRadius: 0,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isActive ? 6 : 0 }}>
                       <span style={{ fontSize: 13, color: r.color, fontWeight: 700 }}>{r.label}</span>
@@ -1348,8 +1348,8 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
                       </span>
                     </div>
                     {isActive && value !== null && (
-                      <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ height: 3, width: `${barPct}%`, background: r.color, borderRadius: 2 }} />
+                      <div style={{ height: 3, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+                        <div style={{ height: 3, width: `${barPct}%`, background: r.color, borderRadius: 0 }} />
                       </div>
                     )}
                   </div>
@@ -1367,8 +1367,8 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {def.tips.map((tip, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, padding: "10px 14px", background: "#111", border: `1px solid ${T.border}`, borderRadius: 8 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 5, background: def.color + "22", border: `1px solid ${def.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color: def.color }}>
+                <div key={i} style={{ display: "flex", gap: 10, padding: "10px 14px", background: "#111", border: `1px solid ${T.border}`, borderRadius: 0 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 0, background: def.color + "22", border: `1px solid ${def.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color: def.color }}>
                     {i + 1}
                   </div>
                   <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.6 }}>{tip}</p>
@@ -1407,7 +1407,7 @@ function ManualForm({ draft, onChange, onSave, saving }: {
                 width: "100%", boxSizing: "border-box",
                 background: draft[def.key] ? "#0f1a0a" : "#0f0f0f",
                 border: `1px solid ${draft[def.key] ? T.accentDim : T.border}`,
-                borderRadius: 8, padding: "10px 12px", fontSize: 14, fontWeight: 600,
+                borderRadius: 0, padding: "10px 12px", fontSize: 14, fontWeight: 600,
                 color: T.text, outline: "none",
               }}
             />
@@ -1417,7 +1417,7 @@ function ManualForm({ draft, onChange, onSave, saving }: {
       <button onClick={onSave} disabled={saving} style={{
         display: "flex", alignItems: "center", gap: 8,
         background: T.accent, color: "#000", border: "none",
-        borderRadius: 9, padding: "12px 28px", fontSize: 14, fontWeight: 800,
+        borderRadius: 0, padding: "12px 28px", fontSize: 14, fontWeight: 800,
         cursor: saving ? "not-allowed" : "pointer", letterSpacing: "0.05em", textTransform: "uppercase",
         opacity: saving ? 0.6 : 1,
       }}>
@@ -1438,7 +1438,7 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
 }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", zIndex: 100, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px" }}>
-      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 20, padding: "32px", width: "100%", maxWidth: 720 }}>
+      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 720 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>
             {bleConnected ? "Scale Connected — Review & Save" : "Manual Entry"}
@@ -1446,7 +1446,7 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={20} /></button>
         </div>
         {bleConnected && (
-          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
+          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 0, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
             <Bluetooth size={14} /> Metrics auto-populated from your scale. Review and hit Save.
           </div>
         )}
