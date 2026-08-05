@@ -6,7 +6,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const T = { bg: "#0a0a0a", card: "#111111", cardBorder: "#1f1f1f", accent: "#84cc16", accentLight: "#a3e635", textPrimary: "#fff", textSecond: "#a3a3a3", textMuted: "#9a9a94" };
+const T = { bg: "#070707", card: "#050504", cardBorder: "#232320", accent: "#84cc16", accentLight: "#84cc16", textPrimary: "#f7f7f5", textSecond: "#9a9a94", textMuted: "#85857e" };
 const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
 
 function Field({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; type?: string }) {
@@ -15,7 +15,7 @@ function Field({ label, value, onChange, placeholder, type = "text" }: { label: 
     <div style={{ marginBottom: 16 }}>
       <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</label>
       <input type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onFocus={() => setF(true)} onBlur={() => setF(false)}
-        style={{ width: "100%", background: "#161616", border: `1px solid ${f ? "rgba(132,204,22,0.5)" : T.cardBorder}`, borderRadius: 10, padding: "13px 16px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box" }} />
+        style={{ width: "100%", background: "#161616", border: `1px solid ${f ? "rgba(132,204,22,0.5)" : T.cardBorder}`, borderRadius: 0, padding: "13px 16px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box" }} />
     </div>
   );
 }
@@ -93,7 +93,7 @@ function DigitalCheckout() {
   if (!planSlug || !sale) return (
     <main style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, display: "grid", placeItems: "center", padding: 24 }}>
       <div style={{ textAlign: "center" }}><p style={{ marginBottom: 20 }}>No plan selected.</p>
-        <button onClick={() => router.push("/plans/digital")} style={{ background: T.accent, color: "#0a0a0a", fontWeight: 700, padding: "12px 22px", borderRadius: 10, border: "none", cursor: "pointer" }}>View digital plans</button></div>
+        <button onClick={() => router.push("/plans/digital")} style={{ background: T.accent, color: "#070707", fontWeight: 700, padding: "12px 22px", borderRadius: 0, border: "none", cursor: "pointer" }}>View digital plans</button></div>
     </main>
   );
 
@@ -102,7 +102,7 @@ function DigitalCheckout() {
       {payuData && <form id="payu-form" method="POST" action={payuData.payuUrl} style={{ display: "none" }}>{Object.entries(payuData).map(([k, v]) => k !== "payuUrl" ? <input key={k} type="hidden" name={k} value={v} /> : null)}</form>}
       <div style={{ maxWidth: 760, margin: "0 auto", display: "grid", gap: 24 }}>
         <h1 style={{ fontSize: 30, fontWeight: 800 }}>Checkout</h1>
-        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: 24 }}>
           <p style={{ color: T.textMuted, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Your plan</p>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 14 }}>{tier} · {planName}</h2>
           <div style={{ display: "flex", justifyContent: "space-between", color: T.textSecond, fontSize: 14, marginBottom: 6 }}><span>Plan price</span><span>{fmt(sale)}</span></div>
@@ -112,7 +112,7 @@ function DigitalCheckout() {
         </div>
 
         {creditApplicable > 0 && (
-          <div style={{ background: T.card, border: `1px solid ${useCredit ? T.accent : T.cardBorder}`, borderRadius: 16, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+          <div style={{ background: T.card, border: `1px solid ${useCredit ? T.accent : T.cardBorder}`, borderRadius: 0, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", flex: 1 }}>
               <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} style={{ width: 18, height: 18, accentColor: T.accent }} />
               <div>
@@ -123,15 +123,15 @@ function DigitalCheckout() {
           </div>
         )}
 
-        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: 24 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>Coupon code</label>
           <div style={{ display: "flex", gap: 10 }}>
-            <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. FITFUEL50" style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: T.textPrimary, outline: "none", textTransform: "uppercase" }} />
-            <button onClick={applyCouponFn} style={{ background: "transparent", color: T.accent, border: `1px solid ${T.accent}`, borderRadius: 10, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Apply</button>
+            <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. FITFUEL50" style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "12px 14px", color: T.textPrimary, outline: "none", textTransform: "uppercase" }} />
+            <button onClick={applyCouponFn} style={{ background: "transparent", color: T.accent, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Apply</button>
           </div>
           {couponMsg && <p style={{ marginTop: 8, fontSize: 13, color: couponMsg.ok ? T.accentLight : "#f87171" }}>{couponMsg.text}</p>}
         </div>
-        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: 24 }}>
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Your details</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="First name" value={firstname} onChange={setFirst} placeholder="Pranit" />
@@ -142,10 +142,10 @@ function DigitalCheckout() {
           <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}>No address needed {'\u2014'} digital download. After payment, log in with this email to download from your dashboard.</p>
         </div>
 
-        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 16, padding: 24 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: 24 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700 }}>Personalise my plan</h3>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#0a0a0a", background: T.accent, padding: "2px 8px", borderRadius: 999 }}>OPTIONAL</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#070707", background: T.accent, padding: "2px 8px", borderRadius: 0 }}>OPTIONAL</span>
           </div>
           <p style={{ color: T.textMuted, fontSize: 12.5, marginBottom: 16 }}>
             Add your stats and your PDF opens with your own numbers {'\u2014'} BMI, calorie target, deficit and a weight-projection chart. Skip it and you{'\u2019'}ll get the standard plan; you can add these later in your dashboard.
@@ -158,7 +158,7 @@ function DigitalCheckout() {
           </div>
         </div>
 
-        <button onClick={pay} disabled={busy} style={{ background: T.accent, color: "#0a0a0a", fontWeight: 800, fontSize: 16, padding: "15px 0", borderRadius: 12, border: "none", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
+        <button onClick={pay} disabled={busy} style={{ background: T.accent, color: "#070707", fontWeight: 800, fontSize: 16, padding: "15px 0", borderRadius: 0, border: "none", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
           {busy ? "Redirecting to PayU..." : `Pay ${fmt(payableTotal)} securely`}
         </button>
       </div>

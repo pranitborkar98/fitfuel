@@ -1,240 +1,212 @@
 "use client";
 
+// app/order/confirmation/page.tsx
+//
+// Order confirmation, on the Instrument System.
+//
+// Removed: an 88px border-radius:50% badge, four more 50% step bullets, radius
+// 8/12/16/20, a lime-to-transparent gradient bar, a lime box-shadow glow under
+// the WhatsApp button, a framer-motion spring that popped the badge in from
+// scale 0.5, and five staggered fade-ins.
+//
+// Emoji removed from three places, including the WhatsApp message body, which
+// is the one that mattered: the pre-filled text ended with a folded-hands
+// emoji, so every customer who tapped through sent it to us.
+//
+// COD used to be marked amber (#fbbf24) against lime for paid, a two-hue
+// status code. Both are plain facts and both are printed in words, so neither
+// gets a colour.
+//
+// The layout was centred. It is flush left in a measured column, and the order
+// facts are a spec-style readout rather than a card, because a confirmation is
+// a receipt: the numbers are the point.
+
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { motion } from "framer-motion";
 import { CheckCircle, MessageCircle, Truck, ChefHat, Clock, Banknote, LogIn } from "lucide-react";
+
 import { WHATSAPP_NUMBER } from "@/lib/site";
+import { Idx, k } from "@/app/_ui/Kit";
+import { Note, Shell, Wrap } from "@/app/_ui/Page";
+import { DIM, INK, body, display, label, num } from "@/app/_ui/theme";
 
-const T = {
-  bg:          "#0a0a0a",
-  card:        "#111111",
-  cardBorder:  "#1f1f1f",
-  accent:      "#84cc16",
-  textPrimary: "#ffffff",
-  textSecond:  "#a3a3a3",
-  textMuted:   "#9a9a94",
-};
-
-// Retired number, kept working here long after Decision #206. Imported now.
 const WA_NUMBER = WHATSAPP_NUMBER;
-function fmt(n: number) { return "₹" + n.toLocaleString("en-IN"); }
+
+function fmt(n: number) {
+  return "Rs " + n.toLocaleString("en-IN");
+}
 
 function ConfirmationInner() {
-  const params   = useSearchParams();
-  const router   = useRouter();
+  const params = useSearchParams();
+  const router = useRouter();
   const { data: session } = useSession();
 
-  const txnid   = params.get("txnid")  || "";
-  const amount  = Number(params.get("amount") || 0);
-  const isCOD   = params.get("cod") === "1";
+  const txnid = params.get("txnid") || "";
+  const amount = Number(params.get("amount") || 0);
+  const isCOD = params.get("cod") === "1";
   const orderNo = params.get("order") || txnid;
 
   const waText = encodeURIComponent(
-    `Hi FitFuel! My order is confirmed.\nOrder: ${orderNo}\nAmount: ${isCOD ? fmt(amount) + " (COD)" : fmt(amount)}\nPlease share delivery details. 🙏`
+    `Hi FitFuel! My order is confirmed.\nOrder: ${orderNo}\nAmount: ${
+      isCOD ? fmt(amount) + " (COD)" : fmt(amount)
+    }\nPlease share delivery details.`,
   );
 
   const steps = [
-    { icon: <CheckCircle size={18} />, title: "Order confirmed",   sub: "We've received your order" },
-    { icon: <ChefHat     size={18} />, title: "Fresh preparation", sub: "Your meals are cooked fresh daily in our kitchen" },
-    { icon: <Clock       size={18} />, title: "Delivery by 10am",  sub: "7am – 10am to your door every day" },
-    { icon: <Truck       size={18} />, title: isCOD ? "Pay cash at door" : "Payment received ✓",
-      sub: isCOD ? `Keep ${fmt(amount)} ready (incl. GST)` : "Paid online via PayU" },
+    { Icon: CheckCircle, title: "Order confirmed", sub: "We have received your order." },
+    { Icon: ChefHat, title: "Fresh preparation", sub: "Your meals are cooked fresh daily in our kitchen." },
+    { Icon: Clock, title: "Delivery by 10:00", sub: "07:00 to 10:00, to your door, every day." },
+    {
+      Icon: Truck,
+      title: isCOD ? "Pay cash at the door" : "Payment received",
+      sub: isCOD ? `Keep ${fmt(amount)} ready, GST included.` : "Paid online via PayU.",
+    },
   ];
 
   const isGuest = !session;
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, paddingTop: 100, paddingBottom: 80 }}>
-      <div style={{ maxWidth: 560, margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
+    <Shell>
+      <Wrap style={{ paddingTop: "clamp(110px,15vw,180px)", paddingBottom: "clamp(60px,9vw,110px)" }}>
+        <div style={{ maxWidth: 720 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {isCOD ? (
+              <Banknote size={16} color="#84cc16" aria-hidden="true" />
+            ) : (
+              <CheckCircle size={16} color="#84cc16" aria-hidden="true" />
+            )}
+            <span style={label("#84cc16")}>{isCOD ? "Order placed" : "Payment confirmed"}</span>
+          </span>
 
-        {/* Checkmark */}
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}
-        >
-          <div style={{
-            width: 88, height: 88, borderRadius: "50%",
-            background: "rgba(132,204,22,0.08)",
-            border: "2px solid rgba(132,204,22,0.35)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {isCOD
-              ? <Banknote size={44} color={T.accent} strokeWidth={1.5} />
-              : <CheckCircle size={44} color={T.accent} strokeWidth={1.5} />}
-          </div>
-        </motion.div>
-
-        {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          style={{ textAlign: "center", marginBottom: 36 }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase", marginBottom: 12 }}>
-            {isCOD ? "Order Placed" : "Payment Confirmed"}
-          </div>
-          <h1 style={{
-            fontFamily: "var(--ff-cond)",
-            fontSize: "clamp(2rem, 8vw, 3rem)",
-            fontWeight: 900, textTransform: "uppercase",
-            color: T.textPrimary, lineHeight: 1, margin: "0 0 12px",
-          }}>
-            {isCOD ? "Order Confirmed!" : "You're All Set!"}
+          <h1 style={{ ...display("clamp(2.4rem,8vw,5rem)"), margin: "18px 0 18px" }}>
+            {isCOD ? "Order confirmed" : "You are all set"}
           </h1>
-          <p style={{ fontSize: 15, color: T.textSecond, lineHeight: 1.7, margin: 0 }}>
-            {isCOD
-              ? <>Keep <strong style={{ color: T.textPrimary }}>{fmt(amount)}</strong> ready at delivery (incl. GST). Fresh meals arrive <strong style={{ color: T.textPrimary }}>7am–10am</strong> daily.</>
-              : <>Your FitFuel order is confirmed. Fresh meals at your door between <strong style={{ color: T.textPrimary }}>7am–10am</strong> daily.</>
-            }
-          </p>
-        </motion.div>
 
-        {/* Order details card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-          style={{
-            background: T.card, border: `1px solid ${T.cardBorder}`,
-            borderRadius: 20, padding: "24px 20px",
-            marginBottom: 16, position: "relative", overflow: "hidden",
-          }}
-        >
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>
-            Order Details
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ ...body(16.5), marginBottom: "clamp(30px,4vw,44px)" }}>
+            {isCOD ? (
+              <>
+                Keep <strong style={{ color: INK }}>{fmt(amount)}</strong> ready at delivery, GST
+                included. Fresh meals arrive between{" "}
+                <strong style={{ color: INK }}>07:00 and 10:00</strong> daily.
+              </>
+            ) : (
+              <>
+                Your FitFuel order is confirmed. Fresh meals at your door between{" "}
+                <strong style={{ color: INK }}>07:00 and 10:00</strong> daily.
+              </>
+            )}
+          </p>
+
+          {/* The receipt. Mono, tabular, flush rows on hairlines. */}
+          <Idx label="Order details" />
+          <div style={{ borderTop: "1px solid #232320", marginBottom: "clamp(30px,4vw,44px)" }}>
             {orderNo && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: T.textMuted }}>Order ID</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: T.textPrimary, fontFamily: "monospace" }}>{orderNo}</span>
+              <div style={ROW}>
+                <span style={label()}>Order ID</span>
+                <span style={num("14px", INK)}>{orderNo}</span>
               </div>
             )}
             {amount > 0 && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: T.textMuted }}>{isCOD ? "Pay at door" : "Amount paid"}</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: T.accent }}>{fmt(amount)}</span>
+              <div style={ROW}>
+                <span style={label()}>{isCOD ? "Pay at door" : "Amount paid"}</span>
+                <span style={num("20px", INK)}>{fmt(amount)}</span>
               </div>
             )}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 13, color: T.textMuted }}>Payment</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: isCOD ? "#fbbf24" : T.accent }}>
-                {isCOD ? "💵 Cash on Delivery" : "✅ Paid via PayU"}
-              </span>
+            <div style={ROW}>
+              <span style={label()}>Payment</span>
+              <span style={num("14px", INK)}>{isCOD ? "Cash on delivery" : "Paid via PayU"}</span>
             </div>
           </div>
-        </motion.div>
 
-        {/* Guest sign-in nudge — only shown when not logged in */}
-        {isGuest && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
-            style={{
-              background: "rgba(132,204,22,0.05)",
-              border: "1px solid rgba(132,204,22,0.25)",
-              borderRadius: 16, padding: "20px",
-              marginBottom: 16,
-              display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>
-                Save your order history
-              </div>
-              <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>
-                Sign in with Google to track this order and future deliveries on your dashboard.
-              </div>
-            </div>
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-              style={{
-                display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
-                background: T.accent, color: "#000",
-                fontWeight: 800, fontSize: 12,
-                padding: "10px 18px", borderRadius: 8, border: "none",
-                cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
-              }}
-            >
-              <LogIn size={13} /> Sign in with Google
-            </button>
-          </motion.div>
-        )}
+          {isGuest && (
+            <Note style={{ marginBottom: "clamp(30px,4vw,44px)" }}>
+              <p>
+                <strong>Save your order history.</strong> Sign in with Google to track this order
+                and future deliveries on your dashboard.
+              </p>
+              <button
+                type="button"
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                className={k.ghost}
+                style={{ marginTop: 16, gap: 8 }}
+              >
+                <LogIn size={14} aria-hidden="true" /> Sign in with Google
+              </button>
+            </Note>
+          )}
 
-        {/* What happens next */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-          style={{
-            background: T.card, border: `1px solid ${T.cardBorder}`,
-            borderRadius: 20, padding: "24px 20px", marginBottom: 16,
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 20 }}>
-            What happens next
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            {steps.map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-                  background: "rgba(132,204,22,0.08)", border: "1px solid rgba(132,204,22,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center", color: T.accent,
-                }}>
-                  {s.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary, marginBottom: 2 }}>{s.title}</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>{s.sub}</div>
-                </div>
+          <Idx label="What happens next" />
+          <div style={{ borderTop: "1px solid #232320", marginBottom: "clamp(30px,4vw,44px)" }}>
+            {steps.map(({ Icon, title, sub }) => (
+              <div key={title} style={{ ...ROW, alignItems: "flex-start", gap: 16 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  <Icon size={15} color="#85857e" aria-hidden="true" style={{ flexShrink: 0 }} />
+                  <span>
+                    <span
+                      style={{
+                        display: "block",
+                        fontFamily: "var(--font-barlow-condensed), sans-serif",
+                        fontWeight: 800,
+                        fontSize: 17,
+                        letterSpacing: "-0.01em",
+                        textTransform: "uppercase",
+                        color: INK,
+                      }}
+                    >
+                      {title}
+                    </span>
+                    <span style={{ ...body(13.5), color: DIM, marginTop: 3, display: "block" }}>
+                      {sub}
+                    </span>
+                  </span>
+                </span>
               </div>
             ))}
           </div>
-        </motion.div>
 
-        {/* Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-          style={{ display: "flex", flexDirection: "column", gap: 10 }}
-        >
-          <a
-            href={`https://wa.me/${WA_NUMBER}?text=${waText}`}
-            target="_blank" rel="noopener noreferrer"
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              background: T.accent, color: "#000", fontWeight: 900, fontSize: 13,
-              padding: "15px 0", borderRadius: 12, textDecoration: "none",
-              letterSpacing: "0.08em", textTransform: "uppercase",
-              boxShadow: "0 4px 20px rgba(132,204,22,0.35)",
-            }}
-          >
-            <MessageCircle size={15} /> WhatsApp Us
-          </a>
-          <button
-            onClick={() => router.push("/plans")}
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              background: "transparent", border: `1px solid ${T.cardBorder}`,
-              borderRadius: 12, padding: "14px 0",
-              fontSize: 13, fontWeight: 700, color: T.textSecond, cursor: "pointer",
-            }}
-          >
-            View Plans
-          </button>
-        </motion.div>
-
-      </div>
-    </div>
+          <div className={k.actions}>
+            <a
+              href={`https://wa.me/${WA_NUMBER}?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={k.btn}
+            >
+              <span>
+                <MessageCircle size={15} aria-hidden="true" style={{ marginRight: 8 }} />
+                WhatsApp us
+              </span>
+            </a>
+            <button type="button" onClick={() => router.push("/plans")} className={k.ghost}>
+              View plans
+            </button>
+          </div>
+        </div>
+      </Wrap>
+    </Shell>
   );
 }
 
+const ROW = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 16,
+  padding: "15px 0",
+  borderBottom: "1px solid #232320",
+} as const;
+
 export default function ConfirmationPage() {
   return (
-    <Suspense fallback={
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#a3a3a3" }}>
-        Loading...
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <Shell>
+          <Wrap style={{ paddingTop: 180 }}>
+            <span style={label()}>Loading</span>
+          </Wrap>
+        </Shell>
+      }
+    >
       <ConfirmationInner />
     </Suspense>
   );

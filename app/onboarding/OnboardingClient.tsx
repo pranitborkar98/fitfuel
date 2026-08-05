@@ -39,12 +39,12 @@ interface Props {
 
 // ── Constants ─────────────────────────────────────────────────
 const GOALS = [
-  { value: 'weight_loss',            label: 'Lose Weight',        icon: '🔥', desc: 'Burn fat, stay full' },
-  { value: 'aggressive_weight_loss', label: 'Aggressive Cut',     icon: '⚡', desc: 'Faster deficit, higher protein' },
-  { value: 'muscle_gain',            label: 'Build Muscle',       icon: '💪', desc: 'Calorie surplus, high protein' },
-  { value: 'lean_bulk',              label: 'Lean Bulk',          icon: '📈', desc: 'Slow, clean mass gain' },
-  { value: 'maintenance',            label: 'Maintain',           icon: '⚖️', desc: 'Eat at your TDEE' },
-  { value: 'performance',            label: 'Performance',        icon: '🏆', desc: 'Fuel training and sport' },
+  { value: 'weight_loss',            label: 'Lose Weight', desc: 'Burn fat, stay full' },
+  { value: 'aggressive_weight_loss', label: 'Aggressive Cut', desc: 'Faster deficit, higher protein' },
+  { value: 'muscle_gain',            label: 'Build Muscle', desc: 'Calorie surplus, high protein' },
+  { value: 'lean_bulk',              label: 'Lean Bulk', desc: 'Slow, clean mass gain' },
+  { value: 'maintenance',            label: 'Maintain', desc: 'Eat at your TDEE' },
+  { value: 'performance',            label: 'Performance', desc: 'Fuel training and sport' },
 ]
 
 const ACTIVITY_LEVELS = [
@@ -56,22 +56,22 @@ const ACTIVITY_LEVELS = [
 ]
 
 const DIETS = [
-  { value: 'vegetarian',    label: 'Vegetarian',    emoji: '🥗' },
-  { value: 'eggetarian',    label: 'Eggetarian',    emoji: '🥚' },
-  { value: 'non_vegetarian',label: 'Non-Vegetarian', emoji: '🍗' },
-  { value: 'jain',          label: 'Jain',          emoji: '🌿' },
-  { value: 'vegan',         label: 'Vegan',         emoji: '🌱' },
+  { value: 'vegetarian',    label: 'Vegetarian' },
+  { value: 'eggetarian',    label: 'Eggetarian' },
+  { value: 'non_vegetarian',label: 'Non-Vegetarian' },
+  { value: 'jain',          label: 'Jain' },
+  { value: 'vegan',         label: 'Vegan' },
 ]
 
 const CONDITIONS = [
-  { value: 'none',     label: 'None',            emoji: '✅' },
-  { value: 'pcos',     label: 'PCOS',            emoji: '🩷' },
-  { value: 'diabetic', label: 'Diabetic',         emoji: '💉' },
-  { value: 'thyroid',  label: 'Thyroid',          emoji: '🦋' },
-  { value: 'heart',    label: 'Heart Condition',  emoji: '❤️' },
-  { value: 'obesity',  label: 'Obesity (BMI 30+)', emoji: '⚕️' },
-  { value: 'gut',      label: 'Gut / IBS',        emoji: '🌿' },
-  { value: 'other',    label: 'Other',            emoji: '🏥' },
+  { value: 'none',     label: 'None' },
+  { value: 'pcos',     label: 'PCOS' },
+  { value: 'diabetic', label: 'Diabetic' },
+  { value: 'thyroid',  label: 'Thyroid' },
+  { value: 'heart',    label: 'Heart Condition' },
+  { value: 'obesity',  label: 'Obesity (BMI 30+)' },
+  { value: 'gut',      label: 'Gut / IBS' },
+  { value: 'other',    label: 'Other' },
 ]
 
 const ALLERGIES = [
@@ -224,7 +224,7 @@ export default function OnboardingClient({ userName }: Props) {
   const s = {
     wrap: {
       minHeight: '100vh',
-      background: '#080808',
+      background: '#070707',
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
@@ -236,8 +236,8 @@ export default function OnboardingClient({ userName }: Props) {
       width: '100%',
       maxWidth: 560,
       background: '#101010',
-      border: '1px solid #1f1f1f',
-      borderRadius: 20,
+      border: '1px solid #232320',
+      borderRadius: 0,
       overflow: 'hidden',
     },
     progressBar: {
@@ -246,7 +246,7 @@ export default function OnboardingClient({ userName }: Props) {
     },
     progressFill: {
       height: '100%',
-      background: 'linear-gradient(90deg, #a3e635, #84cc16)',
+      background: 'linear-gradient(90deg, #84cc16, #84cc16)',
       width: `${((step + 1) / 5) * 100}%`,
       transition: 'width 0.4s ease',
     },
@@ -257,7 +257,7 @@ export default function OnboardingClient({ userName }: Props) {
       fontSize: 12,
       fontWeight: 600,
       letterSpacing: '0.12em',
-      color: '#a3e635',
+      color: '#84cc16',
       textTransform: 'uppercase' as const,
       marginBottom: 8,
     },
@@ -290,7 +290,7 @@ export default function OnboardingClient({ userName }: Props) {
       width: '100%',
       background: '#161616',
       border: '1px solid #2a2a2a',
-      borderRadius: 10,
+      borderRadius: 0,
       padding: '12px 16px',
       fontSize: 15,
       color: '#fff',
@@ -311,19 +311,19 @@ export default function OnboardingClient({ userName }: Props) {
     optBtn: (active: boolean) => ({
       padding: '14px 12px',
       background: active ? 'rgba(163,230,53,0.12)' : '#161616',
-      border: `1.5px solid ${active ? '#a3e635' : '#2a2a2a'}`,
-      borderRadius: 12,
+      border: `1.5px solid ${active ? '#84cc16' : '#2a2a2a'}`,
+      borderRadius: 0,
       cursor: 'pointer',
       textAlign: 'center' as const,
       transition: 'all 0.15s',
-      color: active ? '#a3e635' : '#888',
+      color: active ? '#84cc16' : '#888',
     }),
     optBtnFull: (active: boolean) => ({
       width: '100%',
       padding: '14px 16px',
       background: active ? 'rgba(163,230,53,0.08)' : '#161616',
-      border: `1.5px solid ${active ? '#a3e635' : '#222'}`,
-      borderRadius: 12,
+      border: `1.5px solid ${active ? '#84cc16' : '#222'}`,
+      borderRadius: 0,
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -335,12 +335,12 @@ export default function OnboardingClient({ userName }: Props) {
     nextBtn: (disabled: boolean) => ({
       width: '100%',
       padding: '15px',
-      background: disabled ? '#1a1a1a' : 'linear-gradient(135deg, #a3e635, #84cc16)',
+      background: disabled ? '#1a1a1a' : 'linear-gradient(135deg, #84cc16, #84cc16)',
       border: 'none',
-      borderRadius: 12,
+      borderRadius: 0,
       fontSize: 15,
       fontWeight: 700,
-      color: disabled ? '#444' : '#080808',
+      color: disabled ? '#85857e' : '#070707',
       cursor: disabled ? 'not-allowed' : 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -365,14 +365,14 @@ export default function OnboardingClient({ userName }: Props) {
     statBox: {
       background: '#161616',
       border: '1px solid #222',
-      borderRadius: 14,
+      borderRadius: 0,
       padding: '20px 24px',
       textAlign: 'center' as const,
     },
     statNum: {
       fontSize: 36,
       fontWeight: 800,
-      color: '#a3e635',
+      color: '#84cc16',
       fontFamily: 'var(--ff-cond)',
       lineHeight: 1,
     },
@@ -385,7 +385,7 @@ export default function OnboardingClient({ userName }: Props) {
     errorBox: {
       background: 'rgba(239,68,68,0.1)',
       border: '1px solid rgba(239,68,68,0.3)',
-      borderRadius: 10,
+      borderRadius: 0,
       padding: '12px 16px',
       color: '#f87171',
       fontSize: 13,
@@ -401,15 +401,15 @@ export default function OnboardingClient({ userName }: Props) {
           {STEPS.map((st, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: i === step ? '#a3e635' : i < step ? 'rgba(163,230,53,0.2)' : '#161616',
-                border: `1.5px solid ${i <= step ? '#a3e635' : '#2a2a2a'}`,
+                width: 32, height: 32, borderRadius: 0,
+                background: i === step ? '#84cc16' : i < step ? 'rgba(163,230,53,0.2)' : '#161616',
+                border: `1.5px solid ${i <= step ? '#84cc16' : '#2a2a2a'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.3s',
               }}>
-                <st.icon size={14} color={i === step ? '#080808' : i < step ? '#a3e635' : '#444'} />
+                <st.icon size={14} color={i === step ? '#070707' : i < step ? '#84cc16' : '#85857e'} />
               </div>
-              {i < 4 && <div style={{ width: 20, height: 1, background: i < step ? '#a3e635' : '#222' }} />}
+              {i < 4 && <div style={{ width: 20, height: 1, background: i < step ? '#84cc16' : '#222' }} />}
             </div>
           ))}
         </div>
@@ -528,9 +528,8 @@ export default function OnboardingClient({ userName }: Props) {
                         style={s.optBtnFull(form.goal === g.value)}
                         onClick={() => set('goal', g.value)}
                       >
-                        <span style={{ fontSize: 22 }}>{g.icon}</span>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: form.goal === g.value ? '#a3e635' : '#ddd' }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: form.goal === g.value ? '#84cc16' : '#ddd' }}>
                             {g.label}
                           </div>
                           <div style={{ fontSize: 12, color: '#555', marginTop: 2 }}>{g.desc}</div>
@@ -553,20 +552,20 @@ export default function OnboardingClient({ userName }: Props) {
                             onClick={() => set('activityLevel', a.value)}
                           >
                             <div style={{
-                              width: 36, height: 36, borderRadius: 8,
+                              width: 36, height: 36, borderRadius: 0,
                               background: form.activityLevel === a.value ? 'rgba(163,230,53,0.2)' : '#1a1a1a',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               flexShrink: 0,
                             }}>
-                              <Activity size={16} color={form.activityLevel === a.value ? '#a3e635' : '#444'} />
+                              <Activity size={16} color={form.activityLevel === a.value ? '#84cc16' : '#85857e'} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: form.activityLevel === a.value ? '#a3e635' : '#ddd' }}>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: form.activityLevel === a.value ? '#84cc16' : '#ddd' }}>
                                 {a.label}
                               </div>
                               <div style={{ fontSize: 12, color: '#555', marginTop: 1 }}>{a.desc}</div>
                             </div>
-                            <div style={{ fontSize: 12, color: '#444', fontFamily: 'var(--ff-cond)' }}>{a.multiplier}</div>
+                            <div style={{ fontSize: 12, color: '#85857e', fontFamily: 'var(--ff-cond)' }}>{a.multiplier}</div>
                           </button>
                         ))}
                       </div>
@@ -589,7 +588,6 @@ export default function OnboardingClient({ userName }: Props) {
                             }}
                             onClick={() => set('dietaryPreference', d.value)}
                           >
-                            <span style={{ fontSize: 22 }}>{d.emoji}</span>
                             <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' as const }}>{d.label}</span>
                           </button>
                         ))}
@@ -617,7 +615,6 @@ export default function OnboardingClient({ userName }: Props) {
                             }}
                             onClick={() => toggleArray('healthConditions', c.value)}
                           >
-                            <span style={{ fontSize: 18 }}>{c.emoji}</span>
                             <span style={{ fontSize: 13, fontWeight: 500 }}>{c.label}</span>
                           </button>
                         ))}
@@ -653,24 +650,24 @@ export default function OnboardingClient({ userName }: Props) {
                       <div style={s.statBox}>
                         <div style={s.statNum}>{tdee.toLocaleString()}</div>
                         <div style={s.statLabel}>YOUR TDEE</div>
-                        <div style={{ fontSize: 12, color: '#444', marginTop: 4 }}>calories/day to maintain</div>
+                        <div style={{ fontSize: 12, color: '#85857e', marginTop: 4 }}>calories/day to maintain</div>
                       </div>
-                      <div style={{ ...s.statBox, border: '1.5px solid #a3e635', background: 'rgba(163,230,53,0.05)' }}>
+                      <div style={{ ...s.statBox, border: '1.5px solid #84cc16', background: 'rgba(163,230,53,0.05)' }}>
                         <div style={s.statNum}>{calorieTarget.toLocaleString()}</div>
-                        <div style={{ ...s.statLabel, color: '#a3e635' }}>YOUR TARGET</div>
-                        <div style={{ fontSize: 12, color: '#444', marginTop: 4 }}>personalised to your goal</div>
+                        <div style={{ ...s.statLabel, color: '#84cc16' }}>YOUR TARGET</div>
+                        <div style={{ fontSize: 12, color: '#85857e', marginTop: 4 }}>personalised to your goal</div>
                       </div>
                     </div>
 
                     {/* Macro preview */}
-                    <div style={{ background: '#161616', border: '1px solid #222', borderRadius: 14, padding: 20 }}>
+                    <div style={{ background: '#161616', border: '1px solid #222', borderRadius: 0, padding: 20 }}>
                       <div style={{ fontSize: 12, color: '#555', marginBottom: 12, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
                         Daily Macro Targets
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>
                         {[
                           // was #60a5fa (blue), the last off-palette hue on a public surface
-                          { label: 'Protein', value: Math.round((calorieTarget * 0.30) / 4), unit: 'g', color: '#a3e635' },
+                          { label: 'Protein', value: Math.round((calorieTarget * 0.30) / 4), unit: 'g', color: '#84cc16' },
                           { label: 'Carbs',   value: Math.round((calorieTarget * 0.43) / 4), unit: 'g', color: '#f59e0b' },
                           { label: 'Fat',     value: Math.round((calorieTarget * 0.27) / 9), unit: 'g', color: '#f87171' },
                         ].map(m => (
@@ -688,18 +685,18 @@ export default function OnboardingClient({ userName }: Props) {
                     <div style={{
                       background: 'rgba(163,230,53,0.06)',
                       border: '1px solid rgba(163,230,53,0.2)',
-                      borderRadius: 14,
+                      borderRadius: 0,
                       padding: '16px 20px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 12,
                     }}>
                       <div style={{
-                        width: 40, height: 40, borderRadius: 10,
+                        width: 40, height: 40, borderRadius: 0,
                         background: 'rgba(163,230,53,0.15)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
-                        <Apple size={20} color="#a3e635" />
+                        <Apple size={20} color="#84cc16" />
                       </div>
                       <div>
                         <div style={{ fontSize: 12, color: '#666', marginBottom: 3 }}>YOUR ASSIGNED PLAN</div>
@@ -729,8 +726,8 @@ export default function OnboardingClient({ userName }: Props) {
                       {loading ? (
                         <>
                           <span style={{
-                            width: 16, height: 16, border: '2px solid #080808',
-                            borderTop: '2px solid transparent', borderRadius: '50%',
+                            width: 16, height: 16, border: '2px solid #070707',
+                            borderTop: '2px solid transparent', borderRadius: 0,
                             display: 'inline-block', animation: 'spin 0.8s linear infinite',
                           }} />
                           Setting up your plan...
@@ -742,7 +739,7 @@ export default function OnboardingClient({ userName }: Props) {
                       )}
                     </button>
 
-                    <p style={{ fontSize: 12, color: '#444', textAlign: 'center' as const, margin: 0 }}>
+                    <p style={{ fontSize: 12, color: '#85857e', textAlign: 'center' as const, margin: 0 }}>
                       {result?.requiresOrder
                         ? 'Your targets are saved. Complete your order to activate meals.'
                         : 'You can update these details anytime from your profile.'
@@ -774,7 +771,7 @@ export default function OnboardingClient({ userName }: Props) {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        input:focus { border-color: #a3e635 !important; }
+        input:focus { border-color: #84cc16 !important; }
         input[type=number]::-webkit-inner-spin-button { opacity: 0.3; }
         button:hover { opacity: 0.92; }
       `}</style>

@@ -15,14 +15,14 @@ import { WHATSAPP_NUMBER } from "@/lib/site";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
-  bg:          "#0a0a0a",
-  card:        "#111111",
-  cardBorder:  "#1f1f1f",
+  bg:          "#070707",
+  card:        "#050504",
+  cardBorder:  "#232320",
   accent:      "#84cc16",
-  accentLight: "#a3e635",
-  textPrimary: "#ffffff",
-  textSecond:  "#a3a3a3",
-  textMuted:   "#9a9a94",
+  accentLight: "#84cc16",
+  textPrimary: "#f7f7f5",
+  textSecond:  "#9a9a94",
+  textMuted:   "#85857e",
 };
 
 // Was a local copy of the OLD number that Decision #206 retired, so anyone
@@ -77,7 +77,7 @@ function Field({
         style={{
           width: "100%", background: "#161616",
           border: `1px solid ${focused ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
-          borderRadius: 10, padding: "13px 16px",
+          borderRadius: 0, padding: "13px 16px",
           fontSize: 14, color: T.textPrimary, outline: "none",
           boxSizing: "border-box", transition: "border-color 0.2s",
         }}
@@ -108,7 +108,7 @@ function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMet
                 display: "flex", alignItems: "flex-start", gap: 12,
                 background: active ? "rgba(132,204,22,0.07)" : "#161616",
                 border: `1px solid ${active ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
-                borderRadius: 12, padding: "14px 16px",
+                borderRadius: 0, padding: "14px 16px",
                 cursor: "pointer", textAlign: "left", transition: "all 0.2s",
               }}
             >
@@ -135,13 +135,13 @@ function AddressCard({
         width: "100%", textAlign: "left",
         background: selected ? "rgba(132,204,22,0.07)" : "#161616",
         border: `1px solid ${selected ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
-        borderRadius: 12, padding: "14px 16px",
+        borderRadius: 0, padding: "14px 16px",
         cursor: "pointer", transition: "all 0.2s",
         display: "flex", alignItems: "flex-start", gap: 12,
       }}
     >
       <div style={{
-        width: 32, height: 32, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+        width: 32, height: 32, borderRadius: 0, flexShrink: 0, marginTop: 1,
         background: selected ? "rgba(132,204,22,0.15)" : "#1a1a1a",
         border: `1px solid ${selected ? "rgba(132,204,22,0.4)" : T.cardBorder}`,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -161,7 +161,7 @@ function AddressCard({
         {address.landmark && <div style={{ fontSize: 12, color: T.textMuted }}>Near: {address.landmark}</div>}
       </div>
       {selected && (
-        <div style={{ width: 18, height: 18, borderRadius: "50%", background: T.accent, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 18, height: 18, borderRadius: 0, background: T.accent, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#000" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
       )}
@@ -294,7 +294,7 @@ function CheckoutInner() {
         <p style={{ fontSize: 16, marginBottom: 24 }}>No plan selected. Please choose a plan first.</p>
         <button onClick={() => router.push("/plans")} style={{
           background: T.accent, color: "#000", fontWeight: 800, fontSize: 13,
-          padding: "12px 28px", borderRadius: 10, border: "none", cursor: "pointer",
+          padding: "12px 28px", borderRadius: 0, border: "none", cursor: "pointer",
         }}>View Plans</button>
       </div>
     );
@@ -427,7 +427,7 @@ function CheckoutInner() {
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 1 }} />
+            <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 0 }} />
             <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>Checkout</span>
           </div>
           <h1 style={{
@@ -444,7 +444,7 @@ function CheckoutInner() {
             style={{
               display: "flex", alignItems: "center", gap: 12,
               background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)",
-              borderRadius: 12, padding: "14px 18px", marginBottom: 28,
+              borderRadius: 0, padding: "14px 18px", marginBottom: 28,
             }}
           >
             <FlaskConical size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
@@ -463,7 +463,7 @@ function CheckoutInner() {
             style={{
               display: "flex", alignItems: "flex-start", gap: 12,
               background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
-              borderRadius: 12, padding: "14px 18px", marginBottom: 28,
+              borderRadius: 0, padding: "14px 18px", marginBottom: 28,
             }}
           >
             <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: 1 }} />
@@ -479,7 +479,7 @@ function CheckoutInner() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }} className="checkout-grid">
 
           {/* Left — form */}
-          <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "28px 24px" }}>
+          <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "28px 24px" }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, marginBottom: 24 }}>Your details</h2>
 
             <form onSubmit={handleSubmit}>
@@ -524,7 +524,7 @@ function CheckoutInner() {
                         display: "flex", alignItems: "center", gap: 8,
                         background: useNewAddress ? "rgba(132,204,22,0.07)" : "#161616",
                         border: `1px solid ${useNewAddress ? "rgba(132,204,22,0.5)" : T.cardBorder}`,
-                        borderRadius: 12, padding: "12px 16px",
+                        borderRadius: 0, padding: "12px 16px",
                         cursor: "pointer", fontSize: 13, fontWeight: 600,
                         color: useNewAddress ? T.textPrimary : T.textSecond,
                         transition: "all 0.2s",
@@ -585,10 +585,10 @@ function CheckoutInner() {
                   >
                     <div style={{
                       background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
-                      borderRadius: 10, padding: "12px 16px",
+                      borderRadius: 0, padding: "12px 16px",
                       fontSize: 13, color: T.textSecond, lineHeight: 1.6,
                     }}>
-                      💵 Keep <strong style={{ color: T.textPrimary }}>{fmt(grandTotal)}</strong> ready at delivery.
+                      Keep <strong style={{ color: T.textPrimary }}>{fmt(grandTotal)}</strong> ready at delivery.
                       Our delivery partner will collect cash when your meals arrive.
                     </div>
                   </motion.div>
@@ -601,7 +601,7 @@ function CheckoutInner() {
                   width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   background: loading ? "rgba(132,204,22,0.5)" : T.accent,
                   color: "#000", fontWeight: 900, fontSize: 14,
-                  padding: "15px 0", borderRadius: 10, border: "none",
+                  padding: "15px 0", borderRadius: 0, border: "none",
                   cursor: loading ? "not-allowed" : "pointer",
                   letterSpacing: "0.08em", textTransform: "uppercase",
                   boxShadow: loading ? "none" : "0 4px 20px rgba(132,204,22,0.35)",
@@ -631,7 +631,7 @@ function CheckoutInner() {
           {/* Right — order summary */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-            <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 20, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
+            <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
               <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>Order Summary</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
@@ -715,13 +715,13 @@ function CheckoutInner() {
                 <div style={{ marginTop: 14 }}>
                   <div style={{ display: "flex", gap: 8 }}>
                     <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Coupon code"
-                      style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: T.textPrimary, fontSize: 13, outline: "none" }} />
+                      style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "10px 12px", color: T.textPrimary, fontSize: 13, outline: "none" }} />
                     {couponApplied ? (
                       <button type="button" onClick={clearCoupon}
-                        style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "0 14px", fontSize: 13, cursor: "pointer" }}>Remove</button>
+                        style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "0 14px", fontSize: 13, cursor: "pointer" }}>Remove</button>
                     ) : (
                       <button type="button" onClick={applyCouponFn} disabled={couponBusy || !coupon.trim()}
-                        style={{ background: couponBusy || !coupon.trim() ? "rgba(132,204,22,0.4)" : T.accent, color: "#000", fontWeight: 800, border: "none", borderRadius: 8, padding: "0 16px", fontSize: 13, cursor: couponBusy ? "not-allowed" : "pointer" }}>{couponBusy ? "…" : "Apply"}</button>
+                        style={{ background: couponBusy || !coupon.trim() ? "rgba(132,204,22,0.4)" : T.accent, color: "#000", fontWeight: 800, border: "none", borderRadius: 0, padding: "0 16px", fontSize: 13, cursor: couponBusy ? "not-allowed" : "pointer" }}>{couponBusy ? "…" : "Apply"}</button>
                     )}
                   </div>
                   {couponMsg && <div style={{ fontSize: 12, marginTop: 6, color: couponMsg.ok ? T.accent : "#ef4444" }}>{couponMsg.text}</div>}
@@ -730,7 +730,7 @@ function CheckoutInner() {
 
               {/* 17C-2 — credit toggle (signed-in users only) */}
               {creditApplicable > 0 && (
-                <div style={{ background: "rgba(132,204,22,0.04)", border: `1px solid ${useCredit ? T.accent : T.cardBorder}`, borderRadius: 12, padding: "12px 16px", marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ background: "rgba(132,204,22,0.04)", border: `1px solid ${useCredit ? T.accent : T.cardBorder}`, borderRadius: 0, padding: "12px 16px", marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", flex: 1 }}>
                     <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} style={{ width: 18, height: 18, accentColor: T.accent }} />
                     <div>
@@ -744,9 +744,9 @@ function CheckoutInner() {
 
             <div style={{
               background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
-              borderRadius: 12, padding: "14px 18px", fontSize: 13, color: T.textSecond, lineHeight: 1.6,
+              borderRadius: 0, padding: "14px 18px", fontSize: 13, color: T.textSecond, lineHeight: 1.6,
             }}>
-              🚚 <strong style={{ color: T.textPrimary }}>Free delivery</strong>, 7am–10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
+              <strong style={{ color: T.textPrimary }}>Free delivery</strong>, 7am to 10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
             </div>
 
             <a
@@ -755,7 +755,7 @@ function CheckoutInner() {
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 background: "transparent", border: `1px solid ${T.cardBorder}`,
-                borderRadius: 12, padding: "13px 0",
+                borderRadius: 0, padding: "13px 0",
                 fontSize: 13, fontWeight: 700, color: T.textSecond, textDecoration: "none", transition: "all 0.2s",
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(132,204,22,0.3)"; (e.currentTarget as HTMLElement).style.color = T.textPrimary; }}
@@ -781,7 +781,7 @@ function CheckoutInner() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#a3a3a3" }}>
+      <div style={{ background: "#070707", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#a3a3a3" }}>
         Loading checkout...
       </div>
     }>

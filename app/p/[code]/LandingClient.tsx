@@ -45,12 +45,12 @@ type View = {
 };
 
 const T = {
-  bg: "#080808",
-  card: "#101010",
-  border: "#1f1f1f",
-  text: "#f5f5f4",
-  dim: "#888",
-  accent: "#a3e635",
+  bg: "#070707",
+  card: "#050504",
+  border: "#232320",
+  text: "#f7f7f5",
+  dim: "#85857e",
+  accent: "#84cc16",
   accent2: "#84cc16",
 };
 
@@ -76,7 +76,7 @@ export default function LandingClient({ view }: { view: View }) {
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
 
         {/* Ribbon */}
-        <div style={{ display: "inline-block", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 20, padding: "6px 12px", border: `1px solid ${T.accent2}`, borderRadius: 99, background: "rgba(132,204,22,0.08)" }}>
+        <div style={{ display: "inline-block", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 20, padding: "6px 12px", border: `1px solid ${T.accent2}`, borderRadius: 0, background: "rgba(132,204,22,0.08)" }}>
           You're invited
         </div>
 
@@ -84,7 +84,7 @@ export default function LandingClient({ view }: { view: View }) {
         <Hero view={view} />
 
         {/* Offer card */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, marginTop: 28 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 28, marginTop: 28 }}>
           <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Your welcome offer</div>
           <div style={{ fontFamily: 'var(--ff-cond)', fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>{offer}</div>
           <div style={{ color: T.dim, fontSize: 14, marginTop: 8 }}>
@@ -93,11 +93,11 @@ export default function LandingClient({ view }: { view: View }) {
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 24 }}>
             <Link href={`/plans?ref=${encodeURIComponent(view.code)}`}
-              style={{ background: T.accent, color: "#000", fontWeight: 800, fontSize: 14, padding: "14px 26px", borderRadius: 8, textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              style={{ background: T.accent, color: "#000", fontWeight: 800, fontSize: 14, padding: "14px 26px", borderRadius: 0, textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               See plans →
             </Link>
             <Link href={`/plans/digital?ref=${encodeURIComponent(view.code)}`}
-              style={{ background: "transparent", color: T.text, fontWeight: 700, fontSize: 14, padding: "13px 22px", borderRadius: 8, textDecoration: "none", border: `1px solid ${T.border}`, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              style={{ background: "transparent", color: T.text, fontWeight: 700, fontSize: 14, padding: "13px 22px", borderRadius: 0, textDecoration: "none", border: `1px solid ${T.border}`, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Digital plans
             </Link>
           </div>
@@ -156,11 +156,11 @@ function Hero({ view }: { view: View }) {
     <div style={{ display: "grid", gridTemplateColumns: showPhoto || showLogo ? "120px 1fr" : "1fr", gap: 20, alignItems: "center" }}>
       {showPhoto && (
         <img src={view.profilePhotoUrl as string} alt={view.name}
-          style={{ width: 120, height: 120, borderRadius: 16, objectFit: "cover", border: `1px solid ${T.border}` }} />
+          style={{ width: 120, height: 120, borderRadius: 0, objectFit: "cover", border: `1px solid ${T.border}` }} />
       )}
       {showLogo && (
         <img src={view.companyLogoUrl as string} alt={view.name}
-          style={{ width: 120, height: 120, borderRadius: 16, objectFit: "contain", background: "#fff", padding: 12, border: `1px solid ${T.border}` }} />
+          style={{ width: 120, height: 120, borderRadius: 0, objectFit: "contain", background: "#fff", padding: 12, border: `1px solid ${T.border}` }} />
       )}
 
       <div>
@@ -186,7 +186,7 @@ function Hero({ view }: { view: View }) {
 
 function MetaChip({ children }: { children: any }) {
   return (
-    <span style={{ background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 99, padding: "4px 10px", fontSize: 12, color: T.dim, letterSpacing: "0.02em" }}>
+    <span style={{ background: "#070707", border: `1px solid ${T.border}`, borderRadius: 0, padding: "4px 10px", fontSize: 12, color: T.dim, letterSpacing: "0.02em" }}>
       {children}
     </span>
   );
@@ -199,7 +199,7 @@ function capitalize(s: string) {
 
 function Mini({ title, body }: { title: string; body: string }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16 }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16 }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{title}</div>
       <div style={{ fontSize: 12, color: T.dim, lineHeight: 1.5 }}>{body}</div>
     </div>
