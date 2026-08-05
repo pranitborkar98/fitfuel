@@ -41,7 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const links = NAV.filter((n) => canAccess(admin.role, n.surface));
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "var(--font-archivo), sans-serif" }}>
       <header
         style={{
           borderBottom: `1px solid ${T.border}`,

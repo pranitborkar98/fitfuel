@@ -85,7 +85,7 @@ export default function DriverClient({ token, driverName }: { token: string; dri
   const pending = deliveries.filter(d => d.status !== "DELIVERED" && d.status !== "FAILED_DELIVERY").length;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "system-ui, sans-serif", padding: "20px 14px 60px", maxWidth: 560, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "var(--font-archivo), sans-serif", padding: "20px 14px 60px", maxWidth: 560, margin: "0 auto" }}>
       <div style={{ marginBottom: 18 }}>
         <p style={{ fontSize: 12, color: T.accent, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>FitFuel · Driver</p>
         <h1 style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>Hi {driverName}</h1>
@@ -95,7 +95,7 @@ export default function DriverClient({ token, driverName }: { token: string; dri
       </div>
 
       {!loading && deliveries.length === 0 && (
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 24, textAlign: "center", color: T.textMuted, fontSize: 14 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24, textAlign: "center", color: T.textMuted, fontSize: 14 }}>
           No deliveries assigned to you today.
         </div>
       )}
@@ -107,7 +107,7 @@ export default function DriverClient({ token, driverName }: { token: string; dri
           const done = d.status === "DELIVERED" || d.status === "FAILED_DELIVERY";
           const customer = d.order.user.name ?? d.order.user.email ?? "Customer";
           return (
-            <div key={d.id} style={{ background: T.card, border: `1px solid ${done ? T.border : "#2a3d10"}`, borderRadius: 14, padding: 16 }}>
+            <div key={d.id} style={{ background: T.card, border: `1px solid ${done ? T.border : "#2a3d10"}`, borderRadius: 0, padding: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: T.textMuted }}>{d.order.orderNumber}</span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: st.color }}>{st.label}</span>
@@ -134,11 +134,11 @@ export default function DriverClient({ token, driverName }: { token: string; dri
               {!done && failingId !== d.id && (
                 <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
                   <button onClick={() => mark(d.id, "delivered")} disabled={busyId === d.id}
-                    style={{ flex: 1, background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+                    style={{ flex: 1, background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "14px", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
                     {busyId === d.id ? "…" : "Delivered ✓"}
                   </button>
                   <button onClick={() => { setFailingId(d.id); setNote(""); }} disabled={busyId === d.id}
-                    style={{ background: "transparent", color: T.textSecond, border: `1px solid ${T.border}`, borderRadius: 10, padding: "14px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                    style={{ background: "transparent", color: T.textSecond, border: `1px solid ${T.border}`, borderRadius: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                     Couldn&apos;t deliver
                   </button>
                 </div>
@@ -147,14 +147,14 @@ export default function DriverClient({ token, driverName }: { token: string; dri
               {!done && failingId === d.id && (
                 <div style={{ marginTop: 12 }}>
                   <input value={note} onChange={e => setNote(e.target.value)} placeholder="What happened? (e.g. customer not home)"
-                    style={{ width: "100%", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px", fontSize: 13, color: T.text, marginBottom: 10, boxSizing: "border-box" }} />
+                    style={{ width: "100%", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px", fontSize: 13, color: T.text, marginBottom: 10, boxSizing: "border-box" }} />
                   <div style={{ display: "flex", gap: 10 }}>
                     <button onClick={() => mark(d.id, "failed", note || undefined)} disabled={busyId === d.id}
-                      style={{ flex: 1, background: T.red, color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                      style={{ flex: 1, background: T.red, color: "#fff", border: "none", borderRadius: 0, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                       {busyId === d.id ? "…" : "Confirm not delivered"}
                     </button>
                     <button onClick={() => setFailingId(null)}
-                      style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 10, padding: "13px 16px", fontSize: 14, cursor: "pointer" }}>
+                      style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 0, padding: "13px 16px", fontSize: 14, cursor: "pointer" }}>
                       Cancel
                     </button>
                   </div>

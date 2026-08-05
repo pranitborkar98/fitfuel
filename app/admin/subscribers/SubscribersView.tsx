@@ -8,7 +8,7 @@ const T = {
   accent: "#84cc16", soft: "#0c0c0c", amber: "#facc15", red: "#f87171", blue: "#60a5fa",
 };
 const pretty = (e: string) => (e || "").replace(/_/g, " ").toLowerCase();
-const inputStyle: React.CSSProperties = { background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, boxSizing: "border-box" };
+const inputStyle: React.CSSProperties = { background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 11px", fontSize: 13.5, boxSizing: "border-box" };
 const d = (x: any) => (x ? new Date(x).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—");
 
 function statusColor(s: string) {
@@ -62,7 +62,7 @@ export default function SubscribersView({ subs }: { subs: Sub[] }) {
         </select>
       </div>
 
-      <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1.4fr 0.8fr 1.3fr 0.8fr 0.5fr", gap: 8, padding: "10px 14px", background: "#161616", fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", color: T.muted }}>
           <div>Customer</div><div>Plan</div><div>Status</div><div>Window</div><div>Day</div><div></div>
         </div>

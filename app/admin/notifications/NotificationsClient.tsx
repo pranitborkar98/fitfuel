@@ -36,14 +36,14 @@ type Log = {
 const PANEL: React.CSSProperties = {
   background: "#0e0e0e",
   border: "1px solid #1f1f1f",
-  borderRadius: 8,
+  borderRadius: 0,
   padding: 20,
 };
 const INPUT: React.CSSProperties = {
   background: "#080808",
   border: "1px solid #2a2a2a",
   color: "#eee",
-  borderRadius: 4,
+  borderRadius: 0,
   padding: "8px 10px",
   fontSize: 13,
   width: "100%",
@@ -54,7 +54,7 @@ const BTN: React.CSSProperties = {
   color: "#000",
   border: "none",
   padding: "8px 14px",
-  borderRadius: 4,
+  borderRadius: 0,
   fontWeight: 700,
   cursor: "pointer",
   fontSize: 13,
@@ -64,7 +64,7 @@ const BTN_GHOST: React.CSSProperties = {
   color: "#bbb",
   border: "1px solid #2a2a2a",
   padding: "8px 14px",
-  borderRadius: 4,
+  borderRadius: 0,
   cursor: "pointer",
   fontSize: 13,
 };
@@ -231,7 +231,7 @@ function TemplateRow({
                 color: "#84cc16",
                 background: "#0a1505",
                 padding: "2px 6px",
-                borderRadius: 3,
+                borderRadius: 0,
               }}
             >
               {tpl.key}
@@ -372,7 +372,7 @@ function TemplateEditor({
         <div
           style={{
             border: "1px solid #1a1a1a",
-            borderRadius: 6,
+            borderRadius: 0,
             padding: 14,
             background: "#0a0a0a",
           }}
@@ -442,7 +442,7 @@ function TemplateEditor({
         <div
           style={{
             border: "1px solid #1a1a1a",
-            borderRadius: 6,
+            borderRadius: 0,
             padding: 14,
             background: "#0a0a0a",
           }}
@@ -546,7 +546,7 @@ function TestSendBox({
       style={{
         marginTop: 4,
         border: "1px dashed #2a2a2a",
-        borderRadius: 6,
+        borderRadius: 0,
         padding: 14,
       }}
     >
@@ -621,7 +621,7 @@ function TestSendBox({
             marginTop: 12,
             background: "#050505",
             padding: 10,
-            borderRadius: 4,
+            borderRadius: 0,
             fontSize: 11,
             color: "#9ae600",
             border: "1px solid #1a1a1a",
@@ -813,7 +813,7 @@ function Pill({
         border: muted ? "1px solid #2a2a2a" : "1px solid #1f3a08",
         fontSize: 10,
         padding: "2px 8px",
-        borderRadius: 10,
+        borderRadius: 0,
         fontWeight: 600,
         textTransform: "uppercase",
         letterSpacing: 0.5,

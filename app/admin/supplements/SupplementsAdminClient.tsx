@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 const T = {
   bg: "#0a0a0a", card: "#111", border: "#1f1f1f",
-  accent: "#84cc16", accent2: "#a3e635",
+  accent: "#84cc16", accent2: "#84cc16",
   text: "#fff", dim: "#888", muted: "#666",
   ok: "#22c55e", warn: "#f59e0b", err: "#ef4444",
 };
@@ -42,7 +42,7 @@ export default function SupplementsAdminClient() {
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
-          <h1 style={{ fontFamily: '"Syne", system-ui', fontSize: 28, fontWeight: 800, margin: 0 }}>Supplements</h1>
+          <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 28, fontWeight: 800, margin: 0 }}>Supplements</h1>
           <div style={{ fontSize: 12, color: T.dim }}>Affiliate catalog + click analytics</div>
         </div>
 
@@ -63,7 +63,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       background: active ? T.accent : "transparent",
       color: active ? "#000" : "#bbb",
       border: `1px solid ${active ? T.accent : "#2a2a2a"}`,
-      borderRadius: 8, padding: "8px 16px", fontWeight: active ? 700 : 500,
+      borderRadius: 0, padding: "8px 16px", fontWeight: active ? 700 : 500,
       fontSize: 13, cursor: "pointer",
     }}>{children}</button>
   );
@@ -111,9 +111,9 @@ function CatalogTab() {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
         <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()}
           placeholder="Search name or tagline…"
-          style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, minWidth: 240 }} />
+          style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 13, minWidth: 240 }} />
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-          style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13 }}>
+          style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 13 }}>
           <option value="">All categories</option>
           {categories.map((c) => <option key={c.slug} value={c.slug}>{c.emoji ? c.emoji + " " : ""}{c.name}</option>)}
         </select>
@@ -121,17 +121,17 @@ function CatalogTab() {
           <input type="checkbox" checked={includeInactive} onChange={(e) => setIncludeInactive(e.target.checked)} />
           Include inactive
         </label>
-        <button onClick={load} style={{ background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}>Search</button>
+        <button onClick={load} style={{ background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}>Search</button>
       </div>
 
       {items === null ? (
         <div style={{ color: T.muted, padding: 24 }}>Loading{'\u2026'}</div>
       ) : error ? (
-        <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 10, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>
+        <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 0, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>
           {error}
         </div>
       ) : items.length === 0 ? (
-        <div style={{ color: T.dim, padding: 24, textAlign: "center", background: T.card, border: `1px solid ${T.border}`, borderRadius: 10 }}>
+        <div style={{ color: T.dim, padding: 24, textAlign: "center", background: T.card, border: `1px solid ${T.border}`, borderRadius: 0 }}>
           No supplements match this filter.
         </div>
       ) : (
@@ -159,15 +159,15 @@ function SupplementRow({ s, open, onToggle, onChanged }: {
   s: Supplement; open: boolean; onToggle: () => void; onChanged: () => void;
 }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${open ? s.accentColor || T.accent : T.border}`, borderRadius: 12, padding: "14px 16px" }}>
+    <div style={{ background: T.card, border: `1px solid ${open ? s.accentColor || T.accent : T.border}`, borderRadius: 0, padding: "14px 16px" }}>
       <div onClick={onToggle} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
         <div style={{ fontSize: 24 }}>{s.emoji || "\uD83D\uDC8A"}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <span style={{ fontWeight: 700, fontSize: 14 }}>{s.name}</span>
-            <span style={{ fontSize: 10, background: "#1a1a1a", border: `1px solid ${T.border}`, color: T.dim, padding: "2px 8px", borderRadius: 4, textTransform: "uppercase", letterSpacing: 0.4, fontFamily: "ui-monospace, monospace" }}>{s.slug}</span>
-            {!s.isActive && <span style={{ fontSize: 10, background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: "2px 8px", borderRadius: 4, textTransform: "uppercase" }}>Inactive</span>}
-            {s.isFeatured && <span style={{ fontSize: 10, background: "#1a1505", border: `1px solid ${T.warn}`, color: T.warn, padding: "2px 8px", borderRadius: 4, textTransform: "uppercase" }}>Featured</span>}
+            <span style={{ fontSize: 10, background: "#1a1a1a", border: `1px solid ${T.border}`, color: T.dim, padding: "2px 8px", borderRadius: 0, textTransform: "uppercase", letterSpacing: 0.4, fontFamily: "ui-monospace, monospace" }}>{s.slug}</span>
+            {!s.isActive && <span style={{ fontSize: 10, background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: "2px 8px", borderRadius: 0, textTransform: "uppercase" }}>Inactive</span>}
+            {s.isFeatured && <span style={{ fontSize: 10, background: "#1a1505", border: `1px solid ${T.warn}`, color: T.warn, padding: "2px 8px", borderRadius: 0, textTransform: "uppercase" }}>Featured</span>}
           </div>
           <div style={{ fontSize: 12, color: T.dim }}>
             {s.categoryEmoji ? s.categoryEmoji + " " : ""}{s.categoryName}
@@ -250,7 +250,7 @@ function SupplementSettings({ supplementId, accent, onChanged }: { supplementId:
 
       <div style={{ display: "grid", gridTemplateColumns: imageUrl ? "84px 1fr" : "1fr", gap: 10, marginBottom: 8 }}>
         {imageUrl ? (
-          <div style={{ width: 84, height: 84, background: "#000", border: `1px solid ${T.border}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          <div style={{ width: 84, height: 84, background: "#000", border: `1px solid ${T.border}`, borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
           </div>
@@ -277,7 +277,7 @@ function SupplementSettings({ supplementId, accent, onChanged }: { supplementId:
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: accent, color: "#000", border: "none", borderRadius: 6, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>
+        <button onClick={save} disabled={saving} style={{ background: accent, color: "#000", border: "none", borderRadius: 0, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>
           {saving ? "Saving\u2026" : "Save settings"}
         </button>
       </div>
@@ -347,14 +347,14 @@ function LinkManager({ supplementId, accent, onChanged }: { supplementId: string
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: 0.6 }}>Affiliate links</div>
         {!adding && (
-          <button onClick={() => setAdding(true)} style={{ background: accent, color: "#000", border: "none", borderRadius: 6, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+          <button onClick={() => setAdding(true)} style={{ background: accent, color: "#000", border: "none", borderRadius: 0, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
             + Add link
           </button>
         )}
       </div>
 
       {adding && (
-        <div style={{ background: "#0a0a0a", border: `1px solid ${accent}`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
+        <div style={{ background: "#0a0a0a", border: `1px solid ${accent}`, borderRadius: 0, padding: 14, marginBottom: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 8, marginBottom: 8 }}>
             <select value={newLink.network} onChange={(e) => setNewLink({ ...newLink, network: e.target.value })} style={inputStyle()}>
               {NETWORKS.map((n) => <option key={n} value={n}>{NETWORK_LABEL[n]}</option>)}
@@ -371,8 +371,8 @@ function LinkManager({ supplementId, accent, onChanged }: { supplementId: string
             <input value={newLink.merchantLabel} onChange={(e) => setNewLink({ ...newLink, merchantLabel: e.target.value })} placeholder="Merchant label (e.g. iHerb)" style={{ ...inputStyle(), marginBottom: 8 }} />
           )}
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button onClick={() => setAdding(false)} style={{ background: "transparent", color: T.dim, border: `1px solid ${T.border}`, borderRadius: 6, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Cancel</button>
-            <button onClick={addLink} style={{ background: accent, color: "#000", border: "none", borderRadius: 6, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>Save link</button>
+            <button onClick={() => setAdding(false)} style={{ background: "transparent", color: T.dim, border: `1px solid ${T.border}`, borderRadius: 0, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Cancel</button>
+            <button onClick={addLink} style={{ background: accent, color: "#000", border: "none", borderRadius: 0, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>Save link</button>
           </div>
         </div>
       )}
@@ -386,7 +386,7 @@ function LinkManager({ supplementId, accent, onChanged }: { supplementId: string
           {links.map((l) => editing === l.id ? (
             <LinkEditRow key={l.id} link={l} accent={accent} onSave={(patch) => patchLink(l.id, patch)} onCancel={() => setEditing(null)} />
           ) : (
-            <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, background: l.isActive ? "#0a0a0a" : "#150505", border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px" }}>
+            <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, background: l.isActive ? "#0a0a0a" : "#150505", border: `1px solid ${T.border}`, borderRadius: 0, padding: "10px 12px" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                   <span style={{ fontWeight: 700, fontSize: 13 }}>{l.merchantLabel || NETWORK_LABEL[l.network] || l.network}</span>
@@ -427,7 +427,7 @@ function LinkEditRow({ link, accent, onSave, onCancel }: { link: Link; accent: s
   });
 
   return (
-    <div style={{ background: "#0a0a0a", border: `1px solid ${accent}`, borderRadius: 8, padding: 12 }}>
+    <div style={{ background: "#0a0a0a", border: `1px solid ${accent}`, borderRadius: 0, padding: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 6, marginBottom: 6 }}>
         <select value={f.network} onChange={(e) => setF({ ...f, network: e.target.value })} style={inputStyle()}>
           {NETWORKS.map((n) => <option key={n} value={n}>{NETWORK_LABEL[n]}</option>)}
@@ -479,7 +479,7 @@ function AnalyticsTab() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [days]);
 
-  if (error) return <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 10, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>{error}</div>;
+  if (error) return <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 0, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>{error}</div>;
   if (!data) return <div style={{ color: T.muted, padding: 24 }}>Loading{'\u2026'}</div>;
 
   const maxDaily = Math.max(1, ...data.dailyTrend.map((d: any) => d.clicks));
@@ -493,7 +493,7 @@ function AnalyticsTab() {
             background: days === d ? T.accent : "transparent",
             color: days === d ? "#000" : "#bbb",
             border: `1px solid ${days === d ? T.accent : T.border}`,
-            borderRadius: 6, padding: "6px 14px", fontSize: 12, fontWeight: days === d ? 700 : 500, cursor: "pointer",
+            borderRadius: 0, padding: "6px 14px", fontSize: 12, fontWeight: days === d ? 700 : 500, cursor: "pointer",
           }}>Last {d} days</button>
         ))}
       </div>
@@ -509,12 +509,12 @@ function AnalyticsTab() {
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
 
         {/* Daily trend bar chart */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16 }}>
           <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>Daily clicks</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 140, paddingBottom: 24, position: "relative" }}>
             {data.dailyTrend.map((d: any) => (
               <div key={d.date} title={`${d.date}: ${d.clicks} clicks`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 8 }}>
-                <div style={{ width: "100%", maxWidth: 36, height: `${(d.clicks / maxDaily) * 100}%`, minHeight: d.clicks > 0 ? 2 : 0, background: T.accent, borderRadius: "4px 4px 0 0" }} />
+                <div style={{ width: "100%", maxWidth: 36, height: `${(d.clicks / maxDaily) * 100}%`, minHeight: d.clicks > 0 ? 2 : 0, background: T.accent, borderRadius: 0 }} />
                 <div style={{ fontSize: 9, color: T.muted, position: "absolute", bottom: 0 }}>{d.date.slice(8)}</div>
               </div>
             ))}
@@ -522,7 +522,7 @@ function AnalyticsTab() {
         </div>
 
         {/* Top networks */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16 }}>
           <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>By network</div>
           {data.topNetworks.length === 0 ? (
             <div style={{ color: T.muted, fontSize: 13 }}>No clicks yet.</div>
@@ -538,14 +538,14 @@ function AnalyticsTab() {
       </div>
 
       {/* Top products */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginTop: 14 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16, marginTop: 14 }}>
         <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>Top products by clicks</div>
         {data.topProducts.length === 0 ? (
           <div style={{ color: T.muted, fontSize: 13 }}>No clicks yet. Add affiliate links to start tracking.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {data.topProducts.map((p: any, i: number) => (
-              <div key={p.supplementId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#0a0a0a", borderRadius: 8 }}>
+              <div key={p.supplementId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#0a0a0a", borderRadius: 0 }}>
                 <div style={{ width: 24, fontSize: 12, color: T.muted, fontWeight: 700 }}>#{i + 1}</div>
                 <div style={{ fontSize: 20 }}>{p.emoji || "\uD83D\uDC8A"}</div>
                 <div style={{ flex: 1 }}>
@@ -564,9 +564,9 @@ function AnalyticsTab() {
 
 function Stat({ label, value, accent }: { label: string; value: any; accent?: boolean }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 12, padding: 14 }}>
+    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 0, padding: 14 }}>
       <div style={{ fontSize: 10, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: '"Barlow Condensed", "Syne", system-ui', fontSize: 28, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
+      <div style={{ fontFamily: '"Barlow Condensed", var(--ff-cond)', fontSize: 28, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
     </div>
   );
 }
@@ -574,13 +574,13 @@ function Stat({ label, value, accent }: { label: string; value: any; accent?: bo
 function inputStyle(): any {
   return {
     width: "100%", background: "#0a0a0a", color: T.text,
-    border: `1px solid ${T.border}`, borderRadius: 6,
+    border: `1px solid ${T.border}`, borderRadius: 0,
     padding: "8px 10px", fontSize: 12, fontFamily: "inherit", outline: "none",
   };
 }
 function tinyBtn(): any {
   return {
     background: "transparent", color: T.text, border: `1px solid ${T.border}`,
-    borderRadius: 6, padding: "5px 12px", fontSize: 11, cursor: "pointer",
+    borderRadius: 0, padding: "5px 12px", fontSize: 11, cursor: "pointer",
   };
 }

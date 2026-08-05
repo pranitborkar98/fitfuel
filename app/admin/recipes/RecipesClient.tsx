@@ -59,9 +59,9 @@ export default function RecipesClient({ initial }: { initial: Recipe[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, padding: 32, textAlign: "center", color: T.muted }}>No recipes match.</div>
+        <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, padding: 32, textAlign: "center", color: T.muted }}>No recipes match.</div>
       ) : (
-        <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
           {filtered.map((r, idx) => {
             const noSteps = (r._count?.steps ?? 0) === 0;
             return (

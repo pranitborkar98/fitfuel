@@ -176,7 +176,7 @@ function StepsEditor({ recipeId, steps, onChange }: { recipeId: string; steps: a
             {editId === st.id ? (
               <StepForm form={form} set={set} err={err} busy={busy} onSave={save} onCancel={() => setEditId(null)} />
             ) : (
-              <div style={{ display: "flex", gap: 12, padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: 10, background: T.card }}>
+              <div style={{ display: "flex", gap: 12, padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: 0, background: T.card }}>
                 <div style={{ color: T.accent, fontWeight: 800, fontSize: 15, minWidth: 22 }}>{st.stepNumber}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{st.title}{st.durationMins ? <span style={{ color: T.muted, fontWeight: 400 }}> · {st.durationMins} min</span> : null}{st.technique ? <span style={{ color: T.muted, fontWeight: 400 }}> · {st.technique}</span> : null}</div>
@@ -205,7 +205,7 @@ function StepsEditor({ recipeId, steps, onChange }: { recipeId: string; steps: a
 
 function StepForm({ form, set, err, busy, onSave, onCancel }: any) {
   return (
-    <div style={{ border: `1px solid ${T.accent}55`, borderRadius: 10, padding: 14, background: T.soft }}>
+    <div style={{ border: `1px solid ${T.accent}55`, borderRadius: 0, padding: 14, background: T.soft }}>
       {err && <div style={{ color: T.danger, fontSize: 13, marginBottom: 8 }}>{err}</div>}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
         <div><Label>Title</Label><Text value={form.title} onChange={(e: any) => set("title", e.target.value)} placeholder="Marinate the paneer" /></div>
@@ -240,7 +240,7 @@ function IngredientsEditor({ recipeId, ingredients, onChange }: { recipeId: stri
 
   return (
     <Sec title={`Ingredients (${ingredients.length})`}>
-      <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 12 }}>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden", marginBottom: 12 }}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.4fr 0.8fr 0.9fr", gap: 8, padding: "9px 12px", background: "#161616", fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", color: T.muted }}>
           <div>Ingredient</div><div>Raw g</div><div>Prep</div><div>Optional</div><div></div>
         </div>
@@ -294,7 +294,7 @@ function IngredientForm({ recipeId, initial, onSaved, onCancel }: { recipeId: st
   }
 
   return (
-    <div style={{ border: `1px solid ${T.accent}55`, borderRadius: 10, padding: 14, background: T.soft }}>
+    <div style={{ border: `1px solid ${T.accent}55`, borderRadius: 0, padding: 14, background: T.soft }}>
       {err && <div style={{ color: T.danger, fontSize: 13, marginBottom: 8 }}>{err}</div>}
       {food ? (
         <div style={{ marginBottom: 10, fontSize: 13 }}>
@@ -342,7 +342,7 @@ function FoodPicker({ onPick }: { onPick: (f: any) => void }) {
   }
 
   return (
-    <div style={{ marginBottom: 12, padding: 10, border: `1px dashed ${T.border}`, borderRadius: 8 }}>
+    <div style={{ marginBottom: 12, padding: 10, border: `1px dashed ${T.border}`, borderRadius: 0 }}>
       <Label>Find ingredient</Label>
       <div style={{ display: "flex", gap: 8 }}>
         <Text value={q} onChange={(e: any) => setQ(e.target.value)} onKeyDown={(e: any) => e.key === "Enter" && search()} placeholder="Search food items…" />
@@ -374,4 +374,4 @@ function FoodPicker({ onPick }: { onPick: (f: any) => void }) {
   );
 }
 
-const miniBtn: React.CSSProperties = { background: "transparent", color: T.muted, border: `1px solid ${T.border}`, borderRadius: 6, padding: "4px 7px", fontSize: 11, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { background: "transparent", color: T.muted, border: `1px solid ${T.border}`, borderRadius: 0, padding: "4px 7px", fontSize: 11, cursor: "pointer" };

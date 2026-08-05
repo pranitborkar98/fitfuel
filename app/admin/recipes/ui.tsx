@@ -11,7 +11,7 @@ export const T = {
 
 export const inputStyle: React.CSSProperties = {
   width: "100%", background: T.soft, color: T.text, border: `1px solid ${T.border}`,
-  borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontFamily: "inherit", boxSizing: "border-box",
+  borderRadius: 0, padding: "9px 11px", fontSize: 13.5, fontFamily: "inherit", boxSizing: "border-box",
 };
 
 export const Text = (p: React.InputHTMLAttributes<HTMLInputElement>) => <input {...p} style={{ ...inputStyle, ...(p.style || {}) }} />;
@@ -26,6 +26,6 @@ export const Check = ({ checked, onChange, label }: { checked: boolean; onChange
 );
 export const btn = (primary = false): React.CSSProperties => ({
   background: primary ? T.accent : "transparent", color: primary ? "#080808" : T.text,
-  border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 8, padding: "8px 15px",
+  border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 0, padding: "8px 15px",
   fontSize: 13, fontWeight: 700, cursor: "pointer",
 });

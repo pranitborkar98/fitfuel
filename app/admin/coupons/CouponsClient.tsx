@@ -26,7 +26,7 @@ const EMPTY = {
 };
 
 const inputStyle: React.CSSProperties = {
-  background: "#161616", border: `1px solid ${T.border}`, borderRadius: 8,
+  background: "#161616", border: `1px solid ${T.border}`, borderRadius: 0,
   padding: "9px 12px", color: T.text, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box",
 };
 const labelStyle: React.CSSProperties = {
@@ -118,12 +118,12 @@ export default function CouponsClient() {
             background: msg.kind === "ok" ? "rgba(132,204,22,0.08)" : "rgba(239,68,68,0.08)",
             border: `1px solid ${msg.kind === "ok" ? "rgba(132,204,22,0.3)" : "rgba(239,68,68,0.3)"}`,
             color: msg.kind === "ok" ? T.accent : T.danger,
-            borderRadius: 10, padding: "10px 14px", fontSize: 13, marginBottom: 18,
+            borderRadius: 0, padding: "10px 14px", fontSize: 13, marginBottom: 18,
           }}>{msg.text}</div>
         )}
 
         {/* Create form */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 28 }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 20, marginBottom: 28 }}>
           <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>New coupon</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
             <div>
@@ -191,7 +191,7 @@ export default function CouponsClient() {
               <button onClick={create} disabled={saving || !form.code}
                 style={{
                   width: "100%", background: saving || !form.code ? "rgba(132,204,22,0.4)" : T.accent,
-                  color: "#000", fontWeight: 800, fontSize: 13, padding: "10px 0", borderRadius: 8,
+                  color: "#000", fontWeight: 800, fontSize: 13, padding: "10px 0", borderRadius: 0,
                   border: "none", cursor: saving || !form.code ? "not-allowed" : "pointer",
                 }}>
                 {saving ? "Creating..." : "Create coupon"}
@@ -201,7 +201,7 @@ export default function CouponsClient() {
         </div>
 
         {/* List */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
           {loading ? (
             <div style={{ padding: 24, color: T.muted, fontSize: 13 }}>Loading…</div>
           ) : coupons.length === 0 ? (
@@ -236,14 +236,14 @@ export default function CouponsClient() {
                     <td style={{ padding: "12px 16px" }}>
                       <button onClick={() => toggle(c.id)} style={{
                         background: c.isActive ? "rgba(132,204,22,0.12)" : "rgba(115,115,115,0.15)",
-                        color: c.isActive ? T.accent : T.muted, border: "none", borderRadius: 6,
+                        color: c.isActive ? T.accent : T.muted, border: "none", borderRadius: 0,
                         padding: "4px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer",
                       }}>{c.isActive ? "Active" : "Inactive"}</button>
                     </td>
                     <td style={{ padding: "12px 16px", textAlign: "right" }}>
                       <button onClick={() => remove(c.id, c.code)} style={{
                         background: "transparent", color: T.danger, border: `1px solid rgba(239,68,68,0.3)`,
-                        borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer",
+                        borderRadius: 0, padding: "4px 10px", fontSize: 12, cursor: "pointer",
                       }}>Delete</button>
                     </td>
                   </tr>

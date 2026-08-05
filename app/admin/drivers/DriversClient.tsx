@@ -82,24 +82,24 @@ export default function DriversClient({ initialDrivers }: { initialDrivers: Driv
       </p>
 
       {/* -- Create driver -- */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, marginBottom: 22, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16, marginBottom: 22, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <input
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="Driver name"
-          style={{ flex: "1 1 180px", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px", fontSize: 14, boxSizing: "border-box" }}
+          style={{ flex: "1 1 180px", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px", fontSize: 14, boxSizing: "border-box" }}
         />
         <input
           value={phone}
           onChange={e => setPhone(e.target.value)}
           placeholder="Phone"
           inputMode="tel"
-          style={{ flex: "1 1 140px", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px", fontSize: 14, boxSizing: "border-box" }}
+          style={{ flex: "1 1 140px", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px", fontSize: 14, boxSizing: "border-box" }}
         />
         <button
           onClick={createDriver}
           disabled={creating || !name.trim() || !phone.trim()}
-          style={{ background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 8, padding: "12px 20px", fontSize: 14, fontWeight: 800, cursor: "pointer", opacity: creating || !name.trim() || !phone.trim() ? 0.5 : 1 }}
+          style={{ background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "12px 20px", fontSize: 14, fontWeight: 800, cursor: "pointer", opacity: creating || !name.trim() || !phone.trim() ? 0.5 : 1 }}
         >
           {creating ? "..." : "Add driver"}
         </button>
@@ -108,7 +108,7 @@ export default function DriversClient({ initialDrivers }: { initialDrivers: Driv
       {/* -- Roster -- */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {drivers.map(d => (
-          <div key={d.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, opacity: d.isActive ? 1 : 0.55 }}>
+          <div key={d.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16, opacity: d.isActive ? 1 : 0.55 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <p style={{ fontSize: 16, fontWeight: 700 }}>{d.name}</p>
@@ -124,7 +124,7 @@ export default function DriversClient({ initialDrivers }: { initialDrivers: Driv
             <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
               <button
                 onClick={() => copyLink(d)}
-                style={{ background: "transparent", color: T.accent, border: `1px solid #2a3d10`, borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                style={{ background: "transparent", color: T.accent, border: `1px solid #2a3d10`, borderRadius: 0, padding: "9px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
               >
                 {copiedId === d.id ? "Copied \u2713" : "Copy link"}
               </button>
@@ -132,13 +132,13 @@ export default function DriversClient({ initialDrivers }: { initialDrivers: Driv
                 href={`https://wa.me/?text=${encodeURIComponent(`Your FitFuel delivery link: ${linkFor(d.accessToken)}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ background: "transparent", color: T.textSecond, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
+                style={{ background: "transparent", color: T.textSecond, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 14px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
               >
                 Send on WhatsApp
               </a>
               <button
                 onClick={() => toggleActive(d.id, d.isActive)}
-                style={{ background: "transparent", color: d.isActive ? T.red : T.accent, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginLeft: "auto" }}
+                style={{ background: "transparent", color: d.isActive ? T.red : T.accent, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginLeft: "auto" }}
               >
                 {d.isActive ? "Deactivate" : "Reactivate"}
               </button>
@@ -146,7 +146,7 @@ export default function DriversClient({ initialDrivers }: { initialDrivers: Driv
           </div>
         ))}
         {drivers.length === 0 && (
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 28, textAlign: "center", color: T.textMuted }}>
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 28, textAlign: "center", color: T.textMuted }}>
             No drivers yet. Add your first one above.
           </div>
         )}

@@ -9,8 +9,8 @@ const T = {
 };
 const R = "\u20B9";
 const pretty = (e: string) => (e || "").replace(/_/g, " ").toLowerCase();
-const inputStyle: React.CSSProperties = { background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 11px", fontSize: 13.5, boxSizing: "border-box" };
-const btn = (primary = false): React.CSSProperties => ({ background: primary ? T.accent : "transparent", color: primary ? "#080808" : T.text, border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" });
+const inputStyle: React.CSSProperties = { background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 11px", fontSize: 13.5, boxSizing: "border-box" };
+const btn = (primary = false): React.CSSProperties => ({ background: primary ? T.accent : "transparent", color: primary ? "#080808" : T.text, border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 0, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" });
 
 function payColor(s: string) {
   if (s === "SUCCESS") return T.accent;
@@ -66,7 +66,7 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
         </select>
       </div>
 
-      <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.6fr 1fr 1fr 0.9fr 0.5fr", gap: 8, padding: "10px 14px", background: "#161616", fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", color: T.muted }}>
           <div>Order</div><div>Customer</div><div>Payment</div><div>Status</div><div>Total</div><div></div>
         </div>

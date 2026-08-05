@@ -72,14 +72,14 @@ export default async function ProductionPage({
     .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot]);
 
   const tile = (label: string, value: string | number) => (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 18px", minWidth: 110 }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: "14px 18px", minWidth: 110 }}>
       <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: C.muted }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 800, color: C.text, marginTop: 4 }}>{value}</div>
     </div>
   );
 
   return (
-    <div className="ff-prod" style={{ background: C.bg, color: C.text, fontFamily: "system-ui, sans-serif" }}>
+    <div className="ff-prod" style={{ background: C.bg, color: C.text, fontFamily: "var(--font-archivo), sans-serif" }}>
       <style>{`
         @media print {
           header { display: none !important; }
@@ -111,7 +111,7 @@ export default async function ProductionPage({
           <Link href="/admin/production" style={btn(C, ymd(date) === tomorrowStr)}>Tomorrow</Link>
           <Link href={`/admin/production?date=${next}`} style={btn(C)}>Next →</Link>
           <form method="get" style={{ display: "inline-flex", gap: 6, marginLeft: 4 }}>
-            <input type="date" name="date" defaultValue={ymd(date)} style={{ background: C.card, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 13 }} />
+            <input type="date" name="date" defaultValue={ymd(date)} style={{ background: C.card, color: C.text, border: `1px solid ${C.border}`, borderRadius: 0, padding: "8px 10px", fontSize: 13 }} />
             <button type="submit" style={btn(C)}>Go</button>
           </form>
           <Link href={`/admin/production?date=${ymd(date)}&print=1`} style={{ ...btn(C, true), marginLeft: 4 }}>🖨 Print SOP</Link>
@@ -130,7 +130,7 @@ export default async function ProductionPage({
 
       {/* Warnings */}
       {report.warnings.length > 0 && (
-        <div style={{ background: printMode ? "#fff7ed" : "#2a1d05", border: `1px solid ${printMode ? "#fdba74" : "#7c5e10"}`, color: printMode ? "#7c2d12" : "#fbbf24", borderRadius: 10, padding: "12px 16px", marginBottom: 22, fontSize: 13 }}>
+        <div style={{ background: printMode ? "#fff7ed" : "#2a1d05", border: `1px solid ${printMode ? "#fdba74" : "#7c5e10"}`, color: printMode ? "#7c2d12" : "#fbbf24", borderRadius: 0, padding: "12px 16px", marginBottom: 22, fontSize: 13 }}>
           <strong>Schedule / data gaps ({report.warnings.length}):</strong>
           <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
             {report.warnings.map((w) => <li key={w} style={{ marginBottom: 3 }}>{w}</li>)}
@@ -139,14 +139,14 @@ export default async function ProductionPage({
       )}
 
       {report.lines.length === 0 ? (
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "40px 24px", textAlign: "center", color: C.muted }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 0, padding: "40px 24px", textAlign: "center", color: C.muted }}>
           No active deliveries scheduled for this date.
         </div>
       ) : (
         <>
           {/* Consolidated prep / shopping list */}
           {report.shoppingList.length > 0 && (
-            <details open={printMode} style={{ border: `1px solid ${C.border}`, borderRadius: 12, background: C.card, marginBottom: 26, overflow: "hidden" }}>
+            <details open={printMode} style={{ border: `1px solid ${C.border}`, borderRadius: 0, background: C.card, marginBottom: 26, overflow: "hidden" }}>
               <summary style={{ padding: "14px 18px", fontWeight: 700, color: C.text, display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: C.accent, letterSpacing: 1, textTransform: "uppercase", fontSize: 13 }}>Prep / Shopping list</span>
                 <span style={{ color: C.muted, fontSize: 12 }}>{report.shoppingList.length} ingredients · raw weight</span>
@@ -178,7 +178,7 @@ export default async function ProductionPage({
               <div style={{ fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: C.accent, fontWeight: 700, marginBottom: 8 }}>{SLOT_LABEL[g.slot]}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {g.lines.map((l) => (
-                  <details key={l.recipeId} open={printMode} style={{ border: `1px solid ${C.border}`, borderRadius: 12, background: C.card, overflow: "hidden" }}>
+                  <details key={l.recipeId} open={printMode} style={{ border: `1px solid ${C.border}`, borderRadius: 0, background: C.card, overflow: "hidden" }}>
                     <summary style={{ padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                       <span style={{ fontWeight: 700, fontSize: 16, color: C.text }}>
                         {l.recipeName}
@@ -258,7 +258,7 @@ function btn(C: { card: string; border: string; text: string; accent: string }, 
     background: active ? C.accent : C.card,
     color: active ? "#080808" : C.text,
     border: `1px solid ${active ? C.accent : C.border}`,
-    borderRadius: 8,
+    borderRadius: 0,
     padding: "8px 12px",
     fontSize: 13,
     fontWeight: 600,

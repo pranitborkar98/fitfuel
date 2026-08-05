@@ -83,7 +83,7 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
   const Row = ({ u }: { u: StaffUser }) => (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1a1a1a", border: `1px solid ${T.border}`, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.muted, fontSize: 13 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 0, background: "#1a1a1a", border: `1px solid ${T.border}`, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.muted, fontSize: 13 }}>
           {u.image ? <img src={u.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (u.name ?? u.email ?? "?").slice(0, 1).toUpperCase()}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -98,7 +98,7 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
           disabled={busy === u.id || u.id === meId}
           onChange={(e) => setRole(u.id, e.target.value)}
           title={u.id === meId ? "You can't change your own role" : ""}
-          style={{ background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px", fontSize: 13, fontWeight: 600, cursor: u.id === meId ? "not-allowed" : "pointer" }}
+          style={{ background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "7px 10px", fontSize: 13, fontWeight: 600, cursor: u.id === meId ? "not-allowed" : "pointer" }}
         >
           {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
@@ -116,7 +116,7 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
       {err && <div style={{ color: "#f87171", fontSize: 13, marginBottom: 14 }}>{err}</div>}
 
       {/* Current staff */}
-      <div style={{ border: `1px solid ${T.border}`, borderRadius: 14, background: T.card, marginBottom: 26 }}>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, background: T.card, marginBottom: 26 }}>
         <div style={{ padding: "13px 14px", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: T.accent, fontWeight: 700 }}>
           Current staff ({staff.length})
         </div>
@@ -128,7 +128,7 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
       </div>
 
       {/* Find & promote */}
-      <div style={{ border: `1px solid ${T.border}`, borderRadius: 14, background: T.card }}>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, background: T.card }}>
         <div style={{ padding: "13px 14px", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: T.accent, fontWeight: 700 }}>
           Add staff — find a signed-up user
         </div>
@@ -139,9 +139,9 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && search()}
               placeholder="Search by email or name…"
-              style={{ flex: 1, background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "9px 11px", fontSize: 13 }}
+              style={{ flex: 1, background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 11px", fontSize: 13 }}
             />
-            <button onClick={search} disabled={searching || !q.trim()} style={{ background: T.accent, color: "#080808", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: searching || !q.trim() ? 0.6 : 1 }}>
+            <button onClick={search} disabled={searching || !q.trim()} style={{ background: T.accent, color: "#080808", border: "none", borderRadius: 0, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: searching || !q.trim() ? 0.6 : 1 }}>
               {searching ? "…" : "Search"}
             </button>
           </div>

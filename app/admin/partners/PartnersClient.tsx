@@ -24,10 +24,10 @@ type PartnerDetail = Partner & {
   payouts: any[];
 };
 
-const PANEL: React.CSSProperties = { background: "#0e0e0e", border: "1px solid #1f1f1f", borderRadius: 8, padding: 20 };
-const INPUT: React.CSSProperties = { background: "#080808", border: "1px solid #2a2a2a", color: "#eee", borderRadius: 4, padding: "8px 10px", fontSize: 13, width: "100%", fontFamily: "inherit" };
-const BTN: React.CSSProperties = { background: "#84cc16", color: "#000", border: "none", padding: "8px 14px", borderRadius: 4, fontWeight: 700, cursor: "pointer", fontSize: 13 };
-const BTN_GHOST: React.CSSProperties = { background: "transparent", color: "#bbb", border: "1px solid #2a2a2a", padding: "8px 14px", borderRadius: 4, cursor: "pointer", fontSize: 13 };
+const PANEL: React.CSSProperties = { background: "#0e0e0e", border: "1px solid #1f1f1f", borderRadius: 0, padding: 20 };
+const INPUT: React.CSSProperties = { background: "#080808", border: "1px solid #2a2a2a", color: "#eee", borderRadius: 0, padding: "8px 10px", fontSize: 13, width: "100%", fontFamily: "inherit" };
+const BTN: React.CSSProperties = { background: "#84cc16", color: "#000", border: "none", padding: "8px 14px", borderRadius: 0, fontWeight: 700, cursor: "pointer", fontSize: 13 };
+const BTN_GHOST: React.CSSProperties = { background: "transparent", color: "#bbb", border: "1px solid #2a2a2a", padding: "8px 14px", borderRadius: 0, cursor: "pointer", fontSize: 13 };
 const LABEL: React.CSSProperties = { display: "block", fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6, fontWeight: 600 };
 
 const TYPES = ["CUSTOMER", "GYM", "TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "CORPORATE", "RESIDENCE"];
@@ -128,7 +128,7 @@ function PartnerRow({ p, open, onToggleOpen, onChanged }: { p: Partner; open: bo
             <div style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>{p.name}</div>
             <Pill>{p.type}</Pill>
             <Pill color={statusColor(p.status)}>{p.status}</Pill>
-            <code style={{ fontSize: 11, color: "#84cc16", background: "#0a1505", padding: "2px 6px", borderRadius: 3 }}>{p.code}</code>
+            <code style={{ fontSize: 11, color: "#84cc16", background: "#0a1505", padding: "2px 6px", borderRadius: 0 }}>{p.code}</code>
           </div>
           <div style={{ color: "#888", fontSize: 12, marginTop: 6, display: "flex", gap: 16, flexWrap: "wrap" }}>
             <span>{p._count?.referrals ?? 0} referrals</span>
@@ -494,7 +494,7 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ border: "1px solid #1a1a1a", borderRadius: 6, padding: 14, background: "#0a0a0a", display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ border: "1px solid #1a1a1a", borderRadius: 0, padding: 14, background: "#0a0a0a", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "#84cc16", textTransform: "uppercase", letterSpacing: 0.6 }}>{title}</div>
       {children}
     </div>
@@ -503,7 +503,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 6, padding: "10px 12px" }}>
+    <div style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 0, padding: "10px 12px" }}>
       <div style={{ fontSize: 10, color: "#666", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 18, color: "#fff", fontWeight: 700 }}>{value}</div>
     </div>
@@ -514,7 +514,7 @@ function Th({ children }: { children: React.ReactNode }) { return <th style={{ t
 function Td({ children }: { children: React.ReactNode }) { return <td style={{ padding: "10px 12px", color: "#ddd", verticalAlign: "top" }}>{children}</td>; }
 
 function Pill({ children, color }: { children: React.ReactNode; color?: string }) {
-  return <span style={{ display: "inline-block", background: color === "#84cc16" ? "#0a1505" : "#1a1a1a", color: color || "#aaa", border: `1px solid ${color === "#84cc16" ? "#1f3a08" : "#2a2a2a"}`, fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{children}</span>;
+  return <span style={{ display: "inline-block", background: color === "#84cc16" ? "#0a1505" : "#1a1a1a", color: color || "#aaa", border: `1px solid ${color === "#84cc16" ? "#1f3a08" : "#2a2a2a"}`, fontSize: 10, padding: "2px 8px", borderRadius: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{children}</span>;
 }
 
 function statusColor(status: string): string | undefined {
@@ -590,7 +590,7 @@ function PayoutsTab() {
       {/* Filter row */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
         <label style={{ color: "#888", fontSize: 12 }}>Status</label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ background: "#0a0a0a", color: "#eee", border: "1px solid #2a2a2a", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ background: "#0a0a0a", color: "#eee", border: "1px solid #2a2a2a", borderRadius: 0, padding: "8px 10px", fontSize: 13 }}>
           <option value="">All</option>
           <option value="PENDING">Pending</option>
           <option value="PROCESSING">Processing</option>
@@ -599,27 +599,27 @@ function PayoutsTab() {
         </select>
 
         <label style={{ color: "#888", fontSize: 12, marginLeft: 8 }}>Period</label>
-        <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ background: "#0a0a0a", color: "#eee", border: "1px solid #2a2a2a", borderRadius: 6, padding: "8px 10px", fontSize: 13 }} />
+        <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} style={{ background: "#0a0a0a", color: "#eee", border: "1px solid #2a2a2a", borderRadius: 0, padding: "8px 10px", fontSize: 13 }} />
 
         <button onClick={load} style={BTN_GHOST}>Refresh</button>
         <button onClick={downloadCSV} style={{ ...BTN, marginLeft: "auto" }}>Download CSV</button>
       </div>
 
       {/* Summary */}
-      <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10, padding: "12px 16px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 0, padding: "12px 16px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ color: "#888", fontSize: 12 }}>
           {rows ? rows.length : 0} payout{rows && rows.length === 1 ? "" : "s"} {status ? `(${status})` : "(all)"} {period ? `· ${period}` : ""}
         </div>
-        <div style={{ color: "#a3e635", fontWeight: 700, fontSize: 14 }}>Total: {'\u20B9'}{total.toLocaleString("en-IN")}</div>
+        <div style={{ color: "#84cc16", fontWeight: 700, fontSize: 14 }}>Total: {'\u20B9'}{total.toLocaleString("en-IN")}</div>
       </div>
 
       {/* Table */}
       {rows === null ? (
         <div style={{ color: "#666" }}>Loading{'\u2026'}</div>
       ) : rows.length === 0 ? (
-        <div style={{ color: "#888", padding: 24, textAlign: "center", background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10 }}>No payouts in this filter.</div>
+        <div style={{ color: "#888", padding: 24, textAlign: "center", background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 0 }}>No payouts in this filter.</div>
       ) : (
-        <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 0, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ background: "#101010", color: "#888" }}>
@@ -643,7 +643,7 @@ function PayoutsTab() {
                   </td>
                   <td style={CELL}>{p.partnerType}</td>
                   <td style={CELL}>{p.referralCount}</td>
-                  <td style={{ ...CELL, color: "#a3e635", fontWeight: 700 }}>{'\u20B9'}{p.amountRs.toLocaleString("en-IN")}</td>
+                  <td style={{ ...CELL, color: "#84cc16", fontWeight: 700 }}>{'\u20B9'}{p.amountRs.toLocaleString("en-IN")}</td>
                   <td style={CELL}>
                     <span style={{
                       color: p.status === "PAID" ? "#22c55e" : p.status === "FAILED" ? "#ef4444" : p.status === "PROCESSING" ? "#3b82f6" : "#f59e0b",

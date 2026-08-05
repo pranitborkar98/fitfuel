@@ -108,9 +108,9 @@ export default function TestimonialManager({ initial }: { initial: Tst[] }) {
         <button onClick={startNew} style={btn(true)}>+ New testimonial</button>
       </div>
       {items.length === 0 ? (
-        <div style={{ border: `1px solid ${UI.border}`, borderRadius: 12, padding: 32, textAlign: "center", color: UI.muted }}>No testimonials yet.</div>
+        <div style={{ border: `1px solid ${UI.border}`, borderRadius: 0, padding: 32, textAlign: "center", color: UI.muted }}>No testimonials yet.</div>
       ) : (
-        <div style={{ border: `1px solid ${UI.border}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: `1px solid ${UI.border}`, borderRadius: 0, overflow: "hidden" }}>
           {items.map((t, i) => (
             <div key={t.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderTop: i ? `1px solid ${UI.border}` : "none", background: UI.card }}>
               <div style={{ minWidth: 0 }}>

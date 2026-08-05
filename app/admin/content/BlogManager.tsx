@@ -119,7 +119,7 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
         <Label>Body (HTML)</Label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
           <Area rows={16} value={form.contentHtml} onChange={(e) => set("contentHtml", e.target.value)} placeholder="<p>Write in HTML: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;, &lt;a href&gt;…</p>" style={{ fontFamily: "ui-monospace, monospace", fontSize: 12.5 }} />
-          <div style={{ border: `1px solid ${UI.border}`, borderRadius: 8, padding: "14px 16px", background: UI.soft, overflow: "auto", maxHeight: 380 }}>
+          <div style={{ border: `1px solid ${UI.border}`, borderRadius: 0, padding: "14px 16px", background: UI.soft, overflow: "auto", maxHeight: 380 }}>
             <div style={{ fontSize: 11, color: UI.muted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Live preview</div>
             <div style={{ color: "#cfcfcf", fontSize: 14, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: form.contentHtml || "<p style='color:#666'>Nothing yet…</p>" }} />
           </div>
@@ -141,7 +141,7 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
       {items.length === 0 ? (
         <Empty label="No posts yet." />
       ) : (
-        <div style={{ border: `1px solid ${UI.border}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ border: `1px solid ${UI.border}`, borderRadius: 0, overflow: "hidden" }}>
           {items.map((p, i) => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderTop: i ? `1px solid ${UI.border}` : "none", background: UI.card }}>
               <div style={{ minWidth: 0 }}>
@@ -166,5 +166,5 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
 }
 
 function Empty({ label }: { label: string }) {
-  return <div style={{ border: `1px solid ${UI.border}`, borderRadius: 12, padding: "32px", textAlign: "center", color: UI.muted, fontSize: 14 }}>{label}</div>;
+  return <div style={{ border: `1px solid ${UI.border}`, borderRadius: 0, padding: "32px", textAlign: "center", color: UI.muted, fontSize: 14 }}>{label}</div>;
 }

@@ -156,7 +156,7 @@ export default function DispatchClient({
     const canDispatch = !!d.assignedDriverId && (d.status === "PREPARING" || d.status === "PACKED");
     const terminal = isTerminal(d.status);
     return (
-      <div key={d.id} style={{ background: T.card, border: `1px solid ${terminal ? T.border : "#2a3d10"}`, borderRadius: 14, padding: 16 }}>
+      <div key={d.id} style={{ background: T.card, border: `1px solid ${terminal ? T.border : "#2a3d10"}`, borderRadius: 0, padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6, gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, color: T.textMuted }}>{d.order.orderNumber}</span>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -189,7 +189,7 @@ export default function DispatchClient({
               value={d.assignedDriverId ?? ""}
               onChange={e => assign(d.id, e.target.value || null)}
               disabled={busyId === d.id}
-              style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 13, minWidth: 160 }}
+              style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "10px 12px", fontSize: 13, minWidth: 160 }}
             >
               <option value="">-- Assign driver --</option>
               {drivers.map(dr => (
@@ -201,7 +201,7 @@ export default function DispatchClient({
               <button
                 onClick={() => dispatch(d.id)}
                 disabled={busyId === d.id}
-                style={{ background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
+                style={{ background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
               >
                 {busyId === d.id ? "..." : "Dispatch \u2192"}
               </button>
@@ -257,14 +257,14 @@ export default function DispatchClient({
       {drivers.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
           {drivers.map(dr => (
-            <div key={dr.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", fontSize: 12 }}>
+            <div key={dr.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 12 }}>
               <span style={{ fontWeight: 700 }}>{dr.name}</span>
               <span style={{ color: T.textMuted }}> &middot; COD &#8377;{(codByDriver[dr.id] ?? 0).toLocaleString("en-IN")}</span>
             </div>
           ))}
           <button
             onClick={dispatchAllAssigned}
-            style={{ marginLeft: "auto", background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
+            style={{ marginLeft: "auto", background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "8px 14px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
           >
             Dispatch all assigned
           </button>
@@ -272,7 +272,7 @@ export default function DispatchClient({
       )}
 
       {deliveries.length === 0 && (
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 28, textAlign: "center", color: T.textMuted }}>
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 28, textAlign: "center", color: T.textMuted }}>
           No deliveries scheduled for today.
         </div>
       )}

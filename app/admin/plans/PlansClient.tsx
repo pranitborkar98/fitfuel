@@ -12,7 +12,7 @@ const T = {
 };
 const inputStyle: React.CSSProperties = {
   width: "100%", background: T.soft, color: T.text, border: `1px solid ${T.border}`,
-  borderRadius: 8, padding: "9px 11px", fontSize: 13.5, fontFamily: "inherit", boxSizing: "border-box",
+  borderRadius: 0, padding: "9px 11px", fontSize: 13.5, fontFamily: "inherit", boxSizing: "border-box",
 };
 const Text = (p: React.InputHTMLAttributes<HTMLInputElement>) => <input {...p} style={{ ...inputStyle, ...(p.style || {}) }} />;
 const Area = (p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...p} style={{ ...inputStyle, resize: "vertical", ...(p.style || {}) }} />;
@@ -25,7 +25,7 @@ const Check = ({ checked, onChange, label }: { checked: boolean; onChange: (v: b
 );
 const btn = (primary = false): React.CSSProperties => ({
   background: primary ? T.accent : "transparent", color: primary ? "#080808" : T.text,
-  border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 8, padding: "8px 15px",
+  border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 0, padding: "8px 15px",
   fontSize: 13, fontWeight: 700, cursor: "pointer",
 });
 const pretty = (e: string) => (e || "").replace(/_/g, " ").toLowerCase();
@@ -187,7 +187,7 @@ export default function PlansClient({ initial }: { initial: Plan[] }) {
       <p style={{ color: T.muted, fontSize: 13.5, marginBottom: 20 }}>
         Toggle a plan Active to sell it. Edit copy, macros and prices. Showing {plans.length} plans.
       </p>
-      <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
         {plans.map((p, idx) => (
           <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderTop: idx ? `1px solid ${T.border}` : "none", background: T.card }}>
             <div style={{ minWidth: 0 }}>
@@ -218,7 +218,7 @@ export default function PlansClient({ initial }: { initial: Plan[] }) {
 
 function PriceTable({ rows, onRowSaved }: { rows: any[]; onRowSaved: (r: any) => void }) {
   return (
-    <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 0.9fr 0.9fr 0.7fr 0.8fr", gap: 8, padding: "10px 12px", background: "#161616", fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", color: T.muted }}>
         <div>Plan / bundle</div><div>Duration</div><div>Meals</div><div>Price ₹</div><div>MRP ₹</div><div>GST %</div><div>Active</div>
       </div>
