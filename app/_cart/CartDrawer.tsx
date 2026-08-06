@@ -14,7 +14,7 @@
 import { useEffect, useRef } from "react";
 import { Minus, Plus, X, MessageCircle } from "lucide-react";
 
-import { composeOrder } from "@/lib/menu-cart";
+import { composeOrder, receipt, DELIVERY_RS, PACKAGING_RS, GST_PERCENT } from "@/lib/menu-cart";
 import { waLink } from "@/lib/site";
 import { useCart } from "./CartProvider";
 
@@ -43,6 +43,7 @@ export default function CartDrawer() {
 
   const empty = lines.length === 0 && enquiries.length === 0;
   const href = waLink(composeOrder(lines, enquiries));
+  const bill = receipt(lines);
 
   return (
     <>
@@ -120,14 +121,33 @@ export default function CartDrawer() {
 
         {!empty && (
           <footer className="ff-cart-foot">
+            <span className="ff-rec-label">The receipt, before you pay</span>
+            <dl className="ff-rec">
+              <div>
+                <dt>Food, {totals.count} {totals.count === 1 ? "dish" : "dishes"}</dt>
+                <dd>{rs(bill.subtotalRs)}</dd>
+              </div>
+              <div>
+                <dt>Delivery</dt>
+                <dd>{rs(bill.deliveryRs)}</dd>
+              </div>
+              <div>
+                <dt>Packaging</dt>
+                <dd>{rs(bill.packagingRs)}</dd>
+              </div>
+              <div>
+                <dt>GST at {GST_PERCENT}%</dt>
+                <dd>{rs(bill.gstRs)}</dd>
+              </div>
+            </dl>
             <div className="ff-sum">
-              <span>Subtotal</span>
-              <span className="ff-sum-n">{rs(totals.subtotalRs)}</span>
+              <span>Total</span>
+              <span className="ff-sum-n">{rs(bill.totalRs)}</span>
             </div>
             <p className="ff-foot-note">
-              Delivery is confirmed on reply — no single-meal delivery fee is set yet, so it is
-              not guessed at here. Coupon codes apply to meal plans at checkout, not to single
-              dishes.
+              Delivery {rs(DELIVERY_RS)} and packaging {rs(PACKAGING_RS)} are the single-day rate,
+              GST at {GST_PERCENT}% on food. Nothing is added at the door. Coupon codes apply to
+              meal plans at checkout, not to single dishes.
             </p>
 
             <a href={href} target="_blank" rel="noopener noreferrer" className="ff-send">
@@ -168,7 +188,9 @@ export default function CartDrawer() {
         }
         .ff-cart-x {
           background: none; border: 1px solid var(--ff-rule, #232320); color: var(--ff-mute, #9a9a94);
-          width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer;
+          /* 44 square, not 34: DESIGN.md's touch minimum, and this is the one
+             control a customer hits with a thumb while holding a phone. */
+          width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
           border-radius: 0; transition: color .15s, border-color .15s;
         }
         .ff-cart-x:hover { color: var(--ff-ink, #f7f7f5); border-color: var(--ff-rule-2, #33332f); }
@@ -234,8 +256,26 @@ export default function CartDrawer() {
           padding: 18px 22px calc(18px + env(safe-area-inset-bottom, 0px));
           background: var(--ff-bg, #070707);
         }
+        .ff-rec-label {
+          display: block; margin-bottom: 12px;
+          font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
+          letter-spacing: 0.2em; text-transform: uppercase; color: var(--ff-dim, #85857e);
+        }
+        .ff-rec { margin: 0 0 14px; display: flex; flex-direction: column; gap: 9px; }
+        .ff-rec > div {
+          display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+        }
+        .ff-rec dt {
+          font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
+          letter-spacing: 0.12em; text-transform: uppercase; color: var(--ff-dim, #85857e);
+        }
+        .ff-rec dd {
+          margin: 0; font-family: var(--font-mono), ui-monospace, monospace; font-size: 12.5px;
+          font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ff-ink, #f7f7f5);
+        }
         .ff-sum {
           display: flex; align-items: baseline; justify-content: space-between;
+          padding-top: 13px; border-top: 1px solid var(--ff-rule-2, #33332f);
           font-family: var(--ff-cond); font-weight: 800; font-size: 18px; text-transform: uppercase;
           color: var(--ff-ink, #f7f7f5); letter-spacing: 0.02em;
         }

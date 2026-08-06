@@ -128,6 +128,48 @@ export function totals(lines: CartLine[]): CartTotals {
   };
 }
 
+/* ── The single-meal receipt ───────────────────────────────────────────────
+   Blocker 1 in the header above still stands — the 32 provisional rows are
+   still enquiry-only — but blocker 2's other half has moved: the single-day
+   delivery and packaging rate IS now set, at the same ₹50 + ₹50 the trial day
+   charges, and design/FitFuel Shop.dc.html prints it.
+
+   So the basket stops saying "delivery is confirmed on reply" and shows the
+   whole receipt before the customer commits, which is the claim the shop makes
+   three sections above it. The maths is here rather than in the drawer for the
+   same reason every other total on the site is: two components must never be
+   able to compute it differently. */
+
+/** The single-day rate, matching lib/pricing-decomposition.ts's TRIAL_DAY. */
+export const DELIVERY_RS = 50;
+export const PACKAGING_RS = 50;
+export const GST_PERCENT = 5;
+
+export type CartReceipt = {
+  subtotalRs: number;
+  deliveryRs: number;
+  packagingRs: number;
+  gstRs: number;
+  totalRs: number;
+};
+
+export function receipt(lines: CartLine[]): CartReceipt {
+  const subtotalRs = totals(lines).subtotalRs;
+  /* No lines means no delivery: an order that is only price enquiries has
+     nothing to deliver yet, and printing ₹100 of charges against ₹0 of food
+     reads as a fee for asking a question. */
+  const deliveryRs = subtotalRs > 0 ? DELIVERY_RS : 0;
+  const packagingRs = subtotalRs > 0 ? PACKAGING_RS : 0;
+  const gstRs = Math.round(((subtotalRs + deliveryRs + packagingRs) * GST_PERCENT) / 100);
+  return {
+    subtotalRs,
+    deliveryRs,
+    packagingRs,
+    gstRs,
+    totalRs: subtotalRs + deliveryRs + packagingRs + gstRs,
+  };
+}
+
 /* ── Settlement ────────────────────────────────────────────────────────────
    The WhatsApp handoff. Everything the kitchen needs to price and pack the
    order without a second round trip. */

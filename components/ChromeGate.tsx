@@ -12,6 +12,14 @@ import type { ReactNode } from "react";
 // Path prefixes that render WITHOUT the marketing nav/footer.
 const BARE_PREFIXES = ["/driver", "/admin"];
 
+// Routes that draw their OWN header and footer, so the site chrome would be a
+// second one. "/" is the shop: design/FitFuel Shop.dc.html specifies a header
+// with the wordmark, a search field, the basket, a six-item nav and the live
+// cut-off strip, plus a six-tab bottom bar and a four-column footer. Those are
+// the composition, not decoration around it, and mounting the site navbar as
+// well would put two fixed bars and ~134px of chrome above the trial panel.
+const SELF_CHROMED = ["/"];
+
 // Path prefixes that are the logged-in APPLICATION, not marketing pages.
 // These keep their own denser UI conventions, so the marketing-side
 // art-direction resets in globals.css must not reach them.
@@ -27,7 +35,8 @@ export default function ChromeGate({
   children: ReactNode;
 }) {
   const pathname = usePathname() || "";
-  const bare = BARE_PREFIXES.some((p) => pathname.startsWith(p));
+  const bare =
+    BARE_PREFIXES.some((p) => pathname.startsWith(p)) || SELF_CHROMED.includes(pathname);
   const marketing = !APP_PREFIXES.some((p) => pathname.startsWith(p));
 
   return (
