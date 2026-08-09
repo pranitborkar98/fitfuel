@@ -10,7 +10,12 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 // Path prefixes that render WITHOUT the marketing nav/footer.
-const BARE_PREFIXES = ["/driver", "/admin"];
+//
+// /dashboard joined this list when it grew its own shell (app/_app/AppShell).
+// Before that it carried the marketing navbar and footer on top of an app
+// surface, which meant two navigations on screen at once and a footer full of
+// company links under a nutrition log.
+const BARE_PREFIXES = ["/driver", "/admin", "/dashboard"];
 
 // Routes that draw their OWN header and footer, so the site chrome would be a
 // second one. "/" is the shop: design/FitFuel Shop.dc.html specifies a header

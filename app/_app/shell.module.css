@@ -1,0 +1,291 @@
+/* app/_app/shell.module.css
+ *
+ * The one breakpoint, the two chromes, and the states a style attribute
+ * cannot express. Radius is 0 and there is not a shadow, gradient or blur in
+ * this file: structure is 1px hairlines, as everywhere else.
+ *
+ * Under 1024px the app is a phone: a bottom tab bar, no sidebar.
+ * At and above it, the sidebar appears and the tab bar goes. Exactly one of
+ * the two is ever visible, so nothing double-draws at the seam.
+ */
+
+.shell {
+  min-height: 100dvh;
+  background: var(--ff-bg);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 236px;
+    background: var(--ff-panel);
+    border-right: 1px solid var(--ff-rule);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .main {
+    padding-left: 236px;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--ff-rule);
+  text-decoration: none;
+  flex: none;
+}
+
+.brandMark {
+  width: 22px;
+  height: 22px;
+  background: var(--ff-lime);
+  flex: none;
+}
+
+.groupLabel {
+  padding: 20px 18px 8px;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 0 18px;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: background-color 0.16s ease, border-color 0.16s ease, padding-left 0.16s ease;
+}
+
+.navRow:hover {
+  background: var(--ff-panel-2);
+  padding-left: 22px;
+}
+
+.navRow:focus-visible {
+  outline: 2px solid var(--ff-lime);
+  outline-offset: -2px;
+}
+
+/* Active is carried by the lime rule AND the ink label, never by hue alone. */
+.navRowOn {
+  border-left-color: var(--ff-lime);
+  background: var(--ff-panel-2);
+}
+
+.navRowOn .navLabel {
+  color: var(--ff-ink);
+}
+
+.navLabel {
+  font-family: var(--font-archivo), sans-serif;
+  font-size: 14px;
+  color: var(--ff-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarFoot {
+  margin-top: auto;
+  border-top: 1px solid var(--ff-rule);
+  padding: 14px 18px 18px;
+}
+
+/* ── Main column ──────────────────────────────────────────────────────── */
+
+.main {
+  min-width: 0;
+}
+
+/* The tab bar covers the last 60px plus the safe area on phones, and nothing
+   at all once it is gone. */
+.content {
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding-bottom: 48px;
+  }
+}
+
+/* ── Top bar (phones only: the sidebar carries the brand at desktop) ──── */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  background: var(--ff-bg);
+  border-bottom: 1px solid var(--ff-rule);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+@media (min-width: 1024px) {
+  .topbar {
+    display: none;
+  }
+}
+
+/* ── Bottom tab bar ───────────────────────────────────────────────────── */
+
+.tabbar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1px;
+  background: var(--ff-rule);
+  border-top: 1px solid var(--ff-rule);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 1024px) {
+  .tabbar {
+    display: none;
+  }
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 60px;
+  padding: 0 2px;
+  background: var(--ff-bg);
+  border: 0;
+  border-top: 2px solid transparent;
+  color: var(--ff-dim);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--ff-lime);
+  outline-offset: -2px;
+}
+
+.tabOn {
+  border-top-color: var(--ff-lime);
+  color: var(--ff-ink);
+}
+
+.tabLabel {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* ── More sheet ───────────────────────────────────────────────────────── */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.62);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 41;
+  max-height: 82dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--ff-bg);
+  border-top: 1px solid var(--ff-rule);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  animation: sheetIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sheetIn {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: none;             opacity: 1; }
+}
+
+.sheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--ff-rule);
+  position: sticky;
+  top: 0;
+  background: var(--ff-bg);
+}
+
+.sheetClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  background: transparent;
+  border: 0;
+  color: var(--ff-mute);
+  cursor: pointer;
+}
+
+.sheetClose:focus-visible {
+  outline: 2px solid var(--ff-lime);
+  outline-offset: -2px;
+}
+
+.sheetRow {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 56px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ff-rule);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.sheetRow:hover,
+.sheetRow:focus-visible {
+  background: var(--ff-panel-2);
+  border-left-color: var(--ff-lime);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { animation: none; }
+  .navRow,
+  .tab,
+  .sheetRow { transition: none; }
+  .navRow:hover { padding-left: 18px; }
+}
