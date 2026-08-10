@@ -1,7 +1,16 @@
-// app/dashboard/notification-settings/NotificationSettingsClient.tsx
 "use client";
+
+// app/dashboard/notification-settings/NotificationSettingsClient.tsx
+//
+// The toggles and the save, and nothing else. The title and the standing
+// promise moved to the server page.
+//
+// The old switch was 48x28. A 28px tall control is not a 44px touch target,
+// and DESIGN.md §8 does not make an exception for switches that look tidy at
+// 28. The visual stays small; the hit area is padded out to 44.
+
 import { useState } from "react";
-import Link from "next/link";
+import { C, body, label, num, solidBtn } from "@/app/_app/theme";
 
 type Prefs = {
   weeklyDigest: boolean;
@@ -13,54 +22,69 @@ type Prefs = {
   whatsappEnabled: boolean;
 };
 
-const T = {
-  bg: "#080808",
-  card: "#101010",
-  border: "#1f1f1f",
-  text: "#eaeaea",
-  textMuted: "#888",
-  accent: "#84cc16",
-};
+type Row = { key: keyof Prefs; label: string; desc: string };
 
-const SECTIONS: Array<{
-  title: string;
-  rows: Array<{
-    key: keyof Prefs;
-    label: string;
-    desc: string;
-  }>;
-}> = [
+const SECTIONS: Array<{ title: string; rows: Row[] }> = [
   {
     title: "What you receive",
     rows: [
-      { key: "weeklyDigest", label: "Weekly digest", desc: "Sunday recap with your consistency score and breakdown." },
-      { key: "morningPush", label: "Morning preview (7 AM)", desc: "Today's meal lineup + a quick nudge to log yesterday." },
-      { key: "eveningRecap", label: "Evening recap (9 PM)", desc: "Tomorrow's plate + log-today reminder." },
-      { key: "nudges", label: "Reminders", desc: "Payment pending, plan ending soon, occasional check-in if you go quiet." },
-      { key: "marketing", label: "Promotions", desc: "Offers, new plan launches, seasonal menus. We rarely send these." },
+      { key: "weeklyDigest", label: "Weekly digest", desc: "Sunday recap with your consistency score and its breakdown." },
+      { key: "morningPush", label: "Morning preview, 7 am", desc: "Today's meal lineup, and a nudge to log yesterday." },
+      { key: "eveningRecap", label: "Evening recap, 9 pm", desc: "Tomorrow's plate, and a reminder to log today." },
+      { key: "nudges", label: "Reminders", desc: "Payment pending, plan ending soon, a check in if you go quiet." },
+      { key: "marketing", label: "Promotions", desc: "Offers, new plans, seasonal menus. These are rare." },
     ],
   },
   {
     title: "How you receive it",
     rows: [
-      { key: "emailEnabled", label: "Email", desc: "Currently your primary channel." },
-      { key: "whatsappEnabled", label: "WhatsApp", desc: "Coming soon \u2014 enable now to opt-in early." },
+      { key: "emailEnabled", label: "Email", desc: "Your primary channel." },
+      { key: "whatsappEnabled", label: "WhatsApp", desc: "Not sending yet. Turn it on to be included when it starts." },
     ],
   },
 ];
 
-export default function NotificationSettingsClient({
-  initialPrefs,
-}: {
-  initialPrefs: Prefs;
-}) {
+/** 44x44 hit area around a 44x26 switch. DESIGN.md §8. */
+function Switch({ on, onToggle, name }: { on: boolean; onToggle: () => void; name: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={name}
+      onClick={onToggle}
+      style={{
+        flex: "none", width: 52, height: 44, padding: 0, background: "transparent",
+        border: 0, cursor: "pointer", display: "flex", alignItems: "center",
+        justifyContent: "flex-end",
+      }}
+    >
+      <span
+        style={{
+          width: 44, height: 26, padding: 3, display: "flex", alignItems: "center",
+          justifyContent: on ? "flex-end" : "flex-start",
+          background: on ? C.lime : "transparent",
+          border: `1px solid ${on ? C.lime : C.rule2}`,
+          transition: "background-color 180ms ease-out, border-color 180ms ease-out",
+        }}
+      >
+        <span style={{ width: 18, height: 18, background: on ? C.onLime : C.dim }} />
+      </span>
+    </button>
+  );
+}
+
+export default function NotificationSettingsClient({ initialPrefs }: { initialPrefs: Prefs }) {
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs);
   const [saving, setSaving] = useState(false);
-  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dirty = (Object.keys(prefs) as Array<keyof Prefs>).some((k) => prefs[k] !== initialPrefs[k]);
 
   function toggle(key: keyof Prefs) {
     setPrefs((p) => ({ ...p, [key]: !p[key] }));
+    setSaved(false);
   }
 
   async function save() {
@@ -72,167 +96,62 @@ export default function NotificationSettingsClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prefs),
       });
-      const j = await r.json();
-      if (!r.ok || !j.ok) {
-        setError(j.error || "Save failed");
-      } else {
-        setSavedAt(new Date());
-      }
-    } catch (e: any) {
-      setError(e?.message || "Network error");
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) setError(j.error || "That did not save. Your settings are unchanged.");
+      else setSaved(true);
+    } catch {
+      setError("That did not save. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, padding: "32px 16px" }}>
-      <div style={{ maxWidth: 640, margin: "0 auto" }}>
-        <div style={{ marginBottom: 8 }}>
-          <Link href="/dashboard" style={{ color: T.textMuted, fontSize: 13, textDecoration: "none" }}>
-            \u2190 Back to dashboard
-          </Link>
-        </div>
+    <>
+      {SECTIONS.map((sec) => (
+        <section key={sec.title} style={{ marginTop: 26 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+            <span style={label(12)}>{sec.title}</span>
+            <span style={{ flex: 1, height: 1, background: C.rule }} />
+          </div>
 
-        <h1
-          style={{
-            fontFamily: "var(--ff-cond)",
-            fontSize: 32,
-            fontWeight: 800,
-            letterSpacing: -1,
-            margin: "12px 0 6px",
-            color: "#fff",
-          }}
-        >
-          Notification settings
-        </h1>
-        <p style={{ color: T.textMuted, margin: "0 0 28px", fontSize: 14 }}>
-          Choose what we send you and how. Order confirmations and delivery updates always send.
-        </p>
-
-        {SECTIONS.map((sec) => (
-          <div
-            key={sec.title}
-            style={{
-              background: T.card,
-              border: `1px solid ${T.border}`,
-              borderRadius: 0,
-              padding: "8px 0",
-              marginBottom: 20,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: T.accent,
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                padding: "14px 20px 8px",
-              }}
-            >
-              {sec.title}
-            </div>
-            {sec.rows.map((row, i) => (
-              <ToggleRow
+          <div style={{ borderTop: `1px solid ${C.rule}` }}>
+            {sec.rows.map((row) => (
+              <div
                 key={row.key}
-                label={row.label}
-                desc={row.desc}
-                on={prefs[row.key]}
-                onToggle={() => toggle(row.key)}
-                isLast={i === sec.rows.length - 1}
-              />
+                style={{
+                  display: "flex", alignItems: "center", gap: 16, padding: "10px 0",
+                  borderBottom: `1px solid ${C.rule}`,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={body(14, { color: C.ink, margin: 0 })}>{row.label}</p>
+                  <p style={body(13, { margin: "3px 0 0", maxWidth: "56ch" })}>{row.desc}</p>
+                </div>
+                <Switch on={prefs[row.key]} onToggle={() => toggle(row.key)} name={row.label} />
+              </div>
             ))}
           </div>
-        ))}
+        </section>
+      ))}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 8 }}>
-          <button
-            onClick={save}
-            disabled={saving}
-            style={{
-              background: T.accent,
-              color: "#000",
-              border: "none",
-              padding: "12px 28px",
-              borderRadius: 0,
-              fontWeight: 700,
-              cursor: saving ? "default" : "pointer",
-              fontSize: 14,
-              opacity: saving ? 0.6 : 1,
-            }}
-          >
-            {saving ? "Saving\u2026" : "Save preferences"}
-          </button>
-          {savedAt && (
-            <span style={{ color: T.accent, fontSize: 13 }}>
-              \u2713 Saved {savedAt.toLocaleTimeString()}
-            </span>
-          )}
-          {error && <span style={{ color: "#ef4444", fontSize: 13 }}>{error}</span>}
-        </div>
-      </div>
-    </div>
-  );
-}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginTop: 26 }}>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || !dirty}
+          style={solidBtn({
+            opacity: saving || !dirty ? 0.55 : 1,
+            cursor: saving || !dirty ? "default" : "pointer",
+          })}
+        >
+          {saving ? "Saving" : "Save preferences"}
+        </button>
 
-function ToggleRow({
-  label,
-  desc,
-  on,
-  onToggle,
-  isLast,
-}: {
-  label: string;
-  desc: string;
-  on: boolean;
-  onToggle: () => void;
-  isLast: boolean;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: 16,
-        padding: "16px 20px",
-        borderTop: `1px solid ${T.border}`,
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>{desc}</div>
+        <span role="status" aria-live="polite" style={num(12, { color: error ? C.danger : C.lime })}>
+          {error ? error : saved ? "Saved" : ""}
+        </span>
       </div>
-      <button
-        onClick={onToggle}
-        aria-pressed={on}
-        style={{
-          width: 48,
-          height: 28,
-          minWidth: 48,
-          borderRadius: 0,
-          background: on ? T.accent : "#2a2a2a",
-          border: "none",
-          position: "relative",
-          cursor: "pointer",
-          transition: "background 0.15s",
-          padding: 0,
-        }}
-      >
-        <span
-          style={{
-            position: "absolute",
-            top: 2,
-            left: on ? 22 : 2,
-            width: 24,
-            height: 24,
-            borderRadius: 0,
-            background: on ? "#000" : "#fff",
-            transition: "left 0.15s",
-          }}
-        />
-      </button>
-    </div>
+    </>
   );
 }
