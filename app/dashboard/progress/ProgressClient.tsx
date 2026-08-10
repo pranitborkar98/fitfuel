@@ -1,383 +1,313 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingDown, TrendingUp, Activity, Flame, Target, Dumbbell, Award, ArrowLeft,
-} from "lucide-react";
-import Link from "next/link";
-import type { ProgressData, WeightPoint } from "@/lib/progress";
+// app/dashboard/progress/ProgressClient.tsx
+//
+// Two things were wrong here beyond the palette.
+//
+// The metric toggle did not work. WeightChart only ever read p.weightKg, so
+// picking "Body fat" or "Muscle" redrew the identical weight line. WeightPoint
+// carries bodyFatPct and muscleMassKg, so the toggle now selects the series it
+// claims to, and the empty state is per metric rather than per screen.
+//
+// And the palette was the exact drift theme.ts was written to stop: a blue for
+// fat, an amber for muscle, a green for good, an orange for over and a yellow
+// for the middle consistency band. Five hues on a two colour system, with the
+// meaning carried by the hue. Now: lime is at or under target, the neutral bar
+// grey is over, and both are named in words.
 
-// ── Design tokens (matches existing dashboard system) ──
-const T = {
-  bg: "#0a0a0a",
-  card: "#111111",
-  cardHover: "#161616",
-  border: "#1f1f1f",
-  accent: "#84cc16",
-  accentLight: "#84cc16",
-  text: "#ffffff",
-  textSecond: "#a3a3a3",
-  textMuted: "#737373",
-  good: "#22c55e",
-  warn: "#f97316",
-  fat: "#38bdf8",
-  muscle: "#f59e0b",
+import { useState } from "react";
+import type { ProgressData, WeightPoint } from "@/lib/progress";
+import { C, COND, body, label, num, figure, PANEL } from "@/app/_app/theme";
+
+type MetricKey = "weight" | "bodyFat" | "muscle";
+
+const METRICS: Record<MetricKey, {
+  label: string;
+  unit: string;
+  pick: (p: WeightPoint) => number | null;
+}> = {
+  weight: { label: "Weight", unit: "kg", pick: (p) => p.weightKg },
+  bodyFat: { label: "Body fat", unit: "%", pick: (p) => p.bodyFatPct },
+  muscle: { label: "Muscle", unit: "kg", pick: (p) => p.muscleMassKg },
 };
 
-const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-function fmtNum(n: number | null, suffix = "") {
-  if (n === null || n === undefined) return "—";
+function fmt(n: number | null, suffix = "") {
+  if (n === null || n === undefined) return "Not measured";
   return `${n.toLocaleString("en-IN")}${suffix}`;
 }
 
-// ── Generic section card ──
-function Card({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function Spine({ children }: { children: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: EASE, delay }}
-      style={{
-        background: T.card,
-        border: `1px solid ${T.border}`,
-        borderRadius: 0,
-        padding: "22px 22px",
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function Heading({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-      <div style={{ color: T.accent, display: "flex" }}>{icon}</div>
-      <div>
-        <p style={{ fontSize: 14, fontWeight: 700, color: T.text, lineHeight: 1.1 }}>{title}</p>
-        {sub && <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{sub}</p>}
-      </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "26px 0 16px" }}>
+      <span style={label(12)}>{children}</span>
+      <span style={{ flex: 1, height: 1, background: C.rule }} />
     </div>
   );
 }
 
-// ── Weight + body-comp line chart ──
-function WeightChart({ series, target }: { series: WeightPoint[]; target: number | null }) {
-  const pts = series.filter((p) => p.weightKg !== null);
+function Readout({ v, k, live = false }: { v: string; k: string; live?: boolean }) {
+  return (
+    <div style={{ background: C.bg, padding: "14px 16px 16px" }}>
+      <span style={figure(30, { display: "block", color: live ? C.lime : C.ink })}>{v}</span>
+      <span style={label(12, { display: "block", marginTop: 8, lineHeight: 1.45 })}>{k}</span>
+    </div>
+  );
+}
+
+function Empty({ children }: { children: string }) {
+  return <p style={body(14, { padding: "24px 0", maxWidth: "62ch" })}>{children}</p>;
+}
+
+/** One line, hairline gridlines, no area fill. The fill was a lime gradient,
+ *  which is the accent used decoratively, and §2 does not allow that. */
+function TrendChart({
+  series, metric, target,
+}: {
+  series: WeightPoint[];
+  metric: MetricKey;
+  target: number | null;
+}) {
+  const m = METRICS[metric];
+  const pts = series
+    .map((p) => ({ date: p.date, v: m.pick(p) }))
+    .filter((p): p is { date: string; v: number } => p.v !== null);
+
   if (pts.length < 2) {
     return (
-      <div style={{ fontSize: 13, color: T.textMuted, padding: "28px 0", textAlign: "center" }}>
-        Log at least two weigh-ins to see your trend. Connect your scale on the Body Metrics page.
-      </div>
+      <Empty>
+        {`Two ${m.label.toLowerCase()} readings are needed before a trend means anything. ` +
+         `Your scale sends them over Bluetooth from the Body screen.`}
+      </Empty>
     );
   }
 
-  const W = 640, H = 220, padL = 40, padR = 16, padT = 16, padB = 26;
-  const ws = pts.map((p) => p.weightKg as number);
-  const allY = target !== null ? [...ws, target] : ws;
-  const minY = Math.floor(Math.min(...allY) - 1);
-  const maxY = Math.ceil(Math.max(...allY) + 1);
-  const spanY = maxY - minY || 1;
+  const W = 720, H = 220, padL = 46, padR = 14, padT = 16, padB = 26;
+  const vals = pts.map((p) => p.v);
+  const all = target !== null ? [...vals, target] : vals;
+  const lo = Math.floor(Math.min(...all) - 1);
+  const hi = Math.ceil(Math.max(...all) + 1);
+  const span = hi - lo || 1;
 
   const x = (i: number) => padL + (i / (pts.length - 1)) * (W - padL - padR);
-  const y = (v: number) => padT + (1 - (v - minY) / spanY) * (H - padT - padB);
+  const y = (v: number) => padT + (1 - (v - lo) / span) * (H - padT - padB);
 
-  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.weightKg as number)}`).join(" ");
-  const area = `${path} L ${x(pts.length - 1)} ${H - padB} L ${x(0)} ${H - padB} Z`;
-  const targetY = target !== null ? y(target) : null;
-
-  const gridVals = [minY, minY + spanY / 2, maxY];
+  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.v)}`).join(" ");
+  const gridVals = [lo, lo + span / 2, hi];
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
-      <defs>
-        <linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={T.accent} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={T.accent} stopOpacity="0" />
-        </linearGradient>
-      </defs>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      style={{ display: "block" }}
+      role="img"
+      aria-label={`${m.label} from ${vals[0]}${m.unit} to ${vals[vals.length - 1]}${m.unit} over ${pts.length} readings`}
+    >
       {gridVals.map((g, i) => (
         <g key={i}>
-          <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke={T.border} strokeWidth="1" />
-          <text x={6} y={y(g) + 4} fontSize="10" fill={T.textMuted}>{g.toFixed(0)}</text>
+          <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke={C.rule} strokeWidth="1" />
+          <text x={4} y={y(g) + 4} fontSize="12" fontFamily="var(--font-mono), ui-monospace, monospace" fill={C.dim}>
+            {g.toFixed(0)}
+          </text>
         </g>
       ))}
-      {targetY !== null && (
+
+      {target !== null && (
         <g>
-          <line x1={padL} y1={targetY} x2={W - padR} y2={targetY} stroke={T.textMuted} strokeWidth="1.2" strokeDasharray="5 4" />
-          <text x={W - padR} y={targetY - 5} fontSize="10" fill={T.textMuted} textAnchor="end">target {target}kg</text>
+          <line x1={padL} y1={y(target)} x2={W - padR} y2={y(target)}
+                stroke={C.lime} strokeWidth="1" strokeDasharray="4 6" />
+          <text x={W - padR} y={y(target) - 6} fontSize="12" textAnchor="end"
+                fontFamily="var(--font-mono), ui-monospace, monospace" fill={C.lime}>
+            target {target}{m.unit}
+          </text>
         </g>
       )}
-      <path d={area} fill="url(#wfill)" />
-      <path d={path} fill="none" stroke={T.accent} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map((p, i) => (
-        <circle key={i} cx={x(i)} cy={y(p.weightKg as number)} r="3" fill={T.bg} stroke={T.accentLight} strokeWidth="2" />
-      ))}
+
+      <path d={path} fill="none" stroke={C.ink} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={x(pts.length - 1)} cy={y(pts[pts.length - 1].v)} r="4" fill={C.lime} />
     </svg>
   );
 }
 
-// ── Daily net-calorie bar chart with target line ──
+/** Bars are square. The old ones carried a corner radius, and radius is 0
+ *  everywhere on both grounds. DESIGN.md §4. */
 function CalorieChart({ data }: { data: ProgressData["calories"] }) {
   const days = data.days;
-  const hasAny = days.some((d) => d.in > 0 || d.out > 0);
-  if (!hasAny) {
-    return (
-      <div style={{ fontSize: 13, color: T.textMuted, padding: "28px 0", textAlign: "center" }}>
-        No intake or workouts logged in the last 30 days yet.
-      </div>
-    );
+  if (!days.some((d) => d.in > 0 || d.out > 0)) {
+    return <Empty>Nothing logged in the last 30 days, so there is no net calorie line to draw yet.</Empty>;
   }
 
-  const W = 640, H = 200, padL = 44, padR = 12, padT = 12, padB = 22;
-  const maxVal = Math.max(data.target, ...days.map((d) => d.net), ...days.map((d) => d.in)) * 1.1 || 1;
+  const W = 720, H = 200, padL = 46, padR = 14, padT = 12, padB = 22;
+  const max = Math.max(data.target, ...days.map((d) => d.net), ...days.map((d) => d.in)) * 1.1 || 1;
   const bw = (W - padL - padR) / days.length;
-  const y = (v: number) => padT + (1 - v / maxVal) * (H - padT - padB);
-  const targetY = y(data.target);
+  const y = (v: number) => padT + (1 - v / max) * (H - padT - padB);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }}>
-      {[0, maxVal / 2, maxVal].map((g, i) => (
-        <g key={i}>
-          <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke={T.border} strokeWidth="1" />
-          <text x={6} y={y(g) + 4} fontSize="10" fill={T.textMuted}>{Math.round(g)}</text>
-        </g>
-      ))}
-      {days.map((d, i) => {
-        if (d.net <= 0) return null;
-        const barH = (H - padT - padB) - (y(d.net) - padT);
-        const over = d.net > data.target;
-        return (
-          <rect
-            key={i}
-            x={padL + i * bw + bw * 0.18}
-            y={y(d.net)}
-            width={bw * 0.64}
-            height={Math.max(0, barH)}
-            rx="1.5"
-            fill={over ? T.warn : T.good}
-            opacity={0.9}
-          />
-        );
-      })}
-      <line x1={padL} y1={targetY} x2={W - padR} y2={targetY} stroke={T.accentLight} strokeWidth="1.4" strokeDasharray="5 4" />
-      <text x={W - padR} y={targetY - 5} fontSize="10" fill={T.accentLight} textAnchor="end">target {data.target}</text>
-    </svg>
-  );
-}
+    <>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block" }} role="img"
+           aria-label={`Net calories per day for the last ${days.length} days against a target of ${data.target}`}>
+        {[0, max / 2, max].map((g, i) => (
+          <g key={i}>
+            <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke={C.rule} strokeWidth="1" />
+            <text x={4} y={y(g) + 4} fontSize="12" fontFamily="var(--font-mono), ui-monospace, monospace" fill={C.dim}>
+              {Math.round(g)}
+            </text>
+          </g>
+        ))}
 
-// ── Macro adherence horizontal bars ──
-function MacroBar({ label, value, target, color }: { label: string; value: number; target: number; color: string }) {
-  const pct = target > 0 ? Math.min(150, Math.round((value / target) * 100)) : 0;
-  const barPct = Math.min(100, pct);
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ fontSize: 13, color: T.textSecond, fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 12, color: T.textMuted }}>
-          <span style={{ color: T.text, fontWeight: 700 }}>{value}g</span>
-          {target > 0 ? ` / ${target}g · ${pct}%` : " avg/day"}
-        </span>
-      </div>
-      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${barPct}%`, background: color, borderRadius: 0, transition: "width 0.6s ease" }} />
-      </div>
-    </div>
-  );
-}
-
-// ── Consistency component bars ──
-function ConsistencyBars({ data }: { data: NonNullable<ProgressData["consistency"]> }) {
-  const barColor =
-    data.score >= 80 ? T.good : data.score >= 60 ? T.accent : data.score >= 40 ? "#facc15" : T.warn;
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
-        <span style={{ fontFamily: "var(--ff-cond)", fontSize: 34, fontWeight: 800, color: barColor, lineHeight: 1 }}>
-          {data.score}
-        </span>
-        <span style={{ fontSize: 13, color: T.textMuted }}>/ 100 · {data.label}</span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {data.components.map((c) => {
-          const pct = c.max > 0 ? Math.round((c.points / c.max) * 100) : 0;
+        {days.map((d, i) => {
+          if (d.net <= 0) return null;
+          const top = y(d.net);
           return (
-            <div key={c.label}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: T.textSecond }}>{c.label}</span>
-                <span style={{ fontSize: 11, color: T.textMuted }}>{c.points}/{c.max}</span>
-              </div>
-              <div style={{ height: 6, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 0, opacity: 0.85, transition: "width 0.6s ease" }} />
-              </div>
-            </div>
+            <rect
+              key={i}
+              x={padL + i * bw + bw * 0.18}
+              y={top}
+              width={bw * 0.64}
+              height={Math.max(0, H - padB - top)}
+              fill={d.net > data.target ? C.fat : C.lime}
+            />
           );
         })}
+
+        <line x1={padL} y1={y(data.target)} x2={W - padR} y2={y(data.target)}
+              stroke={C.lime} strokeWidth="1" strokeDasharray="4 6" />
+      </svg>
+
+      <p style={body(13, { marginTop: 10, maxWidth: "68ch" })}>
+        Net is plan meals eaten plus anything in the diary, minus workout burn. A lime bar is at
+        or under target, a grey bar is over. The dashed line is the target itself.
+      </p>
+    </>
+  );
+}
+
+function Meter({ name, value, target, on }: { name: string; value: number; target: number; on: boolean }) {
+  const pct = target > 0 ? Math.min(150, Math.round((value / target) * 100)) : 0;
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={label(12)}>{name}</span>
+        <span style={num(12)}>
+          {value}g{target > 0 ? ` / ${target}g, ${pct}%` : " average a day"}
+        </span>
+      </div>
+      <div style={{ height: 10, background: C.trough }}>
+        <div style={{ height: 10, width: `${Math.min(100, pct)}%`, background: on ? C.lime : C.fat }} />
       </div>
     </div>
   );
 }
 
-// ── Stat tile ──
-function Stat({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color?: string }) {
-  return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "16px 18px" }}>
-      <div style={{ color: color ?? T.textMuted, marginBottom: 8, display: "flex" }}>{icon}</div>
-      <p style={{ fontFamily: "var(--ff-cond)", fontSize: 24, fontWeight: 800, color: color ?? T.text, lineHeight: 1 }}>{value}</p>
-      <p style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{label}</p>
-    </div>
-  );
-}
-
-// ── Page ──
-export default function ProgressClient({ data, userName }: { data: ProgressData; userName: string | null }) {
-  const [metric, setMetric] = useState<"weight" | "bodyFat" | "muscle">("weight");
+export default function ProgressClient({ data }: { data: ProgressData }) {
+  const [metric, setMetric] = useState<MetricKey>("weight");
   const w = data.weight;
-  const losing = w.deltaKg !== null && w.deltaKg < 0;
+  const m = METRICS[metric];
 
   return (
-    <div
-      style={{
-        background: T.bg,
-        minHeight: "100vh",
-        color: T.text,
-        fontFamily: "var(--font-archivo), sans-serif",
-        paddingTop: 96,
-        paddingBottom: 80,
-      }}
-    >
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 16px" }}>
-        {/* header */}
-        <div style={{ marginBottom: 28 }}>
-          <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: T.textMuted, textDecoration: "none", marginBottom: 14 }}>
-            <ArrowLeft size={14} /> Back to dashboard
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 0 }} />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>Your Progress</span>
+    <>
+      <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
+                    gridTemplateColumns: "repeat(auto-fit,minmax(136px,1fr))", marginTop: 26 }}>
+        <Readout
+          v={w.deltaKg !== null ? `${w.deltaKg > 0 ? "+" : ""}${w.deltaKg} kg` : "Not measured"}
+          k="Weight change"
+          live={w.deltaKg !== null && w.deltaKg < 0}
+        />
+        <Readout v={fmt(data.calories.avgNet)} k="Avg net kcal a day" />
+        <Readout v={String(data.adherence.workoutsCompleted)} k="Workouts done" />
+        <Readout v={`${data.adherence.streakDays}d`} k="Logging streak" live={data.adherence.streakDays > 0} />
+      </div>
+
+      <Spine>The trend</Spine>
+      <div style={{ ...PANEL, padding: "18px 18px 14px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                      gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+          <p style={body(13, { margin: 0 })}>
+            Start {fmt(w.startWeight, "kg")}, now {fmt(w.currentWeight, "kg")}, goal {fmt(w.targetWeight, "kg")}
+          </p>
+          <div role="group" aria-label="Metric" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {(Object.keys(METRICS) as MetricKey[]).map((k) => {
+              const on = metric === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setMetric(k)}
+                  style={{
+                    minHeight: 44, padding: "0 14px", cursor: "pointer",
+                    background: on ? C.wash : "transparent",
+                    border: `1px solid ${on ? C.lime : C.rule2}`,
+                    color: on ? C.lime : C.mute,
+                    fontFamily: COND, fontWeight: 800, fontSize: 14,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    transition: "border-color 180ms ease-out, color 180ms ease-out",
+                  }}
+                >
+                  {METRICS[k].label}
+                </button>
+              );
+            })}
           </div>
-          <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: "clamp(2rem, 6vw, 3rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>
-            The Transformation
-          </h1>
-          {data.planName && (
-            <p style={{ fontSize: 13, color: T.textMuted, marginTop: 8 }}>{data.planName} · last 30 days</p>
+        </div>
+
+        <TrendChart
+          series={w.series}
+          metric={metric}
+          target={metric === "weight" ? w.targetWeight : null}
+        />
+
+        <p style={body(13, { marginTop: 10 })}>
+          Showing {m.label.toLowerCase()} in {m.unit}.
+        </p>
+      </div>
+
+      <Spine>Daily net calories</Spine>
+      <div style={{ ...PANEL, padding: "18px" }}>
+        <p style={body(13, { margin: "0 0 14px" })}>
+          In {fmt(data.calories.avgIn)}, out {fmt(data.calories.avgOut)} a day on average,
+          against a target of {data.calories.target}.
+        </p>
+        <CalorieChart data={data.calories} />
+      </div>
+
+      <div style={{ display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+                    marginTop: 26 }}>
+        <div style={{ ...PANEL, padding: 18 }}>
+          <p style={label(12, { display: "block", marginBottom: 14 })}>Macros, average against target</p>
+          <Meter name="Protein" value={data.macros.avg.protein} target={data.macros.target.protein} on />
+          <Meter name="Carbs" value={data.macros.avg.carbs} target={data.macros.target.carbs} on={false} />
+          <Meter name="Fat" value={data.macros.avg.fat} target={data.macros.target.fat} on={false} />
+        </div>
+
+        <div style={{ ...PANEL, padding: 18 }}>
+          <p style={label(12, { display: "block", marginBottom: 14 })}>Consistency this week</p>
+          {data.consistency ? (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
+                <span style={figure(34, { color: C.lime })}>{data.consistency.score}</span>
+                <span style={num(12, { color: C.dim })}>of 100, {data.consistency.label.toLowerCase()}</span>
+              </div>
+              {data.consistency.components.map((c) => (
+                <Meter key={c.label} name={c.label} value={c.points} target={c.max} on={c.points >= c.max * 0.6} />
+              ))}
+            </>
+          ) : (
+            <Empty>No active plan this week, so there is nothing to score.</Empty>
           )}
         </div>
-
-        {/* top stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }} className="prog-stats">
-          <Stat
-            icon={losing ? <TrendingDown size={18} /> : <TrendingUp size={18} />}
-            value={w.deltaKg !== null ? `${w.deltaKg > 0 ? "+" : ""}${w.deltaKg} kg` : "—"}
-            label="Weight change"
-            color={losing ? T.good : w.deltaKg !== null && w.deltaKg > 0 ? T.warn : T.text}
-          />
-          <Stat icon={<Flame size={18} />} value={fmtNum(data.calories.avgNet)} label="Avg net kcal/day" />
-          <Stat icon={<Dumbbell size={18} />} value={fmtNum(data.adherence.workoutsCompleted)} label="Workouts done" color={T.accent} />
-          <Stat icon={<Award size={18} />} value={`${data.adherence.streakDays}d`} label="Current streak" color={T.accentLight} />
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="prog-grid">
-          {/* weight chart — full width */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <Card>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
-                <Heading icon={<Activity size={18} />} title="Weight trend" sub={`Start ${fmtNum(w.startWeight, "kg")} · Now ${fmtNum(w.currentWeight, "kg")} · Goal ${fmtNum(w.targetWeight, "kg")}`} />
-                <div style={{ display: "flex", gap: 6 }}>
-                  {(["weight", "bodyFat", "muscle"] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setMetric(m)}
-                      style={{
-                        fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 0, cursor: "pointer",
-                        background: metric === m ? "rgba(132,204,22,0.12)" : "transparent",
-                        border: `1px solid ${metric === m ? "#84cc16" : T.border}`,
-                        color: metric === m ? T.accentLight : T.textMuted,
-                      }}
-                    >
-                      {m === "weight" ? "Weight" : m === "bodyFat" ? "Body fat" : "Muscle"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <WeightChart series={w.series} target={metric === "weight" ? w.targetWeight : null} />
-              <div style={{ display: "flex", gap: 18, marginTop: 8, flexWrap: "wrap" }}>
-                {w.latestBodyFat !== null && (
-                  <span style={{ fontSize: 12, color: T.textMuted }}>Body fat <strong style={{ color: T.fat }}>{w.latestBodyFat}%</strong></span>
-                )}
-                {w.latestMuscle !== null && (
-                  <span style={{ fontSize: 12, color: T.textMuted }}>Muscle <strong style={{ color: T.muscle }}>{w.latestMuscle}kg</strong></span>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          {/* calorie chart */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <Card delay={0.05}>
-              <Heading icon={<Flame size={18} />} title="Daily net calories" sub={`In ${fmtNum(data.calories.avgIn)} · Out ${fmtNum(data.calories.avgOut)} avg/day · target ${data.calories.target}`} />
-              <CalorieChart data={data.calories} />
-              <p style={{ fontSize: 11, color: T.textMuted, marginTop: 8, lineHeight: 1.5 }}>
-                Net = plan meals eaten + manual diary minus workout burn. Green = at/under target, orange = over.
-              </p>
-            </Card>
-          </div>
-
-          {/* macros */}
-          <Card delay={0.1}>
-            <Heading icon={<Target size={18} />} title="Macro adherence" sub="Average per tracked day vs target" />
-            <MacroBar label="Protein" value={data.macros.avg.protein} target={data.macros.target.protein} color={T.accent} />
-            <MacroBar label="Carbs" value={data.macros.avg.carbs} target={data.macros.target.carbs} color={T.fat} />
-            <MacroBar label="Fat" value={data.macros.avg.fat} target={data.macros.target.fat} color={T.muscle} />
-          </Card>
-
-          {/* consistency */}
-          <Card delay={0.15}>
-            <Heading icon={<Award size={18} />} title="Consistency this week" sub="Resets Sunday · feeds your AI trainer" />
-            {data.consistency ? (
-              <ConsistencyBars data={data.consistency} />
-            ) : (
-              <p style={{ fontSize: 13, color: T.textMuted }}>No active plan this week.</p>
-            )}
-          </Card>
-
-          {/* adherence summary — full width */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <Card delay={0.2}>
-              <Heading icon={<Activity size={18} />} title="Adherence" sub="How closely you followed the plan" />
-              <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-                <div>
-                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800 }}>
-                    {data.adherence.mealsLogged}<span style={{ color: T.textMuted, fontWeight: 600 }}> / {data.adherence.mealsScheduled || "—"}</span>
-                  </p>
-                  <p style={{ fontSize: 12, color: T.textMuted }}>Plan meals eaten</p>
-                </div>
-                <div>
-                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: T.accent }}>{data.adherence.workoutsCompleted}</p>
-                  <p style={{ fontSize: 12, color: T.textMuted }}>Workouts completed</p>
-                </div>
-                <div>
-                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: T.accentLight }}>{data.adherence.streakDays} days</p>
-                  <p style={{ fontSize: 12, color: T.textMuted }}>Current logging streak</p>
-                </div>
-                <div>
-                  <p style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800 }}>{data.adherence.daysActive}</p>
-                  <p style={{ fontSize: 12, color: T.textMuted }}>Active days (30d window)</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
       </div>
 
-      <style>{`
-        @media (max-width: 720px) {
-          .prog-stats { grid-template-columns: 1fr 1fr !important; }
-          .prog-grid  { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </div>
+      <Spine>Adherence</Spine>
+      <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
+                    gridTemplateColumns: "repeat(auto-fit,minmax(136px,1fr))" }}>
+        <Readout
+          v={`${data.adherence.mealsLogged}/${data.adherence.mealsScheduled || 0}`}
+          k="Plan meals eaten"
+        />
+        <Readout v={String(data.adherence.workoutsCompleted)} k="Workouts completed" />
+        <Readout v={`${data.adherence.streakDays}d`} k="Logging streak" />
+        <Readout v={String(data.adherence.daysActive)} k="Active days, 30 day window" />
+      </div>
+    </>
   );
 }
