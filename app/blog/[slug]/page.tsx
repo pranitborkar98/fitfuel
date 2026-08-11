@@ -28,7 +28,9 @@ import { Go, Idx, Row, k } from "@/app/_ui/Kit";
 import { Band, Shell, Wrap, p as pg } from "@/app/_ui/Page";
 import { DIM, INK, SECTION, body, display, label, num } from "@/app/_ui/theme";
 
-export const dynamic = "force-dynamic";
+// See app/blog/page.tsx: a published post is the most cacheable thing on the
+// site. Re-rendering it per request was pure cost.
+export const revalidate = 300;
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-IN", {

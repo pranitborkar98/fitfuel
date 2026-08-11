@@ -22,6 +22,9 @@ import { Idx, Row, Go, k } from "@/app/_ui/Kit";
 import { Masthead, Shell, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, SECTION, body, display, label, num } from "@/app/_ui/theme";
 
+// Stays dynamic: this page reads ?category to filter, so it is rendered per
+// request regardless of what is declared here. The cacheable half of the blog
+// is app/blog/[slug], which is now on revalidate.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {

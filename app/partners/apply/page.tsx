@@ -17,6 +17,7 @@ export const metadata = {
   alternates: { canonical: "/partners/apply" },
 };
 
+// Stays dynamic: calls auth() to prefill the form for a signed-in applicant.
 export const dynamic = "force-dynamic";
 
 export default async function PartnerApplyPage() {

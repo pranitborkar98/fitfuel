@@ -22,7 +22,9 @@ import { Idx } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Wrap, p } from "@/app/_ui/Page";
 import { SECTION } from "@/app/_ui/theme";
 
-export const dynamic = "force-dynamic";
+// The FAQ is prose in the repo. Nothing about it is per-request, and it carries
+// FAQPage JSON-LD that crawlers should get from the edge, not from Postgres.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   alternates: { canonical: "/faq" },

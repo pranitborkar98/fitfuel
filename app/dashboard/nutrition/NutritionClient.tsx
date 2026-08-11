@@ -165,6 +165,13 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [quantity, setQuantity] = useState("100");
   const [logging, setLogging] = useState(false);
 
+  // Everything on this screen mutates the diary and then repaints a number
+  // somewhere else in the layout. A sighted user sees the total move; a screen
+  // reader user got nothing at all. One polite region, written by every
+  // mutation, is what announces those. It also gives the failure path a voice:
+  // logFood used to swallow a rejected POST and simply not add a row.
+  const [notice, setNotice] = useState("");
+
   const [showGoals, setShowGoals] = useState(false);
   const [goalDraft, setGoalDraft] = useState<Goal>(goal);
   const [savingGoals, setSavingGoals] = useState(false);
@@ -240,6 +247,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
   async function logFood() {
     if (!picked || !activeSlot || !quantity) return;
+    // closeAdd() clears both of these, so the announcement text has to be built
+    // before the dialog tears itself down.
+    const what = `${picked.name}, ${quantity} g`;
+    const where = activeSlot.name;
     setLogging(true);
     try {
       const res = await fetch("/api/nutrition/diary", {
@@ -253,7 +264,11 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
       if (!res.ok) throw new Error();
       const created: FoodEntry = await res.json();
       setEntries((p) => [...p, created]);
+      setNotice(`Added ${what} to ${where}.`);
       closeAdd();
+    } catch {
+      // Leave the dialog open so the entry is not lost, and say so out loud.
+      setNotice("Could not add that. Check your connection and try again.");
     } finally {
       setLogging(false);
     }
@@ -264,8 +279,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   }
 
   async function deleteEntry(id: string) {
+    const gone = entries.find((e) => e.id === id);
     await fetch(`/api/nutrition/diary/${id}`, { method: "DELETE" });
     setEntries((p) => p.filter((e) => e.id !== id));
+    setNotice(gone ? `Removed ${gone.foodItem.name}.` : "Entry removed.");
   }
 
   async function updateEntry(id: string, qty: number) {
@@ -338,6 +355,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
   return (
     <>
+      {/* Lives outside the dialog on purpose: the add flow closes on success,
+          and a region that unmounts in the same tick never gets announced. */}
+      <p role="status" aria-live="polite" className="sr-only">{notice}</p>
+
       {/* date navigator */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
         <IconBtn onClick={() => goDay(-1)} name="Previous day">&lt;</IconBtn>
@@ -554,8 +575,15 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
             <label htmlFor="food-search" style={label(12, { display: "block", marginBottom: 8 })}>
               Search the database
             </label>
+            {/* A text box that repaints a list of choices below it is a
+                combobox, and was being announced as a plain input: the results
+                existed visually and not at all in the accessibility tree. */}
             <input
               id="food-search"
+              role="combobox"
+              aria-expanded={results.length > 0}
+              aria-controls="food-results"
+              aria-autocomplete="list"
               value={searchQ}
               onChange={(e) => setSearchQ(e.target.value)}
               placeholder="Rice, dal, paneer, egg"
@@ -650,34 +678,50 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 Nothing in the database matches that.
               </p>
             )}
-            {results.map((f) => {
-              const on = picked?.id === f.id;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => { setPicked(f); setQuantity("100"); }}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                    width: "100%", minHeight: 44, padding: "12px 18px", textAlign: "left",
-                    background: on ? C.panel2 : "transparent",
-                    border: 0, borderBottom: `1px solid ${C.rule}`,
-                    borderLeft: `2px solid ${on ? C.lime : "transparent"}`,
-                    cursor: "pointer", color: "inherit",
-                  }}
-                >
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ ...body(14, { color: C.ink }), display: "block" }}>
-                      {f.name}{f.isCustom ? ", custom" : ""}
+
+            {/* Result count, announced without stealing focus from the box. */}
+            <p role="status" aria-live="polite" className="sr-only">
+              {searching
+                ? "Searching"
+                : searchQ && results.length === 0
+                  ? "No matches"
+                  : results.length > 0
+                    ? `${results.length} ${results.length === 1 ? "food" : "foods"} found`
+                    : ""}
+            </p>
+
+            <div id="food-results" role="listbox" aria-label="Search results">
+              {results.map((f) => {
+                const on = picked?.id === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    role="option"
+                    aria-selected={on}
+                    onClick={() => { setPicked(f); setQuantity("100"); }}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                      width: "100%", minHeight: 44, padding: "12px 18px", textAlign: "left",
+                      background: on ? C.panel2 : "transparent",
+                      border: 0, borderBottom: `1px solid ${C.rule}`,
+                      borderLeft: `2px solid ${on ? C.lime : "transparent"}`,
+                      cursor: "pointer", color: "inherit",
+                    }}
+                  >
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ ...body(14, { color: C.ink }), display: "block" }}>
+                        {f.name}{f.isCustom ? ", custom" : ""}
+                      </span>
+                      <span style={{ ...num(12, { color: C.dim }), display: "block", marginTop: 3 }}>
+                        per 100g: {f.per100Protein} P, {f.per100Carbs} C, {f.per100Fat} F, {f.per100Fiber} fibre
+                      </span>
                     </span>
-                    <span style={{ ...num(12, { color: C.dim }), display: "block", marginTop: 3 }}>
-                      per 100g: {f.per100Protein} P, {f.per100Carbs} C, {f.per100Fat} F, {f.per100Fiber} fibre
-                    </span>
-                  </span>
-                  <span style={num(13, { flex: "none" })}>{Math.round(f.per100Calories)} kcal</span>
-                </button>
-              );
-            })}
+                    <span style={num(13, { flex: "none" })}>{Math.round(f.per100Calories)} kcal</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </Dialog>
       )}

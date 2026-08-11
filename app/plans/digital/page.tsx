@@ -19,7 +19,8 @@ export const metadata = {
   alternates: { canonical: "/plans/digital" },
 };
 
-export const dynamic = "force-dynamic";
+// Static marketing copy and fixed tier pricing. There is nothing to look up.
+export const revalidate = 3600;
 
 export default async function DigitalPlansPage() {
   const prices = await (prisma as any).planPrice.findMany({ where: { isDigital: true, isActive: true }, include: { mealPlan: true } });

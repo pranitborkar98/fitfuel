@@ -24,6 +24,7 @@ import { Idx, Tiles, Tile, k } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, MUTE, SECTION, body, label, num } from "@/app/_ui/theme";
 
+// Stays dynamic: reads ?goal to filter, so it renders per request anyway.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
