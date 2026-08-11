@@ -10,21 +10,41 @@ import {
 } from "lucide-react";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
+//
+// This screen carried its own ramp with five hues: an amber for "warning", a
+// green for "success", a blue for "info", a red, and a per parameter accent
+// that ran to orange, violet, rose, sky, cyan and mint. Eighteen parameters,
+// each with a colour of its own, is the per category palette DESIGN.md §2
+// forbids by name.
+//
+// Every band already carries a word, which is what §8 actually requires, so the
+// hue was never doing the work. T now resolves entirely into the ramp: a band
+// that is where you want it reads lime, a band that is merely off reads in the
+// neutral bar grey, and only the genuinely clinical bands take danger.
+
+import { C } from "@/app/_app/theme";
+
 const T = {
-  bg:          "#0a0a0a",
-  card:        "#111111",
-  cardHover:   "#161616",
-  border:      "#1f1f1f",
-  borderHover: "#2a2a2a",
-  accent:      "#84cc16",
-  accentDim:   "#4d7c0f",
-  text:        "#f9fafb",
-  textSecond:  "#a3a3a3",
-  textMuted:   "#737373",
-  danger:      "#ef4444",
-  warning:     "#f59e0b",
-  success:     "#22c55e",
-  info:        "#60a5fa",
+  bg:          C.bg,
+  card:        C.panel,
+  cardHover:   C.panel2,
+  border:      C.rule,
+  borderHover: C.rule2,
+  accent:      C.lime,
+  accentDim:   C.fat,
+  text:        C.ink,
+  textSecond:  C.mute,
+  textMuted:   C.dim,
+  danger:      C.danger,
+  /** "High", "Low", "Overweight": off target, not clinical. The word carries it. */
+  warning:     C.fat,
+  success:     C.lime,
+  /** "Underweight", "High water": informational bands. */
+  info:        C.dim,
+  /** Bar troughs, and the one selected-segment tint. */
+  trough:      C.trough,
+  wash:        C.wash,
+  onLime:      C.onLime,
 };
 
 // ─── All 18 parameters (13 original + 5 missing from Fitdays) ────────────────
@@ -103,7 +123,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "bmi", label: "BMI", unit: "", icon: <Target size={16} />, color: "#60a5fa", decimals: 1,
+    key: "bmi", label: "BMI", unit: "", icon: <Target size={16} />, color: T.accent, decimals: 1,
     description: "Body Mass Index — your weight in kg divided by your height in metres squared. A population-level screening tool, not a perfect individual health measure (muscular people often score 'overweight').",
     ranges: [
       { label: "Underweight", color: T.info,    min: 0,    max: 18.4 },
@@ -123,7 +143,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "bodyFatRate", label: "Body Fat", unit: "%", icon: <TrendingDown size={16} />, color: "#f97316", decimals: 1,
+    key: "bodyFatRate", label: "Body Fat", unit: "%", icon: <TrendingDown size={16} />, color: T.accent, decimals: 1,
     description: "Percentage of your total body weight that is fat. Includes essential fat (needed for organ function) and storage fat. The most important single metric for metabolic health.",
     ranges: [
       { label: "Essential",  color: T.info,    min: 2,  max: 5  },
@@ -148,7 +168,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "fatMass", label: "Fat Mass", unit: "kg", icon: <TrendingDown size={16} />, color: "#fb923c", decimals: 1,
+    key: "fatMass", label: "Fat Mass", unit: "kg", icon: <TrendingDown size={16} />, color: T.accent, decimals: 1,
     description: "The absolute weight of fat in your body (kg). More actionable than body fat % — it tells you exactly how many kg of fat you need to lose to hit your goal.",
     tips: [
       "Fat mass = Weight × Body Fat% ÷ 100. Losing 0.5 kg of fat per week is healthy and achievable.",
@@ -165,7 +185,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "fatFreeWeight", label: "Fat-Free Weight", unit: "kg", icon: <Dumbbell size={16} />, color: "#a78bfa", decimals: 1,
+    key: "fatFreeWeight", label: "Fat-Free Weight", unit: "kg", icon: <Dumbbell size={16} />, color: T.accent, decimals: 1,
     description: "Total body weight minus all fat mass. Includes muscle, bone, water, and organs. This is what remains after all fat is stripped away — the 'lean body mass'.",
     tips: [
       "Fat-free weight is your goal weight floor — you cannot weigh less than this without losing muscle or bone.",
@@ -174,7 +194,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "subcutaneousFat", label: "Subcutaneous Fat", unit: "%", icon: <TrendingDown size={16} />, color: "#fb923c", decimals: 1,
+    key: "subcutaneousFat", label: "Subcutaneous Fat", unit: "%", icon: <TrendingDown size={16} />, color: T.accent, decimals: 1,
     description: "Fat stored just beneath the skin surface — the 'pinchable' fat. Less dangerous than visceral fat but more visible. Accounts for ~80% of total body fat.",
     ranges: [
       { label: "Low",      color: T.success, min: 0,  max: 14 },
@@ -189,7 +209,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "visceralFat", label: "Visceral Fat", unit: "level", icon: <AlertCircle size={16} />, color: "#f43f5e", decimals: 1,
+    key: "visceralFat", label: "Visceral Fat", unit: "level", icon: <AlertCircle size={16} />, color: T.accent, decimals: 1,
     description: "Fat surrounding your internal organs (liver, intestines, kidneys). The most dangerous type of fat — directly linked to insulin resistance, heart disease, and type 2 diabetes. Level 1–9 is healthy, 10–14 is high, 15+ is very high.",
     ranges: [
       { label: "Healthy",   color: T.success, min: 1,  max: 9  },
@@ -209,7 +229,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "bodyWater", label: "Body Water", unit: "%", icon: <Droplets size={16} />, color: "#38bdf8", decimals: 1,
+    key: "bodyWater", label: "Body Water", unit: "%", icon: <Droplets size={16} />, color: T.accent, decimals: 1,
     description: "Total body water as a percentage of body weight. Includes intracellular (inside cells) and extracellular (blood, lymph) water. Healthy range: 50–65% for men, 45–60% for women.",
     ranges: [
       { label: "Low",    color: T.warning, min: 0,  max: 49 },
@@ -224,7 +244,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "waterWeight", label: "Water Weight", unit: "kg", icon: <Droplets size={16} />, color: "#22d3ee", decimals: 1,
+    key: "waterWeight", label: "Water Weight", unit: "kg", icon: <Droplets size={16} />, color: T.accent, decimals: 1,
     description: "The absolute weight of water in your body (kg). Water is the heaviest component of lean mass — muscle tissue is ~73% water. This number fluctuates significantly day-to-day.",
     tips: [
       "Water weight explains most of the day-to-day scale fluctuations you see — a high-carb or high-salt meal can add 1–2 kg overnight.",
@@ -247,7 +267,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "muscleMass", label: "Muscle Mass", unit: "kg", icon: <Dumbbell size={16} />, color: "#34d399", decimals: 1,
+    key: "muscleMass", label: "Muscle Mass", unit: "kg", icon: <Dumbbell size={16} />, color: T.accent, decimals: 1,
     description: "Total skeletal muscle mass in kilograms. The absolute most important long-term health metric — muscle mass predicts longevity, metabolic health, injury resistance, and quality of life in old age.",
     tips: [
       "Muscle is metabolically expensive — more muscle = higher BMR = easier fat loss.",
@@ -266,7 +286,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "muscleRate", label: "Muscle Rate", unit: "%", icon: <Activity size={16} />, color: "#10b981", decimals: 1,
+    key: "muscleRate", label: "Muscle Rate", unit: "%", icon: <Activity size={16} />, color: T.accent, decimals: 1,
     description: "Muscle mass as a percentage of total body weight. Different from skeletal muscle % — this measures all muscle tissue (skeletal + smooth). Higher is always better for metabolism.",
     tips: [
       "Muscle rate below 60% in men indicates room for significant metabolic improvement.",
@@ -275,7 +295,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "boneMass", label: "Bone Mass", unit: "kg", icon: <Activity size={16} />, color: "#94a3b8", decimals: 2,
+    key: "boneMass", label: "Bone Mass", unit: "kg", icon: <Activity size={16} />, color: T.accent, decimals: 2,
     description: "Estimated bone mineral mass in kilograms. Dense bones protect against fractures and osteoporosis. Bone density peaks around age 30 and slowly declines after.",
     ranges: [
       { label: "Low",    color: T.warning, min: 0,   max: 1.9 },
@@ -289,7 +309,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "protein", label: "Protein", unit: "%", icon: <Zap size={16} />, color: "#f472b6", decimals: 1,
+    key: "protein", label: "Protein", unit: "%", icon: <Zap size={16} />, color: T.accent, decimals: 1,
     description: "Protein content as a percentage of body weight. Low protein % indicates the body may be breaking down muscle for energy, or dietary protein intake is insufficient.",
     ranges: [
       { label: "Low",    color: T.warning, min: 0,  max: 15 },
@@ -303,7 +323,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "proteinMass", label: "Protein Mass", unit: "kg", icon: <Zap size={16} />, color: "#e879f9", decimals: 1,
+    key: "proteinMass", label: "Protein Mass", unit: "kg", icon: <Zap size={16} />, color: T.accent, decimals: 1,
     description: "The absolute weight of protein in your body (kg). Protein is the structural material of muscle — this reflects the size of your protein stores.",
     tips: [
       "Protein mass = Weight × Protein% ÷ 100. A higher number means more structural muscle material.",
@@ -312,7 +332,7 @@ const PARAM_DEFS: ParamDef[] = [
     ],
   },
   {
-    key: "bmr", label: "BMR", unit: "kcal", icon: <Flame size={16} />, color: "#fb923c", decimals: 0,
+    key: "bmr", label: "BMR", unit: "kcal", icon: <Flame size={16} />, color: T.accent, decimals: 0,
     description: "Basal Metabolic Rate — calories your body burns at complete rest just to maintain basic functions (breathing, circulation, temperature). Your metabolic floor.",
     tips: [
       "BMR × activity multiplier = Total Daily Energy Expenditure (TDEE). Sedentary: ×1.2. Light exercise: ×1.375. Moderate exercise: ×1.55.",
@@ -327,7 +347,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "bodyAge", label: "Body Age", unit: "yrs", icon: <Brain size={16} />, color: "#c084fc", decimals: 0,
+    key: "bodyAge", label: "Body Age", unit: "yrs", icon: <Brain size={16} />, color: T.accent, decimals: 0,
     description: "Metabolic age estimate based on your BMR compared to the population average for your age group. Body age younger than actual age = excellent metabolic health.",
     tips: [
       "Body age above actual age means your metabolism runs slower than average for your age — primarily driven by excess body fat and low muscle mass.",
@@ -344,7 +364,7 @@ const PARAM_DEFS: ParamDef[] = [
     },
   },
   {
-    key: "idealWeight", label: "Ideal Weight", unit: "kg", icon: <Target size={16} />, color: "#818cf8", decimals: 1,
+    key: "idealWeight", label: "Ideal Weight", unit: "kg", icon: <Target size={16} />, color: T.accent, decimals: 1,
     description: "Estimated ideal body weight calculated as BMI 22 × height². This is a target for long-term health, not a number to chase aggressively — losing fat while preserving muscle is the goal.",
     tips: [
       "Ideal weight is a guideline, not a hard target. Body composition matters more than scale weight.",
@@ -518,7 +538,7 @@ function MiniBar({ value, min, max, color, label }: { value: number; min: number
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.textMuted, marginBottom: 3 }}>
         <span>{label}</span><span style={{ color }}>{value}</span>
       </div>
-      <div style={{ height: 4, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+      <div style={{ height: 4, background: T.trough, borderRadius: 0, overflow: "hidden" }}>
         <div style={{ height: 4, width: `${pct}%`, background: color, borderRadius: 0, transition: "width 0.6s ease" }} />
       </div>
     </div>
@@ -533,7 +553,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
   const [err, setErr]       = useState("");
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
-    background: "#0f0f0f", border: `1px solid ${T.border}`,
+    background: T.card, border: `1px solid ${T.border}`,
     borderRadius: 0, padding: "10px 12px", fontSize: 15, fontWeight: 600,
     color: T.text, outline: "none",
   };
@@ -545,9 +565,9 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
   }
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 420 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 420 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 0, background: T.accentDim + "44", border: `1px solid ${T.accent}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 36, height: 36, borderRadius: 0, background: T.wash, border: `1px solid ${T.accent}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <User size={18} color={T.accent} />
           </div>
           <h2 style={{ fontSize: 17, fontWeight: 800 }}>Quick Setup</h2>
@@ -571,7 +591,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
               {(["male", "female"] as const).map(g => (
                 <button key={g} onClick={() => setGender(g)} style={{
                   flex: 1, padding: "10px", borderRadius: 0, fontSize: 13, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
-                  background: gender === g ? T.accent + "22" : "#0f0f0f",
+                  background: gender === g ? T.wash : T.card,
                   border: `1px solid ${gender === g ? T.accent : T.border}`,
                   color: gender === g ? T.accent : T.textMuted,
                 }}>{g}</button>
@@ -580,7 +600,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
           </div>
           {err && <p style={{ fontSize: 12, color: T.danger }}>{err}</p>}
           <button onClick={handleConfirm} style={{
-            background: T.accent, color: "#000", border: "none", borderRadius: 0,
+            background: T.accent, color: T.onLime, border: "none", borderRadius: 0,
             padding: "12px", fontSize: 14, fontWeight: 800, cursor: "pointer",
             textTransform: "uppercase", letterSpacing: "0.05em",
           }}>
@@ -864,7 +884,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* BLE error banner */}
         {bleError && (
-          <div style={{ background: "#450a0a22", border: `1px solid ${T.danger}44`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
+          <div style={{ background: "transparent", border: `1px solid ${T.danger}`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
             <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
               <p style={{ fontWeight: 700, marginBottom: 2 }}>Scale connection issue</p>
@@ -876,7 +896,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* BLE connected banner */}
         {bleStatus === "connected" && !showManual && !showBioPrompt && (
-          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 0, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "14px 18px", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.success }}>
               <Bluetooth size={15} />
               <div style={{ flex: 1 }}>
@@ -898,7 +918,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* Saved flash */}
         {savedFlash && (
-          <div style={{ background: "#14532d", border: `1px solid #16a34a`, borderRadius: 0, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: T.success }}>
+          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: T.success }}>
             <Check size={16} /> Metrics saved successfully!
           </div>
         )}
@@ -908,7 +928,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           {(["overview", "history"] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               background: tab === t ? T.accent : "transparent",
-              color:      tab === t ? "#000" : T.textMuted,
+              color:      tab === t ? T.onLime : T.textMuted,
               border: "none", borderRadius: 0, padding: "7px 18px", fontSize: 13, fontWeight: 700,
               cursor: "pointer", textTransform: "capitalize", letterSpacing: "0.03em",
               transition: "all 0.15s",
@@ -954,10 +974,10 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 // ─── BLE Button ───────────────────────────────────────────────────────────────
 function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status: BleStatus; onConnect: () => void; onFallbackConnect: () => void; onManual: () => void }) {
   const configs: Record<BleStatus, { label: string; icon: React.ReactNode; bg: string; color: string; onClick: () => void }> = {
-    idle:        { label: "Connect Scale",   icon: <Bluetooth size={14} />,    bg: T.accent,    color: "#000",      onClick: onConnect },
+    idle:        { label: "Connect Scale",   icon: <Bluetooth size={14} />,    bg: T.accent,    color: T.onLime,      onClick: onConnect },
     scanning:    { label: "Scanning…",       icon: <Bluetooth size={14} />,    bg: T.accentDim, color: T.accent,    onClick: () => {} },
-    connected:   { label: "Scale Connected", icon: <Bluetooth size={14} />,    bg: "#14532d",   color: T.success,   onClick: onManual },
-    failed:      { label: "Retry Connect",   icon: <BluetoothOff size={14} />, bg: "#450a0a",   color: T.danger,    onClick: onFallbackConnect },
+    connected:   { label: "Scale Connected", icon: <Bluetooth size={14} />,    bg: T.wash,   color: T.success,   onClick: onManual },
+    failed:      { label: "Retry Connect",   icon: <BluetoothOff size={14} />, bg: "transparent",   color: T.danger,    onClick: onFallbackConnect },
     unsupported: { label: "Manual Entry",    icon: <Plus size={14} />,          bg: T.card,      color: T.textMuted, onClick: onManual },
   };
   const c = configs[status];
@@ -993,8 +1013,10 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
   return (
     <div>
       <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "48px 40px", marginBottom: 24, textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${T.accent}, #38bdf8, #f472b6, ${T.accent})` }} />
-        <div style={{ width: 64, height: 64, borderRadius: 0, background: "#1a1a1a", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
+        {/* Was a lime to sky to pink rainbow across the top. Structure is a
+            hairline, and the accent is not decorative. */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: T.accent }} />
+        <div style={{ width: 64, height: 64, borderRadius: 0, background: T.trough, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
           <Scale size={28} />
         </div>
         <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, textTransform: "uppercase", marginBottom: 10 }}>
@@ -1004,7 +1026,7 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
           Connect your MEDITIVE BLE scale via Bluetooth, or log your first reading manually. All 18 body composition parameters will be tracked here.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onBle} style={{ display: "flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", border: "none", borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          <button onClick={onBle} style={{ display: "flex", alignItems: "center", gap: 8, background: T.accent, color: T.onLime, border: "none", borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.05em", textTransform: "uppercase" }}>
             <Bluetooth size={15} /> Connect Scale
           </button>
           <button onClick={onManual} style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
@@ -1056,7 +1078,7 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
                   <span style={{ fontSize: 13, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>{def.unit}</span>
                 </p>
                 {rangeInfo && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: rangeInfo.color, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: rangeInfo.color, background: T.trough, border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                     {rangeInfo.label}
                   </span>
                 )}
@@ -1089,12 +1111,12 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
   };
   const chartColors: Record<ChartKey, string> = {
     weight:      T.accent,
-    bodyFatRate: "#f97316",
-    muscleMass:  "#34d399",
-    bmi:         "#60a5fa",
-    visceralFat: "#f43f5e",
-    bodyWater:   "#38bdf8",
-    bmr:         "#a78bfa",
+    bodyFatRate: T.accent,
+    muscleMass:  T.accent,
+    bmi:         T.accent,
+    visceralFat: T.accent,
+    bodyWater:   T.accent,
+    bmr:         T.accent,
   };
 
   const formatDate = (iso: string) => {
@@ -1203,24 +1225,24 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
             const isOpen = expandedRow === row.id;
             const summaryStats = [
               { label: "Weight",   value: `${row.weight} kg`,     color: T.accent },
-              { label: "Body Fat", value: `${row.bodyFatRate}%`,  color: "#f97316" },
-              { label: "Muscle",   value: `${row.muscleMass} kg`, color: "#34d399" },
-              { label: "BMI",      value: `${row.bmi}`,           color: "#60a5fa" },
-              ...(row.visceralFat != null ? [{ label: "Visceral", value: `${row.visceralFat}`, color: "#f43f5e" }] : []),
+              { label: "Body Fat", value: `${row.bodyFatRate}%`,  color: T.accent },
+              { label: "Muscle",   value: `${row.muscleMass} kg`, color: T.accent },
+              { label: "BMI",      value: `${row.bmi}`,           color: T.accent },
+              ...(row.visceralFat != null ? [{ label: "Visceral", value: `${row.visceralFat}`, color: T.accent }] : []),
             ];
             const expandedStats = [
               { label: "Weight",      value: row.weight,      unit: "kg",   color: T.accent },
-              { label: "BMI",         value: row.bmi,         unit: "",     color: "#60a5fa" },
-              { label: "Body Fat",    value: row.bodyFatRate, unit: "%",    color: "#f97316" },
-              { label: "Muscle Mass", value: row.muscleMass,  unit: "kg",   color: "#34d399" },
-              { label: "Body Water",  value: row.bodyWater,   unit: "%",    color: "#38bdf8" },
-              { label: "Visceral Fat",value: row.visceralFat, unit: "lvl",  color: "#f43f5e" },
-              { label: "BMR",         value: row.bmr,         unit: "kcal", color: "#a78bfa" },
+              { label: "BMI",         value: row.bmi,         unit: "",     color: T.accent },
+              { label: "Body Fat",    value: row.bodyFatRate, unit: "%",    color: T.accent },
+              { label: "Muscle Mass", value: row.muscleMass,  unit: "kg",   color: T.accent },
+              { label: "Body Water",  value: row.bodyWater,   unit: "%",    color: T.accent },
+              { label: "Visceral Fat",value: row.visceralFat, unit: "lvl",  color: T.accent },
+              { label: "BMR",         value: row.bmr,         unit: "kcal", color: T.accent },
             ].filter(s => s.value != null);
 
             return (
               <div key={row.id} style={{
-                background: isOpen ? "#141414" : "#0f0f0f",
+                background: isOpen ? T.card : T.card,
                 border: `1px solid ${isOpen ? T.borderHover : T.border}`,
                 borderRadius: 0, overflow: "hidden",
                 transition: "border-color 0.15s",
@@ -1256,11 +1278,11 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
 
                 {/* Expanded detail panel */}
                 {isOpen && (
-                  <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: "#0c0c0c" }}>
+                  <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: T.bg }}>
                     <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>All recorded metrics</p>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
                       {expandedStats.map(s => (
-                        <div key={s.label} style={{ background: "#111", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
+                        <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
                           <p style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
                           <p style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: s.color, lineHeight: 1 }}>
                             {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "—"}
@@ -1289,7 +1311,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px 44px", width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px 44px", width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -1308,7 +1330,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
             </span>
             <span style={{ fontSize: 16, color: T.textMuted }}>{def.unit}</span>
             {rangeInfo && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: rangeInfo.color, background: rangeInfo.color + "18", border: `1px solid ${rangeInfo.color}44`, borderRadius: 0, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: rangeInfo.color, background: T.wash, border: `1px solid ${rangeInfo.color}`, borderRadius: 0, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {rangeInfo.label}
               </span>
             )}
@@ -1320,7 +1342,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
 
         {/* Personalised insight */}
         {personalInsight && (
-          <div style={{ background: def.color + "12", border: `1px solid ${def.color}33`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10 }}>
+          <div style={{ background: T.wash, border: `1px solid ${def.color}`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10 }}>
             <Lightbulb size={15} color={def.color} style={{ flexShrink: 0, marginTop: 1 }} />
             <p style={{ fontSize: 13, color: def.color, lineHeight: 1.6 }}>{personalInsight}</p>
           </div>
@@ -1338,7 +1360,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
                   : 0;
                 return (
                   <div key={r.label} style={{
-                    padding: "10px 14px", background: isActive ? r.color + "15" : "#1a1a1a",
+                    padding: "10px 14px", background: isActive ? T.wash : T.trough,
                     border: `1px solid ${isActive ? r.color : T.border}`, borderRadius: 0,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isActive ? 6 : 0 }}>
@@ -1348,7 +1370,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
                       </span>
                     </div>
                     {isActive && value !== null && (
-                      <div style={{ height: 3, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
+                      <div style={{ height: 3, background: T.trough, borderRadius: 0, overflow: "hidden" }}>
                         <div style={{ height: 3, width: `${barPct}%`, background: r.color, borderRadius: 0 }} />
                       </div>
                     )}
@@ -1367,8 +1389,8 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {def.tips.map((tip, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, padding: "10px 14px", background: "#111", border: `1px solid ${T.border}`, borderRadius: 0 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 0, background: def.color + "22", border: `1px solid ${def.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color: def.color }}>
+                <div key={i} style={{ display: "flex", gap: 10, padding: "10px 14px", background: T.card, border: `1px solid ${T.border}`, borderRadius: 0 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 0, background: T.wash, border: `1px solid ${def.color}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color: def.color }}>
                     {i + 1}
                   </div>
                   <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.6 }}>{tip}</p>
@@ -1405,7 +1427,7 @@ function ManualForm({ draft, onChange, onSave, saving }: {
               placeholder="—"
               style={{
                 width: "100%", boxSizing: "border-box",
-                background: draft[def.key] ? "#0f1a0a" : "#0f0f0f",
+                background: draft[def.key] ? T.wash : T.card,
                 border: `1px solid ${draft[def.key] ? T.accentDim : T.border}`,
                 borderRadius: 0, padding: "10px 12px", fontSize: 14, fontWeight: 600,
                 color: T.text, outline: "none",
@@ -1416,7 +1438,7 @@ function ManualForm({ draft, onChange, onSave, saving }: {
       </div>
       <button onClick={onSave} disabled={saving} style={{
         display: "flex", alignItems: "center", gap: 8,
-        background: T.accent, color: "#000", border: "none",
+        background: T.accent, color: T.onLime, border: "none",
         borderRadius: 0, padding: "12px 28px", fontSize: 14, fontWeight: 800,
         cursor: saving ? "not-allowed" : "pointer", letterSpacing: "0.05em", textTransform: "uppercase",
         opacity: saving ? 0.6 : 1,
@@ -1438,7 +1460,7 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
 }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", zIndex: 100, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px" }}>
-      <div style={{ background: "#141414", border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 720 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 720 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>
             {bleConnected ? "Scale Connected — Review & Save" : "Manual Entry"}
@@ -1446,7 +1468,7 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={20} /></button>
         </div>
         {bleConnected && (
-          <div style={{ background: "#14532d22", border: `1px solid #16a34a44`, borderRadius: 0, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
+          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
             <Bluetooth size={14} /> Metrics auto-populated from your scale. Review and hit Save.
           </div>
         )}
