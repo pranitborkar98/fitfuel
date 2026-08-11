@@ -1,489 +1,447 @@
 "use client";
-// app/dashboard/supplements/SupplementsClient.tsx
-// Phase 8 — Supplements Dashboard
-// All logged-in users get full access — no premium gate
 
-import { useState, useMemo } from "react";
-import {
-  X, Sparkles, CheckCircle2, RefreshCw, ChevronLeft, Star,
-} from "lucide-react";
+// app/dashboard/supplements/SupplementsClient.tsx
+//
+// Phase 8, the supplement guide. Every logged in user gets all of it.
+//
+// The old version led each card with an emoji at 30px, and 52px in the detail
+// sheet, which the reject list names outright. It was also the wrong thing to
+// lead with: lib/supplements-data carries evidenceLevel, studyCount,
+// keyStudyFindings, mechanism, warnings and sideEffects, and none of it was on
+// screen. The nav calls this "researched, not stocked". The research is the
+// product, so the research is what a row shows.
+//
+// Also gone: two backdrop-blurs, three drop shadows, an amber "popular" badge,
+// and body text at rgba(255,255,255,0.2), which is nowhere near AA on this
+// ground.
+
+import { useMemo, useState } from "react";
 import {
   SUPPLEMENTS, STACKS, GOAL_META, CATEGORY_META,
   resolveStack, getSupplementById,
   type Supplement, type SupplementGoal, type SupplementCategory, type QuizAnswers,
 } from "@/lib/supplements-data";
+import { C, COND, SANS, section, body, label, num, PANEL } from "@/app/_app/theme";
+import Dialog from "./Dialog";
 
-// ── Map profile goal string → SupplementGoal ──────────────────────────────────
+/** Reads the FitnessGoal enum UserProfile actually stores, and still accepts a
+ *  free string. IMPROVE_FITNESS used to fall through to balanced because none
+ *  of the substrings matched it. */
+const GOAL_BY_ENUM: Record<string, SupplementGoal> = {
+  GAIN_MUSCLE: "muscle_gain",
+  LOSE_WEIGHT: "weight_loss",
+  IMPROVE_FITNESS: "performance",
+  MAINTAIN: "balanced",
+  MANAGE_CONDITION: "balanced",
+};
+
 function mapProfileGoal(raw: string | null): SupplementGoal {
   if (!raw) return "balanced";
+  const exact = GOAL_BY_ENUM[raw.toUpperCase()];
+  if (exact) return exact;
+
   const r = raw.toLowerCase();
   if (r.includes("muscle") || r.includes("gain") || r.includes("bulk")) return "muscle_gain";
   if (r.includes("loss") || r.includes("cut") || r.includes("weight")) return "weight_loss";
-  if (r.includes("perform") || r.includes("athletic") || r.includes("sport")) return "performance";
+  if (r.includes("perform") || r.includes("athletic") || r.includes("sport") || r.includes("fitness")) return "performance";
   return "balanced";
 }
 
-// ── Quiz config ───────────────────────────────────────────────────────────────
+/** Words, not pictures. Every option used to carry an emoji that the reader
+ *  had to decode: a crescent moon for bad sleep, a falling chart for a
+ *  strength plateau. */
 const QUIZ_STEPS = [
   {
     key: "goal" as const,
-    question: "What's your primary goal right now?",
-    emoji: "🎯",
+    question: "What are you working on right now?",
     options: [
-      { value: "muscle_gain", label: "Build Muscle",     emoji: "💪" },
-      { value: "weight_loss", label: "Lose Fat",         emoji: "🔥" },
-      { value: "balanced",    label: "Stay Healthy",     emoji: "⚖️" },
-      { value: "performance", label: "Peak Performance", emoji: "⚡" },
+      { value: "muscle_gain", label: "Build muscle" },
+      { value: "weight_loss", label: "Lose fat" },
+      { value: "balanced", label: "Stay healthy" },
+      { value: "performance", label: "Peak performance" },
     ],
   },
   {
     key: "frequency" as const,
-    question: "How often do you train per week?",
-    emoji: "📅",
+    question: "How often do you train in a week?",
     options: [
-      { value: "low",    label: "1–2 times", emoji: "🚶" },
-      { value: "medium", label: "3–4 times", emoji: "🏃" },
-      { value: "high",   label: "5–7 times", emoji: "🏋️" },
+      { value: "low", label: "1 to 2 times" },
+      { value: "medium", label: "3 to 4 times" },
+      { value: "high", label: "5 to 7 times" },
     ],
   },
   {
     key: "challenge" as const,
-    question: "What's your biggest challenge?",
-    emoji: "💬",
+    question: "What is getting in the way?",
     options: [
-      { value: "recovery", label: "Poor recovery",    emoji: "😣" },
-      { value: "energy",   label: "Low energy",       emoji: "😴" },
-      { value: "strength", label: "Strength plateau", emoji: "📉" },
-      { value: "weight",   label: "Stubborn weight",  emoji: "⚖️" },
-      { value: "sleep",    label: "Bad sleep",        emoji: "🌙" },
+      { value: "recovery", label: "Poor recovery" },
+      { value: "energy", label: "Low energy" },
+      { value: "strength", label: "Strength plateau" },
+      { value: "weight", label: "Stubborn weight" },
+      { value: "sleep", label: "Bad sleep" },
     ],
   },
   {
     key: "diet" as const,
-    question: "What's your diet type?",
-    emoji: "🍽️",
+    question: "What do you eat?",
     options: [
-      { value: "nonveg", label: "Non-Vegetarian", emoji: "🍗" },
-      { value: "veg",    label: "Vegetarian",     emoji: "🥗" },
-      { value: "vegan",  label: "Vegan",          emoji: "🌿" },
+      { value: "nonveg", label: "Non vegetarian" },
+      { value: "veg", label: "Vegetarian" },
+      { value: "vegan", label: "Vegan" },
     ],
   },
   {
     key: "budget" as const,
-    question: "Monthly supplement budget?",
-    emoji: "💰",
+    question: "What is your monthly budget?",
     options: [
-      { value: "low",  label: "Under ₹1,000", emoji: "🪙" },
-      { value: "mid",  label: "₹1,000–2,500", emoji: "💳" },
-      { value: "high", label: "₹2,500+",      emoji: "🏆" },
+      { value: "low", label: "Under ₹1,000" },
+      { value: "mid", label: "₹1,000 to ₹2,500" },
+      { value: "high", label: "Over ₹2,500" },
     ],
   },
 ];
 
-// ── Supplement Card ───────────────────────────────────────────────────────────
-function SupplementCard({
-  supp,
-  highlight = false,
-  onClick,
-}: {
-  supp: Supplement;
-  highlight?: boolean;
-  onClick: () => void;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const catMeta = CATEGORY_META[supp.category];
+const CATEGORIES: Array<"all" | SupplementCategory> =
+  ["all", "protein", "performance", "recovery", "health", "weight"];
 
+function Spine({ children }: { children: string }) {
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "26px 0 16px" }}>
+      <span style={label(12)}>{children}</span>
+      <span style={{ flex: 1, height: 1, background: C.rule }} />
+    </div>
+  );
+}
+
+/** Square chip, 44 tall, selection is a lime hairline plus lime text. */
+function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
       onClick={onClick}
       style={{
-        background: hovered ? "#161616" : "#101010",
-        border: `1px solid ${highlight ? "#84cc16" : "#232320"}`,
-        borderRadius: 0,
-        padding: 18,
-        cursor: "pointer",
-        transform: "none",
-        transition: "all 0.18s ease",
-        position: "relative",
-        overflow: "hidden",
-        boxShadow: hovered ? "0 10px 30px rgba(0,0,0,0.5)" : "none",
+        minHeight: 44, padding: "0 14px", cursor: "pointer",
+        background: on ? C.wash : "transparent",
+        border: `1px solid ${on ? C.lime : C.rule2}`,
+        color: on ? C.lime : C.mute,
+        fontFamily: SANS, fontSize: 14, fontWeight: on ? 500 : 400,
+        transition: "border-color 180ms ease-out, color 180ms ease-out",
       }}
     >
-      {supp.popular && (
-        <div style={{
-          position: "absolute", top: 10, right: 10,
-          background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)",
-          borderRadius: 0, padding: "2px 7px",
-          fontSize: 12, fontWeight: 700, color: "#fbbf24",
-          letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-archivo), sans-serif",
-        }}>
-          Popular
-        </div>
-      )}
-
-      <div style={{ fontSize: 30, marginBottom: 12 }}>{supp.emoji}</div>
-
-      <span style={{
-        fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-        color: "#85857e", background: "transparent",
-        border: "1px solid #232320",
-        borderRadius: 0, padding: "2px 7px", fontFamily: "var(--font-archivo), sans-serif",
-      }}>
-        {catMeta.label}
-      </span>
-
-      <p style={{ margin: "10px 0 4px", fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "var(--font-archivo), sans-serif", lineHeight: 1.3 }}>
-        {supp.name}
-      </p>
-      <p style={{ margin: "0 0 12px", fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-archivo), sans-serif", lineHeight: 1.4 }}>
-        {supp.tagline}
-      </p>
-      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-        </svg>
-        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-archivo), sans-serif" }}>{supp.dosage}</span>
-      </div>
-    </div>
+      {children}
+    </button>
   );
 }
 
-// ── Supplement Detail Modal ───────────────────────────────────────────────────
-function SupplementModal({ supp, onClose }: { supp: Supplement; onClose: () => void }) {
-  const catMeta = CATEGORY_META[supp.category];
+/** Directory row, DESIGN.md §4 device 3. A real button, so it is reachable by
+ *  keyboard; the old card was a div with an onClick and nothing else. */
+function Row({ supp, inStack, onOpen }: { supp: Supplement; inStack?: boolean; onOpen: () => void }) {
+  const [hover, setHover] = useState(false);
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(10px)" }} />
-      <div style={{
-        position: "relative", width: "100%", maxWidth: 500,
-        background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 0, maxHeight: "88vh", overflowY: "auto",
-        boxShadow: "0 -20px 60px rgba(0,0,0,0.8)",
-      }}>
-        {/* Hero */}
-        <div style={{
-          padding: "32px 22px 20px", textAlign: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
-          position: "relative",
-        }}>
-          <button
-            onClick={onClose}
-            style={{ position: "absolute", top: 16, right: 16, width: 30, height: 30, borderRadius: 0, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <X size={14} />
-          </button>
-          <div style={{ fontSize: 52, marginBottom: 14 }}>{supp.emoji}</div>
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#85857e", border: "1px solid #232320", borderRadius: 0, padding: "4px 9px", fontFamily: "var(--font-mono), monospace" }}>
-            {catMeta.label}
-          </span>
-          <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 20, fontWeight: 700, color: "#fff", margin: "12px 0 6px" }}>{supp.name}</h2>
-          <p style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>{supp.tagline}</p>
-        </div>
-
-        <div style={{ padding: "20px 22px 32px" }}>
-          <p style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: "0 0 20px" }}>
-            {supp.description}
-          </p>
-
-          {/* Benefits */}
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 0, padding: "14px 16px", marginBottom: 16 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 12px", fontFamily: "var(--font-archivo), sans-serif" }}>Key Benefits</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {supp.benefits.map((b) => (
-                <div key={b} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <CheckCircle2 size={13} color="#84cc16" />
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-archivo), sans-serif" }}>{b}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Dosage + Timing */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-            {[{ label: "Dosage", value: supp.dosage }, { label: "Timing", value: supp.timing }].map(({ label, value }) => (
-              <div key={label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 0, padding: "12px 14px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "var(--font-archivo), sans-serif" }}>{label}</p>
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", fontFamily: "var(--font-archivo), sans-serif" }}>{value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Price */}
-          <div style={{ background: "#050504", border: "1px solid #232320", borderRadius: 0, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "var(--font-archivo), sans-serif" }}>Estimated Price</p>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#f7f7f5", fontFamily: "var(--font-mono), monospace", fontVariantNumeric: "tabular-nums" }}>{supp.priceRange}</p>
-            </div>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontFamily: "var(--font-archivo), sans-serif" }}>Coming soon</span>
-          </div>
-
-          {supp.veganFriendly && (
-            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12 }}>🌿</span>
-              <span style={{ fontSize: 11, color: "rgba(163,230,53,0.6)", fontFamily: "var(--font-archivo), sans-serif" }}>Vegan-friendly</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onOpen}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        width: "100%", minHeight: 44, padding: "13px 14px", textAlign: "left",
+        background: hover ? C.panel2 : "transparent",
+        border: 0,
+        borderBottom: `1px solid ${C.rule}`,
+        borderLeft: `2px solid ${inStack || hover ? C.lime : "transparent"}`,
+        cursor: "pointer",
+        transition: "background-color 180ms ease-out, border-color 180ms ease-out",
+      }}
+    >
+      <span style={{ flex: "1 1 220px", minWidth: 0 }}>
+        <span style={{ ...body(14, { color: C.ink }), display: "block" }}>{supp.name}</span>
+        <span style={{ ...body(13), display: "block", marginTop: 3 }}>{supp.tagline}</span>
+      </span>
+      <span style={label(12, { flex: "none" })}>{CATEGORY_META[supp.category].label}</span>
+      <span style={num(12, { flex: "none", minWidth: "12ch", color: C.dim })}>{supp.dosage}</span>
+      <span style={num(12, { flex: "none", minWidth: "9ch", textAlign: "right" })}>{supp.priceRange}</span>
+    </button>
   );
 }
 
-// ── Quiz Modal ────────────────────────────────────────────────────────────────
-function QuizModal({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => void; onClose: () => void }) {
+function Detail({ supp, onClose }: { supp: Supplement; onClose: () => void }) {
+  return (
+    <Dialog title={supp.name} onClose={onClose}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+                    gap: 12, padding: "18px 18px 14px", borderBottom: `1px solid ${C.rule}` }}>
+        <div style={{ minWidth: 0 }}>
+          <span style={label(12, { display: "block", marginBottom: 8 })}>
+            {CATEGORY_META[supp.category].label}
+          </span>
+          <h2 style={section()}>{supp.name}</h2>
+          <p style={body(13, { marginTop: 6 })}>{supp.tagline}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            flex: "none", minWidth: 44, minHeight: 44, background: "transparent",
+            border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
+            fontFamily: COND, fontWeight: 800, fontSize: 14, textTransform: "uppercase",
+          }}
+        >
+          Close
+        </button>
+      </div>
+
+      <div style={{ padding: 18 }}>
+        <p style={body(14, { maxWidth: "62ch" })}>{supp.description}</p>
+
+        <Spine>How it works</Spine>
+        <p style={body(14, { maxWidth: "62ch" })}>{supp.mechanism}</p>
+
+        <Spine>The evidence</Spine>
+        <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
+                      gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))" }}>
+          <div style={{ background: C.bg, padding: "12px 14px" }}>
+            <span style={num(13, { display: "block", color: C.lime })}>{String(supp.evidenceLevel).replace(/_/g, " ")}</span>
+            <span style={label(12, { display: "block", marginTop: 6 })}>Evidence level</span>
+          </div>
+          <div style={{ background: C.bg, padding: "12px 14px" }}>
+            <span style={num(13, { display: "block" })}>{supp.studyCount}</span>
+            <span style={label(12, { display: "block", marginTop: 6 })}>Studies</span>
+          </div>
+          <div style={{ background: C.bg, padding: "12px 14px" }}>
+            <span style={num(13, { display: "block" })}>{String(supp.valueRating).replace(/_/g, " ")}</span>
+            <span style={label(12, { display: "block", marginTop: 6 })}>Value for money</span>
+          </div>
+        </div>
+        {supp.keyStudyFindings?.length ? (
+          <ul style={{ listStyle: "none", margin: "16px 0 0", padding: 0, borderTop: `1px solid ${C.rule}` }}>
+            {supp.keyStudyFindings.map((f) => (
+              <li key={f} style={{ display: "flex", gap: 13, padding: "11px 0", alignItems: "baseline",
+                                   borderBottom: `1px solid ${C.rule}` }}>
+                <span style={num(12, { color: C.lime, flex: "none", minWidth: "2ch" })}>&gt;</span>
+                <span style={body(14, { color: C.ink })}>{f}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <Spine>How to take it</Spine>
+        <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
+                      gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>
+          {[
+            { k: "Dose", v: supp.dosage },
+            { k: "Timing", v: supp.timing },
+            { k: "Noticeable after", v: supp.onsetTime },
+            { k: "Form", v: supp.form },
+          ].map((r) => (
+            <div key={r.k} style={{ background: C.bg, padding: "12px 14px" }}>
+              <span style={label(12, { display: "block", marginBottom: 6 })}>{r.k}</span>
+              <span style={body(13, { color: C.ink })}>{r.v}</span>
+            </div>
+          ))}
+        </div>
+
+        {supp.warnings || supp.sideEffects?.length ? (
+          <>
+            <Spine>Before you take it</Spine>
+            {supp.warnings ? (
+              <p style={{ ...body(14, { color: C.ink, maxWidth: "62ch" }),
+                          borderLeft: `2px solid ${C.danger}`, paddingLeft: 14 }}>
+                {supp.warnings}
+              </p>
+            ) : null}
+            {supp.sideEffects?.length ? (
+              <p style={body(13, { marginTop: 10, maxWidth: "62ch" })}>
+                Reported side effects: {supp.sideEffects.join(", ")}.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+
+        <Spine>Price</Spine>
+        <p style={num(15)}>{supp.priceRange}</p>
+        <p style={body(13, { marginTop: 8, maxWidth: "62ch" })}>
+          A street price range, not a FitFuel price. We do not sell supplements.
+          {supp.certificationNote ? ` ${supp.certificationNote}` : ""}
+        </p>
+      </div>
+    </Dialog>
+  );
+}
+
+function Quiz({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => void; onClose: () => void }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<QuizAnswers>>({});
   const current = QUIZ_STEPS[step];
-  const canProceed = answers[current.key] !== undefined;
-  const progress = (step / QUIZ_STEPS.length) * 100;
-
-  function handleSelect(value: string) {
-    setAnswers((prev) => ({ ...prev, [current.key]: value }));
-  }
-
-  function handleNext() {
-    if (step < QUIZ_STEPS.length - 1) setStep(step + 1);
-    else onComplete(answers as QuizAnswers);
-  }
+  const chosen = answers[current.key];
+  const last = step === QUIZ_STEPS.length - 1;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 480, background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 0, overflow: "hidden", boxShadow: "0 20px 80px rgba(0,0,0,0.9)" }}>
-        {/* Progress */}
-        <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
-          <div style={{ height: "100%", width: `${progress}%`, background: "#84cc16", transition: "width 0.3s ease" }} />
+    <Dialog title="Build your stack" onClose={onClose} maxWidth={480}>
+      <div style={{ height: 2, background: C.trough }}>
+        <div style={{ height: 2, width: `${((step + 1) / QUIZ_STEPS.length) * 100}%`, background: C.lime }} />
+      </div>
+
+      <div style={{ padding: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <span style={label(12)}>Step {step + 1} of {QUIZ_STEPS.length}</span>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              minWidth: 44, minHeight: 44, background: "transparent",
+              border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
+              fontFamily: COND, fontWeight: 800, fontSize: 14, textTransform: "uppercase",
+            }}
+          >
+            Close
+          </button>
         </div>
 
-        <div style={{ padding: "28px 28px 24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-archivo), sans-serif" }}>{step + 1} / {QUIZ_STEPS.length}</span>
-            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)" }}>
-              <X size={16} />
-            </button>
-          </div>
+        <h2 style={section({ margin: "16px 0 14px" })}>{current.question}</h2>
 
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontSize: 36, marginBottom: 14 }}>{current.emoji}</div>
-            <h3 style={{ fontFamily: "var(--ff-cond)", fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>{current.question}</h3>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-            {current.options.map((opt) => {
-              const selected = answers[current.key] === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => handleSelect(opt.value)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12,
-                    padding: "12px 16px", borderRadius: 0,
-                    background: selected ? "rgba(163,230,53,0.1)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${selected ? "rgba(163,230,53,0.35)" : "rgba(255,255,255,0.08)"}`,
-                    cursor: "pointer", textAlign: "left", transition: "all 0.15s ease",
-                  }}
-                >
-                  <span style={{ fontSize: 20 }}>{opt.emoji}</span>
-                  <span style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 13, fontWeight: 500, color: selected ? "#84cc16" : "rgba(255,255,255,0.6)" }}>
-                    {opt.label}
-                  </span>
-                  {selected && <CheckCircle2 size={15} color="#84cc16" style={{ marginLeft: "auto" }} />}
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            {step > 0 && (
+        <div role="radiogroup" aria-label={current.question}
+             style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {current.options.map((o) => {
+            const on = chosen === o.value;
+            return (
               <button
-                onClick={() => setStep(step - 1)}
-                style={{ width: 40, height: 40, borderRadius: 0, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                key={o.value}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setAnswers((p) => ({ ...p, [current.key]: o.value }))}
+                style={{
+                  display: "flex", alignItems: "center", minHeight: 48, padding: "0 14px",
+                  textAlign: "left", cursor: "pointer",
+                  background: on ? C.wash : "transparent",
+                  border: `1px solid ${on ? C.lime : C.rule2}`,
+                  color: on ? C.lime : C.mute,
+                  fontFamily: SANS, fontSize: 14, fontWeight: on ? 500 : 400,
+                  transition: "border-color 180ms ease-out, color 180ms ease-out",
+                }}
               >
-                <ChevronLeft size={16} />
+                {o.label}
               </button>
-            )}
+            );
+          })}
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+          {step > 0 && (
             <button
-              onClick={handleNext}
-              disabled={!canProceed}
+              type="button"
+              onClick={() => setStep(step - 1)}
               style={{
-                flex: 1, padding: "12px", borderRadius: 0,
-                background: canProceed ? "#84cc16" : "rgba(255,255,255,0.06)",
-                border: "none", cursor: canProceed ? "pointer" : "not-allowed",
-                fontFamily: "var(--ff-cond)", fontWeight: 700, fontSize: 13,
-                color: canProceed ? "#000" : "rgba(255,255,255,0.2)",
-                transition: "all 0.15s ease",
+                minHeight: 44, padding: "0 16px", background: "transparent",
+                border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
+                fontFamily: COND, fontWeight: 800, fontSize: 14,
+                letterSpacing: "0.06em", textTransform: "uppercase",
               }}
             >
-              {step === QUIZ_STEPS.length - 1 ? "Build My Stack →" : "Continue →"}
+              Back
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            disabled={chosen === undefined}
+            onClick={() => (last ? onComplete(answers as QuizAnswers) : setStep(step + 1))}
+            style={{
+              flex: 1, minHeight: 44, padding: "0 16px",
+              background: chosen === undefined ? "transparent" : C.lime,
+              border: `1px solid ${chosen === undefined ? C.rule2 : C.lime}`,
+              color: chosen === undefined ? C.dim : C.onLime,
+              cursor: chosen === undefined ? "default" : "pointer",
+              fontFamily: COND, fontWeight: 900, fontSize: 15,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}
+          >
+            {last ? "Build my stack" : "Continue"}
+          </button>
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
-// ── Root ──────────────────────────────────────────────────────────────────────
-
-const CATEGORIES: Array<"all" | SupplementCategory> = ["all", "protein", "performance", "recovery", "health", "weight"];
-
-export default function SupplementsClient({
-  userGoal,
-  userName,
-}: {
-  userGoal: string | null;
-  userName: string | null;
-})  {
+export default function SupplementsClient({ userGoal }: { userGoal: string | null }) {
   const defaultGoal = mapProfileGoal(userGoal);
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
-  const [selectedSupp, setSelectedSupp] = useState<Supplement | null>(null);
-  const [catFilter, setCatFilter] = useState<"all" | SupplementCategory>("all");
+  const [selected, setSelected] = useState<Supplement | null>(null);
+  const [cat, setCat] = useState<"all" | SupplementCategory>("all");
 
-  const stackIds = useMemo(() => {
-    if (quizAnswers) return resolveStack(quizAnswers);
-    return STACKS[defaultGoal];
-  }, [quizAnswers, defaultGoal]);
+  const stackIds = useMemo(
+    () => (quizAnswers ? resolveStack(quizAnswers) : STACKS[defaultGoal]),
+    [quizAnswers, defaultGoal],
+  );
+  const stack = stackIds.map(getSupplementById).filter(Boolean) as Supplement[];
+  const stackSet = new Set(stack.map((s) => s.id));
 
-  const stackSupps = stackIds.map(getSupplementById).filter(Boolean) as Supplement[];
+  const catalogue = useMemo(
+    () => (cat === "all" ? SUPPLEMENTS : SUPPLEMENTS.filter((s) => s.category === cat)),
+    [cat],
+  );
 
-  const filteredCatalogue = useMemo(() => {
-    if (catFilter === "all") return SUPPLEMENTS;
-    return SUPPLEMENTS.filter((s) => s.category === catFilter);
-  }, [catFilter]);
-
-  const activeGoal: SupplementGoal = quizAnswers?.goal ?? defaultGoal;
-  const goalMeta = GOAL_META[activeGoal];
+  const goal = quizAnswers?.goal ?? defaultGoal;
 
   return (
     <>
-      <style>{`* { box-sizing: border-box; }`}</style>
-
-      <div style={{ paddingTop: 88, paddingBottom: 48, maxWidth: 1120, margin: "0 auto", minHeight: "100vh", background: "#080808", paddingLeft: 18, paddingRight: 18 }}>
-
-        {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 0, background: "rgba(163,230,53,0.1)", border: "1px solid rgba(163,230,53,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={18} color="#84cc16" />
-            </div>
-            <div>
-              <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
-                Supplement Guide
-              </h1>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
-                Personalised stack · 15 supplements · 5 categories
-              </p>
-            </div>
+      <Spine>Your stack</Spine>
+      <div style={PANEL}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                      gap: 12, flexWrap: "wrap", padding: "14px 14px 12px",
+                      borderBottom: `1px solid ${C.rule}` }}>
+          <div style={{ minWidth: 0 }}>
+            <h2 style={section()}>{GOAL_META[goal].label}</h2>
+            <p style={body(13, { marginTop: 5 })}>
+              {quizAnswers
+                ? "Built from your answers."
+                : "Built from the goal on your profile. Take the quiz to narrow it."}
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowQuiz(true)}
+            style={{
+              flex: "none", minHeight: 44, padding: "0 16px", background: "transparent",
+              border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
+              fontFamily: COND, fontWeight: 800, fontSize: 14,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}
+          >
+            {quizAnswers ? "Retake quiz" : "Take quiz"}
+          </button>
         </div>
+        {stack.map((s) => (
+          <Row key={s.id} supp={s} inStack onOpen={() => setSelected(s)} />
+        ))}
+      </div>
 
-        {/* ── Your Stack ── */}
-        <div style={{ background: "#101010", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 0, padding: "20px 20px 24px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontFamily: "var(--ff-cond)", fontSize: 16, fontWeight: 700, color: "#fff" }}>Your Stack</span>
-                <span style={{
-                  fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
-                  color: "#84cc16", background: "transparent",
-                  border: "1px solid #232320",
-                  borderRadius: 0, padding: "2px 8px", fontFamily: "var(--font-archivo), sans-serif",
-                }}>
-                  {goalMeta.label}
-                </span>
-              </div>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-archivo), sans-serif" }}>
-                {quizAnswers ? "Based on your quiz answers" : "Based on your profile goal — take the quiz to refine"}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowQuiz(true)}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 0, padding: "8px 14px",
-                fontSize: 12, color: "rgba(255,255,255,0.5)",
-                cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif", fontWeight: 500,
-              }}
-            >
-              <RefreshCw size={13} />
-              {quizAnswers ? "Retake Quiz" : "Take Quiz"}
-            </button>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 10 }}>
-            {stackSupps.map((supp) => (
-              <SupplementCard key={supp.id} supp={supp} highlight onClick={() => setSelectedSupp(supp)} />
-            ))}
-          </div>
-        </div>
-
-        {/* ── Full Catalogue ── */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
-            <div>
-              <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 17, fontWeight: 700, color: "#fff", margin: "0 0 2px" }}>Full Catalogue</h2>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
-                {filteredCatalogue.length} supplement{filteredCatalogue.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-          </div>
-
-          {/* Category tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
-            {CATEGORIES.map((cat) => {
-              const active = cat === catFilter;
-              const meta = cat === "all" ? null : CATEGORY_META[cat];
-              const accent = "#84cc16";
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setCatFilter(cat)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 14px", borderRadius: 0,
-                    background: active ? `${accent}15` : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${active ? `${accent}35` : "rgba(255,255,255,0.07)"}`,
-                    color: active ? accent : "rgba(255,255,255,0.35)",
-                    fontFamily: "var(--font-archivo), sans-serif", fontWeight: 500, fontSize: 12,
-                    cursor: "pointer", transition: "all 0.15s ease",
-                  }}
-                >
-                  <span>{cat === "all" ? "All" : meta?.label ?? cat}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 10 }}>
-            {filteredCatalogue.map((supp) => (
-              <SupplementCard key={supp.id} supp={supp} onClick={() => setSelectedSupp(supp)} />
-            ))}
-          </div>
-        </div>
-
-        {/* Price note */}
-        <div style={{ marginTop: 28, padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 0 }}>
-          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-archivo), sans-serif", lineHeight: 1.6 }}>
-            💡 <strong style={{ color: "rgba(255,255,255,0.4)" }}>Prices are estimates</strong> — final pricing will be confirmed once our supplier partnership is live. You'll be notified first.
-          </p>
-        </div>
+      <Spine>Everything we have looked at</Spine>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        {CATEGORIES.map((c) => (
+          <Chip key={c} on={c === cat} onClick={() => setCat(c)}>
+            {c === "all" ? "All" : CATEGORY_META[c].label}
+          </Chip>
+        ))}
+      </div>
+      <p style={body(13, { marginBottom: 12 })}>
+        {catalogue.length} supplement{catalogue.length === 1 ? "" : "s"}.
+      </p>
+      <div style={{ borderTop: `1px solid ${C.rule}` }}>
+        {catalogue.map((s) => (
+          <Row key={s.id} supp={s} inStack={stackSet.has(s.id)} onOpen={() => setSelected(s)} />
+        ))}
       </div>
 
       {showQuiz && (
-        <QuizModal
-          onComplete={(answers) => { setQuizAnswers(answers); setShowQuiz(false); }}
+        <Quiz
+          onComplete={(a) => { setQuizAnswers(a); setShowQuiz(false); }}
           onClose={() => setShowQuiz(false)}
         />
       )}
-
-      {selectedSupp && (
-        <SupplementModal supp={selectedSupp} onClose={() => setSelectedSupp(null)} />
-      )}
+      {selected && <Detail supp={selected} onClose={() => setSelected(null)} />}
     </>
   );
 }
