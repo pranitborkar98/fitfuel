@@ -1,24 +1,19 @@
 "use client";
 
 // app/dashboard/DeliveryConfirmCard.tsx
-// Phase 15C-CONFIRM — customer "received / report an issue" card.
-// Self-contained: fetches the user's recent deliveries on mount and renders
-// nothing if there are none. Confirming sets customerConfirmedAt; reporting an
-// issue sets customerIssueNote — both surface on the admin dispatch board.
+// Phase 15C-CONFIRM, the customer "received / report an issue" card.
+//
+// Self contained: it fetches the user's recent deliveries on mount and renders
+// nothing if there are none. Confirming sets customerConfirmedAt, reporting an
+// issue sets customerIssueNote, and both surface on the admin dispatch board.
+//
+// It stays a client component because it is embedded in the dashboard client
+// and every part of it is stateful. What changed is the surface: it carried an
+// amber, a green and a red, a decorative lime gradient across the top, and
+// 35px buttons.
 
 import { useEffect, useState } from "react";
-import { Package, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
-
-const T = {
-  card: "#111111",
-  border: "#1f1f1f",
-  accent: "#84cc16",
-  text: "#f9fafb",
-  textSecond: "#a3a3a3",
-  textMuted: "#737373",
-  amber: "#facc15",
-  green: "#22c55e",
-};
+import { C, body, label, section, solidBtn, ghostBtn, PANEL } from "@/app/_app/theme";
 
 type Delivery = {
   id: string;
@@ -33,10 +28,7 @@ type Delivery = {
 
 function fmtDate(s: string): string {
   return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
+    weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
   }).format(new Date(s));
 }
 
@@ -51,13 +43,9 @@ export default function DeliveryConfirmCard() {
     let alive = true;
     fetch("/api/user/deliveries")
       .then((r) => (r.ok ? r.json() : { deliveries: [] }))
-      .then((d) => {
-        if (alive) setDeliveries(d.deliveries ?? []);
-      })
-      .catch(() => alive && setDeliveries([]));
-    return () => {
-      alive = false;
-    };
+      .then((d) => { if (alive) setDeliveries(d.deliveries ?? []); })
+      .catch(() => { if (alive) setDeliveries([]); });
+    return () => { alive = false; };
   }, []);
 
   async function act(deliveryId: string, action: "confirm" | "issue", note?: string) {
@@ -69,172 +57,142 @@ export default function DeliveryConfirmCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deliveryId, action, note }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Something went wrong");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "That did not go through.");
       setDeliveries((prev) =>
         (prev ?? []).map((d) =>
           d.id === deliveryId
             ? {
                 ...d,
-                customerConfirmedAt: data.delivery.customerConfirmedAt ?? d.customerConfirmedAt,
-                customerIssueNote: data.delivery.customerIssueNote ?? d.customerIssueNote,
+                customerConfirmedAt: data.delivery?.customerConfirmedAt ?? d.customerConfirmedAt,
+                customerIssueNote: data.delivery?.customerIssueNote ?? d.customerIssueNote,
               }
-            : d
-        )
+            : d,
+        ),
       );
       setIssueFor(null);
       setIssueText("");
-    } catch (e: any) {
-      setErr(e?.message || "Something went wrong");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "That did not go through.");
     } finally {
       setBusyId(null);
     }
   }
 
-  // Render nothing until loaded, or if there are no recent deliveries.
   if (!deliveries || deliveries.length === 0) return null;
 
   return (
-    <div
-      style={{
-        background: T.card,
-        border: `1px solid ${T.border}`,
-        borderRadius: 0,
-        padding: "20px",
-        marginBottom: 24,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <Package size={18} color={T.accent} />
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Recent deliveries</h2>
+    <section style={{ ...PANEL, marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                    gap: 12, padding: "14px 16px", borderBottom: `1px solid ${C.rule}` }}>
+        <h2 style={section()}>Recent deliveries</h2>
+        <span style={label(12)}>{deliveries.length} in the last few days</span>
       </div>
 
       {err && (
-        <div style={{ color: "#f87171", fontSize: 13, marginBottom: 12 }}>{err}</div>
+        <p role="status" aria-live="polite"
+           style={{ ...body(13, { color: C.danger }), padding: "12px 16px 0", margin: 0 }}>
+          {err}
+        </p>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {deliveries.map((d) => {
-          const confirmed = !!d.customerConfirmedAt;
-          const reported = !!d.customerIssueNote;
-          const busy = busyId === d.id;
-          return (
-            <div
-              key={d.id}
-              style={{
-                border: `1px solid ${T.border}`,
-                borderRadius: 0,
-                padding: "14px 16px",
-                background: "#0d0d0d",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text }}>
-                    {fmtDate(d.deliveryDate)}
-                    {d.deliveryWindow ? (
-                      <span style={{ color: T.textMuted, fontWeight: 400 }}>
-                        {" "}· {d.deliveryWindow === "EVENING" ? "Evening" : "Morning"}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: T.textSecond, marginTop: 3 }}>
-                    {d.mealsIncluded?.length ? d.mealsIncluded.join(", ") : "Your meals"}
-                  </div>
-                </div>
+      {deliveries.map((d) => {
+        const confirmed = !!d.customerConfirmedAt;
+        const reported = !!d.customerIssueNote;
+        const busy = busyId === d.id;
 
-                {d.status === "OUT_FOR_DELIVERY" && !confirmed && !reported && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: T.amber }}>
-                    <Clock size={13} /> On the way
-                  </span>
-                )}
+        return (
+          <div key={d.id} style={{ padding: "14px 16px", borderBottom: `1px solid ${C.rule}` }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                          gap: 10, flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={body(14, { color: C.ink, margin: 0 })}>
+                  {fmtDate(d.deliveryDate)}
+                  {d.deliveryWindow
+                    ? `, ${d.deliveryWindow === "EVENING" ? "evening" : "morning"}`
+                    : ""}
+                </p>
+                <p style={body(13, { margin: "3px 0 0" })}>
+                  {d.mealsIncluded?.length ? d.mealsIncluded.join(", ") : "Your meals"}
+                </p>
               </div>
-
-              {/* States */}
-              {confirmed ? (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, fontSize: 13, color: T.green, fontWeight: 600 }}>
-                  <CheckCircle2 size={15} /> Received — thank you!
-                </div>
-              ) : reported ? (
-                <div style={{ marginTop: 12, fontSize: 13, color: T.amber, display: "flex", alignItems: "flex-start", gap: 6 }}>
-                  <AlertTriangle size={15} style={{ marginTop: 1, flexShrink: 0 }} />
-                  <span>Issue reported. We&rsquo;re on it. <span style={{ color: T.textMuted }}>&ldquo;{d.customerIssueNote}&rdquo;</span></span>
-                </div>
-              ) : issueFor === d.id ? (
-                <div style={{ marginTop: 12 }}>
-                  <textarea
-                    value={issueText}
-                    onChange={(e) => setIssueText(e.target.value)}
-                    placeholder="What went wrong? (missing meal, late, quality…)"
-                    rows={2}
-                    maxLength={500}
-                    style={{ width: "100%", background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 11px", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
-                  />
-                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button
-                      disabled={busy || !issueText.trim()}
-                      onClick={() => act(d.id, "issue", issueText.trim())}
-                      style={{ ...primaryBtn, opacity: busy || !issueText.trim() ? 0.5 : 1 }}
-                    >
-                      {busy ? "Sending…" : "Submit issue"}
-                    </button>
-                    <button
-                      disabled={busy}
-                      onClick={() => { setIssueFor(null); setIssueText(""); }}
-                      style={ghostBtn}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                  <button
-                    disabled={busy}
-                    onClick={() => act(d.id, "confirm")}
-                    style={{ ...primaryBtn, opacity: busy ? 0.6 : 1 }}
-                  >
-                    {busy ? "…" : "Yes, received"}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => { setIssueFor(d.id); setErr(null); }}
-                    style={ghostBtn}
-                  >
-                    Report an issue
-                  </button>
-                </div>
+              {d.status === "OUT_FOR_DELIVERY" && !confirmed && !reported && (
+                <span style={label(12, { color: C.lime })}>On the way</span>
               )}
             </div>
-          );
-        })}
-      </div>
-    </div>
+
+            {confirmed ? (
+              <p style={{ ...label(12, { color: C.lime }), margin: "12px 0 0" }}>
+                Received, thank you
+              </p>
+            ) : reported ? (
+              <div style={{ marginTop: 12, borderLeft: `2px solid ${C.rule2}`, paddingLeft: 12 }}>
+                <p style={label(12, { display: "block" })}>Issue reported, we are on it</p>
+                <p style={body(13, { margin: "6px 0 0" })}>{d.customerIssueNote}</p>
+              </div>
+            ) : issueFor === d.id ? (
+              <div style={{ marginTop: 12 }}>
+                <label htmlFor={`issue-${d.id}`} style={label(12, { display: "block", marginBottom: 8 })}>
+                  What went wrong
+                </label>
+                <textarea
+                  id={`issue-${d.id}`}
+                  value={issueText}
+                  onChange={(e) => setIssueText(e.target.value)}
+                  placeholder="A missing meal, a late drop, quality"
+                  rows={3}
+                  maxLength={500}
+                  style={{
+                    width: "100%", boxSizing: "border-box", background: C.bg, color: C.ink,
+                    border: `1px solid ${C.rule2}`, padding: "10px 12px", fontSize: 14,
+                    lineHeight: 1.55, resize: "vertical", fontFamily: "inherit", outline: "none",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    disabled={busy || !issueText.trim()}
+                    onClick={() => act(d.id, "issue", issueText.trim())}
+                    style={solidBtn({
+                      opacity: busy || !issueText.trim() ? 0.55 : 1,
+                      cursor: busy || !issueText.trim() ? "default" : "pointer",
+                    })}
+                  >
+                    {busy ? "Sending" : "Submit issue"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => { setIssueFor(null); setIssueText(""); }}
+                    style={ghostBtn()}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => act(d.id, "confirm")}
+                  style={solidBtn({ opacity: busy ? 0.6 : 1, cursor: busy ? "default" : "pointer" })}
+                >
+                  {busy ? "Saving" : "Yes, received"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => { setIssueFor(d.id); setErr(null); }}
+                  style={ghostBtn()}
+                >
+                  Report an issue
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
   );
 }
-
-const primaryBtn: React.CSSProperties = {
-  background: T.accent,
-  color: "#080808",
-  border: "none",
-  borderRadius: 0,
-  padding: "9px 16px",
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: "pointer",
-};
-
-const ghostBtn: React.CSSProperties = {
-  background: "transparent",
-  color: T.textSecond,
-  border: `1px solid ${T.border}`,
-  borderRadius: 0,
-  padding: "9px 16px",
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: "pointer",
-};
