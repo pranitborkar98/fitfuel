@@ -22,7 +22,7 @@ import {
   type Supplement, type SupplementGoal, type SupplementCategory, type QuizAnswers,
 } from "@/lib/supplements-data";
 import { C, COND, SANS, section, body, label, num, PANEL } from "@/app/_app/theme";
-import Dialog from "./Dialog";
+import Dialog from "@/app/_app/Dialog";
 
 /** Reads the FitnessGoal enum UserProfile actually stores, and still accepts a
  *  free string. IMPROVE_FITNESS used to fall through to balanced because none
@@ -445,3 +445,4 @@ export default function SupplementsClient({ userGoal }: { userGoal: string | nul
     </>
   );
 }
+

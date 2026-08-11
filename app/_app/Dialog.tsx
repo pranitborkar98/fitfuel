@@ -1,9 +1,9 @@
 "use client";
 
-// app/dashboard/supplements/Dialog.tsx
+// app/_app/Dialog.tsx
 //
 // DESIGN.md §8: overlays lock body scroll, move focus in, trap it, and restore
-// it on close. The two overlays on this screen did none of those, and neither
+// it on close. The overlays on the app screens did none of those, and neither
 // closed on Escape, so a keyboard user who opened one was stuck in it.
 //
 // No backdrop-blur and no drop shadow. The scrim is flat and the panel is a
@@ -95,3 +95,4 @@ export default function Dialog({
     </div>
   );
 }
+
