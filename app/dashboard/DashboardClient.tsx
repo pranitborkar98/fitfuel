@@ -1,714 +1,356 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+// app/dashboard/DashboardClient.tsx
+//
+// Today.
+//
+// The largest thing removed here is a second navigation. A "Features" grid of
+// six tiles linked to Body Metrics, Nutrition, Exercises, Progress, Supplements
+// and Notifications, which is the sidebar, drawn again, in a uniform icon plus
+// title plus paragraph grid that §11 rejects by name. app/_app/nav.ts opens by
+// saying it is "the only place the app's navigation is declared", and this was
+// the other place, already drifted: every tile wore a LIVE badge, one promised
+// "FitDays BLE scale sync coming soon", and none of them knew about Coach or
+// Referrals. The sidebar is on every screen. Today does not need to relist it.
+//
+// The header went with it. It carried a second sign out and a second greeting,
+// both of which the shell owns.
+//
+// The palette was the usual: an orange, a blue, a yellow, a purple and a green
+// for four macros and five order states, meaning carried by hue alone.
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+
 import DeliveryConfirmCard from "./DeliveryConfirmCard";
 import WeeklyReviewCard from "./WeeklyReviewCard";
-import { useState, useEffect } from "react";
+import Dialog from "@/app/_app/Dialog";
 import {
-  Zap, ShoppingBag, Activity, Utensils, Dumbbell, LogOut, User, ChevronRight,
-  Calendar, Target, CheckCircle2, Circle, X, Clock, ChefHat, Flame, Star,
-  Gift, Briefcase, TrendingUp, Pill, Bell,
-} from "lucide-react";
+  C, COND, body, label, num, figure, section, PANEL, solidBtn, ghostBtn,
+} from "@/app/_app/theme";
+import type { ActivePlanView } from "./page";
 
-const T = {
-  bg: "#0a0a0a", card: "#111111", border: "#1f1f1f",
-  accent: "#84cc16", text: "#f9fafb",
-  textSecond: "#a3a3a3", textMuted: "#737373",
-};
-
-const MEAL_LABEL: Record<string, string> = {
-  BREAKFAST_LUNCH: "Breakfast + Lunch",
-  SNACK_DINNER:    "Snack + Dinner",
-  ALL_FOUR:        "All 4 Meals",
-};
-const DUR_LABEL: Record<string, string> = {
-  TRIAL_DAY:             "Trial Day",
-  WEEKLY:                "Weekly",
-  BI_WEEKLY:             "Bi-Weekly",
-  MONTHLY_EXCL_WEEKENDS: "Monthly (excl. weekends)",
-  ONE_MONTH:             "1 Month",
-  TWO_MONTH:             "2 Months",
-  THREE_MONTH:           "3 Months",
-};
-const STATUS_COLOR: Record<string, string> = {
-  CONFIRMED:       "#84cc16",
-  PENDING_PAYMENT: "#facc15",
-  CANCELLED:       "#ef4444",
-  DELIVERED:       "#22c55e",
-  PROCESSING:      "#60a5fa",
-};
+/* ── types ──────────────────────────────────────────────────────────────── */
 
 type Meal = {
-  slotId: string;
-  mealSlot: string;
-  label: string;
-  time: string;
-  emoji: string;
-  isLogged: boolean;
-  isSkipped: boolean;
-  dayNumber: number;
+  slotId: string; mealSlot: string; label: string; time: string; emoji: string;
+  isLogged: boolean; isSkipped: boolean; dayNumber: number;
   recipe: {
-    id: string;
-    name: string;
-    slug?: string;
-    caloriesPerServing: number;
-    proteinGrams: number;
-    carbsGrams: number;
-    fatGrams: number;
-    prepTimeMins?: number;
-    cookTimeMins?: number;
-    cuisineType?: string;
+    id: string; name: string; slug?: string;
+    caloriesPerServing: number; proteinGrams: number;
+    carbsGrams: number; fatGrams: number;
+    prepTimeMins?: number; cookTimeMins?: number; cuisineType?: string;
   };
 };
 
-type ActivePlan = {
-  id: string;
-  isDigital?: boolean;
-  currentDay: number;
-  startDate: string;
-  endDate: string;
-  daysRemaining: number;
-  status: string;
-  calorieTarget: number | null;
-  proteinTarget: number | null;
-  mealPlan: {
-    id: string;
-    name: string;
-    slug: string;
-    tier: string;
-    category: string;
-    dietaryVariant: string;
-    avgCaloriesPerDay: number;
-  } | null;
+type WorkoutExerciseView = {
+  exerciseId: string; name: string; sets: number; reps: number | null;
+  durationSecs: number | null; restSecs: number; notes: string | null;
 };
 
-// 9D — today's plan-linked workout (from /api/user/active-plan/workout-today)
-type WorkoutExerciseView = {
-  exerciseId: string;
-  name: string;
-  sets: number;
-  reps: number | null;
-  durationSecs: number | null;
-  restSecs: number;
-  notes: string | null;
-  category: string | null;
-  equipment: string | null;
-  primaryMuscles: string[];
-  image: string | null;
-};
 type WorkoutToday = {
-  hasWorkout: boolean;
-  isRestDay: boolean;
-  scheduleName: string;
-  focusArea: string;
-  estimatedCalories: number;
-  durationMins?: number;
-  completedToday?: boolean;
-  completedCaloriesBurned?: number | null;
+  hasWorkout: boolean; isRestDay: boolean; scheduleName: string;
+  focusArea: string; estimatedCalories: number; durationMins?: number;
+  completedToday?: boolean; completedCaloriesBurned?: number | null;
   exercises?: WorkoutExerciseView[];
 };
 
-// 9R — weekly consistency score (from /api/user/active-plan/consistency)
-type ConsistencyBreakdown = {
-  score: number;
-  label: string;
+type Consistency = {
+  score: number; label: string;
   meals: { logged: number; delivered: number };
   workouts: { completed: number; scheduled: number };
 };
 
-// ── Meal Detail Drawer ──────────────────────────────────────────
-function MealDrawer({ meal, onClose, isLogged, isLogging, onLog }: {
-  meal: Meal;
-  onClose: () => void;
-  isLogged: boolean;
-  isLogging: boolean;
-  onLog: () => void;
-}) {
-  const totalTime = (meal.recipe.prepTimeMins ?? 0) + (meal.recipe.cookTimeMins ?? 0);
+type Balance = {
+  caloriesIn: number; caloriesOut: number; net: number;
+  target: number; remaining: number; status: string;
+  mealsLogged: number; mealsTotal: number;
+  proteinIn: number; proteinTarget: number;
+};
 
+type OrderItem = { mealsPerDay: string; duration: string };
+type Order = {
+  id: string; orderNumber: string; status: string; totalRs: number;
+  createdAt: string; items?: OrderItem[];
+};
+
+const PLAN_DAYS = 30;
+
+const MEAL_LABEL: Record<string, string> = {
+  BREAKFAST_LUNCH: "Breakfast and lunch",
+  SNACK_DINNER: "Snack and dinner",
+  ALL_FOUR: "All four meals",
+};
+const DUR_LABEL: Record<string, string> = {
+  TRIAL_DAY: "Trial day",
+  WEEKLY: "Weekly",
+  BI_WEEKLY: "Fortnightly",
+  MONTHLY_EXCL_WEEKENDS: "Monthly, excluding weekends",
+  ONE_MONTH: "One month",
+  TWO_MONTH: "Two months",
+  THREE_MONTH: "Three months",
+};
+/** Order state is a word. It used to be five hues with the raw enum inside. */
+const ORDER_STATUS: Record<string, string> = {
+  CONFIRMED: "Confirmed",
+  PENDING_PAYMENT: "Payment pending",
+  CANCELLED: "Cancelled",
+  DELIVERED: "Delivered",
+  PROCESSING: "Being prepared",
+};
+
+const n0 = (v: number) => Math.round(v).toLocaleString("en-IN");
+
+/* ── pieces ─────────────────────────────────────────────────────────────── */
+
+function Spine({ children }: { children: string }) {
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
-          zIndex: 1000, backdropFilter: "blur(4px)",
-        }}
-      />
-      {/* Sheet */}
-      <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "#141414", borderRadius: 0,
-        border: `1px solid ${T.border}`, borderBottom: "none",
-        zIndex: 1001, padding: "28px 24px 40px",
-        maxHeight: "85vh", overflowY: "auto",
-        maxWidth: 640, margin: "0 auto",
-      }}>
-        {/* Handle */}
-        <div style={{ width: 36, height: 4, background: "#333", borderRadius: 0, margin: "0 auto 24px" }} />
-
-        {/* Close */}
-        <button onClick={onClose} style={{
-          position: "absolute", top: 20, right: 20,
-          background: "#1a1a1a", border: `1px solid ${T.border}`,
-          borderRadius: 0, padding: 6, cursor: "pointer", color: T.textMuted,
-          display: "flex", alignItems: "center",
-        }}>
-          <X size={16} />
-        </button>
-
-        {/* Slot badge + emoji */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <span style={{ fontSize: 28 }}>{meal.emoji}</span>
-          <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 0, padding: "2px 8px", textTransform: "uppercase" }}>
-              {meal.label}
-            </span>
-            <p style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{meal.time}</p>
-          </div>
-        </div>
-
-        {/* Recipe name */}
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: T.text, lineHeight: 1.3, marginBottom: 20 }}>
-          {meal.recipe.name}
-        </h2>
-
-        {/* Macro grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
-          {[
-            { label: "Calories", value: meal.recipe.caloriesPerServing, unit: "kcal", color: "#f97316" },
-            { label: "Protein",  value: Number(meal.recipe.proteinGrams).toFixed(1), unit: "g", color: "#60a5fa" },
-            { label: "Carbs",    value: Number(meal.recipe.carbsGrams).toFixed(1),   unit: "g", color: "#facc15" },
-            { label: "Fat",      value: Number(meal.recipe.fatGrams).toFixed(1),     unit: "g", color: "#a78bfa" },
-          ].map(m => (
-            <div key={m.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 10px", textAlign: "center" }}>
-              <p style={{ fontSize: 18, fontWeight: 800, color: m.color, lineHeight: 1 }}>{m.value}</p>
-              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{m.unit}</p>
-              <p style={{ fontSize: 10, color: T.textMuted }}>{m.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Meta row */}
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-          {totalTime > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.textMuted }}>
-              <Clock size={13} /> {totalTime} min prep
-            </div>
-          )}
-          {meal.recipe.cuisineType && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.textMuted }}>
-              <ChefHat size={13} /> {meal.recipe.cuisineType.replace(/_/g, " ")}
-            </div>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.textMuted }}>
-            <Flame size={13} /> Day {meal.dayNumber} of 30
-          </div>
-        </div>
-
-        {/* Log button */}
-        <button
-          onClick={() => { onLog(); onClose(); }}
-          disabled={isLogged || isLogging}
-          style={{
-            width: "100%", padding: "15px 0", borderRadius: 0,
-            background: isLogged ? "#1a2e05" : T.accent,
-            border: `1px solid ${isLogged ? "#365314" : T.accent}`,
-            color: isLogged ? T.accent : "#000",
-            fontSize: 14, fontWeight: 800, cursor: isLogged ? "default" : "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            textTransform: "uppercase", letterSpacing: "0.06em",
-          }}
-        >
-          {isLogged
-            ? <><CheckCircle2 size={16} /> Logged</>
-            : isLogging
-            ? "Logging..."
-            : <><Circle size={16} /> I ate this</>
-          }
-        </button>
-      </div>
-    </>
+    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "26px 0 16px" }}>
+      <span style={label(12)}>{children}</span>
+      <span style={{ flex: 1, height: 1, background: C.rule }} />
+    </div>
   );
 }
 
-
-// ── Meal Progress Ring (9L) ────────────────────────────────────
-function CalorieRing({ balance }: {
-  balance: {
-    caloriesIn: number; caloriesOut: number; net: number;
-    target: number; remaining: number; status: string;
-    mealsLogged: number; mealsTotal: number;
-    proteinIn: number; proteinTarget: number;
-  };
+function Readout({ v, k, live = false, over = false }: {
+  v: string; k: string; live?: boolean; over?: boolean;
 }) {
-  const SIZE = 120;
-  const STROKE = 10;
-  const R = (SIZE - STROKE) / 2;
-  const CIRC = 2 * Math.PI * R;
-
-  const logged = balance.mealsLogged;
-  const total  = balance.mealsTotal || 4;
-  const pct    = Math.min(1, logged / total);
-  const dash   = pct * CIRC;
-  const allDone = logged >= total;
-  const ringColor = allDone ? T.accent : T.accent;
-
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-      {/* Ring */}
-      <div style={{ position: "relative", width: SIZE, height: SIZE, flexShrink: 0 }}>
-        <svg width={SIZE} height={SIZE} style={{ transform: "rotate(-90deg)" }}>
-          <circle cx={SIZE/2} cy={SIZE/2} r={R}
-            fill="none" stroke="#1a1a1a" strokeWidth={STROKE} />
-          <circle cx={SIZE/2} cy={SIZE/2} r={R}
-            fill="none" stroke={ringColor} strokeWidth={STROKE}
-            strokeDasharray={`${dash} ${CIRC - dash}`}
-            strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 0.5s ease" }} />
-        </svg>
-        <div style={{
-          position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-        }}>
-          <p style={{ fontSize: 22, fontWeight: 900, color: T.text, lineHeight: 1 }}>
-            {logged}<span style={{ fontSize: 12, color: T.textMuted, fontWeight: 400 }}>/{total}</span>
-          </p>
-          <p style={{ fontSize: 9, color: T.textMuted, marginTop: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            {allDone ? "✓ done" : "meals"}
-          </p>
-        </div>
-      </div>
+    <div style={{ background: C.bg, padding: "14px 16px 16px" }}>
+      <span style={figure(30, { display: "block", color: over ? C.danger : live ? C.lime : C.ink })}>{v}</span>
+      <span style={label(12, { display: "block", marginTop: 8, lineHeight: 1.45 })}>{k}</span>
+    </div>
+  );
+}
 
-      {/* Stats */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          {[
-            { label: "Eaten",  value: `${balance.caloriesIn}`, unit: "kcal", color: T.accent },
-            { label: "Burned", value: `${balance.caloriesOut}`, unit: "kcal", color: "#22c55e" },
-            { label: "Target", value: `${balance.target}`, unit: "kcal", color: T.textMuted },
-          ].map(s => (
-            <div key={s.label} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 6px", textAlign: "center" }}>
-              <p style={{ fontSize: 13, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{s.unit}</p>
-              <p style={{ fontSize: 9, color: T.textMuted }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "7px 10px" }}>
-            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Protein today</p>
-            <p style={{ fontSize: 13, fontWeight: 800, color: "#60a5fa" }}>
-              {balance.proteinIn}g
-              <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}> / {balance.proteinTarget}g</span>
-            </p>
-          </div>
-          <div style={{ flex: 1, background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "7px 10px" }}>
-            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Remaining</p>
-            <p style={{ fontSize: 13, fontWeight: 800, color: T.text }}>
-              {total - logged} meal{total - logged !== 1 ? "s" : ""}
-            </p>
-          </div>
-        </div>
+function Meter({ name, value, goal, unit, on }: {
+  name: string; value: number; goal: number; unit: string; on: boolean;
+}) {
+  const w = goal > 0 ? Math.min(100, (value / goal) * 100) : 0;
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={label(12)}>{name}</span>
+        <span style={num(12)}>{n0(value)} / {n0(goal)}{unit}</span>
+      </div>
+      <div style={{ height: 10, background: C.trough }}>
+        <div style={{ height: 10, width: `${w}%`, background: on ? C.lime : C.fat }} />
       </div>
     </div>
   );
 }
 
-// ── 9D Today's Workout Card ─────────────────────────────────────
-function WorkoutCard({ workout, completing, onComplete }: {
-  workout: WorkoutToday;
-  completing: boolean;
-  onComplete: () => void;
+function MealDialog({ meal, logged, logging, onLog, onClose }: {
+  meal: Meal; logged: boolean; logging: boolean; onLog: () => void; onClose: () => void;
 }) {
-  const done = !!workout.completedToday;
-
-  // Rest day — calm, no CTA
-  if (workout.isRestDay) {
-    return (
-      <div style={{
-        marginBottom: 20, background: T.card, border: `1px solid ${T.border}`,
-        borderRadius: 0, padding: "16px 18px",
-        display: "flex", alignItems: "center", gap: 12,
-      }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: 0, background: "#0f0f0f",
-          border: `1px solid ${T.border}`, display: "flex",
-          alignItems: "center", justifyContent: "center", flexShrink: 0,
-        }}>
-          <Activity size={18} color={T.textSecond} />
-        </div>
-        <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Rest Day</p>
-          <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
-            {workout.focusArea} · recovery keeps fat loss going
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const fmtSet = (e: WorkoutExerciseView) =>
-    e.durationSecs != null
-      ? `${e.sets} × ${e.durationSecs >= 60 ? `${Math.round(e.durationSecs / 60)} min` : `${e.durationSecs}s`}`
-      : `${e.sets} × ${e.reps ?? "—"}`;
-
+  const prep = (meal.recipe.prepTimeMins ?? 0) + (meal.recipe.cookTimeMins ?? 0);
   return (
-    <div style={{
-      marginBottom: 20, background: T.card,
-      border: `1px solid ${done ? "#365314" : T.border}`,
-      borderRadius: 0, padding: "16px 18px",
-    }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 0, background: "#1a2e05",
-            border: "1px solid #365314", display: "flex",
-            alignItems: "center", justifyContent: "center", flexShrink: 0,
-          }}>
-            <Dumbbell size={17} color={T.accent} />
-          </div>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.2 }}>
-              Today's Workout
-            </p>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{workout.focusArea}</p>
-          </div>
+    <Dialog title={meal.recipe.name} onClose={onClose} maxWidth={520}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+                    gap: 12, padding: "18px 18px 14px", borderBottom: `1px solid ${C.rule}` }}>
+        <div style={{ minWidth: 0 }}>
+          <span style={label(12, { display: "block", marginBottom: 8, color: logged ? C.lime : C.dim })}>
+            {meal.label}, {meal.time}
+          </span>
+          <h2 style={section()}>{meal.recipe.name}</h2>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <p style={{ fontSize: 13, fontWeight: 800, color: "#22c55e", lineHeight: 1 }}>
-            ~{workout.estimatedCalories}
-          </p>
-          <p style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>kcal burn</p>
-        </div>
+        <button type="button" onClick={onClose} style={ghostBtn()}>Close</button>
       </div>
 
-      {/* Exercise list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-        {(workout.exercises ?? []).map((e) => (
-          <div key={e.exerciseId} style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "#0f0f0f", border: `1px solid ${T.border}`,
-            borderRadius: 0, padding: "9px 12px",
-          }}>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 12.5, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {e.name}
-              </p>
-              {e.notes && (
-                <p style={{ fontSize: 10.5, color: T.textMuted, marginTop: 1 }}>{e.notes}</p>
-              )}
+      <div style={{ padding: 18 }}>
+        <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
+                      gridTemplateColumns: "repeat(auto-fit,minmax(90px,1fr))" }}>
+          {[
+            { k: "kcal", v: n0(meal.recipe.caloriesPerServing), on: true },
+            { k: "Protein g", v: n0(Number(meal.recipe.proteinGrams)), on: true },
+            { k: "Carbs g", v: n0(Number(meal.recipe.carbsGrams)), on: false },
+            { k: "Fat g", v: n0(Number(meal.recipe.fatGrams)), on: false },
+          ].map((m) => (
+            <div key={m.k} style={{ background: C.bg, padding: "12px 14px" }}>
+              <span style={figure(24, { display: "block", color: m.on ? C.lime : C.ink })}>{m.v}</span>
+              <span style={label(12, { display: "block", marginTop: 6 })}>{m.k}</span>
             </div>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: T.accent, flexShrink: 0, marginLeft: 10 }}>
-              {fmtSet(e)}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* CTA */}
-      {done ? (
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          background: "#1a2e05", border: "1px solid #365314", borderRadius: 0,
-          padding: "11px", color: T.accent, fontSize: 13, fontWeight: 700,
-        }}>
-          <CheckCircle2 size={16} /> Workout complete · {workout.estimatedCalories} kcal logged
+          ))}
         </div>
-      ) : (
-        <button
-          onClick={onComplete}
-          disabled={completing}
-          style={{
-            width: "100%", background: completing ? "#1a1a1a" : T.accent,
-            color: completing ? T.textMuted : "#0a0a0a",
-            border: "none", borderRadius: 0, padding: "11px",
-            fontSize: 13, fontWeight: 800, cursor: completing ? "default" : "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            transition: "background 0.2s ease",
-          }}
-        >
-          <Flame size={16} /> {completing ? "Logging…" : "Mark Workout Complete"}
-        </button>
-      )}
-    </div>
-  );
-}
 
-// ── 9R Consistency Score Card ───────────────────────────────────
-function ConsistencyCard({ data }: { data: ConsistencyBreakdown }) {
-  const pct = Math.max(0, Math.min(100, data.score));
-  const barColor =
-    pct >= 80 ? "#22c55e" : pct >= 60 ? T.accent : pct >= 40 ? "#facc15" : "#f97316";
-
-  return (
-    <div style={{
-      marginBottom: 20, background: T.card, border: `1px solid ${T.border}`,
-      borderRadius: 0, padding: "16px 18px",
-    }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Consistency this week</p>
-        <p style={{ fontSize: 12, color: T.textMuted }}>
-          <span style={{ fontSize: 18, fontWeight: 800, color: barColor }}>{pct}</span> / 100 · {data.label}
+        <p style={body(13, { marginTop: 14 })}>
+          Day {meal.dayNumber} of {PLAN_DAYS}
+          {prep > 0 ? `, ${prep} min to prepare` : ""}
+          {meal.recipe.cuisineType ? `, ${meal.recipe.cuisineType.replace(/_/g, " ").toLowerCase()}` : ""}
         </p>
+
+        <button
+          type="button"
+          onClick={() => { onLog(); onClose(); }}
+          disabled={logged || logging}
+          style={solidBtn({
+            width: "100%", marginTop: 18,
+            opacity: logged || logging ? 0.55 : 1,
+            cursor: logged ? "default" : "pointer",
+          })}
+        >
+          {logged ? "Already logged" : logging ? "Logging" : "I ate this"}
+        </button>
       </div>
-      <div style={{ height: 8, background: "#1a1a1a", borderRadius: 0, overflow: "hidden", marginBottom: 12 }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 0, transition: "width 0.6s ease" }} />
-      </div>
-      <p style={{ fontSize: 12, color: T.textSecond }}>
-        You logged {data.meals.logged}/{data.meals.delivered} meals
-        {data.workouts.scheduled > 0 && ` and ${data.workouts.completed}/${data.workouts.scheduled} workouts`} this week.
-      </p>
-    </div>
+    </Dialog>
   );
 }
 
-// ── Star Rating Modal ───────────────────────────────────────────
-function StarRatingModal({ meal, onClose, onSubmit }: {
-  meal: Meal;
-  onClose: () => void;
-  onSubmit: (rating: number, note: string) => Promise<void>;
+function RatingDialog({ meal, onClose, onSubmit }: {
+  meal: Meal; onClose: () => void; onSubmit: (rating: number, note: string) => Promise<void>;
 }) {
-  const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
   const [note, setNote] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const LABELS = ["", "Didn't like it", "It was okay", "Pretty good", "Really liked it", "Loved it!"];
+  const LABELS = ["", "Did not like it", "It was okay", "Pretty good", "Really liked it", "Loved it"];
 
-  async function handleSubmit(star: number) {
-    if (submitting) return;
-    setSelected(star);
-    setSubmitting(true);
-    await onSubmit(star, note);
-    onClose();
-  }
-
-  async function handleSubmitWithNote() {
-    if (!selected || submitting) return;
-    setSubmitting(true);
+  async function submit() {
+    if (!selected || saving) return;
+    setSaving(true);
     await onSubmit(selected, note);
     onClose();
   }
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
-          zIndex: 1100, backdropFilter: "blur(6px)",
-        }}
-      />
-      {/* Centering wrapper */}
-      <div style={{
-        position: "fixed", inset: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 1101, pointerEvents: "none",
-        padding: "0 16px",
-      }}>
-        {/* Sheet */}
-        <div style={{
-          width: "100%", maxWidth: 460,
-          background: "#141414", borderRadius: 0,
-          border: `1px solid ${T.border}`,
-          padding: "28px 28px 36px",
-          textAlign: "center",
-          pointerEvents: "all",
-          position: "relative",
-        }}>
-          {/* Close X instead of handle for centered modal */}
-
-          {/* Skip */}
-          <button
-            onClick={onClose}
-            style={{
-              position: "absolute", top: 20, right: 20,
-              background: "transparent", border: "none",
-              fontSize: 12, color: T.textMuted, cursor: "pointer",
-              padding: "4px 8px",
-            }}
-          >
-            Skip
-          </button>
-
-          {/* Emoji */}
-          <div style={{ fontSize: 34, marginBottom: 10 }}>{meal.emoji}</div>
-
-          {/* Heading */}
-          <h3 style={{ fontSize: 17, fontWeight: 800, color: T.text, marginBottom: 4 }}>
-            How was it?
-          </h3>
-          <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 24, lineHeight: 1.5 }}>
-            {meal.recipe.name}
-          </p>
-
-          {/* Stars */}
-          <div
-            style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 12 }}
-            onMouseLeave={() => setHovered(0)}
-          >
-            {[1, 2, 3, 4, 5].map(star => {
-              const active = star <= (hovered || selected);
-              return (
-                <button
-                  key={star}
-                  disabled={submitting}
-                  onMouseEnter={() => setHovered(star)}
-                  onClick={() => setSelected(star)}
-                  style={{
-                    background: "transparent", border: "none", cursor: "pointer",
-                    padding: 4, transition: "transform 0.12s",
-                    transform: active ? "scale(1.18)" : "scale(1)",
-                  }}
-                >
-                  <Star
-                    size={34}
-                    fill={active ? T.accent : "transparent"}
-                    color={active ? T.accent : "#404040"}
-                    strokeWidth={1.5}
-                  />
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Dynamic label */}
-          <p style={{
-            fontSize: 13, fontWeight: 600,
-            color: (hovered || selected) ? T.accent : T.textMuted,
-            minHeight: 20, marginBottom: 20, transition: "color 0.15s",
-          }}>
-            {LABELS[hovered || selected] ?? ""}
-          </p>
-
-          {/* Note input */}
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            placeholder="Add a note (optional) — too spicy, loved the texture..."
-            maxLength={200}
-            rows={2}
-            style={{
-              width: "100%", background: "#0f0f0f",
-              border: `1px solid ${note ? T.accent + "55" : T.border}`,
-              borderRadius: 0, padding: "10px 12px",
-              fontSize: 13, color: T.text, resize: "none",
-              outline: "none", marginBottom: 16,
-              fontFamily: "inherit", lineHeight: 1.5,
-              boxSizing: "border-box",
-              transition: "border-color 0.2s",
-            }}
-          />
-
-          {/* Submit button — shown once a star is selected */}
-          {selected > 0 && (
-            <button
-              onClick={handleSubmitWithNote}
-              disabled={submitting}
-              style={{
-                width: "100%", padding: "13px 0", borderRadius: 0,
-                background: T.accent, border: "none",
-                color: "#000", fontSize: 14, fontWeight: 800,
-                cursor: submitting ? "default" : "pointer",
-                textTransform: "uppercase", letterSpacing: "0.06em",
-                opacity: submitting ? 0.7 : 1,
-              }}
-            >
-              {submitting ? "Saving…" : "Submit Rating"}
-            </button>
-          )}
-        </div>
+    <Dialog title="Rate this meal" onClose={onClose} maxWidth={440}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                    gap: 12, padding: "16px 18px", borderBottom: `1px solid ${C.rule}` }}>
+        <h2 style={section()}>How was it?</h2>
+        <button type="button" onClick={onClose} style={ghostBtn()}>Skip</button>
       </div>
-    </>
+
+      <div style={{ padding: 18 }}>
+        <p style={body(14, { color: C.ink })}>{meal.recipe.name}</p>
+
+        <div role="radiogroup" aria-label="Rating out of five"
+             style={{ display: "flex", gap: 6, marginTop: 16, flexWrap: "wrap" }}>
+          {[1, 2, 3, 4, 5].map((star) => {
+            const on = star <= selected;
+            return (
+              <button
+                key={star}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                aria-label={`${star} out of 5, ${LABELS[star].toLowerCase()}`}
+                onClick={() => setSelected(star)}
+                style={{
+                  minWidth: 52, minHeight: 44, cursor: "pointer",
+                  background: on ? C.lime : "transparent",
+                  border: `1px solid ${on ? C.lime : C.rule2}`,
+                  color: on ? C.onLime : C.mute,
+                  fontFamily: COND, fontWeight: 900, fontSize: 16,
+                  transition: "background-color 180ms ease-out, border-color 180ms ease-out",
+                }}
+              >
+                {star}
+              </button>
+            );
+          })}
+        </div>
+
+        <p style={{ ...label(12, { color: selected ? C.lime : C.dim }), minHeight: 18, marginTop: 12 }}>
+          {LABELS[selected] ?? ""}
+        </p>
+
+        <label htmlFor="rating-note" style={label(12, { display: "block", margin: "16px 0 8px" })}>
+          Anything to add
+        </label>
+        <textarea
+          id="rating-note"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Too spicy, loved the texture"
+          maxLength={200}
+          rows={3}
+          style={{
+            width: "100%", boxSizing: "border-box", background: C.bg, color: C.ink,
+            border: `1px solid ${C.rule2}`, padding: "10px 12px", fontSize: 14,
+            lineHeight: 1.55, resize: "vertical", fontFamily: "inherit", outline: "none",
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!selected || saving}
+          style={solidBtn({
+            width: "100%", marginTop: 14,
+            opacity: !selected || saving ? 0.55 : 1,
+            cursor: !selected || saving ? "default" : "pointer",
+          })}
+        >
+          {saving ? "Saving" : "Submit rating"}
+        </button>
+      </div>
+    </Dialog>
   );
 }
 
-// ── Main Dashboard ──────────────────────────────────────────────
+/* ── main ───────────────────────────────────────────────────────────────── */
+
 export default function DashboardClient({
-  session, orders, user, activePlan, hasPendingOrder, isPartnerOwner,
+  orders, activePlan, hasPendingOrder,
 }: {
-  session: any;
-  orders: any[];
-  user: any;
-  activePlan: ActivePlan | null;
+  orders: Order[];
+  activePlan: ActivePlanView | null;
   hasPendingOrder?: boolean;
-  isPartnerOwner?: boolean;
 }) {
-  const firstName = user?.name?.split(" ")[0] ?? "there";
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [mealsLoading, setMealsLoading] = useState(false);
+  const [mealsLoading, setMealsLoading] = useState(!!activePlan);
   const [loggingSlot, setLoggingSlot] = useState<string | null>(null);
   const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set());
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [openMeal, setOpenMeal] = useState<Meal | null>(null);
   const [ratingMeal, setRatingMeal] = useState<Meal | null>(null);
-  const [balance, setBalance] = useState<{
-    caloriesIn: number; caloriesOut: number; net: number;
-    target: number; remaining: number; status: string;
-    mealsLogged: number; mealsTotal: number;
-    proteinIn: number; proteinTarget: number;
-  } | null>(null);
+  const [balance, setBalance] = useState<Balance | null>(null);
   const [workout, setWorkout] = useState<WorkoutToday | null>(null);
   const [completingWorkout, setCompletingWorkout] = useState(false);
-  const [consistency, setConsistency] = useState<ConsistencyBreakdown | null>(null);
+  const [consistency, setConsistency] = useState<Consistency | null>(null);
 
   useEffect(() => {
     if (!activePlan) return;
-    setMealsLoading(true);
+    let alive = true;
+
     fetch("/api/user/active-plan/meals/today")
-      .then(r => r.json())
-      .then(data => {
-        if (data.meals) {
-          setMeals(data.meals);
-          const logged = new Set<string>(
-            data.meals.filter((m: Meal) => m.isLogged).map((m: Meal) => m.slotId)
-          );
-          setLoggedSlots(logged);
-        }
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive || !d.meals) return;
+        setMeals(d.meals);
+        setLoggedSlots(new Set<string>(
+          d.meals.filter((m: Meal) => m.isLogged).map((m: Meal) => m.slotId),
+        ));
       })
-      .finally(() => setMealsLoading(false));
+      .finally(() => { if (alive) setMealsLoading(false); });
 
-    // 9L: fetch calorie balance
     fetch("/api/user/active-plan/calorie-balance")
-      .then(r => r.json())
-      .then(data => { if (data.target) setBalance(data); });
-
-    // 9D: fetch today's plan-linked workout
+      .then((r) => r.json()).then((d) => { if (alive && d.target) setBalance(d); }).catch(() => {});
     fetch("/api/user/active-plan/workout-today")
-      .then(r => r.json())
-      .then(data => { if (data.hasWorkout) setWorkout(data); });
-
-    // 9R: fetch this week's consistency score
+      .then((r) => r.json()).then((d) => { if (alive && d.hasWorkout) setWorkout(d); }).catch(() => {});
     fetch("/api/user/active-plan/consistency")
-      .then(r => r.json())
-      .then(data => { if (typeof data.score === "number") setConsistency(data); });
+      .then((r) => r.json()).then((d) => { if (alive && typeof d.score === "number") setConsistency(d); }).catch(() => {});
+
+    return () => { alive = false; };
   }, [activePlan]);
 
-  async function handleLogMeal(meal: Meal) {
+  function refreshBalance() {
+    fetch("/api/user/active-plan/calorie-balance")
+      .then((r) => r.json()).then((d) => { if (d.target) setBalance(d); }).catch(() => {});
+  }
+
+  async function logMeal(meal: Meal) {
     if (loggedSlots.has(meal.slotId) || loggingSlot === meal.slotId) return;
     setLoggingSlot(meal.slotId);
     try {
       const res = await fetch("/api/user/active-plan/meals/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planScheduleSlotId: meal.slotId,
-          dayNumber: meal.dayNumber,
-        }),
+        body: JSON.stringify({ planScheduleSlotId: meal.slotId, dayNumber: meal.dayNumber }),
       });
       if (res.ok || res.status === 409) {
-        setLoggedSlots(prev => new Set([...prev, meal.slotId]));
-        // refresh calorie balance ring
-        fetch("/api/user/active-plan/calorie-balance")
-          .then(r => r.json())
-          .then(data => { if (data.target) setBalance(data); });
-        // 9K: close drawer then show star rating prompt
-        setSelectedMeal(null);
+        setLoggedSlots((p) => new Set([...p, meal.slotId]));
+        refreshBalance();
+        setOpenMeal(null);
         setRatingMeal(meal);
       }
     } finally {
@@ -716,7 +358,7 @@ export default function DashboardClient({
     }
   }
 
-  async function handleRateMeal(meal: Meal, rating: number, note: string) {
+  async function rateMeal(meal: Meal, rating: number, note: string) {
     try {
       await fetch("/api/user/active-plan/meals/rate", {
         method: "POST",
@@ -729,556 +371,328 @@ export default function DashboardClient({
         }),
       });
     } catch {
-      // Rating is non-blocking — silently ignore network errors
+      // Rating is not load bearing. A failure here must not block the log.
     }
   }
 
-  async function handleCompleteWorkout() {
+  async function completeWorkout() {
     if (completingWorkout || workout?.completedToday || workout?.isRestDay) return;
     setCompletingWorkout(true);
     try {
       const res = await fetch("/api/user/active-plan/workout/complete", { method: "POST" });
       if (res.ok || res.status === 409) {
-        setWorkout(prev => (prev ? { ...prev, completedToday: true } : prev));
-        // refresh ring so Burned reflects the logged session
-        fetch("/api/user/active-plan/calorie-balance")
-          .then(r => r.json())
-          .then(data => { if (data.target) setBalance(data); });
+        setWorkout((p) => (p ? { ...p, completedToday: true } : p));
+        refreshBalance();
       }
     } finally {
       setCompletingWorkout(false);
     }
   }
 
-  const totalCalories = meals.reduce((sum, m) => sum + (m.recipe?.caloriesPerServing ?? 0), 0);
-  const loggedCalories = meals
-    .filter(m => loggedSlots.has(m.slotId))
-    .reduce((sum, m) => sum + (m.recipe?.caloriesPerServing ?? 0), 0);
-  const calorieTarget = activePlan?.calorieTarget ?? activePlan?.mealPlan?.avgCaloriesPerDay ?? 1600;
-  const progressPct = Math.min(100, Math.round((loggedCalories / calorieTarget) * 100));
-  const dayProgress = activePlan ? Math.round((activePlan.currentDay / 30) * 100) : 0;
+  const target = balance?.target
+    ?? activePlan?.calorieTarget
+    ?? activePlan?.mealPlan?.avgCaloriesPerDay
+    ?? 0;
+  const eaten = balance?.caloriesIn ?? 0;
+  const burned = balance?.caloriesOut ?? 0;
+  const remaining = target - (eaten - burned);
+  const setsLabel = (e: WorkoutExerciseView) =>
+    e.durationSecs != null
+      ? `${e.sets} x ${e.durationSecs >= 60 ? `${Math.round(e.durationSecs / 60)} min` : `${e.durationSecs}s`}`
+      : `${e.sets} x ${e.reps ?? "?"}`;
+
+  /* ── no plan states ── */
+
+  if (!activePlan) {
+    return (
+      <>
+        <DeliveryConfirmCard />
+        <div style={{ ...PANEL, borderColor: hasPendingOrder ? C.lime : C.rule, padding: 20, marginTop: 20 }}>
+          <span style={label(12, { display: "block", marginBottom: 10, color: hasPendingOrder ? C.lime : C.dim })}>
+            {hasPendingOrder ? "Order confirmed" : "No active plan"}
+          </span>
+          <h2 style={section()}>
+            {hasPendingOrder ? "One step left, personalise your plan" : "You do not have a plan running"}
+          </h2>
+          <p style={body(14, { margin: "10px 0 16px", maxWidth: "62ch" })}>
+            {hasPendingOrder
+              ? "Your order is confirmed. The two minute setup sets your calorie target, diet and goal before the meals start."
+              : "A trial day is four meals, personalised, for 399 rupees."}
+          </p>
+          <Link
+            href={hasPendingOrder ? "/onboarding" : "/plans"}
+            style={solidBtn({ textDecoration: "none" })}
+          >
+            {hasPendingOrder ? "Set up my plan" : "See the plans"}
+          </Link>
+        </div>
+        <RecentOrders orders={orders} />
+      </>
+    );
+  }
+
+  /* ── the day ── */
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", paddingTop: 88, paddingBottom: 80, color: T.text }}>
+    <>
+      <DeliveryConfirmCard />
 
-      {/* Meal Detail Drawer */}
-      {selectedMeal && (
-        <MealDrawer
-          meal={selectedMeal}
-          onClose={() => setSelectedMeal(null)}
-          isLogged={loggedSlots.has(selectedMeal.slotId)}
-          isLogging={loggingSlot === selectedMeal.slotId}
-          onLog={() => handleLogMeal(selectedMeal)}
+      <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
+                    gridTemplateColumns: "repeat(auto-fit,minmax(136px,1fr))", marginTop: 20 }}>
+        <Readout
+          v={remaining >= 0 ? n0(remaining) : `+${n0(-remaining)}`}
+          k={remaining >= 0 ? "Remaining kcal" : "Over by kcal"}
+          live={remaining >= 0}
+          over={remaining < 0}
+        />
+        <Readout v={n0(eaten)} k="Eaten" />
+        <Readout v={n0(burned)} k="Burned" />
+        <Readout v={n0(target)} k="Target" />
+      </div>
+
+      <p style={body(13, { marginTop: 12 })}>
+        {activePlan.mealPlan?.name}
+        {activePlan.mealPlan?.tier ? `, ${activePlan.mealPlan.tier.toLowerCase()}` : ""}
+        {`, ${activePlan.daysRemaining} day${activePlan.daysRemaining === 1 ? "" : "s"} left`}
+        {activePlan.isDigital && activePlan.mealPlan?.slug ? ". " : "."}
+        {activePlan.isDigital && activePlan.mealPlan?.slug ? (
+          <a href={`/api/digital-plan/${activePlan.mealPlan.slug}/pdf`} target="_blank" rel="noopener noreferrer"
+             style={{ color: C.lime }}>
+            Download the plan as a PDF
+          </a>
+        ) : null}
+      </p>
+
+      <div style={{ display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
+                    marginTop: 26, alignItems: "start" }}>
+
+        {/* meals */}
+        <section style={PANEL}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                        gap: 12, padding: "14px 16px", borderBottom: `1px solid ${C.rule}` }}>
+            <h2 style={section()}>The day&apos;s meals</h2>
+            <span style={label(12)}>
+              {loggedSlots.size} of {meals.length || 4} logged
+            </span>
+          </div>
+
+          {mealsLoading ? (
+            <div style={{ padding: 16 }} aria-busy="true">
+              {[80, 66, 74, 58].map((w, i) => (
+                <div key={i} style={{ height: 12, width: `${w}%`, background: C.trough, marginBottom: 12 }} />
+              ))}
+            </div>
+          ) : meals.length === 0 ? (
+            <p style={{ ...body(14), padding: 16, margin: 0, maxWidth: "62ch" }}>
+              Nothing is scheduled for today. Your plan may not have a schedule set up yet.
+            </p>
+          ) : (
+            meals.map((meal) => {
+              const isLogged = loggedSlots.has(meal.slotId);
+              const isLogging = loggingSlot === meal.slotId;
+              return (
+                <div
+                  key={meal.slotId}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+                    padding: "13px 16px", borderBottom: `1px solid ${C.rule}`,
+                    borderLeft: `2px solid ${isLogged ? C.lime : "transparent"}`,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenMeal(meal)}
+                    style={{
+                      flex: "1 1 180px", minWidth: 0, minHeight: 44, textAlign: "left",
+                      background: "transparent", border: 0, cursor: "pointer", padding: 0,
+                      color: "inherit",
+                    }}
+                  >
+                    <span style={{ ...label(12, { color: isLogged ? C.lime : C.dim }), display: "block" }}>
+                      {meal.label}, {meal.time}
+                    </span>
+                    <span style={{ ...body(14, { color: C.ink }), display: "block", marginTop: 4 }}>
+                      {meal.recipe?.name ?? meal.label}
+                    </span>
+                    <span style={{ ...num(12, { color: C.dim }), display: "block", marginTop: 3 }}>
+                      {n0(Number(meal.recipe?.proteinGrams ?? 0))} P,{" "}
+                      {n0(Number(meal.recipe?.carbsGrams ?? 0))} C,{" "}
+                      {n0(Number(meal.recipe?.fatGrams ?? 0))} F
+                    </span>
+                  </button>
+
+                  <span style={num(13, { flex: "none", minWidth: "8ch", textAlign: "right" })}>
+                    {n0(meal.recipe?.caloriesPerServing ?? 0)} kcal
+                  </span>
+
+                  {isLogged ? (
+                    <span style={label(12, { flex: "none", color: C.lime })}>Logged</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => logMeal(meal)}
+                      disabled={isLogging}
+                      style={ghostBtn(false, { flex: "none", opacity: isLogging ? 0.55 : 1 })}
+                    >
+                      {isLogging ? "Logging" : "I ate this"}
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </section>
+
+        {/* right rail */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {balance && (
+            <section style={{ ...PANEL, padding: 18 }}>
+              <p style={label(12, { display: "block", marginBottom: 14 })}>Against target</p>
+              <Meter name="Calories" value={eaten} goal={target} unit=" kcal" on />
+              <Meter name="Protein" value={balance.proteinIn} goal={balance.proteinTarget} unit="g" on />
+              <p style={body(13, { marginTop: 4 })}>
+                {balance.mealsLogged} of {balance.mealsTotal} plan meals confirmed today.
+              </p>
+            </section>
+          )}
+
+          {workout?.hasWorkout && (
+            <section style={{ ...PANEL, borderColor: workout.completedToday ? C.lime : C.rule }}>
+              <div style={{ padding: "16px 18px 14px", borderBottom: `1px solid ${C.rule}` }}>
+                <p style={label(12, { display: "block", marginBottom: 8 })}>Training today</p>
+                <p style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, lineHeight: 1,
+                            letterSpacing: "-0.02em", textTransform: "uppercase", color: C.ink, margin: 0 }}>
+                  {workout.isRestDay ? "Rest day" : workout.focusArea}
+                </p>
+                <p style={body(13, { marginTop: 8 })}>
+                  {workout.isRestDay
+                    ? "Recovery is part of the plan, not a gap in it."
+                    : `${workout.exercises?.length ?? 0} exercises, about ${workout.estimatedCalories} kcal.`}
+                </p>
+              </div>
+
+              {!workout.isRestDay && (
+                <>
+                  {(workout.exercises ?? []).map((e) => (
+                    <div key={e.exerciseId} style={{ display: "flex", alignItems: "center", gap: 12,
+                                                     padding: "11px 18px", borderBottom: `1px solid ${C.rule}` }}>
+                      <span style={{ ...body(14, { color: C.ink }), flex: 1, minWidth: 0 }}>{e.name}</span>
+                      <span style={num(12, { flex: "none" })}>{setsLabel(e)}</span>
+                    </div>
+                  ))}
+                  <div style={{ padding: 16 }}>
+                    {workout.completedToday ? (
+                      <p style={label(12, { color: C.lime })}>
+                        Completed, {workout.estimatedCalories} kcal logged
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={completeWorkout}
+                        disabled={completingWorkout}
+                        style={solidBtn({
+                          width: "100%",
+                          opacity: completingWorkout ? 0.55 : 1,
+                          cursor: completingWorkout ? "default" : "pointer",
+                        })}
+                      >
+                        {completingWorkout ? "Logging" : "Mark it complete"}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+
+          {consistency && (
+            <section style={{ ...PANEL, padding: 18 }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                            gap: 12, marginBottom: 14 }}>
+                <p style={label(12)}>Consistency this week</p>
+                <span style={num(12, { color: C.dim })}>resets Sunday</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
+                <span style={figure(34, { color: C.lime })}>{Math.round(consistency.score)}</span>
+                <span style={num(12, { color: C.dim })}>of 100, {consistency.label.toLowerCase()}</span>
+              </div>
+              <div style={{ height: 10, background: C.trough }}>
+                <div style={{ height: 10, width: `${Math.max(0, Math.min(100, consistency.score))}%`,
+                              background: C.lime }} />
+              </div>
+              <p style={body(13, { marginTop: 12 })}>
+                {consistency.meals.logged} of {consistency.meals.delivered} delivered meals logged
+                {consistency.workouts.scheduled > 0
+                  ? `, and ${consistency.workouts.completed} of ${consistency.workouts.scheduled} sessions done`
+                  : ""}.
+              </p>
+            </section>
+          )}
+        </div>
+      </div>
+
+      <Spine>From your coach</Spine>
+      <WeeklyReviewCard />
+
+      <RecentOrders orders={orders} />
+
+      {openMeal && (
+        <MealDialog
+          meal={openMeal}
+          logged={loggedSlots.has(openMeal.slotId)}
+          logging={loggingSlot === openMeal.slotId}
+          onLog={() => logMeal(openMeal)}
+          onClose={() => setOpenMeal(null)}
         />
       )}
-
-      {/* 9K: Star rating prompt shown after "I ate this" */}
       {ratingMeal && (
-        <StarRatingModal
+        <RatingDialog
           meal={ratingMeal}
           onClose={() => setRatingMeal(null)}
-          onSubmit={(rating, note) => handleRateMeal(ratingMeal, rating, note)}
+          onSubmit={(rating, note) => rateMeal(ratingMeal, rating, note)}
         />
       )}
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px" }}>
-
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 40 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 0, border: `2px solid ${T.border}`, overflow: "hidden", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {user?.image
-                ? <img src={user.image} alt={user.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <User size={22} color={T.textMuted} />}
-            </div>
-            <div>
-              <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 3 }}>Welcome back</p>
-              <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 32, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em", lineHeight: 1 }}>
-                {firstName} <span style={{ color: T.accent }}>💪</span>
-              </h1>
-            </div>
-          </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 0, padding: "9px 16px", fontSize: 13, fontWeight: 600, color: T.textMuted, cursor: "pointer" }}
-          >
-            <LogOut size={14} /> Sign Out
-          </button>
-        </div>
-
-        {/* 15C-CONFIRM — recent deliveries: confirm receipt / report issue */}
-        <DeliveryConfirmCard />
-
-        {/* Active Plan Card */}
-        {activePlan ? (
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-
-            {/* Plan header */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 20 }}>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active Plan</p>
-                <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{activePlan.mealPlan?.name}</h2>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, color: T.accent, background: "#1a2e05", border: "1px solid #365314", borderRadius: 0, padding: "2px 7px", fontWeight: 700 }}>
-                    {activePlan.mealPlan?.tier}
-                  </span>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{activePlan.mealPlan?.dietaryVariant}</span>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{activePlan.daysRemaining} days remaining</span>
-                </div>
-              </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <p style={{ fontSize: 26, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: T.accent, lineHeight: 1 }}>
-                  Day {activePlan.currentDay}
-                </p>
-                <p style={{ fontSize: 11, color: T.textMuted }}>of 30</p>
-              </div>
-            </div>
-
-            {activePlan.isDigital && activePlan.mealPlan?.slug && (
-              <a
-              href={`/api/digital-plan/${activePlan.mealPlan.slug}/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  background: T.accent,
-                  color: "#0a0a0a",
-                  fontWeight: 800,
-                  fontSize: 14,
-                  padding: "12px 0",
-                  borderRadius: 0,
-                  textDecoration: "none",
-                  marginBottom: 20,
-                }}
-              >
-                ⬇ Download my plan (PDF)
-              </a>
-            )}
-            
-
-
-            
-
-            {/* Day progress bar */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: T.textMuted }}>Plan progress</span>
-                <span style={{ fontSize: 12, color: T.textMuted }}>{dayProgress}%</span>
-              </div>
-              <div style={{ height: 4, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${dayProgress}%`, background: T.accent, borderRadius: 0, transition: "width 0.6s ease" }} />
-              </div>
-            </div>
-
-            {/* 9R — Consistency Score (weekly) */}
-            {consistency && <ConsistencyCard data={consistency} />}
-            <WeeklyReviewCard />
-
-            {/* 9L — Net Calorie Ring */}
-            {balance && (
-              <div style={{ marginBottom: 20 }}>
-                <CalorieRing balance={balance} />
-              </div>
-            )}
-
-            {/* 9D — Today's Workout */}
-            {workout?.hasWorkout && (
-              <WorkoutCard
-                workout={workout}
-                completing={completingWorkout}
-                onComplete={handleCompleteWorkout}
-              />
-            )}
-
-            {/* Today's Meals */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Today's Meals</p>
-                {calorieTarget && (
-                  <p style={{ fontSize: 12, color: T.textMuted }}>
-                    {loggedCalories} / {calorieTarget} kcal
-                    {loggedCalories > 0 && (
-                      <span style={{ color: T.accent, marginLeft: 6 }}>({progressPct}%)</span>
-                    )}
-                  </p>
-                )}
-              </div>
-
-              {mealsLoading ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} style={{ height: 56, background: "#0f0f0f", borderRadius: 0, border: `1px solid ${T.border}` }} />
-                  ))}
-                </div>
-              ) : meals.length === 0 ? (
-                <div style={{ background: "#0f0f0f", border: `1px dashed ${T.border}`, borderRadius: 0, padding: "20px 24px", textAlign: "center" }}>
-                  <p style={{ fontSize: 13, color: T.textMuted }}>No meals scheduled for today. Your plan may not have a schedule set up yet.</p>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {meals.map(meal => {
-                    const isLogged = loggedSlots.has(meal.slotId);
-                    const isLogging = loggingSlot === meal.slotId;
-                    return (
-                      <div
-                        key={meal.slotId}
-                        onClick={() => setSelectedMeal(meal)}
-                        style={{
-                          background: "#0f0f0f",
-                          border: `1px solid ${isLogged ? "#365314" : T.border}`,
-                          borderRadius: 0,
-                          padding: "12px 14px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          cursor: "pointer",
-                          transition: "border-color 0.2s, background 0.15s",
-                        }}
-                        onMouseEnter={e => { if (!isLogged) e.currentTarget.style.borderColor = "#333"; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = isLogged ? "#365314" : T.border; }}
-                      >
-                        <span style={{ fontSize: 18, flexShrink: 0 }}>{meal.emoji}</span>
-
-                        {/* Name + macros — flex col, truncates on mobile */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{
-                            fontSize: 13, fontWeight: 700,
-                            color: isLogged ? T.accent : T.text,
-                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                            marginBottom: 2,
-                          }}>
-                            {meal.recipe?.name ?? meal.label}
-                          </p>
-                          <p style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {Number(meal.recipe?.proteinGrams ?? 0).toFixed(0)}g P
-                            {" · "}{Number(meal.recipe?.fatGrams ?? 0).toFixed(0)}g F
-                            {" · "}{Number(meal.recipe?.carbsGrams ?? 0).toFixed(0)}g C
-                            {" · "}{meal.recipe?.caloriesPerServing} kcal
-                          </p>
-                        </div>
-
-                        {/* Time — hidden on very small screens via explicit min-width check */}
-                        <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0, display: "none" }}
-                          className="meal-time"
-                        >{meal.time}</span>
-
-                        {/* Log button — stops propagation so card click doesn't double-fire */}
-                        <button
-                          onClick={e => { e.stopPropagation(); handleLogMeal(meal); }}
-                          disabled={isLogged || isLogging}
-                          style={{
-                            flexShrink: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 5,
-                            background: isLogged ? "#1a2e05" : "transparent",
-                            border: `1px solid ${isLogged ? "#365314" : T.border}`,
-                            borderRadius: 0,
-                            padding: "6px 10px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: isLogged ? T.accent : T.textMuted,
-                            cursor: isLogged ? "default" : "pointer",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {isLogged
-                            ? <><CheckCircle2 size={11} /> Logged</>
-                            : isLogging
-                            ? "..."
-                            : <><Circle size={11} /> I ate this</>
-                          }
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Calorie progress bar */}
-              {loggedCalories > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ height: 3, background: "#1a1a1a", borderRadius: 0, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${progressPct}%`, background: progressPct >= 100 ? "#ef4444" : T.accent, borderRadius: 0, transition: "width 0.4s ease" }} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : hasPendingOrder ? (
-          /* Confirmed order exists but no active plan — needs onboarding */
-          <div style={{ background: T.card, border: `1px solid #365314`, borderRadius: 0, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-              <div>
-                <p style={{ fontSize: 12, color: T.accent, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Order Confirmed ✓</p>
-                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>One step left — personalise your plan</h2>
-                <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.6 }}>
-                  Your order is confirmed. Complete the 2-minute setup so we know your calorie target, diet, and goals before your meals start.
-                </p>
-              </div>
-              <div>
-                <Link href="/onboarding" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "13px 28px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
-                  <Zap size={14} fill="currentColor" /> Set Up My Plan
-                </Link>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* No active plan, no confirmed order */
-          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 20px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-              <div>
-                <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Active Plan</p>
-                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>No active plan yet</h2>
-                <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.6 }}>
-                  Start with a trial day for just ₹399 — 4 meals, fully personalised.
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link href="/plans" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: T.accent, color: "#000", fontWeight: 800, fontSize: 13, textDecoration: "none", padding: "11px 22px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
-                  <Zap size={14} fill="currentColor" /> Order Now
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Orders */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px", marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <ShoppingBag size={18} color={T.accent} />
-            <h2 style={{ fontSize: 16, fontWeight: 700 }}>Recent Orders</h2>
-            <span style={{ fontSize: 12, color: T.textMuted, marginLeft: 4 }}>({orders.length})</span>
-          </div>
-
-          {orders.length === 0 ? (
-            <div style={{ border: `1px dashed ${T.border}`, borderRadius: 0, padding: "32px 24px", textAlign: "center" }}>
-              <ShoppingBag size={32} color={T.border} style={{ margin: "0 auto 12px" }} />
-              <p style={{ fontSize: 14, color: T.textMuted }}>No orders yet. Your order history will appear here.</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {orders.map((order: any) => {
-                const item = order.items?.[0];
-                return (
-                  <div key={order.id} style={{ background: "#0f0f0f", border: `1px solid ${T.border}`, borderRadius: 0, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{order.orderNumber}</p>
-                      <p style={{ fontSize: 12, color: T.textMuted }}>
-                        {item ? `${MEAL_LABEL[item.mealsPerDay] ?? item.mealsPerDay} · ${DUR_LABEL[item.duration] ?? item.duration}` : "—"}
-                      </p>
-                      <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                        {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>₹{order.totalRs.toLocaleString("en-IN")}</p>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLOR[order.status] ?? T.textMuted, background: "#1a1a1a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 8px" }}>
-                        {order.status}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Features */}
-        <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Features</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14, marginBottom: 32 }}>
-
-          <Link href="/dashboard/body-metrics" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <Activity size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Body Metrics</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Track 18 body composition parameters — quick manual logging, FitDays BLE scale sync coming soon.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          <Link href="/dashboard/nutrition" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <Utensils size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Nutrition Tracker</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Log meals, track calories, macros and water daily.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          <Link href="/dashboard/exercises" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <Dumbbell size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Exercise Library</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>873 exercises {'\u2014'} browse, log workouts, track sets and burned kcal.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          <Link href="/dashboard/progress" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <TrendingUp size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Progress</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Weight trend, body composition charts and plateau detection over time.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          <Link href="/dashboard/supplements" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <Pill size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Supplements</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>LIVE</span>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Your goal-matched stack with doses, plus the full educational catalogue.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          <Link href="/dashboard/notification-settings" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <Bell size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Notifications</p>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Choose which emails you get: daily nudges, weekly digest, order updates.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          {/* Phase 17B {'\u2014'} Customer P2P referrals (always visible) */}
-          <Link href="/dashboard/referrals" style={{ textDecoration: "none" }}>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                <Gift size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Refer + Earn</p>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>NEW</span>
-                </div>
-                <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Share your code. Friends get {'\u20B9'}200 off, you earn {'\u20B9'}500 credit per signup.</p>
-              </div>
-              <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-            </div>
-          </Link>
-
-          {/* Phase 17B {'\u2014'} Partner dashboard (only if user owns a non-CUSTOMER Partner) */}
-          {isPartnerOwner && (
-            <Link href="/dashboard/partners" style={{ textDecoration: "none" }}>
-              <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 20px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "#365314")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
-              >
-                <div style={{ width: 40, height: 40, borderRadius: 0, background: "#1a2e05", border: `1px solid #365314`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, flexShrink: 0 }}>
-                  <Briefcase size={20} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Partner Dashboard</p>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: "#1a2e05", border: `1px solid #365314`, borderRadius: 0, padding: "2px 6px" }}>PARTNER</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Conversions, payouts, and your tracking code.</p>
-                </div>
-                <ChevronRight size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
-              </div>
-            </Link>
-          )}
-
-        </div>
-
-        {/* Account */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700 }}>Account</h2>
-            <Link href="/dashboard/profile" style={{ fontSize: 13, fontWeight: 600, color: T.accent, textDecoration: "none" }}>
-              Edit Profile →
-            </Link>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Row label="Name"  value={user?.name  ?? "—"} />
-            <Row label="Email" value={user?.email ?? "—"} />
-            <Row label="Phone" value={user?.phone ?? "—"} />
-            <Row label="Role"  value={user?.role  ?? "CUSTOMER"} />
-          </div>
-        </div>
-
-      </div>
-    </div>
+    </>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function RecentOrders({ orders }: { orders: Order[] }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #161616", gap: 12 }}>
-      <span style={{ fontSize: 13, color: "#737373", flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 13, color: "#f9fafb", textAlign: "right", wordBreak: "break-all" }}>{value}</span>
-    </div>
+    <>
+      <Spine>Recent orders</Spine>
+      {orders.length === 0 ? (
+        <div style={{ ...PANEL, padding: "20px 18px" }}>
+          <p style={body(14, { maxWidth: "62ch" })}>
+            No orders yet. Anything you order shows up here with its status.
+          </p>
+        </div>
+      ) : (
+        <div style={{ borderTop: `1px solid ${C.rule}` }}>
+          {orders.map((o) => {
+            const item = o.items?.[0];
+            return (
+              <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+                                       padding: "13px 0", borderBottom: `1px solid ${C.rule}` }}>
+                <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                  <p style={body(14, { color: C.ink, margin: 0 })}>{o.orderNumber}</p>
+                  <p style={{ ...num(12, { color: C.dim }), margin: "3px 0 0" }}>
+                    {item
+                      ? `${MEAL_LABEL[item.mealsPerDay] ?? item.mealsPerDay}, ${DUR_LABEL[item.duration] ?? item.duration}, `
+                      : ""}
+                    {new Date(o.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric", month: "short", year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <span style={label(12, { flex: "none" })}>{ORDER_STATUS[o.status] ?? o.status}</span>
+                <span style={num(13, { flex: "none", minWidth: "8ch", textAlign: "right" })}>
+                  {"₹"}{o.totalRs.toLocaleString("en-IN")}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
