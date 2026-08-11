@@ -23,6 +23,7 @@ import {
 // neutral bar grey, and only the genuinely clinical bands take danger.
 
 import { C } from "@/app/_app/theme";
+import Dialog from "@/app/_app/Dialog";
 
 const T = {
   bg:          C.bg,
@@ -118,13 +119,13 @@ const PARAM_DEFS: ParamDef[] = [
     ranges: [{ label: "Normal", color: T.success, min: 0, max: 999 }],
     tips: [
       "Weigh yourself first thing in the morning, after using the toilet, before eating or drinking.",
-      "Daily fluctuations of 0.5–2 kg are normal — water, food, and hormones cause this. Track the weekly average, not daily swings.",
-      "A caloric deficit of 500 kcal/day loses ~0.5 kg of fat per week — sustainable and muscle-preserving.",
+      "Daily fluctuations of 0.5–2 kg are normal, water, food, and hormones cause this. Track the weekly average, not daily swings.",
+      "A caloric deficit of 500 kcal/day loses ~0.5 kg of fat per week, sustainable and muscle-preserving.",
     ],
   },
   {
     key: "bmi", label: "BMI", unit: "", icon: <Target size={16} />, color: T.accent, decimals: 1,
-    description: "Body Mass Index — your weight in kg divided by your height in metres squared. A population-level screening tool, not a perfect individual health measure (muscular people often score 'overweight').",
+    description: "Body Mass Index, your weight in kg divided by your height in metres squared. A population-level screening tool, not a perfect individual health measure (muscular people often score 'overweight').",
     ranges: [
       { label: "Underweight", color: T.info,    min: 0,    max: 18.4 },
       { label: "Normal",      color: T.success,  min: 18.5, max: 24.9 },
@@ -132,12 +133,12 @@ const PARAM_DEFS: ParamDef[] = [
       { label: "Obese",       color: T.danger,   min: 30,   max: 999  },
     ],
     tips: [
-      "BMI ignores muscle — a fit person with high muscle mass will score 'overweight'. Use body fat % as your primary fat metric instead.",
+      "BMI ignores muscle, a fit person with high muscle mass will score 'overweight'. Use body fat % as your primary fat metric instead.",
       "Every 5 kg of fat lost lowers BMI by ~1.7 points (at average height). Losing 10 kg of fat would bring you from Obese to Overweight.",
       "BMI below 25 correlates with significantly lower cardiovascular and metabolic disease risk.",
     ],
     insightFn: (v, m) => {
-      if (v >= 30 && m.muscleMass && m.muscleMass > 55) return "Your high BMI is partly explained by strong muscle mass — focus on body fat % as your real progress metric.";
+      if (v >= 30 && m.muscleMass && m.muscleMass > 55) return "Your high BMI is partly explained by strong muscle mass, focus on body fat % as your real progress metric.";
       if (v >= 30) return `At ${v}, each 5 kg of fat lost brings BMI down ~1.7 points. Target: 25.`;
       return null;
     },
@@ -154,25 +155,25 @@ const PARAM_DEFS: ParamDef[] = [
     ],
     tips: [
       "Losing fat while preserving muscle requires: caloric deficit + adequate protein (1.6–2.2 g per kg of body weight daily).",
-      "Cardio burns calories; strength training preserves muscle during a cut — do both.",
+      "Cardio burns calories; strength training preserves muscle during a cut, do both.",
       "Sleep 7–9 hours. Poor sleep raises cortisol, which breaks down muscle and promotes fat storage.",
-      "Alcohol is the enemy of fat loss — it halts fat oxidation entirely for several hours after consumption.",
+      "Alcohol is the enemy of fat loss, it halts fat oxidation entirely for several hours after consumption.",
     ],
     insightFn: (v, m) => {
       if (v > 25 && m.weight) {
         const fatKg = (m.weight * v / 100).toFixed(1);
         const targetFatKg = (m.weight * 0.20).toFixed(1);
-        return `You're carrying ${fatKg} kg of fat. At 20% BF you'd carry ${targetFatKg} kg — a loss of ${(parseFloat(fatKg) - parseFloat(targetFatKg)).toFixed(1)} kg of fat.`;
+        return `You're carrying ${fatKg} kg of fat. At 20% BF you'd carry ${targetFatKg} kg, a loss of ${(parseFloat(fatKg) - parseFloat(targetFatKg)).toFixed(1)} kg of fat.`;
       }
       return null;
     },
   },
   {
     key: "fatMass", label: "Fat Mass", unit: "kg", icon: <TrendingDown size={16} />, color: T.accent, decimals: 1,
-    description: "The absolute weight of fat in your body (kg). More actionable than body fat % — it tells you exactly how many kg of fat you need to lose to hit your goal.",
+    description: "The absolute weight of fat in your body (kg). More actionable than body fat %, it tells you exactly how many kg of fat you need to lose to hit your goal.",
     tips: [
       "Fat mass = Weight × Body Fat% ÷ 100. Losing 0.5 kg of fat per week is healthy and achievable.",
-      "Track fat mass, not just weight. If weight stays the same but fat mass drops and muscle mass rises — that's body recomposition and it's excellent.",
+      "Track fat mass, not just weight. If weight stays the same but fat mass drops and muscle mass rises, that's body recomposition and it's excellent.",
       "Target fat mass for a 'fit' body: Weight × 0.15 (15% BF for men) or Weight × 0.22 (22% BF for women).",
     ],
     insightFn: (v, m) => {
@@ -186,16 +187,16 @@ const PARAM_DEFS: ParamDef[] = [
   },
   {
     key: "fatFreeWeight", label: "Fat-Free Weight", unit: "kg", icon: <Dumbbell size={16} />, color: T.accent, decimals: 1,
-    description: "Total body weight minus all fat mass. Includes muscle, bone, water, and organs. This is what remains after all fat is stripped away — the 'lean body mass'.",
+    description: "Total body weight minus all fat mass. Includes muscle, bone, water, and organs. This is what remains after all fat is stripped away, the 'lean body mass'.",
     tips: [
-      "Fat-free weight is your goal weight floor — you cannot weigh less than this without losing muscle or bone.",
-      "During a cut, if fat-free weight drops, you're losing muscle — increase protein intake and add resistance training.",
+      "Fat-free weight is your goal weight floor, you cannot weigh less than this without losing muscle or bone.",
+      "During a cut, if fat-free weight drops, you're losing muscle, increase protein intake and add resistance training.",
       "For men, ideal weight often equals fat-free weight ÷ 0.85 (roughly 15% BF at goal weight).",
     ],
   },
   {
     key: "subcutaneousFat", label: "Subcutaneous Fat", unit: "%", icon: <TrendingDown size={16} />, color: T.accent, decimals: 1,
-    description: "Fat stored just beneath the skin surface — the 'pinchable' fat. Less dangerous than visceral fat but more visible. Accounts for ~80% of total body fat.",
+    description: "Fat stored just beneath the skin surface, the 'pinchable' fat. Less dangerous than visceral fat but more visible. Accounts for ~80% of total body fat.",
     ranges: [
       { label: "Low",      color: T.success, min: 0,  max: 14 },
       { label: "Normal",   color: T.accent,  min: 15, max: 22 },
@@ -204,27 +205,27 @@ const PARAM_DEFS: ParamDef[] = [
     ],
     tips: [
       "Subcutaneous fat is cosmetically visible but metabolically less harmful than visceral fat.",
-      "Spot reduction doesn't work — you can't choose where fat is lost. Total caloric deficit reduces it everywhere.",
+      "Spot reduction doesn't work, you can't choose where fat is lost. Total caloric deficit reduces it everywhere.",
       "Subcutaneous fat responds well to sustained cardio (150+ min/week moderate intensity).",
     ],
   },
   {
     key: "visceralFat", label: "Visceral Fat", unit: "level", icon: <AlertCircle size={16} />, color: T.accent, decimals: 1,
-    description: "Fat surrounding your internal organs (liver, intestines, kidneys). The most dangerous type of fat — directly linked to insulin resistance, heart disease, and type 2 diabetes. Level 1–9 is healthy, 10–14 is high, 15+ is very high.",
+    description: "Fat surrounding your internal organs (liver, intestines, kidneys). The most dangerous type of fat, directly linked to insulin resistance, heart disease, and type 2 diabetes. Level 1–9 is healthy, 10–14 is high, 15+ is very high.",
     ranges: [
       { label: "Healthy",   color: T.success, min: 1,  max: 9  },
       { label: "High",      color: T.warning, min: 10, max: 14 },
       { label: "Very High", color: T.danger,  min: 15, max: 30 },
     ],
     tips: [
-      "Visceral fat is more metabolically active than subcutaneous fat — it secretes inflammatory chemicals that damage organs.",
+      "Visceral fat is more metabolically active than subcutaneous fat, it secretes inflammatory chemicals that damage organs.",
       "GOOD NEWS: Visceral fat responds faster to diet and exercise than subcutaneous fat. It's the first to go.",
       "Reducing sugar and refined carbs specifically targets visceral fat. Fructose is especially linked to visceral accumulation.",
       "Aerobic exercise (running, cycling, swimming) is the most effective way to reduce visceral fat.",
       "Target: below level 9. Each 5 kg of fat lost typically drops visceral fat by ~2–3 levels.",
     ],
     insightFn: (v) => {
-      if (v >= 10) return `Visceral fat at ${v} is the most urgent health priority — it's linked to heart disease and diabetes. The good news: it responds to diet faster than any other fat type.`;
+      if (v >= 10) return `Visceral fat at ${v} is the most urgent health priority, it's linked to heart disease and diabetes. The good news: it responds to diet faster than any other fat type.`;
       return null;
     },
   },
@@ -238,18 +239,18 @@ const PARAM_DEFS: ParamDef[] = [
     ],
     tips: [
       "Drink 35 ml of water per kg of body weight daily (e.g. 3.2 L for 92 kg).",
-      "Body water % naturally decreases as body fat % increases — losing fat raises this number automatically.",
+      "Body water % naturally decreases as body fat % increases, losing fat raises this number automatically.",
       "Dehydration of just 2% bodyweight impairs strength, endurance, and cognitive performance.",
-      "Electrolytes (sodium, potassium, magnesium) are needed to retain water in cells — don't just drink plain water.",
+      "Electrolytes (sodium, potassium, magnesium) are needed to retain water in cells, don't just drink plain water.",
     ],
   },
   {
     key: "waterWeight", label: "Water Weight", unit: "kg", icon: <Droplets size={16} />, color: T.accent, decimals: 1,
-    description: "The absolute weight of water in your body (kg). Water is the heaviest component of lean mass — muscle tissue is ~73% water. This number fluctuates significantly day-to-day.",
+    description: "The absolute weight of water in your body (kg). Water is the heaviest component of lean mass, muscle tissue is ~73% water. This number fluctuates significantly day-to-day.",
     tips: [
-      "Water weight explains most of the day-to-day scale fluctuations you see — a high-carb or high-salt meal can add 1–2 kg overnight.",
-      "Muscle holds more water than fat — as you gain muscle, water weight increases, which is positive.",
-      "Don't confuse water weight loss with fat loss — quick weight drops from fasting or low-carb are mostly water.",
+      "Water weight explains most of the day-to-day scale fluctuations you see, a high-carb or high-salt meal can add 1–2 kg overnight.",
+      "Muscle holds more water than fat, as you gain muscle, water weight increases, which is positive.",
+      "Don't confuse water weight loss with fat loss, quick weight drops from fasting or low-carb are mostly water.",
     ],
   },
   {
@@ -261,16 +262,16 @@ const PARAM_DEFS: ParamDef[] = [
       { label: "High",     color: T.accent,  min: 45, max: 100 },
     ],
     tips: [
-      "Skeletal muscle is metabolically expensive — each kg of muscle burns ~13 kcal/day at rest (vs 4.5 kcal for fat).",
-      "Muscle % appears lower than absolute muscle mass when body fat is high — losing fat raises this % even if muscle mass stays constant.",
+      "Skeletal muscle is metabolically expensive, each kg of muscle burns ~13 kcal/day at rest (vs 4.5 kcal for fat).",
+      "Muscle % appears lower than absolute muscle mass when body fat is high, losing fat raises this % even if muscle mass stays constant.",
       "Progressive overload (gradually increasing weight/reps in training) is the only proven way to build skeletal muscle.",
     ],
   },
   {
     key: "muscleMass", label: "Muscle Mass", unit: "kg", icon: <Dumbbell size={16} />, color: T.accent, decimals: 1,
-    description: "Total skeletal muscle mass in kilograms. The absolute most important long-term health metric — muscle mass predicts longevity, metabolic health, injury resistance, and quality of life in old age.",
+    description: "Total skeletal muscle mass in kilograms. The absolute most important long-term health metric, muscle mass predicts longevity, metabolic health, injury resistance, and quality of life in old age.",
     tips: [
-      "Muscle is metabolically expensive — more muscle = higher BMR = easier fat loss.",
+      "Muscle is metabolically expensive, more muscle = higher BMR = easier fat loss.",
       "You can lose fat and maintain/gain muscle simultaneously (body recomposition) with adequate protein + resistance training.",
       "Muscle mass peaks in your 30s and declines ~3–8% per decade after 30. Start building now.",
       "Target: protein intake of 1.6–2.2 g per kg of body weight. At 92 kg, that's 147–202 g of protein daily.",
@@ -279,7 +280,7 @@ const PARAM_DEFS: ParamDef[] = [
     insightFn: (v, m) => {
       if (v && m.weight) {
         const ffm = m.fatFreeWeight ?? (m.weight * 0.75);
-        if (v > ffm * 0.88) return `Your muscle mass is excellent relative to your fat-free weight — this means most of your lean mass is actual muscle, not just water or bone.`;
+        if (v > ffm * 0.88) return `Your muscle mass is excellent relative to your fat-free weight, this means most of your lean mass is actual muscle, not just water or bone.`;
         return `At ${v} kg, you have a strong muscle base. Focus on preserving this during any fat-loss phase.`;
       }
       return null;
@@ -287,11 +288,11 @@ const PARAM_DEFS: ParamDef[] = [
   },
   {
     key: "muscleRate", label: "Muscle Rate", unit: "%", icon: <Activity size={16} />, color: T.accent, decimals: 1,
-    description: "Muscle mass as a percentage of total body weight. Different from skeletal muscle % — this measures all muscle tissue (skeletal + smooth). Higher is always better for metabolism.",
+    description: "Muscle mass as a percentage of total body weight. Different from skeletal muscle %, this measures all muscle tissue (skeletal + smooth). Higher is always better for metabolism.",
     tips: [
       "Muscle rate below 60% in men indicates room for significant metabolic improvement.",
-      "As fat decreases, muscle rate increases automatically — losing 10 kg of fat would raise this significantly.",
-      "Muscle rate correlates strongly with resting metabolic rate — each 1% increase means meaningfully more calories burned daily.",
+      "As fat decreases, muscle rate increases automatically, losing 10 kg of fat would raise this significantly.",
+      "Muscle rate correlates strongly with resting metabolic rate, each 1% increase means meaningfully more calories burned daily.",
     ],
   },
   {
@@ -305,7 +306,7 @@ const PARAM_DEFS: ParamDef[] = [
     tips: [
       "Weight-bearing exercise (running, walking, weightlifting) is the most powerful stimulus for bone density.",
       "Calcium (1000 mg/day) and Vitamin D3 (2000–4000 IU/day) are essential for bone maintenance.",
-      "Bone mass correlates with body weight — if you're heavier, you naturally have denser bones.",
+      "Bone mass correlates with body weight, if you're heavier, you naturally have denser bones.",
     ],
   },
   {
@@ -319,25 +320,25 @@ const PARAM_DEFS: ParamDef[] = [
     tips: [
       "A protein % below 16 often means insufficient dietary protein. Aim for 1.6–2.2 g per kg bodyweight daily.",
       "Best protein sources: eggs, chicken breast, greek yoghurt, cottage cheese, whey protein, fish, lean beef.",
-      "Spread protein across 4–5 meals — the body can only synthesise muscle from ~40 g protein per meal.",
+      "Spread protein across 4–5 meals, the body can only synthesise muscle from ~40 g protein per meal.",
     ],
   },
   {
     key: "proteinMass", label: "Protein Mass", unit: "kg", icon: <Zap size={16} />, color: T.accent, decimals: 1,
-    description: "The absolute weight of protein in your body (kg). Protein is the structural material of muscle — this reflects the size of your protein stores.",
+    description: "The absolute weight of protein in your body (kg). Protein is the structural material of muscle, this reflects the size of your protein stores.",
     tips: [
       "Protein mass = Weight × Protein% ÷ 100. A higher number means more structural muscle material.",
-      "Protein mass below 14 kg often indicates muscle loss risk — prioritise protein intake and strength training.",
+      "Protein mass below 14 kg often indicates muscle loss risk, prioritise protein intake and strength training.",
       "During a caloric deficit, adequate protein prevents protein mass from dropping (muscle being broken down for energy).",
     ],
   },
   {
     key: "bmr", label: "BMR", unit: "kcal", icon: <Flame size={16} />, color: T.accent, decimals: 0,
-    description: "Basal Metabolic Rate — calories your body burns at complete rest just to maintain basic functions (breathing, circulation, temperature). Your metabolic floor.",
+    description: "Basal Metabolic Rate, calories your body burns at complete rest just to maintain basic functions (breathing, circulation, temperature). Your metabolic floor.",
     tips: [
       "BMR × activity multiplier = Total Daily Energy Expenditure (TDEE). Sedentary: ×1.2. Light exercise: ×1.375. Moderate exercise: ×1.55.",
       "Eat below TDEE to lose fat. A 500 kcal/day deficit = ~0.5 kg fat/week. Never eat below BMR.",
-      "Muscle mass directly raises BMR — building 5 kg of muscle increases BMR by ~65 kcal/day.",
+      "Muscle mass directly raises BMR, building 5 kg of muscle increases BMR by ~65 kcal/day.",
       "BMR decreases with severe caloric restriction (metabolic adaptation). Don't crash diet.",
     ],
     insightFn: (v, m) => {
@@ -350,14 +351,14 @@ const PARAM_DEFS: ParamDef[] = [
     key: "bodyAge", label: "Body Age", unit: "yrs", icon: <Brain size={16} />, color: T.accent, decimals: 0,
     description: "Metabolic age estimate based on your BMR compared to the population average for your age group. Body age younger than actual age = excellent metabolic health.",
     tips: [
-      "Body age above actual age means your metabolism runs slower than average for your age — primarily driven by excess body fat and low muscle mass.",
+      "Body age above actual age means your metabolism runs slower than average for your age, primarily driven by excess body fat and low muscle mass.",
       "Losing fat and building muscle are the two fastest ways to lower body age.",
       "Each 5 kg of fat lost typically drops body age by 2–3 years.",
       "Consistent aerobic exercise can lower body age by 10+ years over 12 months.",
     ],
     insightFn: (v, m) => {
       if (m.weight && m.bodyFatRate) {
-        const actual = new Date().getFullYear() - 1990; // placeholder — ideally use user.age
+        const actual = new Date().getFullYear() - 1990; // placeholder, ideally use user.age
         return `A body age of ${v} means your metabolism is running older than ideal. Dropping visceral fat is the fastest fix.`;
       }
       return null;
@@ -365,7 +366,7 @@ const PARAM_DEFS: ParamDef[] = [
   },
   {
     key: "idealWeight", label: "Ideal Weight", unit: "kg", icon: <Target size={16} />, color: T.accent, decimals: 1,
-    description: "Estimated ideal body weight calculated as BMI 22 × height². This is a target for long-term health, not a number to chase aggressively — losing fat while preserving muscle is the goal.",
+    description: "Estimated ideal body weight calculated as BMI 22 × height². This is a target for long-term health, not a number to chase aggressively, losing fat while preserving muscle is the goal.",
     tips: [
       "Ideal weight is a guideline, not a hard target. Body composition matters more than scale weight.",
       "If you have significant muscle mass, your ideal weight will be higher than this estimate.",
@@ -374,7 +375,7 @@ const PARAM_DEFS: ParamDef[] = [
     insightFn: (v, m) => {
       if (m.weight && v) {
         const diff = parseFloat((m.weight - v).toFixed(1));
-        if (diff > 0) return `You're ${diff} kg above ideal weight. But since you have strong muscle, realistic target weight with 18% BF is likely ${Math.round(m.fatFreeWeight! / 0.82)} kg — higher than the BMI-22 estimate.`;
+        if (diff > 0) return `You're ${diff} kg above ideal weight. But since you have strong muscle, realistic target weight with 18% BF is likely ${Math.round(m.fatFreeWeight! / 0.82)} kg, higher than the BMI-22 estimate.`;
       }
       return null;
     },
@@ -415,7 +416,7 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
   const subcutaneousFat = parseFloat((bodyFatRate * 0.82).toFixed(1));
   const bodyWater       = parseFloat((fatFreeWeight / weight * 73.2).toFixed(1));
   const waterWeight     = parseFloat((weight * bodyWater / 100).toFixed(1));
-  // FIX: was 0.826 — now 0.95 to match Fitdays (muscle ≈ 95% of fat-free weight)
+  // FIX: was 0.826, now 0.95 to match Fitdays (muscle ≈ 95% of fat-free weight)
   const muscleMass      = parseFloat((fatFreeWeight * 0.95).toFixed(1));
   const muscleRate      = parseFloat((muscleMass / weight * 100).toFixed(1));
   const skeletalMuscle  = parseFloat((muscleMass / weight * 100 * 0.73).toFixed(1)); // skeletal ≈ 73% of total muscle rate
@@ -423,7 +424,7 @@ function computeAllMetrics(weight: number, impedance: number, bio: UserBio): Met
   const protein         = parseFloat(((muscleMass * 0.2 / weight) * 100).toFixed(1));
   const proteinMass     = parseFloat((weight * protein / 100).toFixed(1));
   const bmr             = calcBMR(weight, heightCm, age, gender);
-  // FIX: visceral fat stored as float (1 decimal) — was Math.round()
+  // FIX: visceral fat stored as float (1 decimal), was Math.round()
   const visceralFat     = parseFloat((bodyFatRate * 0.25 + bmi * 0.1).toFixed(1));
   const bodyAge         = Math.round(age + (bodyFatRate - (gender === "male" ? 18 : 25)) * 0.4);
   const idealWeight     = parseFloat((22 * h * h).toFixed(1));
@@ -535,7 +536,7 @@ function MiniBar({ value, min, max, color, label }: { value: number; min: number
   const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
   return (
     <div style={{ marginBottom: 6 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.textMuted, marginBottom: 3 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textMuted, marginBottom: 3 }}>
         <span>{label}</span><span style={{ color }}>{value}</span>
       </div>
       <div style={{ height: 4, background: T.trough, borderRadius: 0, overflow: "hidden" }}>
@@ -564,29 +565,34 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
     onConfirm({ heightCm: h, age: a, gender });
   }
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 420 }}>
+    <Dialog title="Quick setup" onClose={onClose} maxWidth={420}>
+      <div style={{ padding: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 0, background: T.wash, border: `1px solid ${T.accent}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <User size={18} color={T.accent} />
-          </div>
-          <h2 style={{ fontSize: 17, fontWeight: 800 }}>Quick Setup</h2>
-          <button onClick={onClose} style={{ marginLeft: "auto", background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={18} /></button>
+          <h2 style={{ fontSize: 17, fontWeight: 800 }}>Quick setup</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ marginLeft: "auto", minWidth: 44, minHeight: 44, background: "transparent",
+                     border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer" }}
+          >
+            <X size={18} />
+          </button>
         </div>
         <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24, lineHeight: 1.6 }}>
           Your scale sends weight + impedance. We need your height, age, and sex to compute all 18 body metrics.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Height (cm)</label>
+            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Height (cm)</label>
             <input type="number" placeholder="e.g. 170" value={height} onChange={e => setHeight(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Age (years)</label>
+            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Age (years)</label>
             <input type="number" placeholder="e.g. 28" value={age} onChange={e => setAge(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Sex</label>
+            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Sex</label>
             <div style={{ display: "flex", gap: 8 }}>
               {(["male", "female"] as const).map(g => (
                 <button key={g} onClick={() => setGender(g)} style={{
@@ -604,11 +610,11 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
             padding: "12px", fontSize: 14, fontWeight: 800, cursor: "pointer",
             textTransform: "uppercase", letterSpacing: "0.05em",
           }}>
-            Calculate My Metrics
+            Calculate my metrics
           </button>
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -652,7 +658,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           const data = await res.json();
           if (data) setMetrics(prev => ({ ...prev, ...data }));
         }
-      } catch { /* silent — show empty state if offline */ }
+      } catch { /* silent, show empty state if offline */ }
       finally { setLoadingLatest(false); }
     }
     loadLatest();
@@ -901,7 +907,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
               <Bluetooth size={15} />
               <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: 700 }}>
-                  Scale connected —{" "}
+                  Scale connected,{" "}
                   {liveWeight !== null && tareWeightRef.current === undefined
                     ? <span style={{ color: T.textMuted }}>calibrating baseline…</span>
                     : liveWeight !== null
@@ -909,7 +915,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
                     : "step on it barefoot"}
                 </p>
                 <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>
-                  {liveWeight !== null ? "Stay still — waiting for stable reading." : "Stand still for 3–5 seconds."}
+                  {liveWeight !== null ? "Stay still, waiting for stable reading." : "Stand still for 3–5 seconds."}
                 </p>
               </div>
             </div>
@@ -983,7 +989,7 @@ function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status:
   const c = configs[status];
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      {status === "unsupported" && <p style={{ fontSize: 11, color: T.textMuted, alignSelf: "center" }}>Chrome required for BLE</p>}
+      {status === "unsupported" && <p style={{ fontSize: 12, color: T.textMuted, alignSelf: "center" }}>Chrome required for BLE</p>}
       <button onClick={c.onClick} disabled={status === "scanning"} style={{
         display: "flex", alignItems: "center", gap: 8,
         background: c.bg, color: c.color,
@@ -1041,7 +1047,7 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
             <div style={{ color: def.color, flexShrink: 0 }}>{def.icon}</div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700 }}>{def.label}</p>
-              <p style={{ fontSize: 11, color: T.textMuted }}>{def.unit || "—"}</p>
+              <p style={{ fontSize: 12, color: T.textMuted }}>{def.unit || ""}</p>
             </div>
           </div>
         ))}
@@ -1070,7 +1076,7 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
               <div style={{ color: def.color, opacity: value !== null ? 1 : 0.4 }}>{def.icon}</div>
               <Info size={12} color={T.textMuted} />
             </div>
-            <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{def.label}</p>
+            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{def.label}</p>
             {value !== null ? (
               <>
                 <p style={{ fontSize: 26, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: T.text, lineHeight: 1, marginBottom: 6 }}>
@@ -1078,13 +1084,13 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
                   <span style={{ fontSize: 13, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>{def.unit}</span>
                 </p>
                 {rangeInfo && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: rangeInfo.color, background: T.trough, border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: rangeInfo.color, background: T.trough, border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                     {rangeInfo.label}
                   </span>
                 )}
               </>
             ) : (
-              <p style={{ fontSize: 22, fontWeight: 700, color: T.border }}>—</p>
+              <p style={{ fontSize: 12, fontWeight: 500, color: T.textMuted }}>Not measured</p>
             )}
           </div>
         );
@@ -1162,12 +1168,12 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <BarChart3 size={16} color={T.accent} />
-            <h3 style={{ fontSize: 14, fontWeight: 700 }}>{metricLabels[chartMetric]} — Last {history.length} readings</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700 }}>{metricLabels[chartMetric]}, Last {history.length} readings</h3>
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {(Object.entries(metricLabels) as [ChartKey, string][]).map(([k, label]) => (
               <button key={k} onClick={() => setChartMetric(k)} style={{
-                fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 0, cursor: "pointer",
+                fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 0, cursor: "pointer",
                 background: chartMetric === k ? chartColors[k] + "22" : "transparent",
                 color: chartMetric === k ? chartColors[k] : T.textMuted,
                 border: `1px solid ${chartMetric === k ? chartColors[k] : T.border}`,
@@ -1247,7 +1253,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                 borderRadius: 0, overflow: "hidden",
                 transition: "border-color 0.15s",
               }}>
-                {/* Summary row — always visible, click to expand */}
+                {/* Summary row, always visible, click to expand */}
                 <div
                   onClick={() => setExpandedRow(isOpen ? null : row.id)}
                   style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, cursor: "pointer" }}
@@ -1258,7 +1264,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                     </div>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700 }}>{formatDate(row.recordedAt)}, {new Date(row.recordedAt).getFullYear()}</p>
-                      <p style={{ fontSize: 11, color: T.textMuted }}>{new Date(row.recordedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · MEDITIVE BLE Scale</p>
+                      <p style={{ fontSize: 12, color: T.textMuted }}>{new Date(row.recordedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · MEDITIVE BLE Scale</p>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
@@ -1266,7 +1272,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                       {summaryStats.map(stat => (
                         <div key={stat.label} style={{ textAlign: "right" }}>
                           <p style={{ fontSize: 14, fontWeight: 800, color: stat.color }}>{stat.value}</p>
-                          <p style={{ fontSize: 10, color: T.textMuted }}>{stat.label}</p>
+                          <p style={{ fontSize: 12, color: T.textMuted }}>{stat.label}</p>
                         </div>
                       ))}
                     </div>
@@ -1279,14 +1285,16 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                 {/* Expanded detail panel */}
                 {isOpen && (
                   <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: T.bg }}>
-                    <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>All recorded metrics</p>
+                    <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>All recorded metrics</p>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
                       {expandedStats.map(s => (
                         <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
-                          <p style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
+                          <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
                           <p style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: s.color, lineHeight: 1 }}>
-                            {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "—"}
-                            <span style={{ fontSize: 11, fontWeight: 500, color: T.textMuted, marginLeft: 3 }}>{s.unit}</span>
+                            {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "Not measured"}
+                            {s.value != null && (
+                              <span style={{ fontSize: 12, fontWeight: 500, color: T.textMuted, marginLeft: 3 }}>{s.unit}</span>
+                            )}
                           </p>
                         </div>
                       ))}
@@ -1310,16 +1318,21 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
   const personalInsight = def.insightFn && value !== null ? def.insightFn(value, metrics) : null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "28px 28px 44px", width: "100%", maxWidth: 580, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+    <Dialog title={def.label} onClose={onClose} maxWidth={580}>
+      <div style={{ padding: "24px 24px 32px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ color: def.color }}>{def.icon}</div>
-            <h3 style={{ fontSize: 17, fontWeight: 700 }}>{def.label}</h3>
-          </div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={18} /></button>
+          <h3 style={{ fontSize: 17, fontWeight: 700 }}>{def.label}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ minWidth: 44, minHeight: 44, background: "transparent",
+                     border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer" }}
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Value + badge */}
@@ -1330,7 +1343,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
             </span>
             <span style={{ fontSize: 16, color: T.textMuted }}>{def.unit}</span>
             {rangeInfo && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: rangeInfo.color, background: T.wash, border: `1px solid ${rangeInfo.color}`, borderRadius: 0, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: rangeInfo.color, background: T.wash, border: `1px solid ${rangeInfo.color}`, borderRadius: 0, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {rangeInfo.label}
               </span>
             )}
@@ -1351,7 +1364,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
         {/* Reference ranges */}
         {def.ranges && (
           <>
-            <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Reference ranges</p>
+            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Reference ranges</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
               {def.ranges.map(r => {
                 const isActive = rangeInfo?.label === r.label;
@@ -1384,13 +1397,13 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
         {/* Tips */}
         {def.tips && def.tips.length > 0 && (
           <>
-            <p style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
               Tips to improve
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {def.tips.map((tip, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, padding: "10px 14px", background: T.card, border: `1px solid ${T.border}`, borderRadius: 0 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 0, background: T.wash, border: `1px solid ${def.color}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 800, color: def.color }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 0, background: T.wash, border: `1px solid ${def.color}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: def.color }}>
                     {i + 1}
                   </div>
                   <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.6 }}>{tip}</p>
@@ -1400,7 +1413,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
           </>
         )}
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -1416,7 +1429,7 @@ function ManualForm({ draft, onChange, onSave, saving }: {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14, marginBottom: 24 }}>
         {PARAM_DEFS.map(def => (
           <div key={def.key}>
-            <label style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>
+            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>
               <span style={{ color: def.color, marginRight: 5 }}>{def.icon}</span>
               {def.label} {def.unit && <span style={{ color: T.border }}>({def.unit})</span>}
             </label>
@@ -1424,7 +1437,7 @@ function ManualForm({ draft, onChange, onSave, saving }: {
               type="number" step="0.1"
               value={draft[def.key] ?? ""}
               onChange={e => onChange({ ...draft, [def.key]: e.target.value })}
-              placeholder="—"
+              placeholder={def.unit || "value"}
               style={{
                 width: "100%", boxSizing: "border-box",
                 background: draft[def.key] ? T.wash : T.card,
@@ -1459,13 +1472,25 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
   bleConnected: boolean;
 }) {
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", zIndex: 100, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px" }}>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "32px", width: "100%", maxWidth: 720 }}>
+    <Dialog
+      title={bleConnected ? "Scale connected, review and save" : "Manual entry"}
+      onClose={onClose}
+      maxWidth={720}
+    >
+      <div style={{ padding: 24 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>
-            {bleConnected ? "Scale Connected — Review & Save" : "Manual Entry"}
+            {bleConnected ? "Scale connected, review and save" : "Manual entry"}
           </h2>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", color: T.textMuted, cursor: "pointer" }}><X size={20} /></button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ minWidth: 44, minHeight: 44, background: "transparent",
+                     border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer" }}
+          >
+            <X size={20} />
+          </button>
         </div>
         {bleConnected && (
           <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
@@ -1473,10 +1498,10 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
           </div>
         )}
         <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
-          {bleConnected ? "Values calculated from weight + impedance. Edit any field before saving." : "Fill any or all fields — empty fields are skipped."}
+          {bleConnected ? "Values calculated from weight + impedance. Edit any field before saving." : "Fill any or all fields, empty fields are skipped."}
         </p>
         <ManualForm draft={draft} onChange={onChange} onSave={onSave} saving={saving} />
       </div>
-    </div>
+    </Dialog>
   );
 }
