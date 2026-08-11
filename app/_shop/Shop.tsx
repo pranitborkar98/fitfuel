@@ -39,6 +39,7 @@ import { ShopFooter, ShopHeader, ShopTabs, SectionLabel } from "./Chrome";
 import DishSheet from "./DishSheet";
 import PlanSheet from "./PlanSheet";
 import Slot, { type SlotMap } from "./Slot";
+import V2Sections from "./V2Sections";
 import { C, COND, MONO, SANS, body, display, figure, ghostBtn, grid, label, num, solidBtn, sub, PANEL, PANEL_LIVE, RAIL } from "./theme";
 import s from "./shop.module.css";
 
@@ -742,6 +743,13 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
             </span>
           </Link>
         </section>
+
+        {/* ══ THE MOAT, DEMONSTRATED ══
+            The seven blocks above argue it in prose. These three show it
+            running: the coach doing the arithmetic on a real fortnight, the
+            licence and testimonial checks, and the delivery map. Written for
+            the v2 homepage and never mounted anywhere until now. */}
+        <V2Sections licence={licence} />
 
         {/* ══ THE CLOSE ══ */}
         <section aria-labelledby="shop-close" className={s.shell} style={{ padding: "34px 16px 20px" }}>
