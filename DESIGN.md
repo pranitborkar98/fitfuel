@@ -148,9 +148,27 @@ A screen uses one scale. Never both.
 
 ## 5. Photography
 
-The honest state: **8 photographs exist and `public/images/dishes/` is empty**,
-on a site that sells 16 named dishes. No palette or layout decision beats fixing
-that. `IMAGE-BRIEF-V2.md` is written and unused.
+The honest state: **8 photographs exist and 78 slots are empty**, on a site that
+sells 48 named dishes. No palette or layout decision beats fixing that.
+
+The pipeline is now built and verified, so filling those slots is a command
+rather than a project:
+
+    npm run images:status    what has landed, per folder
+    npm run images:plan      what would be generated, spends nothing
+    npm run images:fill      generate every slot still empty
+    npm run images:check     fail if the slot names have drifted apart
+
+Slot names and prompts live in `scripts/image-slots.mjs`, shared by the
+generator and the coverage report. `lib/site-images.ts` stays the site's source
+of truth and `images:check` fails if the two disagree, because they silently did
+for months: the generator wrote `goal-fatloss` into a flat directory while the
+resolver looked for `lose-fat` in `ai/goals/`, and every generated file was
+invisible to the page.
+
+Generation needs a key. `GEMINI_API_KEY` in `~/.claude/.env` is preferred and
+has a free tier; `OPENAI_API_KEY` is the fallback and is currently out of
+credits.
 
 - One unified grade. Food keeps colour: `saturate(1.06) contrast(1.07)`.
   Nothing else. No brightening, no gradient vignette.

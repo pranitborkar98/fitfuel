@@ -16,6 +16,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { allSlots } from "./image-slots.mjs";
 
 const PUBLIC = path.resolve("public");
 const EXT = [".jpg", ".jpeg", ".png", ".webp", ".avif"];
@@ -33,41 +34,17 @@ function find(folder, name) {
   return null;
 }
 
-/** Must stay identical to dishSlug() in app/_hp/DishImage.tsx. */
-function dishSlug(name) {
-  return name
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .split("-")
-    .slice(0, 6)
-    .join("-");
-}
-
-function alacarteSlugs() {
-  try {
-    const src = fs.readFileSync(path.resolve("lib/menu-alacarte.ts"), "utf8");
-    return [...src.matchAll(/name: "([^"]+)"/g)].map((m) => dishSlug(m[1]));
-  } catch {
-    return [];
+// The slot list and the dishSlug() that derives dish names both live in
+// scripts/image-slots.mjs now, shared with the generator. Keeping a second copy
+// here is what let the generator drift into writing files nothing reads.
+const GROUPS = (() => {
+  const byFolder = new Map();
+  for (const s of allSlots()) {
+    if (!byFolder.has(s.folder)) byFolder.set(s.folder, []);
+    byFolder.get(s.folder).push(s.name);
   }
-}
-
-const GROUPS = [
-  ["hero", ["hero-box-open", "hero-bowl-overhead", "hero-week-spread", "hero-mobile"]],
-  ["goals", ["lose-fat", "build-muscle", "eat-well", "condition"]],
-  [
-    "film",
-    ["0400-kitchen", "0630-weighing", "0800-doorstep", "0802-logged", "1830-training", "2100-evening", "sunday-review"],
-  ],
-  [
-    "sections",
-    ["conditions", "kitchen-wide", "produce", "delivery-city", "corporate", "supplements", "week-spread", "packaging", "partners", "menu-alacarte"],
-  ],
-  ["social", ["og-default", "og-trial", "ig-square", "ig-story", "wa-preview"]],
-  ["dishes", alacarteSlugs()],
-];
+  return [...byFolder.entries()];
+})();
 
 let totalReal = 0;
 let totalAi = 0;

@@ -10,7 +10,11 @@
     "build": "next build",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "images:status": "node scripts/image-status.mjs",
+    "images:plan": "node scripts/generate-images.mjs --dry-run",
+    "images:fill": "node scripts/generate-images.mjs --missing",
+    "images:check": "node scripts/check-slot-sync.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
