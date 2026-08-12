@@ -1,0 +1,789 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   THE FITFUEL WEBAPP.
+
+   Not a landing page with a nav bar on top. The shell is persistent, the
+   catalog is browsable, and the primary gesture is search-and-add rather than
+   scroll-and-read. Sidebar at >=1024px, bottom tab bar below it, exactly one
+   visible at a time — the same rule app/_app/AppShell.tsx already follows for
+   /dashboard, so the marketing half and the app half finally agree.
+
+   Tokens only. No raw hex.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.app {
+  min-height: 100dvh;
+  background: var(--fk-paper);
+}
+
+/* ── Top bar ────────────────────────────────────────────────────────────── */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: var(--fk-z-header);
+  background: var(--fk-paper);
+  border-bottom: 1px solid var(--fk-line);
+}
+
+/* MOBILE FIRST, and this is not cosmetic. With brand + search + location +
+   basket on one row at 375px the search field collapsed to 90px — the primary
+   control of the whole app, unusable. Below 640px it gets its own full-width
+   row, which is what every food app does. */
+.topRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "brand actions"
+    "search search";
+  align-items: center;
+  gap: 8px var(--fk-s-3);
+  padding: 8px var(--fk-gutter);
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.topRow > a[class*="brand"] {
+  grid-area: brand;
+}
+
+@media (min-width: 640px) {
+  .topRow {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "brand search actions";
+    padding: 10px var(--fk-gutter);
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--fk-tap);
+  font-family: var(--fk-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fk-ink);
+  text-decoration: none;
+}
+.brand em {
+  font-style: normal;
+  color: var(--fk-green);
+}
+
+/* Location. A food app states where it is delivering before anything else. */
+.place {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--fk-tap);
+  padding: 0 12px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  font: inherit;
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.place:hover {
+  background: var(--fk-warm);
+}
+
+.searchWrap {
+  grid-area: search;
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: var(--fk-ink-3);
+  pointer-events: none;
+  display: flex;
+}
+.search {
+  width: 100%;
+  min-height: var(--fk-tap);
+  padding: 0 40px 0 42px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-full);
+  background: var(--fk-surface);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-base); /* 16px — never smaller, or iOS zooms on focus */
+  color: var(--fk-ink);
+}
+.search::placeholder {
+  color: var(--fk-ink-3);
+}
+.search:focus {
+  border-color: var(--fk-green);
+  outline: 3px solid var(--fk-green-deep);
+  outline-offset: 1px;
+}
+.searchClear {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  color: var(--fk-ink-3);
+  cursor: pointer;
+}
+.searchClear:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+
+.topActions {
+  grid-area: actions;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: var(--fk-s-2);
+}
+
+.iconBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--fk-tap);
+  min-width: var(--fk-tap);
+  padding: 0 14px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+.iconBtn:hover {
+  background: var(--fk-warm);
+}
+.badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-terracotta);
+  color: #fff;
+  font-family: var(--fk-mono);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The cut-off line. One fact, always visible, never a countdown clock. */
+.cutoff {
+  background: var(--fk-green-wash);
+}
+.cutoffRow {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: 7px var(--fk-gutter);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-green-deep);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cutoffRow b {
+  font-weight: 700;
+}
+
+/* ── Body: rail + content ───────────────────────────────────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+.rail {
+  display: none;
+}
+
+.main {
+  min-width: 0;
+  padding-bottom: 96px; /* clears the mobile tab bar */
+}
+
+@media (min-width: 1024px) {
+  .body {
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: var(--fk-s-6);
+  }
+  .rail {
+    display: block;
+    position: sticky;
+    top: var(--fk-s-5);
+    align-self: start;
+    padding: var(--fk-s-5) 0 var(--fk-s-5) var(--fk-gutter);
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+  }
+  .main {
+    padding-bottom: var(--fk-s-8);
+    padding-right: var(--fk-gutter);
+  }
+}
+
+.railList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.railLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--fk-tap);
+  padding: 0 12px;
+  border-radius: var(--fk-r);
+  color: var(--fk-ink-2);
+  text-decoration: none;
+  font-size: var(--fk-t-base);
+  font-weight: 500;
+}
+.railLink:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+.railOn {
+  background: var(--fk-ink);
+  color: var(--fk-paper);
+  font-weight: 600;
+}
+.railOn:hover {
+  background: var(--fk-ink);
+  color: var(--fk-paper);
+}
+.railNote {
+  margin-top: var(--fk-s-5);
+  padding: var(--fk-s-4);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+}
+
+/* ── Bottom tabs (mobile) ───────────────────────────────────────────────── */
+.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--fk-z-sticky);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--fk-paper);
+  border-top: 1px solid var(--fk-line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (min-width: 1024px) {
+  .tabs {
+    display: none;
+  }
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 58px;
+  color: var(--fk-ink-3);
+  text-decoration: none;
+  font-size: var(--fk-t-xs);
+  font-weight: 600;
+}
+.tabOn {
+  color: var(--fk-green-deep);
+}
+
+/* ── Filters ────────────────────────────────────────────────────────────── */
+ /* The filter chips live INSIDE the sticky header, not in the content column.
+    They were sticky separately at a hand-tuned `top`, which meant the offset
+    had to match the header's height at every breakpoint — it was 148px against
+    a real 150px, so a 2px strip of content showed through the seam. Nesting
+    them removes the arithmetic entirely and makes the whole thing one unit. */
+.filters {
+  border-top: 1px solid var(--fk-line);
+  background: var(--fk-paper);
+  padding: var(--fk-s-3) var(--fk-gutter);
+}
+.filters > * {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+.chipRow {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.chipRow::-webkit-scrollbar {
+  display: none;
+}
+.fchip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--fk-tap);
+  padding: 0 16px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease);
+}
+.fchip:hover {
+  background: var(--fk-warm);
+}
+.fchipOn {
+  background: var(--fk-ink);
+  border-color: var(--fk-ink);
+  color: var(--fk-paper);
+}
+.fchipOn:hover {
+  background: var(--fk-ink);
+}
+.fcount {
+  font-family: var(--fk-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* ── Content ────────────────────────────────────────────────────────────── */
+.pad {
+  padding-inline: var(--fk-gutter);
+}
+@media (min-width: 1024px) {
+  .pad {
+    padding-inline: 0;
+  }
+}
+
+.resultBar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fk-s-3);
+  flex-wrap: wrap;
+  padding: var(--fk-s-5) 0 var(--fk-s-4);
+}
+.resultBar h2 {
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-xl);
+  font-weight: 500;
+  color: var(--fk-ink);
+  margin: 0;
+}
+.resultBar p {
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+  margin: 0;
+}
+
+/* The offer strip. Compact: an app surfaces an offer as a row, not as a hero
+   that pushes the catalog below the fold. */
+.offer {
+  display: flex;
+  align-items: center;
+  gap: var(--fk-s-4);
+  flex-wrap: wrap;
+  padding: var(--fk-s-4) var(--fk-s-5);
+  margin-top: var(--fk-s-4);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
+}
+.offerText {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+.offerText b {
+  display: block;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-lg);
+  font-weight: 600;
+  color: var(--fk-ink);
+}
+.offerText span {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+}
+
+/* ── Dish grid ──────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--fk-s-4);
+  padding-bottom: var(--fk-s-7);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  overflow: hidden;
+  transition:
+    box-shadow var(--fk-dur) var(--fk-ease),
+    transform var(--fk-dur) var(--fk-ease);
+}
+.card:hover {
+  box-shadow: var(--fk-shadow-2);
+  transform: translateY(-2px);
+}
+
+/* The image well. Where a photograph is missing the well stays a warm surface
+   with the course name — NOT a macro ring. AGENTS.md forbids a diagram
+   standing in for a dish on a surface where someone is choosing what to eat,
+   and a coloured ring is exactly that. */
+.shot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--fk-warm);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+}
+.shotEmpty {
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-md);
+  color: var(--fk-ink-3);
+  letter-spacing: 0.01em;
+}
+.kcalTag {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 4px 9px;
+  border-radius: var(--fk-r-full);
+  background: color-mix(in srgb, var(--fk-ink) 84%, transparent);
+  color: var(--fk-paper);
+  font-family: var(--fk-mono);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--fk-s-4);
+  flex: 1;
+}
+/* The dish name is a second way into the detail sheet (the photo well is the
+   first). It carries the full 44px target rather than being a 23px text hit —
+   AGENTS.md pins 44px and does not exempt links or text buttons. The padding
+   is vertical only, so the name still sits flush left with the blurb. */
+.dishName {
+  display: flex;
+  align-items: center;
+  min-height: var(--fk-tap);
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-md);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--fk-ink);
+  margin: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.dishName:hover {
+  color: var(--fk-green-deep);
+}
+.dishBlurb {
+  font-size: var(--fk-t-sm);
+  line-height: 1.45;
+  color: var(--fk-ink-3);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.macroLine {
+  font-family: var(--fk-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink-3);
+  margin: 0;
+}
+
+.cardFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fk-s-3);
+  margin-top: auto;
+  padding-top: var(--fk-s-3);
+}
+.price {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+}
+.askPrice {
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+}
+
+/* Add control. Morphs into a stepper once the dish is in the order — the
+   standard food-app gesture, and it keeps the tap target in one place. */
+.add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--fk-tap);
+  min-width: 84px;
+  padding: 0 16px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: #fff;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.add:hover {
+  background: var(--fk-green-deep);
+  border-color: var(--fk-green-deep);
+}
+/* ── Anchor specificity ─────────────────────────────────────────────────────
+   app/_design/base.css sets `.fk a { color: inherit }` so plain prose links
+   take their parent's colour. That rule is (0,1,1) and out-specifies ANY bare
+   single-class rule here (0,1,0). Every component in this file that can render
+   as an <a> therefore has to be re-stated qualified by `.app` (0,2,1).
+
+   This is not theoretical: it silently shipped the trial CTA as dark ink on
+   green (1.58:1) and the ACTIVE RAIL ITEM as dark ink on dark ink (1.80:1) —
+   the selected navigation item was effectively invisible. Anything added below
+   that is sometimes a link needs a line here too. */
+.app a.add,
+.app a.add:hover {
+  color: #fff;
+}
+.app a.railLink {
+  color: var(--fk-ink-2);
+}
+.app a.railLink:hover {
+  color: var(--fk-ink);
+}
+.app a.railOn,
+.app a.railOn:hover {
+  color: var(--fk-paper);
+}
+.app a.tab {
+  color: var(--fk-ink-3);
+}
+.app a.tabOn,
+.app a.tabOn:hover {
+  color: var(--fk-green-deep);
+}
+.app a.brand,
+.app a.brand:hover {
+  color: var(--fk-ink);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--fk-ink);
+  border-color: var(--fk-line-strong);
+}
+.app a.ghost,
+.app a.ghost:hover {
+  color: var(--fk-ink);
+}
+.ghost:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+.ghostOn {
+  background: var(--fk-green-wash);
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  overflow: hidden;
+  min-height: var(--fk-tap);
+}
+.stepBtn {
+  width: 40px;
+  min-height: var(--fk-tap);
+  border: 0;
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.stepBtn:hover {
+  background: var(--fk-green);
+  color: #fff;
+}
+.stepQty {
+  min-width: 34px;
+  text-align: center;
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-base);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+.empty {
+  padding: var(--fk-s-9) var(--fk-s-4);
+  text-align: center;
+}
+.empty h3 {
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-xl);
+  font-weight: 500;
+  color: var(--fk-ink);
+  margin: 0 0 var(--fk-s-3);
+}
+.empty p {
+  color: var(--fk-ink-3);
+  margin: 0 auto var(--fk-s-5);
+  max-width: 44ch;
+}
+
+/* ── Order bar ──────────────────────────────────────────────────────────────
+   Appears only when the basket has something in it, the way a food app does.
+   Sits above the tab bar on mobile. */
+.orderBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--fk-z-sticky) + 1);
+  padding: 10px var(--fk-gutter) calc(10px + env(safe-area-inset-bottom));
+  background: var(--fk-ink);
+  animation: rise var(--fk-dur-slow) var(--fk-ease);
+}
+@media (min-width: 1024px) {
+  .orderBar {
+    left: auto;
+    right: var(--fk-gutter);
+    bottom: var(--fk-s-5);
+    border-radius: var(--fk-r-lg);
+    padding: 12px 14px;
+    min-width: 340px;
+    box-shadow: var(--fk-shadow-3);
+  }
+}
+@keyframes rise {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orderBar {
+    animation: none;
+  }
+}
+.orderInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fk-s-4);
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.orderMeta {
+  min-width: 0;
+}
+.orderMeta b {
+  display: block;
+  color: var(--fk-paper);
+  font-size: var(--fk-t-base);
+  font-weight: 600;
+}
+.orderMeta span {
+  display: block;
+  color: #b3ada0;
+  font-size: var(--fk-t-sm);
+  font-family: var(--fk-mono);
+  font-variant-numeric: tabular-nums;
+}
+.orderCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--fk-tap);
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: #fff;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-base);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.orderCta:hover {
+  background: var(--fk-green-deep);
+}
