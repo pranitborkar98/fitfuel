@@ -749,7 +749,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
             running: the coach doing the arithmetic on a real fortnight, the
             licence and testimonial checks, and the delivery map. Written for
             the v2 homepage and never mounted anywhere until now. */}
-        <V2Sections licence={licence} />
+        <V2Sections licence={licence} waHref={waHref} days={days} />
 
         {/* ══ THE CLOSE ══ */}
         <section aria-labelledby="shop-close" className={s.shell} style={{ padding: "34px 16px 20px" }}>

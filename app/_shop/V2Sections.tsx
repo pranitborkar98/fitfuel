@@ -25,10 +25,14 @@
 import { useMemo, useRef, useState } from "react";
 
 import { PuneMap, barcodeBars } from "@/app/_hp/v2/graphics";
-import { CoachSection, ChecksSection, CoverageSection, AiDock } from "@/app/_hp/v2/Sections";
 import {
-  FLOOR, GOAL_RATE, KCAL_PER_KG, MAX_SWING, PUNE_PLACES, TARGET, WEIGH_INS,
-  replyFor,
+  CoachSection, ChecksSection, CoverageSection, AiDock,
+  FinderSection, PriceSection, FilmSection, MoreSection, FaqSection,
+} from "@/app/_hp/v2/Sections";
+import {
+  ACTS, DIETS, DOORS, DURATIONS, FALLBACK_COUPONS, FAQS, FLOOR, GOAL_ADJ as ADJ,
+  GOAL_RATE, KCAL_PER_KG, MAX_SWING, PUNE_PLACES, SLOTS, TARGET, WEIGH_INS,
+  decompose, replyFor,
 } from "@/app/_hp/v2/data";
 
 const MONO = "var(--font-mono), monospace";
@@ -49,12 +53,42 @@ const OPENING: Msg[] = [
   },
 ];
 
-export default function V2Sections({ licence }: { licence: string }) {
+/** Only the shape the finder reads. Kept structural rather than importing
+ *  ShopDay so this file does not couple the v2 sections to the storefront's
+ *  own types, which change for storefront reasons. */
+type DayLike = { dishes: { kcal: number }[] };
+
+export default function V2Sections({
+  licence,
+  waHref,
+  days,
+}: {
+  licence: string;
+  waHref: string;
+  days: DayLike[];
+}) {
   const [aiOpen, setAiOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
   const [chat, setChat] = useState<Msg[]>(OPENING);
   const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The finder, the price builder, the day drum and the FAQ each own a slice
+  // of state, exactly as Home.tsx holds it. Same initial values, so the
+  // sections open on the same frame the prototype opens on.
+  const [door, setDoor] = useState(0);
+  const [dur, setDur] = useState(0);
+  const [sex, setSex] = useState("m");
+  const [wt, setWt] = useState(78);
+  const [ht, setHt] = useState(174);
+  const [age, setAge] = useState(31);
+  const [act, setAct] = useState(2);
+  const [diet, setDiet] = useState(0);
+  const [hour, setHour] = useState(0);
+  const [faqCat, setFaqCat] = useState("all");
+  const [faqQuery, setFaqQuery] = useState("");
+  const [faqOpen, setFaqOpen] = useState(0);
+  const stageRef = useRef<HTMLDivElement | null>(null);
 
   const ask = (q: string) => {
     const question = String(q || "").trim();
@@ -85,6 +119,57 @@ export default function V2Sections({ licence }: { licence: string }) {
 
   const map = useMemo(() => <PuneMap places={PUNE_PLACES} />, []);
 
+  /* ── the price builder ── */
+  const [dName, dCount, dSub, dBlurb] = DURATIONS[dur]!;
+  const p = decompose(dSub, dCount);
+
+  /* ── the finder ── */
+  const activeDoor = DOORS[door]!;
+  const plan = useMemo(() => {
+    const bmr = Math.round(10 * wt + 6.25 * ht - 5 * age + (sex === "m" ? 5 : -161));
+    const mult = ACTS[act]![1];
+    const tdee = Math.round(bmr * mult);
+    const adj = ADJ[door] ?? 0;
+    const swing = Math.round(tdee * adj);
+    const rawT = tdee + swing;
+    const target = Math.max(FLOOR, Math.round(rawT / 10) * 10);
+    const kpg: Record<string, number> = { Protein: 4, Carbohydrate: 4, Fat: 9 };
+    const shares = days[0]!.dishes.map((d) => d.kcal);
+    const shareSum = shares.reduce((a, b) => a + b, 0) || 1;
+    return {
+      accent: activeDoor.accent,
+      name: activeDoor.goal + " (" + DIETS[diet] + ")",
+      matches: activeDoor.count,
+      target: target.toLocaleString("en-IN"),
+      rate: adj < 0 ? "a held deficit" : adj > 0 ? "a finishable surplus" : "maintenance",
+      macros: activeDoor.split.map(([name, v, pct, color]) => ({
+        name, v, color, pct, g: Math.round((target * pct) / 100 / (kpg[name] || 4)),
+      })),
+      ledger: [
+        { k: "Resting energy, Mifflin St Jeor", v: bmr.toLocaleString("en-IN") + " kcal", fg: "#9a9a94", vfg: "#f7f7f5" },
+        { k: ACTS[act]![0] + " week, × " + mult.toFixed(3), v: tdee.toLocaleString("en-IN") + " kcal", fg: "#9a9a94", vfg: "#f7f7f5" },
+        {
+          k: adj === 0 ? "No goal adjustment on maintenance" : (adj < 0 ? "Deficit for " + activeDoor.goal.toLowerCase() : "Surplus for " + activeDoor.goal.toLowerCase()) + ", " + Math.round(Math.abs(adj) * 100) + "%",
+          v: (swing > 0 ? "+" : swing < 0 ? "−" : "") + Math.abs(swing).toLocaleString("en-IN") + " kcal",
+          fg: "#9a9a94", vfg: swing === 0 ? "#85857e" : activeDoor.accent,
+        },
+        { k: rawT < FLOOR ? "Held at the 1,200 kcal floor" : "Above the 1,200 kcal floor", v: rawT < FLOOR ? "floor applied" : "no floor needed", fg: "#85857e", vfg: rawT < FLOOR ? "#f59e0b" : "#5f5f59" },
+        { k: "Your target, rounded to ten", v: target.toLocaleString("en-IN") + " kcal", fg: "#f7f7f5", vfg: activeDoor.accent },
+      ],
+      meals: SLOTS.map((name, i) => ({
+        name, share: shares[i] ?? 0,
+        kcal: Math.round((target * (shares[i] ?? 0)) / shareSum),
+        bg: ["#d9f99d", "#bef264", "#a3e635", "#84cc16"][i]!, fg: "#070707",
+      })),
+    };
+  }, [wt, ht, age, sex, act, door, diet, activeDoor, days]);
+
+  /* ── the faq ── */
+  const faqQ = faqQuery.trim().toLowerCase();
+  const faqList = FAQS.filter(
+    (f) => (faqCat === "all" || f.cat === faqCat) && (!faqQ || (f.q + " " + f.a).toLowerCase().includes(faqQ)),
+  );
+
   // The barcode ChecksSection stamps its licence panel with. Same generator
   // Home calls, not a second derivation that would drift from it.
   const barcode = useMemo(() => barcodeBars(), []);
@@ -99,6 +184,24 @@ export default function V2Sections({ licence }: { licence: string }) {
 
   return (
     <>
+      {/* The finder answers "which plan is mine" with arithmetic rather than a
+          quiz, and the price builder shows the invoice decomposed. Both were
+          the reason v2 existed and neither has been on the site since cfdf494. */}
+      <FinderSection
+        doors={DOORS} door={door} setDoor={setDoor} plan={plan} activeDoor={activeDoor}
+        sex={sex} setSex={setSex} wt={wt} setWt={setWt} ht={ht} setHt={setHt}
+        age={age} setAge={setAge} act={act} setAct={setAct} diet={diet} setDiet={setDiet}
+        wrap={WRAP} rule={RULE} h2={h2} deck={deck}
+      />
+
+      <PriceSection
+        durations={DURATIONS} dur={dur} setDur={setDur} p={p}
+        dName={dName} dCount={dCount} dBlurb={dBlurb} coupons={FALLBACK_COUPONS}
+        wrap={WRAP} rule={RULE} h2={h2} deck={deck}
+      />
+
+      <FilmSection hour={hour} setHour={setHour} stageRef={stageRef} wrap={WRAP} rule={RULE} deck={deck} />
+
       <CoachSection
         chat={chat} thinking={thinking} draft={draft} setDraft={setDraft} ask={ask}
         engine={{ plateau, actualRate, raw, capped, capBit, proposed, floorBit, sign }}
@@ -108,6 +211,18 @@ export default function V2Sections({ licence }: { licence: string }) {
       <ChecksSection barcode={barcode} licence={licence} wrap={WRAP} rule={RULE} h2={h2} deck={deck} />
 
       <CoverageSection map={map} wrap={WRAP} rule={RULE} h2={h2} deck={deck} />
+
+      {/* The nine products: the diary, training, supplements, corporate. This
+          is the section carrying the gym and partnership photography, and the
+          only one on the page today that has real images behind it. */}
+      <MoreSection wrap={WRAP} rule={RULE} h2={h2} deck={deck} />
+
+      <FaqSection
+        faqList={faqList} faqs={FAQS} faqCat={faqCat} setFaqCat={setFaqCat} faqQuery={faqQuery}
+        setFaqQuery={setFaqQuery} faqOpen={faqOpen} setFaqOpen={setFaqOpen}
+        openAi={() => setAiOpen(true)} waHref={waHref}
+        wrap={WRAP} rule={RULE} h2={h2} deck={deck}
+      />
 
       {/* The dock is fixed-position and sits above the storefront's own bottom
           tab bar, which is why its offset is clamped to 86px and not 0. */}
