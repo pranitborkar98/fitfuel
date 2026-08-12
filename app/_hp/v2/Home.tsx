@@ -16,7 +16,7 @@
 // serve is fetched in app/page.tsx and passed down; the prototype's own figures
 // are the fallback, so the page renders exactly as designed either way.
 //
-// Two implementation notes, both from DESIGN-FEEDBACK-HOMEPAGE-V2 section 6:
+// Two implementation notes, both from the round 2 review:
 // the three faces load once through next/font in app/layout.tsx rather than
 // from fonts.googleapis.com, and everything here is a CSS Module rather than a
 // <style> block. Nothing else about the design is changed.

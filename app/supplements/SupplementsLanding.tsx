@@ -4,7 +4,7 @@
 //
 // The public supplements catalogue, on the Instrument System.
 //
-// THIS PAGE WAS THE ARCHETYPE. DESIGN.md's reject list names, as a single
+// THIS PAGE WAS THE ARCHETYPE. The reject list names, as a single
 // item, "centered hero with a chip, a headline and two pill buttons". This
 // page had exactly that, over a 700x500 radial-gradient ellipse glow, with
 // gradient text on the headline and a `pulse-glow` keyframe animating a lime
@@ -25,7 +25,7 @@
 // five-hue green-to-slate ramp, and the label is printed beside it so the
 // meaning never rests on the segments alone.
 //
-// The modal also gained the three things DESIGN.md requires of an overlay and
+// The modal also gained the three things an overlay requires and
 // it had none of: body scroll lock, focus moved in, focus restored on close.
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -66,7 +66,7 @@ const CATEGORIES: Array<"all" | SupplementCategory> = [
 /**
  * Shown when a supplement has no product photo. This was the raw emoji from
  * the data file rendered at 44px and 64px as the primary product visual;
- * DESIGN.md rejects emoji on sight, and a pill glyph standing in for a product
+ * emoji are rejected on sight, and a pill glyph standing in for a product
  * shot reads as a missing asset either way.
  */
 function Monogram({ name, size }: { name: string; size: number }) {

@@ -16,7 +16,7 @@ export type NavItem = {
   blurb: string;
   /** lucide-react icon name, resolved in AppShell. */
   icon: IconName;
-  /** In the bottom tab bar on phones. Max five, DESIGN.md §4. */
+  /** In the bottom tab bar on phones. Max five. */
   tab?: boolean;
   /** Only rendered when the viewer owns a partner account. */
   partnerOnly?: boolean;

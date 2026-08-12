@@ -2,7 +2,7 @@
 //
 // THE READOUT BAR, WELDED TO THE HERO.
 //
-// DESIGN.md signature device 1: a full-bleed band with a hairline top rule,
+// Signature device 1: a full-bleed band with a hairline top rule,
 // condensed 900 numerals against dim labels. It is also the section that breaks
 // the alternating-band rhythm feedback §2.8 complained about, because it has no
 // top gap at all against the hero and runs to both viewport edges.

@@ -8,7 +8,7 @@
 // carousel: `perspective: 1500px`, each face at `rotateY(51.43deg)
 // translateZ(370px)`, auto-advancing every six seconds. Three problems, and they
 // compound. Perspective on a rotating carousel is the `v2Deal` device
-// DESIGN-FEEDBACK §2.5 deleted. A six-second auto-advance moves the content out
+// the review deleted. A six-second auto-advance moves the content out
 // from under a reader who is still reading it. And backface-hidden faces mean
 // six of the seven beats are in the DOM but invisible, which is a bad trade for
 // a section whose whole job is that the kitchen is real.

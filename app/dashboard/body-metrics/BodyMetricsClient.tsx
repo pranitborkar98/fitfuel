@@ -14,8 +14,8 @@ import {
 // This screen carried its own ramp with five hues: an amber for "warning", a
 // green for "success", a blue for "info", a red, and a per parameter accent
 // that ran to orange, violet, rose, sky, cyan and mint. Eighteen parameters,
-// each with a colour of its own, is the per category palette DESIGN.md §2
-// forbids by name.
+// each with a colour of its own, is the per category palette that is
+// forbidden by name.
 //
 // Every band already carries a word, which is what §8 actually requires, so the
 // hue was never doing the work. T now resolves entirely into the ramp: a band

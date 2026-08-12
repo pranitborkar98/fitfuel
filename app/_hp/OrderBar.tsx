@@ -8,7 +8,7 @@
 // WhatsApp and the order button.
 //
 // SOLID, NOT FROSTED. The prototype's version carries
-// `backdrop-filter: blur(...)`, and DESIGN-FEEDBACK §2.3 killed it on this exact
+// `backdrop-filter: blur(...)`, and the review killed it on this exact
 // element: "Replace with solid #070707 and a 1px #232320 hairline. No
 // transparency, no blur." Glassmorphism is on the reject-on-sight list.
 //

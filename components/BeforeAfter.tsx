@@ -16,8 +16,8 @@
 //
 // So resolveImage() is deliberately NOT used here, and "people" images are read
 // ONLY from public/images/people/ — the real directory. There is no
-// public/images/ai/people/ path in this component, and IMAGE-BRIEF-V2.md
-// excludes before/after from the prompt bank for the same reason.
+// public/images/ai/people/ path in this component, and before/after is
+// excluded from the AI prompt bank for the same reason.
 //
 // THE BAR FOR PUTTING A STORY HERE, all four, no exceptions:
 //   1. A real FitFuel member.

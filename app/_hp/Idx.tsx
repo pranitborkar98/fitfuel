@@ -3,7 +3,7 @@
 // The section marker: one label, one hairline. Nothing else.
 //
 // It started as an index header — `[ 004 ]  THE WEEK  ────────  1 OF 126 PLANS`
-// — which is what DESIGN.md's "spine of the page" describes. The owner has
+// — which is what the old "spine of the page" idea described. The owner has
 // already rejected exactly that: the bracketed number plus a right-hand caption
 // on every block was named as the specific tell that made an earlier build read
 // as machine-generated ("too much subtext, each and everything"). A page with

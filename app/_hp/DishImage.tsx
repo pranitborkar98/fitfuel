@@ -30,7 +30,7 @@ import Image from "next/image";
 import DishGlyph from "./DishGlyph";
 import s from "./hp.module.css";
 
-/** Must match the slugs in IMAGE-BRIEF.md: lowercase, first six words. */
+/** The slug form the image files use: lowercase, first six words. */
 export function dishSlug(name: string): string {
   return name
     .toLowerCase()

@@ -9,8 +9,7 @@ metadata:
 
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** for anything visual, and `DESIGN.md` §Copy governs voice.
+> This is a generic third-party skill.
 >
 > **Visual identity is locked** — do not run this skill's identity, palette or
 > style-guide creation flows. They produce a new one.

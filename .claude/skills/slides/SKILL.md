@@ -9,8 +9,7 @@ metadata:
 
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** — load that skill and `DESIGN.md` first.
+> This is a generic third-party skill.
 >
 > Any deck that represents FitFuel externally uses the locked system:
 >

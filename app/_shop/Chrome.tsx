@@ -331,7 +331,7 @@ const body12: React.CSSProperties = {
 };
 
 /* One mono label opens a section, and nothing else at section level: no serial,
-   no bracket, no right-hand caption. DESIGN.md killed the numbered variant by
+   no bracket, no right-hand caption. The numbered variant was killed by
    name on 2026-07-30 and this is the corrected marker. */
 export function SectionLabel({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (

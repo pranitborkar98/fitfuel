@@ -166,7 +166,7 @@ export default async function TrialDay() {
                       <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                         {/* Real words, never a dash. A glyph standing in for
                             "we have not weighed this yet" is meaning encoded in
-                            a character, which DESIGN.md rejects by name. */}
+                            a character, which is rejected by name. */}
                         {d.kcal == null ? (
                           <span style={{ ...label(DIM), fontSize: 12, letterSpacing: "0.14em" }}>
                             not yet weighed

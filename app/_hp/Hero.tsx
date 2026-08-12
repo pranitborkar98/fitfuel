@@ -3,7 +3,7 @@
 // THE HERO, AS A SPLIT. Type on the left, the photograph on the right.
 //
 // WHY THIS CHANGED. The previous hero ran the one good plated-dish photograph
-// full-bleed with the headline laid over it, and DESIGN-FEEDBACK-HOMEPAGE-V2 §3
+// full-bleed with the headline laid over it, and the review
 // was blunt about the result: an ungraded high-chroma stock salad macro at full
 // brightness with a three-line 900-weight headline on top, "AGAIN." landing on a
 // tomato. The fix it prescribed is not a heavier scrim. It is to stop asking one

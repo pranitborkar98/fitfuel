@@ -15,7 +15,7 @@
 // single-dish menu, computed by the kitchen from the ingredient list rather than
 // measured. Keeping them separate from the priced menu means nobody can mistake
 // one for the other, and every surface that prints them stamps EST — which is
-// the rule the design drew and section 8 of DESIGN.md requires (never encode a
+// the rule the design drew (never encode a
 // claim you cannot back).
 
 import { MENU, type MenuCategoryKey } from "@/lib/menu-alacarte";

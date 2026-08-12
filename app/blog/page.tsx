@@ -2,8 +2,8 @@
 //
 // The journal index, on the Instrument System.
 //
-// The card grid is gone. An index of articles is the exact case DESIGN.md
-// names the directory row for: hairline-separated rows you scan down, rather
+// The card grid is gone. An index of articles is the exact case the directory
+// row exists for: hairline-separated rows you scan down, rather
 // than a three-up grid of radius-18 cards that each lift 3px on hover. The
 // category filters were border-radius:999px pills and are now the chip rail.
 //

@@ -4,8 +4,7 @@ description: "UI/UX design intelligence. Searchable local database with 67 style
 ---
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** — load that skill and `DESIGN.md` first.
+> This is a generic third-party skill.
 >
 > **Do not select from this skill's databases.** The art direction is already
 > locked and is not up for re-exploration:

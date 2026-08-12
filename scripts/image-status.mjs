@@ -1,6 +1,6 @@
 // scripts/image-status.mjs
 //
-// What has landed, what has not, per folder in IMAGE-BRIEF-V2.md.
+// What has landed, what has not, per folder.
 //
 // Written because the previous brief claimed six folders were wired when one
 // was, and nothing on disk would have told you. Run this after a generation
@@ -74,5 +74,5 @@ for (const [folder, names] of GROUPS) {
 const total = totalReal + totalAi + totalMissing;
 console.log(
   `\n${"".padEnd(50, "-")}\n${totalReal} real, ${totalAi} ai, ${totalMissing} missing of ${total} slots` +
-    `\n(week dishes are keyed by recipe slug and counted separately — see IMAGE-BRIEF-V2.md §6)\n`,
+    `\n(week dishes are keyed by recipe slug and counted separately)\n`,
 );

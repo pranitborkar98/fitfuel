@@ -17,7 +17,7 @@
 //
 // JSON-LD (BlogPosting) is unchanged: this page states facts about a published
 // work, so it keeps its structured data. A canonical was added, because
-// DESIGN.md requires one on every public page and this one did not have it.
+// every public page needs one and this one did not have it.
 
 import Link from "next/link";
 import type { Metadata } from "next";

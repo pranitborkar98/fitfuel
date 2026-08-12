@@ -11,10 +11,10 @@
 // backend ships is one tap away from every other.
 //
 // Sidebar at >=1024px, bottom tab bar below it, exactly one visible at a time
-// (shell.module.css owns the switch). Five tabs plus More, per DESIGN.md §4.
+// (shell.module.css owns the switch). Five tabs plus More.
 //
 // The More sheet locks body scroll, moves focus in, traps it and restores it
-// on close, per DESIGN.md §8.
+// on close.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";

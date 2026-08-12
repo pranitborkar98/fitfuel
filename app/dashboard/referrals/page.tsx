@@ -8,7 +8,7 @@
 // Now it follows the Coach: server component, the query called directly, and
 // one small client component for the clipboard. The only numbers on the page
 // are the ones the database holds. There is no reward ladder, because the
-// product does not ship one (DESIGN.md §10).
+// product does not ship one.
 
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -27,7 +27,7 @@ const WRAP: React.CSSProperties = {
   padding: "0 clamp(16px,4vw,28px)",
 };
 
-/** Status wording, never the colour on its own. DESIGN.md §8. */
+/** Status wording, never the colour on its own. */
 const STATUS_COPY: Record<string, string> = {
   PENDING: "Waiting on their first order",
   APPROVED: "Credited",
@@ -63,7 +63,7 @@ function Readout({ v, k, live = false }: { v: string; k: string; live?: boolean 
 }
 
 /** Directory row: hairline separated, full width, the number in a column.
- *  DESIGN.md §4, signature device 3. Not a card grid. */
+ *  Signature device 3. Not a card grid. */
 function RefereeRow({ r }: { r: Referee }) {
   const credited = r.status?.toUpperCase() === "APPROVED" || r.status?.toUpperCase() === "PAID";
   return (

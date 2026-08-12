@@ -4,7 +4,7 @@
 //
 // THE ONE INTERACTION ON THIS PAGE, and it is the one the review approved.
 //
-// DESIGN-FEEDBACK-HOMEPAGE-V2 §5: the prototype promised three interactive toys
+// The prototype promised three interactive toys
 // and the instruction was to pick one and cut the other two, "because the
 // week-bar day picker shows real data the customer is buying". This is it. Every
 // other section on the page is a server component.

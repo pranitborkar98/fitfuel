@@ -136,7 +136,7 @@ export function Tile({ href, children }: { href?: string; children: ReactNode })
 
 /**
  * A real <table>. If it is tabular data it goes in one of these: a grid of
- * divs cannot be parsed by assistive tech, and this is the device DESIGN.md
+ * divs cannot be parsed by assistive tech, and this is the device the system
  * names for exactly that reason. `caption` is required and screen-reader only.
  */
 export function Spec({

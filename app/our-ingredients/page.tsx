@@ -6,7 +6,7 @@
 //
 // The two halves are set differently on purpose. What goes in is a hairline
 // tile grid; what we leave out is a plain measured list. A page where every
-// block has the same shape is the rhythm DESIGN.md rejects.
+// block has the same shape is the rhythm to avoid.
 
 import { Head, Tiles, Tile } from "@/app/_ui/Kit";
 import { Band, Masthead, Note, Prose, Shell, Stack, Wrap, A } from "@/app/_ui/Page";

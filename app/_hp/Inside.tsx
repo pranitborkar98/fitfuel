@@ -9,7 +9,7 @@
 // right. Ten surfaces cost one screen here and would have cost ten screens as
 // feature blocks.
 //
-// Signature device #3 in DESIGN.md (directory rows) — this is what replaces card
+// Signature device #3 (directory rows) — this is what replaces card
 // grids for every index on the site. Every href was checked against app/.
 //
 // SERVER COMPONENT.

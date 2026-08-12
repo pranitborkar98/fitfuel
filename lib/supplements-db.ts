@@ -58,7 +58,7 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
   });
 
   return rows.map((r: any) => {
-    // The static copy in supplements-data.ts was de-dashed per DESIGN.md, but
+    // The static copy in supplements-data.ts was de-dashed, but
     // the same fields also live in the DB, where the old text still carries
     // em dashes. Rows are edited through the admin UI, so normalising on read
     // keeps the rule enforced no matter what gets typed in later.
@@ -118,7 +118,7 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       // first neutralised to a hardcoded "#a3e635", which removed the palette
       // but left a dead field being threaded through eighteen call sites on
       // the public page. Lime is the only chromatic value on marketing
-      // surfaces (DESIGN.md), and category is carried by label and position.
+      // surfaces, and category is carried by label and position.
       //
       // The column stays in the database for the admin UI, which is not bound
       // by the marketing rules. Nothing on a public surface reads it.

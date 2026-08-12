@@ -5,9 +5,9 @@
 // The only stateful part of the referrals screen: whether the link is on the
 // clipboard. Everything else is server rendered, so this is deliberately small.
 //
-// The WhatsApp handoff is a plain link, not a brand colour. DESIGN.md §2 says
-// the ramp is the only palette, so WhatsApp's green does not get to live here.
-// The word carries the meaning, which §8 requires anyway.
+// The WhatsApp handoff is a plain link, not a brand colour. The ramp is the
+// only palette, so WhatsApp's green does not get to live here. The word
+// carries the meaning, which is required anyway.
 
 import { useState } from "react";
 import { C, label, ghostBtn, solidBtn } from "@/app/_app/theme";

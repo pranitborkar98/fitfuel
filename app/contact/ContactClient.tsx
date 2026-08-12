@@ -9,7 +9,7 @@
 // divider", radius 10/11/12/14/16/24 across the controls, border-radius:50%
 // radio dots, two lime box-shadow glows on the send button that grew on hover,
 // a translateY lift on every card, and framer-motion fading each block in from
-// blur(4px). Every one of those is on DESIGN.md's reject list by name.
+// blur(4px). Every one of those is on the reject list by name.
 //
 // A REAL BUG FIXED IN PASSING. The two-column layout's media query targeted
 // `.contact-main-grid`, a class declared in the trailing <style> block but

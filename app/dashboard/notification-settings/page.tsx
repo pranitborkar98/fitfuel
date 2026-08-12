@@ -3,7 +3,7 @@
 //
 // The server owns the frame: title, the standing promise about order and
 // delivery mail, and the wrap. Only the toggles and the save have state, so
-// only they are a client component. DESIGN.md §7.
+// only they are a client component.
 
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";

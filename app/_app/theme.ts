@@ -12,7 +12,7 @@
 // variables rather than restating them, so the app can never drift from
 // globals.css again.
 //
-// DESIGN.md §3 "App scale" is the type ramp here. The editorial ramp (display
+// The "app scale" is the type ramp here. The editorial ramp (display
 // to 9rem) belongs to marketing pages and must not appear on these screens.
 
 import type { CSSProperties } from "react";
@@ -42,11 +42,11 @@ export const C = {
   fat: "#5f5f59",
   wash: "rgba(132,204,22,0.1)",
   /** The one semantic that is not lime. Always paired with a text label,
-   *  never carrying meaning on its own (DESIGN.md §8). */
+   *  never carrying meaning on its own. */
   danger: "#dc2626",
 } as const;
 
-/* ── Type, app scale (DESIGN.md §3) ────────────────────────────────────────
+/* ── Type, app scale ──────────────────────────────────────────────────────
    Reports, it does not argue. The 12px floor is legibility on mid-range
    Android, not taste, so it is baked into the helpers rather than trusted to
    each call site. */
@@ -109,7 +109,7 @@ export const grid = (cols: string, extra: CSSProperties = {}): CSSProperties => 
 });
 
 /* ── Controls ──────────────────────────────────────────────────────────────
-   44x44 minimum is a DESIGN.md rule, so it lives in the helper. */
+   44x44 minimum is a rule, so it lives in the helper. */
 
 export const solidBtn = (extra: CSSProperties = {}): CSSProperties => ({
   display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -129,7 +129,7 @@ export const ghostBtn = (on = false, extra: CSSProperties = {}): CSSProperties =
 
 /* ── The app measure ───────────────────────────────────────────────────────
    Wider than the marketing measure (1180) because these screens are dense and
-   two-column at desktop. DESIGN.md §4. */
+   two-column at desktop. */
 export const APP_MAX = 1280;
 export const SIDEBAR_W = 236;
 export const TABBAR_H = 60;

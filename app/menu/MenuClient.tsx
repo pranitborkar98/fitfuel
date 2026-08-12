@@ -4,7 +4,7 @@
 //
 // The menu as an editorial list, not a grid of cards.
 //
-// A uniform 3-up card grid is the first thing DESIGN.md rejects on sight, and
+// A uniform 3-up card grid is the first thing rejected on sight, and
 // it is also just wrong for this content: 48 dishes in 6 courses is a menu,
 // and a menu is a list. Rows let the blurb — which is the only art direction
 // this page has until photography exists — actually be read, and they scale to

@@ -11,7 +11,7 @@
 // buttons that mutate the same target, behaving differently, is worse than one
 // button and a link. So the card reports and hands off.
 //
-// The spinner is a skeleton: DESIGN.md §6 says anything over 300ms gets one.
+// The spinner is a skeleton: anything over 300ms gets one.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";

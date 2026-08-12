@@ -19,7 +19,7 @@
 //
 // NO PER-CATEGORY HUES. The prototype gives each cell its own accent — amber for
 // exercises, sky for supplements, teal for conditions. That is the palette
-// DESIGN.md bans by hex, and here it is decorative rather than structural: these
+// banned by hex, and here it is decorative rather than structural: these
 // six are not a taxonomy, they are six counts of six different things. They are
 // distinguished by label and by the shape of their own glyph.
 //

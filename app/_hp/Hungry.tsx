@@ -10,7 +10,7 @@
 // click. It does not owe them a product carousel.
 //
 // THE BAND NOW SELLS. It used to be a hairline table of course names and "from"
-// prices, on the reasoning that a 3-up grid is what DESIGN.md rejects and that
+// prices, on the reasoning that a 3-up grid is rejected on sight and that
 // six photo-shaped boxes holding nothing would be worse than type. The first
 // half of that is right; the conclusion was wrong, and it is worth naming why,
 // because the same reasoning independently produced a text-only version of

@@ -15,7 +15,7 @@
 
    Fonts are NOT loaded here. The prototype pulls three faces from
    fonts.googleapis.com via <link>; in this repo the same three load once
-   through next/font in app/layout.tsx, per DESIGN-FEEDBACK 6.
+   through next/font in app/layout.tsx.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .root :global(a) {

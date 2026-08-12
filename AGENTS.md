@@ -6,17 +6,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Design
 
-DESIGN.md is deleted. It was the single authority for eighteen months and it is
-the reason the product looked the way it did: near-black ground, acid lime,
-uppercase condensed everything, monospace readouts, a hard ban on any corner
-radius, and a rule that a slot with no photograph renders type. Each rule was
-defensible alone. Together they produced a screen that reads as a trading
-terminal, and the owner's verdict on 2026-08-12, looking at the live site on a
-phone, was that it does not look like healthy food and a normal person cannot
-parse it. That verdict is correct and it outranks the document.
+The old design system is gone, and nothing replaces it yet. For eighteen months
+one document was the single authority, and it is the reason the product looked
+the way it did: near-black ground, acid lime, uppercase condensed everything,
+monospace readouts, a hard ban on any corner radius, and a rule that a slot with
+no photograph renders type. Each rule was defensible alone. Together they
+produced a screen that reads as a trading terminal, and the owner's verdict on
+2026-08-12, looking at the live site on a phone, was that it does not look like
+healthy food and a normal person cannot parse it. That verdict is correct and it
+outranks anything written before it.
 
-Do not restore it, do not reconstruct its rules from the ~50 code comments that
-still cite it, and do not treat those comments as binding. They are history.
+Do not reconstruct those rules from old code comments, and do not treat them as
+binding. They are history.
 
 What holds instead:
 

@@ -10,9 +10,7 @@ metadata:
 
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** — load that skill and `DESIGN.md` first, and take every visual
-> decision from there.
+> This is a generic third-party skill.
 >
 > This skill's entire premise conflicts with the house system:
 >

@@ -27,7 +27,7 @@ const WRAP: React.CSSProperties = {
   padding: "0 clamp(16px,4vw,28px)",
 };
 
-/** Status wording. Never the colour alone, per DESIGN.md §8. */
+/** Status wording. Never the colour alone. */
 const STATUS_COPY: Record<string, string> = {
   on_track: "On track",
   too_slow: "Slower than planned",

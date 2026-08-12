@@ -4,12 +4,12 @@
 
    Every device here is lifted from the shipped homepage rather than invented:
    the section marker, the directory row, the spec table, the tile grid, the
-   chip rail, the segmented control and the two buttons. DESIGN.md names four
-   of them as the signature devices that exist to replace generic patterns, so
+   chip rail, the segmented control and the two buttons. Four of them are
+   the signature devices that exist to replace generic patterns, so
    a page built out of these cannot drift back into card grids.
 
    Radius is 0 throughout, structure is 1px #232320 hairlines, and the only
-   chromatic value is lime. Motion is the one reveal DESIGN.md allows: opacity
+   chromatic value is lime. Motion is the one allowed reveal: opacity
    plus 16px, scroll-driven, dead under prefers-reduced-motion.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -45,7 +45,7 @@
 
 /* ── the section marker: one mono label, one hairline ──────────────────────
    The spine of every page. NO serial number, no right-hand caption: that is
-   the over-annotation habit DESIGN.md rejects by name. */
+   the over-annotation habit rejected by name. */
 .idx {
   display: flex;
   align-items: center;

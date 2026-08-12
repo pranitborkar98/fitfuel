@@ -43,7 +43,7 @@ import MenuClient, { type MenuDish } from "./MenuClient";
    IMAGES. Same convention as the homepage — public/images/dishes/<slug>.jpg
    beats public/images/ai/dishes/<slug>.jpg beats nothing at all, resolved at
    build time. No dish has a file yet, so today this page is type-led, which is
-   the honest state and also the system DESIGN.md locked. Dropping files in
+   the honest state and also the locked system. Dropping files in
    lights them up with no edit here.
 ══════════════════════════════════════════════════════════════════════════ */
 

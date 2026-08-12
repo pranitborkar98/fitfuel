@@ -11,7 +11,7 @@
 //
 //   WeekPicker   seven columns you can tap, the active day's dishes below. The
 //                one interactive device on this page, and the one
-//                DESIGN-FEEDBACK §5 said earns its keep.
+//                the review said earns its keep.
 //   the table    a real <table>, seven rows, four meal columns and a day total.
 //                Server-rendered, always present. This is what a screen reader
 //                and a crawler read, and it is why the picker is allowed to be

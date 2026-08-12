@@ -22,7 +22,7 @@ const LIME = "#84cc16";
 
 // Category icons were previously colour-coded teal / purple / sky / amber /
 // pink. That leaked a five-hue secondary palette into the global chrome, so
-// it rendered on every page including the homepage, against DESIGN.md's
+// it rendered on every page including the homepage, against
 // "lime is the only chromatic value". Icons now carry meaning by shape.
 const ICON = "var(--ff-dim)";
 

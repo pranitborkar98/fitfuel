@@ -33,7 +33,7 @@ const archivo = Archivo({
 
 // FRAUNCES IS GONE. It was loaded here on the argument above: that Barlow
 // Condensed reads as athletic utility and a warm old-style serif is the
-// difference between "plain" and "appetising". DESIGN.md rejected that on
+// difference between "plain" and "appetising". That was rejected on
 // 2026-07-30 and the reasoning stands. The Instrument System's thesis is
 // hairlines, grain, radius 0 and kinetic type at ~10x scale, which is coherent
 // with a condensed grotesque; a serif with a wonky optical axis is a different
@@ -45,7 +45,7 @@ const archivo = Archivo({
 //
 // The observation behind it stands and is not solved here: the page does read
 // cold for a food brand. That is an image-grade problem, and the fix is the
-// art-directed photography DESIGN.md has specified since rev 2.
+// art-directed photography specified since rev 2.
 
 // Data face. A macro-tracking food brand prints a lot of numbers — grams, kcal,
 // times, licence numbers — and setting those in mono reads as measurement rather

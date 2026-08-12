@@ -134,7 +134,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
   );
 }
 
-/** Directory row, DESIGN.md §4 device 3. A real button, so it is reachable by
+/** Directory row, signature device 3. A real button, so it is reachable by
  *  keyboard; the old card was a div with an onClick and nothing else. */
 function Row({ supp, inStack, onOpen }: { supp: Supplement; inStack?: boolean; onOpen: () => void }) {
   const [hover, setHover] = useState(false);

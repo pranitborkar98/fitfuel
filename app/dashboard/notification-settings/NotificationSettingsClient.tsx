@@ -6,7 +6,7 @@
 // promise moved to the server page.
 //
 // The old switch was 48x28. A 28px tall control is not a 44px touch target,
-// and DESIGN.md §8 does not make an exception for switches that look tidy at
+// and there is no exception for switches that look tidy at
 // 28. The visual stays small; the hit area is padded out to 44.
 
 import { useState } from "react";
@@ -44,7 +44,7 @@ const SECTIONS: Array<{ title: string; rows: Row[] }> = [
   },
 ];
 
-/** 44x44 hit area around a 44x26 switch. DESIGN.md §8. */
+/** 44x44 hit area around a 44x26 switch. */
 function Switch({ on, onToggle, name }: { on: boolean; onToggle: () => void; name: string }) {
   return (
     <button

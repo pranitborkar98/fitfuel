@@ -10,8 +10,7 @@ metadata:
 
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** — load that skill and `DESIGN.md` first.
+> This is a generic third-party skill.
 >
 > **The token system already exists and is locked.** It lives in
 > `app/globals.css` as `--ff-*` and in `app/_hp/theme.ts` as style helpers.

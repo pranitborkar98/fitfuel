@@ -3,7 +3,7 @@
 // Six steps, one loop. Rebuilt onto the Instrument System: the page previously
 // carried its own `const C` palette (#080808, #a3e635, #111111 cards), radius
 // 16 tiles in a uniform three-up grid, and a centred gradient CTA — the exact
-// object DESIGN.md's slop list rejects by name.
+// object the slop list rejects by name.
 //
 // The steps are now a directory: a numbered hairline-separated list you read
 // straight down, which is what the content actually is. A day is a sequence,

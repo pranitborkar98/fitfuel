@@ -2,8 +2,8 @@
 //
 // The referral summary, in one place. It used to live inside the GET handler,
 // which meant the only way to read it was an HTTP round trip, so the screen
-// booted empty and filled in later. DESIGN.md §7 wants server components by
-// default; a server component cannot call its own API route without paying for
+// booted empty and filled in later. Server components are the default here;
+// a server component cannot call its own API route without paying for
 // a request it already has the session for. So the query moves here and both
 // callers use it: the route for anything client-side, the page for first paint.
 

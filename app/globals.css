@@ -4,7 +4,7 @@
   /* ═══════════════════════════════════════════════════════════════
      CANONICAL TOKENS — single source of truth for the homepage AND
      the global chrome (Navbar, Footer). Editorial system: warm
-     off-blacks, square corners, flat lime. See DESIGN.md.
+     off-blacks, square corners, flat lime.
      Everything below this block is LEGACY, still referenced by older
      interior pages; migrate them to --ff-* over time.
      ═══════════════════════════════════════════════════════════════ */
@@ -165,7 +165,7 @@ main[data-surface="marketing"] {
 
 /* ── Buttons ──
    Square, flat, no glow shadow. These were rounded (9px) with a coloured
-   box-shadow, which is the "❌ neon glow" item in DESIGN.md. */
+   box-shadow, which is the "neon glow" item on the reject list. */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -290,7 +290,7 @@ main[data-surface="marketing"] {
   text-transform: uppercase;
 }
 
-/* Gradient fills on type are an explicit DESIGN.md reject. Neutralised
+/* Gradient fills on type are an explicit reject. Neutralised
    here rather than deleted, because ~a dozen pages still apply the class. */
 .gradient-text {
   color: var(--ff-ink);

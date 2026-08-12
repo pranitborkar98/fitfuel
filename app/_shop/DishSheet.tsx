@@ -9,7 +9,7 @@
 // THE EST STAMP IS NOT DECORATION. The plan meals are weighed on a scale; these
 // à la carte figures are recipe estimates. The line under the bars says so in
 // words, because a number printed next to a weighed one and not distinguished
-// from it is the kind of claim DESIGN.md's machine-readability section exists
+// from it is the kind of claim the machine-readability rule exists
 // to stop us making.
 
 import { useState } from "react";

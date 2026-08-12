@@ -12,7 +12,7 @@
 // --font-archivo are not on the document. globals.css declares --ff-cond and
 // --ff-body with 'Arial Narrow' / sans-serif fallbacks behind those variables,
 // so importing it here degrades to a condensed stack rather than to Times. Do
-// not "fix" that by hardcoding a family: the ban list in DESIGN.md §11 still
+// not "fix" that by hardcoding a family: the font ban list still
 // applies to anything a user can actually see.
 //
 // Red is deliberate, and matches error.tsx for the same reason given there:

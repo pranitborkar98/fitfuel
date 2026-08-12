@@ -10,8 +10,7 @@ metadata:
 
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** — load that skill and `DESIGN.md` first.
+> This is a generic third-party skill.
 >
 > Its generation flows (logo, CIP, banner, icon, social photo, slides) are
 > usable, but **every output must land inside the locked system**:

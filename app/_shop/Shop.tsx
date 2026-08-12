@@ -59,7 +59,7 @@ export type ShopProps = {
 
 /* The counts strip is the one place on the site that carries more than one
    hue. It is inherited from the v2 homepage ticker and the prototype keeps it,
-   but it is a standing conflict with DESIGN.md's "lime is the only chromatic
+   but it is a standing conflict with "lime is the only chromatic
    value" — flagged rather than silently resolved either way. */
 const COUNT_ROWS = (c: ShopProps["counts"]) => [
   { n: c.plans.toLocaleString("en-IN"), l: "goal & condition plans", accent: C.limeLight },

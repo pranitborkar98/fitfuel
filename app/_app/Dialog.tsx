@@ -2,7 +2,7 @@
 
 // app/_app/Dialog.tsx
 //
-// DESIGN.md §8: overlays lock body scroll, move focus in, trap it, and restore
+// Overlays lock body scroll, move focus in, trap it, and restore
 // it on close. The overlays on the app screens did none of those, and neither
 // closed on Escape, so a keyboard user who opened one was stuck in it.
 //

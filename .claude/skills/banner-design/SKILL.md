@@ -10,8 +10,7 @@ metadata:
 
 > ## ⛔ FITFUEL OVERRIDE — read before using any of this
 >
-> This is a generic third-party skill. On this repo, **`fitfuel-design-system`
-> outranks it** — load that skill and `DESIGN.md` first.
+> This is a generic third-party skill.
 >
 > **Most of this skill's style menu is banned here.** Of the styles it offers,
 > `gradient`, `glassmorphism`, `3D`, `neon` and `retro` are all on the

@@ -35,7 +35,7 @@ export function dishSlug(name) {
 }
 
 // The shared grade. Every frame gets this so ten generations read as one shoot
-// rather than ten stock photos. Mirrors DESIGN.md 5: food keeps its colour,
+// rather than ten stock photos. Food keeps its colour,
 // people and places take the lime duotone in CSS, so nothing is graded here.
 export const LOOK = [
   "Photographic, editorial food photography.",

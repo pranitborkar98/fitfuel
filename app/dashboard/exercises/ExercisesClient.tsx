@@ -15,7 +15,7 @@ import {
 import { C } from "@/app/_app/theme";
 import Dialog from "@/app/_app/Dialog";
 
-// Faces load once, via next/font in the root layout. DESIGN.md §3 does not
+// Faces load once, via next/font in the root layout. The system does not
 // allow font injection from a component, and there is none here.
 
 /** Ramp aliases, so this screen stops carrying a palette of its own. */
@@ -97,7 +97,7 @@ interface ExercisesClientProps {
 const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
-/* This was a per-category palette, which DESIGN.md §2 forbids by name: seven
+/* This was a per-category palette, which is forbidden by name: seven
    training categories, seven hues, and an rgba `glow` on each that nothing ever
    read. The label already says it is cardio. One accent, and it is THE accent. */
 const CAT: Record<string, { accent: string; label: string }> = {

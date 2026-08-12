@@ -5,7 +5,7 @@
 // The bottom sheet the dish and plan panels rise in.
 //
 // The prototype draws the sheet and nothing else: a scrim, a panel, an X. That
-// is fine in a prototype and not shippable, because DESIGN.md section 8 makes
+// is fine in a prototype and not shippable, because the system makes
 // the overlay contract part of the design rather than a later pass — "overlay
 // menus lock body scroll, move focus in, trap it, and restore it". So all four
 // live here once, and the two sheets that use it cannot get any of them wrong

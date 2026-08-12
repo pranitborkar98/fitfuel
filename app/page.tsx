@@ -137,7 +137,7 @@ function imageMap(days: ShopDay[]): Record<string, string> {
   for (const day of days) for (const m of day.dishes) put(dishSlot(m.name), findDishImage(dishSlot(m.name)));
 
   // Everything that is not a dish. `corporate` has a real photograph today;
-  // the rest resolve to null until IMAGE-BRIEF-V2 lands them, and nothing
+  // the rest resolve to null until the photography lands them, and nothing
   // borrows a picture of something it is not.
   put("corporate", resolveSlot("sections", "corporate"));
   for (const p of CORP_PLANS) put(`corporate-${p.slug}`, resolveSlot("sections", `corporate-${p.slug}`));

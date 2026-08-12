@@ -148,7 +148,7 @@
 
 /* ── Hover, on the devices that have it ───────────────────────────────────
    A directory row shifts right and takes a lime edge; a tile lifts its rule.
-   Both are the signature devices from DESIGN.md, not new inventions. */
+   Both are the signature devices, not new inventions. */
 
 @media (hover: hover) {
   .row:hover {

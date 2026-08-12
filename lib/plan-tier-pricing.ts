@@ -35,8 +35,8 @@ export const MEALS: { key: MealKey; label: string; short: string; time: string; 
 
 // ─── Diet metadata (Jain is first-class) ─────────────────────────────────────
 //
-// These dots are the ONE sanctioned exception to the lime-only palette in
-// DESIGN.md. Green-for-vegetarian and red-for-non-vegetarian is FSSAI
+// These dots are the ONE sanctioned exception to the lime-only palette.
+// Green-for-vegetarian and red-for-non-vegetarian is FSSAI
 // labelling convention in India, so the colour is carrying regulated meaning
 // here, not decoration: recolouring it lime would actively mislead.
 //
@@ -58,7 +58,7 @@ export const DIETS: { key: DietKey; label: string; short: string; dot: string; l
 // Accents were lime / amber / violet, i.e. a three-hue tier palette. Tiers are
 // now distinguished by availability, not colour: the one purchasable tier gets
 // lime, the two waitlisted ones sit muted. Same reason as the category accents
-// in PlansCatalog, see DESIGN.md.
+// in PlansCatalog.
 //
 // The Luxury tagline promised an "AI trainer". There is no AI anywhere in this
 // codebase, so it is not being sold here or on the homepage tier table.

@@ -8,7 +8,7 @@
 // photographs exists yet, and a dashed empty rectangle labelled with the name
 // of a missing image reads as a page that failed to load, not as a promise.
 // Where the photos were, the page now states the facts it actually has: a
-// readout of the morning, which is the device DESIGN.md defines for exactly
+// readout of the morning, which is the device defined for exactly
 // this. When real kitchen photography exists it goes in as a full-bleed
 // alternating block, not back into three placeholder slots.
 //

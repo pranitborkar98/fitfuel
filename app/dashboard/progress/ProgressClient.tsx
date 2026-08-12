@@ -129,7 +129,7 @@ function TrendChart({
 }
 
 /** Bars are square. The old ones carried a corner radius, and radius is 0
- *  everywhere on both grounds. DESIGN.md §4. */
+ *  everywhere on both grounds. */
 function CalorieChart({ data }: { data: ProgressData["calories"] }) {
   const days = data.days;
   if (!days.some((d) => d.in > 0 || d.out > 0)) {

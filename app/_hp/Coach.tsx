@@ -11,7 +11,7 @@
 // assembles a structured snapshot of one user and serialises it into a cacheable
 // prompt block; lib/coach is deterministic arithmetic and rules. A visitor who
 // types a question into that box gets nothing back, and a caption admitting so
-// does not fix it: DESIGN.md's rule is never advertise a capability the product
+// does not fix it: the rule is never advertise a capability the product
 // does not ship, and an input field is not an advertisement, it is an offer.
 //
 // So the console keeps its shape and loses its dead half. The left panel is what

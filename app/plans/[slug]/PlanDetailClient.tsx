@@ -373,7 +373,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
 
 
         .ff-root {
-          /* The locked ramp. --lime was #a3e635 (lime-LIGHT), which DESIGN.md
+          /* The locked ramp. --lime was #a3e635 (lime-LIGHT), which the ramp
              reserves for a single live value; here it drove every accent on
              the page. --bone and --ember were a second and third palette: a
              cream inverted card and an orange 'what we leave out' accent. The

@@ -11,7 +11,7 @@
 // app/_hp/theme.ts re-exports everything here, so nothing that already imports
 // it needs to change.
 //
-// Colour, type and radius match DESIGN.md exactly. Do not add a grey.
+// Colour, type and radius match the shipped system exactly. Do not add a grey.
 
 import type { CSSProperties } from "react";
 
@@ -85,7 +85,7 @@ export const body = (size = 15.5): CSSProperties => ({
 
 /* Labels and every number are mono: the measurement voice. 12px floor, because
    below that it is unreadable on the mid-range Androids our customers order
-   from (DESIGN.md, "minimum type size"). */
+   from. */
 export const label = (color = DIM): CSSProperties => ({
   fontFamily: MONO,
   fontWeight: 500,

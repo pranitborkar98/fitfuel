@@ -8,7 +8,7 @@
 // through a `--ac` custom property that then coloured the eyebrow, every
 // segmented button, the progress ring, the protein bar, the input focus state
 // and the CTA. Lose fat was #a3e635, Maintain was sky #38bdf8 and Build muscle
-// was orange #f97316 — two of the three are named in DESIGN.md's reject list,
+// was orange #f97316 — two of the three are on the reject list,
 // and the mechanism itself is exactly what "no per-category accent hues"
 // exists to prevent. Goals are distinguished by label and rule weight now.
 //

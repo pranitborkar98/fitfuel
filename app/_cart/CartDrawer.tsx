@@ -3,7 +3,7 @@
 // app/_cart/CartDrawer.tsx
 //
 // The basket, as a right-hand drawer. Square corners, hairline rules, one
-// lime CTA — DESIGN.md's system, not the rounded-glass drawer every dark SaaS
+// lime CTA — the house system, not the rounded-glass drawer every dark SaaS
 // site ships.
 //
 // The footer states the two things a customer is entitled to know before they
@@ -188,7 +188,7 @@ export default function CartDrawer() {
         }
         .ff-cart-x {
           background: none; border: 1px solid var(--ff-rule, #232320); color: var(--ff-mute, #9a9a94);
-          /* 44 square, not 34: DESIGN.md's touch minimum, and this is the one
+          /* 44 square, not 34: the touch minimum, and this is the one
              control a customer hits with a thumb while holding a phone. */
           width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
           border-radius: 0; transition: color .15s, border-color .15s;

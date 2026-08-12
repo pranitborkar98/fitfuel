@@ -2,7 +2,7 @@
 //
 // The ask, then the whole directory.
 //
-// DESIGN.md requires that every service the business runs is reachable from the
+// Every service the business runs has to be reachable from the
 // homepage. The last three versions each failed that differently: one gave every
 // service a chapter and reached 39,708px, the next cut them to eight links and
 // dropped half the site. A four-column directory is the resolution — twenty-odd

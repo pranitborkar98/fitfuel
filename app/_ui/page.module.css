@@ -138,7 +138,7 @@
 
 /* The one non-lime edge on the site. A shared-kitchen allergen warning and a
    "this is not medical advice" notice are the cases where colour is carrying
-   meaning rather than decorating, which is the exception DESIGN.md's
+   meaning rather than decorating, which is the exception the
    accessibility rule is written around. The word "Important" leads the copy
    regardless, so the meaning never rests on the colour alone. */
 .noteWarn {

@@ -26,7 +26,7 @@
 }
 
 /* ── the reveal ───────────────────────────────────────────────────────────
-   Opacity plus 14px, 0.6s, the one easing DESIGN.md names. Nothing parallaxes
+   Opacity plus 14px, 0.6s, the one named easing. Nothing parallaxes
    and nothing bounces. Delays are set inline so the three elements of the
    masthead arrive in reading order. */
 @keyframes planRise {

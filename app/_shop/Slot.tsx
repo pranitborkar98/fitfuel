@@ -58,8 +58,8 @@ export default function Slot({
         sizes={sizes}
         quality={75}
         priority={priority}
-        /* Food keeps its colour and takes the one unified grade, per DESIGN.md
-           section 5. People and places take the lime duotone, which is applied
+        /* Food keeps its colour and takes the one unified grade. People and
+           places take the lime duotone, which is applied
            by the caller that knows which it is holding. */
         style={{ objectFit: "cover", filter: "saturate(1.06) contrast(1.07)" }}
       />
