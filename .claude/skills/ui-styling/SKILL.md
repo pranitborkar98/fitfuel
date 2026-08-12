@@ -12,19 +12,28 @@ metadata:
 >
 > This is a generic third-party skill.
 >
-> This skill's entire premise conflicts with the house system:
+> **Updated 2026-08-12.** Two of the rules below were inverted by the owner's
+> 2026-08-12 verdict, and `AGENTS.md` says that verdict outranks anything
+> written before it. The storefront ground is now WARM PAPER `#fcfaf6`, not
+> near-black, and radius is permitted and restrained rather than banned. If you
+> read "the site is permanently near-black" anywhere, that text is stale.
+>
+> This skill's premise still conflicts with the house system:
 >
 > - **shadcn/ui and Radix are not used here.** No component library. Components
->   are written by hand in `app/_hp/`.
+>   are written by hand — new work goes in `app/_kitchen/`, not `app/_hp/`.
 > - **No Tailwind utility classes in page bodies.** Tailwind appears only on the
->   root layout `<body>`. Styling is CSS Modules or inline `style={{}}` objects
->   built from `app/_hp/theme.ts` helpers.
-> - **Radius is 0.** Every shadcn default (`rounded-md`, `rounded-lg`, pills)
->   is banned.
-> - **No dark-mode theming work.** The site is permanently near-black
->   (`--ff-bg #070707`). There is no light mode to build.
-> - **Colour comes from the `--ff-*` ramp only.** Do not run this skill's theme
->   or colour-customisation flows.
+>   root layout `<body>`. Styling is CSS Modules plus the global primitives in
+>   `app/_design/base.css`, reading `--fk-*` tokens.
+> - **Radius is restrained, not banned** — 4 / 8 / 14px, with full-round pills
+>   reserved for small status chips. shadcn's rounded defaults are still wrong,
+>   but "radius 0" is no longer the rule.
+> - **Light ground.** The storefront is warm paper with a warm ink ramp. There
+>   is no dark mode to build; do not add a theme toggle.
+> - **Colour comes from the `--fk-*` ramp only** (`app/_design/tokens.css`).
+>   The old `--ff-*` ramp still exists for ~27 unmigrated legacy pages — never
+>   reach for it in new work. Do not run this skill's theme or colour-
+>   customisation flows.
 >
 > Use this skill only for accessible-interaction patterns — focus management,
 > dialog semantics, keyboard behaviour. Take its markup structure, never its

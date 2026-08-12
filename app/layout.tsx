@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Barlow_Condensed, JetBrains_Mono } from "next/font/google";
+import { Archivo, Barlow_Condensed, JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -57,10 +57,32 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+// THE DISPLAY FACE OF THE STOREFRONT, and the typographic half of the
+// 2026-08-12 reset. The page read as a trading terminal largely because every
+// heading was Barlow Condensed 900, uppercase, tracked tight. A warm editorial
+// serif set in sentence case is the single largest lever on "does this look
+// like food", and it costs nothing at the layout level to swap.
+//
+// This is deliberately NOT Fraunces. Fraunces was proposed and rejected twice,
+// and the objection was sound: it shipped a fourth face to every visitor while
+// being used on two preview routes only. Newsreader is the primary display
+// face of the actual homepage, and it arrives in the same change that cuts
+// Barlow Condensed from ten font files to four — no italic axis (grep found
+// zero italic usage across app/ and components/) and no 500. Total payload
+// goes DOWN, from 18 files to 15.
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  variable: "--font-newsreader",
+});
+
+// Retained ONLY for the ~27 legacy pages still on the old token set. It is no
+// longer loaded for its own sake, and the new storefront never references it.
+// When those pages migrate, delete this and the --font-barlow-condensed var.
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
+  weight: ["600", "700", "800", "900"],
   display: "swap",
   variable: "--font-barlow-condensed",
 });
@@ -102,7 +124,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-IN"
-      className={`${archivo.variable} ${barlowCondensed.variable} ${mono.variable} scroll-smooth`}
+      className={`${archivo.variable} ${newsreader.variable} ${barlowCondensed.variable} ${mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <head>
@@ -147,7 +169,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${archivo.className} antialiased`} style={{ background: "var(--ff-bg)", color: "var(--ff-ink)" }}>
+      {/* The inline `background: var(--ff-bg)` that used to sit here is gone.
+          It duplicated the `html, body, main` rule in globals.css, and because
+          an inline style beats any stylesheet it made the page ground
+          impossible to override per-route — the warm storefront rendered on a
+          near-black body, visible on overscroll and under short pages. Legacy
+          pages still get the dark ground from globals.css; app/_design/base.css
+          flips it to warm paper for any page containing `.fk`. */}
+      <body className={`${archivo.className} antialiased`}>
         <a href="#main" className="skip-link">Skip to content</a>
         <ReferralCapture />
         <SessionProvider>

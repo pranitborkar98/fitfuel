@@ -11,17 +11,24 @@ metadata:
 >
 > This is a generic third-party skill.
 >
-> Any deck that represents FitFuel externally uses the locked system:
+> **Updated 2026-08-12.** This block used to pin slide background `#070707`,
+> lime `#84cc16` and Barlow Condensed 900 uppercase. That system was rejected on
+> 2026-08-12 and `AGENTS.md` says the verdict outranks anything written before
+> it. Do not reconstruct it from here.
 >
-> - `--ff-*` colours only. Slide background `#070707`, ink `#f7f7f5`,
->   lime `#84cc16` as the single accent.
-> - Barlow Condensed 900 UPPERCASE flush-left for slide titles, Archivo for
->   body, JetBrains Mono for every figure.
-> - Radius 0, hairline rules `#232320` for structure. No cards, no shadows,
->   no gradient fills.
-> - **Chart.js colour comes from the `--ff-*` ramp**, not from this skill's
->   default categorical palette. Series are distinguished by lime plus
->   ink/mute/dim values and line weight, not by hue rotation.
+> Any deck that represents FitFuel externally uses the current system
+> (`app/_design/tokens.css`):
+>
+> - `--fk-*` colours. Slide ground warm paper `#fcfaf6` (or warm ink `#1b1a17`
+>   for a dark slide), deep herb green `#2c6e49` and terracotta `#b44a26` as
+>   accents.
+> - Newsreader in **sentence case** for slide titles, Archivo for body,
+>   JetBrains Mono for every measured figure.
+> - Restrained radius, hairline rules `#e6ded0` for structure. No gradient
+>   fills, no glow.
+> - **Chart.js colour comes from the `--fk-*` ramp**, not this skill's default
+>   categorical palette. Distinguish series by green/terracotta/ink values and
+>   line weight, and never by hue alone — pair with a label or marker.
 > - Data is the hero. No decorative chart chrome, no fake metrics.
 >
 > Internal working decks do not need this. Anything a customer, investor or

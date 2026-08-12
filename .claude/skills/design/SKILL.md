@@ -12,20 +12,31 @@ metadata:
 >
 > This is a generic third-party skill.
 >
-> Its generation flows (logo, CIP, banner, icon, social photo, slides) are
-> usable, but **every output must land inside the locked system**:
+> **Updated 2026-08-12.** This block previously pinned the `--ff-*` near-black
+> ramp, acid lime `#84cc16`, Barlow Condensed 900 uppercase and radius 0. The
+> owner rejected that system on 2026-08-12 and `AGENTS.md` says that verdict
+> outranks anything written before it. Those values are history — do not
+> reconstruct them from this file, old code comments, or the other skill files.
 >
-> - Colour: the `--ff-*` ramp only. Near-black `#070707`, ink `#f7f7f5`,
->   lime `#84cc16` as the single accent. No gradients, no second hue.
-> - Type: Barlow Condensed 900 UPPERCASE display, Archivo body, JetBrains Mono
->   for numbers. Nothing else.
-> - Radius 0 on every generated asset. No glows, no glass, no 3D, no neon.
-> - Photography follows the locked grade: food `saturate(1.06) contrast(1.07)`,
->   people/places lime duotone, grain overlay on everything.
+> Its generation flows (logo, CIP, banner, icon, social photo, slides) are
+> usable, but **every output must land inside the current system**, which is
+> `app/_design/tokens.css`:
+>
+> - Colour: the `--fk-*` ramp. Warm paper `#fcfaf6`, warm ink `#1b1a17`, deep
+>   herb green `#2c6e49` and terracotta `#b44a26` as the two food accents.
+>   Turmeric `#e0a32e` is a NON-TEXT accent only (2.13:1 on paper).
+> - Type: Newsreader for display in **sentence case**, Archivo for body,
+>   JetBrains Mono for measured numbers only.
+> - Radius is permitted and restrained (4 / 8 / 14px). No glows, no glass, no
+>   3D, no neon — those were rejected on their own merits and still are.
+> - Photography: warm and appetising, food as the brightest thing in frame.
+>   Never a macro ring, glyph or typographic stand-in for a dish on a surface
+>   where someone is choosing what to eat.
 >
 > **Do not run its brand-identity or design-token discovery flows.** They
-> propose a new palette and type system. Ours is locked and re-opening it is the
-> exact loop this override exists to stop.
+> propose a new palette and type system per session, and that churn — not any
+> particular palette — is the loop this override exists to stop. Change
+> `tokens.css` deliberately instead.
 
 # Design
 

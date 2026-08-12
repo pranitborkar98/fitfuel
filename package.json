@@ -14,7 +14,8 @@
     "images:status": "node scripts/image-status.mjs",
     "images:plan": "node scripts/generate-images.mjs --dry-run",
     "images:fill": "node scripts/generate-images.mjs --missing",
-    "images:check": "node scripts/check-slot-sync.mjs"
+    "images:check": "node scripts/check-slot-sync.mjs",
+    "design:contrast": "node scripts/check-contrast.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

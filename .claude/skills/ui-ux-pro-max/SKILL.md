@@ -6,22 +6,31 @@ description: "UI/UX design intelligence. Searchable local database with 67 style
 >
 > This is a generic third-party skill.
 >
-> **Do not select from this skill's databases.** The art direction is already
-> locked and is not up for re-exploration:
+> **Updated 2026-08-12.** This block used to pin "the Instrument System" — the
+> `--ff-*` near-black ramp, acid lime `#84cc16`, Barlow Condensed 900 uppercase.
+> The owner rejected that system on 2026-08-12: it does not look like healthy
+> food and a normal person cannot parse it. `AGENTS.md` states that verdict
+> "outranks anything written before it", so this block outranked nothing.
 >
-> - **67 styles** → the style is the Instrument System. Not a choice.
-> - **161 palettes** → the palette is the 11-token `--ff-*` ramp. Lime `#84cc16`
->   is the only chromatic value on the site.
-> - **57 font pairings** → the faces are Barlow Condensed (display), Archivo
->   (body), JetBrains Mono (data). Inter, Roboto and system-ui are banned by name.
-> - **21 stacks** → the stack is Next.js server components with CSS Modules.
->   Ignore its Tailwind and shadcn/ui guidance.
-> - **25 charts** → chart colour comes from the `--ff-*` ramp, not from its
->   categorical palettes. No fake dashboards.
+> That is worth naming, because it is the mechanism that kept the old look
+> alive through two complete homepage rebuilds: the tokens survived in files
+> nobody re-read — `app/_ui/theme.ts`, a `!important` radius ban in
+> `globals.css`, and four skill files including this one, which re-injected the
+> dead palette into every new session as settled fact.
+>
+> **The current system is `app/_design/tokens.css`.** Warm paper ground,
+> a single warm ink ramp, deep herb green + terracotta as the two food accents,
+> Newsreader for display in sentence case, Archivo for body, JetBrains Mono for
+> measured numbers only. Radius is permitted and restrained.
+>
+> **Do not select from this skill's databases** — not because the direction is
+> unchallengeable, but because it is already decided and re-picking a palette
+> per session is the loop. If you believe a token is wrong, say so to the owner
+> and change `tokens.css`; do not shop for a replacement here.
 >
 > Use this skill for its **UX guidelines** — hierarchy, interaction patterns,
-> accessibility checks, layout reasoning. Those are genuinely useful. Every
-> visual token it offers is superseded.
+> accessibility checks, layout reasoning. Those are genuinely useful and were
+> never the problem. Every visual token it offers is superseded.
 
 # UI/UX Pro Max - Design Intelligence
 

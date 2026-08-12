@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* THE NEW DESIGN SYSTEM (2026-08-12). Imported first so the `--fk-*` ramp is
+   defined before anything below can reference it. `base.css` is scoped under
+   `.fk` and therefore cannot repaint the legacy pages that still read the
+   `--ff-*` tokens further down this file. See app/_design/tokens.css for why
+   the two ramps coexist and which one new work must use. */
+@import "./_design/tokens.css";
+@import "./_design/base.css";
+
 :root {
   /* ═══════════════════════════════════════════════════════════════
      CANONICAL TOKENS — single source of truth for the homepage AND
@@ -84,7 +92,16 @@ main {
    `.ff-round` is the escape hatch for things that must stay circular
    (avatars, the one radio dot).
    ──────────────────────────────────────────────────────────────────── */
-main[data-surface="marketing"] :not(.ff-round):not(.ff-round *) {
+/* The radius ban belonged to the rejected system: "a hard ban on any corner
+   radius" is named in AGENTS.md as one of the rules that produced a screen
+   reading as a trading terminal. It stays for now ONLY because ~27 legacy
+   pages were laid out expecting it, and removing it globally would round
+   corners on surfaces nobody has re-checked.
+   The `.fk` exemption is what lets the new system opt out. Without it this
+   !important rule silently flattens every card and button on the storefront,
+   which is exactly the kind of invisible survival that kept the old look
+   alive through two full homepage rebuilds. */
+main[data-surface="marketing"] :not(.ff-round):not(.ff-round *):not(.fk):not(.fk *) {
   border-radius: 0 !important;
 }
 .ff-round { border-radius: 50% !important; }

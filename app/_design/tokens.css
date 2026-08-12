@@ -1,0 +1,184 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   FITFUEL DESIGN TOKENS — "Kitchen Table"
+   The single source of truth for the customer-facing product.
+
+   WHY THIS FILE EXISTS AND WHY THE PREFIX IS NEW.
+   The previous system (near-black #070707, acid lime #84cc16, uppercase
+   Barlow Condensed at 900, monospace readouts, radius banned) was rejected by
+   the owner on 2026-08-12: it does not look like food, and a normal person
+   cannot parse it. Its tokens live under `--ff-*` and are still imported by
+   ~27 legacy files, so they cannot be deleted today without breaking the
+   build. This ramp therefore takes a NEW namespace, `--fk-*`, so that the two
+   can coexist during migration and so that no file can accidentally inherit
+   the dead palette by typing a familiar name.
+
+   Never add a `--ff-*` value here, and never map an `--fk-*` token onto one.
+
+   THE THESIS. FitFuel sells food to someone in Pune ordering lunch. The
+   surface should behave like good paper under a plate: warm, quiet, and
+   high-contrast, so the photograph of the dish is the brightest, most
+   saturated thing on the screen. Colour here hosts food; it never competes
+   with it.
+
+   Every value below was checked against WCAG 2.1. Ratios are recorded inline
+   and re-verified by scripts/check-contrast.mjs, which fails the build on a
+   regression rather than trusting this comment.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Ground ──────────────────────────────────────────────────────────────
+     Warm paper, not white and not grey. Both greys and pure white push a
+     plated photograph cool; a warm ground makes the same photograph read
+     appetising without touching the image. */
+  --fk-paper: #fcfaf6;
+  --fk-surface: #ffffff; /* cards that must lift off the paper */
+  --fk-warm: #f4ede1; /* recessed band, the colour of a menu card */
+  --fk-warm-2: #ece2d2; /* hover on a warm surface */
+  --fk-ink-bg: #1b1a17; /* the one dark ground, used sparingly */
+
+  /* ── Ink ─────────────────────────────────────────────────────────────────
+     A single warm ink ramp. There is no second, cooler grey ramp: two
+     temperatures on one page was a real bug in the old stylesheet. */
+  --fk-ink: #1b1a17; /* 16.69:1 on paper — headings, prices */
+  --fk-ink-2: #4a4438; /*  9.26:1 on paper — body copy */
+  --fk-ink-3: #5f5849; /*  6.76:1 on paper — metadata, captions */
+
+  /* ── Accents ─────────────────────────────────────────────────────────────
+     Two, and they are both food colours. Deep herb green carries "this is
+     good for you"; terracotta carries appetite and reads as Indian kitchen
+     rather than Californian juice bar. Acid lime is deliberately absent. */
+  --fk-green: #2c6e49; /*  5.87:1 on paper — AA for text AND as a button ground */
+  --fk-green-deep: #1c4f33; /*  9.09:1 on paper — hover, focus ring, text on warm */
+  --fk-green-wash: #eaf2ec; /* tint band, never carries text below 4.5:1 */
+
+  --fk-terracotta: #b44a26; /*  5.10:1 on paper — AA, price emphasis, alerts */
+  --fk-terracotta-deep: #9c3f1f; /*  6.41:1 on paper — hover */
+  --fk-terracotta-wash: #fbeee7;
+
+  /* Turmeric FAILS as text on every light ground (2.13:1). It is a non-text
+     accent only: rules, dots, illustration fills, or text on --fk-ink-bg
+     (7.83:1 there, AAA). Do not set body copy in it. */
+  --fk-turmeric: #e0a32e;
+
+  /* ── Lines ───────────────────────────────────────────────────────────────
+     Decorative hairlines may sit under 3:1 (WCAG exempts pure decoration).
+     Anything that communicates — an input boundary, a selected state — must
+     use --fk-line-strong, which clears 3:1. */
+  --fk-line: #e6ded0;
+  --fk-line-2: #d9cfbc;
+  --fk-line-strong: #8c8474; /* 3.06:1 on paper — form borders, dividers that mean something */
+
+  /* ── Status ──────────────────────────────────────────────────────────────
+     Never the only carrier of meaning: every status pairs with an icon or a
+     word in the components that use them. */
+  --fk-ok: #2c6e49;
+  --fk-warn: #8a5a00;
+  --fk-danger: #b3261e;
+
+  /* ── Radius ──────────────────────────────────────────────────────────────
+     The old system banned radius outright; that ban is history. But the
+     16–20px pill-and-bento look is the house style of every dark SaaS landing
+     page and reads as generic, so the scale stops early. Food packaging has
+     soft corners; dashboards do not have 999px pills. */
+  --fk-r-sm: 4px;
+  --fk-r: 8px;
+  --fk-r-lg: 14px;
+  --fk-r-full: 999px; /* pills are for small status chips ONLY */
+
+  /* ── Elevation ───────────────────────────────────────────────────────────
+     Warm-tinted and shallow. Shadows lift real overlays (sheets, menus,
+     sticky bars). There are no coloured glows and no backdrop-filter glass:
+     both were on the reject-on-sight list and both still look like 2022. */
+  --fk-shadow-1: 0 1px 2px rgba(27, 26, 23, 0.06), 0 1px 1px rgba(27, 26, 23, 0.04);
+  --fk-shadow-2: 0 4px 12px rgba(27, 26, 23, 0.08), 0 1px 3px rgba(27, 26, 23, 0.05);
+  --fk-shadow-3: 0 16px 40px rgba(27, 26, 23, 0.14), 0 2px 8px rgba(27, 26, 23, 0.06);
+
+  /* ── Type ────────────────────────────────────────────────────────────────
+     Three faces, each with one job.
+
+     Newsreader (display) is the change that matters. A warm editorial serif
+     is what makes a food page read as food; a condensed athletic grotesque
+     set in uppercase at weight 900 is what made the old page read as a
+     trading terminal. Headlines are SENTENCE CASE — AGENTS.md is explicit
+     that we write for a customer, not for a reader of the spec.
+
+     This is NOT Fraunces, which was proposed and rejected twice. The
+     objection then was a fourth face shipping to every visitor while being
+     used on two preview routes. Newsreader is the primary display face of
+     the actual storefront, and Barlow Condensed's weight list is cut from ten
+     files to two in the same change, so total font payload goes DOWN. */
+  --fk-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --fk-sans: var(--font-archivo), system-ui, sans-serif;
+  --fk-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
+
+  /* Type scale, 1.25 major third, clamped so it scales with the viewport
+     without the 10x kinetic display type the old system used. */
+  --fk-t-xs: 0.75rem; /* 12px — legal, never body */
+  --fk-t-sm: 0.875rem; /* 14px */
+  --fk-t-base: 1rem; /* 16px — minimum body size, avoids iOS auto-zoom */
+  --fk-t-md: 1.125rem; /* 18px — preferred body on desktop */
+  --fk-t-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --fk-t-xl: clamp(1.5rem, 1.2rem + 1.4vw, 2rem);
+  --fk-t-2xl: clamp(1.875rem, 1.4rem + 2.2vw, 2.75rem);
+  --fk-t-3xl: clamp(2.25rem, 1.5rem + 3.4vw, 3.75rem);
+  --fk-t-4xl: clamp(2.75rem, 1.6rem + 5vw, 5rem);
+
+  --fk-lh-tight: 1.08; /* display only */
+  --fk-lh-snug: 1.25; /* sub-heads */
+  --fk-lh-body: 1.6; /* body copy — 1.5 minimum per WCAG 1.4.12 */
+
+  /* ── Space ───────────────────────────────────────────────────────────────
+     4px base. Section rhythm is deliberately generous: the owner's standing
+     note is "subtract, don't add", and whitespace is how a page looks
+     confident rather than crowded. */
+  --fk-s-1: 4px;
+  --fk-s-2: 8px;
+  --fk-s-3: 12px;
+  --fk-s-4: 16px;
+  --fk-s-5: 24px;
+  --fk-s-6: 32px;
+  --fk-s-7: 48px;
+  --fk-s-8: 64px;
+  --fk-s-9: 96px;
+  --fk-s-10: 128px;
+
+  --fk-section-y: clamp(56px, 8vw, 112px);
+  --fk-gutter: clamp(20px, 5vw, 40px);
+  --fk-measure: 62ch; /* 60–75 char line length for long-form copy */
+  --fk-wrap: 1200px;
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     150–300ms, ease-out entering. Restrained on purpose: motion here is
+     feedback, not decoration. */
+  --fk-dur-fast: 140ms;
+  --fk-dur: 220ms;
+  --fk-dur-slow: 320ms;
+  --fk-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --fk-ease-in: cubic-bezier(0.55, 0.06, 0.68, 0.19);
+
+  /* ── Layers ──────────────────────────────────────────────────────────────
+     One scale, so no component has to guess. */
+  --fk-z-base: 0;
+  --fk-z-sticky: 100;
+  --fk-z-header: 200;
+  --fk-z-scrim: 300;
+  --fk-z-sheet: 400;
+  --fk-z-toast: 500;
+
+  /* Minimum interactive size. AGENTS.md pins 44px and it is not negotiable. */
+  --fk-tap: 44px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Reduced motion. Honouring this is listed in AGENTS.md under the rules that
+   are "not up for reinterpretation", so it is enforced at the token layer:
+   every component reading --fk-dur* gets the correct behaviour for free
+   instead of each author remembering the media query.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fk-dur-fast: 1ms;
+    --fk-dur: 1ms;
+    --fk-dur-slow: 1ms;
+  }
+}

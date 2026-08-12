@@ -1,0 +1,263 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   FITFUEL BASE — element defaults for the new storefront.
+
+   EVERYTHING IS SCOPED UNDER `.fk`. That is deliberate and load-bearing.
+   ~27 legacy pages still render against the old near-black tokens and their
+   own CSS modules. A global element reset here would repaint all of them
+   half-way and produce dark-text-on-dark-ground pages, which is strictly
+   worse than leaving them alone. Scoping means the new system can ship on the
+   storefront today and migrate the rest deliberately, page by page, instead
+   of requiring a 27-file big bang that never gets started.
+
+   Read app/_design/tokens.css first; this file only applies those tokens.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* app/layout.tsx inline-styles <body> to the OLD dark ground for the legacy
+   pages. Without this, warm paper stops at the storefront's own box and the
+   dead near-black shows through on overscroll and on any viewport taller than
+   the content. `:has()` lets the ground follow the page that opted in, instead
+   of flipping the default for 27 pages that are not ready for it. */
+html:has(.fk),
+body:has(.fk),
+main:has(.fk) {
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
+}
+
+.fk {
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-md);
+  line-height: var(--fk-lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Headings ───────────────────────────────────────────────────────────────
+   Sentence case is set here rather than left to each author, because
+   "uppercase condensed everything" is precisely what made the old page
+   unreadable. `text-transform: none` is defensive: several legacy globals
+   still set uppercase on h1–h3 and would otherwise leak in. */
+.fk h1,
+.fk h2,
+.fk h3,
+.fk h4 {
+  font-family: var(--fk-display);
+  color: var(--fk-ink);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.fk h1 {
+  font-size: var(--fk-t-4xl);
+  line-height: var(--fk-lh-tight);
+  letter-spacing: -0.025em;
+}
+.fk h2 {
+  font-size: var(--fk-t-3xl);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+.fk h3 {
+  font-size: var(--fk-t-xl);
+  line-height: var(--fk-lh-snug);
+}
+.fk h4 {
+  font-size: var(--fk-t-lg);
+  line-height: var(--fk-lh-snug);
+}
+
+.fk p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Long-form copy gets a real measure. Body text that runs the full width of a
+   1200px container is unreadable regardless of how good the type is. */
+.fk .fk-measure {
+  max-width: var(--fk-measure);
+}
+
+/* ── Numbers ────────────────────────────────────────────────────────────────
+   Mono is for MEASURED values only — rupees, grams, kcal, times, licence
+   numbers. It is not a decorative label style. The old page set every caption
+   in mono and that is a large part of why it read as a terminal readout.
+   Tabular figures stop prices jittering as they change. */
+.fk .fk-num {
+  font-family: var(--fk-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── Links ──────────────────────────────────────────────────────────────── */
+.fk a {
+  color: inherit;
+  text-decoration-color: var(--fk-line-2);
+  text-underline-offset: 0.2em;
+  transition: color var(--fk-dur) var(--fk-ease);
+}
+.fk a:hover {
+  color: var(--fk-green-deep);
+}
+
+/* ── Focus ──────────────────────────────────────────────────────────────────
+   One visible ring for everything, non-negotiable per AGENTS.md. :focus-visible
+   so a mouse click does not draw it but a Tab key does. The offset keeps the
+   ring off the element's own border so it stays legible on dark buttons. */
+.fk :focus-visible {
+  outline: 3px solid var(--fk-green-deep);
+  outline-offset: 2px;
+  border-radius: var(--fk-r-sm);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────────
+   Exactly two ranks. One primary action per screen region; everything else is
+   secondary or a plain link. Both clear the 44px tap minimum by construction
+   (padding + line-height), not by luck. */
+.fk .fk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fk-s-2);
+  min-height: var(--fk-tap);
+  padding: 0 var(--fk-s-5);
+  border: 1px solid transparent;
+  border-radius: var(--fk-r);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-base);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease),
+    transform var(--fk-dur-fast) var(--fk-ease);
+}
+
+/* Press feedback is a 1px settle, not a scale. Scaling a button nudges the
+   text off the pixel grid and reads as cheap. */
+.fk .fk-btn:active {
+  transform: translateY(1px);
+}
+
+.fk .fk-btn-primary {
+  background: var(--fk-green);
+  color: #fff; /* 6.12:1 on --fk-green — AA */
+  border-color: var(--fk-green);
+}
+.fk .fk-btn-primary:hover {
+  background: var(--fk-green-deep);
+  border-color: var(--fk-green-deep);
+  color: #fff;
+}
+
+.fk .fk-btn-secondary {
+  background: transparent;
+  color: var(--fk-ink);
+  border-color: var(--fk-line-strong);
+}
+.fk .fk-btn-secondary:hover {
+  background: var(--fk-warm);
+  border-color: var(--fk-ink-3);
+  color: var(--fk-ink);
+}
+
+.fk .fk-btn:disabled,
+.fk .fk-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Chips ──────────────────────────────────────────────────────────────────
+   The one place a full radius is allowed. Status only, never navigation. */
+.fk .fk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
+  font-size: var(--fk-t-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.fk .fk-chip-warm {
+  background: var(--fk-terracotta-wash);
+  color: var(--fk-terracotta-deep);
+}
+.fk .fk-chip-quiet {
+  background: var(--fk-warm);
+  color: var(--fk-ink-3);
+}
+
+/* ── Surfaces ───────────────────────────────────────────────────────────────
+   A card lifts off the paper by one hairline and one shallow shadow. No glow,
+   no glass, no coloured shadow. */
+.fk .fk-card {
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  box-shadow: var(--fk-shadow-1);
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.fk .fk-wrap {
+  width: 100%;
+  max-width: var(--fk-wrap);
+  margin-inline: auto;
+  padding-inline: var(--fk-gutter);
+}
+
+.fk .fk-section {
+  padding-block: var(--fk-section-y);
+}
+
+/* A section label. ONE per section — not an eyebrow plus a number plus a
+   right-hand caption. Over-annotation is the specific thing the owner reads
+   as machine-generated. */
+.fk .fk-eyebrow {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+  margin: 0 0 var(--fk-s-3);
+}
+
+/* ── Images ─────────────────────────────────────────────────────────────────
+   Food is the brightest thing on the page. A hair more saturation and warmth
+   makes a plated photograph read appetising against warm paper; it is applied
+   here once rather than baked into the files, so a real photograph swapping in
+   for a placeholder inherits the same grade automatically. */
+.fk .fk-food {
+  filter: saturate(1.06) contrast(1.03);
+}
+
+.fk img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Screen-reader-only text, for the accessible names that icon buttons need. */
+.fk .fk-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

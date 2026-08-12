@@ -1,5 +1,24 @@
 # FITFUEL — MASTER TRACKER (COMPILED / CANONICAL)
 
+> ## ⚠️ DESIGN TOKENS IN THIS DOCUMENT ARE OBSOLETE — 2026-08-12
+>
+> Every colour and type value recorded below — `#080808` / `#0a0a0a` grounds,
+> lime `#84cc16` / `#a3e635`, "Dark athletic", Syne / DM Sans / Barlow Condensed
+> — describes the design system the owner **rejected on 2026-08-12**. `AGENTS.md`
+> records that verdict and states it "outranks anything written before it".
+>
+> That includes the instruction at Part I "Read `globals.css` + homepage BEFORE
+> building UI. Tokens: bg `#080808`, lime …". Following it today rebuilds the
+> rejected look. **Do not.**
+>
+> The current system is **`app/_design/tokens.css`** (`--fk-*`): warm paper
+> ground, warm ink ramp, deep herb green + terracotta, Newsreader in sentence
+> case, restrained radius. Verify it with `npm run design:contrast`.
+>
+> Everything else in this tracker — architecture, pricing, ops, franchise, the
+> decision log — remains accurate and valuable. This banner is scoped to
+> **visual design tokens only**.
+
 > **Compiled: June 23, 2026.** This is the COMPLETE, single source of truth. It **preserves every line**
 > of all three prior trackers and adds a clean navigation + roadmap layer on top so the history is no
 > longer a maze.

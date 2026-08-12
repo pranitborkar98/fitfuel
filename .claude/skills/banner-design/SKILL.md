@@ -17,15 +17,23 @@ metadata:
 > reject-on-sight list. The only permitted directions are **bold typography**,
 > **photo-based**, **editorial**, and **duotone** (lime duotone specifically).
 >
-> Every banner must obey:
+> **Updated 2026-08-12.** The palette and type rules in this block used to be
+> near-black `#070707` + acid lime `#84cc16` + Barlow Condensed 900 uppercase +
+> radius 0. That system was rejected by the owner on 2026-08-12 for not looking
+> like food; `AGENTS.md` says that verdict outranks anything written earlier.
+> Do not reconstruct it from here.
 >
-> - Near-black `#070707`, ink `#f7f7f5`, lime `#84cc16` as the one accent.
->   No second hue, no gradient, ever.
-> - Barlow Condensed 900 UPPERCASE flush-left display. Archivo for body.
->   JetBrains Mono for any number.
-> - Radius 0. No rounded corners, no pills, no glow, no drop shadow.
-> - Grain overlay. Food art keeps colour (`saturate(1.06) contrast(1.07)`);
->   people and places take the lime duotone.
+> Every banner must obey the current system (`app/_design/tokens.css`):
+>
+> - Warm paper `#fcfaf6` and warm ink `#1b1a17`. Deep herb green `#2c6e49` and
+>   terracotta `#b44a26` are the accents. Turmeric `#e0a32e` is non-text only.
+>   No gradient.
+> - Newsreader display in **sentence case** — not uppercase. Archivo for body.
+>   JetBrains Mono for any measured number.
+> - Restrained radius (4 / 8 / 14px). No pills except small status chips, no
+>   glow, no coloured shadow.
+> - Food is the brightest thing in the frame and keeps its own colour
+>   (`saturate(1.06) contrast(1.03)`). No duotone over food, ever.
 > - No emoji, no sparkles, no decorative chips.
 >
 > **Do not generate "multiple art direction options" that vary the system.**
