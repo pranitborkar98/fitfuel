@@ -12,21 +12,18 @@ metadata:
 >
 > This is a generic third-party skill.
 >
-> **There is no locked token system any more.** This block used to say there
-> was: a flat 11-token `--ff-*` ramp in `app/globals.css` with helpers in
-> `app/_hp/theme.ts`, a 1180px wrap, `clamp(64px,8vw,120px)` sections, weights
-> at 900 or 400 and nothing between. The owner rejected that system on
-> 2026-08-12, `DESIGN.md` was deleted, and `app/_hp/` was deleted with the
-> homepage it styled.
+> **The token system already exists and is locked.** It lives in
+> `app/globals.css` as `--ff-*` and in `app/_hp/theme.ts` as style helpers.
 >
-> - **`AGENTS.md` is the design authority.** Read it first. Do not reconstruct
->   the old rules from code comments — several files still carry them.
-> - Surviving token files are **per-surface, not global**: `app/_app/theme.ts`
->   (the dark app half, still correct at `/dashboard`) and `app/_ui/theme.ts`
->   (the old system, still serving ~25 marketing pages until they are redone).
->   Neither is a starting point for new work.
-> - Do **not** silently restructure either one. Contrast on any surface must be
->   recomputed and stated, not inherited on trust — AA is not reinterpretable.
+> - Do **not** apply this skill's three-layer architecture
+>   (primitive → semantic → component). Ours is a deliberately flat 11-token
+>   ramp, verified for WCAG AA. Restructuring it would break the contrast
+>   guarantees that took a full audit to establish.
+> - Do **not** generate spacing or type scales. Spacing is
+>   `clamp(64px,8vw,120px)` sections inside a 1180px wrap; type is a ~10x
+>   display-to-body ratio with weights at 900 or 400 and nothing between.
+> - Do **not** add tokens. If something genuinely has no token, that is a
+>   conversation with the owner, not a generation step.
 >
 > Use this skill for **component specification writing** — states, variants,
 > props, edge cases. That part is useful and system-agnostic.

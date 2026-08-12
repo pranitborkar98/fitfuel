@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { MENU_STATS, MENU_FROM } from "@/lib/menu-alacarte";
 import { DISHES, ORDERABLE_COUNT, ENQUIRY_COUNT } from "@/lib/menu-cart";
-import { dishSlug, resolveImage } from "@/lib/site-images";
+import { dishSlug, findDishImage } from "@/app/_hp/DishImage";
 import MenuClient, { type MenuDish } from "./MenuClient";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -66,7 +66,7 @@ export default function MenuPage() {
     addOns: d.addOns ?? null,
     category: d.category,
     categoryLabel: d.categoryLabel,
-    image: resolveImage("dishes", dishSlug(d.name))?.src ?? null,
+    image: findDishImage(dishSlug(d.name))?.src ?? null,
   }));
 
   return (
