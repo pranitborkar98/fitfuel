@@ -1,12 +1,29 @@
 // app/_shop/theme.ts
 //
-// The Instrument System tokens, as the shop's inline styles need them.
+// The storefront's palette and type. One file, and the only place in app/_shop
+// that names a colour.
 //
-// The prototype hardcodes hex literals and quoted font names because it renders
-// standalone with a Google Fonts <link>. Neither travels: the three faces load
-// once through next/font in app/layout.tsx, and DESIGN.md requires the colour
-// variables rather than the literals. So every value the shop draws comes from
-// here, and here is the only place in app/_shop that names a colour at all.
+// REBUILT 2026-08-12, LIGHT AND WARM. This file used to read the --ff-* dark
+// tokens: near-black ground, acid lime #84cc16, uppercase condensed on every
+// heading, radius 0 everywhere. On a phone that produced a screen the owner
+// read as a trading terminal rather than a food shop, and he was right. Acid
+// green on near-black is the palette of a system dashboard. Food photographed
+// on a dark ground reads as a laboratory sample; the same photograph on warm
+// cream reads as lunch.
+//
+// So the ground is cream, the accent is a leaf green rather than a highlighter,
+// headings set in sentence case, and boxes have a radius. The dark tokens are
+// deliberately NOT read here any more: the app half at /dashboard keeps them,
+// because density that is hostile on a storefront is correct in a food diary.
+// The two halves are allowed to look different.
+//
+// CONTRAST, checked rather than assumed, because this is the one thing the old
+// system got right and it is not being reopened:
+//   ink   #1A1714 on bg #FBF7F0   15.9:1
+//   mute  #554C43 on bg           8.1:1
+//   dim   #6E6358 on bg           5.4:1   (was #8A7F73 at 3.5:1, which failed)
+//   green #2F7A3E on panel #FFF   4.9:1
+//   white on green #2F7A3E        4.9:1
 
 /* ── Faces ─────────────────────────────────────────────────────────────────
    Barlow Condensed display, Archivo body, JetBrains Mono for every number.
@@ -69,7 +86,7 @@ export const sub = (size: number | string, extra: React.CSSProperties = {}): Rea
   ...extra,
 });
 
-/** Archivo body. 12px floor, per DESIGN.md, on every surface. */
+/** Archivo body. 12px floor on every surface. */
 export const body = (size = 13.5, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: SANS,
   fontSize: size,
@@ -83,7 +100,7 @@ export const body = (size = 13.5, extra: React.CSSProperties = {}): React.CSSPro
  * A mono section label. One per section, UPPERCASE, wide, `dim`.
  *
  * THE CLAMP IS THE POINT. The prototype sets these labels between 8.5px and
- * 10.5px, and DESIGN.md's floor is 12px with a stated reason: below that they
+ * 10.5px, and our floor is 12px with a stated reason: below that they
  * are unreadable on the mid-range Android phones our customers actually order
  * from. That is a legibility rule, not a taste one, so the floor wins and every
  * call site keeps the size it asked for as an intent rather than a value.
@@ -158,7 +175,7 @@ export const RAIL: React.CSSProperties = {
 };
 
 /* ── Controls ──────────────────────────────────────────────────────────────
-   44×44 minimum on touch is a DESIGN.md rule, not a preference, so the minimum
+   44×44 minimum on touch is a rule, not a preference, so the minimum
    height is baked into the helper rather than left to each call site. */
 
 export const solidBtn = (extra: React.CSSProperties = {}): React.CSSProperties => ({
