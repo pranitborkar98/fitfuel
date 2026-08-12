@@ -22,7 +22,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** Must stay identical to dishSlug() in app/_hp/DishImage.tsx. */
+/** Must stay identical to dishSlug() in lib/site-images.ts. */
 export function dishSlug(name) {
   return name
     .toLowerCase()

@@ -18,12 +18,15 @@ import type { ReactNode } from "react";
 const BARE_PREFIXES = ["/driver", "/admin", "/dashboard"];
 
 // Routes that draw their OWN header and footer, so the site chrome would be a
-// second one. "/" is the shop: design/FitFuel Shop.dc.html specifies a header
-// with the wordmark, a search field, the basket, a six-item nav and the live
-// cut-off strip, plus a six-tab bottom bar and a four-column footer. Those are
-// the composition, not decoration around it, and mounting the site navbar as
-// well would put two fixed bars and ~134px of chrome above the trial panel.
-const SELF_CHROMED = ["/"];
+// second one.
+//
+// "/" was on this list while the shop homepage drew its own header, six-tab bar
+// and four-column footer (app/_shop/Chrome.tsx). That homepage was deleted on
+// 2026-08-12 — see the note at the top of app/page.tsx — so "/" takes the site
+// Navbar and Footer like every other marketing page. Whatever replaces it goes
+// back on this list only if it genuinely draws its own chrome; otherwise the
+// homepage is the one page on the site with no navigation.
+const SELF_CHROMED: string[] = [];
 
 // Path prefixes that are the logged-in APPLICATION, not marketing pages.
 // These keep their own denser UI conventions, so the marketing-side

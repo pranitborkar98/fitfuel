@@ -12,23 +12,26 @@ metadata:
 >
 > This is a generic third-party skill.
 >
-> This skill's entire premise conflicts with the house system:
+> What holds here:
 >
 > - **shadcn/ui and Radix are not used here.** No component library. Components
->   are written by hand in `app/_hp/`.
+>   are written by hand.
 > - **No Tailwind utility classes in page bodies.** Tailwind appears only on the
->   root layout `<body>`. Styling is CSS Modules or inline `style={{}}` objects
->   built from `app/_hp/theme.ts` helpers.
-> - **Radius is 0.** Every shadcn default (`rounded-md`, `rounded-lg`, pills)
->   is banned.
-> - **No dark-mode theming work.** The site is permanently near-black
->   (`--ff-bg #070707`). There is no light mode to build.
-> - **Colour comes from the `--ff-*` ramp only.** Do not run this skill's theme
->   or colour-customisation flows.
+>   root layout `<body>`. Styling is CSS Modules or inline `style={{}}` objects.
+> - **Read `AGENTS.md` before styling anything.** It is the only design
+>   authority. `DESIGN.md` was deleted on 2026-08-12 and is not to be
+>   reconstructed from old code comments.
 >
-> Use this skill only for accessible-interaction patterns — focus management,
-> dialog semantics, keyboard behaviour. Take its markup structure, never its
-> classes or its look.
+> This block used to say: radius is 0, the site is permanently near-black
+> (`--ff-bg #070707`), there is no light mode, colour comes from the `--ff-*`
+> ramp only. **All four are dead.** The owner's verdict on 2026-08-12 was that
+> the result read as a trading terminal rather than healthy food, and that
+> outranks anything written before it. The dark `--ff-*` ramp survives at
+> `/dashboard` only, where density is correct.
+>
+> Otherwise use this skill only for accessible-interaction patterns — focus
+> management, dialog semantics, keyboard behaviour. Take its markup structure,
+> never its classes or its look.
 
 # UI Styling Skill
 
