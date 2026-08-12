@@ -39,6 +39,7 @@ import { ShopFooter, ShopHeader, ShopTabs, SectionLabel } from "./Chrome";
 import DishSheet from "./DishSheet";
 import PlanSheet from "./PlanSheet";
 import Slot, { type SlotMap } from "./Slot";
+import ReturnBand from "./ReturnBand";
 import V2Sections from "./V2Sections";
 import { C, COND, MONO, SANS, body, display, figure, ghostBtn, grid, label, num, solidBtn, sub, PANEL, PANEL_LIVE, RAIL } from "./theme";
 import s from "./shop.module.css";
@@ -162,6 +163,11 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
           route in one, and two <main> landmarks nested inside each other is
           invalid markup and two "main" stops for a screen reader. */}
       <div className={s.pad}>
+        {/* Renders nothing on a first visit, so the pitch below still leads for
+            the audience it was written for. See the file for why it waits for
+            hydration rather than guessing. */}
+        <ReturnBand />
+
         {/* ══ THE TRIAL DAY ══ */}
         <section aria-labelledby="shop-trial" className={s.shell} style={{ padding: "18px 16px 0" }}>
           <div style={PANEL_LIVE}>
