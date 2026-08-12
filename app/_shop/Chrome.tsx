@@ -74,7 +74,7 @@ export function Mark({ size = 30 }: { size?: number }) {
 
 function Wordmark({ size = 18 }: { size?: number }) {
   return (
-    <span style={{ fontFamily: SANS, fontSize: size, fontWeight: 800, letterSpacing: "-0.025em", color: C.ink }}>
+    <span style={{ fontFamily: SANS, fontSize: size, fontWeight: 600, letterSpacing: "-0.025em", color: C.ink }}>
       Fit<span style={{ color: C.lime }}>Fuel</span>
     </span>
   );
@@ -124,7 +124,7 @@ export function ShopHeader({ active, waHref }: { active: Tab; waHref: string }) 
             section you are already looking at is a decoration. */}
         <form
           action="/menu"
-          style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: C.panel, border: `1px solid ${C.rule}`, padding: "0 10px", minHeight: 38 }}
+          style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: C.panel, border: `1px solid ${C.rule}`, padding: "0 10px", minHeight: 44 }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
@@ -168,10 +168,10 @@ export function ShopHeader({ active, waHref }: { active: Tab; waHref: string }) 
               href={t.href}
               aria-current={on ? "page" : undefined}
               style={{
-                flex: "none", display: "grid", placeItems: "center", minHeight: 38, padding: "0 13px",
+                flex: "none", display: "grid", placeItems: "center", minHeight: 44, padding: "0 13px",
                 borderBottom: `2px solid ${on ? C.lime : "transparent"}`, textDecoration: "none",
-                fontFamily: COND, fontWeight: 800, fontSize: 14, letterSpacing: "0.05em",
-                textTransform: "uppercase", color: on ? C.ink : C.dim,
+                fontFamily: COND, fontWeight: 600, fontSize: 14, letterSpacing: "0",
+                textTransform: "none", color: on ? C.ink : C.dim,
               }}
             >
               {t.label}
@@ -182,13 +182,13 @@ export function ShopHeader({ active, waHref }: { active: Tab; waHref: string }) 
           href={waHref}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 7, minHeight: 38, padding: "0 14px", border: `1px solid ${C.rule2}`, color: C.ink, textDecoration: "none", fontFamily: COND, fontWeight: 800, fontSize: 13.5, letterSpacing: "0.05em", textTransform: "uppercase" }}
+          style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 7, minHeight: 44, padding: "0 14px", border: `1px solid ${C.rule2}`, color: C.ink, textDecoration: "none", fontFamily: SANS, fontWeight: 600, fontSize: 13.5, letterSpacing: "0", textTransform: "none" }}
         >
           Talk to the kitchen
         </a>
       </nav>
 
-      <div className={s.shell} style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px 9px", ...label(10.5, { letterSpacing: "0.14em" }) }}>
+      <div className={s.shell} style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px 9px", ...label(10.5, { letterSpacing: "0.04em" }) }}>
         <span aria-hidden="true" className={s.pulse} style={{ width: 6, height: 6, background: C.lime, flex: "none" }} />
         <span style={{ color: C.ink }}>Kharadi</span>
         <span>· 9pm cut-off in</span>
@@ -218,7 +218,7 @@ export function ShopTabs({ active }: { active: Tab }) {
           className={s.up}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", minHeight: 52, padding: "0 16px", background: C.lime, border: 0, color: C.bg, cursor: "pointer" }}
         >
-          <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 15, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 15, letterSpacing: "0", textTransform: "none" }}>
             {cart.totals.count} {cart.totals.count === 1 ? "dish in order" : "dishes in order"}
           </span>
           <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
@@ -241,7 +241,7 @@ export function ShopTabs({ active }: { active: Tab }) {
                 <path d={TAB_ICONS[t.key][0]} />
                 <path d={TAB_ICONS[t.key][1]} />
               </svg>
-              <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0", textTransform: "none" }}>{t.label}</span>
             </Link>
           );
         })}
@@ -276,7 +276,7 @@ export function ShopFooter({ licence }: { licence: string }) {
       <div className={`${s.two}`} style={{ display: "grid", gap: 1, background: C.rule, borderTop: `1px solid ${C.rule}`, borderBottom: `1px solid ${C.rule}`, marginTop: 22 }}>
         {FOOTER_COLS.map((col) => (
           <div key={col.title} style={{ padding: 16, background: C.panel }}>
-            <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em", color: C.lime }), marginBottom: 12 }}>{col.title}</span>
+            <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em", color: C.lime }), marginBottom: 12 }}>{col.title}</span>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {col.links.map((l) => (
                 <Link
@@ -286,7 +286,7 @@ export function ShopFooter({ licence }: { licence: string }) {
                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, minHeight: 44, textDecoration: "none", fontFamily: SANS, fontSize: 13, color: C.mute }}
                 >
                   <span>{l.label}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", color: C.dim }}>{l.meta}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}>{l.meta}</span>
                 </Link>
               ))}
             </div>
@@ -298,7 +298,7 @@ export function ShopFooter({ licence }: { licence: string }) {
         <div className={s.two} style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {facts.map(([k, v]) => (
             <span key={k} style={{ padding: "12px 11px", background: C.panel }}>
-              <span style={{ display: "block", ...label(10, { letterSpacing: "0.16em" }) }}>{k}</span>
+              <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }) }}>{k}</span>
               <b style={{ display: "block", marginTop: 7, ...num(12) }}>{v}</b>
             </span>
           ))}

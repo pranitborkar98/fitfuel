@@ -19,7 +19,7 @@ import type { AddOn } from "@/lib/menu-alacarte";
 import { rs, type ShopDish } from "./catalog";
 import Sheet, { SheetClose } from "./Sheet";
 import Slot, { type SlotMap } from "./Slot";
-import { C, COND, MONO, SANS, body, display, figure, label, num, sub } from "./theme";
+import { C, MONO, SANS, body, display, figure, label, num, sub } from "./theme";
 
 const NONE = "None" as const;
 
@@ -64,7 +64,7 @@ export default function DishSheet({
 
       <div style={{ padding: 16 }}>
         <span style={{ display: "block", ...label(10, { letterSpacing: "0.18em", color: C.lime }) }}>{dish.categoryLabel}</span>
-        <h2 id="dish-sheet-title" style={display(28, { margin: "10px 0 0", lineHeight: 0.94, letterSpacing: "-0.02em" })}>{dish.name}</h2>
+        <h2 id="dish-sheet-title" style={display(28, { margin: "10px 0 0", lineHeight: 1.06, letterSpacing: "-0.02em" })}>{dish.name}</h2>
         <p style={body(13.5, { margin: "11px 0 0" })}>{dish.blurb}</p>
         {dish.variantNote && <p style={body(12.5, { margin: "9px 0 0", color: C.dim })}>{dish.variantNote}</p>}
 
@@ -72,7 +72,7 @@ export default function DishSheet({
           {macroCells.map(([k, v]) => (
             <span key={k} style={{ padding: "11px 9px", background: C.panel }}>
               <b style={figure(22, { display: "block" })}>{v}</b>
-              <span style={{ display: "block", marginTop: 7, ...label(10, { letterSpacing: "0.14em" }) }}>{k}</span>
+              <span style={{ display: "block", marginTop: 7, ...label(10, { letterSpacing: "0.04em" }) }}>{k}</span>
             </span>
           ))}
         </div>
@@ -90,7 +90,7 @@ export default function DishSheet({
 
         {hasAddOns && (
           <fieldset style={{ marginTop: 20, border: 0, padding: 0, margin: "20px 0 0" }}>
-            <legend style={{ ...label(10, { letterSpacing: "0.2em" }), marginBottom: 10, padding: 0 }}>Add protein</legend>
+            <legend style={{ ...label(10, { letterSpacing: "0.06em" }), marginBottom: 10, padding: 0 }}>Add protein</legend>
             <div style={{ display: "flex", flexDirection: "column", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
               {rows.map((a) => {
                 const on = a.kind === NONE ? !addOn : addOn === a.kind;
@@ -121,7 +121,7 @@ export default function DishSheet({
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.rule}` }}>
           <span>
-            <span style={{ display: "block", ...label(10, { letterSpacing: "0.16em" }) }}>Unit</span>
+            <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }) }}>Unit</span>
             <b style={figure(30, { display: "block", marginTop: 6 })}>{dish.orderable ? rs(unit) : "On request"}</b>
           </span>
           {dish.orderable ? (
@@ -131,7 +131,7 @@ export default function DishSheet({
               style={{
                 minHeight: 52, minWidth: 200, padding: "0 16px", cursor: "pointer",
                 background: C.lime, border: `1px solid ${C.lime}`, color: C.onLime,
-                fontFamily: COND, fontWeight: 800, fontSize: 15, letterSpacing: "0.06em", textTransform: "uppercase",
+                fontFamily: SANS, fontWeight: 600, fontSize: 15, letterSpacing: "0", textTransform: "none",
               }}
             >
               {qty > 0 ? `Add another · ${qty} in order` : "Add to order"}
@@ -143,7 +143,7 @@ export default function DishSheet({
               style={{
                 minHeight: 52, minWidth: 200, padding: "0 16px", cursor: "pointer",
                 background: "transparent", border: `1px solid ${asked ? C.lime : C.rule2}`, color: asked ? C.lime : C.mute,
-                fontFamily: COND, fontWeight: 800, fontSize: 15, letterSpacing: "0.06em", textTransform: "uppercase",
+                fontFamily: SANS, fontWeight: 600, fontSize: 15, letterSpacing: "0", textTransform: "none",
               }}
             >
               {asked ? "Price asked" : "Ask the price"}

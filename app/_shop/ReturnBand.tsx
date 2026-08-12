@@ -136,10 +136,10 @@ export default function ReturnBand() {
             id="return-band"
             style={{
               fontFamily: COND,
-              fontWeight: 900,
+              fontWeight: 600,
               fontSize: "clamp(20px,3vw,28px)",
               letterSpacing: "-0.02em",
-              textTransform: "uppercase",
+              textTransform: "none",
               color: C.ink,
               margin: "6px 0 0",
             }}
@@ -186,9 +186,9 @@ export default function ReturnBand() {
           maxWidth: 1240,
           margin: "10px auto 0",
           fontFamily: MONO,
-          fontSize: 10.5,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
+          fontSize: 12,
+          letterSpacing: "0.06em",
+          textTransform: "none",
           color: C.dim,
         }}
       >

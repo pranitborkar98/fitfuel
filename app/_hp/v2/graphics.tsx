@@ -34,7 +34,7 @@ export function Ring({
   const r = Math.max(26, Math.min(46, 26 + (kcal / 500) * 18));
   const C = 2 * Math.PI * r;
   const total = protein + carbs + fat || 1;
-  const palette = pal || ["#84cc16", "#9a9a94", "#5f5f59"];
+  const palette = pal || ["var(--fk-green)", "var(--fk-ink-2)", "var(--fk-ink-3)"];
   let acc = 0;
   const arcs: ReactNode[] = [];
   ([[protein, palette[0]!], [carbs, palette[1]!], [fat, palette[2]!]] as [number, string][]).forEach(
@@ -106,7 +106,7 @@ export function Marks({
     >
       <defs>
         <pattern id={`${uid}a`} width={cw + gap} height={chh + gap} patternUnits="userSpaceOnUse">
-          <rect width={cw} height={chh} fill="#33332f" />
+          <rect width={cw} height={chh} fill="var(--fk-line-2)" />
         </pattern>
         <pattern id={`${uid}b`} width={cw + gap} height={chh + gap} patternUnits="userSpaceOnUse">
           <rect width={cw} height={chh} fill={accent} />
@@ -135,17 +135,17 @@ export function PuneMap({ places }: { places: { name: string; lat: number; lng: 
 
   const grid: ReactNode[] = [];
   for (let k = -10; k <= 10; k += 2) {
-    grid.push(<line key={`gx${k}`} x1={W / 2 + k * s} y1={0} x2={W / 2 + k * s} y2={H} stroke="#171715" strokeWidth={1} />);
-    grid.push(<line key={`gy${k}`} x1={0} y1={H / 2 + k * s} x2={W} y2={H / 2 + k * s} stroke="#171715" strokeWidth={1} />);
+    grid.push(<line key={`gx${k}`} x1={W / 2 + k * s} y1={0} x2={W / 2 + k * s} y2={H} stroke="var(--fk-surface)" strokeWidth={1} />);
+    grid.push(<line key={`gy${k}`} x1={0} y1={H / 2 + k * s} x2={W} y2={H / 2 + k * s} stroke="var(--fk-surface)" strokeWidth={1} />);
   }
 
   const rings = [3, 6, 9].map((km) => (
     <g key={`r${km}`}>
-      <circle cx={W / 2} cy={H / 2} r={km * s} fill="none" stroke="#232320" strokeWidth={1} />
+      <circle cx={W / 2} cy={H / 2} r={km * s} fill="none" stroke="var(--fk-line)" strokeWidth={1} />
       <text
         x={W / 2 + 6}
         y={H / 2 - km * s - 7}
-        fill="#5f5f59"
+        fill="var(--fk-ink-3)"
         fontFamily="var(--font-mono), monospace"
         fontSize={12}
         letterSpacing={1.4}
@@ -156,7 +156,7 @@ export function PuneMap({ places }: { places: { name: string; lat: number; lng: 
   ));
 
   const spokes = pts.map((q, i) => (
-    <line key={`s${i}`} x1={W / 2} y1={H / 2} x2={px(q)} y2={py(q)} stroke="#1f1f1c" strokeWidth={1} />
+    <line key={`s${i}`} x1={W / 2} y1={H / 2} x2={px(q)} y2={py(q)} stroke="var(--fk-warm)" strokeWidth={1} />
   ));
 
   /* Labels point away from the kitchen, then get nudged apart per side. */
@@ -179,11 +179,11 @@ export function PuneMap({ places }: { places: { name: string; lat: number; lng: 
           x={lx}
           y={ly}
           textAnchor={right ? "start" : "end"}
-          fill="#c6c6c0"
+          fill="var(--fk-ink-2)"
           fontFamily="var(--font-mono), monospace"
           fontSize={13}
           letterSpacing={0.6}
-          stroke="#070707"
+          stroke="var(--fk-paper)"
           strokeWidth={4}
           paintOrder="stroke"
           strokeLinejoin="round"
@@ -193,12 +193,12 @@ export function PuneMap({ places }: { places: { name: string; lat: number; lng: 
       );
       return (
         <g key={`n${i}`}>
-          <rect x={px(q) - 4} y={py(q) - 4} width={8} height={8} fill="#f7f7f5" />
+          <rect x={px(q) - 4} y={py(q) - 4} width={8} height={8} fill="var(--fk-ink)" />
           {Math.abs(ly - (py(q) + 4.5)) > 3 && (
             <polyline
               points={`${px(q)},${py(q)} ${px(q) + (right ? 7 : -7)},${ly - 4} ${lx},${ly - 4}`}
               fill="none"
-              stroke="#4c4c46"
+              stroke="var(--fk-line-2)"
               strokeWidth={1}
             />
           )}
@@ -217,15 +217,15 @@ export function PuneMap({ places }: { places: { name: string; lat: number; lng: 
       {rings}
       {spokes}
       <g>
-        <rect x={W / 2 - 7} y={H / 2 - 7} width={14} height={14} fill="#84cc16" />
+        <rect x={W / 2 - 7} y={H / 2 - 7} width={14} height={14} fill="var(--fk-green)" />
         <text
           x={W / 2 + 20}
           y={H / 2 + 5}
-          fill="#84cc16"
+          fill="var(--fk-green)"
           fontFamily="var(--font-mono), monospace"
           fontSize={14}
           letterSpacing={0.8}
-          stroke="#070707"
+          stroke="var(--fk-paper)"
           strokeWidth={4.5}
           paintOrder="stroke"
           strokeLinejoin="round"
@@ -257,9 +257,9 @@ export function BandChart({ k }: { k: number[] }) {
 
   const grid: ReactNode[] = [];
   for (let v = lo; v <= hi; v += 100) {
-    grid.push(<line key={`g${v}`} x1={L} y1={Y(v)} x2={W - Rr} y2={Y(v)} stroke={v === lo ? "#2b2b26" : "#1a1a17"} strokeWidth={1} />);
+    grid.push(<line key={`g${v}`} x1={L} y1={Y(v)} x2={W - Rr} y2={Y(v)} stroke={v === lo ? "var(--fk-line-2)" : "var(--fk-warm)"} strokeWidth={1} />);
     grid.push(
-      <text key={`t${v}`} x={L - 12} y={Y(v) + 4} textAnchor="end" fill="#5f5f59" fontFamily="var(--font-mono), monospace" fontSize={12}>
+      <text key={`t${v}`} x={L - 12} y={Y(v) + 4} textAnchor="end" fill="var(--fk-ink-3)" fontFamily="var(--font-mono), monospace" fontSize={12}>
         {v.toLocaleString("en-IN")}
       </text>,
     );
@@ -275,7 +275,7 @@ export function BandChart({ k }: { k: number[] }) {
       fontFamily="var(--font-mono), monospace"
       fontSize={12}
       letterSpacing={0.6}
-      stroke="#070707"
+      stroke="var(--fk-paper)"
       strokeWidth={3.5}
       paintOrder="stroke"
     >
@@ -292,24 +292,24 @@ export function BandChart({ k }: { k: number[] }) {
     >
       {grid}
       {k.map((v, i) => (
-        <line key={`s${i}`} x1={X(i)} y1={Y(v)} x2={X(i)} y2={H - B} stroke={i < 7 ? "#3f4a26" : "#232320"} strokeWidth={i < 7 ? 2 : 1} />
+        <line key={`s${i}`} x1={X(i)} y1={Y(v)} x2={X(i)} y2={H - B} stroke={i < 7 ? "var(--fk-green-deep)" : "var(--fk-line)"} strokeWidth={i < 7 ? 2 : 1} />
       ))}
-      <line x1={L} y1={Y(avg)} x2={W - Rr} y2={Y(avg)} stroke="#85857e" strokeWidth={1} strokeDasharray="5 6" />
-      <text x={W - Rr} y={Y(avg) - 8} textAnchor="end" fill="#85857e" fontFamily="var(--font-mono), monospace" fontSize={12} letterSpacing={1}>
+      <line x1={L} y1={Y(avg)} x2={W - Rr} y2={Y(avg)} stroke="var(--fk-ink-3)" strokeWidth={1} strokeDasharray="5 6" />
+      <text x={W - Rr} y={Y(avg) - 8} textAnchor="end" fill="var(--fk-ink-3)" fontFamily="var(--font-mono), monospace" fontSize={12} letterSpacing={1}>
         AVERAGE {avg.toLocaleString("en-IN")}
       </text>
-      <polyline points={k.map((v, i) => `${X(i)},${Y(v)}`).join(" ")} fill="none" stroke="#84cc16" strokeWidth={2.2} strokeLinejoin="round" />
+      <polyline points={k.map((v, i) => `${X(i)},${Y(v)}`).join(" ")} fill="none" stroke="var(--fk-green)" strokeWidth={2.2} strokeLinejoin="round" />
       {k.map((v, i) => (
-        <rect key={`d${i}`} x={X(i) - 2.5} y={Y(v) - 2.5} width={5} height={5} fill={v === hiV ? "#f7f7f5" : v === loV ? "#f59e0b" : "#84cc16"} />
+        <rect key={`d${i}`} x={X(i) - 2.5} y={Y(v) - 2.5} width={5} height={5} fill={v === hiV ? "var(--fk-ink)" : v === loV ? "#8a5a00" : "var(--fk-green)"} />
       ))}
-      {note(hiV, k.indexOf(hiV), "#f7f7f5", `PEAK ${hiV.toLocaleString("en-IN")}`)}
-      {note(loV, k.indexOf(loV), "#f59e0b", `LOW ${loV.toLocaleString("en-IN")}`)}
+      {note(hiV, k.indexOf(hiV), "var(--fk-ink)", `PEAK ${hiV.toLocaleString("en-IN")}`)}
+      {note(loV, k.indexOf(loV), "#8a5a00", `LOW ${loV.toLocaleString("en-IN")}`)}
       {[0, 6, 14, 22, 29].map((i) => (
-        <text key={`x${i}`} x={X(i)} y={H - 12} textAnchor="middle" fill="#5f5f59" fontFamily="var(--font-mono), monospace" fontSize={12}>
+        <text key={`x${i}`} x={X(i)} y={H - 12} textAnchor="middle" fill="var(--fk-ink-3)" fontFamily="var(--font-mono), monospace" fontSize={12}>
           D{i + 1}
         </text>
       ))}
-      <text x={L} y={T - 4} fill="#3f4a26" fontFamily="var(--font-mono), monospace" fontSize={11} letterSpacing={1.4}>
+      <text x={L} y={T - 4} fill="var(--fk-green-deep)" fontFamily="var(--font-mono), monospace" fontSize={12} letterSpacing={1.4}>
         WEEK ONE, BELOW
       </text>
     </svg>
@@ -336,19 +336,19 @@ export function EngineChart({ w }: { w: number[] }) {
       role="img"
       aria-label={`Four weigh-ins: ${w.join(", ")} kilograms`}
     >
-      <line x1={0} y1={y(w[0]!)} x2={320} y2={y(w[0]!)} stroke="#232320" strokeWidth={1} strokeDasharray="3 4" />
+      <line x1={0} y1={y(w[0]!)} x2={320} y2={y(w[0]!)} stroke="var(--fk-line)" strokeWidth={1} strokeDasharray="3 4" />
       <polyline
         points={w.map((kg, i) => `${16 + i * 96},${y(kg)}`).join(" ")}
         fill="none"
-        stroke="#84cc16"
+        stroke="var(--fk-green)"
         strokeWidth={2.5}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
       {w.map((kg, i) => (
         <g key={i}>
-          <circle cx={16 + i * 96} cy={y(kg)} r={5} fill="#070707" stroke="#84cc16" strokeWidth={2.5} />
-          <text x={16 + i * 96} y={y(kg) - 13} fill="#f7f7f5" fontFamily="var(--font-mono), monospace" fontSize={11} textAnchor="middle">
+          <circle cx={16 + i * 96} cy={y(kg)} r={5} fill="var(--fk-paper)" stroke="var(--fk-green)" strokeWidth={2.5} />
+          <text x={16 + i * 96} y={y(kg) - 13} fill="var(--fk-ink)" fontFamily="var(--font-mono), monospace" fontSize={12} textAnchor="middle">
             {kg.toFixed(1)}
           </text>
         </g>
@@ -364,7 +364,7 @@ export function barcodeBars() {
   for (let i = 0; i < 34; i++) {
     seed = (seed * 1103515245 + 12345) % 2147483648;
     const w = 1 + (seed % 4);
-    a.push({ w: w + "px", c: seed % 5 === 0 ? "#84cc16" : w > 2 ? "#c6c6c0" : "#4a4a45" });
+    a.push({ w: w + "px", c: seed % 5 === 0 ? "var(--fk-green)" : w > 2 ? "var(--fk-ink-2)" : "var(--fk-line-2)" });
   }
   return a;
 }

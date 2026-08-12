@@ -1,93 +1,95 @@
 // app/_shop/theme.ts
 //
 // The storefront's palette and type. One file, and the only place in app/_shop
-// that names a colour.
+// that names a colour. Shop, Chrome, DishSheet, PlanSheet, ReturnBand, Sheet
+// and Slot all render through it, so this file IS the design of every section.
 //
-// REBUILT 2026-08-12, LIGHT AND WARM. This file used to read the --ff-* dark
-// tokens: near-black ground, acid lime #84cc16, uppercase condensed on every
-// heading, radius 0 everywhere. On a phone that produced a screen the owner
-// read as a trading terminal rather than a food shop, and he was right. Acid
-// green on near-black is the palette of a system dashboard. Food photographed
-// on a dark ground reads as a laboratory sample; the same photograph on warm
-// cream reads as lunch.
+// REBUILT FOR REAL 2026-08-12.
 //
-// So the ground is cream, the accent is a leaf green rather than a highlighter,
-// headings set in sentence case, and boxes have a radius. The dark tokens are
-// deliberately NOT read here any more: the app half at /dashboard keeps them,
-// because density that is hostile on a storefront is correct in a food diary.
-// The two halves are allowed to look different.
+// The previous header of this file already claimed "REBUILT 2026-08-12, LIGHT
+// AND WARM — the ground is cream, the accent is a leaf green", and listed
+// contrast ratios against #FBF7F0. None of it was true in the code: every value
+// below it still read `var(--ff-bg)`, `var(--ff-lime)` and friends, which
+// resolve to #070707 and #84cc16 in globals.css. A commit named "light warm
+// tokens" shipped, the comment changed, the pixels did not. That is the whole
+// reason the owner was still looking at a near-black trading terminal on his
+// phone after the redesign was reported as done.
 //
-// CONTRAST, checked rather than assumed, because this is the one thing the old
-// system got right and it is not being reopened:
-//   ink   #1A1714 on bg #FBF7F0   15.9:1
-//   mute  #554C43 on bg           8.1:1
-//   dim   #6E6358 on bg           5.4:1   (was #8A7F73 at 3.5:1, which failed)
-//   green #2F7A3E on panel #FFF   4.9:1
-//   white on green #2F7A3E        4.9:1
+// So: the values now actually point at the warm ramp in app/_design/tokens.css.
+// If you are reading this to find out what the shop looks like, read the values,
+// not this comment.
+//
+// EXPORT SIGNATURES ARE UNCHANGED ON PURPOSE. Every key in `C` keeps its old
+// name — including `lime`, `limeLight` and `onLime`, which are now green, light
+// green and white. Renaming them would touch seven components and ~1,900 lines
+// of JSX for zero visual gain, and the point of this change is that it restyles
+// the ENTIRE storefront without deleting or rewriting a single section.
+//
+// CONTRAST, verified by npm run design:contrast rather than asserted here.
 
 /* ── Faces ─────────────────────────────────────────────────────────────────
-   Barlow Condensed display, Archivo body, JetBrains Mono for every number.
-   Three, and no fourth. */
-export const COND = "var(--ff-cond), sans-serif";
-export const SANS = "var(--font-archivo), sans-serif";
-export const MONO = "var(--font-mono), monospace";
+   Newsreader carries the display voice now. A condensed athletic grotesque set
+   at 900 in uppercase is what made a food shop read as an instrument panel;
+   a warm editorial serif in sentence case is the single biggest lever on
+   "does this look like food". Archivo body, JetBrains Mono for real numbers. */
+export const COND = "var(--fk-display), Georgia, serif";
+export const SANS = "var(--fk-sans), sans-serif";
+export const MONO = "var(--fk-mono), monospace";
 
 /* ── Colour ────────────────────────────────────────────────────────────────
-   The whole ramp, and nothing that is not on it. `line` and `wash` are the two
-   values the prototype used that have no token: a 4px macro-bar trough and the
-   10% lime fill behind a selected segment. Both are derived from tokens rather
-   than being new greys. */
+   Warm paper hosts the food; it never competes with it. */
 export const C = {
-  bg: "var(--ff-bg)",
-  panel: "var(--ff-panel)",
-  panel2: "var(--ff-panel-2)",
-  ink: "var(--ff-ink)",
-  mute: "var(--ff-mute)",
-  dim: "var(--ff-dim)",
-  rule: "var(--ff-rule)",
-  rule2: "var(--ff-rule-2)",
-  lime: "var(--ff-lime)",
-  limeLight: "var(--ff-lime-light)",
-  /** On-lime text. Near-black rather than pure, so the lime does not vibrate. */
-  onLime: "#06140b",
-  /** Macro-bar trough and the fat segment: the two steps between rule and dim. */
-  trough: "#1c1c1a",
-  fat: "#5f5f59",
-  wash: "rgba(132,204,22,0.1)",
+  bg: "var(--fk-paper)",
+  panel: "var(--fk-surface)",
+  panel2: "var(--fk-warm)",
+  ink: "var(--fk-ink)",
+  mute: "var(--fk-ink-2)",
+  dim: "var(--fk-ink-3)",
+  rule: "var(--fk-line)",
+  rule2: "var(--fk-line-2)",
+  /** LEGACY KEY NAMES. `lime` is the deep herb green; `onLime` is white. */
+  lime: "var(--fk-green)",
+  limeLight: "var(--fk-green-deep)",
+  onLime: "#ffffff",
+  /** Macro-bar trough and the fat segment. */
+  trough: "var(--fk-warm-2)",
+  fat: "var(--fk-terracotta)",
+  wash: "var(--fk-green-wash)",
 } as const;
 
 /* ── Type helpers ──────────────────────────────────────────────────────────
-   Every heading, label and figure on the shop is one of these five. Written as
-   functions returning style objects so a caller varies the size and nothing
-   else, which is what stops the ramp drifting section by section. */
+   Same five helpers, same call sites, different voice. */
 
-/** UPPERCASE Barlow Condensed 900, flush left, tight. The display voice. */
+/** The display voice: Newsreader, sentence case, tight. NOT uppercase — the
+ *  copy in Shop.tsx is already authored in sentence case ("Anyone can sell you
+ *  a salad", "Order tonight"), and the old `textTransform: uppercase` was
+ *  shouting it back at the customer. */
 export const display = (size: number | string, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: COND,
-  fontWeight: 900,
+  fontWeight: 500,
   fontSize: size,
-  lineHeight: 0.88,
-  letterSpacing: "-0.03em",
-  textTransform: "uppercase",
+  lineHeight: 1.08,
+  letterSpacing: "-0.02em",
+  textTransform: "none",
   color: C.ink,
   margin: 0,
   ...extra,
 });
 
-/** Barlow Condensed 800 for a card or row title, which sets one notch tighter. */
+/** A card or row title, one notch tighter. */
 export const sub = (size: number | string, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: COND,
-  fontWeight: 800,
+  fontWeight: 500,
   fontSize: size,
-  lineHeight: 1.06,
+  lineHeight: 1.2,
   letterSpacing: "-0.01em",
-  textTransform: "uppercase",
+  textTransform: "none",
   color: C.ink,
   ...extra,
 });
 
-/** Archivo body. 12px floor on every surface. */
-export const body = (size = 13.5, extra: React.CSSProperties = {}): React.CSSProperties => ({
+/** Archivo body. */
+export const body = (size = 14.5, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: SANS,
   fontSize: size,
   lineHeight: 1.6,
@@ -97,101 +99,111 @@ export const body = (size = 13.5, extra: React.CSSProperties = {}): React.CSSPro
 });
 
 /**
- * A mono section label. One per section, UPPERCASE, wide, `dim`.
+ * A section label. One per section.
  *
- * THE CLAMP IS THE POINT. The prototype sets these labels between 8.5px and
- * 10.5px, and our floor is 12px with a stated reason: below that they
- * are unreadable on the mid-range Android phones our customers actually order
- * from. That is a legibility rule, not a taste one, so the floor wins and every
- * call site keeps the size it asked for as an intent rather than a value.
+ * NO LONGER MONO. Setting every caption in tracked-out uppercase monospace is
+ * the specific thing the owner called "AI slop" — it annotates rather than
+ * labels, and it is what made the page read as a readout. Mono is now reserved
+ * for figures that were actually measured (see num/figure below).
  *
- * Raising the floor is one number. If the tighter prototype setting is wanted
- * back, this is the only line to change.
+ * THE 12px FLOOR STAYS. Below that these are unreadable on the mid-range
+ * Android phones our customers order from. That is legibility, not taste.
  */
 export const MIN_TYPE_PX = 12;
 
 export const label = (size = 12, extra: React.CSSProperties = {}): React.CSSProperties => ({
-  fontFamily: MONO,
+  fontFamily: SANS,
+  fontWeight: 600,
   fontSize: Math.max(size, MIN_TYPE_PX),
-  letterSpacing: "0.2em",
+  letterSpacing: "0.06em",
   textTransform: "uppercase",
   color: C.dim,
   ...extra,
 });
 
-/** Any number that sits in a column: mono, tabular, so digits line up. Same
- *  12px floor as label(), and for the same reason: a macro figure nobody can
- *  read on a phone is worse than no figure. */
+/** Any number in a column: mono, tabular, so digits line up. */
 export const num = (size = 12, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: MONO,
-  fontWeight: 700,
+  fontWeight: 600,
   fontSize: Math.max(size, MIN_TYPE_PX),
   fontVariantNumeric: "tabular-nums",
   color: C.ink,
   ...extra,
 });
 
-/** A headline-scale figure: condensed 900 with tabular digits. */
+/** A headline-scale figure. */
 export const figure = (size: number | string, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: COND,
-  fontWeight: 900,
+  fontWeight: 600,
   fontSize: size,
-  lineHeight: 0.9,
-  letterSpacing: "-0.035em",
+  lineHeight: 1,
+  letterSpacing: "-0.02em",
   fontVariantNumeric: "tabular-nums",
   color: C.ink,
   ...extra,
 });
 
 /* ── Structure ─────────────────────────────────────────────────────────────
-   Radius is 0 everywhere, so a "card" is a 1px hairline and a recessed panel.
-   These four cover every box the shop draws. */
+   Radius is back, restrained. A card is white on warm paper with one hairline
+   and one shallow, warm-tinted shadow. No glow, no glass, no coloured shadow. */
 
-/** A hairline-bordered panel on the recessed ground. */
-export const PANEL: React.CSSProperties = { background: C.panel, border: `1px solid ${C.rule}` };
+export const PANEL: React.CSSProperties = {
+  background: C.panel,
+  border: `1px solid ${C.rule}`,
+  borderRadius: "var(--fk-r-lg)",
+  boxShadow: "var(--fk-shadow-1)",
+};
 
-/** The same panel, promoted: lime hairline for the one thing per section that
- *  is being sold. Never more than one of these visible at a time. */
-export const PANEL_LIVE: React.CSSProperties = { background: C.panel, border: `1px solid ${C.lime}` };
+/** The same panel, promoted: green hairline for the one thing per section being
+ *  sold. Never more than one visible at a time. */
+export const PANEL_LIVE: React.CSSProperties = {
+  background: C.panel,
+  border: `1px solid ${C.lime}`,
+  borderRadius: "var(--fk-r-lg)",
+  boxShadow: "var(--fk-shadow-2)",
+};
 
 /** A hairline grid: 1px gaps over the rule colour, so the dividers ARE the gap.
- *  Cheaper than borders per cell and it never double-draws at a seam. */
+ *  `overflow: hidden` lets the outer radius clip the cells. */
 export const grid = (cols: string, extra: React.CSSProperties = {}): React.CSSProperties => ({
   display: "grid",
   gridTemplateColumns: cols,
   gap: 1,
   background: C.rule,
   border: `1px solid ${C.rule}`,
+  borderRadius: "var(--fk-r-lg)",
+  overflow: "hidden",
   ...extra,
 });
 
-/** A horizontally scrolling rail. `ffx` hides the scrollbar without hiding the
- *  scroll: the rails stay keyboard and trackpad reachable. */
+/** A horizontally scrolling rail — the webapp's primary browse gesture. */
 export const RAIL: React.CSSProperties = {
   display: "flex",
-  gap: 1,
+  gap: 12,
   overflowX: "auto",
   scrollSnapType: "x mandatory",
+  scrollPadding: "0 16px",
 };
 
 /* ── Controls ──────────────────────────────────────────────────────────────
-   44×44 minimum on touch is a rule, not a preference, so the minimum
-   height is baked into the helper rather than left to each call site. */
+   44×44 minimum on touch is a rule, not a preference, so it is baked in here
+   rather than left to each call site. */
 
 export const solidBtn = (extra: React.CSSProperties = {}): React.CSSProperties => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   minHeight: 44,
-  padding: "0 16px",
+  padding: "0 18px",
   background: C.lime,
   border: `1px solid ${C.lime}`,
+  borderRadius: "var(--fk-r)",
   color: C.onLime,
-  fontFamily: COND,
-  fontWeight: 900,
+  fontFamily: SANS,
+  fontWeight: 600,
   fontSize: 15,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
+  letterSpacing: "0",
+  textTransform: "none",
   cursor: "pointer",
   ...extra,
 });
@@ -201,41 +213,43 @@ export const ghostBtn = (on = false, extra: React.CSSProperties = {}): React.CSS
   alignItems: "center",
   justifyContent: "center",
   minHeight: 44,
-  padding: "0 16px",
-  background: "transparent",
-  border: `1px solid ${on ? C.lime : C.rule2}`,
-  color: on ? C.lime : C.ink,
-  fontFamily: COND,
-  fontWeight: 800,
-  fontSize: 14,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
+  padding: "0 18px",
+  background: on ? C.wash : "transparent",
+  border: `1px solid ${on ? C.lime : "var(--fk-line-strong)"}`,
+  borderRadius: "var(--fk-r)",
+  color: on ? C.limeLight : C.ink,
+  fontFamily: SANS,
+  fontWeight: 600,
+  fontSize: 14.5,
+  letterSpacing: "0",
+  textTransform: "none",
   cursor: "pointer",
   ...extra,
 });
 
-/** A filter chip. Square, hairline, lime when on. Never a pill. */
+/** A filter chip — the webapp browse control. Rounded, because this is the one
+ *  place a full radius genuinely belongs. */
 export const chip = (on: boolean, extra: React.CSSProperties = {}): React.CSSProperties => ({
   flex: "none",
   display: "inline-flex",
   alignItems: "center",
   gap: 7,
-  minHeight: 38,
-  padding: "0 14px",
-  background: on ? C.lime : "transparent",
-  border: `1px solid ${on ? C.lime : C.rule}`,
-  color: on ? C.onLime : C.mute,
-  fontFamily: COND,
-  fontWeight: 800,
-  fontSize: 13.5,
-  letterSpacing: "0.05em",
-  textTransform: "uppercase",
+  minHeight: 44,
+  padding: "0 16px",
+  background: on ? C.ink : "transparent",
+  border: `1px solid ${on ? C.ink : "var(--fk-line-strong)"}`,
+  borderRadius: "var(--fk-r-full)",
+  color: on ? C.bg : C.mute,
+  fontFamily: SANS,
+  fontWeight: 600,
+  fontSize: 14,
+  letterSpacing: "0",
+  textTransform: "none",
   cursor: "pointer",
   ...extra,
 });
 
-/** A segmented control cell: top rule lights, ground washes. Used by the plan
- *  configurator, the corporate seat bands and the meal-count picker. */
+/** A segmented control cell: top rule lights, ground washes. */
 export const seg = (on: boolean, extra: React.CSSProperties = {}): React.CSSProperties => ({
   padding: "12px 11px",
   textAlign: "left",
@@ -249,13 +263,14 @@ export const seg = (on: boolean, extra: React.CSSProperties = {}): React.CSSProp
 });
 
 /* ── The shell ─────────────────────────────────────────────────────────────
-   The prototype frames itself in a 480px device and widens to 940px at 860px.
-   On the real site the page is the document, so the shell width becomes the
-   content measure and the breakpoint stays where the design put it. */
-export const SHELL_MAX = 940;
+   Widened from 940 to 1120. 940 was inherited from a 480px device mock-up and
+   it is why the shop read as a phone screenshot stretched onto a desktop; a
+   food webapp wants the extra column of dishes. The grids below it are all
+   `repeat(auto-fit, minmax(...))` or explicit breakpoints, so they absorb it. */
+export const SHELL_MAX = 1120;
 export const WRAP: React.CSSProperties = {
   width: "100%",
   maxWidth: SHELL_MAX,
   margin: "0 auto",
-  padding: "0 clamp(16px,4vw,28px)",
+  padding: "0 clamp(16px,4vw,32px)",
 };

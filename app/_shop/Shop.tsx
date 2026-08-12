@@ -93,8 +93,9 @@ function DishAction({ dish, size = "row" }: { dish: ShopDish; size?: "row" | "ra
   const base: React.CSSProperties = {
     display: "flex", alignItems: "center", justifyContent: "center",
     minHeight: 44, minWidth: compact ? 60 : 104, padding: "0 12px",
-    fontFamily: COND, fontWeight: 800, fontSize: compact ? 12.5 : 13.5,
-    letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
+    fontFamily: SANS, fontWeight: 600, fontSize: compact ? 13 : 14,
+    letterSpacing: "0", textTransform: "none", cursor: "pointer",
+    borderRadius: "var(--fk-r)",
     ...(size === "tile" ? { margin: 11, minHeight: 44 } : null),
   };
 
@@ -145,7 +146,13 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
   const dayOne = days[0]!;
 
   return (
-    <div style={{ position: "relative", background: C.bg, color: C.ink, minHeight: "100vh", fontFamily: SANS, overflowX: "clip" }}>
+    /* `fk` opts this subtree into the warm design system. It does two things
+       that cannot be done from inline styles: app/_design/base.css uses
+       `html/body/main:has(.fk)` to flip the page ground (globals.css paints all
+       three near-black for the legacy pages), and it exempts the storefront
+       from the global `border-radius: 0 !important` ban that would otherwise
+       flatten every card and chip this file draws. */
+    <div className="fk" style={{ position: "relative", background: C.bg, color: C.ink, minHeight: "100vh", fontFamily: SANS, overflowX: "clip" }}>
       {/* Generated grain. A data URI, so there is no image request and nothing
           to 404. Fixed, overlay, and never in the way of a pointer. */}
       <div
@@ -173,7 +180,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
           <div style={PANEL_LIVE}>
             <div style={{ padding: "16px 16px 12px" }}>
               <span style={{ display: "block", ...label(10.5, { color: C.lime }), marginBottom: 9 }}>Start here · one day</span>
-              <h1 id="shop-trial" style={display(34, { lineHeight: 0.86 })}>
+              <h1 id="shop-trial" style={display(34, { lineHeight: 1.06 })}>
                 Trial day
                 <br />
                 {TRIAL_TOTAL_GLYPH} all in
@@ -210,7 +217,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         <section aria-labelledby="shop-aisles" className={s.shell} style={{ padding: "26px 16px 0" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
             <h2 id="shop-aisles" style={display(22, { lineHeight: 1, letterSpacing: "-0.02em" })}>Shop by course</h2>
-            <span style={label(10.5, { letterSpacing: "0.16em" })}>{AISLES.length} aisles</span>
+            <span style={label(10.5, { letterSpacing: "0.06em" })}>{AISLES.length} aisles</span>
           </div>
           <div className={s.four} style={grid("repeat(4,1fr)")}>
             {AISLES.map((a) => (
@@ -231,7 +238,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         <section aria-labelledby="shop-tonight" className={s.shell} style={{ padding: "30px 16px 0" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
             <h2 id="shop-tonight" style={display(26, { lineHeight: 1, letterSpacing: "-0.025em" })}>Order tonight</h2>
-            <Link href="/menu" className={s.under} style={{ ...label(10.5, { letterSpacing: "0.14em", color: C.lime }), display: "inline-flex", alignItems: "center", minHeight: 44, paddingLeft: 8, textDecoration: "none" }}>
+            <Link href="/menu" className={s.under} style={{ ...label(10.5, { letterSpacing: "0.04em", color: C.lime }), display: "inline-flex", alignItems: "center", minHeight: 44, paddingLeft: 8, textDecoration: "none" }}>
               All {MENU_STATS.items} →
             </Link>
           </div>
@@ -245,7 +252,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               <article key={d.id} className={s.tile} style={{ background: C.panel, display: "flex", flexDirection: "column" }}>
                 <div style={{ position: "relative", aspectRatio: "3/2", background: C.panel2, borderBottom: `1px solid ${C.rule}`, overflow: "hidden" }}>
                   <Slot images={images} name={d.slot} alt={d.name} dish={d} />
-                  <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, color: C.bg, ...label(10, { letterSpacing: "0.16em", color: C.bg }), padding: "5px 8px", pointerEvents: "none" }}>
+                  <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, color: C.bg, ...label(10, { letterSpacing: "0.06em", color: C.bg }), padding: "5px 8px", pointerEvents: "none" }}>
                     {d.categoryLabel}
                   </span>
                   <span style={{ position: "absolute", right: 0, bottom: 0, background: C.bg, padding: "4px 8px", ...figure(21, { lineHeight: 1 }), pointerEvents: "none" }}>
@@ -283,7 +290,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
           <section key={course.key} aria-labelledby={`rail-${course.key}`} style={{ padding: "28px 0 0" }}>
             <div className={s.shell} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "0 16px", marginBottom: 4 }}>
               <h2 id={`rail-${course.key}`} style={display(22, { lineHeight: 1, letterSpacing: "-0.02em" })}>{course.label}</h2>
-              <span style={label(10, { letterSpacing: "0.14em" })}>{course.n} dishes</span>
+              <span style={label(10, { letterSpacing: "0.04em" })}>{course.n} dishes</span>
             </div>
             <p className={s.shell} style={body(12.5, { margin: "0 auto 12px", padding: "0 16px", color: C.dim })}>{course.note}</p>
 
@@ -297,7 +304,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                     </span>
                   </div>
                   <button type="button" onClick={() => setSheetDish(d)} style={{ all: "unset", cursor: "pointer", display: "block", padding: "12px 12px 0" }}>
-                    <span style={{ display: "block", ...sub(15), minHeight: 32 }}>{d.name}</span>
+                    <span style={{ display: "block", ...sub(15), minHeight: 44 }}>{d.name}</span>
                     <span style={{ display: "block", marginTop: 7, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.dim }}>{d.shortBlurb}</span>
                   </button>
                   <div style={{ marginTop: "auto", padding: "11px 12px 0" }}>
@@ -307,7 +314,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: 12 }}>
-                    <span style={d.orderable ? figure(21, { lineHeight: 1 }) : label(11, { letterSpacing: "0.16em" })}>{d.priceLabel}</span>
+                    <span style={d.orderable ? figure(21, { lineHeight: 1 }) : label(11, { letterSpacing: "0.06em" })}>{d.priceLabel}</span>
                     <DishAction dish={d} size="rail" />
                   </div>
                 </article>
@@ -338,7 +345,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                   {meals.map((m) => (
                     <span key={m.slot} style={{ position: "relative", display: "block", height: 104, background: C.panel2, overflow: "hidden" }}>
                       <Slot images={images} name={dishSlot(m.name)} alt={m.name} dish={m} sizes="25vw" />
-                      <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, color: C.bg, fontFamily: MONO, fontWeight: 700, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", padding: "4px 6px", pointerEvents: "none" }}>
+                      <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, color: C.bg, fontFamily: MONO, fontWeight: 700, fontSize: 12, letterSpacing: "0.04em", textTransform: "none", padding: "4px 6px", pointerEvents: "none" }}>
                         {m.slot}
                       </span>
                       <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "12px 6px 5px", background: "linear-gradient(transparent,rgba(7,7,7,0.96))", ...num(10), pointerEvents: "none" }}>
@@ -352,15 +359,15 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-                        <span aria-hidden="true" style={{ width: 7, height: 7, flex: "none", background: "#22c55e" }} />
-                        <span style={label(10, { letterSpacing: "0.16em" })}>Veg · standard · 30-day rotation</span>
+                        <span aria-hidden="true" style={{ width: 7, height: 7, flex: "none", background: "var(--fk-green)" }} />
+                        <span style={label(10, { letterSpacing: "0.06em" })}>Veg · standard · 30-day rotation</span>
                       </span>
-                      <b style={display(30, { display: "block", lineHeight: 0.9 })}>{p.label}</b>
+                      <b style={display(30, { display: "block", lineHeight: 1.06 })}>{p.label}</b>
                       <span style={{ display: "block", marginTop: 6, fontFamily: SANS, fontSize: 12.5, color: C.dim }}>{p.note}</span>
                     </span>
                     <span style={{ flex: "none", textAlign: "right" }}>
                       <b style={figure(30, { display: "block", color: C.lime })}>{p.kcal?.toLocaleString("en-IN") ?? "—"}</b>
-                      <span style={{ display: "block", marginTop: 6, ...label(10, { letterSpacing: "0.14em" }) }}>kcal a day</span>
+                      <span style={{ display: "block", marginTop: 6, ...label(10, { letterSpacing: "0.04em" }) }}>kcal a day</span>
                     </span>
                   </div>
 
@@ -376,7 +383,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                     <span>
                       <span style={{ display: "block" }}>
                         <b style={figure(23)}>{rs(PER_MEAL_RS)}</b>
-                        <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", color: C.dim }}> a meal</span>
+                        <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}> a meal</span>
                       </span>
                       <span style={{ display: "block", marginTop: 5, ...label(10, { letterSpacing: "0.1em" }) }}>
                         {rs(MONTH_TOTAL_RS)} a month, all in
@@ -396,7 +403,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
             className={s.tile}
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", minHeight: 54, padding: "0 15px", border: `1px solid ${C.rule2}`, textDecoration: "none" }}
           >
-            <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 16, letterSpacing: "0.06em", textTransform: "uppercase", color: C.ink }}>See more plans</span>
+            <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, letterSpacing: "0", textTransform: "none", color: C.ink }}>See more plans</span>
             <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <span style={label(10, { letterSpacing: "0.12em" })}>{Math.max(0, counts.plans - 3)} more</span>
               <span style={{ fontFamily: MONO, fontSize: 13, color: C.lime }}>→</span>
@@ -408,7 +415,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         <section aria-labelledby="shop-office" style={{ padding: "30px 0 0" }}>
           <div className={s.shell} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, padding: "0 16px", marginBottom: 4 }}>
             <h2 id="shop-office" style={display(26, { lineHeight: 1, letterSpacing: "-0.025em" })}>For the office</h2>
-            <Link href="/corporate" className={s.under} style={{ ...label(10.5, { letterSpacing: "0.14em", color: C.lime }), display: "inline-flex", alignItems: "center", minHeight: 44, paddingLeft: 8, textDecoration: "none" }}>Bulk rates →</Link>
+            <Link href="/corporate" className={s.under} style={{ ...label(10.5, { letterSpacing: "0.04em", color: C.lime }), display: "inline-flex", alignItems: "center", minHeight: 44, paddingLeft: 8, textDecoration: "none" }}>Bulk rates →</Link>
           </div>
           <p className={s.shell} style={body(13, { margin: "0 auto 14px", padding: "0 16px" })}>
             Same kitchen, priced per seat. Every employee still picks their own goal and diet; you get one GST invoice.
@@ -418,10 +425,10 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               <article key={p.slug} className={s.tile} style={{ flex: "none", width: 214, background: C.panel, border: `1px solid ${C.rule}`, display: "flex", flexDirection: "column", scrollSnapAlign: "start" }}>
                 <div style={{ position: "relative", height: 118, background: C.panel2, borderBottom: `1px solid ${C.rule}`, overflow: "hidden" }}>
                   <Slot images={images} name={`corporate-${p.slug}`} alt={p.label} sizes="214px" />
-                  <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, ...label(10, { letterSpacing: "0.14em", color: C.bg }), padding: "4px 7px", pointerEvents: "none" }}>{p.tag}</span>
+                  <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, ...label(10, { letterSpacing: "0.04em", color: C.bg }), padding: "4px 7px", pointerEvents: "none" }}>{p.tag}</span>
                 </div>
                 <div style={{ padding: 12, display: "flex", flexDirection: "column", flex: 1 }}>
-                  <b style={display(20, { display: "block", lineHeight: 0.94, letterSpacing: "-0.02em" })}>{p.label}</b>
+                  <b style={display(20, { display: "block", lineHeight: 1.06, letterSpacing: "-0.02em" })}>{p.label}</b>
                   <span style={{ display: "block", marginTop: 8, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.dim }}>
                     {p.note.split(".")[0]}.
                   </span>
@@ -439,7 +446,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               className={s.tile}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", minHeight: 54, padding: "0 15px", border: `1px solid ${C.lime}`, textDecoration: "none" }}
             >
-              <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 16, letterSpacing: "0.06em", textTransform: "uppercase", color: C.lime }}>Price your team</span>
+              <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, letterSpacing: "0", textTransform: "none", color: C.lime }}>Price your team</span>
               <span style={label(10, { letterSpacing: "0.1em" })}>from {rs(CORP_FROM_RS)} a meal</span>
             </Link>
           </div>
@@ -449,7 +456,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         <section aria-labelledby="shop-digital" className={s.shell} style={{ padding: "32px 16px 0" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
             <h2 id="shop-digital" style={display(26, { lineHeight: 1, letterSpacing: "-0.025em" })}>Not in Pune?</h2>
-            <Link href="/plans/digital" className={s.under} style={{ ...label(10.5, { letterSpacing: "0.14em", color: C.lime }), display: "inline-flex", alignItems: "center", minHeight: 44, paddingLeft: 8, textDecoration: "none" }}>Digital plans →</Link>
+            <Link href="/plans/digital" className={s.under} style={{ ...label(10.5, { letterSpacing: "0.04em", color: C.lime }), display: "inline-flex", alignItems: "center", minHeight: 44, paddingLeft: 8, textDecoration: "none" }}>Digital plans →</Link>
           </div>
           <p style={body(13, { margin: "0 0 14px" })}>
             Cook it yourself, anywhere in India. The same 30-day plan as a PDF: recipes, per-meal macros, a consolidated
@@ -460,12 +467,12 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               <Link key={d.key} href="/plans/digital" className={s.tile} style={{ display: "block", background: C.panel, textDecoration: "none" }}>
                 <span style={{ position: "relative", display: "block", height: 126, background: C.panel2, borderBottom: `1px solid ${C.rule}`, overflow: "hidden" }}>
                   <Slot images={images} name={`digital-${d.key.toLowerCase()}`} alt={d.label} sizes="50vw" />
-                  <span style={{ position: "absolute", top: 0, left: 0, background: d.popular ? C.lime : C.bg, color: d.popular ? C.bg : C.dim, ...label(10, { letterSpacing: "0.14em", color: d.popular ? C.bg : C.dim }), padding: "4px 7px", pointerEvents: "none" }}>
+                  <span style={{ position: "absolute", top: 0, left: 0, background: d.popular ? C.lime : C.bg, color: d.popular ? C.bg : C.dim, ...label(10, { letterSpacing: "0.04em", color: d.popular ? C.bg : C.dim }), padding: "4px 7px", pointerEvents: "none" }}>
                     {d.popular ? "Most popular" : "Cook it yourself"}
                   </span>
                 </span>
                 <span style={{ display: "block", padding: 12 }}>
-                  <b style={display(21, { display: "block", lineHeight: 0.94, letterSpacing: "-0.025em" })}>{d.label}</b>
+                  <b style={display(21, { display: "block", lineHeight: 1.06, letterSpacing: "-0.025em" })}>{d.label}</b>
                   <span style={{ display: "block", marginTop: 7, ...label(10, { letterSpacing: "0.1em" }) }}>30-day PDF · {d.bullets.length} inclusions</span>
                   <span style={{ display: "block", marginTop: 9, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.dim }}>{d.bullets[0]}</span>
                 </span>
@@ -478,7 +485,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         <section aria-labelledby="shop-moats" style={{ marginTop: 44, padding: "26px 0 22px", background: C.panel, borderTop: `1px solid ${C.rule}`, borderBottom: `1px solid ${C.rule}` }}>
           <div className={s.shell} style={{ padding: "0 16px" }}>
             <SectionLabel accent>Part two</SectionLabel>
-            <h2 id="shop-moats" style={display(46, { margin: "12px 0 0", lineHeight: 0.84, letterSpacing: "-0.035em" })}>
+            <h2 id="shop-moats" style={display(46, { margin: "12px 0 0", lineHeight: 1.06, letterSpacing: "-0.035em" })}>
               Anyone can
               <br />
               sell you
@@ -495,8 +502,8 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: C.rule, borderBottom: `1px solid ${C.rule}` }}>
           {COUNT_ROWS(counts).map((c) => (
             <div key={c.l} style={{ padding: "16px 13px", background: C.bg }}>
-              <b style={figure(38, { display: "block", lineHeight: 0.84, letterSpacing: "-0.04em", color: c.accent })}>{c.n}</b>
-              <span style={{ display: "block", marginTop: 9, ...label(10, { letterSpacing: "0.16em" }) }}>{c.l}</span>
+              <b style={figure(38, { display: "block", lineHeight: 1.06, letterSpacing: "-0.04em", color: c.accent })}>{c.n}</b>
+              <span style={{ display: "block", marginTop: 9, ...label(10, { letterSpacing: "0.06em" }) }}>{c.l}</span>
             </div>
           ))}
         </div>
@@ -528,7 +535,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                 </tr>
               ))}
               <tr style={{ background: C.panel2 }}>
-                <th scope="row" style={{ textAlign: "left", padding: 13, ...label(10.5, { letterSpacing: "0.16em" }), fontWeight: 400 }}>Day one, all in</th>
+                <th scope="row" style={{ textAlign: "left", padding: 13, ...label(10.5, { letterSpacing: "0.06em" }), fontWeight: 400 }}>Day one, all in</th>
                 <td style={{ padding: 13, textAlign: "right" }}>
                   <b style={figure(26, { color: C.lime })}>
                     {Math.round(dayOne.kcal).toLocaleString("en-IN")} kcal · {Math.round(dayOne.protein)}g
@@ -562,8 +569,8 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                   aria-pressed={on}
                   style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", height: "100%", gap: 7, background: "transparent", border: 0, padding: 0, cursor: "pointer" }}
                 >
-                  <span aria-hidden="true" style={{ width: "100%", height: `${h}%`, minHeight: 22, marginTop: "auto", background: on ? C.lime : C.rule2, borderTop: `3px solid ${on ? C.limeLight : "#4c4c46"}` }} />
-                  <b style={{ fontFamily: COND, fontWeight: 900, fontSize: 13, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: on ? C.limeLight : C.ink }}>
+                  <span aria-hidden="true" style={{ width: "100%", height: `${h}%`, minHeight: 22, marginTop: "auto", background: on ? C.lime : C.rule2, borderTop: `3px solid ${on ? C.limeLight : "var(--fk-line-2)"}` }} />
+                  <b style={{ fontFamily: COND, fontWeight: 600, fontSize: 13, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: on ? C.limeLight : C.ink }}>
                     {x.kcal}
                   </b>
                   <span style={label(10, { letterSpacing: "0.1em", color: on ? C.ink : C.dim })}>D{x.d + 1}</span>
@@ -571,7 +578,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               );
             })}
           </div>
-          <p style={{ display: "flex", flexWrap: "wrap", gap: 10, margin: "14px 0 0", ...label(10, { letterSpacing: "0.14em" }) }}>
+          <p style={{ display: "flex", flexWrap: "wrap", gap: 10, margin: "14px 0 0", ...label(10, { letterSpacing: "0.04em" }) }}>
             {CUISINES.map((cu) => (
               <span key={cu}>{cu}</span>
             ))}
@@ -632,10 +639,10 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               <article key={sc.key} className={s.tile} style={{ flex: "none", width: 198, background: C.panel, border: `1px solid ${C.rule}`, scrollSnapAlign: "start", display: "flex", flexDirection: "column" }}>
                 <div style={{ position: "relative", height: 236, background: C.panel2, borderBottom: `1px solid ${C.rule}`, overflow: "hidden" }}>
                   <Slot images={images} name={`app-${sc.key}`} alt={`${sc.label} screen`} sizes="198px" />
-                  <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, ...label(10, { letterSpacing: "0.14em", color: C.bg }), padding: "4px 7px", pointerEvents: "none" }}>{sc.tag}</span>
+                  <span style={{ position: "absolute", top: 0, left: 0, background: C.lime, ...label(10, { letterSpacing: "0.04em", color: C.bg }), padding: "4px 7px", pointerEvents: "none" }}>{sc.tag}</span>
                 </div>
                 <div style={{ padding: 12, display: "flex", flexDirection: "column", flex: 1 }}>
-                  <b style={display(19, { display: "block", lineHeight: 0.96, letterSpacing: "-0.02em" })}>{sc.label}</b>
+                  <b style={display(19, { display: "block", lineHeight: 1.06, letterSpacing: "-0.02em" })}>{sc.label}</b>
                   <span style={{ display: "block", marginTop: 7, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.dim }}>{sc.note}</span>
                   <span style={{ display: "block", marginTop: "auto", paddingTop: 11, ...num(10.5, { color: C.lime }) }}>{sc.stat}</span>
                 </div>
@@ -675,7 +682,12 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                 colours, used to name a third party rather than to decorate
                 ours. That is the only reason a non-lime hue is allowed here. */}
             {[["Zomato", "#e23744"], ["Swiggy", "#fc8019"]].map(([nm, col]) => (
-              <span key={nm} style={{ display: "inline-flex", alignItems: "center", gap: 7, border: `1px solid ${col}`, color: col, padding: "9px 12px", fontFamily: SANS, fontSize: 13, fontWeight: 600 }}>
+              /* Brand hue stays on the border and the glyph, but the NAME is set
+                 in ink. On the old near-black ground these read fine; on warm
+                 paper Swiggy orange is 2.44:1 and Zomato red 4.14:1, so as 13px
+                 label text they failed AA. The mark still identifies the brand —
+                 colour is not the only carrier, the word is right there. */
+              <span key={nm} style={{ display: "inline-flex", alignItems: "center", gap: 7, border: `1px solid ${col}`, borderRadius: "var(--fk-r)", color: "var(--fk-ink)", padding: "9px 12px", fontFamily: SANS, fontSize: 13.5, fontWeight: 600 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
                   <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.6" />
                   <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -683,7 +695,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
                 {nm}
               </span>
             ))}
-            <span style={{ display: "inline-flex", alignItems: "center", border: `1px solid ${C.lime}`, color: C.lime, padding: "9px 12px", fontFamily: COND, fontWeight: 800, fontSize: 14, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", border: `1px solid ${C.lime}`, color: C.lime, padding: "9px 12px", fontFamily: SANS, fontWeight: 600, fontSize: 14, letterSpacing: "0", textTransform: "none" }}>
               Direct · this shop
             </span>
           </div>
@@ -744,7 +756,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
               ))}
             </span>
             <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 13px", background: C.panel, borderTop: `1px solid ${C.rule}` }}>
-              <span style={sub(15, { letterSpacing: "0.06em" })}>Price a corporate account</span>
+              <span style={sub(15, { letterSpacing: "0" })}>Price a corporate account</span>
               <span style={{ fontFamily: MONO, fontSize: 13, color: C.lime }}>→</span>
             </span>
           </Link>
@@ -760,7 +772,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
         {/* ══ THE CLOSE ══ */}
         <section aria-labelledby="shop-close" className={s.shell} style={{ padding: "34px 16px 20px" }}>
           <div style={{ ...PANEL_LIVE, padding: 18 }}>
-            <h2 id="shop-close" style={display(34, { lineHeight: 0.86 })}>
+            <h2 id="shop-close" style={display(34, { lineHeight: 1.06 })}>
               Start with
               <br />
               one day.
@@ -772,7 +784,7 @@ export default function Shop({ days, images, counts, waHref, licence }: ShopProp
             <Link href="/plans?trial=true" style={solidBtn({ marginTop: 16, width: "100%", minHeight: 52, fontSize: 17, textDecoration: "none" })}>
               Start the trial day
             </Link>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.rule}`, ...label(10, { letterSpacing: "0.14em" }) }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.rule}`, ...label(10, { letterSpacing: "0.04em" }) }}>
               <span>FSSAI licensed</span>
               <span>Kharadi kitchen</span>
               <span>15 areas</span>

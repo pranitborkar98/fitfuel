@@ -26,7 +26,7 @@ import {
   type DietKey, type MealKey, type PlanDurationKey, type ShopPlan, type Tier,
 } from "./catalog";
 import Sheet, { SheetClose } from "./Sheet";
-import { C, COND, MONO, SANS, display, figure, label, num, seg } from "./theme";
+import { C, MONO, SANS, display, figure, label, num, seg } from "./theme";
 import s from "./shop.module.css";
 
 export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: () => void }) {
@@ -59,8 +59,8 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
     <Sheet onClose={onClose} labelledBy="plan-sheet-title">
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "15px 16px", borderBottom: `1px solid ${C.rule}` }}>
         <span>
-          <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em" }), marginBottom: 8 }}>Configure your plan</span>
-          <b id="plan-sheet-title" style={display(28, { display: "block", lineHeight: 0.92, letterSpacing: "-0.025em" })}>
+          <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 8 }}>Configure your plan</span>
+          <b id="plan-sheet-title" style={display(28, { display: "block", lineHeight: 1.06, letterSpacing: "-0.025em" })}>
             {plan.label} ({dietRow.short})
           </b>
         </span>
@@ -69,12 +69,12 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
 
       {/* Tier */}
       <div style={{ padding: "16px 16px 0" }}>
-        <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em" }), marginBottom: 9 }}>Tier</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>Tier</span>
         <div style={{ display: "flex", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {TIERS.map((t) => (
             <button key={t.key} type="button" onClick={() => setTier(t.key)} aria-pressed={tier === t.key} style={seg(tier === t.key, { flex: 1 })}>
-              <span style={{ display: "block", fontFamily: COND, fontWeight: 900, fontSize: 15, lineHeight: 1, textTransform: "uppercase" }}>{t.label}</span>
-              <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              <span style={{ display: "block", fontFamily: SANS, fontWeight: 600, fontSize: 15, lineHeight: 1, textTransform: "none" }}>{t.label}</span>
+              <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "none" }}>
                 {t.available ? "orderable" : "waitlist"}
               </span>
             </button>
@@ -84,7 +84,7 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
 
       {/* Diet */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em" }), marginBottom: 9 }}>Diet</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>Diet</span>
         <div className={s.rail} style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 2 }}>
           {DIETS.map((d) => {
             const on = diet === d.key;
@@ -98,7 +98,7 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
                   flex: "none", display: "inline-flex", alignItems: "center", gap: 7, minHeight: 44, padding: "0 13px",
                   border: `1px solid ${on ? C.lime : C.rule}`, background: on ? C.wash : "transparent",
                   color: on ? C.ink : C.mute, cursor: "pointer",
-                  fontFamily: COND, fontWeight: 800, fontSize: 13.5, letterSpacing: "0.05em", textTransform: "uppercase",
+                  fontFamily: SANS, fontWeight: 600, fontSize: 13.5, letterSpacing: "0", textTransform: "none",
                 }}
               >
                 {/* FSSAI labelling convention: green vegetarian, red non-veg.
@@ -114,12 +114,12 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
 
       {/* Meals a day */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em" }), marginBottom: 9 }}>Meals a day</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>Meals a day</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {MEALS.map((m) => (
             <button key={m.key} type="button" onClick={() => setMeal(m.key)} aria-pressed={meal === m.key} style={seg(meal === m.key)}>
-              <span style={{ display: "block", fontFamily: COND, fontWeight: 900, fontSize: 16, lineHeight: 1, textTransform: "uppercase" }}>{m.short}</span>
-              <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>{m.time}</span>
+              <span style={{ display: "block", fontFamily: SANS, fontWeight: 600, fontSize: 16, lineHeight: 1, textTransform: "none" }}>{m.short}</span>
+              <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "none" }}>{m.time}</span>
             </button>
           ))}
         </div>
@@ -127,15 +127,15 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
 
       {/* How long */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em" }), marginBottom: 9 }}>How long</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>How long</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {DURATIONS.map((d) => {
             const sub = planSubtotal(diet, d.key, meal, tier);
             return (
               <button key={d.key} type="button" onClick={() => setDuration(d.key)} aria-pressed={duration === d.key} style={seg(duration === d.key)}>
                 <span style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ fontFamily: COND, fontWeight: 900, fontSize: 16, lineHeight: 1, textTransform: "uppercase" }}>{d.label}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.dim }}>
+                  <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, lineHeight: 1, textTransform: "none" }}>{d.label}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "none", color: C.dim }}>
                     {d.days === 1 ? "1 day" : `${d.days} days`}
                   </span>
                 </span>
@@ -150,7 +150,7 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
 
       {/* The receipt */}
       <div style={{ padding: "20px 16px 0" }}>
-        <span style={{ display: "block", ...label(10, { letterSpacing: "0.2em" }), marginBottom: 12 }}>The receipt, before you pay</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 12 }}>The receipt, before you pay</span>
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           {receipt.map(([k, v, struck]) => (
             <span key={k} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
@@ -162,8 +162,8 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
 
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: `1px solid ${C.rule2}` }}>
           <span>
-            <span style={{ display: "block", fontFamily: MONO, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase", color: C.ink }}>Total</span>
-            <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", color: C.dim }}>
+            <span style={{ display: "block", fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", textTransform: "none", color: C.ink }}>Total</span>
+            <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}>
               {rs(Math.round(p.totalRs / mealsTotal))} a meal · {mealsTotal} meals
             </span>
           </span>
@@ -185,7 +185,7 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
               display: "flex", alignItems: "center", justifyContent: "center",
               marginTop: 16, width: "100%", minHeight: 54, textDecoration: "none",
               background: C.lime, border: `1px solid ${C.lime}`, color: C.onLime,
-              fontFamily: COND, fontWeight: 900, fontSize: 17, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: SANS, fontWeight: 600, fontSize: 17, letterSpacing: "0", textTransform: "none",
             }}
           >
             Order · {rs(p.totalRs)}
@@ -197,7 +197,7 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
               display: "flex", alignItems: "center", justifyContent: "center",
               marginTop: 16, width: "100%", minHeight: 54, textDecoration: "none",
               background: "transparent", border: `1px solid ${C.lime}`, color: C.lime,
-              fontFamily: COND, fontWeight: 900, fontSize: 17, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: SANS, fontWeight: 600, fontSize: 17, letterSpacing: "0", textTransform: "none",
             }}
           >
             Join the {tierRow.label} waitlist

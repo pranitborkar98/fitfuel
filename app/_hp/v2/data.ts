@@ -21,7 +21,7 @@
 export const SLOTS = ["Breakfast", "Lunch", "Snack", "Dinner"] as const;
 
 /** One accent per meal slot, drawn from the goal palette. */
-export const PLATE_ACCENT = ["#a3e635", "#f59e0b", "#38bdf8", "#84cc16"];
+export const PLATE_ACCENT = ["var(--fk-green-deep)", "#8a5a00", "#1d6fa5", "var(--fk-green)"];
 
 /** One grade for food, one lime duotone for people and places. */
 export const FOOD = "saturate(1.06) contrast(1.07)";
@@ -127,42 +127,42 @@ export type Door = {
 export const DOORS: Door[] = [
   {
     goal: "Lose fat",
-    accent: "#a3e635",
+    accent: "var(--fk-green-deep)",
     count: 5,
     who: "You want the weight down without living on boiled eggs.",
     what: "A controlled deficit with protein held high, so what you lose is fat and not the muscle underneath it. The kitchen weighs the deficit; you do not count anything.",
     tags: ["Deficit held, not guessed", "Protein 1.6–2g/kg", "Fibre above 25g"],
-    split: [["Protein", "30%", 30, "#84cc16"], ["Carbohydrate", "45%", 45, "#9a9a94"], ["Fat", "25%", 25, "#5f5f59"]],
+    split: [["Protein", "30%", 30, "var(--fk-green)"], ["Carbohydrate", "45%", 45, "var(--fk-ink-2)"], ["Fat", "25%", 25, "var(--fk-ink-3)"]],
     href: "/plans?goal=weight_loss",
   },
   {
     goal: "Build muscle",
-    accent: "#f59e0b",
+    accent: "#8a5a00",
     count: 5,
     who: "You train, and eating enough is the part that keeps failing.",
     what: "A surplus you can actually finish, spread across four meals so you hit the protein number without one enormous dinner doing all the work.",
     tags: ["Surplus 300–500 kcal", "Protein every 4 hours", "Training block included"],
-    split: [["Protein", "28%", 28, "#f59e0b"], ["Carbohydrate", "52%", 52, "#9a9a94"], ["Fat", "20%", 20, "#5f5f59"]],
+    split: [["Protein", "28%", 28, "#8a5a00"], ["Carbohydrate", "52%", 52, "var(--fk-ink-2)"], ["Fat", "20%", 20, "var(--fk-ink-3)"]],
     href: "/plans?goal=muscle_gain",
   },
   {
     goal: "Just eat well",
-    accent: "#38bdf8",
+    accent: "#1d6fa5",
     count: 5,
     who: "No target. You are tired of deciding what is for dinner.",
     what: "Maintenance macros across varied regional cuisines, cooked properly. Nothing about it reads as a diet, and there is no number for you to hit.",
     tags: ["Maintenance calories", "Six regional cuisines", "No tracking required"],
-    split: [["Protein", "22%", 22, "#38bdf8"], ["Carbohydrate", "53%", 53, "#9a9a94"], ["Fat", "25%", 25, "#5f5f59"]],
+    split: [["Protein", "22%", 22, "#1d6fa5"], ["Carbohydrate", "53%", 53, "var(--fk-ink-2)"], ["Fat", "25%", 25, "var(--fk-ink-3)"]],
     href: "/plans?goal=balanced",
   },
   {
     goal: "Eat for a condition",
-    accent: "#2dd4bf",
+    accent: "#0f766e",
     count: 70,
     who: "Diabetes, PCOS, thyroid, fatty liver, postpartum, and 33 more.",
     what: "Written for a diagnosis by a nutritionist, not a generic plan with the rice taken out. Nutritional support, not medical treatment. Read the disclaimer and talk to your doctor.",
     tags: ["38 conditions", "Low-GI where it matters", "Nutritionist-specified"],
-    split: [["Protein", "25%", 25, "#2dd4bf"], ["Carbohydrate", "42%", 42, "#9a9a94"], ["Fat", "33%", 33, "#5f5f59"]],
+    split: [["Protein", "25%", 25, "#0f766e"], ["Carbohydrate", "42%", 42, "var(--fk-ink-2)"], ["Fat", "33%", 33, "var(--fk-ink-3)"]],
     href: "/plans?category=LIFESTYLE_MEDICAL",
   },
 ];
@@ -266,20 +266,20 @@ export const PROMPTS = [
 ];
 
 export const FEEDS = [
-  { k: "Weigh-ins", v: "4 / fortnight", w: "72%", c: "#84cc16" },
-  { k: "Meals, pre-logged", v: "4 / day", w: "100%", c: "#84cc16" },
-  { k: "Food diary, per gram", v: "154 foods", w: "58%", c: "#a3e635" },
-  { k: "Training log", v: "952 exercises", w: "44%", c: "#f59e0b" },
-  { k: "Body metrics, bluetooth", v: "18 metrics", w: "30%", c: "#38bdf8" },
+  { k: "Weigh-ins", v: "4 / fortnight", w: "72%", c: "var(--fk-green)" },
+  { k: "Meals, pre-logged", v: "4 / day", w: "100%", c: "var(--fk-green)" },
+  { k: "Food diary, per gram", v: "154 foods", w: "58%", c: "var(--fk-green-deep)" },
+  { k: "Training log", v: "952 exercises", w: "44%", c: "#8a5a00" },
+  { k: "Body metrics, bluetooth", v: "18 metrics", w: "30%", c: "#1d6fa5" },
 ];
 
 export const AI_JOBS = [
-  { n: "01", c: "#84cc16", h: "Calls the plateau", p: "Two weigh-ins a fortnight apart under half a kilo, and it says so before you notice." },
-  { n: "02", c: "#84cc16", h: "Moves the target", p: "Through 7,700 kcal per kg, capped at ±300 a day, never below the 1,200 floor." },
-  { n: "03", c: "#a3e635", h: "Reads the diary", p: "Your meals arrive pre-logged, so the answer uses what you actually ate, per gram." },
-  { n: "04", c: "#f59e0b", h: "Adjusts the training", p: "Sets and reps in, one net-calorie figure out, folded into the same target." },
-  { n: "05", c: "#38bdf8", h: "Answers on supplements", p: "What the evidence supports, at what dose. We sell none of it, so there is nothing to push." },
-  { n: "06", c: "#c6c6c0", h: "Shows its working", p: "Every answer carries the figures it came from. Nothing changes behind your back." },
+  { n: "01", c: "var(--fk-green)", h: "Calls the plateau", p: "Two weigh-ins a fortnight apart under half a kilo, and it says so before you notice." },
+  { n: "02", c: "var(--fk-green)", h: "Moves the target", p: "Through 7,700 kcal per kg, capped at ±300 a day, never below the 1,200 floor." },
+  { n: "03", c: "var(--fk-green-deep)", h: "Reads the diary", p: "Your meals arrive pre-logged, so the answer uses what you actually ate, per gram." },
+  { n: "04", c: "#8a5a00", h: "Adjusts the training", p: "Sets and reps in, one net-calorie figure out, folded into the same target." },
+  { n: "05", c: "#1d6fa5", h: "Answers on supplements", p: "What the evidence supports, at what dose. We sell none of it, so there is nothing to push." },
+  { n: "06", c: "var(--fk-ink-2)", h: "Shows its working", p: "Every answer carries the figures it came from. Nothing changes behind your back." },
 ];
 
 export const MATHS = [
@@ -320,16 +320,16 @@ export const LOG_ROWS = [
 export const RECAP_BARS = [64, 88, 46, 92, 71, 100, 58];
 
 export const DIARY_ROWS = [
-  { k: "Breakfast · pre-logged", v: "412 kcal", c: "#84cc16" },
-  { k: "Lunch · pre-logged", v: "538 kcal", c: "#84cc16" },
-  { k: "Poha, 180 g · added", v: "462 kcal", c: "#c6c6c0" },
+  { k: "Breakfast · pre-logged", v: "412 kcal", c: "var(--fk-green)" },
+  { k: "Lunch · pre-logged", v: "538 kcal", c: "var(--fk-green)" },
+  { k: "Poha, 180 g · added", v: "462 kcal", c: "var(--fk-ink-2)" },
 ];
 
 export const TRAIN_ROWS = [
-  { k: "Incline press", v: "4 × 8", c: "#84cc16", fill: "#84cc16" },
-  { k: "Overhead press", v: "3 × 10", c: "#84cc16", fill: "#84cc16" },
-  { k: "Cable fly", v: "3 × 12", c: "#84cc16", fill: "#84cc16" },
-  { k: "Triceps pushdown", v: "3 × 12", c: "#3d3d37", fill: "transparent" },
+  { k: "Incline press", v: "4 × 8", c: "var(--fk-green)", fill: "var(--fk-green)" },
+  { k: "Overhead press", v: "3 × 10", c: "var(--fk-green)", fill: "var(--fk-green)" },
+  { k: "Cable fly", v: "3 × 12", c: "var(--fk-green)", fill: "var(--fk-green)" },
+  { k: "Triceps pushdown", v: "3 × 12", c: "var(--fk-line-2)", fill: "transparent" },
 ];
 
 export const TRAIN_BARS = [42, 60, 38, 72, 55, 84, 48, 66, 90, 58, 74, 100];
@@ -346,16 +346,16 @@ export const COACH_STRIP = [
 ];
 
 export const SUPP_GRADES = [
-  { k: "Creatine", n: "A", w: "100%", c: "#84cc16" },
-  { k: "Whey", n: "A", w: "92%", c: "#84cc16" },
-  { k: "Omega-3", n: "B", w: "64%", c: "#38bdf8" },
+  { k: "Creatine", n: "A", w: "100%", c: "var(--fk-green)" },
+  { k: "Whey", n: "A", w: "92%", c: "var(--fk-green)" },
+  { k: "Omega-3", n: "B", w: "64%", c: "#1d6fa5" },
 ];
 
 export const INVOICE_ROWS = [
-  { k: "22 employees · weekday plan", v: "₹1,58,400", c: "#c6c6c0" },
-  { k: "Per-employee macros", v: "22 plans", c: "#c6c6c0" },
-  { k: "GST at 5%", v: "₹7,920", c: "#c6c6c0" },
-  { k: "One invoice, one payment", v: "₹1,66,320", c: "#84cc16" },
+  { k: "22 employees · weekday plan", v: "₹1,58,400", c: "var(--fk-ink-2)" },
+  { k: "Per-employee macros", v: "22 plans", c: "var(--fk-ink-2)" },
+  { k: "GST at 5%", v: "₹7,920", c: "var(--fk-ink-2)" },
+  { k: "One invoice, one payment", v: "₹1,66,320", c: "var(--fk-green)" },
 ];
 
 export const PARTNER_TYPES = ["Gyms", "Trainers", "Dieticians", "Doctors", "Offices", "Residences", "Clinics", "Studios"];
@@ -394,12 +394,12 @@ export const FALLBACK_COUPONS = [
 
 /** The six counts on the strip, with the tally scale each one is drawn at. */
 export const TICKER = [
-  { key: "plans", n: 126, l: "plans", accent: "#a3e635", per: 1, cols: 14, scale: "one mark each" },
-  { key: "conditions", n: 38, l: "conditions", accent: "#2dd4bf", per: 1, cols: 8, scale: "one mark each" },
-  { key: "exercises", n: 952, l: "exercises", accent: "#f59e0b", per: 8, cols: 14, scale: "one mark = 8" },
-  { key: "supplements", n: 46, l: "supplements", accent: "#38bdf8", per: 1, cols: 8, scale: "one mark each" },
-  { key: "foods", n: 154, l: "foods", accent: "#84cc16", per: 1, cols: 16, scale: "one mark each" },
-  { key: "prices", n: 3614, l: "published prices", accent: "#f7f7f5", per: 32, cols: 14, scale: "one mark = 32", markColour: "#c6c6c0" },
+  { key: "plans", n: 126, l: "plans", accent: "var(--fk-green-deep)", per: 1, cols: 14, scale: "one mark each" },
+  { key: "conditions", n: 38, l: "conditions", accent: "#0f766e", per: 1, cols: 8, scale: "one mark each" },
+  { key: "exercises", n: 952, l: "exercises", accent: "#8a5a00", per: 8, cols: 14, scale: "one mark = 8" },
+  { key: "supplements", n: 46, l: "supplements", accent: "#1d6fa5", per: 1, cols: 8, scale: "one mark each" },
+  { key: "foods", n: 154, l: "foods", accent: "var(--fk-green)", per: 1, cols: 16, scale: "one mark each" },
+  { key: "prices", n: 3614, l: "published prices", accent: "var(--fk-ink)", per: 32, cols: 14, scale: "one mark = 32", markColour: "var(--fk-ink-2)" },
 ];
 
 export const FOOTER_COLS = [

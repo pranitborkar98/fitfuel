@@ -36,7 +36,7 @@ import {
 } from "@/app/_hp/v2/data";
 
 const MONO = "var(--font-mono), monospace";
-const COND = "var(--ff-cond), sans-serif";
+const COND = "var(--fk-display), Georgia, serif";
 const SANS = "var(--font-archivo), sans-serif";
 
 type Msg = { who: string; text: string; figures?: string[] };
@@ -146,20 +146,20 @@ export default function V2Sections({
         name, v, color, pct, g: Math.round((target * pct) / 100 / (kpg[name] || 4)),
       })),
       ledger: [
-        { k: "Resting energy, Mifflin St Jeor", v: bmr.toLocaleString("en-IN") + " kcal", fg: "#9a9a94", vfg: "#f7f7f5" },
-        { k: ACTS[act]![0] + " week, × " + mult.toFixed(3), v: tdee.toLocaleString("en-IN") + " kcal", fg: "#9a9a94", vfg: "#f7f7f5" },
+        { k: "Resting energy, Mifflin St Jeor", v: bmr.toLocaleString("en-IN") + " kcal", fg: "var(--fk-ink-2)", vfg: "var(--fk-ink)" },
+        { k: ACTS[act]![0] + " week, × " + mult.toFixed(3), v: tdee.toLocaleString("en-IN") + " kcal", fg: "var(--fk-ink-2)", vfg: "var(--fk-ink)" },
         {
           k: adj === 0 ? "No goal adjustment on maintenance" : (adj < 0 ? "Deficit for " + activeDoor.goal.toLowerCase() : "Surplus for " + activeDoor.goal.toLowerCase()) + ", " + Math.round(Math.abs(adj) * 100) + "%",
           v: (swing > 0 ? "+" : swing < 0 ? "−" : "") + Math.abs(swing).toLocaleString("en-IN") + " kcal",
-          fg: "#9a9a94", vfg: swing === 0 ? "#85857e" : activeDoor.accent,
+          fg: "var(--fk-ink-2)", vfg: swing === 0 ? "var(--fk-ink-3)" : activeDoor.accent,
         },
-        { k: rawT < FLOOR ? "Held at the 1,200 kcal floor" : "Above the 1,200 kcal floor", v: rawT < FLOOR ? "floor applied" : "no floor needed", fg: "#85857e", vfg: rawT < FLOOR ? "#f59e0b" : "#5f5f59" },
-        { k: "Your target, rounded to ten", v: target.toLocaleString("en-IN") + " kcal", fg: "#f7f7f5", vfg: activeDoor.accent },
+        { k: rawT < FLOOR ? "Held at the 1,200 kcal floor" : "Above the 1,200 kcal floor", v: rawT < FLOOR ? "floor applied" : "no floor needed", fg: "var(--fk-ink-3)", vfg: rawT < FLOOR ? "var(--fk-warn)" : "var(--fk-ink-3)" },
+        { k: "Your target, rounded to ten", v: target.toLocaleString("en-IN") + " kcal", fg: "var(--fk-ink)", vfg: activeDoor.accent },
       ],
       meals: SLOTS.map((name, i) => ({
         name, share: shares[i] ?? 0,
         kcal: Math.round((target * (shares[i] ?? 0)) / shareSum),
-        bg: ["#d9f99d", "#bef264", "#a3e635", "#84cc16"][i]!, fg: "#070707",
+        bg: ["#e6f0e8", "#cfe4d5", "#a9cfb6", "#7fb694"][i]!, fg: "var(--fk-ink)",
       })),
     };
   }, [wt, ht, age, sex, act, door, diet, activeDoor, days]);
@@ -175,12 +175,12 @@ export default function V2Sections({
   const barcode = useMemo(() => barcodeBars(), []);
 
   const h2 = (max: string) => ({
-    fontFamily: COND, fontWeight: 900, fontSize: "clamp(2.4rem,6.6vw,5.4rem)", lineHeight: 0.82,
-    letterSpacing: "-0.03em", textTransform: "uppercase" as const, color: "#f7f7f5", margin: 0, maxWidth: max,
+    fontFamily: COND, fontWeight: 600, fontSize: "clamp(2.4rem,6.6vw,5.4rem)", lineHeight: 1.06,
+    letterSpacing: "-0.03em", textTransform: "none" as const, color: "var(--fk-ink)", margin: 0, maxWidth: max,
   });
-  const deck = { fontFamily: SANS, fontSize: 16.5, lineHeight: 1.62, color: "#9a9a94", margin: 0, maxWidth: "48ch" };
+  const deck = { fontFamily: SANS, fontSize: 16.5, lineHeight: 1.62, color: "var(--fk-ink-2)", margin: 0, maxWidth: "48ch" };
   const WRAP = { width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 clamp(18px,4vw,40px)" } as const;
-  const RULE = { height: 1, background: "#232320", margin: "14px 0 clamp(26px,4vw,44px)" } as const;
+  const RULE = { height: 1, background: "var(--fk-line)", margin: "14px 0 clamp(26px,4vw,44px)" } as const;
 
   return (
     <>

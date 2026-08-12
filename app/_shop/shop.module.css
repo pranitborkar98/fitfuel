@@ -152,16 +152,16 @@
 
 @media (hover: hover) {
   .row:hover {
-    background: var(--ff-panel-2);
-    border-left-color: var(--ff-lime);
+    background: var(--fk-warm);
+    border-left-color: var(--fk-green);
   }
 
   .tile:hover {
-    border-color: var(--ff-rule-2);
+    border-color: var(--fk-line-2);
   }
 
   .under:hover {
-    border-bottom-color: var(--ff-lime);
+    border-bottom-color: var(--fk-green);
   }
 }
 
