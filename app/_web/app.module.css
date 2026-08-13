@@ -985,3 +985,117 @@
   gap: 10px;
   justify-content: center;
 }
+
+/* ── The image section, kept as a placeholder ───────────────────────────────
+   There is no photography pipeline yet. Rather than hold blank space (which
+   read as broken) or drop the slot entirely (which loses the layout), the well
+   states what the thing IS. Drop a file into public/images/dishes/<slug> and
+   the real <Slot> replaces this at the same aspect, no layout change. */
+.shotPlaceholder {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-bottom: 1px solid var(--fk-line);
+  cursor: pointer;
+  padding: 0;
+  /* A quiet lime wash rather than a flat grey hole: it reads as a reserved
+     surface, not a failed image. */
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fk-green) 9%, transparent), transparent 70%),
+    var(--fk-warm);
+}
+.shotPlaceholder span {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+}
+
+/* ── Plan actions: two buttons, side by side ───────────────────────────────
+   Variations and View menu are different questions and get different controls;
+   Configure stays the primary action in the card foot below them. */
+.planActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: var(--fk-s-3);
+}
+.planActions .add {
+  min-width: 0;
+  padding: 0 10px;
+  font-size: var(--fk-t-sm);
+}
+
+/* The disclosure panel behind either button. */
+.panel {
+  list-style: none;
+  margin: var(--fk-s-3) 0 0;
+  padding: var(--fk-s-3);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+  display: grid;
+  gap: 7px;
+}
+.panel li {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  font-size: var(--fk-t-sm);
+}
+.panel li > span:first-child {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.panel li > b {
+  color: var(--fk-ink-2);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.panel li > span:last-child {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+}
+.panelNote {
+  margin: var(--fk-s-3) 0 0;
+  padding: var(--fk-s-3);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+  line-height: 1.5;
+}
+
+/* The add-on line is a real control now, not a paragraph pretending to be one. */
+.addOnHint {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.addOnHint:hover {
+  color: var(--fk-green-deep);
+}

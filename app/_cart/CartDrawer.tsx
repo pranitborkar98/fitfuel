@@ -236,7 +236,28 @@ export default function CartDrawer() {
         }
         .ff-cart-x:hover { color: var(--fk-ink); border-color: var(--fk-line-2); }
 
-        .ff-cart-body { flex: 1; overflow-y: auto; padding: 4px 22px 22px; }
+        /* The list gets at least 40% of the drawer. It was collapsing to 213px
+           of a 720px viewport because the footer (receipt + total + CTA) is
+           unbounded and flex was letting it take whatever it wanted — so the
+           order you are reviewing was a sliver above a giant receipt. */
+        /* THE SPLIT. flex:1 alone gave the list 213px of a 720px screen,
+           because the footer (receipt + total + CTA) is ~420px and flex let it
+           take its full natural height. A 40vh min-height over-corrected the
+           other way: 40vh plus a 60vh footer plus the header exceeds the
+           viewport, so the Pay button fell off the bottom.
+           min-height:0 lets the list shrink properly, flex:1 1 0 makes it take
+           the REMAINING space, and the footer is capped so it can never push
+           the list out or overflow the drawer. Both scroll internally.
+           (No backticks in here — this whole block lives inside a template
+           literal, and one backtick ends the stylesheet mid-rule.) */
+        .ff-cart-body {
+          flex: 1 1 0; min-height: 0; overflow-y: auto;
+          padding: 4px 22px 22px; overscroll-behavior: contain;
+        }
+        .ff-cart-foot {
+          flex: 0 0 auto; max-height: 62%; overflow-y: auto;
+          overscroll-behavior: contain;
+        }
         .ff-cart-empty {
           font-family: var(--fk-sans); font-size: 14.5px; color: var(--fk-ink-2);
           line-height: 1.6; margin: 26px 0 0;

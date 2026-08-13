@@ -105,7 +105,24 @@ export type Course = { key: string; label: string; n: number };
 
 /** A plan row from the database, shaped so PlanSheet can consume it unchanged. */
 export type PlanMeal = { slot: string; name: string; kcal: number };
-export type AppPlan = ShopPlan & { diet: string; sub: string; meals: PlanMeal[] };
+export type PlanVariant = {
+  diet: string;
+  slug: string;
+  label: string;
+  kcal: number;
+  protein: number;
+  meals: number;
+};
+export type AppPlan = ShopPlan & {
+  diet: string;
+  sub: string;
+  meals: PlanMeal[];
+  variants: PlanVariant[];
+};
+
+const DIET_LABEL: Record<string, string> = {
+  VEG: "Vegetarian", EGG: "Eggetarian", NON_VEG: "Non-veg", JAIN: "Jain", VEGAN: "Vegan",
+};
 
 const SLOT_LABEL: Record<string, string> = {
   BREAKFAST: "Breakfast", LUNCH: "Lunch", SNACK: "Snack", DINNER: "Dinner",
@@ -220,6 +237,11 @@ export default function FitFuelApp({
      Dismissing costs nothing: the basket is one tap away in the header and the
      badge there still carries the count. */
   const [barHidden, setBarHidden] = useState(false);
+  /* Which plan card has its variations open, and which has its menu open.
+     Two separate buttons, two separate panels — a plan's diets and a plan's
+     food are different questions and were previously behind one "Configure". */
+  const [openVariants, setOpenVariants] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   /* Keeps typing responsive on a long list: the input updates every keystroke,
@@ -260,7 +282,7 @@ export default function FitFuelApp({
     const needle = dq.trim().toLowerCase();
     return plans.filter((p) => {
       if (planCat !== "all" && p.cat !== planCat) return false;
-      if (planDiet !== "all" && p.diet !== planDiet) return false;
+      if (planDiet !== "all" && !p.variants.some((v) => v.diet === planDiet)) return false;
       if (!needle) return true;
       /* `sub` is the condition slug — searching it is what lets someone type
          "pcos", "thyroid" or "fatty liver" and land on their plan across 59
@@ -538,9 +560,16 @@ export default function FitFuelApp({
               <ul className={s.grid}>
                 {planResults.map((p) => (
                   <li key={p.slug} className={s.card}>
+                    {/* The image slot is KEPT as a labelled placeholder. There is
+                        no photography pipeline yet; when one lands, this well
+                        takes the file with no layout change. */}
+                    <div className={s.shotPlaceholder} aria-hidden="true">
+                      <span>{p.sub.replace(/_/g, " ")}</span>
+                    </div>
+
                     <div className={s.cardBody}>
                       <p className={s.planCat}>
-                        {p.sub.replace(/_/g, " ")}
+                        {p.variants.length} diet{p.variants.length === 1 ? "" : "s"} · 4 meals a day
                       </p>
                       <button type="button" className={s.dishName} onClick={() => setPlanSheet(p)}>
                         {p.label}
@@ -548,29 +577,54 @@ export default function FitFuelApp({
                       <p className={s.dishBlurb}>{p.note}</p>
                       <p className={s.macroLine}>{p.macroLine}</p>
 
-                      {/* The food. Real day-one dishes where the schedule is
-                          seeded; a labelled placeholder where it is not.
-                          Never an invented dish name. */}
-                      {p.meals.length > 0 ? (
-                        <ul className={s.planMeals}>
-                          {p.meals.map((m) => (
-                            <li key={m.slot}>
-                              <span>{SLOT_LABEL[m.slot] ?? m.slot}</span>
-                              <b>{m.name}</b>
-                              <span className="fk-num">{m.kcal} kcal</span>
+                      <div className={s.planActions}>
+                        <button
+                          type="button"
+                          className={`${s.add} ${s.ghost}`}
+                          aria-expanded={openVariants === p.slug}
+                          onClick={() => { setOpenVariants(openVariants === p.slug ? null : p.slug); setOpenMenu(null); }}
+                        >
+                          {p.variants.length} variation{p.variants.length === 1 ? "" : "s"}
+                        </button>
+                        <button
+                          type="button"
+                          className={`${s.add} ${s.ghost}`}
+                          aria-expanded={openMenu === p.slug}
+                          onClick={() => { setOpenMenu(openMenu === p.slug ? null : p.slug); setOpenVariants(null); }}
+                        >
+                          View menu
+                        </button>
+                      </div>
+
+                      {openVariants === p.slug ? (
+                        <ul className={s.panel}>
+                          {p.variants.map((v) => (
+                            <li key={v.slug}>
+                              <span>{DIET_LABEL[v.diet] ?? v.diet}</span>
+                              <span className="fk-num">{v.kcal.toLocaleString("en-IN")} kcal · {v.protein}g P</span>
                             </li>
                           ))}
                         </ul>
-                      ) : (
-                        <ul className={`${s.planMeals} ${s.planMealsSoon}`}>
-                          {["BREAKFAST", "LUNCH", "SNACK", "DINNER"].map((sl) => (
-                            <li key={sl}>
-                              <span>{SLOT_LABEL[sl]}</span>
-                              <b>Menu published monthly</b>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                      ) : null}
+
+                      {openMenu === p.slug ? (
+                        p.meals.length > 0 ? (
+                          <ul className={s.panel}>
+                            {p.meals.map((m) => (
+                              <li key={m.slot}>
+                                <span>{SLOT_LABEL[m.slot] ?? m.slot}</span>
+                                <b>{m.name}</b>
+                                <span className="fk-num">{m.kcal} kcal</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className={s.panelNote}>
+                            The 30-day menu for this plan is published monthly. Its macros above
+                            are the daily target the kitchen cooks to.
+                          </p>
+                        )
+                      ) : null}
 
                       <div className={s.cardFoot}>
                         <span className={s.askPrice}>{p.macros}</span>
@@ -609,7 +663,20 @@ export default function FitFuelApp({
               <ul className={s.grid}>
                 {results.map((d) => (
                   <li key={d.id} className={s.card}>
-                    {images[d.slot] ? (
+                    {!images[d.slot] ? (
+                      /* Image section KEPT as a placeholder. Drop a photograph
+                         into public/images/dishes/<slug> and it replaces this
+                         with no layout change — the well is already the right
+                         aspect. */
+                      <button
+                        type="button"
+                        className={s.shotPlaceholder}
+                        onClick={() => setSheet(d)}
+                        aria-label={`See ${d.name}`}
+                      >
+                        <span>{d.categoryLabel}</span>
+                      </button>
+                    ) : (
                     <button
                       type="button"
                       className={s.shot}
@@ -629,19 +696,13 @@ export default function FitFuelApp({
                       />
                       {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
                     </button>
-                    ) : null}
+                    )}
 
                     <div className={s.cardBody}>
-                      {/* No photograph: the course and the calories carry the
-                          top of the card instead of an empty 4:3 well. There is
-                          no photography pipeline, so a card that keeps holding
-                          space for one just looks unfinished forever. */}
-                      {!images[d.slot] ? (
-                        <p className={s.dishTop}>
-                          <span className={s.dishCourse}>{d.categoryLabel}</span>
-                          {d.kcal ? <span className="fk-num">{d.kcalLabel}</span> : null}
-                        </p>
-                      ) : null}
+                      <p className={s.dishTop}>
+                        <span className={s.dishCourse}>{d.categoryLabel}</span>
+                        {d.kcal ? <span className="fk-num">{d.kcalLabel}</span> : null}
+                      </p>
                       <button type="button" className={s.dishName} onClick={() => setSheet(d)}>
                         {d.name}
                       </button>
@@ -650,12 +711,16 @@ export default function FitFuelApp({
                       {/* The add-on ladder (paneer/tofu, egg, grilled chicken)
                           and any variant already live in DishSheet. The card
                           only has to say they exist, or nobody opens it. */}
+                      {/* CLICKABLE. This was a <p> with cursor:auto — it
+                          advertised paneer/egg/chicken and every variant and
+                          then did nothing when tapped. It opens the sheet that
+                          actually holds them. */}
                       {d.orderable && (d.addOns?.length || d.variantNote) ? (
-                        <p className={s.addOnHint}>
+                        <button type="button" className={s.addOnHint} onClick={() => setSheet(d)}>
                           {d.addOns?.length ? `+ ${d.addOns.length} add-ons` : null}
                           {d.addOns?.length && d.variantNote ? " · " : null}
                           {d.variantNote ? d.variantNote : null}
-                        </p>
+                        </button>
                       ) : null}
 
                       <div className={s.cardFoot}>
@@ -699,7 +764,11 @@ export default function FitFuelApp({
       </nav>
 
       {/* ── Order bar ───────────────────────────────────────────────────── */}
-      {basketCount > 0 && !barHidden ? (
+      {/* Hidden while the basket drawer is open. The bar is z-index 101 and the
+          drawer is 81, so it rendered straight over the Pay button — the one
+          control that takes money, covered by a bar advertising the same
+          basket you already have open. */}
+      {basketCount > 0 && !barHidden && !cart.open ? (
         <div className={s.orderBar}>
           <div className={s.orderInner}>
             <span className={s.orderMeta}>

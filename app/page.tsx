@@ -99,18 +99,34 @@ async function getPlans(): Promise<AppPlan[]> {
     const rows = await prisma.mealPlan.findMany({
       orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
       select: {
-        displayName: true, slug: true, tagline: true, category: true,
+        name: true, displayName: true, slug: true, tagline: true, category: true,
         subCategory: true, dietaryVariant: true, avgCaloriesPerDay: true,
         avgProteinGrams: true, avgCarbsGrams: true, avgFatGrams: true,
       },
     });
-    return rows.map((r) => {
+    /* GROUP BY CONCEPT. The 126 rows are 59 plans x diet variants — "Weight
+       Loss — Vegetarian / Eggetarian / Jain / Non Vegetarian / Vegan" is ONE
+       plan with five variants, not five plans. Rendering the raw rows produced
+       52 concepts as duplicate cards. `name` is already the clean concept name
+       and `displayName` is the decorated one, so the split exists in the data. */
+    const groups = new Map<string, typeof rows>();
+    for (const r of rows) {
+      const list = groups.get(r.subCategory) ?? [];
+      list.push(r);
+      groups.set(r.subCategory, list);
+    }
+
+    return [...groups.values()].map((rowsForConcept) => {
+      // The vegetarian row is the sensible default where there is one — it is
+      // the sheet the kitchen cooks most and the one Jain/Vegan are priced as.
+      const r =
+        rowsForConcept.find((x) => x.dietaryVariant === "VEG") ?? rowsForConcept[0];
       const kcal = Number(r.avgCaloriesPerDay) || 0;
       const p = Number(r.avgProteinGrams) || 0;
       const c = Number(r.avgCarbsGrams) || 0;
       const f = Number(r.avgFatGrams) || 0;
       return {
-        label: r.displayName,
+        label: r.name,
         slug: r.slug,
         note: r.tagline,
         cat: r.category as AppPlan["cat"],
@@ -121,6 +137,16 @@ async function getPlans(): Promise<AppPlan[]> {
         kcal,
         pcf: [p, c, f] as [number, number, number],
         meals: menus[r.slug] ?? [],
+        /* Every diet this plan is cooked in, each with its own slug, macros and
+           menu — this is what the "Variations" button opens. */
+        variants: rowsForConcept.map((v) => ({
+          diet: String(v.dietaryVariant),
+          slug: v.slug,
+          label: v.displayName,
+          kcal: Number(v.avgCaloriesPerDay) || 0,
+          protein: Number(v.avgProteinGrams) || 0,
+          meals: (menus[v.slug] ?? []).length,
+        })),
       };
     });
   } catch {
