@@ -797,20 +797,20 @@ export function MoreSection({ wrap, rule, h2, deck }: { wrap: Wrap; rule: CSSPro
                 </span>
               ))}
               <span style={{ marginTop: "auto", display: "flex", alignItems: "flex-end", gap: 4, height: 40 }}>
-                {TRAIN_BARS.map((h, i) => (<span key={i} style={{ flex: 1, background: i > 8 ? "#8a5a00" : "var(--fk-line)", height: `${h}%` }} />))}
+                {TRAIN_BARS.map((h, i) => (<span key={i} style={{ flex: 1, background: i > 8 ? "#f59e0b" : "var(--fk-line)", height: `${h}%` }} />))}
               </span>
             </>
           ), "Training", "A programme built around your plan, not a video library you scroll through. Volume feeds straight back into the target.")}
 
           {card("/dashboard/body-metrics", (
             <>
-              <span style={{ display: "flex", alignItems: "center", gap: 9, border: "1px solid var(--fk-line)", padding: "9px 11px", ...mono(10, "0.14em", "#1d6fa5") }}>
-                <span className={c("v2-loop", "aBlink16")} style={{ width: 7, height: 7, background: "#1d6fa5" }} />
+              <span style={{ display: "flex", alignItems: "center", gap: 9, border: "1px solid var(--fk-line)", padding: "9px 11px", ...mono(10, "0.14em", "#38bdf8") }}>
+                <span className={c("v2-loop", "aBlink16")} style={{ width: 7, height: 7, background: "#38bdf8" }} />
                 Scale paired over bluetooth
               </span>
               <svg viewBox="0 0 200 54" preserveAspectRatio="none" role="img" aria-label="Weight trending down over six weeks" style={{ width: "100%", height: 54, display: "block" }}>
-                <polyline points="0,14 33,18 66,12 100,24 133,30 166,27 200,38" fill="none" stroke="#1d6fa5" strokeWidth="2.5" strokeLinejoin="round" />
-                <circle cx="200" cy="38" r="4" fill="var(--fk-paper)" stroke="#1d6fa5" strokeWidth="2.5" />
+                <polyline points="0,14 33,18 66,12 100,24 133,30 166,27 200,38" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinejoin="round" />
+                <circle cx="200" cy="38" r="4" fill="var(--fk-paper)" stroke="#38bdf8" strokeWidth="2.5" />
               </svg>
               <span style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--fk-surface)", marginTop: "auto" }}>
                 {METRIC_CELLS.map((m) => (
@@ -846,7 +846,7 @@ export function MoreSection({ wrap, rule, h2, deck }: { wrap: Wrap; rule: CSSPro
 
           {card("/supplements", (
             <>
-              <span style={{ display: "flex", justifyContent: "space-between", ...mono(9.5, "0.14em") }}>Evidence grade<span style={{ color: "#1d6fa5" }}>we sell none of it</span></span>
+              <span style={{ display: "flex", justifyContent: "space-between", ...mono(9.5, "0.14em") }}>Evidence grade<span style={{ color: "#38bdf8" }}>we sell none of it</span></span>
               {SUPP_GRADES.map((g) => (
                 <span key={g.k} style={{ display: "grid", gridTemplateColumns: "78px minmax(0,1fr) 34px", gap: 9, alignItems: "center", ...mono(10, "0.08em", "var(--fk-ink-2)") }}>{g.k}
                   <span style={{ display: "block", height: 7, background: "var(--fk-surface)" }}><span className={c("v2-bar")} style={{ display: "block", height: 7, width: g.w, background: g.c }} /></span>
@@ -957,7 +957,7 @@ export function FaqSection({
           <div style={{ background: "var(--fk-warm)", padding: "clamp(18px,2.2vw,26px)", display: "flex", flexDirection: "column", gap: 20 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 9, border: "1px solid var(--fk-line)", background: "var(--fk-paper)", padding: "0 12px", minHeight: 48 }}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--fk-green)" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
-              <input type="search" value={faqQuery} onChange={(e) => { setFaqQuery(e.currentTarget.value); setFaqOpen(-1); }} placeholder="Search the questions" aria-label="Search the questions" style={{ flex: 1, minWidth: 0, background: "transparent", border: 0, outline: "none", color: "var(--fk-ink)", fontFamily: SANS, fontSize: 12, letterSpacing: "0.04em" }} />
+              <input type="search" value={faqQuery} onChange={(e) => { setFaqQuery(e.currentTarget.value); setFaqOpen(-1); }} placeholder="Search the questions" aria-label="Search the questions" style={{ flex: 1, minWidth: 0, minHeight: 44, background: "transparent", border: 0, outline: "none", color: "var(--fk-ink)", fontFamily: SANS, fontSize: 16, letterSpacing: "0" }} />
             </label>
 
             <div style={{ display: "flex", flexDirection: "column" }}>

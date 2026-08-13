@@ -280,6 +280,10 @@
 }
 
 .v2-range {
+  /* 44 minimum. These render at 34 and a slider is one of the harder controls
+     to hit accurately on a phone. */
+  min-height: 44px;
+  touch-action: manipulation;
   -webkit-appearance: none;
   appearance: none;
   width: 100%;

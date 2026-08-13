@@ -329,7 +329,7 @@ export default function Home(props: HomeProps) {
           v: (swing > 0 ? "+" : swing < 0 ? "−" : "") + Math.abs(swing).toLocaleString("en-IN") + " kcal",
           fg: "var(--fk-ink-2)", vfg: swing === 0 ? "var(--fk-ink-3)" : activeDoor.accent,
         },
-        { k: rawT < FLOOR ? "Held at the 1,200 kcal floor" : "Above the 1,200 kcal floor", v: rawT < FLOOR ? "floor applied" : "no floor needed", fg: "var(--fk-ink-3)", vfg: rawT < FLOOR ? "#8a5a00" : "var(--fk-ink-3)" },
+        { k: rawT < FLOOR ? "Held at the 1,200 kcal floor" : "Above the 1,200 kcal floor", v: rawT < FLOOR ? "floor applied" : "no floor needed", fg: "var(--fk-ink-3)", vfg: rawT < FLOOR ? "#f59e0b" : "var(--fk-ink-3)" },
         { k: "Your target, rounded to ten", v: target.toLocaleString("en-IN") + " kcal", fg: "var(--fk-ink)", vfg: activeDoor.accent },
       ],
       meals: SLOTS.map((name, i) => ({
@@ -350,9 +350,9 @@ export default function Home(props: HomeProps) {
   const glyphs = useMemo(
     () => ({
       plans: <Marks count={counts.plans ?? 126} per={1} cols={14} accent="var(--fk-green-deep)" className={c("v2-wipe")} />,
-      conditions: <Marks count={counts.conditions ?? 38} per={1} cols={8} accent="#0f766e" className={c("v2-wipe")} />,
-      exercises: <Marks count={counts.exercises ?? 952} per={8} cols={14} accent="#8a5a00" className={c("v2-wipe")} />,
-      supplements: <Marks count={counts.supplements ?? 46} per={1} cols={8} accent="#1d6fa5" className={c("v2-wipe")} />,
+      conditions: <Marks count={counts.conditions ?? 38} per={1} cols={8} accent="#2dd4bf" className={c("v2-wipe")} />,
+      exercises: <Marks count={counts.exercises ?? 952} per={8} cols={14} accent="#f59e0b" className={c("v2-wipe")} />,
+      supplements: <Marks count={counts.supplements ?? 46} per={1} cols={8} accent="#38bdf8" className={c("v2-wipe")} />,
       foods: <Marks count={counts.foods ?? 154} per={1} cols={16} accent="var(--fk-green)" className={c("v2-wipe")} />,
       prices: <Marks count={counts.prices ?? 3614} per={32} cols={14} accent="var(--fk-ink-2)" className={c("v2-wipe")} />,
     }),
@@ -363,9 +363,9 @@ export default function Home(props: HomeProps) {
 
   const ticker = [
     { n: count(counts.plans ?? 126), l: "plans", accent: "var(--fk-green-deep)", glyph: glyphs.plans, scale: "one mark each" },
-    { n: count(counts.conditions ?? 38), l: "conditions", accent: "#0f766e", glyph: glyphs.conditions, scale: "one mark each" },
-    { n: count(counts.exercises ?? 952), l: "exercises", accent: "#8a5a00", glyph: glyphs.exercises, scale: "one mark = 8" },
-    { n: count(counts.supplements ?? 46), l: "supplements", accent: "#1d6fa5", glyph: glyphs.supplements, scale: "one mark each" },
+    { n: count(counts.conditions ?? 38), l: "conditions", accent: "#2dd4bf", glyph: glyphs.conditions, scale: "one mark each" },
+    { n: count(counts.exercises ?? 952), l: "exercises", accent: "#f59e0b", glyph: glyphs.exercises, scale: "one mark = 8" },
+    { n: count(counts.supplements ?? 46), l: "supplements", accent: "#38bdf8", glyph: glyphs.supplements, scale: "one mark each" },
     { n: count(counts.foods ?? 154), l: "foods", accent: "var(--fk-green)", glyph: glyphs.foods, scale: "one mark each" },
     { n: count(counts.prices ?? 3614), l: "published prices", accent: "var(--fk-ink)", glyph: glyphs.prices, scale: "one mark = 32" },
   ];

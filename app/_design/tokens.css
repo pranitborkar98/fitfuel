@@ -37,7 +37,10 @@
      What does NOT come back is the part he actually called unparseable:
      uppercase-everything, 8.5px labels, mono captions, tracked-out display type.
      The palette is his; the legibility rules are not up for renegotiation. */
-  --fk-paper: #0a0a09; /* the page */
+  /* EXACTLY the legacy --ff-bg. The two ramps now share a ground, so moving
+     from the app at `/` to any of the 57 interior routes is not a 3/255 step
+     in the page colour. Imperceptible alone, but it is free to remove. */
+  --fk-paper: #070707; /* the page */
   --fk-surface: #131311; /* a card, LIGHTER than the page — on a dark ground a
                             raised surface must lift, not recess */
   --fk-warm: #1a1a17; /* hover / secondary band */
@@ -60,7 +63,7 @@
                                because "deep" means more contrast, and on a dark
                                ground that is lighter, not darker */
   --fk-green-wash: #1b2410; /* tint band behind a selected state */
-  --fk-on-green: #0a0a09; /* text ON lime */
+  --fk-on-green: #070707; /* text ON lime */
 
   /* Kept so nothing that references them breaks. Amber is the warning colour
      and is legible here; it was not on paper. */

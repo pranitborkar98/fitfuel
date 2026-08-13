@@ -21,7 +21,7 @@
 export const SLOTS = ["Breakfast", "Lunch", "Snack", "Dinner"] as const;
 
 /** One accent per meal slot, drawn from the goal palette. */
-export const PLATE_ACCENT = ["var(--fk-green-deep)", "#8a5a00", "#1d6fa5", "var(--fk-green)"];
+export const PLATE_ACCENT = ["var(--fk-green-deep)", "#f59e0b", "#38bdf8", "var(--fk-green)"];
 
 /** One grade for food, one lime duotone for people and places. */
 export const FOOD = "saturate(1.06) contrast(1.07)";
@@ -137,32 +137,32 @@ export const DOORS: Door[] = [
   },
   {
     goal: "Build muscle",
-    accent: "#8a5a00",
+    accent: "#f59e0b",
     count: 5,
     who: "You train, and eating enough is the part that keeps failing.",
     what: "A surplus you can actually finish, spread across four meals so you hit the protein number without one enormous dinner doing all the work.",
     tags: ["Surplus 300–500 kcal", "Protein every 4 hours", "Training block included"],
-    split: [["Protein", "28%", 28, "#8a5a00"], ["Carbohydrate", "52%", 52, "var(--fk-ink-2)"], ["Fat", "20%", 20, "var(--fk-ink-3)"]],
+    split: [["Protein", "28%", 28, "#f59e0b"], ["Carbohydrate", "52%", 52, "var(--fk-ink-2)"], ["Fat", "20%", 20, "var(--fk-ink-3)"]],
     href: "/plans?goal=muscle_gain",
   },
   {
     goal: "Just eat well",
-    accent: "#1d6fa5",
+    accent: "#38bdf8",
     count: 5,
     who: "No target. You are tired of deciding what is for dinner.",
     what: "Maintenance macros across varied regional cuisines, cooked properly. Nothing about it reads as a diet, and there is no number for you to hit.",
     tags: ["Maintenance calories", "Six regional cuisines", "No tracking required"],
-    split: [["Protein", "22%", 22, "#1d6fa5"], ["Carbohydrate", "53%", 53, "var(--fk-ink-2)"], ["Fat", "25%", 25, "var(--fk-ink-3)"]],
+    split: [["Protein", "22%", 22, "#38bdf8"], ["Carbohydrate", "53%", 53, "var(--fk-ink-2)"], ["Fat", "25%", 25, "var(--fk-ink-3)"]],
     href: "/plans?goal=balanced",
   },
   {
     goal: "Eat for a condition",
-    accent: "#0f766e",
+    accent: "#2dd4bf",
     count: 70,
     who: "Diabetes, PCOS, thyroid, fatty liver, postpartum, and 33 more.",
     what: "Written for a diagnosis by a nutritionist, not a generic plan with the rice taken out. Nutritional support, not medical treatment. Read the disclaimer and talk to your doctor.",
     tags: ["38 conditions", "Low-GI where it matters", "Nutritionist-specified"],
-    split: [["Protein", "25%", 25, "#0f766e"], ["Carbohydrate", "42%", 42, "var(--fk-ink-2)"], ["Fat", "33%", 33, "var(--fk-ink-3)"]],
+    split: [["Protein", "25%", 25, "#2dd4bf"], ["Carbohydrate", "42%", 42, "var(--fk-ink-2)"], ["Fat", "33%", 33, "var(--fk-ink-3)"]],
     href: "/plans?category=LIFESTYLE_MEDICAL",
   },
 ];
@@ -269,16 +269,16 @@ export const FEEDS = [
   { k: "Weigh-ins", v: "4 / fortnight", w: "72%", c: "var(--fk-green)" },
   { k: "Meals, pre-logged", v: "4 / day", w: "100%", c: "var(--fk-green)" },
   { k: "Food diary, per gram", v: "154 foods", w: "58%", c: "var(--fk-green-deep)" },
-  { k: "Training log", v: "952 exercises", w: "44%", c: "#8a5a00" },
-  { k: "Body metrics, bluetooth", v: "18 metrics", w: "30%", c: "#1d6fa5" },
+  { k: "Training log", v: "952 exercises", w: "44%", c: "#f59e0b" },
+  { k: "Body metrics, bluetooth", v: "18 metrics", w: "30%", c: "#38bdf8" },
 ];
 
 export const AI_JOBS = [
   { n: "01", c: "var(--fk-green)", h: "Calls the plateau", p: "Two weigh-ins a fortnight apart under half a kilo, and it says so before you notice." },
   { n: "02", c: "var(--fk-green)", h: "Moves the target", p: "Through 7,700 kcal per kg, capped at ±300 a day, never below the 1,200 floor." },
   { n: "03", c: "var(--fk-green-deep)", h: "Reads the diary", p: "Your meals arrive pre-logged, so the answer uses what you actually ate, per gram." },
-  { n: "04", c: "#8a5a00", h: "Adjusts the training", p: "Sets and reps in, one net-calorie figure out, folded into the same target." },
-  { n: "05", c: "#1d6fa5", h: "Answers on supplements", p: "What the evidence supports, at what dose. We sell none of it, so there is nothing to push." },
+  { n: "04", c: "#f59e0b", h: "Adjusts the training", p: "Sets and reps in, one net-calorie figure out, folded into the same target." },
+  { n: "05", c: "#38bdf8", h: "Answers on supplements", p: "What the evidence supports, at what dose. We sell none of it, so there is nothing to push." },
   { n: "06", c: "var(--fk-ink-2)", h: "Shows its working", p: "Every answer carries the figures it came from. Nothing changes behind your back." },
 ];
 
@@ -348,7 +348,7 @@ export const COACH_STRIP = [
 export const SUPP_GRADES = [
   { k: "Creatine", n: "A", w: "100%", c: "var(--fk-green)" },
   { k: "Whey", n: "A", w: "92%", c: "var(--fk-green)" },
-  { k: "Omega-3", n: "B", w: "64%", c: "#1d6fa5" },
+  { k: "Omega-3", n: "B", w: "64%", c: "#38bdf8" },
 ];
 
 export const INVOICE_ROWS = [
@@ -395,9 +395,9 @@ export const FALLBACK_COUPONS = [
 /** The six counts on the strip, with the tally scale each one is drawn at. */
 export const TICKER = [
   { key: "plans", n: 126, l: "plans", accent: "var(--fk-green-deep)", per: 1, cols: 14, scale: "one mark each" },
-  { key: "conditions", n: 38, l: "conditions", accent: "#0f766e", per: 1, cols: 8, scale: "one mark each" },
-  { key: "exercises", n: 952, l: "exercises", accent: "#8a5a00", per: 8, cols: 14, scale: "one mark = 8" },
-  { key: "supplements", n: 46, l: "supplements", accent: "#1d6fa5", per: 1, cols: 8, scale: "one mark each" },
+  { key: "conditions", n: 38, l: "conditions", accent: "#2dd4bf", per: 1, cols: 8, scale: "one mark each" },
+  { key: "exercises", n: 952, l: "exercises", accent: "#f59e0b", per: 8, cols: 14, scale: "one mark = 8" },
+  { key: "supplements", n: 46, l: "supplements", accent: "#38bdf8", per: 1, cols: 8, scale: "one mark each" },
   { key: "foods", n: 154, l: "foods", accent: "var(--fk-green)", per: 1, cols: 16, scale: "one mark each" },
   { key: "prices", n: 3614, l: "published prices", accent: "var(--fk-ink)", per: 32, cols: 14, scale: "one mark = 32", markColour: "var(--fk-ink-2)" },
 ];

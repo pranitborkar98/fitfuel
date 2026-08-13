@@ -90,6 +90,10 @@ const NAV: NavItem[] = [
 
 /* Everything the long-form page used to argue, still reachable. */
 const MORE = [
+  /* /why carries the plan finder, the receipt builder, the day timeline and the
+     coach. Those were orphaned when `/` became the app — reachable from nowhere
+     — so this link is not decoration, it is the only way back to them. */
+  { href: "/why", label: "Why FitFuel" },
   { href: "/how-it-works", label: "How a day works" },
   { href: "/our-kitchen", label: "The kitchen" },
   { href: "/corporate", label: "For offices" },

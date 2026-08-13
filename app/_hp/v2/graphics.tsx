@@ -300,10 +300,10 @@ export function BandChart({ k }: { k: number[] }) {
       </text>
       <polyline points={k.map((v, i) => `${X(i)},${Y(v)}`).join(" ")} fill="none" stroke="var(--fk-green)" strokeWidth={2.2} strokeLinejoin="round" />
       {k.map((v, i) => (
-        <rect key={`d${i}`} x={X(i) - 2.5} y={Y(v) - 2.5} width={5} height={5} fill={v === hiV ? "var(--fk-ink)" : v === loV ? "#8a5a00" : "var(--fk-green)"} />
+        <rect key={`d${i}`} x={X(i) - 2.5} y={Y(v) - 2.5} width={5} height={5} fill={v === hiV ? "var(--fk-ink)" : v === loV ? "#f59e0b" : "var(--fk-green)"} />
       ))}
       {note(hiV, k.indexOf(hiV), "var(--fk-ink)", `PEAK ${hiV.toLocaleString("en-IN")}`)}
-      {note(loV, k.indexOf(loV), "#8a5a00", `LOW ${loV.toLocaleString("en-IN")}`)}
+      {note(loV, k.indexOf(loV), "#f59e0b", `LOW ${loV.toLocaleString("en-IN")}`)}
       {[0, 6, 14, 22, 29].map((i) => (
         <text key={`x${i}`} x={X(i)} y={H - 12} textAnchor="middle" fill="var(--fk-ink-3)" fontFamily="var(--font-mono), monospace" fontSize={12}>
           D{i + 1}

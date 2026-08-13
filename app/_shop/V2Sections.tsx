@@ -159,7 +159,12 @@ export default function V2Sections({
       meals: SLOTS.map((name, i) => ({
         name, share: shares[i] ?? 0,
         kcal: Math.round((target * (shares[i] ?? 0)) / shareSum),
-        bg: ["#e6f0e8", "#cfe4d5", "#a9cfb6", "#7fb694"][i]!, fg: "var(--fk-ink)",
+        /* Lime ramp with DARK text on it. These four were pale green tints
+           carrying `--fk-ink`, which worked while ink was near-black on a warm
+           ground. Ink is now near-WHITE, so white-on-pale-green rendered the
+           meal calories at 1.09:1 — effectively invisible. Bright bar, dark
+           label is the correct pairing on a black page. */
+        bg: ["#d9f99d", "#bef264", "#a3e635", "#84cc16"][i]!, fg: "#070707",
       })),
     };
   }, [wt, ht, age, sex, act, door, diet, activeDoor, days]);
