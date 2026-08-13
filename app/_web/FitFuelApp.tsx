@@ -100,7 +100,12 @@ const MORE = [
 export type Course = { key: string; label: string; n: number };
 
 /** A plan row from the database, shaped so PlanSheet can consume it unchanged. */
-export type AppPlan = ShopPlan & { diet: string; sub: string };
+export type PlanMeal = { slot: string; name: string; kcal: number };
+export type AppPlan = ShopPlan & { diet: string; sub: string; meals: PlanMeal[] };
+
+const SLOT_LABEL: Record<string, string> = {
+  BREAKFAST: "Breakfast", LUNCH: "Lunch", SNACK: "Snack", DINNER: "Dinner",
+};
 
 /** Diet chips. Jain and Vegan are cooked to the vegetarian sheet and priced as
  *  VEGETARIAN, but they are still separate plans and a customer filters by the
@@ -523,6 +528,31 @@ export default function FitFuelApp({
                       </button>
                       <p className={s.dishBlurb}>{p.note}</p>
                       <p className={s.macroLine}>{p.macroLine}</p>
+
+                      {/* The food. Real day-one dishes where the schedule is
+                          seeded; a labelled placeholder where it is not.
+                          Never an invented dish name. */}
+                      {p.meals.length > 0 ? (
+                        <ul className={s.planMeals}>
+                          {p.meals.map((m) => (
+                            <li key={m.slot}>
+                              <span>{SLOT_LABEL[m.slot] ?? m.slot}</span>
+                              <b>{m.name}</b>
+                              <span className="fk-num">{m.kcal} kcal</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className={`${s.planMeals} ${s.planMealsSoon}`}>
+                          {["BREAKFAST", "LUNCH", "SNACK", "DINNER"].map((sl) => (
+                            <li key={sl}>
+                              <span>{SLOT_LABEL[sl]}</span>
+                              <b>Menu published monthly</b>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
                       <div className={s.cardFoot}>
                         <span className={s.askPrice}>{p.macros}</span>
                         <button type="button" className={s.add} onClick={() => setPlanSheet(p)}>

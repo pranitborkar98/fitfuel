@@ -170,6 +170,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.redirect(`${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`, 303);
     }
 
+    // ════════════════════ À LA CARTE PATH ════════════════════
+    // A single-meal basket has no plan to activate. Without this branch the
+    // physical path below runs resolvePurchasedPlan() with meta.planSlug
+    // undefined and either logs "paid but NO meal plan found" or, worse,
+    // resolves a default plan and creates a 30-day UserActivePlan for someone
+    // who bought one salad. The order is already CONFIRMED and the payment
+    // SUCCESS by this point; a dish order is complete at that.
+    if (meta.kind === "DISH") {
+      return NextResponse.redirect(
+        `${BASE_URL}/order/confirmation?order=${order.orderNumber}`,
+        303,
+      );
+    }
+
     // ════════════════════ PHYSICAL PATH ════════════════════
     const durEnum  = DUR_MAP[meta.dur]  ?? "ONE_MONTH";
     const mealEnum = MEAL_MAP[meta.meal] ?? "ALL_FOUR";

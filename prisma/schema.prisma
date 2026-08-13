@@ -407,21 +407,49 @@ model Order {
   referralUsage            PartnerReferral[]  @relation("ReferralOrder")
 }
 
+/// What a line on an order actually is. Until 2026-08-13 an OrderItem could
+/// only ever be a subscription: `diet`, `duration` and `mealsPerDay` were all
+/// required, and `productId` pointed at a MealPlanProduct. A single dish has
+/// none of those, so the à la carte basket had no way to become an order and
+/// settled over WhatsApp instead — PayU was wired and unreachable for dishes.
+enum OrderItemKind {
+  PLAN
+  DISH
+}
+
 model OrderItem {
-  id          String       @id @default(cuid())
+  id          String        @id @default(cuid())
   orderId     String
   productId   String?
-  diet        DietType
-  duration    PlanDuration
-  mealsPerDay MealsPerDay
+  kind        OrderItemKind @default(PLAN)
+
+  /// Subscription columns. NULLABLE as of the à la carte migration — required
+  /// when kind = PLAN, meaningless when kind = DISH. Existing rows are
+  /// unaffected: they keep their values and default to kind = PLAN.
+  diet        DietType?
+  duration    PlanDuration?
+  mealsPerDay MealsPerDay?
+
+  /// À la carte columns, set only when kind = DISH.
+  /// `dishId` is the slug from lib/menu-cart (e.g. "broccoli-and-bean-salad-in
+  /// -mustard-dressing"); it is deliberately NOT a foreign key, because dishes
+  /// live in lib/menu-alacarte.ts rather than in a table. `dishName` and
+  /// `addOnLabel` are denormalised on purpose so an old invoice still reads
+  /// correctly after the menu is edited.
+  dishId      String?
+  dishName    String?
+  addOnKind   String?
+  addOnLabel  String?
+
   priceRs     Int
   gstRs       Int
   totalRs     Int
-  quantity    Int          @default(1)
+  quantity    Int           @default(1)
 
   order   Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product MealPlanProduct? @relation(fields: [productId], references: [id])
 
+  @@index([kind])
   @@map("order_items")
 }
 

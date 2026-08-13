@@ -54,8 +54,49 @@ export const viewport: Viewport = {
  * renders an empty catalog. Ordering still goes through the configurator and
  * the seeded PlanPrice matrix, which is what actually gates a sale.
  */
+/**
+ * Day one of every plan that actually has a seeded menu.
+ *
+ * TODAY THAT IS EXACTLY ONE PLAN OF 126 (weight-loss-veg, 120 slots = 30 days
+ * x 4 meals, against 30 Recipe rows). The other 125 have no PlanScheduleSlot
+ * rows at all, so their cards show a labelled placeholder rather than four
+ * invented dish names — a plan that lists food it cannot cook is worse than a
+ * plan that says the menu is coming. Seed more schedules and they light up
+ * here with no code change.
+ */
+async function getPlanMenus(): Promise<Record<string, { slot: string; name: string; kcal: number }[]>> {
+  const SLOT_ORDER = ["BREAKFAST", "LUNCH", "SNACK", "DINNER"];
+  try {
+    const rows = await prisma.planScheduleSlot.findMany({
+      where: { dayNumber: 1 },
+      select: {
+        mealSlot: true,
+        mealPlan: { select: { slug: true } },
+        recipe: { select: { name: true, caloriesPerServing: true } },
+      },
+    });
+    const out: Record<string, { slot: string; name: string; kcal: number }[]> = {};
+    for (const r of rows) {
+      if (!r.recipe || !r.mealPlan) continue;
+      const slug = r.mealPlan.slug;
+      (out[slug] ||= []).push({
+        slot: String(r.mealSlot),
+        name: r.recipe.name,
+        kcal: Math.round(Number(r.recipe.caloriesPerServing) || 0),
+      });
+    }
+    for (const k of Object.keys(out)) {
+      out[k].sort((a, b) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot));
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 async function getPlans(): Promise<AppPlan[]> {
   try {
+    const menus = await getPlanMenus();
     const rows = await prisma.mealPlan.findMany({
       orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
       select: {
@@ -80,6 +121,7 @@ async function getPlans(): Promise<AppPlan[]> {
         macroLine: `${kcal.toLocaleString("en-IN")} kcal · ${p}P · ${c}C · ${f}F`,
         kcal,
         pcf: [p, c, f] as [number, number, number],
+        meals: menus[r.slug] ?? [],
       };
     });
   } catch {

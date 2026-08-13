@@ -878,3 +878,46 @@
 .app button.tab.tabOn {
   color: var(--fk-green-deep);
 }
+
+/* ── A plan's day-one menu ──────────────────────────────────────────────────
+   Four meals, the actual food. Where a plan has no seeded schedule the same
+   list renders a labelled placeholder — dimmed and italic so it can never be
+   mistaken for a dish the kitchen cooks. */
+.planMeals {
+  list-style: none;
+  margin: var(--fk-s-2) 0 0;
+  padding: var(--fk-s-3) 0 0;
+  border-top: 1px solid var(--fk-line);
+  display: grid;
+  gap: 6px;
+}
+.planMeals li {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  font-size: var(--fk-t-sm);
+}
+.planMeals li > span:first-child {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.planMeals li > b {
+  color: var(--fk-ink-2);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.planMeals li > span:last-child {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+}
+.planMealsSoon li > b {
+  color: var(--fk-ink-3);
+  font-style: italic;
+}
