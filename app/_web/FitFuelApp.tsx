@@ -566,8 +566,19 @@ function AddControl({ dish }: { dish: ShopDish }) {
       >
         −
       </button>
+      {/* CONFIRMATION AT THE POINT OF CONTACT. Tapping Add swapped the button
+          for this stepper and said nothing else; the only other feedback is the
+          basket count in the header, which is the one place you are not looking.
+          The number pops on every change.
+
+          The live region is the OUTER span and stays mounted — re-creating an
+          aria-live element is how announcements get dropped. The inner span
+          carries key={qty} so it remounts and replays the CSS animation, which
+          is why this needs no timers, no state and no injected nodes. */}
       <span className={s.stepQty} aria-live="polite" aria-label={`${qty} in order`}>
-        {qty}
+        <span key={qty} className={s.qtyPop}>
+          {qty}
+        </span>
       </span>
       <button
         type="button"

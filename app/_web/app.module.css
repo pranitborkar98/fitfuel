@@ -1238,6 +1238,19 @@
 .stepBtn:active {
   transform: scale(0.96);
 }
+
+/* The quantity confirms itself. No fill-mode: the animation ends on the base
+   values, so the number settles back to normal ink rather than being pinned by
+   a retained keyframe — the mistake that killed the card hover lift. */
+@keyframes qtyPop {
+  0%   { transform: scale(1);    color: var(--fk-green-deep); }
+  40%  { transform: scale(1.32); color: var(--fk-green-deep); }
+  100% { transform: scale(1);    color: var(--fk-ink); }
+}
+.qtyPop {
+  display: inline-block;
+  animation: qtyPop 320ms var(--fk-ease);
+}
 .add,
 .stepBtn {
   transition: transform var(--fk-dur-fast) var(--fk-ease), background-color var(--fk-dur) var(--fk-ease);
@@ -1317,7 +1330,8 @@
   .card:active,
   .card:hover .price,
   .add:active,
-  .stepBtn:active {
+  .stepBtn:active,
+  .qtyPop {
     animation: none;
     transform: none;
     transition: none;
