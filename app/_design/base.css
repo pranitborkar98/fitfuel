@@ -149,13 +149,13 @@ main:has(.fk) {
 
 .fk .fk-btn-primary {
   background: var(--fk-green);
-  color: #fff; /* 6.12:1 on --fk-green — AA */
+  color: var(--fk-on-green); /* near-black on lime — 10.03:1 */
   border-color: var(--fk-green);
 }
 .fk .fk-btn-primary:hover {
   background: var(--fk-green-deep);
   border-color: var(--fk-green-deep);
-  color: #fff;
+  color: var(--fk-on-green);
 }
 
 .fk .fk-btn-secondary {

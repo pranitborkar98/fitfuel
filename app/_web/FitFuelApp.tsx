@@ -30,8 +30,9 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
-import type { ShopDish } from "@/app/_shop/catalog";
+import { PLAN_CATS, SHOP_PLANS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
 import DishSheet from "@/app/_shop/DishSheet";
+import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import s from "./app.module.css";
 
@@ -69,13 +70,23 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
   );
 }
 
-const NAV = [
-  { href: "/", label: "Order", icon: I.bowl },
-  { href: "/plans", label: "Plans", icon: I.layers },
-  { href: "/dashboard/coach", label: "Coach", icon: I.spark },
-  { href: "/dashboard/nutrition", label: "Diary", icon: I.book },
-  { href: "/dashboard", label: "Account", icon: I.user },
-] as const;
+/* THE RAIL IS FOR THINGS A BROWSING CUSTOMER CAN ACTUALLY USE.
+   It previously listed "Diary" and "Account", which route to logged-in
+   dashboard screens on a different visual system — a visitor clicking them
+   lands somewhere unrecognisable and signed out. "Plans" also navigated AWAY
+   from the app to a legacy page; it now switches the catalog in place, because
+   the subscription IS the main product and it belongs inside the shell.
+   Diary/Coach/Training still exist and are reached from Your account. */
+type NavItem =
+  | { kind: "mode"; mode: "dishes" | "plans"; label: string; icon: string }
+  | { kind: "link"; href: string; label: string; icon: string };
+
+const NAV: NavItem[] = [
+  { kind: "mode", mode: "dishes", label: "Order tonight", icon: I.bowl },
+  { kind: "mode", mode: "plans", label: "Meal plans", icon: I.layers },
+  { kind: "link", href: "/dashboard/coach", label: "Coach", icon: I.spark },
+  { kind: "link", href: "/dashboard", label: "Your account", icon: I.user },
+];
 
 /* Everything the long-form page used to argue, still reachable. */
 const MORE = [
@@ -172,6 +183,12 @@ export default function FitFuelApp({
   const [course, setCourse] = useState("all");
   const [onlyOrderable, setOnlyOrderable] = useState(false);
   const [sheet, setSheet] = useState<ShopDish | null>(null);
+  /* Two catalogs, one shell. Dishes are a single meal tonight; plans are a
+     subscription configured by duration x diet x meals x tier. Both are the
+     product, and the old page made you scroll past one to reach the other. */
+  const [mode, setMode] = useState<"dishes" | "plans">("dishes");
+  const [planCat, setPlanCat] = useState("all");
+  const [planSheet, setPlanSheet] = useState<ShopPlan | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   /* Keeps typing responsive on a long list: the input updates every keystroke,
@@ -207,6 +224,19 @@ export default function FitFuelApp({
       );
     });
   }, [dishes, dq, course, onlyOrderable]);
+
+  const planResults = useMemo(() => {
+    const needle = dq.trim().toLowerCase();
+    return SHOP_PLANS.filter((p) => {
+      if (planCat !== "all" && p.cat !== planCat) return false;
+      if (!needle) return true;
+      return (
+        p.label.toLowerCase().includes(needle) ||
+        p.note.toLowerCase().includes(needle) ||
+        p.macros.toLowerCase().includes(needle)
+      );
+    });
+  }, [dq, planCat]);
 
   const orderableCount = results.filter((d) => d.orderable).length;
   const basketCount = cart.totals.count;
@@ -275,6 +305,43 @@ export default function FitFuelApp({
 
         {/* ── Rail + content ──────────────────────────────────────────────── */}
         <div className={s.filters}>
+          {/* Catalog switch. A subscription and a single meal are different
+              purchases, so they get different chip sets rather than one mixed
+              grid where a Rs 230 salad sits beside a Rs 17,849 month. */}
+          <div className={s.modeRow} role="group" aria-label="What are you ordering">
+            <button
+              type="button"
+              className={`${s.mode} ${mode === "dishes" ? s.modeOn : ""}`}
+              onClick={() => setMode("dishes")}
+              aria-pressed={mode === "dishes"}
+            >
+              Single meals <span className={s.fcount}>{dishes.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`${s.mode} ${mode === "plans" ? s.modeOn : ""}`}
+              onClick={() => setMode("plans")}
+              aria-pressed={mode === "plans"}
+            >
+              Meal plans <span className={s.fcount}>{planCount}</span>
+            </button>
+          </div>
+
+          {mode === "plans" ? (
+            <div className={s.chipRow} role="group" aria-label="Filter plans">
+              {PLAN_CATS.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={`${s.fchip} ${planCat === c.key ? s.fchipOn : ""}`}
+                  onClick={() => setPlanCat(c.key)}
+                  aria-pressed={planCat === c.key}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          ) : (
           <div className={s.chipRow} role="group" aria-label="Filter by course">
             <button
               type="button"
@@ -304,6 +371,7 @@ export default function FitFuelApp({
               Priced tonight
             </button>
           </div>
+          )}
         </div>
       </header>
 
@@ -311,11 +379,23 @@ export default function FitFuelApp({
         <nav className={s.rail} aria-label="Sections">
           <ul className={s.railList}>
             {NAV.map((n) => (
-              <li key={n.href}>
-                <Link href={n.href} className={`${s.railLink} ${n.href === "/" ? s.railOn : ""}`}>
-                  <Icon d={n.icon} />
-                  {n.label}
-                </Link>
+              <li key={n.label}>
+                {n.kind === "mode" ? (
+                  <button
+                    type="button"
+                    className={`${s.railLink} ${mode === n.mode ? s.railOn : ""}`}
+                    onClick={() => setMode(n.mode)}
+                    aria-current={mode === n.mode ? "page" : undefined}
+                  >
+                    <Icon d={n.icon} />
+                    {n.label}
+                  </button>
+                ) : (
+                  <Link href={n.href} className={s.railLink}>
+                    <Icon d={n.icon} />
+                    {n.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -365,14 +445,49 @@ export default function FitFuelApp({
             </div>
 
             <div className={s.resultBar}>
-              <h2>{q.trim() ? `Results for “${q.trim()}”` : course === "all" ? "Everything on the menu" : courses.find((c) => c.key === course)?.label}</h2>
+              <h2>
+                {q.trim()
+                  ? `Results for “${q.trim()}”`
+                  : mode === "plans"
+                    ? PLAN_CATS.find((c) => c.key === planCat)?.label
+                    : course === "all"
+                      ? "Everything on the menu"
+                      : courses.find((c) => c.key === course)?.label}
+              </h2>
               <p>
-                {results.length} dish{results.length === 1 ? "" : "es"}
-                {orderableCount !== results.length ? ` · ${orderableCount} priced tonight, from ${menuFrom}` : ` · from ${menuFrom}`}
+                {mode === "plans"
+                  ? `${planResults.length} shown · ${planCount} plans across goals and ${38} medical conditions`
+                  : `${results.length} dish${results.length === 1 ? "" : "es"}` +
+                    (orderableCount !== results.length
+                      ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
+                      : ` · from ${menuFrom}`)}
               </p>
             </div>
 
-            {results.length === 0 ? (
+            {mode === "plans" ? (
+              <ul className={s.grid}>
+                {planResults.map((p) => (
+                  <li key={p.slug} className={s.card}>
+                    <div className={s.cardBody}>
+                      <p className={s.planCat}>
+                        {PLAN_CATS.find((c) => c.key === p.cat)?.label ?? "Plan"}
+                      </p>
+                      <button type="button" className={s.dishName} onClick={() => setPlanSheet(p)}>
+                        {p.label}
+                      </button>
+                      <p className={s.dishBlurb}>{p.note}</p>
+                      <p className={s.macroLine}>{p.macroLine}</p>
+                      <div className={s.cardFoot}>
+                        <span className={s.askPrice}>Four meals a day</span>
+                        <button type="button" className={s.add} onClick={() => setPlanSheet(p)}>
+                          Configure
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : results.length === 0 ? (
               <div className={s.empty}>
                 <h3>Nothing matches that.</h3>
                 <p>
@@ -417,6 +532,16 @@ export default function FitFuelApp({
                       </button>
                       <p className={s.dishBlurb}>{d.blurb}</p>
                       {d.kcal ? <p className={s.macroLine}>{d.macroLine}</p> : null}
+                      {/* The add-on ladder (paneer/tofu, egg, grilled chicken)
+                          and any variant already live in DishSheet. The card
+                          only has to say they exist, or nobody opens it. */}
+                      {d.orderable && (d.addOns?.length || d.variantNote) ? (
+                        <p className={s.addOnHint}>
+                          {d.addOns?.length ? `+ ${d.addOns.length} add-ons` : null}
+                          {d.addOns?.length && d.variantNote ? " · " : null}
+                          {d.variantNote ? d.variantNote : null}
+                        </p>
+                      ) : null}
 
                       <div className={s.cardFoot}>
                         {d.orderable ? (
@@ -437,12 +562,25 @@ export default function FitFuelApp({
 
       {/* ── Bottom tabs ─────────────────────────────────────────────────── */}
       <nav className={s.tabs} aria-label="Sections">
-        {NAV.map((n) => (
-          <Link key={n.href} href={n.href} className={`${s.tab} ${n.href === "/" ? s.tabOn : ""}`}>
-            <Icon d={n.icon} size={22} />
-            {n.label}
-          </Link>
-        ))}
+        {NAV.map((n) =>
+          n.kind === "mode" ? (
+            <button
+              key={n.label}
+              type="button"
+              className={`${s.tab} ${mode === n.mode ? s.tabOn : ""}`}
+              onClick={() => setMode(n.mode)}
+              aria-current={mode === n.mode ? "page" : undefined}
+            >
+              <Icon d={n.icon} size={22} />
+              {n.label}
+            </button>
+          ) : (
+            <Link key={n.label} href={n.href} className={s.tab}>
+              <Icon d={n.icon} size={22} />
+              {n.label}
+            </Link>
+          ),
+        )}
       </nav>
 
       {/* ── Order bar ───────────────────────────────────────────────────── */}
@@ -463,6 +601,7 @@ export default function FitFuelApp({
       ) : null}
 
       {sheet ? <DishSheet dish={sheet} images={images} onClose={() => setSheet(null)} /> : null}
+      {planSheet ? <PlanSheet plan={planSheet} onClose={() => setPlanSheet(null)} /> : null}
     </div>
   );
 }

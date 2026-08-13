@@ -36,17 +36,17 @@ export default function CartButton() {
       <style>{`
         .ff-cart-btn {
           position: relative; display: inline-flex; align-items: center; gap: 8px;
-          background: transparent; border: 1px solid var(--ff-rule-2, #33332f);
+          background: transparent; border: 1px solid var(--fk-line-2);
           border-radius: 0; padding: 8px 13px; cursor: pointer;
           /* 44px, matching the touch-target floor the navbar already holds
              for the logo and the hamburger. */
-          color: var(--ff-ink, #f7f7f5); min-height: 44px;
+          color: var(--fk-ink); min-height: 44px;
           transition: border-color .2s, color .2s;
         }
-        .ff-cart-btn:hover { border-color: var(--ff-lime, #84cc16); }
+        .ff-cart-btn:hover { border-color: var(--fk-green); }
         .ff-cart-badge {
           font-family: var(--font-mono), ui-monospace, monospace;
-          font-size: 12.5px; font-weight: 700; color: var(--ff-lime, #84cc16);
+          font-size: 12.5px; font-weight: 700; color: var(--fk-green);
           font-variant-numeric: tabular-nums; line-height: 1;
         }
       `}</style>

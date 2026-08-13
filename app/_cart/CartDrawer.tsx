@@ -170,8 +170,8 @@ export default function CartDrawer() {
           position: fixed; top: 0; right: 0; bottom: 0; z-index: 81;
           width: min(420px, 100vw);
           display: flex; flex-direction: column;
-          background: var(--ff-panel, #050504);
-          border-left: 1px solid var(--ff-rule, #232320);
+          background: var(--fk-surface);
+          border-left: 1px solid var(--fk-line);
           transform: translateX(100%);
           transition: transform .3s cubic-bezier(.16,1,.3,1);
           visibility: hidden;
@@ -180,86 +180,86 @@ export default function CartDrawer() {
 
         .ff-cart-head {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 20px 22px; border-bottom: 1px solid var(--ff-rule, #232320); flex-shrink: 0;
+          padding: 20px 22px; border-bottom: 1px solid var(--fk-line); flex-shrink: 0;
         }
         .ff-cart-title {
-          margin: 0; font-family: var(--ff-cond); font-weight: 900; font-size: 26px;
-          letter-spacing: -0.02em; text-transform: uppercase; color: var(--ff-ink, #f7f7f5);
+          margin: 0; font-family: var(--fk-sans); font-weight: 700; font-size: 26px;
+          letter-spacing: -0.02em; text-transform: none; color: var(--fk-ink);
         }
         .ff-cart-x {
-          background: none; border: 1px solid var(--ff-rule, #232320); color: var(--ff-mute, #9a9a94);
+          background: none; border: 1px solid var(--fk-line); color: var(--fk-ink-2);
           /* 44 square, not 34: the touch minimum, and this is the one
              control a customer hits with a thumb while holding a phone. */
           width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
           border-radius: 0; transition: color .15s, border-color .15s;
         }
-        .ff-cart-x:hover { color: var(--ff-ink, #f7f7f5); border-color: var(--ff-rule-2, #33332f); }
+        .ff-cart-x:hover { color: var(--fk-ink); border-color: var(--fk-line-2); }
 
         .ff-cart-body { flex: 1; overflow-y: auto; padding: 4px 22px 22px; }
         .ff-cart-empty {
-          font-family: var(--ff-body); font-size: 14.5px; color: var(--ff-mute, #9a9a94);
+          font-family: var(--fk-sans); font-size: 14.5px; color: var(--fk-ink-2);
           line-height: 1.6; margin: 26px 0 0;
         }
 
         .ff-line {
           display: flex; gap: 14px; justify-content: space-between;
-          padding: 18px 0; border-bottom: 1px solid var(--ff-rule, #232320);
+          padding: 18px 0; border-bottom: 1px solid var(--fk-line);
         }
         .ff-line-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
         .ff-line-name {
-          font-family: var(--ff-cond); font-weight: 800; font-size: 17px; line-height: 1.1;
-          text-transform: uppercase; letter-spacing: -0.01em; color: var(--ff-ink, #f7f7f5);
+          font-family: var(--fk-sans); font-weight: 800; font-size: 17px; line-height: 1.1;
+          text-transform: none; letter-spacing: -0.01em; color: var(--fk-ink);
         }
         .ff-line-addon, .ff-line-cat {
-          font-family: var(--ff-body); font-size: 12.5px; color: var(--ff-dim, #85857e);
+          font-family: var(--fk-sans); font-size: 12.5px; color: var(--fk-ink-3);
         }
         .ff-line-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
         .ff-line-money {
           font-family: var(--font-mono), ui-monospace, monospace; font-weight: 700; font-size: 15px;
-          color: var(--ff-ink, #f7f7f5); font-variant-numeric: tabular-nums;
+          color: var(--fk-ink); font-variant-numeric: tabular-nums;
         }
-        .ff-step { display: flex; align-items: center; border: 1px solid var(--ff-rule, #232320); }
+        .ff-step { display: flex; align-items: center; border: 1px solid var(--fk-line); }
         .ff-step button {
-          background: none; border: 0; color: var(--ff-mute, #9a9a94); cursor: pointer;
+          background: none; border: 0; color: var(--fk-ink-2); cursor: pointer;
           width: 30px; height: 30px; display: grid; place-items: center;
         }
-        .ff-step button:hover { color: var(--ff-lime, #84cc16); }
+        .ff-step button:hover { color: var(--fk-green); }
         .ff-step-n {
           font-family: var(--font-mono), ui-monospace, monospace; font-size: 13px; font-weight: 700;
-          color: var(--ff-ink, #f7f7f5); min-width: 26px; text-align: center;
-          border-left: 1px solid var(--ff-rule, #232320); border-right: 1px solid var(--ff-rule, #232320);
+          color: var(--fk-ink); min-width: 26px; text-align: center;
+          border-left: 1px solid var(--fk-line); border-right: 1px solid var(--fk-line);
           line-height: 30px; font-variant-numeric: tabular-nums;
         }
         .ff-line-rm {
           background: none; border: 0; padding: 0; cursor: pointer;
-          font-family: var(--ff-body); font-size: 12px; color: var(--ff-dim, #85857e);
+          font-family: var(--fk-sans); font-size: 12px; color: var(--fk-ink-3);
           text-decoration: underline; text-underline-offset: 3px;
         }
-        .ff-line-rm:hover { color: var(--ff-ink, #f7f7f5); }
+        .ff-line-rm:hover { color: var(--fk-ink); }
 
-        .ff-enq { margin-top: 26px; border-top: 1px solid var(--ff-rule-2, #33332f); padding-top: 18px; }
+        .ff-enq { margin-top: 26px; border-top: 1px solid var(--fk-line-2); padding-top: 18px; }
         .ff-enq-h {
-          margin: 0 0 6px; font-family: var(--ff-cond); font-weight: 800; font-size: 16px;
-          text-transform: uppercase; letter-spacing: 0.04em; color: var(--ff-mute, #9a9a94);
+          margin: 0 0 6px; font-family: var(--fk-sans); font-weight: 800; font-size: 16px;
+          text-transform: none; letter-spacing: 0.04em; color: var(--fk-ink-2);
         }
         .ff-enq-note {
-          margin: 0 0 12px; font-family: var(--ff-body); font-size: 12.5px; line-height: 1.55;
-          color: var(--ff-dim, #85857e);
+          margin: 0 0 12px; font-family: var(--fk-sans); font-size: 12.5px; line-height: 1.55;
+          color: var(--fk-ink-3);
         }
         .ff-enq-row {
           display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          padding: 9px 0; font-family: var(--ff-body); font-size: 13.5px; color: var(--ff-mute, #9a9a94);
+          padding: 9px 0; font-family: var(--fk-sans); font-size: 13.5px; color: var(--fk-ink-2);
         }
 
         .ff-cart-foot {
-          flex-shrink: 0; border-top: 1px solid var(--ff-rule, #232320);
+          flex-shrink: 0; border-top: 1px solid var(--fk-line);
           padding: 18px 22px calc(18px + env(safe-area-inset-bottom, 0px));
-          background: var(--ff-bg, #070707);
+          background: var(--fk-paper);
         }
         .ff-rec-label {
           display: block; margin-bottom: 12px;
           font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
-          letter-spacing: 0.2em; text-transform: uppercase; color: var(--ff-dim, #85857e);
+          letter-spacing: 0.02em; text-transform: none; color: var(--fk-ink-3);
         }
         .ff-rec { margin: 0 0 14px; display: flex; flex-direction: column; gap: 9px; }
         .ff-rec > div {
@@ -267,41 +267,41 @@ export default function CartDrawer() {
         }
         .ff-rec dt {
           font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
-          letter-spacing: 0.12em; text-transform: uppercase; color: var(--ff-dim, #85857e);
+          letter-spacing: 0.02em; text-transform: none; color: var(--fk-ink-3);
         }
         .ff-rec dd {
           margin: 0; font-family: var(--font-mono), ui-monospace, monospace; font-size: 12.5px;
-          font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ff-ink, #f7f7f5);
+          font-weight: 700; font-variant-numeric: tabular-nums; color: var(--fk-ink);
         }
         .ff-sum {
           display: flex; align-items: baseline; justify-content: space-between;
-          padding-top: 13px; border-top: 1px solid var(--ff-rule-2, #33332f);
-          font-family: var(--ff-cond); font-weight: 800; font-size: 18px; text-transform: uppercase;
-          color: var(--ff-ink, #f7f7f5); letter-spacing: 0.02em;
+          padding-top: 13px; border-top: 1px solid var(--fk-line-2);
+          font-family: var(--fk-sans); font-weight: 800; font-size: 18px; text-transform: none;
+          color: var(--fk-ink); letter-spacing: 0.02em;
         }
         .ff-sum-n {
           font-family: var(--font-mono), ui-monospace, monospace; font-size: 22px; font-weight: 700;
           letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
         }
         .ff-foot-note {
-          margin: 10px 0 14px; font-family: var(--ff-body); font-size: 12px; line-height: 1.55;
-          color: var(--ff-dim, #85857e);
+          margin: 10px 0 14px; font-family: var(--fk-sans); font-size: 12px; line-height: 1.55;
+          color: var(--fk-ink-3);
         }
         .ff-send {
           display: flex; align-items: center; justify-content: center; gap: 9px;
           background: #25d366; color: #06140b; text-decoration: none;
-          font-family: var(--ff-cond); font-weight: 800; font-size: 16px;
-          letter-spacing: 0.05em; text-transform: uppercase;
+          font-family: var(--fk-sans); font-weight: 800; font-size: 16px;
+          letter-spacing: 0.05em; text-transform: none;
           min-height: 52px; border-radius: 0; transition: background .15s;
         }
         .ff-send:hover { background: #34e57a; }
-        .ff-send:focus-visible { outline: 3px solid var(--ff-lime-light, #a3e635); outline-offset: 3px; }
+        .ff-send:focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 3px; }
         .ff-clear {
           display: block; width: 100%; margin-top: 10px; background: none; border: 0; cursor: pointer;
-          font-family: var(--ff-body); font-size: 12.5px; color: var(--ff-dim, #85857e);
+          font-family: var(--fk-sans); font-size: 12.5px; color: var(--fk-ink-3);
           text-decoration: underline; text-underline-offset: 3px; padding: 6px;
         }
-        .ff-clear:hover { color: var(--ff-mute, #9a9a94); }
+        .ff-clear:hover { color: var(--fk-ink-2); }
 
         @media (prefers-reduced-motion: reduce) {
           .ff-cart, .ff-cart-scrim { transition-duration: .01ms; }

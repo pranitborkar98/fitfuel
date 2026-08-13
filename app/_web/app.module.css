@@ -182,7 +182,7 @@
   place-items: center;
   border-radius: var(--fk-r-full);
   background: var(--fk-terracotta);
-  color: #fff;
+  color: var(--fk-on-green); /* near-black on amber — white would be 2.1:1 */
   font-family: var(--fk-mono);
   font-size: 12px;
   font-weight: 700;
@@ -501,8 +501,8 @@
   bottom: 10px;
   padding: 4px 9px;
   border-radius: var(--fk-r-full);
-  background: color-mix(in srgb, var(--fk-ink) 84%, transparent);
-  color: var(--fk-paper);
+  background: color-mix(in srgb, #000 72%, transparent);
+  color: var(--fk-ink);
   font-family: var(--fk-mono);
   font-size: 12px;
   font-weight: 600;
@@ -590,7 +590,7 @@
   border: 1px solid var(--fk-green);
   border-radius: var(--fk-r);
   background: var(--fk-green);
-  color: #fff;
+  color: var(--fk-on-green);
   font-family: var(--fk-sans);
   font-size: var(--fk-t-sm);
   font-weight: 600;
@@ -613,7 +613,7 @@
    that is sometimes a link needs a line here too. */
 .app a.add,
 .app a.add:hover {
-  color: #fff;
+  color: var(--fk-on-green);
 }
 .app a.railLink {
   color: var(--fk-ink-2);
@@ -677,7 +677,7 @@
 }
 .stepBtn:hover {
   background: var(--fk-green);
-  color: #fff;
+  color: var(--fk-on-green);
 }
 .stepQty {
   min-width: 34px;
@@ -717,7 +717,12 @@
   bottom: 0;
   z-index: calc(var(--fk-z-sticky) + 1);
   padding: 10px var(--fk-gutter) calc(10px + env(safe-area-inset-bottom));
-  background: var(--fk-ink);
+  /* Was `background: var(--fk-ink)`. On the light palette ink was near-black
+     and this read as an inverted bar; on the dark palette ink is near-WHITE,
+     which would have flipped it to a white slab with unreadable grey text.
+     A raised surface plus a hairline is the correct dark-ground elevation. */
+  background: var(--fk-warm);
+  border-top: 1px solid var(--fk-line-2);
   animation: rise var(--fk-dur-slow) var(--fk-ease);
 }
 @media (min-width: 1024px) {
@@ -757,13 +762,13 @@
 }
 .orderMeta b {
   display: block;
-  color: var(--fk-paper);
+  color: var(--fk-ink);
   font-size: var(--fk-t-base);
   font-weight: 600;
 }
 .orderMeta span {
   display: block;
-  color: #b3ada0;
+  color: var(--fk-ink-3);
   font-size: var(--fk-t-sm);
   font-family: var(--fk-mono);
   font-variant-numeric: tabular-nums;
@@ -777,7 +782,7 @@
   border: 0;
   border-radius: var(--fk-r);
   background: var(--fk-green);
-  color: #fff;
+  color: var(--fk-on-green);
   font-family: var(--fk-sans);
   font-size: var(--fk-t-base);
   font-weight: 600;
@@ -786,4 +791,90 @@
 }
 .orderCta:hover {
   background: var(--fk-green-deep);
+}
+
+/* ── Catalog switch ─────────────────────────────────────────────────────────
+   Single meals vs meal plans. Two different purchases, so two chip sets rather
+   than one grid mixing a ₹230 salad with a ₹17,849 month. */
+.modeRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--fk-s-3);
+}
+.mode {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--fk-tap);
+  padding: 0 14px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  background: transparent;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-ink-2);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.mode:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+.modeOn {
+  background: var(--fk-green);
+  border-color: var(--fk-green);
+  color: var(--fk-on-green);
+}
+.modeOn:hover {
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+}
+@media (min-width: 640px) {
+  .modeRow {
+    justify-content: flex-start;
+  }
+  .mode {
+    flex: 0 0 auto;
+    min-width: 180px;
+  }
+}
+
+.planCat {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fk-green);
+  margin: 0;
+}
+
+/* Says the add-on ladder and variants exist. Without it nobody opens the sheet
+   that contains them, and "configuration, add-ons, variations" is invisible. */
+.addOnHint {
+  margin: 0;
+  font-size: var(--fk-t-sm);
+  color: var(--fk-green);
+}
+
+/* The rail and tab entries are <button> as often as <a> now, because switching
+   the catalog is not navigation. Buttons need the anchor styling reset. */
+.app button.railLink,
+.app button.tab {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: var(--fk-sans);
+  cursor: pointer;
+  text-align: left;
+}
+.app button.railLink.railOn {
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+}
+.app button.tab.tabOn {
+  color: var(--fk-green-deep);
 }

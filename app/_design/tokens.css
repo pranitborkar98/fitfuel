@@ -27,53 +27,62 @@
 
 :root {
   /* ── Ground ──────────────────────────────────────────────────────────────
-     Warm paper, not white and not grey. Both greys and pure white push a
-     plated photograph cool; a warm ground makes the same photograph read
-     appetising without touching the image. */
-  --fk-paper: #fcfaf6;
-  --fk-surface: #ffffff; /* cards that must lift off the paper */
-  --fk-warm: #f4ede1; /* recessed band, the colour of a menu card */
-  --fk-warm-2: #ece2d2; /* hover on a warm surface */
-  --fk-ink-bg: #1b1a17; /* the one dark ground, used sparingly */
+     BLACK AND LIME, on the owner's direct instruction (2026-08-13): "everything
+     is black lime so keep that". AGENTS.md records the opposite verdict from
+     2026-08-12; he is overriding it, and a live instruction outranks a recorded
+     one. Practically it is also the only way the product reads as ONE app
+     today — 57 interior routes are black+lime, so a warm storefront made the
+     app inconsistent with everything it linked to.
+
+     What does NOT come back is the part he actually called unparseable:
+     uppercase-everything, 8.5px labels, mono captions, tracked-out display type.
+     The palette is his; the legibility rules are not up for renegotiation. */
+  --fk-paper: #0a0a09; /* the page */
+  --fk-surface: #131311; /* a card, LIGHTER than the page — on a dark ground a
+                            raised surface must lift, not recess */
+  --fk-warm: #1a1a17; /* hover / secondary band */
+  --fk-warm-2: #232320;
+  --fk-ink-bg: #000000; /* the one true black, for full-bleed media only */
 
   /* ── Ink ─────────────────────────────────────────────────────────────────
-     A single warm ink ramp. There is no second, cooler grey ramp: two
-     temperatures on one page was a real bug in the old stylesheet. */
-  --fk-ink: #1b1a17; /* 16.69:1 on paper — headings, prices */
-  --fk-ink-2: #4a4438; /*  9.26:1 on paper — body copy */
-  --fk-ink-3: #5f5849; /*  6.76:1 on paper — metadata, captions */
+     One ramp. Ratios are against --fk-paper and verified by
+     npm run design:contrast, which reads these very hex values. */
+  --fk-ink: #f7f7f5; /* 18.1:1 — headings, prices */
+  --fk-ink-2: #c6c6c0; /* 11.4:1 — body copy */
+  --fk-ink-3: #9a9a94; /*  6.6:1 — metadata, captions */
 
   /* ── Accents ─────────────────────────────────────────────────────────────
-     Two, and they are both food colours. Deep herb green carries "this is
-     good for you"; terracotta carries appetite and reads as Indian kitchen
-     rather than Californian juice bar. Acid lime is deliberately absent. */
-  --fk-green: #2c6e49; /*  5.87:1 on paper — AA for text AND as a button ground */
-  --fk-green-deep: #1c4f33; /*  9.09:1 on paper — hover, focus ring, text on warm */
-  --fk-green-wash: #eaf2ec; /* tint band, never carries text below 4.5:1 */
+     Lime is the single chromatic value, as it always was. It is bright enough
+     to carry text on this ground, which is why on-lime text must be near-black
+     rather than white. */
+  --fk-green: #84cc16; /*  9.9:1 on paper */
+  --fk-green-deep: #a3e635; /* 13.0:1 — hover, focus ring; BRIGHTER on dark,
+                               because "deep" means more contrast, and on a dark
+                               ground that is lighter, not darker */
+  --fk-green-wash: #1b2410; /* tint band behind a selected state */
+  --fk-on-green: #0a0a09; /* text ON lime */
 
-  --fk-terracotta: #b44a26; /*  5.10:1 on paper — AA, price emphasis, alerts */
-  --fk-terracotta-deep: #9c3f1f; /*  6.41:1 on paper — hover */
-  --fk-terracotta-wash: #fbeee7;
-
-  /* Turmeric FAILS as text on every light ground (2.13:1). It is a non-text
-     accent only: rules, dots, illustration fills, or text on --fk-ink-bg
-     (7.83:1 there, AAA). Do not set body copy in it. */
-  --fk-turmeric: #e0a32e;
+  /* Kept so nothing that references them breaks. Amber is the warning colour
+     and is legible here; it was not on paper. */
+  --fk-terracotta: #f59e0b; /*  9.6:1 on paper */
+  --fk-terracotta-deep: #fbbf24;
+  --fk-terracotta-wash: #2a1e07;
+  --fk-turmeric: #f59e0b;
 
   /* ── Lines ───────────────────────────────────────────────────────────────
      Decorative hairlines may sit under 3:1 (WCAG exempts pure decoration).
      Anything that communicates — an input boundary, a selected state — must
      use --fk-line-strong, which clears 3:1. */
-  --fk-line: #e6ded0;
-  --fk-line-2: #d9cfbc;
-  --fk-line-strong: #8c8474; /* 3.06:1 on paper — form borders, dividers that mean something */
+  --fk-line: #232320;
+  --fk-line-2: #33332f;
+  --fk-line-strong: #5f5f59; /* 3.2:1 on paper — form borders, meaningful dividers */
 
   /* ── Status ──────────────────────────────────────────────────────────────
      Never the only carrier of meaning: every status pairs with an icon or a
      word in the components that use them. */
-  --fk-ok: #2c6e49;
-  --fk-warn: #8a5a00;
-  --fk-danger: #b3261e;
+  --fk-ok: #84cc16;
+  --fk-warn: #f59e0b;
+  --fk-danger: #f87171;
 
   /* ── Radius ──────────────────────────────────────────────────────────────
      The old system banned radius outright; that ban is history. But the
@@ -89,9 +98,12 @@
      Warm-tinted and shallow. Shadows lift real overlays (sheets, menus,
      sticky bars). There are no coloured glows and no backdrop-filter glass:
      both were on the reject-on-sight list and both still look like 2022. */
-  --fk-shadow-1: 0 1px 2px rgba(27, 26, 23, 0.06), 0 1px 1px rgba(27, 26, 23, 0.04);
-  --fk-shadow-2: 0 4px 12px rgba(27, 26, 23, 0.08), 0 1px 3px rgba(27, 26, 23, 0.05);
-  --fk-shadow-3: 0 16px 40px rgba(27, 26, 23, 0.14), 0 2px 8px rgba(27, 26, 23, 0.06);
+  /* On a black ground a drop shadow is invisible. Elevation is carried by the
+     surface value and the hairline instead; these stay only so components that
+     reference them do not break, and only the overlay tier does real work. */
+  --fk-shadow-1: none;
+  --fk-shadow-2: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --fk-shadow-3: 0 18px 48px rgba(0, 0, 0, 0.7);
 
   /* ── Type ────────────────────────────────────────────────────────────────
      Three faces, each with one job.

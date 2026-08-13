@@ -1,15 +1,17 @@
 // Verify the FitFuel `--fk-*` palette against WCAG 2.1.
 //
 // app/_design/tokens.css records a contrast ratio next to almost every colour.
-// A comment claiming "9.26:1 AAA" is worth nothing if the value drifts and
-// nobody re-checks, so the claims are re-derived here FROM THE FILE ITSELF —
-// the hex values are parsed out of tokens.css rather than duplicated, which
-// means editing a token and forgetting to edit its comment fails this check.
+// A comment claiming "11.4:1" is worth nothing if the value drifts and nobody
+// re-checks, so the claims are re-derived here FROM THE FILE ITSELF — the hex
+// values are parsed out of tokens.css rather than duplicated, which means
+// editing a token and forgetting to edit its comment fails this check.
 //
 //   node scripts/check-contrast.mjs        exits 1 on any AA failure
 //
 // AGENTS.md lists AA contrast under the rules that are "not up for
-// reinterpretation". This is that rule, executable.
+// reinterpretation". This is that rule, executable. It has already earned its
+// keep twice: it caught white-on-lime at 1.98:1 the moment the palette was
+// flipped to the dark ground, and the sub-3:1 form border before that.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -45,36 +47,38 @@ const ratio = (a, b) => {
 // carries meaning (WCAG 1.4.11). Purely decorative hairlines are NOT listed:
 // they are exempt, and asserting 3:1 on them would be a false requirement.
 const PAIRS = [
-  ["--fk-ink", "--fk-paper", 4.5, "headings and prices on paper"],
-  ["--fk-ink-2", "--fk-paper", 4.5, "body copy on paper"],
-  ["--fk-ink-3", "--fk-paper", 4.5, "metadata on paper"],
-  ["--fk-green", "--fk-paper", 4.5, "accent text on paper"],
-  ["--fk-green-deep", "--fk-paper", 4.5, "links and focus ring on paper"],
-  ["--fk-terracotta", "--fk-paper", 4.5, "price emphasis on paper"],
+  ["--fk-ink", "--fk-paper", 4.5, "headings and prices on the page"],
+  ["--fk-ink-2", "--fk-paper", 4.5, "body copy on the page"],
+  ["--fk-ink-3", "--fk-paper", 4.5, "metadata on the page"],
+  ["--fk-green", "--fk-paper", 4.5, "lime text on the page"],
+  ["--fk-green-deep", "--fk-paper", 4.5, "links and focus ring on the page"],
+  ["--fk-terracotta", "--fk-paper", 4.5, "warning text on the page"],
 
   ["--fk-ink", "--fk-surface", 4.5, "headings on a card"],
   ["--fk-ink-2", "--fk-surface", 4.5, "body copy on a card"],
   ["--fk-ink-3", "--fk-surface", 4.5, "metadata on a card"],
+  ["--fk-green", "--fk-surface", 4.5, "lime text on a card"],
 
-  ["--fk-ink", "--fk-warm", 4.5, "headings on the warm band"],
-  ["--fk-ink-2", "--fk-warm", 4.5, "body copy on the warm band"],
-  ["--fk-ink-3", "--fk-warm", 4.5, "metadata on the warm band"],
-  ["--fk-green-deep", "--fk-warm", 4.5, "links on the warm band"],
+  ["--fk-ink", "--fk-warm", 4.5, "headings on the hover band"],
+  ["--fk-ink-2", "--fk-warm", 4.5, "body copy on the hover band"],
+  ["--fk-ink-3", "--fk-warm", 4.5, "metadata on the hover band"],
+  ["--fk-green-deep", "--fk-warm", 4.5, "links on the hover band"],
 
   ["--fk-green-deep", "--fk-green-wash", 4.5, "chip text on its tint"],
-  ["--fk-terracotta-deep", "--fk-terracotta-wash", 4.5, "warm chip text on its tint"],
+  ["--fk-terracotta", "--fk-terracotta-wash", 4.5, "warning chip on its tint"],
+
+  // THE ONE THAT FLIPS WITH THE GROUND. Lime is a light colour, so a label
+  // sitting ON it must be near-black. White-on-lime is 1.98:1 and was the
+  // first thing this check caught when the palette changed.
+  ["--fk-on-green", "--fk-green", 4.5, "label ON a lime button"],
+  ["--fk-on-green", "--fk-green-deep", 4.5, "label ON a lime button, hover"],
 
   ["--fk-line-strong", "--fk-paper", 3, "form borders and meaningful dividers"],
-  ["--fk-green", "--fk-paper", 3, "primary button ground against paper"],
-  ["--fk-turmeric", "--fk-ink-bg", 4.5, "footer link hover on the dark ground"],
+  ["--fk-green", "--fk-paper", 3, "lime button ground against the page"],
 ];
 
-// Literal pairs that are not both tokens — white button text, footer greys.
 const LITERALS = [
-  ["#ffffff", "--fk-green", 4.5, "primary button label"],
-  ["#ffffff", "--fk-green-deep", 4.5, "primary button label, hover"],
-  ["#d8d3c8", "--fk-ink-bg", 4.5, "footer body text"],
-  ["#b3ada0", "--fk-ink-bg", 4.5, "footer fine print"],
+  ["#ffffff", "--fk-paper", 4.5, "pure white text on the page"],
 ];
 
 let failed = 0;
@@ -102,17 +106,6 @@ const run = (fg, bg, min, what) => {
 console.log(`\nFitFuel palette — WCAG check against ${path.relative(process.cwd(), CSS)}\n`);
 for (const [fg, bg, min, what] of PAIRS) run(fg, bg, min, what);
 for (const [fg, bg, min, what] of LITERALS) run(fg, bg, min, what);
-
-// The turmeric guard. tokens.css states in prose that turmeric must never be
-// used as text on a light ground. Assert it, so the comment cannot rot into a
-// suggestion.
-const turmericOnPaper = ratio(tokens["--fk-turmeric"], tokens["--fk-paper"]);
-if (turmericOnPaper >= 4.5) {
-  console.log(
-    `\nNOTE  --fk-turmeric now passes on paper (${turmericOnPaper.toFixed(2)}:1). ` +
-      `The "non-text accent only" comment in tokens.css is stale — update it.`,
-  );
-}
 
 console.log(`\n${checked} pairs checked, ${failed} failing.\n`);
 process.exit(failed ? 1 : 0);

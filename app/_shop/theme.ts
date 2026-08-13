@@ -50,7 +50,7 @@ export const C = {
   /** LEGACY KEY NAMES. `lime` is the deep herb green; `onLime` is white. */
   lime: "var(--fk-green)",
   limeLight: "var(--fk-green-deep)",
-  onLime: "#ffffff",
+  onLime: "var(--fk-on-green)",
   /** Macro-bar trough and the fat segment. */
   trough: "var(--fk-warm-2)",
   fat: "var(--fk-terracotta)",
