@@ -7,7 +7,7 @@ import { MENU_FROM } from "@/lib/menu-alacarte";
 import { cutoffLabel } from "@/lib/order-cutoff";
 import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
-import type { AppPlan } from "./_web/FitFuelApp";
+import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
 import FitFuelApp from "./_web/FitFuelApp";
 
@@ -171,8 +171,46 @@ function imageMap(): Record<string, string> {
   return out;
 }
 
+/**
+ * THE SUPPLEMENT CATALOG — 46 rows across 12 categories.
+ *
+ * A whole product line the webapp did not carry. The model is an educational
+ * catalog, not a shelf: mechanism, benefits, dosage, timing, half-life,
+ * stacks-with, avoid-with, warnings, evidence level and study count. The card
+ * shows the buyer-facing slice; the rest belongs on a supplement product page
+ * the same way the dish page carries a dish.
+ */
+async function getSupplements(): Promise<AppSupp[]> {
+  try {
+    const rows = await prisma.supplement.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        slug: true, name: true, brandName: true, tagline: true, form: true,
+        dosage: true, timing: true, evidenceLevel: true, studyCount: true,
+        benefits: true, category: { select: { name: true } },
+      },
+    });
+    return rows.map((r) => ({
+      slug: r.slug,
+      name: r.name,
+      brand: r.brandName ?? null,
+      tagline: r.tagline ?? "",
+      category: r.category?.name ?? "Other",
+      form: r.form ?? null,
+      dosage: r.dosage ?? null,
+      timing: r.timing ?? null,
+      evidence: r.evidenceLevel ?? null,
+      studies: r.studyCount ?? null,
+      benefits: (r.benefits ?? []).slice(0, 3),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function AppPage() {
-  const plans = await getPlans();
+  const [plans, supplements] = await Promise.all([getPlans(), getSupplements()]);
 
   return (
     <>
@@ -186,6 +224,7 @@ export default async function AppPage() {
         trialTotal={TRIAL_TOTAL_GLYPH}
         menuFrom={`₹${MENU_FROM}`}
         plans={plans}
+        supplements={supplements}
         planCount={plans.length || 126}
         licence={FSSAI_LICENCE}
       />

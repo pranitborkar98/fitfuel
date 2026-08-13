@@ -1301,3 +1301,96 @@
     transition: none;
   }
 }
+
+/* Benefit bullets on a supplement card — the buyer-facing slice of a model that
+   also holds mechanism, half-life, stacking and contraindications. */
+.benefits {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+}
+.benefits li {
+  position: relative;
+  padding-left: 14px;
+  font-size: var(--fk-t-sm);
+  line-height: 1.45;
+  color: var(--fk-ink-2);
+}
+.benefits li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green);
+}
+
+/* ── Services ─────────────────────────────────────────────────────────────
+   Destinations, not a pitch. Each tile leads with the number that makes it
+   real (952 exercises, ₹110 a meal) rather than an adjective. */
+.services {
+  border-top: 1px solid var(--fk-line);
+  padding: var(--fk-s-8) var(--fk-gutter) var(--fk-s-6);
+}
+.servicesInner {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.servicesH {
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-xl);
+  font-weight: 600;
+  color: var(--fk-ink);
+  margin: 0 0 var(--fk-s-5);
+}
+.serviceGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--fk-s-3);
+}
+.app .serviceGrid a {
+  display: grid;
+  gap: 6px;
+  height: 100%;
+  padding: var(--fk-s-5);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  text-decoration: none;
+  color: var(--fk-ink);
+  transition: border-color var(--fk-dur) var(--fk-ease), transform var(--fk-dur) var(--fk-ease);
+}
+.app .serviceGrid a:hover {
+  border-color: color-mix(in srgb, var(--fk-green) 45%, var(--fk-line));
+  transform: translateY(-2px);
+}
+.serviceStat {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fk-green);
+}
+.serviceGrid b {
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.serviceBlurb {
+  font-size: var(--fk-t-sm);
+  line-height: 1.5;
+  color: var(--fk-ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app .serviceGrid a:hover { transform: none; transition: none; }
+}

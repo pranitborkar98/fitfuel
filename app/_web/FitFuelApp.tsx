@@ -78,12 +78,13 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
    the subscription IS the main product and it belongs inside the shell.
    Diary/Coach/Training still exist and are reached from Your account. */
 type NavItem =
-  | { kind: "mode"; mode: "dishes" | "plans"; label: string; icon: string }
+  | { kind: "mode"; mode: "dishes" | "plans" | "supps"; label: string; icon: string }
   | { kind: "link"; href: string; label: string; icon: string };
 
 const NAV: NavItem[] = [
   { kind: "mode", mode: "dishes", label: "Order tonight", icon: I.bowl },
   { kind: "mode", mode: "plans", label: "Meal plans", icon: I.layers },
+  { kind: "mode", mode: "supps", label: "Supplements", icon: I.spark },
   { kind: "link", href: "/dashboard/coach", label: "Coach", icon: I.spark },
   { kind: "link", href: "/dashboard", label: "Your account", icon: I.user },
 ];
@@ -144,6 +145,33 @@ export type Course = { key: string; label: string; n: number };
 
 /** A plan row from the database, shaped so PlanSheet can consume it unchanged. */
 export type PlanMeal = { slot: string; name: string; kcal: number };
+export type AppSupp = {
+  slug: string; name: string; brand: string | null; tagline: string;
+  category: string; form: string | null; dosage: string | null;
+  timing: string | null; evidence: string | null; studies: string | null;
+  benefits: string[];
+};
+
+/* THE SERVICES. The v2 homepage argued these as scrolling sections; a webapp
+   carries them as destinations. Each is real and NONE was reachable from the
+   app: the coach is lib/coach + lib/ai-trainer, training is 952 Exercise rows,
+   corporate is CORP_PLANS, digital is 17 MealPlanProduct rows, and the gym
+   network is Partner rows. */
+const SERVICES: { href: string; label: string; blurb: string; stat: string }[] = [
+  { href: "/dashboard/coach", label: "The AI coach", stat: "Recalibrates weekly",
+    blurb: "Four weigh-ins that disagree with your goal move your target, with the arithmetic shown." },
+  { href: "/dashboard/exercises", label: "Training", stat: "952 exercises",
+    blurb: "Sets, reps and rest programmed into your week, burn fed back into today's net." },
+  { href: "/corporate", label: "For offices", stat: "From ₹110 a meal",
+    blurb: "One hot lunch a day at the desk, personalised by goal and diet, trays labelled per person." },
+  { href: "/plans/digital", label: "Digital plans", stat: "₹299 / ₹699",
+    blurb: "The 30-day recipe book, macros and grocery list, without the delivery." },
+  { href: "/partners", label: "Gyms & trainers", stat: "Partner network",
+    blurb: "Your gym or trainer puts your plan on your account and gets paid for it." },
+  { href: "/why", label: "Why FitFuel", stat: "The whole argument",
+    blurb: "The plan finder, the receipt builder and what happens between 4am and your door." },
+];
+
 export type PlanVariant = {
   diet: string;
   slug: string;
@@ -184,6 +212,7 @@ export type AppProps = {
   images: SlotMap;
   courses: Course[];
   plans: AppPlan[];
+  supplements: AppSupp[];
   area: string;
   cutoffLabel: string;
   trialTotal: string;
@@ -251,6 +280,7 @@ export default function FitFuelApp({
   images,
   courses,
   plans,
+  supplements,
   area,
   cutoffLabel,
   trialTotal,
@@ -266,7 +296,8 @@ export default function FitFuelApp({
   /* Two catalogs, one shell. Dishes are a single meal tonight; plans are a
      subscription configured by duration x diet x meals x tier. Both are the
      product, and the old page made you scroll past one to reach the other. */
-  const [mode, setMode] = useState<"dishes" | "plans">("dishes");
+  const [mode, setMode] = useState<"dishes" | "plans" | "supps">("dishes");
+  const [suppCat, setSuppCat] = useState("all");
   const [planCat, setPlanCat] = useState("all");
   const [planDiet, setPlanDiet] = useState("all");
   const [planSheet, setPlanSheet] = useState<ShopPlan | null>(null);
@@ -341,6 +372,26 @@ export default function FitFuelApp({
     for (const p of plans) m[p.cat] = (m[p.cat] ?? 0) + 1;
     return m;
   }, [plans]);
+
+  const suppCats = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const x of supplements) m.set(x.category, (m.get(x.category) ?? 0) + 1);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [supplements]);
+
+  const suppResults = useMemo(() => {
+    const needle = dq.trim().toLowerCase();
+    return supplements.filter((x) => {
+      if (suppCat !== "all" && x.category !== suppCat) return false;
+      if (!needle) return true;
+      return (
+        x.name.toLowerCase().includes(needle) ||
+        x.tagline.toLowerCase().includes(needle) ||
+        x.category.toLowerCase().includes(needle) ||
+        x.benefits.some((b) => b.toLowerCase().includes(needle))
+      );
+    });
+  }, [supplements, dq, suppCat]);
 
   const orderableCount = results.filter((d) => d.orderable).length;
   const basketCount = cart.totals.count;
@@ -421,6 +472,13 @@ export default function FitFuelApp({
               <span>
                 Plans start tomorrow — order by <b>{cutoffLabel}</b>, at your door by 8am.
               </span>
+            ) : mode === "supps" ? (
+              /* Supplements are not cooked and not delivered by our drivers —
+                 they are researched and linked out. Saying "cooked to order"
+                 over a nootropic is the kind of copy that erodes trust. */
+              <span>
+                Researched against your plan, not stocked. Priced across six retailers.
+              </span>
             ) : (
               <span>
                 Cooked to order and delivered across <b>{area}</b> today.
@@ -451,9 +509,39 @@ export default function FitFuelApp({
             >
               Meal plans <span className={s.fcount}>{planCount}</span>
             </button>
+            <button
+              type="button"
+              className={`${s.mode} ${mode === "supps" ? s.modeOn : ""}`}
+              onClick={() => setMode("supps")}
+              aria-pressed={mode === "supps"}
+            >
+              Supplements <span className={s.fcount}>{supplements.length}</span>
+            </button>
           </div>
 
-          {mode === "plans" ? (
+          {mode === "supps" ? (
+            <div className={s.chipRow} role="group" aria-label="Filter supplements">
+              <button
+                type="button"
+                className={`${s.fchip} ${suppCat === "all" ? s.fchipOn : ""}`}
+                onClick={() => setSuppCat("all")}
+                aria-pressed={suppCat === "all"}
+              >
+                Everything <span className={s.fcount}>{supplements.length}</span>
+              </button>
+              {suppCats.map(([c, n]) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`${s.fchip} ${suppCat === c ? s.fchipOn : ""}`}
+                  onClick={() => setSuppCat(c)}
+                  aria-pressed={suppCat === c}
+                >
+                  {c} <span className={s.fcount}>{n}</span>
+                </button>
+              ))}
+            </div>
+          ) : mode === "plans" ? (
             <>
               <div className={s.chipRow} role="group" aria-label="Filter plans by goal">
                 {PLAN_CATS.map((c) => (
@@ -590,6 +678,8 @@ export default function FitFuelApp({
               <h2>
                 {q.trim()
                   ? `Results for “${q.trim()}”`
+                  : mode === "supps"
+                    ? (suppCat === "all" ? "Supplements" : suppCat)
                   : mode === "plans"
                     ? PLAN_CATS.find((c) => c.key === planCat)?.label
                     : course === "all"
@@ -597,7 +687,9 @@ export default function FitFuelApp({
                       : courses.find((c) => c.key === course)?.label}
               </h2>
               <p>
-                {mode === "plans"
+                {mode === "supps"
+                  ? `${suppResults.length} of ${supplements.length} · researched, not stocked`
+                  : mode === "plans"
                   ? `${planResults.length} of ${planCount} plans · 59 goals and conditions`
                   : `${results.length} dish${results.length === 1 ? "" : "es"}` +
                     (orderableCount !== results.length
@@ -606,7 +698,37 @@ export default function FitFuelApp({
               </p>
             </div>
 
-            {mode === "plans" ? (
+            {mode === "supps" ? (
+              <ul className={s.grid}>
+                {suppResults.map((x) => (
+                  <li key={x.slug} className={s.card}>
+                    <div className={s.shotPlaceholder} aria-hidden="true">
+                      <span>{x.category}</span>
+                    </div>
+                    <div className={s.cardBody}>
+                      <p className={s.dishTop}>
+                        <span className={s.dishCourse}>{x.category}</span>
+                        {x.evidence ? <span className="fk-num">{x.evidence.replace(/_/g, " ")}</span> : null}
+                      </p>
+                      <Link href={`/supplements#${x.slug}`} className={s.dishName}>{x.name}</Link>
+                      {x.tagline ? <p className={s.dishBlurb}>{x.tagline}</p> : null}
+                      {x.benefits.length ? (
+                        <ul className={s.benefits}>
+                          {x.benefits.map((b) => <li key={b}>{b}</li>)}
+                        </ul>
+                      ) : null}
+                      <p className={s.macroLine}>
+                        {[x.form, x.dosage, x.timing].filter(Boolean).join(" · ") || "Dosage on the page"}
+                      </p>
+                      <div className={s.cardFoot}>
+                        <span className={s.askPrice}>{x.studies ? `${x.studies} studies` : "Researched"}</span>
+                        <Link href={`/supplements#${x.slug}`} className={`${s.add} ${s.ghost}`}>Read up</Link>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : mode === "plans" ? (
               <ul className={s.grid}>
                 {planResults.map((p) => (
                   <li key={p.slug} className={s.card}>
@@ -801,6 +923,27 @@ export default function FitFuelApp({
           </div>
         </div>
       </div>
+
+      {/* ── Services ─────────────────────────────────────────────────────
+          The v2 homepage argued these as scrolling sections. A webapp carries
+          them as destinations — the AI coach, training, corporate, digital
+          plans and the gym network were all real and none was reachable. */}
+      <section className={s.services} aria-labelledby="services-h">
+        <div className={s.servicesInner}>
+          <h2 id="services-h" className={s.servicesH}>Everything else the kitchen runs</h2>
+          <ul className={s.serviceGrid}>
+            {SERVICES.map((sv) => (
+              <li key={sv.href}>
+                <Link href={sv.href}>
+                  <span className={s.serviceStat}>{sv.stat}</span>
+                  <b>{sv.label}</b>
+                  <span className={s.serviceBlurb}>{sv.blurb}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className={s.footer}>
