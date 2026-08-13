@@ -212,6 +212,12 @@ export default function FitFuelApp({
   const [planCat, setPlanCat] = useState("all");
   const [planDiet, setPlanDiet] = useState("all");
   const [planSheet, setPlanSheet] = useState<ShopPlan | null>(null);
+  /* The order bar is dismissible. It is fixed, it sits over the last row of
+     cards, and shipping it with no way out left a customer with something in
+     the basket staring at a slab across the menu for the rest of the session.
+     Dismissing costs nothing: the basket is one tap away in the header and the
+     badge there still carries the count. */
+  const [barHidden, setBarHidden] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   /* Keeps typing responsive on a long list: the input updates every keystroke,
@@ -275,6 +281,17 @@ export default function FitFuelApp({
 
   const orderableCount = results.filter((d) => d.orderable).length;
   const basketCount = cart.totals.count;
+  /* Adding another dish brings the bar back. Without this one dismissal
+     silences it for the session and later additions give no feedback at all.
+     Comparing against a ref rather than setting state unconditionally keeps
+     this from cascading a render on every pass. */
+  const seenCount = useRef(basketCount);
+  useEffect(() => {
+    if (seenCount.current !== basketCount) {
+      seenCount.current = basketCount;
+      setBarHidden(false);
+    }
+  }, [basketCount]);
   /* The bar prints what will actually be collected, not the food subtotal.
      lib/menu-cart's receipt() adds delivery, packaging and the 5% GST — and
      charges none of them when the basket is enquiries only. */
@@ -668,7 +685,7 @@ export default function FitFuelApp({
       </nav>
 
       {/* ── Order bar ───────────────────────────────────────────────────── */}
-      {basketCount > 0 ? (
+      {basketCount > 0 && !barHidden ? (
         <div className={s.orderBar}>
           <div className={s.orderInner}>
             <span className={s.orderMeta}>
@@ -679,6 +696,14 @@ export default function FitFuelApp({
             </span>
             <button type="button" className={s.orderCta} onClick={() => cart.setOpen(true)}>
               View order
+            </button>
+            <button
+              type="button"
+              className={s.orderHide}
+              onClick={() => setBarHidden(true)}
+              aria-label="Hide the order bar. Your order is kept and is still in the basket."
+            >
+              <Icon d={I.x} size={18} />
             </button>
           </div>
         </div>

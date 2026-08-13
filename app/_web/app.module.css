@@ -952,3 +952,29 @@
 .grid {
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
 }
+
+/* The order bar's dismiss. Fixed UI that covers content and cannot be closed is
+   a trap, and this bar sits directly over the last row of dish cards. */
+.orderHide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--fk-tap);
+  height: var(--fk-tap);
+  flex: none;
+  border: 0;
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-ink-3);
+  cursor: pointer;
+}
+.orderHide:hover {
+  background: var(--fk-warm-2);
+  color: var(--fk-ink);
+}
+
+/* Reserve the bar's own height so it can never hide the final row of cards
+   while it IS showing. */
+.grid {
+  padding-bottom: 104px;
+}
