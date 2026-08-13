@@ -232,38 +232,112 @@ const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
  *
  * "14P · 32C · 14F" is a readout: it makes the reader do arithmetic to answer
  * the only question anyone asks of it — is this a protein dish or a carb dish.
- * A proportional bar answers that at a glance and keeps the grams for anyone
- * who wants them.
+ * A proportional graphic answers that at a glance and keeps the grams for
+ * anyone who wants them.
  *
- * 4 kcal/g for protein and carbs, 9 for fat, normalised so the segments always
+ * 4 kcal/g for protein and carbs, 9 for fat, normalised so the shares always
  * sum to 100% even when the stated kcal disagrees slightly with the macros.
  *
- * This is NOT a macro ring standing in for a photograph, which AGENTS.md
- * forbids. It sits beside the dish's name, description and price and
- * visualises numbers the card already prints.
+ * ── WHY ONE RING AND NOT THREE ─────────────────────────────────────────────
+ * The reflexive version of this graphic is three rings, one per macro, each
+ * filling against its own maximum. That maximum is always invented. A ring
+ * reads as "X out of Y", and on a menu grid there is no Y — we do not know the
+ * reader's protein target while they are scanning lunch. Three rings sitting
+ * at 70%, 40% and 60% full state a fact nobody has.
+ *
+ * This is a single ring whose three arcs are shares of one denominator that is
+ * real: the dish's own calories. The circle closes by construction, and the
+ * number in the middle is what the arcs are shares OF.
+ *
+ * It is NOT a macro ring standing in for a photograph, which AGENTS.md forbids.
+ * The image well above it is untouched and still carries the dish; this sits in
+ * the card body beside the name, blurb and price, and visualises numbers the
+ * card already prints in words.
  */
-function MacroSplit({ p, c, f }: { p: number; c: number; f: number }) {
+const RING_R = 26;
+const RING_C = 2 * Math.PI * RING_R;
+/** Visual separation between arcs, in path units. Three gaps, so three×. */
+const RING_GAP = 3.5;
+
+function MacroSplit({
+  p,
+  c,
+  f,
+  kcal,
+  unit = "kcal",
+}: {
+  p: number;
+  c: number;
+  f: number;
+  kcal?: number;
+  unit?: string;
+}) {
   const kp = p * 4, kc = c * 4, kf = f * 9;
   const total = kp + kc + kf;
   if (!total) return null;
-  const pct = (n: number) => Math.round((n / total) * 100);
+
+  /* Shares are taken from the raw kcal fractions, not from the rounded
+     percentages, so three roundings cannot leave the ring 1% short or long. */
   const segs = [
-    { key: "protein", label: "P", g: p, w: pct(kp), cls: sx.segP },
-    { key: "carbs", label: "C", g: c, w: pct(kc), cls: sx.segC },
-    { key: "fat", label: "F", g: f, w: pct(kf), cls: sx.segF },
+    { key: "protein", label: "P", g: p, share: kp / total, cls: sx.segP, arc: sx.arcP },
+    { key: "carbs", label: "C", g: c, share: kc / total, cls: sx.segC, arc: sx.arcC },
+    { key: "fat", label: "F", g: f, share: kf / total, cls: sx.segF, arc: sx.arcF },
   ];
+  const usable = RING_C - RING_GAP * segs.length;
+  let cursor = 0;
+  const arcs = segs.map((sg) => {
+    const len = sg.share * usable;
+    const start = cursor;
+    cursor += len + RING_GAP;
+    return { ...sg, len, start };
+  });
+
+  const proteinPct = Math.round((kp / total) * 100);
+
   return (
     <div className={sx.macro}>
-      {/* One sentence for the whole graphic. The bar is decorative so a screen
-          reader is not read three unlabelled divs. */}
+      {/* One sentence for the whole graphic. The ring is decorative so a screen
+          reader is not read three unlabelled shapes. */}
       <span className="fk-sr-only">
-        {`${p} grams protein, ${c} grams carbohydrate, ${f} grams fat. ${pct(kp)} per cent of calories from protein.`}
+        {`${p} grams protein, ${c} grams carbohydrate, ${f} grams fat. ${proteinPct} per cent of calories from protein.`}
       </span>
-      <span className={sx.macroBar} aria-hidden="true">
-        {segs.map((sg) => (
-          <span key={sg.key} className={sg.cls} style={{ width: `${sg.w}%` }} />
+
+      <svg className={sx.donut} viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+        <circle className={sx.donutTrack} cx="32" cy="32" r={RING_R} />
+        {arcs.map((a) => (
+          <circle
+            key={a.key}
+            className={`${sx.donutArc} ${a.arc}`}
+            cx="32"
+            cy="32"
+            r={RING_R}
+            style={
+              {
+                "--len": a.len.toFixed(2),
+                "--circ": RING_C.toFixed(2),
+                strokeDashoffset: -a.start,
+              } as React.CSSProperties
+            }
+          />
         ))}
-      </span>
+        {/* The denominator, in the middle of the thing it is the denominator of.
+            Printed without a thousands separator: a plan's daily figure is four
+            digits, and "1,800" does not fit the 45px well inside the ring. The
+            narrow class drops the size for those. */}
+        {kcal ? (
+          <>
+            <text
+              className={`${sx.donutNum} ${kcal >= 1000 ? sx.donutNumWide : ""}`}
+              x="32"
+              y="31"
+            >
+              {kcal}
+            </text>
+            <text className={sx.donutUnit} x="32" y="42">{unit}</text>
+          </>
+        ) : null}
+      </svg>
+
       <span className={sx.macroKeys} aria-hidden="true">
         {segs.map((sg) => (
           <span key={sg.key} className={sx.macroKey}>
@@ -306,23 +380,157 @@ function badgesFor(d: ShopDish): string[] {
  *
  * Every card carried the same empty dark rectangle across the top — roughly 40%
  * of the card showing nothing, 48 times, which is what made the grid read as a
- * single texture. Hashing the dish id into a hue gives the grid rhythm while a
- * card is still waiting for its photograph, and the moment a real image lands
- * it replaces this with no layout change.
+ * single texture. A coloured ground gives the grid rhythm while a card is still
+ * waiting for its photograph, and the moment a real image lands it replaces
+ * this with no layout change.
+ *
+ * THE HUE COMES FROM THE COURSE, NOT FROM A HASH OF THE ID. The first version
+ * hashed the id, which produced variety and nothing else: two salads could land
+ * 180° apart and a reader scrolling the grid learned nothing from the colour.
+ * Anchoring each course to a hue makes the rhythm carry information — every
+ * salad reads as one family — and the ±12° jitter keeps twelve salads from
+ * being twelve identical rectangles.
+ *
+ * Hues stay in the part of the wheel food occupies: leaf, butter, roast, morning
+ * yellow, berry, cold-press. Nothing lands in the blues.
  *
  * It is a SURFACE, not a diagram: it does not encode flavour, heat or
  * ingredients, and nothing about it invites the reader to decode it. That is
  * the line AGENTS.md draws — a macro ring pretending to be a dish is out, a
  * coloured ground under a course label is not.
  */
-function fieldStyle(id: string): React.CSSProperties {
+/* Three of the six courses live in the warm end, which is where the crowding
+   is. Measured across all 48 cards, centres at 12/30/46 with ±12 of jitter put
+   Bowls at 0-23, Keto at 20-37 and Breakfast at 35-56 — two overlaps, so a bowl
+   and a keto dish could land on the same colour and the family cue was false
+   exactly where most of the menu sits. Centres re-spaced to 20° apart and the
+   jitter cut to ±7, which separates every pair. */
+const COURSE_HUE: Record<string, number> = {
+  bowls: 14,      // roast
+  keto: 34,       // butter
+  breakfast: 54,  // morning
+  salads: 96,     // leaf
+  juices: 168,    // cold-press
+  bars: 344,      // berry
+};
+/** Half-width of the within-course spread, in degrees. */
+const HUE_JITTER = 7;
+
+/** Stable small integer from a string, for the within-course jitter. */
+function hashOf(id: string): number {
   let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 4096;
+  return h;
+}
+
+function field(hue: number): React.CSSProperties {
+  const h = ((hue % 360) + 360) % 360;
   return {
     backgroundImage:
       `radial-gradient(120% 100% at 20% 0%, hsl(${h} 45% 22% / 0.85), transparent 62%),` +
       `radial-gradient(90% 90% at 90% 100%, hsl(${(h + 48) % 360} 40% 18% / 0.7), transparent 60%)`,
   };
+}
+
+/** Dishes: the course sets the family, the id sets the variation within it. */
+function dishField(d: ShopDish): React.CSSProperties {
+  const base = COURSE_HUE[d.category] ?? 96;
+  return field(base + (hashOf(d.id) % (HUE_JITTER * 2 + 1)) - HUE_JITTER);
+}
+
+/** Plans have no course, so they keep the hash. */
+function fieldStyle(id: string): React.CSSProperties {
+  return field(hashOf(id) % 360);
+}
+
+/**
+ * POINTER-TRACKED DEPTH, at a cost the grid can afford.
+ *
+ * ONE listener on the grid, not one per card: a 126-plan grid would otherwise
+ * attach 252 handlers. Reads are rAF-throttled to a single write per frame, and
+ * the only thing written is four custom properties on one element — CSS
+ * composes the transform and the gradient from there. Writing .style.transform
+ * on several children per pointermove, which is the usual shape of this effect,
+ * forces layout on every event.
+ *
+ * Bails entirely on coarse pointers and under prefers-reduced-motion, so a
+ * phone never runs any of it. Everything degrades to the plain card.
+ */
+function useCardTilt<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root || typeof window.matchMedia !== "function") return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    /* Tilt in degrees at the corners. 8° — the figure the effect is usually
+       written with — visibly skews a paragraph of body copy. 5 reads as depth
+       and leaves the blurb flat enough to finish reading. */
+    const MAX = 5;
+    let frame = 0;
+    let next: { el: HTMLElement; x: number; y: number } | null = null;
+
+    const paint = () => {
+      frame = 0;
+      if (!next) return;
+      const { el, x, y } = next;
+      el.style.setProperty("--mx", `${x.toFixed(1)}%`);
+      el.style.setProperty("--my", `${y.toFixed(1)}%`);
+      el.style.setProperty("--rx", `${((50 - y) / 50) * MAX}deg`);
+      el.style.setProperty("--ry", `${((x - 50) / 50) * MAX}deg`);
+    };
+
+    const clear = (el: HTMLElement) => {
+      for (const p of ["--mx", "--my", "--rx", "--ry"]) el.style.removeProperty(p);
+    };
+
+    const cardOf = (n: EventTarget | null) =>
+      n instanceof Element ? (n.closest("li") as HTMLElement | null) : null;
+
+    const onMove = (e: PointerEvent) => {
+      const el = cardOf(e.target);
+      if (!el || !root.contains(el)) return;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      next = {
+        el,
+        x: ((e.clientX - r.left) / r.width) * 100,
+        y: ((e.clientY - r.top) / r.height) * 100,
+      };
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+
+    /* pointerout bubbles (pointerleave does not), so it is the one that works
+       for a delegated listener — but it also fires when crossing between
+       children of the same card. relatedTarget tells those apart. */
+    const onOut = (e: PointerEvent) => {
+      const el = cardOf(e.target);
+      if (!el) return;
+      const to = e.relatedTarget;
+      if (to instanceof Node && el.contains(to)) return;
+      if (next?.el === el) next = null;
+      clear(el);
+    };
+
+    root.addEventListener("pointermove", onMove, { passive: true });
+    root.addEventListener("pointerout", onOut, { passive: true });
+    /* Marks in the DOM that the effect engaged, so "is the tilt live?" is a
+       question the page can answer directly. The effect has four separate
+       reasons to bail (no ref, no matchMedia, coarse pointer, reduced motion)
+       and without this the only way to tell a bail from a broken listener is
+       to watch for motion — which a non-compositing preview pane cannot show. */
+    root.dataset.tilt = "on";
+    return () => {
+      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerout", onOut);
+      delete root.dataset.tilt;
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return ref;
 }
 
 /** Add / stepper. One control, two states, same footprint. */
@@ -415,6 +623,7 @@ export default function FitFuelApp({
   const [openVariants, setOpenVariants] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const gridRef = useCardTilt<HTMLDivElement>();
 
   /* Keeps typing responsive on a long list: the input updates every keystroke,
      the 48-item filter runs at React's leisure. */
@@ -755,7 +964,12 @@ export default function FitFuelApp({
             legacy pages. `main:has(.fk)` flips ChromeGate's outer main to warm
             paper, but it cannot match a <main> nested INSIDE the .fk subtree,
             so this element was rendering dark ink on #070707. */}
-        <div className={s.main}>
+        {/* The tilt listener lives on this stable wrapper rather than on the
+            grid: the three catalog modes each mount their own <ul>, so a ref on
+            the grid would go stale the moment someone switched to plans. One
+            listener here covers dishes, plans and supplements for the life of
+            the app. */}
+        <div className={s.main} ref={gridRef}>
           {/* Filters. Counts are real, so a chip never leads to an empty grid. */}
           <div className={s.pad}>
             {/* The app's one h1. Visually hidden because the shell states the
@@ -854,8 +1068,21 @@ export default function FitFuelApp({
                         {p.label}
                       </Link>
                       <p className={s.dishBlurb}>{p.note}</p>
-                      <p className={s.macroLine}>{p.kcal?.toLocaleString("en-IN")} kcal a day</p>
-                      {p.pcf ? <MacroSplit p={p.pcf[0]} c={p.pcf[1]} f={p.pcf[2]} /> : null}
+                      {/* The daily kcal was a line of its own above the bar.
+                          It is the ring's centre now, labelled "a day" so the
+                          per-day basis survives the move. Falls back to the
+                          plain line when a plan has no macro split to draw. */}
+                      {p.pcf ? (
+                        <MacroSplit
+                          p={p.pcf[0]}
+                          c={p.pcf[1]}
+                          f={p.pcf[2]}
+                          kcal={p.kcal ?? undefined}
+                          unit="a day"
+                        />
+                      ) : p.kcal ? (
+                        <p className={s.macroLine}>{p.kcal.toLocaleString("en-IN")} kcal a day</p>
+                      ) : null}
 
                       <div className={s.planActions}>
                         <button
@@ -951,7 +1178,7 @@ export default function FitFuelApp({
                       <button
                         type="button"
                         className={s.shotPlaceholder}
-                        style={fieldStyle(d.id)}
+                        style={dishField(d)}
                         onClick={() => setSheet(d)}
                         aria-label={`See ${d.name}`}
                       >
@@ -987,9 +1214,13 @@ export default function FitFuelApp({
                     )}
 
                     <div className={s.cardBody}>
+                      {/* The kcal figure used to sit here as well. It is now the
+                          number inside the ring, which is the one place on the
+                          card where it is the denominator of something rather
+                          than a loose statistic. Printing it twice made the top
+                          row compete with the dish name for no gain. */}
                       <p className={s.dishTop}>
                         <span className={s.dishCourse}>{d.categoryLabel}</span>
-                        {d.kcal ? <span className="fk-num">{d.kcalLabel}</span> : null}
                       </p>
                       {/* Every dish now has a URL. It was reachable only as a
                           card and a modal, so it could not be linked, shared,
@@ -999,7 +1230,9 @@ export default function FitFuelApp({
                         {d.name}
                       </Link>
                       <p className={s.dishBlurb}>{d.blurb}</p>
-                      {d.kcal ? <MacroSplit p={d.protein} c={d.carbs} f={d.fat} /> : null}
+                      {d.kcal ? (
+                        <MacroSplit p={d.protein} c={d.carbs} f={d.fat} kcal={d.kcal} />
+                      ) : null}
                       {/* The add-on ladder (paneer/tofu, egg, grilled chicken)
                           and any variant already live in DishSheet. The card
                           only has to say they exist, or nobody opens it. */}

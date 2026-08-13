@@ -664,8 +664,14 @@
   overflow: hidden;
   min-height: var(--fk-tap);
 }
+/* 44px SQUARE, not 40. These were 40px wide against a 44px minimum, and the
+   violation was invisible in every earlier sweep because the stepper only
+   exists once a dish is already in the order — an empty basket renders the
+   plain Add button and nothing to measure. It is also the control most likely
+   to be tapped repeatedly and in a hurry. */
 .stepBtn {
-  width: 40px;
+  width: var(--fk-tap);
+  min-width: var(--fk-tap);
   min-height: var(--fk-tap);
   border: 0;
   background: var(--fk-green-wash);
@@ -1145,14 +1151,64 @@
   z-index: 2;
 }
 
-/* The lift. -3px and a lime-tinted rim: enough to feel physical, not enough to
-   look like it is floating away. */
+/* ── DEPTH THAT TRACKS THE POINTER ──────────────────────────────────────────
+   The lift is -3px with a lime-tinted rim: enough to feel physical, not enough
+   to look like it is floating away. On a fine pointer it also tilts toward the
+   cursor and catches a light.
+
+   THE WHOLE EFFECT IS FOUR CUSTOM PROPERTIES. JavaScript writes --mx/--my/
+   --rx/--ry on ONE card (delegated listener, rAF-throttled, one write per
+   frame); CSS composes them into a single transform and a single gradient.
+   The alternative — a script setting .style.transform on six children per
+   mousemove — thrashes layout on every event and does nothing at all on a
+   phone, where there is no pointer to track.
+
+   Gated on (hover: hover) and (pointer: fine) so a touch device never pays for
+   a transform it cannot drive. Touch gets a press response instead, below. */
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(var(--lift, -3px));
   border-color: color-mix(in srgb, var(--fk-green) 40%, var(--fk-line));
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.55),
     0 0 0 1px color-mix(in srgb, var(--fk-green) 14%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform:
+      perspective(900px)
+      translateY(var(--lift, -3px))
+      rotateX(var(--rx, 0deg))
+      rotateY(var(--ry, 0deg));
+  }
+
+  /* The specular. One radial gradient, painted only while a single card is
+     hovered — versus an animated conic border on all 48 at once, which is not
+     compositor-accelerated and repaints every card every frame forever. */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--mx, 50%) var(--my, 0%),
+      color-mix(in srgb, var(--fk-ink) 10%, transparent),
+      transparent 42%
+    );
+    opacity: 0;
+    transition: opacity var(--fk-dur) var(--fk-ease);
+    pointer-events: none;
+    z-index: 3;
+  }
+  .card:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Touch has no hover to lift into, so contact is the feedback instead. */
+@media (hover: none) {
+  .card:active {
+    transform: scale(0.985);
+  }
 }
 .card:hover::before {
   opacity: 1;
@@ -1195,8 +1251,13 @@
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* `backwards`, NOT `both`. With `both` the animation retains its `to` values
+   after finishing, which pins transform at translateY(0) forever and silently
+   defeats every :hover transform below — the lift, and the tilt. `backwards`
+   still applies the `from` frame during the stagger delay (so a card cannot
+   flash at full opacity before its turn) and then hands the property back. */
 .card {
-  animation: cardIn var(--fk-dur-slow) var(--fk-ease) both;
+  animation: cardIn var(--fk-dur-slow) var(--fk-ease) backwards;
 }
 .card:nth-child(1)  { animation-delay: 0ms; }
 .card:nth-child(2)  { animation-delay: 25ms; }
@@ -1260,8 +1321,12 @@
   margin: 0 0 var(--fk-s-2);
 }
 .footerList { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+/* `flex`, not `inline-flex`. These carried the 44px height but shrank to the
+   width of their own text, so "Blog" was a 29px-wide target in a stacked nav
+   list. Filling the column costs nothing visually — the label still sits flush
+   left — and makes the whole row tappable. */
 .app .footerList a {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   min-height: 44px;
   color: var(--fk-ink-2);
@@ -1288,6 +1353,7 @@
 @media (prefers-reduced-motion: reduce) {
   .card,
   .card:hover,
+  .card:active,
   .card:hover .price,
   .add:active,
   .stepBtn:active {
@@ -1299,6 +1365,13 @@
   .card:hover .shotPlaceholder::after,
   .card:hover .shot::after {
     transition: none;
+  }
+  /* A light that follows the cursor is pointer-driven motion. Removed outright
+     rather than merely un-transitioned — instant tracking is worse, not
+     better, for the reader this setting exists for. */
+  .card::after,
+  .card:hover::after {
+    display: none;
   }
 }
 
@@ -1403,33 +1476,84 @@
    carbohydrate, amber for fat. Each carries a gram figure next to its swatch,
    so the colour is never the only thing conveying which is which — WCAG 1.4.1.
    ══════════════════════════════════════════════════════════════════════════ */
+/* Ring left, grams right. The old bar was full-width with a wrapping key row
+   under it — two rows of vertical space. This is one row and gives a card with
+   no photograph a centre of gravity. */
 .macro {
   display: grid;
-  gap: 6px;
-  margin: 2px 0 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 0;
+
+  /* The three macro colours are declared ONCE here and used by both the arcs
+     (stroke) and the key swatches (background), so a colour cannot drift
+     between the graphic and its legend. */
+  --mp: var(--fk-green);
+  --mc: #8fb0c9;
+  --mf: var(--fk-terracotta);
 }
 
-.macroBar {
-  display: flex;
-  width: 100%;
-  height: 8px;
-  border-radius: var(--fk-r-full);
-  overflow: hidden;
-  background: var(--fk-warm-2);
+.donut {
+  flex: none;
+  display: block;
+  overflow: visible;
 }
-.macroBar > span {
-  height: 100%;
-  transition: width var(--fk-dur-slow) var(--fk-ease);
+.donutTrack {
+  fill: none;
+  stroke: var(--fk-warm-2);
+  stroke-width: 7;
+}
+.donutArc {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: butt;
+  stroke-dasharray: var(--len) var(--circ);
+  /* Start the ring at twelve o'clock rather than three. */
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  animation: arcIn 640ms var(--fk-ease) both;
+}
+/* Sweeping the dash in from zero reads as a measurement resolving. It is a
+   bounded, one-shot repaint on a 64px box — not a permanent animation. */
+@keyframes arcIn {
+  from { stroke-dasharray: 0 var(--circ); }
+  to   { stroke-dasharray: var(--len) var(--circ); }
+}
+.arcP { stroke: var(--mp); }
+.arcC { stroke: var(--mc); }
+.arcF { stroke: var(--mf); }
+
+.donutNum {
+  fill: var(--fk-ink);
+  font-family: var(--fk-mono);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+}
+/* Four digits — a plan's daily figure — in a 45px well. */
+.donutNumWide {
+  font-size: 12.5px;
+}
+.donutUnit {
+  fill: var(--fk-ink-3);
+  font-family: var(--fk-sans);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-anchor: middle;
 }
 
-.segP { background: var(--fk-green); }
-.segC { background: #6f8fa8; }
-.segF { background: var(--fk-terracotta); }
+.segP { background: var(--mp); }
+.segC { background: var(--mc); }
+.segF { background: var(--mf); }
 
 .macroKeys {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
 .macroKey {
   display: inline-flex;
@@ -1449,16 +1573,13 @@
   flex: none;
 }
 
-/* The bar animates its widths in on hover of the card, so the split reads as a
-   measurement resolving rather than a static graphic. */
-.card:hover .macroBar > span {
-  transition-duration: var(--fk-dur);
-}
-
+/* Reduced motion gets the finished ring, not a sweep. `both` fill-mode means
+   removing the animation would leave the arcs at their base dasharray, which is
+   already the final value — so this lands on the correct graphic, not an empty
+   circle. */
 @media (prefers-reduced-motion: reduce) {
-  .macroBar > span,
-  .card:hover .macroBar > span {
-    transition: none;
+  .donutArc {
+    animation: none;
   }
 }
 
