@@ -88,6 +88,45 @@ const NAV: NavItem[] = [
   { kind: "link", href: "/dashboard", label: "Your account", icon: I.user },
 ];
 
+/* THE FOOTER EXISTS BECAUSE A REACHABILITY AUDIT FOUND 26 ORPHANS. The app
+   linked to 10 routes; everything else that exists — /plans, /menu, /results,
+   /testimonials, /tdee-calculator, /locations, /about, /blog and EVERY legal
+   page — was unreachable from `/`. Refund, privacy, terms and the medical
+   disclaimer being unreachable is not a UX nicety, it is a compliance problem. */
+const FOOTER: { title: string; links: { href: string; label: string }[] }[] = [
+  { title: "Order", links: [
+    { href: "/menu", label: "Full menu" },
+    { href: "/plans", label: "All meal plans" },
+    { href: "/plans/digital", label: "Digital plans" },
+    { href: "/corporate", label: "For offices" },
+    { href: "/supplements", label: "Supplements" },
+  ]},
+  { title: "FitFuel", links: [
+    { href: "/why", label: "Why FitFuel" },
+    { href: "/how-it-works", label: "How a day works" },
+    { href: "/our-kitchen", label: "The kitchen" },
+    { href: "/our-team", label: "The team" },
+    { href: "/our-ingredients", label: "Our ingredients" },
+    { href: "/about", label: "About" },
+  ]},
+  { title: "Proof", links: [
+    { href: "/results", label: "Results" },
+    { href: "/testimonials", label: "Testimonials" },
+    { href: "/tdee-calculator", label: "TDEE calculator" },
+    { href: "/locations", label: "Where we deliver" },
+    { href: "/blog", label: "Blog" },
+    { href: "/faq", label: "Questions" },
+  ]},
+  { title: "Legal", links: [
+    { href: "/privacy", label: "Privacy" },
+    { href: "/terms", label: "Terms" },
+    { href: "/refund-policy", label: "Refunds" },
+    { href: "/allergen-policy", label: "Allergens" },
+    { href: "/medical-disclaimer", label: "Medical disclaimer" },
+    { href: "/contact", label: "Contact" },
+  ]},
+];
+
 /* Everything the long-form page used to argue, still reachable. */
 const MORE = [
   /* /why carries the plan finder, the receipt builder, the day timeline and the
@@ -372,10 +411,21 @@ export default function FitFuelApp({
           </div>
         </div>
         <div className={s.cutoff}>
+          {/* Two products, two promises. The 9pm/8am line is the SUBSCRIPTION
+              schedule (lib/order-cutoff models plan deliveries); single meals
+              are ordered and delivered like any food app. Showing the plan
+              promise over a 48-dish catalog was telling a customer buying one
+              salad that it arrives tomorrow morning. */}
           <p className={s.cutoffRow}>
-            <span>
-              Order by <b>{cutoffLabel}</b> to eat tomorrow — at your door by 8am.
-            </span>
+            {mode === "plans" ? (
+              <span>
+                Plans start tomorrow — order by <b>{cutoffLabel}</b>, at your door by 8am.
+              </span>
+            ) : (
+              <span>
+                Cooked to order and delivered across <b>{area}</b> today.
+              </span>
+            )}
           </p>
         </div>
 
@@ -571,9 +621,14 @@ export default function FitFuelApp({
                       <p className={s.planCat}>
                         {p.variants.length} diet{p.variants.length === 1 ? "" : "s"} · 4 meals a day
                       </p>
-                      <button type="button" className={s.dishName} onClick={() => setPlanSheet(p)}>
+                      {/* THE PRODUCT PAGE. app/plans/[slug] is an 80KB page with
+                          the full 30-day schedule, live PlanPrice rows and
+                          Product/Offer schema — it has existed all along and
+                          the app never linked to it. The card title is the way
+                          in; the buttons below stay for quick answers. */}
+                      <Link href={`/plans/${p.slug}`} className={s.dishName}>
                         {p.label}
-                      </button>
+                      </Link>
                       <p className={s.dishBlurb}>{p.note}</p>
                       <p className={s.macroLine}>{p.macroLine}</p>
 
@@ -595,6 +650,9 @@ export default function FitFuelApp({
                           View menu
                         </button>
                       </div>
+                      <Link href={`/plans/${p.slug}`} className={s.fullPlanLink}>
+                        Full plan, 30-day schedule and prices →
+                      </Link>
 
                       {openVariants === p.slug ? (
                         <ul className={s.panel}>
@@ -739,6 +797,30 @@ export default function FitFuelApp({
           </div>
         </div>
       </div>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer className={s.footer}>
+        <div className={s.footerGrid}>
+          {FOOTER.map((col) => (
+            <div key={col.title}>
+              <h2 className={s.footerTitle}>{col.title}</h2>
+              <ul className={s.footerList}>
+                {col.links.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href}>{l.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className={s.footerBase}>
+          <span>© {new Date().getFullYear()} FitFuel, Pune</span>
+          <span>
+            FSSAI <span className="fk-num">{licence}</span>
+          </span>
+        </p>
+      </footer>
 
       {/* ── Bottom tabs ─────────────────────────────────────────────────── */}
       <nav className={s.tabs} aria-label="Sections">

@@ -1099,3 +1099,205 @@
 .addOnHint:hover {
   color: var(--fk-green-deep);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CARD PRESENCE — depth, light and motion.
+
+   The cards were correct and flat: a border, a name, a price. On a black ground
+   a 1px hairline gives a card no presence at all, so 48 of them read as a
+   spreadsheet. What follows is depth built the honest way — layered surface,
+   a light source, and motion that responds to the pointer — rather than the
+   drop-shadow-and-glow kit that reads as generic dark SaaS.
+
+   Every effect here is transform/opacity only (compositor-friendly), and the
+   whole block is disabled under prefers-reduced-motion at the bottom.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.card {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fk-surface) 100%, transparent), var(--fk-paper) 140%);
+  transition:
+    transform var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease),
+    box-shadow var(--fk-dur) var(--fk-ease);
+  will-change: transform;
+}
+
+/* A hairline of light along the top edge — the same trick a physical card gets
+   from a light source above it. Cheap, and it separates 48 cards from the page
+   far better than a heavier border would. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--fk-green) 55%, transparent),
+    transparent
+  );
+  opacity: 0.5;
+  transition: opacity var(--fk-dur) var(--fk-ease);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* The lift. -3px and a lime-tinted rim: enough to feel physical, not enough to
+   look like it is floating away. */
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--fk-green) 40%, var(--fk-line));
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px color-mix(in srgb, var(--fk-green) 14%, transparent);
+}
+.card:hover::before {
+  opacity: 1;
+}
+
+/* The image well gets a slow scale under the card's hover, so the card feels
+   like one object rather than a box with a picture in it. */
+.card .shotPlaceholder::after,
+.card .shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 80% at 50% 0%,
+    color-mix(in srgb, var(--fk-green) 14%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity var(--fk-dur-slow) var(--fk-ease);
+  pointer-events: none;
+}
+.card:hover .shotPlaceholder::after,
+.card:hover .shot::after {
+  opacity: 1;
+}
+
+/* The price steps up as the card lifts — the one number a buyer is scanning. */
+.price {
+  transition: transform var(--fk-dur) var(--fk-ease), color var(--fk-dur) var(--fk-ease);
+}
+.card:hover .price {
+  transform: translateY(-1px);
+  color: var(--fk-green-deep);
+}
+
+/* Entrance. A short, staggered rise so a filtered grid resolves as a movement
+   instead of snapping. Capped at 12 so a 126-card grid does not cascade for
+   a second and a half. */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card {
+  animation: cardIn var(--fk-dur-slow) var(--fk-ease) both;
+}
+.card:nth-child(1)  { animation-delay: 0ms; }
+.card:nth-child(2)  { animation-delay: 25ms; }
+.card:nth-child(3)  { animation-delay: 50ms; }
+.card:nth-child(4)  { animation-delay: 75ms; }
+.card:nth-child(5)  { animation-delay: 100ms; }
+.card:nth-child(6)  { animation-delay: 125ms; }
+.card:nth-child(7)  { animation-delay: 150ms; }
+.card:nth-child(8)  { animation-delay: 175ms; }
+.card:nth-child(9)  { animation-delay: 200ms; }
+.card:nth-child(10) { animation-delay: 225ms; }
+.card:nth-child(11) { animation-delay: 250ms; }
+.card:nth-child(n + 12) { animation-delay: 275ms; }
+
+/* The add control gets a press response so tapping feels like contact. */
+.add:active,
+.stepBtn:active {
+  transform: scale(0.96);
+}
+.add,
+.stepBtn {
+  transition: transform var(--fk-dur-fast) var(--fk-ease), background-color var(--fk-dur) var(--fk-ease);
+}
+
+/* The route to the real product page. */
+.fullPlanLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 4px;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-green);
+  text-decoration: none;
+}
+.app a.fullPlanLink { color: var(--fk-green); }
+.fullPlanLink:hover { color: var(--fk-green-deep); text-decoration: underline; }
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--fk-line);
+  background: var(--fk-warm);
+  padding: var(--fk-s-8) var(--fk-gutter) var(--fk-s-6);
+  margin-top: var(--fk-s-8);
+}
+.footerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--fk-s-6);
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.footerTitle {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+  margin: 0 0 var(--fk-s-2);
+}
+.footerList { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.app .footerList a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--fk-ink-2);
+  text-decoration: none;
+  font-size: var(--fk-t-sm);
+}
+.app .footerList a:hover { color: var(--fk-green-deep); }
+.footerBase {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fk-s-3) var(--fk-s-5);
+  justify-content: space-between;
+  max-width: 1440px;
+  margin: var(--fk-s-6) auto 0;
+  padding-top: var(--fk-s-4);
+  border-top: 1px solid var(--fk-line);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+}
+
+/* AGENTS.md pins prefers-reduced-motion, and a 126-card stagger is exactly the
+   kind of thing that makes a vestibular disorder unusable. Everything above
+   collapses to a plain, instant card. */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card:hover,
+  .card:hover .price,
+  .add:active,
+  .stepBtn:active {
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+  .card::before,
+  .card:hover .shotPlaceholder::after,
+  .card:hover .shot::after {
+    transition: none;
+  }
+}
