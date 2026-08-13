@@ -978,3 +978,10 @@
 .grid {
   padding-bottom: 104px;
 }
+
+.emptyActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}

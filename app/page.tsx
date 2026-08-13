@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 
 import StructuredData from "@/components/StructuredData";
 import { prisma } from "@/lib/prisma";
-import { waLink } from "@/lib/site";
 import { FSSAI_LICENCE } from "@/lib/trust-marks";
 import { MENU_FROM } from "@/lib/menu-alacarte";
 import { cutoffLabel } from "@/lib/order-cutoff";
@@ -162,9 +161,6 @@ export default async function AppPage() {
         menuFrom={`₹${MENU_FROM}`}
         plans={plans}
         planCount={plans.length || 126}
-        waHref={waLink(
-          "Hi FitFuel, I'd like to order. Do you deliver to my area?",
-        )}
         licence={FSSAI_LICENCE}
       />
     </>

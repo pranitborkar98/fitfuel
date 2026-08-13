@@ -129,7 +129,6 @@ export type AppProps = {
   trialTotal: string;
   menuFrom: string;
   planCount: number;
-  waHref: string;
   licence: string;
 };
 
@@ -197,7 +196,6 @@ export default function FitFuelApp({
   trialTotal,
   menuFrom,
   planCount,
-  waHref,
   licence,
 }: AppProps) {
   const cart = useCart();
@@ -581,15 +579,27 @@ export default function FitFuelApp({
                 ))}
               </ul>
             ) : results.length === 0 ? (
+              /* No off-domain escape hatch here either. An empty search result
+                 is not a reason to hand the customer to another company's app —
+                 the two useful actions are both on this page. */
               <div className={s.empty}>
                 <h3>Nothing matches that.</h3>
                 <p>
-                  We cook {dishes.length} dishes across {courses.length} courses, and {planCount} plans on
-                  subscription. Try a different word, or ask the kitchen directly.
+                  We cook {dishes.length} dishes across {courses.length} courses, and {planCount}{" "}
+                  plans on subscription. Try a different word, or look through the plans.
                 </p>
-                <a href={waHref} className={s.add} style={{ textDecoration: "none" }}>
-                  Ask on WhatsApp
-                </a>
+                <span className={s.emptyActions}>
+                  <button type="button" className={s.add} onClick={() => { setQ(""); setCourse("all"); setOnlyOrderable(false); }}>
+                    Clear the search
+                  </button>
+                  <button
+                    type="button"
+                    className={`${s.add} ${s.ghost}`}
+                    onClick={() => { setQ(""); setMode("plans"); }}
+                  >
+                    Browse {planCount} plans
+                  </button>
+                </span>
               </div>
             ) : (
               <ul className={s.grid}>

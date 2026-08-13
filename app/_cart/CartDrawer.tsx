@@ -12,14 +12,17 @@
 // fixed that and app/api/orders/dishes signs a real PayU payload, so priced
 // dishes are paid for here.
 //
-// WhatsApp stays for the 32 price-on-request dishes, which the server refuses
-// to charge for. A basket can hold both, so the footer can show both.
+// THE WHATSAPP EXIT IS GONE (2026-08-13). It survived one revision as a
+// secondary action for the 32 price-on-request dishes, and the owner was right
+// to kill it: an order does not leave our own domain to be finished inside
+// another company's app. Unpriced dishes now say so in place and stay in the
+// basket until a price exists. lib/menu-cart still exports composeOrder() for
+// other callers; this drawer no longer uses it.
 
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, X, MessageCircle, CreditCard } from "lucide-react";
+import { Minus, Plus, X, CreditCard } from "lucide-react";
 
-import { composeOrder, receipt, DELIVERY_RS, PACKAGING_RS, GST_PERCENT } from "@/lib/menu-cart";
-import { waLink } from "@/lib/site";
+import { receipt, DELIVERY_RS, PACKAGING_RS, GST_PERCENT } from "@/lib/menu-cart";
 import { useCart } from "./CartProvider";
 import DishCheckout from "./DishCheckout";
 
@@ -55,7 +58,6 @@ export default function CartDrawer() {
   /* Only priced lines can be paid for. An enquiry-only basket has a zero
      total, and receipt() charges it no delivery or packaging either. */
   const payable = lines.length > 0;
-  const href = waLink(composeOrder(lines, enquiries));
   const bill = receipt(lines);
 
   return (
@@ -117,8 +119,9 @@ export default function CartDrawer() {
                 <div className="ff-enq">
                   <h3 className="ff-enq-h">Price on request</h3>
                   <p className="ff-enq-note">
-                    The kitchen has not set a price for these yet, so they are not in the total.
-                    They go on the message and we reply with the number.
+                    The kitchen has not set a price for these yet, so they are not in the
+                    total and cannot be paid for. They stay in your basket and become
+                    orderable the moment a price is set.
                   </p>
                   {enquiries.map((d) => (
                     <div key={d.id} className="ff-enq-row">
@@ -180,14 +183,16 @@ export default function CartDrawer() {
                     <CreditCard size={17} aria-hidden="true" />
                     Pay {rs(bill.totalRs)}
                   </button>
-                ) : null}
-
-                {/* Price-on-request dishes cannot be charged, so this is the
-                    only route for them — and the label says which it is. */}
-                <a href={href} target="_blank" rel="noopener noreferrer" className={payable ? "ff-alt" : "ff-send"}>
-                  <MessageCircle size={17} aria-hidden="true" />
-                  {payable ? "Ask on WhatsApp instead" : "Ask for prices on WhatsApp"}
-                </a>
+                ) : (
+                  /* Nothing priced in the basket. There is no WhatsApp exit any
+                     more — an order does not leave our own domain to be
+                     completed on someone else's app — so this states the truth
+                     and keeps the customer here. */
+                  <p className="ff-nothing">
+                    Nothing here is priced yet, so there is nothing to pay.
+                    Add a dish with a price and it becomes an order.
+                  </p>
+                )}
                 <button onClick={clear} className="ff-clear">Clear order</button>
               </>
             )}
@@ -196,15 +201,6 @@ export default function CartDrawer() {
       </div>
 
       <style>{`
-        .ff-alt {
-          display: flex; align-items: center; justify-content: center; gap: 9px;
-          min-height: 44px; margin-top: 8px; padding: 0 16px;
-          border: 1px solid var(--fk-line-strong); border-radius: 8px;
-          background: transparent; color: var(--fk-ink);
-          font-family: var(--fk-sans); font-size: 14px; font-weight: 600;
-          text-decoration: none;
-        }
-        .ff-alt:hover { background: var(--fk-warm); }
         .ff-cart-scrim {
           position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.66);
           opacity: 0; pointer-events: none; transition: opacity .24s ease;
@@ -264,9 +260,13 @@ export default function CartDrawer() {
           color: var(--fk-ink); font-variant-numeric: tabular-nums;
         }
         .ff-step { display: flex; align-items: center; border: 1px solid var(--fk-line); }
+        /* 44 square. These were 30 — the quantity steppers are the controls a
+           customer taps most in the whole basket, and AGENTS.md pins 44px with
+           no exception for "it is only a small button". */
         .ff-step button {
           background: none; border: 0; color: var(--fk-ink-2); cursor: pointer;
-          width: 30px; height: 30px; display: grid; place-items: center;
+          width: 44px; height: 44px; display: grid; place-items: center;
+          touch-action: manipulation;
         }
         .ff-step button:hover { color: var(--fk-green); }
         .ff-step-n {
@@ -275,10 +275,15 @@ export default function CartDrawer() {
           border-left: 1px solid var(--fk-line); border-right: 1px solid var(--fk-line);
           line-height: 30px; font-variant-numeric: tabular-nums;
         }
+        /* "Remove" was an 18px-tall text hit. It stays visually a text link but
+           carries the full 44px target — padding, not type size, so the line
+           does not grow. */
         .ff-line-rm {
           background: none; border: 0; padding: 0; cursor: pointer;
-          font-family: var(--fk-sans); font-size: 12px; color: var(--fk-ink-3);
+          display: inline-flex; align-items: center; min-height: 44px;
+          font-family: var(--fk-sans); font-size: 13px; color: var(--fk-ink-3);
           text-decoration: underline; text-underline-offset: 3px;
+          touch-action: manipulation;
         }
         .ff-line-rm:hover { color: var(--fk-ink); }
 
@@ -332,17 +337,34 @@ export default function CartDrawer() {
           margin: 10px 0 14px; font-family: var(--fk-sans); font-size: 12px; line-height: 1.55;
           color: var(--fk-ink-3);
         }
+        /* THE PRIMARY ACTION, and it has to look like it.
+           This was WhatsApp green (#25d366) with no width, which was fine while
+           it was an <a> that filled the footer. As a <button> it collapsed to
+           its own text — so the pay button rendered a quarter of the width of
+           the secondary action beneath it, wearing another company's brand
+           colour. Inverted hierarchy, on the one control that takes money. */
         .ff-send {
-          display: flex; align-items: center; justify-content: center; gap: 9px;
-          background: #25d366; color: #06140b; text-decoration: none;
-          font-family: var(--fk-sans); font-weight: 800; font-size: 16px;
-          letter-spacing: 0.05em; text-transform: none;
-          min-height: 52px; border-radius: 0; transition: background .15s;
+          display: flex; width: 100%; align-items: center; justify-content: center; gap: 9px;
+          background: var(--fk-green); color: var(--fk-on-green);
+          border: 1px solid var(--fk-green); text-decoration: none;
+          font-family: var(--fk-sans); font-weight: 700; font-size: 16px;
+          letter-spacing: 0; text-transform: none; cursor: pointer;
+          min-height: 52px; border-radius: 8px; transition: background .15s;
         }
-        .ff-send:hover { background: #34e57a; }
+        .ff-send:hover { background: var(--fk-green-deep); border-color: var(--fk-green-deep); }
+        .ff-nothing {
+          margin: 0; padding: 12px 14px; border-radius: 8px;
+          background: var(--fk-warm); border: 1px solid var(--fk-line);
+          font-family: var(--fk-sans); font-size: 13.5px; line-height: 1.5;
+          color: var(--fk-ink-2);
+        }
         .ff-send:focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 3px; }
+        /* The last sub-44px control in the drawer. Destructive, so it stays
+           visually quiet — but a quiet control still has to be hittable. */
         .ff-clear {
-          display: block; width: 100%; margin-top: 10px; background: none; border: 0; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          width: 100%; min-height: 44px; margin-top: 6px;
+          background: none; border: 0; cursor: pointer;
           font-family: var(--fk-sans); font-size: 12.5px; color: var(--fk-ink-3);
           text-decoration: underline; text-underline-offset: 3px; padding: 6px;
         }
