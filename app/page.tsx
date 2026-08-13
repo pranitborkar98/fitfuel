@@ -8,6 +8,7 @@ import { MENU_FROM } from "@/lib/menu-alacarte";
 import { cutoffLabel } from "@/lib/order-cutoff";
 import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
+import type { AppPlan } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
 import FitFuelApp from "./_web/FitFuelApp";
 
@@ -36,16 +37,53 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fcfaf6",
-  colorScheme: "light",
+  themeColor: "#0a0a09",
+  colorScheme: "dark",
 };
 
-/** Live count, so the empty state never quotes a stale number. */
-async function getPlanCount(): Promise<number> {
+/**
+ * ALL 126 PLANS, from the database.
+ *
+ * The app previously rendered `SHOP_PLANS` — a hand-written array of six
+ * showcase plans — while claiming "126" on the chip. The real set is 70
+ * lifestyle & medical, 34 goal and 22 sports plans across 59 conditions, and
+ * shipping six of them was the single biggest thing missing from the shop.
+ *
+ * NOT FILTERED ON isActive. Every one of the 126 rows currently has
+ * `isActive: false` ("flip to true when ready to sell"), so filtering on it
+ * renders an empty catalog. Ordering still goes through the configurator and
+ * the seeded PlanPrice matrix, which is what actually gates a sale.
+ */
+async function getPlans(): Promise<AppPlan[]> {
   try {
-    return (await prisma.mealPlan.count()) || 126;
+    const rows = await prisma.mealPlan.findMany({
+      orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+      select: {
+        displayName: true, slug: true, tagline: true, category: true,
+        subCategory: true, dietaryVariant: true, avgCaloriesPerDay: true,
+        avgProteinGrams: true, avgCarbsGrams: true, avgFatGrams: true,
+      },
+    });
+    return rows.map((r) => {
+      const kcal = Number(r.avgCaloriesPerDay) || 0;
+      const p = Number(r.avgProteinGrams) || 0;
+      const c = Number(r.avgCarbsGrams) || 0;
+      const f = Number(r.avgFatGrams) || 0;
+      return {
+        label: r.displayName,
+        slug: r.slug,
+        note: r.tagline,
+        cat: r.category as AppPlan["cat"],
+        diet: String(r.dietaryVariant),
+        sub: r.subCategory,
+        macros: `${kcal.toLocaleString("en-IN")} kcal a day · ${p}g protein`,
+        macroLine: `${kcal.toLocaleString("en-IN")} kcal · ${p}P · ${c}C · ${f}F`,
+        kcal,
+        pcf: [p, c, f] as [number, number, number],
+      };
+    });
   } catch {
-    return 126;
+    return [];
   }
 }
 
@@ -67,7 +105,7 @@ function imageMap(): Record<string, string> {
 }
 
 export default async function AppPage() {
-  const planCount = await getPlanCount();
+  const plans = await getPlans();
 
   return (
     <>
@@ -80,7 +118,8 @@ export default async function AppPage() {
         cutoffLabel={cutoffLabel()}
         trialTotal={TRIAL_TOTAL_GLYPH}
         menuFrom={`₹${MENU_FROM}`}
-        planCount={planCount}
+        plans={plans}
+        planCount={plans.length || 126}
         waHref={waLink(
           "Hi FitFuel, I'd like to order. Do you deliver to my area?",
         )}

@@ -30,7 +30,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
-import { PLAN_CATS, SHOP_PLANS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
+import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
@@ -99,10 +99,26 @@ const MORE = [
 
 export type Course = { key: string; label: string; n: number };
 
+/** A plan row from the database, shaped so PlanSheet can consume it unchanged. */
+export type AppPlan = ShopPlan & { diet: string; sub: string };
+
+/** Diet chips. Jain and Vegan are cooked to the vegetarian sheet and priced as
+ *  VEGETARIAN, but they are still separate plans and a customer filters by the
+ *  word they use for themselves. */
+const DIETS: { key: string; label: string }[] = [
+  { key: "all", label: "Any diet" },
+  { key: "VEG", label: "Vegetarian" },
+  { key: "EGG", label: "Eggetarian" },
+  { key: "NON_VEG", label: "Non-veg" },
+  { key: "JAIN", label: "Jain" },
+  { key: "VEGAN", label: "Vegan" },
+];
+
 export type AppProps = {
   dishes: ShopDish[];
   images: SlotMap;
   courses: Course[];
+  plans: AppPlan[];
   area: string;
   cutoffLabel: string;
   trialTotal: string;
@@ -170,6 +186,7 @@ export default function FitFuelApp({
   dishes,
   images,
   courses,
+  plans,
   area,
   cutoffLabel,
   trialTotal,
@@ -188,6 +205,7 @@ export default function FitFuelApp({
      product, and the old page made you scroll past one to reach the other. */
   const [mode, setMode] = useState<"dishes" | "plans">("dishes");
   const [planCat, setPlanCat] = useState("all");
+  const [planDiet, setPlanDiet] = useState("all");
   const [planSheet, setPlanSheet] = useState<ShopPlan | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -227,16 +245,28 @@ export default function FitFuelApp({
 
   const planResults = useMemo(() => {
     const needle = dq.trim().toLowerCase();
-    return SHOP_PLANS.filter((p) => {
+    return plans.filter((p) => {
       if (planCat !== "all" && p.cat !== planCat) return false;
+      if (planDiet !== "all" && p.diet !== planDiet) return false;
       if (!needle) return true;
+      /* `sub` is the condition slug — searching it is what lets someone type
+         "pcos", "thyroid" or "fatty liver" and land on their plan across 59
+         conditions, which a label-only search would miss. */
       return (
         p.label.toLowerCase().includes(needle) ||
         p.note.toLowerCase().includes(needle) ||
-        p.macros.toLowerCase().includes(needle)
+        p.sub.replace(/_/g, " ").includes(needle) ||
+        p.macroLine.toLowerCase().includes(needle)
       );
     });
-  }, [dq, planCat]);
+  }, [plans, dq, planCat, planDiet]);
+
+  /** Live counts per category, so a chip never leads to an empty grid. */
+  const catCount = useMemo(() => {
+    const m: Record<string, number> = { all: plans.length };
+    for (const p of plans) m[p.cat] = (m[p.cat] ?? 0) + 1;
+    return m;
+  }, [plans]);
 
   const orderableCount = results.filter((d) => d.orderable).length;
   const basketCount = cart.totals.count;
@@ -328,19 +358,35 @@ export default function FitFuelApp({
           </div>
 
           {mode === "plans" ? (
-            <div className={s.chipRow} role="group" aria-label="Filter plans">
-              {PLAN_CATS.map((c) => (
-                <button
-                  key={c.key}
-                  type="button"
-                  className={`${s.fchip} ${planCat === c.key ? s.fchipOn : ""}`}
-                  onClick={() => setPlanCat(c.key)}
-                  aria-pressed={planCat === c.key}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
+            <>
+              <div className={s.chipRow} role="group" aria-label="Filter plans by goal">
+                {PLAN_CATS.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    className={`${s.fchip} ${planCat === c.key ? s.fchipOn : ""}`}
+                    onClick={() => setPlanCat(c.key)}
+                    aria-pressed={planCat === c.key}
+                  >
+                    {c.key === "all" ? "All plans" : c.label}
+                    <span className={s.fcount}>{catCount[c.key] ?? 0}</span>
+                  </button>
+                ))}
+              </div>
+              <div className={s.chipRow} role="group" aria-label="Filter plans by diet" style={{ marginTop: 8 }}>
+                {DIETS.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    className={`${s.fchip} ${planDiet === d.key ? s.fchipOn : ""}`}
+                    onClick={() => setPlanDiet(d.key)}
+                    aria-pressed={planDiet === d.key}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </>
           ) : (
           <div className={s.chipRow} role="group" aria-label="Filter by course">
             <button
@@ -456,7 +502,7 @@ export default function FitFuelApp({
               </h2>
               <p>
                 {mode === "plans"
-                  ? `${planResults.length} shown · ${planCount} plans across goals and ${38} medical conditions`
+                  ? `${planResults.length} of ${planCount} plans · 59 goals and conditions`
                   : `${results.length} dish${results.length === 1 ? "" : "es"}` +
                     (orderableCount !== results.length
                       ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
@@ -470,7 +516,7 @@ export default function FitFuelApp({
                   <li key={p.slug} className={s.card}>
                     <div className={s.cardBody}>
                       <p className={s.planCat}>
-                        {PLAN_CATS.find((c) => c.key === p.cat)?.label ?? "Plan"}
+                        {p.sub.replace(/_/g, " ")}
                       </p>
                       <button type="button" className={s.dishName} onClick={() => setPlanSheet(p)}>
                         {p.label}
@@ -478,7 +524,7 @@ export default function FitFuelApp({
                       <p className={s.dishBlurb}>{p.note}</p>
                       <p className={s.macroLine}>{p.macroLine}</p>
                       <div className={s.cardFoot}>
-                        <span className={s.askPrice}>Four meals a day</span>
+                        <span className={s.askPrice}>{p.macros}</span>
                         <button type="button" className={s.add} onClick={() => setPlanSheet(p)}>
                           Configure
                         </button>
