@@ -761,9 +761,13 @@ export default function FitFuelApp({
                         <span className={s.dishCourse}>{d.categoryLabel}</span>
                         {d.kcal ? <span className="fk-num">{d.kcalLabel}</span> : null}
                       </p>
-                      <button type="button" className={s.dishName} onClick={() => setSheet(d)}>
+                      {/* Every dish now has a URL. It was reachable only as a
+                          card and a modal, so it could not be linked, shared,
+                          indexed or sent to a customer. The sheet stays as the
+                          quick look; this is the page. */}
+                      <Link href={`/menu/${d.id}`} className={s.dishName}>
                         {d.name}
-                      </button>
+                      </Link>
                       <p className={s.dishBlurb}>{d.blurb}</p>
                       {d.kcal ? <p className={s.macroLine}>{d.macroLine}</p> : null}
                       {/* The add-on ladder (paneer/tofu, egg, grilled chicken)

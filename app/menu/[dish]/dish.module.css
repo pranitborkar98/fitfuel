@@ -1,0 +1,320 @@
+/* The individual dish page. Tokens only. */
+
+.page {
+  min-height: 100dvh;
+  background: var(--fk-paper);
+  padding-block: var(--fk-s-5) var(--fk-s-9);
+}
+.wrap {
+  width: 100%;
+  max-width: 1100px;
+  margin-inline: auto;
+  padding-inline: var(--fk-gutter);
+}
+
+.crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+  margin-bottom: var(--fk-s-5);
+}
+.page .crumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--fk-ink-2);
+  text-decoration: none;
+}
+.page .crumb a:hover {
+  color: var(--fk-green);
+}
+
+.top {
+  display: grid;
+  gap: var(--fk-s-6);
+}
+@media (min-width: 900px) {
+  .top {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--fk-s-8);
+    align-items: start;
+  }
+}
+
+.shot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fk-green) 10%, transparent), transparent 65%),
+    var(--fk-warm);
+}
+.shotLabel {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+}
+
+.course {
+  margin: 0 0 var(--fk-s-2);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fk-green);
+}
+.title {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--fk-ink);
+}
+.blurb {
+  margin: var(--fk-s-3) 0 0;
+  font-size: var(--fk-t-md);
+  line-height: 1.6;
+  color: var(--fk-ink-2);
+  max-width: 54ch;
+}
+
+/* Each macro gets its own tile. On a card these are one cramped mono line;
+   room to separate them is half the reason this page exists. */
+.macros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: var(--fk-s-5) 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  overflow: hidden;
+}
+.macros li {
+  background: var(--fk-surface);
+  padding: var(--fk-s-4) var(--fk-s-3);
+  text-align: center;
+}
+.macros b {
+  display: block;
+  font-size: var(--fk-t-lg);
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+.macros span {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fk-t-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+}
+.estimate {
+  margin: var(--fk-s-2) 0 0;
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+}
+
+.buy {
+  margin-top: var(--fk-s-6);
+  padding: var(--fk-s-5);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.addOns {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--fk-s-4);
+  display: grid;
+  gap: 8px;
+}
+.addOns legend {
+  padding: 0;
+  margin-bottom: var(--fk-s-3);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-ink-2);
+}
+.addOns label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  cursor: pointer;
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-2);
+}
+.addOns label:hover {
+  background: var(--fk-warm);
+}
+.onOpt {
+  border-color: var(--fk-green);
+  background: var(--fk-green-wash);
+  color: var(--fk-ink);
+}
+.addOns b {
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+
+.variant {
+  margin: 0 0 var(--fk-s-4);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-green);
+}
+
+.buyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fk-s-4);
+}
+.price b {
+  display: block;
+  font-size: var(--fk-t-xl);
+  font-weight: 700;
+  color: var(--fk-ink);
+  line-height: 1;
+}
+.price span {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+}
+
+.add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--fk-tap);
+  padding: 0 20px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-base);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color var(--fk-dur) var(--fk-ease), transform var(--fk-dur-fast) var(--fk-ease);
+}
+.add:hover {
+  background: var(--fk-green-deep);
+  border-color: var(--fk-green-deep);
+}
+.add:active {
+  transform: scale(0.97);
+}
+.ghost {
+  background: transparent;
+  color: var(--fk-ink);
+  border-color: var(--fk-line-strong);
+}
+.ghost:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+.notPriced {
+  margin: 0 0 var(--fk-s-4);
+  font-size: var(--fk-t-sm);
+  line-height: 1.55;
+  color: var(--fk-ink-2);
+}
+
+.more {
+  margin-top: var(--fk-s-9);
+  padding-top: var(--fk-s-6);
+  border-top: 1px solid var(--fk-line);
+}
+.more h2 {
+  margin: 0 0 var(--fk-s-4);
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-xl);
+  font-weight: 600;
+  color: var(--fk-ink);
+}
+.moreGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--fk-s-3);
+}
+.page .moreGrid a {
+  display: grid;
+  gap: 5px;
+  min-height: 44px;
+  padding: var(--fk-s-4);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+  text-decoration: none;
+  color: var(--fk-ink);
+  transition: border-color var(--fk-dur) var(--fk-ease), transform var(--fk-dur) var(--fk-ease);
+}
+.page .moreGrid a:hover {
+  border-color: var(--fk-green);
+  transform: translateY(-2px);
+}
+.moreGrid b {
+  font-family: var(--fk-display);
+  font-weight: 500;
+  font-size: var(--fk-t-md);
+  line-height: 1.25;
+}
+.moreGrid span {
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+}
+
+.foot {
+  margin-top: var(--fk-s-8);
+  padding-top: var(--fk-s-5);
+  border-top: 1px solid var(--fk-line);
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-3);
+}
+/* A navigation action, not prose, so it carries a real target even though an
+   inline link in a sentence would be WCAG-exempt. The four radios above are
+   13px inputs inside 44px labels — the label is the target, which is correct. */
+.page .foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--fk-green);
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add:active,
+  .page .moreGrid a:hover {
+    transform: none;
+    transition: none;
+  }
+}
