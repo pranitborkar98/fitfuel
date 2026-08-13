@@ -202,13 +202,13 @@ export default function CartDrawer() {
 
       <style>{`
         .ff-cart-scrim {
-          position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.66);
+          position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.66);
           opacity: 0; pointer-events: none; transition: opacity .24s ease;
         }
         .ff-cart-scrim[data-open="1"] { opacity: 1; pointer-events: auto; }
 
         .ff-cart {
-          position: fixed; top: 0; right: 0; bottom: 0; z-index: 81;
+          position: fixed; top: 0; right: 0; bottom: 0; z-index: 310;
           width: min(420px, 100vw);
           display: flex; flex-direction: column;
           background: var(--fk-surface);

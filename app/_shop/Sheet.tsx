@@ -92,7 +92,11 @@ export default function Sheet({
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}
-      style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(3,3,3,0.72)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+      /* zIndex 60 put the dish sheet BELOW the app header (200) and the filter bar
+             (199): the modal opened behind the chrome, with the page showing
+             through it and the scrim dimming nothing above it. Overlays use the
+             sheet tier. */
+        style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(3,3,3,0.72)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}
     >
       <button
         type="button"

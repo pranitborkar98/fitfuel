@@ -59,7 +59,6 @@ export default function DishCheckout({ lines, totalRs, onCancel }: Props) {
   const [v, setV] = useState<Record<Field, string>>({
     firstname: "", email: "", phone: "", address: "", pincode: "",
   });
-  const [window_, setWindow] = useState<"MORNING" | "EVENING">("MORNING");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +77,6 @@ export default function DishCheckout({ lines, totalRs, onCancel }: Props) {
         body: JSON.stringify({
           ...v,
           city: "Pune",
-          deliveryWindow: window_,
           // ids and quantities only — never a price.
           lines: lines.map((l) => ({ id: l.id, qty: l.qty, addOn: l.addOn?.kind })),
         }),
@@ -121,28 +119,22 @@ export default function DishCheckout({ lines, totalRs, onCancel }: Props) {
   return (
     <form className="ff-co" onSubmit={submit} noValidate={false}>
       <p className="ff-co-h">Where is it going?</p>
+      {/* NO DELIVERY WINDOW. 7-9 AM / 6-8 PM is the SUBSCRIPTION schedule —
+          lib/order-cutoff.ts models plan deliveries and a generate-deliveries
+          cron, and there is no à la carte SLA anywhere in the codebase. Asking
+          a single-meal buyer to pick a morning slot is subscription furniture
+          on a Swiggy-shaped purchase.
+          This states only what can be sourced: the kitchen confirms the time.
+          When the real single-meal promise exists, it replaces this line. */}
+      <p className="ff-co-when">
+        The kitchen confirms your delivery time on this number once the order is in.
+      </p>
 
       {F({ id: "firstname", label: "Name", auto: "given-name" })}
       {F({ id: "phone", label: "Phone", type: "tel", auto: "tel", inputMode: "tel", hint: "The driver calls this number." })}
       {F({ id: "email", label: "Email", type: "email", auto: "email", inputMode: "email", hint: "Your receipt goes here." })}
       {F({ id: "address", label: "Address", auto: "street-address" })}
       {F({ id: "pincode", label: "Pincode", auto: "postal-code", inputMode: "numeric" })}
-
-      <fieldset className="ff-co-win">
-        <legend>Delivery window</legend>
-        {(["MORNING", "EVENING"] as const).map((w) => (
-          <label key={w} className={window_ === w ? "on" : ""}>
-            <input
-              type="radio"
-              name="window"
-              value={w}
-              checked={window_ === w}
-              onChange={() => setWindow(w)}
-            />
-            {w === "MORNING" ? "7–9 AM" : "6–8 PM"}
-          </label>
-        ))}
-      </fieldset>
 
       {/* role="alert" so a screen reader is told the payment failed rather than
           the message appearing silently above the button. */}
@@ -186,6 +178,12 @@ export default function DishCheckout({ lines, totalRs, onCancel }: Props) {
           border-color: var(--fk-green);
         }
         .ff-f small { font-size: 12px; color: var(--fk-ink-3); }
+        .ff-co-when {
+          margin: 0; padding: 10px 12px; border-radius: 8px;
+          background: var(--fk-warm); border: 1px solid var(--fk-line);
+          font-family: var(--fk-sans); font-size: 13px; line-height: 1.5;
+          color: var(--fk-ink-2);
+        }
         .ff-co-win { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
         .ff-co-win legend {
           padding: 0; font-family: var(--fk-sans); font-size: 13px;
