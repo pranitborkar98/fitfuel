@@ -1394,3 +1394,70 @@
 @media (prefers-reduced-motion: reduce) {
   .app .serviceGrid a:hover { transform: none; transition: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MACRO SPLIT — proportion of calories, not a row of letters.
+
+   Three colours, and they are chosen for meaning rather than decoration:
+   lime for protein (the number this whole product is about), a muted ink for
+   carbohydrate, amber for fat. Each carries a gram figure next to its swatch,
+   so the colour is never the only thing conveying which is which — WCAG 1.4.1.
+   ══════════════════════════════════════════════════════════════════════════ */
+.macro {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+
+.macroBar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--fk-r-full);
+  overflow: hidden;
+  background: var(--fk-warm-2);
+}
+.macroBar > span {
+  height: 100%;
+  transition: width var(--fk-dur-slow) var(--fk-ease);
+}
+
+.segP { background: var(--fk-green); }
+.segC { background: #6f8fa8; }
+.segF { background: var(--fk-terracotta); }
+
+.macroKeys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.macroKey {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink-3);
+}
+/* The swatch reuses the segment class, so a colour can never drift between the
+   bar and its key. */
+.macroKey i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* The bar animates its widths in on hover of the card, so the split reads as a
+   measurement resolving rather than a static graphic. */
+.card:hover .macroBar > span {
+  transition-duration: var(--fk-dur);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macroBar > span,
+  .card:hover .macroBar > span {
+    transition: none;
+  }
+}

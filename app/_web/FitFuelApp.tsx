@@ -36,6 +36,10 @@ import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import s from "./app.module.css";
 
+/* Alias so helper components can reach the stylesheet without shadowing the
+   `s` name used for props inside the main component. */
+const sx = s;
+
 /* ── Icons ─────────────────────────────────────────────────────────────────
    Inline, 1.6 stroke, one family. SVG rather than an icon package so the
    shell has no runtime dependency and no version surprise, and never emoji. */
@@ -222,6 +226,55 @@ export type AppProps = {
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+/**
+ * MACRO SPLIT — the share of a dish's calories from protein, carbs and fat.
+ *
+ * "14P · 32C · 14F" is a readout: it makes the reader do arithmetic to answer
+ * the only question anyone asks of it — is this a protein dish or a carb dish.
+ * A proportional bar answers that at a glance and keeps the grams for anyone
+ * who wants them.
+ *
+ * 4 kcal/g for protein and carbs, 9 for fat, normalised so the segments always
+ * sum to 100% even when the stated kcal disagrees slightly with the macros.
+ *
+ * This is NOT a macro ring standing in for a photograph, which AGENTS.md
+ * forbids. It sits beside the dish's name, description and price and
+ * visualises numbers the card already prints.
+ */
+function MacroSplit({ p, c, f }: { p: number; c: number; f: number }) {
+  const kp = p * 4, kc = c * 4, kf = f * 9;
+  const total = kp + kc + kf;
+  if (!total) return null;
+  const pct = (n: number) => Math.round((n / total) * 100);
+  const segs = [
+    { key: "protein", label: "P", g: p, w: pct(kp), cls: sx.segP },
+    { key: "carbs", label: "C", g: c, w: pct(kc), cls: sx.segC },
+    { key: "fat", label: "F", g: f, w: pct(kf), cls: sx.segF },
+  ];
+  return (
+    <div className={sx.macro}>
+      {/* One sentence for the whole graphic. The bar is decorative so a screen
+          reader is not read three unlabelled divs. */}
+      <span className="fk-sr-only">
+        {`${p} grams protein, ${c} grams carbohydrate, ${f} grams fat. ${pct(kp)} per cent of calories from protein.`}
+      </span>
+      <span className={sx.macroBar} aria-hidden="true">
+        {segs.map((sg) => (
+          <span key={sg.key} className={sg.cls} style={{ width: `${sg.w}%` }} />
+        ))}
+      </span>
+      <span className={sx.macroKeys} aria-hidden="true">
+        {segs.map((sg) => (
+          <span key={sg.key} className={sx.macroKey}>
+            <i className={sg.cls} />
+            {sg.g}g {sg.label}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
 
 /** Add / stepper. One control, two states, same footprint. */
 function AddControl({ dish }: { dish: ShopDish }) {
@@ -752,7 +805,8 @@ export default function FitFuelApp({
                         {p.label}
                       </Link>
                       <p className={s.dishBlurb}>{p.note}</p>
-                      <p className={s.macroLine}>{p.macroLine}</p>
+                      <p className={s.macroLine}>{p.kcal?.toLocaleString("en-IN")} kcal a day</p>
+                      {p.pcf ? <MacroSplit p={p.pcf[0]} c={p.pcf[1]} f={p.pcf[2]} /> : null}
 
                       <div className={s.planActions}>
                         <button
@@ -772,9 +826,6 @@ export default function FitFuelApp({
                           View menu
                         </button>
                       </div>
-                      <Link href={`/plans/${p.slug}`} className={s.fullPlanLink}>
-                        Full plan, 30-day schedule and prices →
-                      </Link>
 
                       {openVariants === p.slug ? (
                         <ul className={s.panel}>
@@ -891,7 +942,7 @@ export default function FitFuelApp({
                         {d.name}
                       </Link>
                       <p className={s.dishBlurb}>{d.blurb}</p>
-                      {d.kcal ? <p className={s.macroLine}>{d.macroLine}</p> : null}
+                      {d.kcal ? <MacroSplit p={d.protein} c={d.carbs} f={d.fat} /> : null}
                       {/* The add-on ladder (paneer/tofu, egg, grilled chicken)
                           and any variant already live in DishSheet. The card
                           only has to say they exist, or nobody opens it. */}
