@@ -1461,3 +1461,79 @@
     transition: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CARD SCANNING AIDS.
+
+   48 identically-structured cards give the eye nothing to land on. Badges,
+   a coloured ground and a real price hierarchy are what let someone scan a
+   grid instead of reading it row by row.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The image well now carries a deterministic colour ground (inline, from the
+   dish id) plus the course label and up to two badges. It stays exactly the
+   aspect a photograph will take. */
+.shotPlaceholder {
+  position: relative;
+  align-content: end;
+  justify-items: start;
+  gap: 8px;
+  padding: var(--fk-s-4);
+  aspect-ratio: 16 / 10;
+}
+/* The label sits bottom-left over the field, with a scrim so it stays legible
+   whatever hue the hash produced. */
+.shotPlaceholder > span:first-of-type {
+  align-self: end;
+  padding: 3px 8px;
+  border-radius: var(--fk-r-sm);
+  background: color-mix(in srgb, #000 55%, transparent);
+  color: var(--fk-ink-2);
+}
+
+.badgeRow {
+  position: absolute;
+  top: var(--fk-s-3);
+  left: var(--fk-s-3);
+  right: var(--fk-s-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Lime on near-black: the claim is a measurement, so it reads as data rather
+   than as a marketing sticker. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--fk-r-full);
+  background: color-mix(in srgb, var(--fk-green) 92%, #000);
+  color: #070707;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* PRICE HIERARCHY. The price and the protein figure are the two numbers a
+   FitFuel customer actually compares across cards, so they get their own block
+   and the price gets real size instead of matching the body copy. */
+.priceBlock {
+  display: grid;
+  gap: 1px;
+}
+.price {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+  line-height: 1.1;
+}
+.perProtein {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-green);
+}

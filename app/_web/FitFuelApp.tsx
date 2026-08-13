@@ -276,6 +276,55 @@ function MacroSplit({ p, c, f }: { p: number; c: number; f: number }) {
   );
 }
 
+/**
+ * BADGES, computed from the macros rather than typed by a marketer.
+ *
+ * A grid of 48 cards with identical structure has nothing to scan by. These are
+ * the three claims the data can actually support, and each is a threshold on
+ * real numbers: 12 dishes are high-protein at 25% of calories, 15 come in under
+ * 250 kcal, 10 are low-carb at 20% or less. No badge is shown that cannot be
+ * recomputed from the card's own figures.
+ *
+ * Two maximum. A card wearing four badges is a card with no hierarchy.
+ *
+ * DELIBERATELY ABSENT: a veg / non-veg mark. In India that is a regulated
+ * claim, and the only way to derive it here would be keyword-matching dish
+ * names — "Avocado Chicken" is easy, a paneer dish cooked in ghee is not. It
+ * needs a real column on the dish, not a guess. Flagged rather than faked.
+ */
+function badgesFor(d: ShopDish): string[] {
+  if (!d.kcal) return [];
+  const out: string[] = [];
+  if ((d.protein * 4) / d.kcal >= 0.25) out.push("High protein");
+  if ((d.carbs * 4) / d.kcal <= 0.2) out.push("Low carb");
+  if (d.kcal < 250) out.push("Under 250 kcal");
+  return out.slice(0, 2);
+}
+
+/**
+ * A deterministic colour field for the image well.
+ *
+ * Every card carried the same empty dark rectangle across the top — roughly 40%
+ * of the card showing nothing, 48 times, which is what made the grid read as a
+ * single texture. Hashing the dish id into a hue gives the grid rhythm while a
+ * card is still waiting for its photograph, and the moment a real image lands
+ * it replaces this with no layout change.
+ *
+ * It is a SURFACE, not a diagram: it does not encode flavour, heat or
+ * ingredients, and nothing about it invites the reader to decode it. That is
+ * the line AGENTS.md draws — a macro ring pretending to be a dish is out, a
+ * coloured ground under a course label is not.
+ */
+function fieldStyle(id: string): React.CSSProperties {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360;
+  return {
+    backgroundImage:
+      `radial-gradient(120% 100% at 20% 0%, hsl(${h} 45% 22% / 0.85), transparent 62%),` +
+      `radial-gradient(90% 90% at 90% 100%, hsl(${(h + 48) % 360} 40% 18% / 0.7), transparent 60%)`,
+  };
+}
+
 /** Add / stepper. One control, two states, same footprint. */
 function AddControl({ dish }: { dish: ShopDish }) {
   const cart = useCart();
@@ -788,7 +837,7 @@ export default function FitFuelApp({
                     {/* The image slot is KEPT as a labelled placeholder. There is
                         no photography pipeline yet; when one lands, this well
                         takes the file with no layout change. */}
-                    <div className={s.shotPlaceholder} aria-hidden="true">
+                    <div className={s.shotPlaceholder} style={fieldStyle(p.slug)} aria-hidden="true">
                       <span>{p.sub.replace(/_/g, " ")}</span>
                     </div>
 
@@ -902,10 +951,18 @@ export default function FitFuelApp({
                       <button
                         type="button"
                         className={s.shotPlaceholder}
+                        style={fieldStyle(d.id)}
                         onClick={() => setSheet(d)}
                         aria-label={`See ${d.name}`}
                       >
                         <span>{d.categoryLabel}</span>
+                        {badgesFor(d).length ? (
+                          <span className={s.badgeRow}>
+                            {badgesFor(d).map((b) => (
+                              <span key={b} className={s.tag}>{b}</span>
+                            ))}
+                          </span>
+                        ) : null}
                       </button>
                     ) : (
                     <button
@@ -960,7 +1017,14 @@ export default function FitFuelApp({
 
                       <div className={s.cardFoot}>
                         {d.orderable ? (
-                          <span className={s.price}>{d.priceLabel}</span>
+                          <span className={s.priceBlock}>
+                            <b className={s.price}>{d.priceLabel}</b>
+                            {d.kcal ? (
+                              <span className={s.perProtein}>
+                                {d.protein}g protein
+                              </span>
+                            ) : null}
+                          </span>
                         ) : (
                           <span className={s.askPrice}>Price on request</span>
                         )}
