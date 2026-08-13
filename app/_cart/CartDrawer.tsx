@@ -6,17 +6,22 @@
 // lime CTA — the house system, not the rounded-glass drawer every dark SaaS
 // site ships.
 //
-// The footer states the two things a customer is entitled to know before they
-// commit: delivery is not in this total because no single-meal fee is set,
-// and the order clears through a person on WhatsApp rather than a card form.
-// Both are true today and both stop being true by editing one block.
+// THE ORDER NOW CLEARS ON A CARD. The header of this file used to say the
+// basket "clears through a person on WhatsApp rather than a card form" — true
+// only because OrderItem could not hold a dish. The 20260813040000 migration
+// fixed that and app/api/orders/dishes signs a real PayU payload, so priced
+// dishes are paid for here.
+//
+// WhatsApp stays for the 32 price-on-request dishes, which the server refuses
+// to charge for. A basket can hold both, so the footer can show both.
 
-import { useEffect, useRef } from "react";
-import { Minus, Plus, X, MessageCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Minus, Plus, X, MessageCircle, CreditCard } from "lucide-react";
 
 import { composeOrder, receipt, DELIVERY_RS, PACKAGING_RS, GST_PERCENT } from "@/lib/menu-cart";
 import { waLink } from "@/lib/site";
 import { useCart } from "./CartProvider";
+import DishCheckout from "./DishCheckout";
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -24,13 +29,18 @@ export default function CartDrawer() {
   const { lines, enquiries, totals, open, setOpen, setQty, remove, toggleEnquiry, clear } = useCart();
   const panel = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
+  /* Declared ABOVE the Escape effect that closes over it. Left below, it still
+     ran (the callback fires after render) but sat in the temporal dead zone at
+     the point of capture, which the react-hooks rule rejects and is one edit
+     away from being a real crash. */
+  const [checkout, setCheckout] = useState(false);
 
   // Escape closes, focus moves in, background stops scrolling. A drawer that
   // traps neither focus nor scroll is the usual shortcut and it makes the
   // whole page unusable behind it on a phone.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setCheckout(false); setOpen(false); } };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -42,6 +52,9 @@ export default function CartDrawer() {
   }, [open, setOpen]);
 
   const empty = lines.length === 0 && enquiries.length === 0;
+  /* Only priced lines can be paid for. An enquiry-only basket has a zero
+     total, and receipt() charges it no delivery or packaging either. */
+  const payable = lines.length > 0;
   const href = waLink(composeOrder(lines, enquiries));
   const bill = receipt(lines);
 
@@ -150,16 +163,48 @@ export default function CartDrawer() {
               meal plans at checkout, not to single dishes.
             </p>
 
-            <a href={href} target="_blank" rel="noopener noreferrer" className="ff-send">
-              <MessageCircle size={17} aria-hidden="true" />
-              Send order on WhatsApp
-            </a>
-            <button onClick={clear} className="ff-clear">Clear order</button>
+            {checkout ? (
+              <DishCheckout
+                lines={lines}
+                totalRs={bill.totalRs}
+                onCancel={() => setCheckout(false)}
+              />
+            ) : (
+              <>
+                {payable ? (
+                  <button
+                    type="button"
+                    onClick={() => setCheckout(true)}
+                    className="ff-send"
+                  >
+                    <CreditCard size={17} aria-hidden="true" />
+                    Pay {rs(bill.totalRs)}
+                  </button>
+                ) : null}
+
+                {/* Price-on-request dishes cannot be charged, so this is the
+                    only route for them — and the label says which it is. */}
+                <a href={href} target="_blank" rel="noopener noreferrer" className={payable ? "ff-alt" : "ff-send"}>
+                  <MessageCircle size={17} aria-hidden="true" />
+                  {payable ? "Ask on WhatsApp instead" : "Ask for prices on WhatsApp"}
+                </a>
+                <button onClick={clear} className="ff-clear">Clear order</button>
+              </>
+            )}
           </footer>
         )}
       </div>
 
       <style>{`
+        .ff-alt {
+          display: flex; align-items: center; justify-content: center; gap: 9px;
+          min-height: 44px; margin-top: 8px; padding: 0 16px;
+          border: 1px solid var(--fk-line-strong); border-radius: 8px;
+          background: transparent; color: var(--fk-ink);
+          font-family: var(--fk-sans); font-size: 14px; font-weight: 600;
+          text-decoration: none;
+        }
+        .ff-alt:hover { background: var(--fk-warm); }
         .ff-cart-scrim {
           position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.66);
           opacity: 0; pointer-events: none; transition: opacity .24s ease;
