@@ -1022,67 +1022,28 @@
   color: var(--fk-ink-3);
 }
 
-/* ── Plan actions: two buttons, side by side ───────────────────────────────
-   Variations and View menu are different questions and get different controls;
-   Configure stays the primary action in the card foot below them. */
-.planActions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: var(--fk-s-3);
+/* .planActions, .panel and .panelNote are deleted with the plan card's two
+   disclosure buttons. An inline panel inside a grid whose rows stretch to the
+   tallest card made expanding one card grow all four in its row by 155px; the
+   contents now live in the Configure sheet, which is a real container.
+
+   The plan card foot uses .cardFoot like every other card: a ghost link to the
+   plan's page and the primary Configure button. */
+
+/* Two actions share the width evenly. Scoped to .planFoot, NOT to .cardFoot:
+   a dish card's foot holds a price block and one Add button, and stretching
+   that Add across the card would be a regression on 48 cards to fix 59. */
+.planFoot {
+  /* The <a> resolved 3px taller than the <button> from its own line box.
+     Stretching both to the row makes them agree without pinning a height that
+     could clip a wrapped label. */
+  align-items: stretch;
 }
-.planActions .add {
+.planFoot .add {
+  flex: 1 1 0;
   min-width: 0;
   padding: 0 10px;
   font-size: var(--fk-t-sm);
-}
-
-/* The disclosure panel behind either button. */
-.panel {
-  list-style: none;
-  margin: var(--fk-s-3) 0 0;
-  padding: var(--fk-s-3);
-  border: 1px solid var(--fk-line);
-  border-radius: var(--fk-r);
-  background: var(--fk-paper);
-  display: grid;
-  gap: 7px;
-}
-.panel li {
-  display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: baseline;
-  font-size: var(--fk-t-sm);
-}
-.panel li > span:first-child {
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.panel li > b {
-  color: var(--fk-ink-2);
-  font-weight: 500;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.panel li > span:last-child {
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
-}
-.panelNote {
-  margin: var(--fk-s-3) 0 0;
-  padding: var(--fk-s-3);
-  border: 1px solid var(--fk-line);
-  border-radius: var(--fk-r);
-  background: var(--fk-paper);
-  font-size: var(--fk-t-sm);
-  color: var(--fk-ink-3);
-  line-height: 1.5;
 }
 
 /* The add-on line is a real control now, not a paragraph pretending to be one. */

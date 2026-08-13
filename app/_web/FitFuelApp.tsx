@@ -191,13 +191,9 @@ export type AppPlan = ShopPlan & {
   variants: PlanVariant[];
 };
 
-const DIET_LABEL: Record<string, string> = {
-  VEG: "Vegetarian", EGG: "Eggetarian", NON_VEG: "Non-veg", JAIN: "Jain", VEGAN: "Vegan",
-};
-
-const SLOT_LABEL: Record<string, string> = {
-  BREAKFAST: "Breakfast", LUNCH: "Lunch", SNACK: "Snack", DINNER: "Dinner",
-};
+/* DIET_LABEL and SLOT_LABEL lived here for the plan card's two disclosure
+   panels. Both panels are gone: the diet list is the live picker in the
+   Configure sheet, and SLOT_LABEL moved to PlanSheet with the day-one menu. */
 
 /** Diet chips. Jain and Vegan are cooked to the vegetarian sheet and priced as
  *  VEGETARIAN, but they are still separate plans and a customer filters by the
@@ -610,18 +606,18 @@ export default function FitFuelApp({
   const [suppCat, setSuppCat] = useState("all");
   const [planCat, setPlanCat] = useState("all");
   const [planDiet, setPlanDiet] = useState("all");
-  const [planSheet, setPlanSheet] = useState<ShopPlan | null>(null);
+  /* AppPlan, not ShopPlan. Typing this as ShopPlan erased `meals` at the state
+     boundary, so the day-one schedule never reached the sheet. */
+  const [planSheet, setPlanSheet] = useState<AppPlan | null>(null);
   /* The order bar is dismissible. It is fixed, it sits over the last row of
      cards, and shipping it with no way out left a customer with something in
      the basket staring at a slab across the menu for the rest of the session.
      Dismissing costs nothing: the basket is one tap away in the header and the
      badge there still carries the count. */
   const [barHidden, setBarHidden] = useState(false);
-  /* Which plan card has its variations open, and which has its menu open.
-     Two separate buttons, two separate panels — a plan's diets and a plan's
-     food are different questions and were previously behind one "Configure". */
-  const [openVariants, setOpenVariants] = useState<string | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  /* openVariants / openMenu are gone with the two disclosure buttons on the
+     plan card. Both contents live in the Configure sheet now — see the comment
+     on the plan card foot for why an inline panel was the wrong container. */
   const searchRef = useRef<HTMLInputElement>(null);
   const gridRef = useCardTilt<HTMLDivElement>();
 
@@ -1084,57 +1080,34 @@ export default function FitFuelApp({
                         <p className={s.macroLine}>{p.kcal.toLocaleString("en-IN")} kcal a day</p>
                       ) : null}
 
-                      <div className={s.planActions}>
-                        <button
-                          type="button"
-                          className={`${s.add} ${s.ghost}`}
-                          aria-expanded={openVariants === p.slug}
-                          onClick={() => { setOpenVariants(openVariants === p.slug ? null : p.slug); setOpenMenu(null); }}
-                        >
-                          {p.variants.length} variation{p.variants.length === 1 ? "" : "s"}
-                        </button>
-                        <button
-                          type="button"
-                          className={`${s.add} ${s.ghost}`}
-                          aria-expanded={openMenu === p.slug}
-                          onClick={() => { setOpenMenu(openMenu === p.slug ? null : p.slug); setOpenVariants(null); }}
-                        >
-                          View menu
-                        </button>
-                      </div>
+                      {/* ── TWO ACTIONS, NO ACCORDIONS ────────────────────────
+                          This card carried three controls — "N variations",
+                          "View menu" and "Configure" — and the first two were
+                          both wrong.
 
-                      {openVariants === p.slug ? (
-                        <ul className={s.panel}>
-                          {p.variants.map((v) => (
-                            <li key={v.slug}>
-                              <span>{DIET_LABEL[v.diet] ?? v.diet}</span>
-                              <span className="fk-num">{v.kcal.toLocaleString("en-IN")} kcal · {v.protein}g P</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
+                          "N variations" was a read-only list of diets and their
+                          calories. Configure has the same diets as a live
+                          picker, with FSSAI dots and a price that moves when you
+                          choose. A disclosure that previews a better control is
+                          just a longer route to it.
 
-                      {openMenu === p.slug ? (
-                        p.meals.length > 0 ? (
-                          <ul className={s.panel}>
-                            {p.meals.map((m) => (
-                              <li key={m.slot}>
-                                <span>{SLOT_LABEL[m.slot] ?? m.slot}</span>
-                                <b>{m.name}</b>
-                                <span className="fk-num">{m.kcal} kcal</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className={s.panelNote}>
-                            The 30-day menu for this plan is published monthly. Its macros above
-                            are the daily target the kitchen cooks to.
-                          </p>
-                        )
-                      ) : null}
+                          "View menu" opened an inline panel, and 1 of 126 plan
+                          rows has a seeded day-1 menu — so 58 of these 59 cards
+                          opened the identical apology. Worse, the grid stretches
+                          a row to its tallest card, so expanding one card grew
+                          all four in its row by 155px and shoved every Configure
+                          button down with it. Nothing was broken about the
+                          click; the feedback just landed everywhere except where
+                          you were looking.
 
-                      <div className={s.cardFoot}>
-                        <span className={s.askPrice}>{p.macros}</span>
+                          The day-one menu moved into the Configure sheet, where
+                          the buying decision is actually made, and the full
+                          30-day schedule is on the plan's own page. So: one link
+                          to the page, one button to the sheet. */}
+                      <div className={`${s.cardFoot} ${s.planFoot}`}>
+                        <Link href={`/plans/${p.slug}`} className={`${s.add} ${s.ghost}`}>
+                          See the plan
+                        </Link>
                         <button type="button" className={s.add} onClick={() => setPlanSheet(p)}>
                           Configure
                         </button>

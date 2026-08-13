@@ -29,7 +29,18 @@ import Sheet, { SheetClose } from "./Sheet";
 import { C, MONO, SANS, display, figure, label, num, seg } from "./theme";
 import s from "./shop.module.css";
 
-export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: () => void }) {
+/** Day one, when the plan has a seeded schedule. Optional, because the static
+ *  SHOP_PLANS rows Shop.tsx passes carry no menu — only the database-backed
+ *  rows the app builds do. */
+export type PlanSheetPlan = ShopPlan & {
+  meals?: { slot: string; name: string; kcal: number }[];
+};
+
+const SLOT_LABEL: Record<string, string> = {
+  BREAKFAST: "Breakfast", LUNCH: "Lunch", SNACK: "Snack", DINNER: "Dinner",
+};
+
+export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onClose: () => void }) {
   const [tier, setTier] = useState<Tier>("STANDARD");
   const [diet, setDiet] = useState<DietKey>("VEG");
   const [meal, setMeal] = useState<MealKey>("ALL_FOUR");
@@ -146,6 +157,65 @@ export default function PlanSheet({ plan, onClose }: { plan: ShopPlan; onClose: 
             );
           })}
         </div>
+      </div>
+
+      {/* ── WHAT YOU EAT ────────────────────────────────────────────────────
+          This was a "View menu" accordion on the plan card. It belongs here:
+          the card is where you scan, this is where you decide, and expanding a
+          panel in a stretched grid row dragged three neighbouring cards down
+          with it.
+
+          1 of 126 plan rows currently has a seeded day-one schedule, so the
+          empty branch is the one nearly everyone sees. It says what is true and
+          points at the page that carries the full 30 days, rather than
+          pretending the section is missing. */}
+      <div style={{ padding: "18px 16px 0" }}>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>
+          What you eat on day one
+        </span>
+        {plan.meals && plan.meals.length > 0 ? (
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
+            {plan.meals.map((m) => (
+              <li
+                key={m.slot}
+                style={{
+                  display: "grid", gridTemplateColumns: "76px minmax(0, 1fr) auto",
+                  gap: 10, alignItems: "baseline",
+                }}
+              >
+                <span style={{ ...label(10, { letterSpacing: "0.06em" }) }}>
+                  {SLOT_LABEL[m.slot] ?? m.slot}
+                </span>
+                <span style={{ fontFamily: SANS, fontSize: 13.5, color: C.ink, minWidth: 0 }}>
+                  {m.name}
+                </span>
+                <span style={{ ...num(12), color: C.dim }}>{m.kcal} kcal</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <>
+            <p style={{ margin: 0, fontFamily: SANS, fontSize: 13, lineHeight: 1.55, color: C.dim }}>
+              The 30-day menu for this plan is published monthly and is not seeded
+              here yet. The macros you picked above are the daily target the
+              kitchen cooks to.
+            </p>
+            {/* A block action, not a link inside the sentence. WCAG 2.5.8 would
+                exempt an inline link, but the same call was already made for
+                app/menu/[dish] — a navigation action carries a real target
+                here. */}
+            <Link
+              href={`/plans/${plan.slug}`}
+              style={{
+                display: "inline-flex", alignItems: "center", minHeight: 44,
+                marginTop: 4, color: C.lime, fontFamily: SANS,
+                fontSize: 13, fontWeight: 600,
+              }}
+            >
+              See the plan page
+            </Link>
+          </>
+        )}
       </div>
 
       {/* The receipt */}
