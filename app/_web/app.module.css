@@ -921,3 +921,34 @@
   color: var(--fk-ink-3);
   font-style: italic;
 }
+
+/* ── The card without a photograph ──────────────────────────────────────────
+   There is no photography pipeline and none is planned, so the grid stops
+   waiting for one. A card with a real image keeps its 4:3 well; a card without
+   leads on the course and the calories and gives the space back to the food's
+   name and description. Denser, and it reads as finished rather than as an
+   asset that failed to load. */
+.dishTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 2px;
+  font-size: var(--fk-t-xs);
+}
+.dishCourse {
+  font-family: var(--fk-sans);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fk-green);
+}
+.dishTop .fk-num {
+  color: var(--fk-ink-3);
+}
+
+/* Without the image well the natural card is much shorter, so the grid can
+   hold more of the menu per screen instead of leaving long gaps. */
+.grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}

@@ -578,31 +578,39 @@ export default function FitFuelApp({
               <ul className={s.grid}>
                 {results.map((d) => (
                   <li key={d.id} className={s.card}>
+                    {images[d.slot] ? (
                     <button
                       type="button"
                       className={s.shot}
                       onClick={() => setSheet(d)}
                       aria-label={`See ${d.name}`}
                     >
-                      {/* Slot is mounted ONLY when a real photograph exists.
-                          Its no-image branch draws a macro glyph, and
-                          AGENTS.md forbids a diagram standing in for a dish
-                          where someone is choosing what to eat — so that
-                          branch is deliberately unreachable from here. */}
-                      {images[d.slot] ? (
-                        <Slot
-                          images={images}
-                          name={d.slot}
-                          alt={d.name}
-                          sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
-                        />
-                      ) : (
-                        <span className={s.shotEmpty}>{d.categoryLabel}</span>
-                      )}
+                      {/* Slot is mounted ONLY when a real photograph exists. Its
+                          no-image branch draws a macro glyph, and AGENTS.md
+                          forbids a diagram standing in for a dish where someone
+                          is choosing what to eat — so that branch is
+                          deliberately unreachable from here. */}
+                      <Slot
+                        images={images}
+                        name={d.slot}
+                        alt={d.name}
+                        sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
+                      />
                       {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
                     </button>
+                    ) : null}
 
                     <div className={s.cardBody}>
+                      {/* No photograph: the course and the calories carry the
+                          top of the card instead of an empty 4:3 well. There is
+                          no photography pipeline, so a card that keeps holding
+                          space for one just looks unfinished forever. */}
+                      {!images[d.slot] ? (
+                        <p className={s.dishTop}>
+                          <span className={s.dishCourse}>{d.categoryLabel}</span>
+                          {d.kcal ? <span className="fk-num">{d.kcalLabel}</span> : null}
+                        </p>
+                      ) : null}
                       <button type="button" className={s.dishName} onClick={() => setSheet(d)}>
                         {d.name}
                       </button>
