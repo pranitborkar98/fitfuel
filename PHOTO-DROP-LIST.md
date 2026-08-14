@@ -1,13 +1,23 @@
 # Dish photograph drop-list
 
 Put a photo at `public/images/dishes/<name>.jpg` and that dish's card and
-product page fill in on the next build. No code change, no layout change —
-the well is already the right aspect ratio (16:9 on the card, 4:3 on the page).
+product page fill in on the next build. No code change, no layout change.
 
 `.jpg .jpeg .png .webp .avif` all work. Real photos in `images/dishes/` beat
 anything in `images/ai/dishes/`, so a real shot always wins a swap.
 
-Shoot overhead, in daylight, on a plain surface. A phone is fine.
+**Shoot square, and centre the plate.** The same file is cropped to three
+different shapes with `object-fit: cover`, so anything at the edges can be cut:
+
+| where | shape |
+| --- | --- |
+| dish card, phone | 1:1 square, 112px |
+| dish card, desktop | 16:10 landscape |
+| product page | 4:3 landscape |
+
+A square original with the plate centred survives all three. Overhead, in
+daylight, on a plain surface. A phone camera is fine — a real photograph of the
+actual dish beats anything else you can put in that space.
 
 ## Bowls (8)
 

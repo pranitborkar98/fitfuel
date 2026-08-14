@@ -1161,26 +1161,25 @@ export default function FitFuelApp({
                 {results.map((d) => (
                   <li key={d.id} className={s.card}>
                     {!images[d.slot] ? (
-                      /* Image section KEPT as a placeholder. Drop a photograph
-                         into public/images/dishes/<slug> and it replaces this
-                         with no layout change — the well is already the right
-                         aspect. */
+                      /* The reserved space a photograph drops into. Drop a file
+                         into public/images/dishes/<slug> and it fills with no
+                         layout change.
+
+                         EMPTY ON PURPOSE. It used to print the course name and
+                         carry the badges. The course was already printed
+                         immediately below it in .dishTop, so every card said
+                         "SALADS" twice; and the badges sat ON the well, which
+                         is exactly where the food goes — chips over a
+                         photograph is the wrong instinct, and at the mobile row
+                         size this well is 104px wide and could not hold them at
+                         all. Both now live in the body. */
                       <button
                         type="button"
                         className={s.shotPlaceholder}
                         style={dishField(d)}
                         onClick={() => setSheet(d)}
                         aria-label={`See ${d.name}`}
-                      >
-                        <span>{d.categoryLabel}</span>
-                        {badgesFor(d).length ? (
-                          <span className={s.badgeRow}>
-                            {badgesFor(d).map((b) => (
-                              <span key={b} className={s.tag}>{b}</span>
-                            ))}
-                          </span>
-                        ) : null}
-                      </button>
+                      />
                     ) : (
                     <button
                       type="button"
@@ -1209,8 +1208,16 @@ export default function FitFuelApp({
                           card where it is the denominator of something rather
                           than a loose statistic. Printing it twice made the top
                           row compete with the dish name for no gain. */}
+                      {/* Course and badges share one line. The badges were an
+                          overlay on the image well; as text beside the course
+                          they survive the mobile row layout, stop covering the
+                          photograph, and read as what they are — a measurement,
+                          not a sticker on the food. */}
                       <p className={s.dishTop}>
                         <span className={s.dishCourse}>{d.categoryLabel}</span>
+                        {badgesFor(d).map((b) => (
+                          <span key={b} className={s.tag}>{b}</span>
+                        ))}
                       </p>
                       {/* Every dish now has a URL. It was reachable only as a
                           card and a modal, so it could not be linked, shared,

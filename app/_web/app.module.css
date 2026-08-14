@@ -436,6 +436,7 @@
   min-width: 0;
   flex: 1 1 260px;
 }
+
 .offerText b {
   display: block;
   font-family: var(--fk-display);
@@ -972,6 +973,13 @@
   margin: 0 0 2px;
   font-size: var(--fk-t-xs);
 }
+/* Course and badges on one line, wrapping together. */
+.dishTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .dishCourse {
   font-family: var(--fk-sans);
   font-weight: 700;
@@ -1043,6 +1051,8 @@
     linear-gradient(180deg, color-mix(in srgb, var(--fk-green) 9%, transparent), transparent 70%),
     var(--fk-warm);
 }
+/* Dish wells are empty now, but plan and supplement wells still label
+   themselves — this rule is theirs. */
 .shotPlaceholder span {
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
@@ -1050,6 +1060,8 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fk-ink-3);
+  padding-inline: 6px;
+  text-align: center;
 }
 
 /* .planActions, .panel and .panelNote are deleted with the plan card's two
@@ -1711,15 +1723,8 @@
   color: var(--fk-ink-2);
 }
 
-.badgeRow {
-  position: absolute;
-  top: var(--fk-s-3);
-  left: var(--fk-s-3);
-  right: var(--fk-s-3);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+/* .badgeRow is gone: the badges were absolutely positioned over the image well
+   and are now inline in .dishTop beside the course. */
 /* Lime on near-black: the claim is a measurement, so it reads as data rather
    than as a marketing sticker. */
 .tag {
@@ -1756,4 +1761,155 @@
   font-size: var(--fk-t-xs);
   font-variant-numeric: tabular-nums;
   color: var(--fk-green);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PHONE. THIS BLOCK IS LAST ON PURPOSE.
+
+   Every rule here is a single class competing with a single class defined
+   earlier in this file, so it wins on source order and nothing else. The first
+   attempt at this block sat in the middle of the file and was silently beaten:
+   `.offerText b` at mobile size was overridden by the `.offerText b` twenty
+   lines below it, and `.addOnHint { display: none }` by the second `.addOnHint`
+   rule further down. Both looked applied in the source and were dead in the
+   browser. Keep mobile overrides at the bottom.
+
+   WHY ANY OF IT. Measured at 375x812 before this: the dish card was 335x551 —
+   1.43 cards per screen, 34.5 screens to reach the end of a 48-dish menu — and
+   580px of chrome, 71% of the opening screen, before a single dish. A food app
+   is judged on how fast it can be scanned, and none of the hover work elsewhere
+   in this file runs on a phone, because there is no pointer to run it with.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 639px) {
+  /* ── The card turns on its side ──────────────────────────────────────────
+     Body left, image well right, the shape every food app converges on. Same
+     DOM and same components: the well keeps its place in the markup and
+     grid-template-areas moves it. No JavaScript, no second component. */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--fk-s-3);
+  }
+
+  .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 124px;
+    grid-template-areas: "body well";
+    align-items: stretch;
+  }
+
+  /* A SQUARE THUMBNAIL, not a full-height strip. Stretching the well down the
+     card made it 112x256 — a portrait slot, and `objectFit: cover` would crop a
+     landscape photograph of a plate down to a vertical sliver of it. Square,
+     centred, inset from the edge: the shape food actually photographs into, and
+     it sits correctly whether the card is 241px or 294px tall. */
+  .card .shotPlaceholder,
+  .card .shot {
+    grid-area: well;
+    align-self: center;
+    justify-self: end;
+    width: 112px;
+    height: 112px;
+    min-height: 0;
+    aspect-ratio: 1;
+    padding: 0;
+    margin-inline-end: var(--fk-s-3);
+    border: 1px solid var(--fk-line);
+    border-radius: var(--fk-r);
+    overflow: hidden;
+  }
+
+  .cardBody {
+    grid-area: body;
+    gap: 2px;
+    padding: var(--fk-s-3) var(--fk-s-4);
+  }
+
+  /* KEEPS ITS 44px. I first dropped this to min-height:0 on the reasoning that
+     the 112px image well beside it is target enough — which is wrong, because
+     they go to different places: the well opens the quick-look sheet, the name
+     is the only route to the dish's own product page. It measured 24px on the
+     22 dishes whose names fit one line. A two-line name already exceeds 44, so
+     this costs height only on the short ones. */
+  .dishName {
+    min-height: var(--fk-tap);
+    padding-block: 1px;
+    font-size: var(--fk-t-md);
+    line-height: 1.2;
+  }
+
+  /* Two lines is enough to sell a dish in a list. Past that is the product
+     page's job. */
+  .dishBlurb {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  /* The ring shrinks and its keys move alongside instead of underneath. */
+  .macro {
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .donut {
+    width: 46px;
+    height: 46px;
+  }
+  .macroKeys {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1px 9px;
+  }
+
+  .cardFoot {
+    padding-top: var(--fk-s-2);
+  }
+
+  /* Costs a whole 44px row in a list this dense, and says only that add-ons
+     exist. They are still on the dish sheet and the product page, both one tap
+     away from this card. */
+  .addOnHint {
+    display: none;
+  }
+
+  /* ── Chrome above the fold ───────────────────────────────────────────────
+     The offer was wrapping its button onto a second line and paying for a
+     display-size heading; the result bar carried desktop padding. */
+  .offer {
+    gap: var(--fk-s-3);
+    padding: var(--fk-s-3) var(--fk-s-4);
+    margin-top: var(--fk-s-3);
+    flex-wrap: nowrap;
+  }
+  .offerText {
+    flex: 1 1 auto;
+  }
+  .offerText b {
+    font-size: var(--fk-t-base);
+    line-height: 1.25;
+  }
+  /* The line under it repeats what the trial page says on arrival, and it is
+     what forced this row to wrap at this width. */
+  .offerText span {
+    display: none;
+  }
+  .offer .add {
+    flex: none;
+    min-width: 0;
+    padding: 0 14px;
+  }
+
+  .resultBar {
+    padding: var(--fk-s-3) 0 var(--fk-s-2);
+  }
+  .resultBar h2 {
+    font-size: var(--fk-t-lg);
+  }
+
+  /* The delivery promise is a standing fact, not a headline. */
+  .cutoffRow {
+    padding-block: 5px;
+    font-size: var(--fk-t-xs);
+  }
 }
