@@ -1542,6 +1542,21 @@
   border-color: color-mix(in srgb, var(--fk-green) 45%, var(--fk-line));
   transform: translateY(-2px);
 }
+/* The image well on a service card. Same height on both branches — photograph
+   or colour ground — so a row of six never goes ragged because three of them
+   have a picture and three do not. */
+.serviceShot {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--fk-s-3);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  overflow: hidden;
+  background: var(--fk-warm);
+}
+
 .serviceStat {
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
@@ -1964,4 +1979,43 @@
     padding-block: 5px;
     font-size: var(--fk-t-xs);
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE DELIVERY-AREA SHEET.
+
+   app/_hp/Areas.tsx renders at its own scale — it was built as a full-width
+   homepage section with a 1000x520 map. Inside a sheet it needs a ceiling and
+   somewhere to scroll, and its own section padding has to come off so the map
+   is not inset twice.
+   ══════════════════════════════════════════════════════════════════════════ */
+.areaSheetTop {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fk-s-3);
+  padding: var(--fk-s-4);
+  border-bottom: 1px solid var(--fk-line);
+  background: var(--fk-paper);
+}
+.areaSheet {
+  padding: var(--fk-s-4) var(--fk-s-4) var(--fk-s-6);
+}
+.areaSheetH {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-lg);
+  font-weight: 600;
+  color: var(--fk-ink);
+}
+/* The section inside brings its own vertical rhythm for a full page. */
+.areaSheet section {
+  padding-block: 0;
+}
+.areaSheet svg {
+  max-width: 100%;
+  height: auto;
 }

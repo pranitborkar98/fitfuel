@@ -9,7 +9,10 @@ import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
 import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
+import Areas from "./_hp/Areas";
+import { slot } from "@/lib/site-images";
 import FitFuelApp from "./_web/FitFuelApp";
+import { SERVICES } from "./_web/services";
 
 /* ══════════════════════════════════════════════════════════════════════════
    `/` IS THE APP.
@@ -227,6 +230,21 @@ export default async function AppPage() {
         supplements={supplements}
         planCount={plans.length || 126}
         licence={FSSAI_LICENCE}
+        /* Resolved here because lib/site-images.ts touches the filesystem and
+           must not be called from a client component. Three of the six services
+           have an honest photograph; the rest resolve to null and the card
+           renders its colour ground instead of borrowing an unrelated picture. */
+        serviceImages={Object.fromEntries(
+          SERVICES.map((sv) => [
+            sv.href,
+            sv.slot && sv.folder ? (slot(sv.folder, sv.slot)?.src ?? null) : null,
+          ]),
+        )}
+        /* app/_hp/Areas.tsx was written for the v2 homepage and then imported by
+           nothing — the plotted delivery map, on no route at all. It is a server
+           component, so it is rendered here and passed down as a node for the
+           location chip to open. */
+        areaPanel={<Areas />}
       />
     </>
   );

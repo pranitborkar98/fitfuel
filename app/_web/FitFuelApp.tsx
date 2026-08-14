@@ -25,6 +25,7 @@
 // the rail. A customer choosing lunch should not have to scroll past a pitch
 // deck; someone who wants the pitch can still reach it.
 
+import Image from "next/image";
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
@@ -33,7 +34,9 @@ import { receipt } from "@/lib/menu-cart";
 import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
+import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
+import { SERVICES } from "./services";
 import s from "./app.module.css";
 
 /* Alias so helper components can reach the stylesheet without shadowing the
@@ -161,20 +164,12 @@ export type AppSupp = {
    app: the coach is lib/coach + lib/ai-trainer, training is 952 Exercise rows,
    corporate is CORP_PLANS, digital is 17 MealPlanProduct rows, and the gym
    network is Partner rows. */
-const SERVICES: { href: string; label: string; blurb: string; stat: string }[] = [
-  { href: "/dashboard/coach", label: "The AI coach", stat: "Recalibrates weekly",
-    blurb: "Four weigh-ins that disagree with your goal move your target, with the arithmetic shown." },
-  { href: "/dashboard/exercises", label: "Training", stat: "952 exercises",
-    blurb: "Sets, reps and rest programmed into your week, burn fed back into today's net." },
-  { href: "/corporate", label: "For offices", stat: "From ₹110 a meal",
-    blurb: "One hot lunch a day at the desk, personalised by goal and diet, trays labelled per person." },
-  { href: "/plans/digital", label: "Digital plans", stat: "₹299 / ₹699",
-    blurb: "The 30-day recipe book, macros and grocery list, without the delivery." },
-  { href: "/partners", label: "Gyms & trainers", stat: "Partner network",
-    blurb: "Your gym or trainer puts your plan on your account and gets paid for it." },
-  { href: "/why", label: "Why FitFuel", stat: "The whole argument",
-    blurb: "The plan finder, the receipt builder and what happens between 4am and your door." },
-];
+/* SERVICES lives in ./services.ts. app/page.tsx is a server component and has to
+   read it to resolve the photographs, and Next replaces every export of a
+   "use client" module with a client REFERENCE across that boundary — so
+   `SERVICES.map(...)` on the server threw "SERVICES.map is not a function" at
+   prerender, after tsc and eslint both passed clean. Shared data belongs in a
+   module that is neither client nor server. */
 
 export type PlanVariant = {
   diet: string;
@@ -219,6 +214,13 @@ export type AppProps = {
   menuFrom: string;
   planCount: number;
   licence: string;
+  /** Resolved server-side — lib/site-images.ts reads the filesystem and must
+   *  never be called from a client component. Keyed by the service's href. */
+  serviceImages: Record<string, string | null>;
+  /** The delivery-area map, rendered on the server and handed down as a node so
+   *  the location chip can open it without this file importing a server
+   *  component. */
+  areaPanel?: React.ReactNode;
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -610,6 +612,8 @@ export default function FitFuelApp({
   menuFrom,
   planCount,
   licence,
+  serviceImages,
+  areaPanel,
 }: AppProps) {
   const cart = useCart();
   const [q, setQ] = useState("");
@@ -637,6 +641,7 @@ export default function FitFuelApp({
      on the plan card foot for why an inline panel was the wrong container. */
   const searchRef = useRef<HTMLInputElement>(null);
   const gridRef = useCardTilt<HTMLDivElement>();
+  const [areaOpen, setAreaOpen] = useState(false);
 
   /* Keeps typing responsive on a long list: the input updates every keystroke,
      the 48-item filter runs at React's leisure. */
@@ -770,7 +775,25 @@ export default function FitFuelApp({
           </div>
 
           <div className={s.topActions}>
-            <button type="button" className={s.place}>
+            {/* A DEAD CONTROL UNTIL NOW. This was a <button> with no onClick —
+                it looked like the location picker every food app has and did
+                nothing at all when tapped.
+
+                It opens the delivery-area map: app/_hp/Areas.tsx, which plots
+                every suburb from its published coordinates with 3, 6 and 9km
+                rings measured from the kitchen. That component was written for
+                the v2 homepage and has been imported by NOTHING since — the
+                whole argument for one kitchen in Kharadi serving a tight
+                cluster, sitting on no route. This is the question a cold
+                visitor asks first, so it belongs behind the control that names
+                the area. */}
+            <button
+              type="button"
+              className={s.place}
+              onClick={() => setAreaOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={areaOpen}
+            >
               <Icon d={I.pin} size={16} />
               {area}
             </button>
@@ -1280,6 +1303,26 @@ export default function FitFuelApp({
             {SERVICES.map((sv) => (
               <li key={sv.href}>
                 <Link href={sv.href}>
+                  {/* The three that have a real photograph get it; the three
+                      that do not get the same colour ground the dish wells use,
+                      hashed off the route so each is its own. Both branches are
+                      the same height, so the row never goes ragged. */}
+                  <span
+                    className={s.serviceShot}
+                    style={serviceImages[sv.href] ? undefined : fieldStyle(sv.href)}
+                    aria-hidden="true"
+                  >
+                    {serviceImages[sv.href] ? (
+                      <Image
+                        src={serviceImages[sv.href]!}
+                        alt=""
+                        fill
+                        sizes="(min-width: 1024px) 240px, (min-width: 640px) 45vw, 92vw"
+                        style={{ objectFit: "cover" }}
+                        loading="lazy"
+                      />
+                    ) : null}
+                  </span>
                   <span className={s.serviceStat}>{sv.stat}</span>
                   <b>{sv.label}</b>
                   <span className={s.serviceBlurb}>{sv.blurb}</span>
@@ -1368,6 +1411,25 @@ export default function FitFuelApp({
 
       {sheet ? <DishSheet dish={sheet} images={images} onClose={() => setSheet(null)} /> : null}
       {planSheet ? <PlanSheet plan={planSheet} onClose={() => setPlanSheet(null)} /> : null}
+
+      {/* areaPanel is a server component handed down as a node. Sheet already
+          traps and restores focus and closes on Escape, so the map inherits all
+          of that without knowing anything about it. */}
+      {areaOpen && areaPanel ? (
+        <Sheet onClose={() => setAreaOpen(false)} labelledBy="area-sheet-title">
+          {/* SheetClose is not optional furniture. Escape and the backdrop both
+              close this, but neither is visible, and a full-screen overlay whose
+              only exits are invisible is the same trap as the order bar that
+              could not be dismissed. */}
+          <div className={s.areaSheetTop}>
+            <h2 id="area-sheet-title" className={s.areaSheetH}>
+              Where we deliver
+            </h2>
+            <SheetClose onClose={() => setAreaOpen(false)} />
+          </div>
+          <div className={s.areaSheet}>{areaPanel}</div>
+        </Sheet>
+      ) : null}
     </div>
   );
 }
