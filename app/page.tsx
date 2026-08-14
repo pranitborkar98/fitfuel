@@ -11,8 +11,10 @@ import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
 import Areas from "./_hp/Areas";
 import { slot } from "@/lib/site-images";
+import { decodeRow } from "@/lib/decode-entities";
 import FitFuelApp from "./_web/FitFuelApp";
 import { SERVICES } from "./_web/services";
+import type { BandCounts, Quote } from "./_web/HomeBands";
 
 /* ══════════════════════════════════════════════════════════════════════════
    `/` IS THE APP.
@@ -212,8 +214,60 @@ async function getSupplements(): Promise<AppSupp[]> {
   }
 }
 
+/* The bands below the catalog. Every figure is counted here rather than typed,
+   so "70 of 126 plans are built for a condition" cannot drift from the plans
+   the page is actually listing. Fails soft to figures the catalogue can still
+   back if the database is unreachable — except the quotes, which fall to an
+   empty array so the proof band renders nothing rather than something
+   encouraging and invented. */
+async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
+  const fallback: BandCounts = {
+    dishes: SHOP_DISHES.length, plans: 126, conditionPlans: 70,
+    exercises: 952, supplements: 46, recipes: 30,
+  };
+  try {
+    const [plans, conditionPlans, exercises, supplements, recipes, rows] =
+      await Promise.all([
+        prisma.mealPlan.count(),
+        prisma.mealPlan.count({ where: { category: "LIFESTYLE_MEDICAL" } }),
+        prisma.exercise.count(),
+        prisma.supplement.count({ where: { isActive: true } }),
+        prisma.recipe.count(),
+        prisma.testimonial.findMany({
+          where: { isActive: true, isFeatured: true },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+          take: 3,
+          select: {
+            id: true, name: true, location: true, planLabel: true,
+            resultLabel: true, quote: true,
+          },
+        }),
+      ]);
+    return {
+      counts: {
+        dishes: SHOP_DISHES.length,
+        plans: plans || fallback.plans,
+        conditionPlans: conditionPlans || fallback.conditionPlans,
+        exercises: exercises || fallback.exercises,
+        supplements: supplements || fallback.supplements,
+        recipes: recipes || fallback.recipes,
+      },
+      /* Seeded copy carries &mdash; and &middot;, and React escapes text nodes
+         — so a featured quote rendered as "actually delicious &mdash; I was
+         expecting". Decoded on the way out. */
+      quotes: rows.map(decodeRow),
+    };
+  } catch {
+    return { counts: fallback, quotes: [] };
+  }
+}
+
 export default async function AppPage() {
-  const [plans, supplements] = await Promise.all([getPlans(), getSupplements()]);
+  const [plans, supplements, bands] = await Promise.all([
+    getPlans(),
+    getSupplements(),
+    getBandData(),
+  ]);
 
   return (
     <>
@@ -245,6 +299,8 @@ export default async function AppPage() {
            component, so it is rendered here and passed down as a node for the
            location chip to open. */
         areaPanel={<Areas />}
+        bandCounts={bands.counts}
+        quotes={bands.quotes}
       />
     </>
   );

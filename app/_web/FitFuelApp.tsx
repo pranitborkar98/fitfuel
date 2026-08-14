@@ -37,6 +37,7 @@ import PlanSheet from "@/app/_shop/PlanSheet";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import { SERVICES } from "./services";
+import HomeBands, { type BandCounts, type Quote } from "./HomeBands";
 import s from "./app.module.css";
 
 /* Alias so helper components can reach the stylesheet without shadowing the
@@ -221,6 +222,11 @@ export type AppProps = {
    *  the location chip can open it without this file importing a server
    *  component. */
   areaPanel?: React.ReactNode;
+  /** Counts and quotes for the bands below the catalog. Both come from the
+   *  database in page.tsx so a figure here cannot disagree with the catalogue
+   *  it describes. */
+  bandCounts: BandCounts;
+  quotes: Quote[];
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -614,6 +620,8 @@ export default function FitFuelApp({
   licence,
   serviceImages,
   areaPanel,
+  bandCounts,
+  quotes,
 }: AppProps) {
   const cart = useCart();
   const [q, setQ] = useState("");
@@ -1291,6 +1299,13 @@ export default function FitFuelApp({
           </div>
         </div>
       </div>
+
+      {/* ── The bands ────────────────────────────────────────────────────
+          Scale, conditions and proof. All three were built for v2 and left on
+          no route; all three are the arguments that make this hard to copy.
+          They sit here, BELOW the catalog, because AGENTS.md is explicit that
+          nothing pushes food down the page. */}
+      <HomeBands counts={bandCounts} quotes={quotes} />
 
       {/* ── Services ─────────────────────────────────────────────────────
           The v2 homepage argued these as scrolling sections. A webapp carries

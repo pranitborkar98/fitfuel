@@ -20,6 +20,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { prisma } from "@/lib/prisma";
+import { decodeRow } from "@/lib/decode-entities";
 import { Idx, Tiles, Tile, k } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, MUTE, SECTION, body, label, num } from "@/app/_ui/theme";
@@ -70,10 +71,15 @@ export default async function TestimonialsPage({
   const { goal } = await searchParams;
   const activeGoal = GOAL_FILTERS.some((g) => g.value === goal) ? goal ?? null : null;
 
-  const all = await prisma.testimonial.findMany({
-    where: { isActive: true },
-    orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }],
-  });
+  /* decodeRow: the seeded quotes carry &mdash; and &middot;, and React escapes
+     text nodes — so these rendered the entity source on the page. Same fix as
+     the homepage bands; see lib/decode-entities.ts. */
+  const all = (
+    await prisma.testimonial.findMany({
+      where: { isActive: true },
+      orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }],
+    })
+  ).map(decodeRow);
 
   const visible = activeGoal ? all.filter((t) => t.goal === activeGoal) : all;
   const avg = all.length > 0 ? (all.reduce((s, t) => s + t.rating, 0) / all.length).toFixed(1) : "0.0";
