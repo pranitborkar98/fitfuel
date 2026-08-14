@@ -476,10 +476,16 @@ function useCardTilt<T extends HTMLElement>() {
       el.style.setProperty("--my", `${y.toFixed(1)}%`);
       el.style.setProperty("--rx", `${((50 - y) / 50) * MAX}deg`);
       el.style.setProperty("--ry", `${((x - 50) / 50) * MAX}deg`);
+      /* Where the chromatic edge is brightest. atan2 puts 0 at three o'clock
+         and the conic gradient starts its band a little after `from`, so the
+         quarter turn lands the bright part under the cursor rather than
+         trailing it. */
+      const deg = (Math.atan2(y - 50, x - 50) * 180) / Math.PI - 90;
+      el.style.setProperty("--edge", `${deg.toFixed(1)}deg`);
     };
 
     const clear = (el: HTMLElement) => {
-      for (const p of ["--mx", "--my", "--rx", "--ry"]) el.style.removeProperty(p);
+      for (const p of ["--mx", "--my", "--rx", "--ry", "--edge"]) el.style.removeProperty(p);
     };
 
     const cardOf = (n: EventTarget | null) =>

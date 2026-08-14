@@ -657,12 +657,31 @@
 }
 
 .stepper {
+  position: relative;
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--fk-green);
   border-radius: var(--fk-r);
-  overflow: hidden;
   min-height: var(--fk-tap);
+}
+
+/* THE SHOCKWAVE. One ring, once, when the dish first enters the order — the
+   stepper only mounts on that transition, so the animation is triggered by the
+   mount itself rather than by a timer or a piece of state. It is a pseudo
+   element, so nothing is injected into the DOM and there is nothing to clean
+   up if the card unmounts mid-flight. */
+@keyframes addShock {
+  from { opacity: 0.6; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.85); }
+}
+.stepper::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 2px solid var(--fk-green);
+  animation: addShock 520ms var(--fk-ease) forwards;
+  pointer-events: none;
 }
 /* 44px SQUARE, not 40. These were 40px wide against a 44px minimum, and the
    violation was invisible in every earlier sweep because the stepper only
@@ -680,6 +699,17 @@
   font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;
+}
+/* The stepper used `overflow: hidden` to clip these two backgrounds to its
+   rounded corners. That would also clip the shockwave, which expands past the
+   control's bounds by design, so the corners are rounded here instead. */
+.stepBtn:first-child {
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
+}
+.stepBtn:last-child {
+  border-start-end-radius: inherit;
+  border-end-end-radius: inherit;
 }
 .stepBtn:hover {
   background: var(--fk-green);
@@ -1092,24 +1122,90 @@
   will-change: transform;
 }
 
-/* A hairline of light along the top edge — the same trick a physical card gets
-   from a light source above it. Cheap, and it separates 48 cards from the page
-   far better than a heavier border would. */
+/* ── THE CHROMATIC EDGE ─────────────────────────────────────────────────────
+   One element doing two jobs, because a card needs separating from the page at
+   rest and wants to feel lit when you reach for it.
+
+   AT REST it is a soft light from above — the same trick a physical card gets
+   from a lamp overhead, and it separates 48 cards far better than a heavier
+   border would.
+
+   ON HOVER the full chroma comes up and THE ANGLE FOLLOWS THE CURSOR. This is
+   the effect usually built as a conic gradient on a CSS timer, spinning on
+   every card forever. A conic gradient is not compositor-accelerated, so that
+   version repaints 48 large gradient boxes every frame for the entire life of
+   the page, whether or not anyone is looking at it. Driving --edge from the
+   pointer instead means it repaints one card, only while that card is under the
+   cursor, on a signal that is already throttled to one write per frame. It also
+   reads better: light that answers you beats light that ignores you.
+
+   Costs nothing on touch — there is no pointer, so --edge never changes and
+   this stays the resting hairline. */
+/* `inherits: true` IS LOAD-BEARING. The pointer handler writes --edge on the
+   card; the gradient that consumes it is on the card's ::before. A pseudo
+   element takes its custom properties by inheritance from its originating
+   element, so with `inherits: false` the ::before never sees the write and
+   falls back to initial-value — a chromatic edge permanently frozen at 270deg,
+   which looks deliberate and is therefore the kind of dead effect that ships.
+   Caught by setting --edge by hand and finding `from 270deg` unchanged. */
+@property --edge {
+  syntax: "<angle>";
+  initial-value: 270deg;
+  inherits: true;
+}
+
 .card::before {
   content: "";
   position: absolute;
-  inset: 0 0 auto;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--fk-green) 55%, transparent),
-    transparent
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--edge, 270deg) at 50% 50%,
+    transparent 0deg,
+    color-mix(in srgb, var(--fk-green) 85%, transparent) 26deg,
+    color-mix(in srgb, var(--fk-ink) 50%, transparent) 56deg,
+    color-mix(in srgb, var(--fk-terracotta) 60%, transparent) 86deg,
+    transparent 132deg,
+    transparent 360deg
   );
-  opacity: 0.5;
+  /* Punch the middle out so the gradient survives only in the 1px pad — a
+     gradient border without a wrapper element. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.4;
   transition: opacity var(--fk-dur) var(--fk-ease);
   pointer-events: none;
   z-index: 2;
+}
+.card:hover::before {
+  opacity: 1;
+}
+
+/* Without mask-composite the cut-out never happens and the conic gradient
+   floods the whole card. Degrade to the plain top hairline this replaced. */
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  .card::before {
+    inset: 0 0 auto;
+    height: 1px;
+    padding: 0;
+    border-radius: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--fk-green) 55%, transparent),
+      transparent
+    );
+    -webkit-mask: none;
+    mask: none;
+    opacity: 0.5;
+  }
 }
 
 /* ── DEPTH THAT TRACKS THE POINTER ──────────────────────────────────────────
@@ -1170,9 +1266,6 @@
   .card:active {
     transform: scale(0.985);
   }
-}
-.card:hover::before {
-  opacity: 1;
 }
 
 /* The image well gets a slow scale under the card's hover, so the card feels
@@ -1348,6 +1441,24 @@
   .card:hover::after {
     display: none;
   }
+  /* The chromatic edge stays — it is the card's border and removing it would
+     take the separation with it — but it is pinned to the resting angle so it
+     cannot chase the cursor, and it stops brightening on hover. */
+  .card::before,
+  .card:hover::before {
+    --edge: 270deg !important;
+    opacity: 0.4;
+    transition: none;
+  }
+  .stepper::after {
+    animation: none;
+    opacity: 0;
+  }
+  .donutArc,
+  .card:hover .donutArc {
+    filter: none;
+    transition: none;
+  }
 }
 
 /* Benefit bullets on a supplement card — the buyer-facing slice of a model that
@@ -1495,9 +1606,22 @@
   from { stroke-dasharray: 0 var(--circ); }
   to   { stroke-dasharray: var(--len) var(--circ); }
 }
-.arcP { stroke: var(--mp); }
-.arcC { stroke: var(--mc); }
-.arcF { stroke: var(--mf); }
+/* `color` is set alongside `stroke` purely so the hover glow below can use
+   currentColor and pick up each arc's own hue without repeating the values. */
+.arcP { stroke: var(--mp); color: var(--mp); }
+.arcC { stroke: var(--mc); color: var(--mc); }
+.arcF { stroke: var(--mf); color: var(--mf); }
+
+/* The ring catches light with the rest of the card. Three small circles on one
+   hovered card — a filter on 48 rings at once would not be worth it. */
+@media (hover: hover) and (pointer: fine) {
+  .donutArc {
+    transition: filter var(--fk-dur) var(--fk-ease);
+  }
+  .card:hover .donutArc {
+    filter: drop-shadow(0 0 3px currentColor);
+  }
+}
 
 .donutNum {
   fill: var(--fk-ink);
