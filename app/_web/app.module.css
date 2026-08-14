@@ -1727,16 +1727,23 @@
    and are now inline in .dishTop beside the course. */
 /* Lime on near-black: the claim is a measurement, so it reads as data rather
    than as a marketing sticker. */
+/* OUTLINED, NOT FILLED. As a solid lime pill this was the loudest object on the
+   card — louder than the dish name and louder than the price, on 24 of the 48
+   cards. A badge that half the grid wears cannot also be the thing your eye
+   lands on first. Lime on the card surface measures 9.42:1, so dropping the
+   fill costs nothing in legibility and returns the hierarchy to name, price,
+   Add. */
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: var(--fk-r-full);
-  background: color-mix(in srgb, var(--fk-green) 92%, #000);
-  color: #070707;
+  border: 1px solid color-mix(in srgb, var(--fk-green) 42%, transparent);
+  background: color-mix(in srgb, var(--fk-green) 10%, transparent);
+  color: var(--fk-green);
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
@@ -1792,26 +1799,32 @@
 
   .card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 124px;
+    grid-template-columns: minmax(0, 1fr) 136px;
     grid-template-areas: "body well";
     align-items: stretch;
   }
 
   /* A SQUARE THUMBNAIL, not a full-height strip. Stretching the well down the
      card made it 112x256 — a portrait slot, and `objectFit: cover` would crop a
-     landscape photograph of a plate down to a vertical sliver of it. Square,
-     centred, inset from the edge: the shape food actually photographs into, and
-     it sits correctly whether the card is 241px or 294px tall. */
+     landscape photograph of a plate down to a vertical sliver of it.
+
+     It grows with the card instead of sitting at a fixed 112: at 112 it filled
+     38% of its column and left 90px of dead space above AND below, which is
+     what reads as an empty card. `height: 100%` inside a max lets it take the
+     room a tall card has while staying square-ish on a short one, and
+     aspect-ratio keeps it from ever going portrait. */
   .card .shotPlaceholder,
   .card .shot {
     grid-area: well;
     align-self: center;
     justify-self: end;
-    width: 112px;
-    height: 112px;
-    min-height: 0;
-    aspect-ratio: 1;
+    width: 124px;
+    height: 100%;
+    max-height: 148px;
+    min-height: 124px;
+    aspect-ratio: auto;
     padding: 0;
+    margin-block: var(--fk-s-3);
     margin-inline-end: var(--fk-s-3);
     border: 1px solid var(--fk-line);
     border-radius: var(--fk-r);
@@ -1847,19 +1860,58 @@
     overflow: hidden;
   }
 
-  /* The ring shrinks and its keys move alongside instead of underneath. */
+  /* ── The ring and its keys ───────────────────────────────────────────────
+     KEYS STAY STACKED, as they are on desktop. The keys were wrapping raggedly
+     to two and three lines here, so I forced them onto one row with nowrap —
+     and that clipped every one of the 48 cards, which needed 156px of key row
+     inside a 100px column. The fat figure was silently cut off the entire menu.
+     Invisible data loss is a worse bug than a ragged wrap.
+
+     Stacked, three keys come to about 48px, which is the ring's own height, so
+     the block costs nothing over the graphic beside it and nothing can clip.
+     The lesson is that the row was never what made these cards tall — at 360px
+     it is the dish name taking an extra line. */
   .macro {
-    gap: 8px;
+    gap: 9px;
     margin-top: 2px;
   }
   .donut {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
   }
-  .macroKeys {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 1px 9px;
+  .macroKey {
+    gap: 5px;
+    font-size: 11.5px;
+    /* Three stacked keys at the default leading came to 61px against a 44px
+       ring. Tightened, they sit at roughly the ring's own height, which is what
+       makes the block cost nothing. */
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+  /* Plan and supplement wells still carry a category word, and at 124px wide
+     "Performance" overflowed by 3px and lost its last letters. Smaller, and
+     allowed to wrap rather than shave. */
+  .shotPlaceholder span {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+  }
+
+  /* ── The mode chips, also on one line ────────────────────────────────────
+     "Single meals" + its count wrapped to two lines at 360px, giving a 47px
+     chip with a broken label. Less horizontal padding and a tighter gap fits
+     all three across without shrinking the 44px target. */
+  .mode {
+    gap: 5px;
+    padding: 0 8px;
+    font-size: var(--fk-t-xs);
+    white-space: nowrap;
+  }
+  .modeRow {
+    gap: 6px;
   }
 
   .cardFoot {
