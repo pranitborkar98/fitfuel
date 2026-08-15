@@ -23,7 +23,12 @@ const BARE_PREFIXES = ["/driver", "/admin", "/dashboard"];
 // cut-off strip, plus a six-tab bottom bar and a four-column footer. Those are
 // the composition, not decoration around it, and mounting the site navbar as
 // well would put two fixed bars and ~134px of chrome above the trial panel.
-const SELF_CHROMED = ["/"];
+// Now a PREFIX list, not an exact-match list. /menu/<dish> is 48 product pages
+// that a customer reaches by tapping a card on `/`, and they were dropping out
+// of the app onto the marketing site: different header, no search, no location,
+// no basket, no tab bar. They render app/_web/AppChrome instead, so the site
+// navbar here would be a second header.
+const SELF_CHROMED = ["/", "/menu"];
 
 // Path prefixes that are the logged-in APPLICATION, not marketing pages.
 // These keep their own denser UI conventions, so the marketing-side
@@ -40,8 +45,12 @@ export default function ChromeGate({
   children: ReactNode;
 }) {
   const pathname = usePathname() || "";
+  /* SELF_CHROMED is matched as a prefix now — "/" exactly, anything else by
+     startsWith — so /menu and its 48 dish pages are covered without listing
+     each one. */
   const bare =
-    BARE_PREFIXES.some((p) => pathname.startsWith(p)) || SELF_CHROMED.includes(pathname);
+    BARE_PREFIXES.some((p) => pathname.startsWith(p)) ||
+    SELF_CHROMED.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
   const marketing = !APP_PREFIXES.some((p) => pathname.startsWith(p));
 
   return (

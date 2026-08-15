@@ -237,7 +237,9 @@ export default function MenuClient({ dishes, stats }: { dishes: MenuDish[]; stat
           letter-spacing: 0.05em; text-transform: uppercase;
           background: transparent; color: var(--ff-mute, #9a9a94);
           border: 1px solid var(--ff-rule, #232320); border-radius: 0;
-          padding: 8px 14px; min-height: 38px; cursor: pointer;
+          /* 44, not 38. These measured 40px tall against the 44 AGENTS.md pins,
+             on the primary filter of a 48-dish catalog. */
+          padding: 8px 14px; min-height: 44px; cursor: pointer;
           transition: color .15s, border-color .15s, background .15s;
         }
         .mn-chip:hover { color: var(--ff-ink, #f7f7f5); border-color: var(--ff-rule-2, #33332f); }

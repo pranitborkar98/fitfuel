@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { MENU_STATS, MENU_FROM } from "@/lib/menu-alacarte";
 import { DISHES, ORDERABLE_COUNT, ENQUIRY_COUNT } from "@/lib/menu-cart";
 import { dishSlug, findDishImage } from "@/app/_hp/DishImage";
+import { cutoffLabel } from "@/lib/order-cutoff";
+import AppChrome from "@/app/_web/AppChrome";
+import Areas from "@/app/_hp/Areas";
 import MenuClient, { type MenuDish } from "./MenuClient";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -69,16 +72,26 @@ export default function MenuPage() {
     image: findDishImage(dishSlug(d.name))?.src ?? null,
   }));
 
+  /* AppChrome, for the same reason the dish pages have it: ChromeGate now
+     treats everything under /menu as self-chromed, and without this the page
+     lost the marketing navbar and got nothing in its place — a catalog with no
+     navigation at all, which is worse than the mismatch it replaced. */
   return (
-    <MenuClient
-      dishes={dishes}
-      stats={{
-        items: MENU_STATS.items,
-        categories: MENU_STATS.categories,
-        from: MENU_FROM,
-        orderable: ORDERABLE_COUNT,
-        enquiry: ENQUIRY_COUNT,
-      }}
-    />
+    <AppChrome
+      dishCount={DISHES.length}
+      cutoff={cutoffLabel()}
+      areaPanel={<Areas />}
+    >
+      <MenuClient
+        dishes={dishes}
+        stats={{
+          items: MENU_STATS.items,
+          categories: MENU_STATS.categories,
+          from: MENU_FROM,
+          orderable: ORDERABLE_COUNT,
+          enquiry: ENQUIRY_COUNT,
+        }}
+      />
+    </AppChrome>
   );
 }

@@ -5,6 +5,9 @@ import { DISHES, dishId, isOrderable } from "@/lib/menu-cart";
 import { SHOP_DISH_BY_ID, SHOP_DISHES } from "@/app/_shop/catalog";
 import { FSSAI_LICENCE } from "@/lib/trust-marks";
 import { resolveImage } from "@/lib/site-images";
+import { cutoffLabel } from "@/lib/order-cutoff";
+import AppChrome from "@/app/_web/AppChrome";
+import Areas from "@/app/_hp/Areas";
 import DishPage from "./DishPage";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -74,7 +77,18 @@ export default async function Page({ params }: Props) {
 
   const img = resolveImage("dishes", d.slot);
 
+  /* THE APP SHELL. These 48 pages are reached by tapping a card on `/`, and
+     until now that tap dropped the customer out of the app and onto the
+     marketing site — a different header, no search, no location, no basket and
+     no tab bar, with the browser back button as the only way home. The shell is
+     the same header and tabs the homepage draws, and the same cart context, so
+     the basket count does not reset when you open a dish. */
   return (
+    <AppChrome
+      dishCount={SHOP_DISHES.length}
+      cutoff={cutoffLabel()}
+      areaPanel={<Areas />}
+    >
     <DishPage
       dish={d}
       related={related}
@@ -103,6 +117,7 @@ export default async function Page({ params }: Props) {
           : null
       }
     />
+    </AppChrome>
   );
 }
 

@@ -21,10 +21,15 @@
   color: var(--fk-ink-3);
   margin-bottom: var(--fk-s-5);
 }
+/* min-WIDTH too. These carried the 44px height and shrank to the width of the
+   word — "Order" measured 36px and "Menu" 35px. A breadcrumb is navigation, not
+   prose, so it takes a real target on both axes. */
 .page .crumb a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
+  min-width: 44px;
   color: var(--fk-ink-2);
   text-decoration: none;
 }
