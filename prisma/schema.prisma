@@ -1647,12 +1647,15 @@ model SupplementClick {
 // ══════════════════════════════════════════════════════════════════════════
 // PHASE 12C — AI COACH CONVERSATIONS
 //
-// WRITTEN BUT NOT YET PUSHED. Applying these needs `prisma db push` against
-// the live Neon database, which is a production change and not one to make
-// unasked. Until it runs, app/dashboard/trainer holds the thread in component
-// state: a reload starts fresh, and nothing is lost, because every fact the
-// coach uses is read from the customer's logged rows rather than from the
-// thread.
+// PUSHED to live Neon on 2026-08-18, on the owner's say-so. The migration was
+// purely additive — two tables, one enum, two indexes, two foreign keys, no
+// ALTER on anything existing — and every pre-existing row count was identical
+// afterwards.
+//
+// These are conversation history, NOT the coach's memory. lib/ai-trainer
+// re-reads the customer's real rows on every turn, so a weight logged since
+// the last message is current even though the stored message still quotes the
+// old number. Nothing downstream should start treating stored turns as fact.
 //
 // The coach reads health data and answers about a customer's own body, so the
 // retention posture is deliberate: `onDelete: Cascade` means a DPDP erasure

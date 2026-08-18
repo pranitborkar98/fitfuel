@@ -18,8 +18,37 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { isTrainerConfigured, streamTrainerReply } from "@/lib/ai-trainer/client";
+import {
+  isTrainerConfigured,
+  streamTrainerReply,
+  type TrainerChunk,
+} from "@/lib/ai-trainer/client";
 import { TRAINER_OFFLINE } from "@/lib/ai-trainer/persona";
+import { beginTurn, finishTurn } from "@/lib/ai-trainer/store";
+
+/** Emit one NDJSON line ahead of an existing stream, without buffering it. */
+function prependLine(
+  stream: ReadableStream<Uint8Array>,
+  chunk: TrainerChunk,
+): ReadableStream<Uint8Array> {
+  const head = new TextEncoder().encode(JSON.stringify(chunk) + "\n");
+  const reader = stream.getReader();
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(head);
+    },
+    async pull(controller) {
+      const { done, value } = await reader.read();
+      if (done) controller.close();
+      else controller.enqueue(value);
+    },
+    /* Propagate a client disconnect so the upstream request is torn down
+       rather than left generating tokens nobody will read. */
+    cancel(reason) {
+      return reader.cancel(reason);
+    },
+  });
+}
 
 /* Builds a per-user context from live rows; nothing here is cacheable. */
 export const dynamic = "force-dynamic";
@@ -40,6 +69,9 @@ const Body = z.object({
     )
     .max(20)
     .default([]),
+  /* Which thread to append to. Client-supplied and therefore untrusted —
+     beginTurn() re-checks ownership against the session before writing. */
+  conversationId: z.string().cuid().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -76,13 +108,35 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  /* The customer's turn is recorded before the model is called, so a question
+     that crashes the coach survives the reload. Returns null if persistence is
+     unavailable, and the turn proceeds unsaved rather than being refused. */
+  const conversationId = await beginTurn(
+    session.user.id,
+    parsed.data.conversationId ?? null,
+    parsed.data.message,
+  );
+
   const stream = await streamTrainerReply(
     session.user.id,
     parsed.data.history,
     parsed.data.message,
+    (outcome) =>
+      finishTurn(conversationId, outcome.reply, {
+        inputTokens: outcome.inputTokens,
+        outputTokens: outcome.outputTokens,
+        refusedReason: outcome.refusedReason,
+      }),
   );
 
-  return new Response(stream, {
+  /* The thread id goes out ahead of the reply so the client is holding it
+     before the first token lands — a customer who closes the tab mid-answer
+     still comes back to the right conversation. */
+  const withId = conversationId
+    ? prependLine(stream, { c: conversationId })
+    : stream;
+
+  return new Response(withId, {
     headers: {
       "content-type": "application/x-ndjson; charset=utf-8",
       "cache-control": "no-store",

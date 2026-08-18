@@ -21,6 +21,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { isTrainerConfigured } from "@/lib/ai-trainer/client";
+import { loadLatestThread } from "@/lib/ai-trainer/store";
 import { TRAINER_OFFLINE, TRAINER_OPENER } from "@/lib/ai-trainer/persona";
 import { C, screen, body, label, PANEL, APP_MAX, SANS } from "@/app/_app/theme";
 import TrainerChat from "./TrainerChat";
@@ -40,6 +41,11 @@ export default async function TrainerPage() {
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard/trainer");
 
   const configured = isTrainerConfigured();
+  /* Read on the server so a returning customer's thread is in the first paint
+     rather than appearing a beat later — a chat that flashes empty and then
+     fills reads as though it lost the conversation. Skipped when the coach is
+     off; there is nothing to resume. */
+  const thread = configured ? await loadLatestThread(session.user.id) : null;
 
   return (
     <div style={{ background: C.bg, minHeight: "100dvh", paddingBottom: 96 }}>
@@ -65,7 +71,10 @@ export default async function TrainerPage() {
         </header>
 
         {configured ? (
-          <TrainerChat />
+          <TrainerChat
+            initialTurns={thread?.turns ?? []}
+            initialConversationId={thread?.conversationId ?? null}
+          />
         ) : (
           /* NOT an error state. The pipeline is built and wired; the key is a
              business decision that has not been taken. Saying so plainly is

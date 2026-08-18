@@ -4,22 +4,26 @@
 //
 // The conversation. Client component because it owns the thread and the stream.
 //
-// STATE LIVES HERE, NOT ON THE SERVER, in this first cut. Persisting threads is
-// Phase 12C and needs the AiConversation / AiMessage tables — those are written
-// into prisma/schema.prisma but not pushed, because `prisma db push` against
-// the live Neon database is not a change to make without being asked. Until
-// then a reload starts a new conversation, which is honest and costs the
-// customer nothing: every fact the coach uses comes from their logged data, not
-// from the thread.
+// THE THREAD IS PERSISTED (Phase 12C). The last conversation is read on the
+// server and arrives as `initialTurns`, so a reload resumes rather than
+// restarting. `conversationId` comes back down the stream on the first line and
+// is echoed on every later turn; the server re-checks it belongs to the session
+// before writing, because it is client-supplied.
 //
-// The thread is sent back with each turn so the model has the conversation; the
-// route caps it at twenty turns.
+// History is NOT the coach's memory. buildTrainerContext() re-reads the
+// customer's real rows on every turn, so a weight logged since the last message
+// is current even though the old message still quotes the old number.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { C, body, label, SANS, PANEL } from "@/app/_app/theme";
 
 type Turn = { role: "user" | "assistant"; content: string };
+
+type Props = {
+  initialTurns?: Turn[];
+  initialConversationId?: string | null;
+};
 
 /* Openers. Not decoration — an empty chat box asks the customer to invent a
    question, and the three below are the ones the context can answer best. */
@@ -29,11 +33,17 @@ const SUGGESTIONS = [
   "What should I eat tonight?",
 ];
 
-export default function TrainerChat() {
-  const [turns, setTurns] = useState<Turn[]>([]);
+export default function TrainerChat({
+  initialTurns = [],
+  initialConversationId = null,
+}: Props) {
+  const [turns, setTurns] = useState<Turn[]>(initialTurns);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  /* A ref, not state: it changes once, mid-stream, and rendering on it would
+     re-run the reader loop's closure for no visible gain. */
+  const convoId = useRef<string | null>(initialConversationId);
 
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -69,7 +79,7 @@ export default function TrainerChat() {
         const res = await fetch("/api/trainer/chat", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ message, history }),
+          body: JSON.stringify({ message, history, conversationId: convoId.current }),
         });
 
         if (!res.ok || !res.body) {
@@ -95,13 +105,15 @@ export default function TrainerChat() {
 
           for (const raw of lines) {
             if (!raw.trim()) continue;
-            let chunk: { t?: string; e?: string };
+            let chunk: { t?: string; e?: string; c?: string };
             try {
               chunk = JSON.parse(raw);
             } catch {
               continue;
             }
-            if (chunk.e) {
+            if (chunk.c) {
+              convoId.current = chunk.c;
+            } else if (chunk.e) {
               setNotice(chunk.e);
             } else if (chunk.t) {
               got = true;

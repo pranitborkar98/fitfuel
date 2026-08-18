@@ -62,8 +62,19 @@ const MAX_TOKENS = 16_000;
 export type TrainerTurn = { role: "user" | "assistant"; content: string };
 
 /** A line of the response stream. Newline-delimited JSON: `t` is text to
- *  append, `e` is a notice to show in place of a reply. */
-export type TrainerChunk = { t: string } | { e: string };
+ *  append, `e` is a notice to show in place of a reply, `c` is the conversation
+ *  id to send back with the next turn. */
+export type TrainerChunk = { t: string } | { e: string } | { c: string };
+
+/** What the turn produced, handed to the caller once the stream has drained so
+ *  persistence lives in the route rather than in here. Reported even when the
+ *  turn failed — a refusal and a half-written reply are both worth recording. */
+export type TrainerOutcome = {
+  reply: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  refusedReason?: string;
+};
 
 const enc = new TextEncoder();
 const line = (c: TrainerChunk) => enc.encode(JSON.stringify(c) + "\n");
@@ -80,6 +91,7 @@ export async function streamTrainerReply(
   userId: string,
   history: TrainerTurn[],
   message: string,
+  onFinish?: (outcome: TrainerOutcome) => Promise<void> | void,
 ): Promise<ReadableStream<Uint8Array>> {
   const anthropic = new Anthropic({ apiKey: KEY });
 
@@ -93,6 +105,9 @@ export async function streamTrainerReply(
   return new ReadableStream<Uint8Array>({
     async start(controller) {
       const push = (c: TrainerChunk) => controller.enqueue(line(c));
+      /* Accumulated alongside the stream so the finished reply can be stored
+         without the route having to re-read what it just sent. */
+      const outcome: TrainerOutcome = { reply: "" };
       try {
         const stream = anthropic.beta.messages.stream({
           model: MODEL,
@@ -132,16 +147,21 @@ export async function streamTrainerReply(
             event.delta.type === "text_delta" &&
             event.delta.text
           ) {
+            outcome.reply += event.delta.text;
             push({ t: event.delta.text });
           }
         }
 
         const final = await stream.finalMessage();
+        outcome.inputTokens = final.usage?.input_tokens;
+        outcome.outputTokens = final.usage?.output_tokens;
 
         /* Checked AFTER the stream drains rather than instead of reading it: a
            mid-stream decline keeps the partial text, so the customer should see
            what was written plus an explanation, not a blank panel. */
         if (final.stop_reason === "refusal") {
+          outcome.refusedReason =
+            (final.stop_details as { category?: string } | null)?.category ?? "refusal";
           push({
             e: "I can't take that one on. If it's about your health or your medication, that's a question for your doctor — I can pick up anything to do with your plan and your numbers.",
           });
@@ -158,6 +178,13 @@ export async function streamTrainerReply(
               : "The coach could not be reached. Nothing you have logged is affected — try again shortly.",
         });
       } finally {
+        /* Persist before closing, and never let a storage failure surface as a
+           broken stream — the customer has already read the reply by now. */
+        try {
+          await onFinish?.(outcome);
+        } catch (err) {
+          console.error("[ai-trainer] onFinish failed", err);
+        }
         controller.close();
       }
     },
