@@ -31,8 +31,16 @@ function mealsFor(m: string | null | undefined): string[] {
 
 export async function GET(req: NextRequest) {
   // Vercel Cron sends "Authorization: Bearer <CRON_SECRET>" automatically.
+  //
+  // FAILS CLOSED. This was `if (expected && ...)`, which skipped the check
+  // entirely whenever CRON_SECRET was unset — so any environment that lost the
+  // variable (a fresh preview deployment, a half-finished rotation) silently
+  // exposed a public endpoint that WRITES Delivery rows. An absent secret is
+  // the case you most need the gate for, not the case to waive it in.
+  // app/api/cron/snapshot-consistency already had it this way round; this is
+  // the two of them agreeing.
   const expected = process.env.CRON_SECRET;
-  if (expected && req.headers.get("authorization") !== `Bearer ${expected}`) {
+  if (!expected || req.headers.get("authorization") !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

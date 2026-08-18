@@ -71,7 +71,9 @@ Ria/Healthify."
 **Stack:** Next.js 16 / Turbopack · Prisma 7 (PrismaPg adapter + `prisma.config.ts`) · Neon Postgres (Mumbai)
 · Auth.js v5 (`auth()`) · PayU + COD · Vercel · Upstash Redis (rate-limit) · Resend (email) + MSG91/WAHA
 (WhatsApp later) · QStash + Vercel cron · Vercel Blob · Nutrabay affiliate (`pranit1944`).
-**Anthropic API key: not yet provisioned (post-funding).**
+**Anthropic API key: STILL not provisioned.** `.env` holds a 12-char placeholder.
+As of 2026-08-18 this is the ONLY thing between the repo and a working AI coach:
+`@anthropic-ai/sdk` is installed and Phase 12B/12C are built, wired and migrated.
 
 **Hard build rules (do not relax — each was paid for in a broken build):**
 - **`tsc --strict` gate (#183)** — real-dependency typecheck before handoff; esbuild only checks syntax.
@@ -129,10 +131,10 @@ SIGN-UP -> ONBOARDING (body+goal+diet+condition)            [LIVE]
    | consistency score (0-100)                               [LIVE]
         -> weekly digest (email)                             [LIVE]
         -> supplements: recommended stack                    [catalog LIVE / recommender LOOP-7 = NOT built]
-        -> AI coach                                          [proactive deterministic LIVE / LLM chat = NOT built, API key]
+        -> AI coach                                          [proactive deterministic LIVE / LLM chat BUILT, keyless]
 ```
-The loop is **closed and verified** through the consistency score. Two open seams: **LOOP-7** (supplement
-recommender) and the **conversational AI trainer** (API key gated).
+The loop is **closed and verified** through the consistency score. LOOP-7 shipped (#214) and the
+conversational trainer shipped (#215); the trainer's only remaining seam is the API key itself.
 
 ## I.4 CURRENT STATE SNAPSHOT
 
@@ -149,11 +151,11 @@ recommender) and the **conversational AI trainer** (API key gated).
 | Supplements infra | done | 100 code / 10 products seeded (urls pending) |
 | Plans catalog + pricing (R-PRICE) | done | 100 |
 | Exercise schedules (EX-1/1b) | done | 100 |
-| Supplement recommender (LOOP-7) | not built | 0 |
+| Supplement recommender (LOOP-7) | done (F13/#214) | 100 |
 | Security hardening (WS-3) | DONE (F1+F2) | 100 |
 | Discoverability / a11y / design | not built | low |
 | AI trainer — proactive (deterministic) | done | 100 |
-| AI trainer — chat (LLM) | parked | 0 (API key) |
+| AI trainer — chat (LLM) | built, unkeyed (#215) | 95 — model call untested |
 | Recipe seeding (126 plans) | parallel | 1/126 |
 | Launch readiness (Phase 20) | not built | 0 |
 
@@ -187,14 +189,14 @@ recommender) and the **conversational AI trainer** (API key gated).
 | F15 | EX-3 — exercise media (licensed clips; optional glTF viewer). | future | EX-3 |
 | F16 | EX-4 — BlazePose camera form analysis (on-device; merges w/ AI coach). | future | EX-4 |
 
-### BLOCK C — AI TRAINER (headline moat; un-parks Phase 12 — GATED ON API KEY / FUNDING)
+### BLOCK C — AI TRAINER (headline moat; UN-PARKED 2026-08-18, #215 — only the key is left)
 > Brain before mouth (#174). The deterministic proactive coach (weekly review + recalibration + nudges) is
 > ALREADY LIVE. What remains needs the API key. Full spec preserved in PART III.
 | F | Item | Note | Maps to |
 |---|---|---|---|
 | F17 | AI-1 — coach actions deepen: progression (LOOP-8) + supplement-stack (LOOP-7) surfaced as coach actions. | builds on F13/F14 | R8 |
-| F18 | AI-2 — Context Engine + Safety + cost — `lib/ai-trainer/context.ts`, 12-SAFE guards, prompt caching, two-model split, AiUsageLog, rate limits, eval harness. | needs API key | 12A/12-SAFE/12H/12I |
-| F19 | AI-3 — reactive chat + support + workout-mode — `/dashboard/trainer` streaming (Luxury gate), persistence, tool use (logMeal/requestSwap/suggestRecalibration confirm-gated), 12-SUPPORT, in-session workout-mode. **Flips Premium/Luxury waitlist live.** | needs API key + data depth | Phase 12 v1 |
+| F18 ◐(#215) | AI-2 — **DONE:** context engine consumed, `lib/ai-trainer/persona.ts` 12-SAFE guards, prompt caching (frozen zero-interpolation prefix + breakpoint on the context block), `aiChat` rate-limit preset, per-turn token counts stored on `AiMessage`. **LEFT:** eval harness (12I), two-model split (12H). | key | 12A/12-SAFE/12H/12I |
+| F19 ◐(#215) | AI-3 — **DONE:** `/dashboard/trainer` streaming chat, NDJSON, thread persistence (`AiConversation`/`AiMessage`, pushed to Neon), ownership-checked resume. **LEFT:** tool use (12D), Luxury gate, 12-SUPPORT, workout-mode. Not yet gated by tier — currently any signed-in user. | key + data depth | Phase 12 v1 |
 
 ### BLOCK D — WHOLE-PERSON EXPANSION (post-launch new "senses", #175–#177)
 | F | Item | Maps to |
@@ -242,6 +244,7 @@ This compile overturns NO decision; it re-files them under a non-colliding index
 
 **— SESSION LOG —**
 - `Jun 23, 2026` — **F13 supplement recommender (Decision #214):** `lib/supplement-recommender.ts` (LOOP-7) — deterministic, maps buyer `UserProfile.fitnessGoal` → `SupplementGoal` (LOSE_WEIGHT→WEIGHT_LOSS, GAIN_MUSCLE→MUSCLE_GAIN, MAINTAIN/MANAGE→BALANCED, IMPROVE_FITNESS→PERFORMANCE), returns a ranked (isFeatured→popular→sortOrder) shortlist from the live catalogue; **diet-aware** — vegans never get whey/fish-oil (`veganFriendly` filter). Surfaced as a 'Picked for you / Built for {goal}' strip above the supplements catalogue (server component in the page; renders only for logged-in users with a goal + matching active products). No API key, no external calls. Strict+noUnusedLocals clean. First moat-deepening (F13) feature; degrades gracefully on empty catalogue / no goal.
+- `Aug 18, 2026` — **F18/F19 AI trainer un-parked (Decision #215):** `lib/ai-trainer/` had shipped a complete context engine on 29 Jul and been imported by NOTHING for three weeks. Given a consumer: `persona.ts` (12-SAFE — frozen zero-interpolation system prompt so it is a real cache prefix; medical boundary, ED guardrails at the same 1200 kcal FLOOR as `coach/recalibration.ts`, no-mutation rule, injection resistance; tone modulates by consistency score in a suffix), `client.ts` (Claude Opus 5, streaming, adaptive thinking, cache breakpoint on the context block, server-side refusal fallback), `app/api/trainer/chat` (session -> new `aiChat` rate-limit preset -> Zod -> config, NDJSON so errors arrive in-stream), `app/dashboard/trainer` (on `_app/theme`, links both ways with `/dashboard/coach`), `store.ts` (12C persistence; `AiConversation`/`AiMessage` **pushed to live Neon** — purely additive, all pre-existing counts unchanged; client-supplied conversationId ownership-checked before any write). Surfaced on `/` via a services card + rail link. **KEY STILL ABSENT** — `isTrainerConfigured()` is false and the screen says so rather than 500ing, so THE MODEL CALL HAS NEVER BEEN EXECUTED. tsc/eslint/build clean; 401, signin redirect and the persistence round-trip (incl. a refused cross-user append) verified against live. Also hardened `cron/generate-deliveries`, which failed OPEN when CRON_SECRET was unset.
 - `Jun 23, 2026` — **F11 PDF Blob caching (Decision #213):** `app/api/digital-plan/[slug]/pdf/route.tsx` now caches the rendered PDF in Vercel Blob instead of re-running `renderToBuffer` every download. Key = `digital-plans/{userId}/{slug}-{bundle}-{sha1(person+bundle+slug)[:12]}.pdf` — personalisation-hashed so a buyer’s stat change auto-invalidates; never serves stale. Cache served server-side through the authed route (no public-link leak); all Blob ops wrapped in try/catch → falls back to rendering, so caching can’t break a download. Strict gate clean. **F11 brand-fonts deferred:** the doc deliberately uses built-in Helvetica with a ‘no remote fonts → render never fails’ guarantee; brand fonts need actual .ttf files bundled in-repo (remote URLs would break that guarantee) — Chintu must add Barlow Condensed / Space Mono .ttf to e.g. public/fonts, then a Font.register pass. **All launch-blocking BUILDS now done; remainder = ops/content + F12 launch process.**
 - `Jun 23, 2026` — **F8 public TDEE calculator (Decision #212):** `/tdee-calculator` — server page (SEO metadata + canonical) + `TdeeCalculator` client. Mifflin–St Jeor BMR → activity TDEE → goal-adjusted calories (lose −20% / maintain / build +10%) + macro split (protein/kg, 25% fat, carb remainder). Live calorie ring + macro bar in the athletic aesthetic; goal-colored accent; CTA funnels to /plans ('See plans that hit N kcal'). Acquisition top-of-funnel (high-search term). Strict+noUnusedLocals clean. Sitemap updated with /tdee-calculator + /refund-policy. **F11 (PDF Blob caching + brand fonts) is the last launch build — needs grounding the PDF-gen pipeline before touching.**
 - `Jun 23, 2026` — **F6/F29/F30/F31 launch batch (Decision #211):** **F29** `/refund-policy` page (route matches Terms link; mirrors legal-page style; 10 sections incl. trial/COD/digital/supplements/timeline; contact wired). **F30** `opengraph-image.tsx` (1200x630 dark/lime share card via next/og), `icon.tsx` (lime ⚡ app icon), `manifest.ts` (PWA, theme #080808, standalone). **F31** layout adds `@vercel/analytics` + `@vercel/speed-insights` (needs `npm i @vercel/analytics @vercel/speed-insights`); Sentry left optional (needs DSN). **F6** `/supplements` affiliate-disclosure footer appended in the server wrapper (no client edit). Strict gate clean (refund/og/icon/manifest), scope gate clean (layout/supplements). Closes F6, F29, F30; F31 done pending the npm install.
