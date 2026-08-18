@@ -39,6 +39,7 @@ import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import { SERVICES } from "./services";
 import HomeBands, { type BandCounts, type Quote } from "./HomeBands";
 import Platform from "./Platform";
+import Behind from "./Behind";
 import s from "./app.module.css";
 
 /* Alias so helper components can reach the stylesheet without shadowing the
@@ -1411,6 +1412,12 @@ export default function FitFuelApp({
           They sit here, BELOW the catalog, because AGENTS.md is explicit that
           nothing pushes food down the page. */}
       <HomeBands counts={bandCounts} quotes={quotes} />
+
+      {/* ── The operation, and the buyers who are not the eater ──────────
+          The recipe production system, the delivery chain, the partner network
+          and corporate. All four are real, all four had no presence on this
+          page beyond at most one card near the footer. */}
+      <Behind counts={bandCounts} />
 
       {/* ── Services ─────────────────────────────────────────────────────
           The v2 homepage argued these as scrolling sections. A webapp carries

@@ -2398,3 +2398,128 @@
   .platformRow, .platformArrow { transition: none; }
   .platformRow:hover .platformArrow { transform: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WHAT HAPPENS BEFORE THE BOX REACHES YOU
+
+   Four claims about the operation, on the paper ground so the band reads as a
+   change of subject from the app list above it. Two columns from 720px, one
+   below — no photograph, because there is no photograph of "a production sheet"
+   that isn't a stock picture of a kitchen, and lib/site-images.ts is explicit
+   that a stand-in may only hold a slot whose subject it actually matches.
+   ══════════════════════════════════════════════════════════════════════════ */
+.behind { border-top: 1px solid var(--fk-line); background: var(--fk-paper); }
+.behindInner {
+  max-width: var(--fk-max);
+  margin: 0 auto;
+  padding: var(--fk-s-8) var(--fk-s-5);
+}
+.behindH {
+  font-family: var(--fk-display);
+  font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--fk-ink);
+  margin: 0;
+  text-wrap: balance;
+}
+.behindDeck {
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-2);
+  margin: 8px 0 0;
+  max-width: 56ch;
+}
+.behindGrid {
+  display: grid;
+  gap: var(--fk-s-5) var(--fk-s-7);
+  margin-top: var(--fk-s-6);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) { .behindGrid { grid-template-columns: 1fr 1fr; } }
+.behindItem {
+  border-top: 2px solid var(--fk-green);
+  padding-top: var(--fk-s-4);
+}
+.behindItem b {
+  display: block;
+  font-size: var(--fk-t-sm);
+  font-weight: 650;
+  color: var(--fk-ink);
+  line-height: 1.35;
+}
+.behindItem p {
+  margin: 6px 0 0;
+  font-size: var(--fk-t-xs);
+  line-height: 1.55;
+  color: var(--fk-ink-3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NOT ONLY FOR ONE PERSON AT A TIME
+
+   A gym owner and an HR manager are buying something a person choosing lunch
+   is not, and each had exactly one card near the footer. Two real cards, whole
+   surface clickable.
+   ══════════════════════════════════════════════════════════════════════════ */
+.b2b { border-top: 1px solid var(--fk-line); background: var(--fk-surface); }
+.b2bInner {
+  max-width: var(--fk-max);
+  margin: 0 auto;
+  padding: var(--fk-s-8) var(--fk-s-5);
+}
+.b2bH {
+  font-family: var(--fk-display);
+  font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--fk-ink);
+  margin: 0 0 var(--fk-s-6);
+  text-wrap: balance;
+}
+.b2bGrid { display: grid; gap: var(--fk-s-5); grid-template-columns: 1fr; }
+@media (min-width: 720px) { .b2bGrid { grid-template-columns: 1fr 1fr; } }
+.b2bCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--fk-s-6);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--fk-dur) var(--fk-ease);
+}
+.b2bCard:hover { border-color: var(--fk-green); }
+.b2bKicker {
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  color: var(--fk-green);
+}
+.b2bCard b {
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-md);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--fk-ink);
+}
+.b2bCard p {
+  margin: 0;
+  font-size: var(--fk-t-xs);
+  line-height: 1.55;
+  color: var(--fk-ink-3);
+}
+.b2bGo {
+  margin-top: auto;
+  padding-top: var(--fk-s-3);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+.b2bCard:hover .b2bGo { color: var(--fk-green-deep); }
+
+@media (prefers-reduced-motion: reduce) {
+  .b2bCard { transition: none; }
+}

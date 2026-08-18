@@ -79,8 +79,12 @@ export default function HomeBands({
           route at all. */}
       <section className={s.band} aria-labelledby="band-conditions">
         <div className={s.bandInner}>
+          {/* The ratio alone left "a condition" abstract — 29 is the figure that
+              makes a reader look for their own. Off CONDITIONS.length, so it
+              cannot drift from the list rendered directly below it. */}
           <h2 id="band-conditions" className={s.bandH}>
-            {counts.conditionPlans} of the {counts.plans} plans are built for a condition
+            {counts.conditionPlans} of the {counts.plans} plans are built for a
+            condition, across {CONDITIONS.length} of them
           </h2>
           <p className={s.bandP}>
             Not a low-calorie box with a label on it. A diabetic plan holds its
