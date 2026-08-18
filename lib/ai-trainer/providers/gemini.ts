@@ -35,12 +35,17 @@ import type { ProviderDelta, ProviderRequest, TrainerProvider } from "../provide
 
 const KEY = process.env.GEMINI_API_KEY?.trim() ?? "";
 
-/* Both this and gemini-3.7-flash are on Google's free-tier list. Defaulting to
-   2.5 rather than the newest because it is the one this integration was written
-   and reasoned against; override in the environment to move up without a
-   deploy. The coach reads a month of one person's numbers — Flash is the right
-   size for that, and Pro is not free. */
-const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
+/* WHY 3.6 AND NOT 2.5. The pricing page lists gemini-2.5-flash as free-tier, so
+   it was the original default — but the API rejects it for accounts created
+   recently: "This model is no longer available to new users. Please update your
+   code to use models/gemini-3.6-flash." A free-tier LISTING is not the same as
+   availability to a new project, and only a real call surfaces the difference.
+   Taking the model named by Google's own error rather than guessing again.
+
+   Override in the environment to move without a deploy; gemini-3.7-flash is
+   also free-tier. The coach reads a month of one person's numbers — Flash is
+   the right size for that, and Pro is not free. */
+const MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
 
 const ENDPOINT = (model: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
