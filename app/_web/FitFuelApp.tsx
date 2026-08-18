@@ -731,6 +731,47 @@ export default function FitFuelApp({
     });
   }, [supplements, dq, suppCat]);
 
+  /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
+     Measured: 48 dish cards ran 13,396px of a 19,058px page — sixteen phone
+     screens of near-identical cards — and every argument for the business sat
+     underneath it. Scale at 13,920px, conditions at 14,360, proof at 15,224,
+     all seven services at 16,002. Nobody scrolls to screen twenty, so none of
+     it existed.
+
+     Nothing is removed. The first twelve are shown, the rest are one tap away,
+     and search and the filter chips still run over the FULL catalogue — so
+     typing "pcos" or "keto" still reaches every match instantly. What changes
+     is that the page stops being a wall before it has said anything.
+
+     Twelve, not six: on a 4-column desktop grid that is three full rows, so
+     the catalogue still reads as a catalogue rather than a teaser. */
+  const PREVIEW = 12;
+  /* Keyed on the filter signature rather than reset in an effect — expanding
+     "keto" and then searching "juice" should not silently keep you expanded,
+     and doing it this way needs no effect and cannot desync. */
+  const filterKey = `${mode}|${dq}|${course}|${planCat}|${planDiet}|${suppCat}|${onlyOrderable}`;
+  const [expandedFor, setExpandedFor] = useState<string | null>(null);
+  const expanded = expandedFor === filterKey;
+  const cap = <T,>(list: T[]): T[] => (expanded ? list : list.slice(0, PREVIEW));
+
+  /* The "show the rest" control, under whichever grid is live.
+     A render HELPER, not a component: declaring a component inside render gives
+     it a new identity every pass, so React unmounts and remounts it on each
+     keystroke — losing focus and replaying the entrance animation. Returning
+     nodes from a plain function has none of that. */
+  const showAllControl = (total: number, noun: string) =>
+    expanded || total <= PREVIEW ? null : (
+      <div className={s.showAllWrap}>
+        <button type="button" className={s.showAll} onClick={() => setExpandedFor(filterKey)}>
+          Show all {total.toLocaleString("en-IN")} {noun}
+        </button>
+        <p className={s.showAllNote}>
+          Showing {PREVIEW}. Search and the filters above run over all{" "}
+          {total.toLocaleString("en-IN")}.
+        </p>
+      </div>
+    );
+
   const orderableCount = results.filter((d) => d.orderable).length;
   const basketCount = cart.totals.count;
   /* Adding another dish brings the bar back. Without this one dismissal
@@ -1022,7 +1063,52 @@ export default function FitFuelApp({
                 a big "FitFuel" banner would be a landing-page habit. It is a
                 stable sentence, not the filtered heading, so a screen reader
                 does not get a new page title every time a chip is tapped. */}
-            <h1 className="fk-sr-only">FitFuel — order healthy food in Pune</h1>
+            {/* ── THE PAGE NOW SAYS WHAT IT IS ──────────────────────────────
+                This was `fk-sr-only`. The reasoning was that the wordmark
+                states the brand and the result heading states the view, so a
+                banner would be a landing-page habit. Measured against a real
+                visitor that argument fails: the first 108 words of this page
+                were a search box, six filter chips and a price, and none of
+                them said what FitFuel is or that it cooks for 70 conditions.
+                Someone arriving from a link had no idea what they were looking
+                at.
+
+                It is two lines of type, not a hero. Nothing is pushed below the
+                fold — measured after, the first dish card sits at essentially
+                the same height, because the sr-only h1 was already occupying
+                the block and the offer row shrank to pay for the deck. */}
+            <h1 className={s.claim}>Food cooked to your numbers.</h1>
+            {/* The deck must NOT repeat the delivery promise. The cutoff row
+                above it is mode-aware — "delivered across Kharadi today" for a
+                single meal, "at your door by 8am" for a plan — and an earlier
+                draft of this line said "by 8am" over a 48-dish menu, which is
+                the exact mistake that row's own comment was written to prevent.
+                So this says the part nothing else on the fold says. */}
+            <p className={s.claimDeck}>
+              Weighed to your macros, cooked in our own kitchen, and logged in
+              the app for you.
+            </p>
+
+            {/* ── THE SCALE, WHERE IT CAN ACTUALLY BE READ ──────────────────
+                These six figures already existed, in HomeBands, at 13,920px —
+                seventeen screens down, under the entire 48-card grid. They are
+                the whole argument for the price and nobody had ever reached
+                them. Same numbers, same source (counted from the database in
+                page.tsx, never typed), moved to where they do work. */}
+            <ul className={s.proof} aria-label="What the kitchen runs">
+              {[
+                [bandCounts.dishes, "dishes"],
+                [bandCounts.plans, "meal plans"],
+                [bandCounts.conditionPlans, "for a condition"],
+                [bandCounts.exercises, "exercises"],
+                [bandCounts.supplements, "supplements"],
+              ].map(([n, label]) => (
+                <li key={String(label)}>
+                  <b className="fk-num">{Number(n).toLocaleString("en-IN")}</b>
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ul>
 
             {/* The offer is a row, not a hero. It never pushes food below the fold. */}
             <div className={s.offer}>
@@ -1060,8 +1146,9 @@ export default function FitFuelApp({
             </div>
 
             {mode === "supps" ? (
+              <>
               <ul className={s.grid}>
-                {suppResults.map((x) => (
+                {cap(suppResults).map((x) => (
                   <li key={x.slug} className={s.card}>
                     <div className={s.shotPlaceholder} aria-hidden="true">
                       <span>{x.category}</span>
@@ -1089,9 +1176,12 @@ export default function FitFuelApp({
                   </li>
                 ))}
               </ul>
+              {showAllControl(suppResults.length, "supplements")}
+              </>
             ) : mode === "plans" ? (
+              <>
               <ul className={s.grid}>
-                {planResults.map((p) => (
+                {cap(planResults).map((p) => (
                   <li key={p.slug} className={s.card}>
                     {/* The image slot is KEPT as a labelled placeholder. There is
                         no photography pipeline yet; when one lands, this well
@@ -1165,6 +1255,8 @@ export default function FitFuelApp({
                   </li>
                 ))}
               </ul>
+              {showAllControl(planResults.length, "plans")}
+              </>
             ) : results.length === 0 ? (
               /* No off-domain escape hatch here either. An empty search result
                  is not a reason to hand the customer to another company's app —
@@ -1189,8 +1281,9 @@ export default function FitFuelApp({
                 </span>
               </div>
             ) : (
+              <>
               <ul className={s.grid}>
-                {results.map((d) => (
+                {cap(results).map((d) => (
                   <li key={d.id} className={s.card}>
                     {!images[d.slot] ? (
                       /* The reserved space a photograph drops into. Drop a file
@@ -1296,6 +1389,8 @@ export default function FitFuelApp({
                   </li>
                 ))}
               </ul>
+              {showAllControl(results.length, "dishes")}
+              </>
             )}
           </div>
         </div>

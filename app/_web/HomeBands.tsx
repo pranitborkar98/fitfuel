@@ -66,32 +66,12 @@ export default function HomeBands({
 }) {
   return (
     <>
-      {/* ── The scale of the catalogue ──────────────────────────────────────
-          Six figures, flat. This is Ticker.tsx and Counts.tsx rebuilt without
-          the marquee the owner rejected: a number that slides past cannot be
-          read, and these are the whole argument for the price. */}
-      <section className={s.band} aria-labelledby="band-counts">
-        <div className={s.bandInner}>
-          <h2 id="band-counts" className={s.bandH}>
-            What the kitchen actually runs
-          </h2>
-          <ul className={s.countRow}>
-            {[
-              [counts.dishes, "dishes on the menu"],
-              [counts.plans, "meal plans"],
-              [counts.conditionPlans, "built for a condition"],
-              [counts.recipes, "weighed recipes"],
-              [counts.exercises, "exercises programmed"],
-              [counts.supplements, "supplements researched"],
-            ].map(([n, label]) => (
-              <li key={String(label)}>
-                <b className="fk-num">{Number(n).toLocaleString("en-IN")}</b>
-                <span>{label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {/* ── The counts band has MOVED, not been deleted ─────────────────────
+          It rendered here, at 13,920px — seventeen phone screens down, beneath
+          the whole 48-card grid. Six figures that are the entire argument for
+          the price, placed where no customer had ever scrolled. They now sit
+          directly under the headline in FitFuelApp, off the same database
+          counts. Repeating them here would just be saying it twice. */}
 
       {/* ── Conditions ──────────────────────────────────────────────────────
           The hardest thing here for a tiffin service to copy, and the reason a

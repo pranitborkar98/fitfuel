@@ -2195,3 +2195,113 @@
     padding: var(--fk-s-4);
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE FOLD SAYS WHAT THIS IS
+
+   The page opened on a search box and six filter chips: 108 words before the
+   first dish, none of which said what FitFuel is or that it cooks for seventy
+   conditions. The h1 existed but was `fk-sr-only` — stated only to screen
+   readers, which is the one audience that was never confused.
+
+   This is two lines of type and a row of real figures, not a hero. It replaces
+   the space the hidden h1 already occupied and the offer row's old margin, so
+   food does not move meaningfully down the page — the constraint AGENTS.md
+   actually cares about.
+   ══════════════════════════════════════════════════════════════════════════ */
+.claim {
+  font-family: var(--fk-display);
+  /* Smaller floor than the first cut. At 1.5rem the headline wrapped to three
+     lines on a 390px phone and cost 82px of fold on its own; the whole point of
+     a two-line statement is that it is cheap. */
+  font-size: clamp(1.3rem, 1.05rem + 1.3vw, 2rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--fk-ink);
+  margin: 0;
+  text-wrap: balance;
+  max-width: 26ch;
+}
+.claimDeck {
+  font-size: var(--fk-t-sm);
+  line-height: 1.45;
+  color: var(--fk-ink-2);
+  margin: 6px 0 0;
+  max-width: 46ch;
+}
+
+/* The six figures that were stranded at 13,920px. Horizontally scrollable on a
+   phone rather than wrapped to three rows: this is a glance, not a table, and
+   it must not itself become a wall. */
+.proof {
+  display: flex;
+  gap: var(--fk-s-5);
+  margin: 10px 0 0;
+  padding: 0 0 2px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.proof::-webkit-scrollbar { display: none; }
+.proof li {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.proof b {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-green);
+  line-height: 1.1;
+}
+.proof span {
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+  white-space: nowrap;
+}
+
+/* ── Show the rest ─────────────────────────────────────────────────────────
+   The grid renders twelve and this reveals the remainder. Full width and 44px
+   so it reads as the end of a section rather than as a dropped link, and the
+   note under it exists so nobody thinks the other thirty-six dishes are gone —
+   search and the chips have been running over all of them the whole time. */
+.showAllWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 var(--fk-s-7);
+}
+.showAll {
+  min-height: var(--fk-tap);
+  width: 100%;
+  max-width: 420px;
+  padding: 0 20px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--fk-dur) var(--fk-ease), color var(--fk-dur) var(--fk-ease);
+}
+.showAll:hover {
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
+}
+.showAllNote {
+  margin: 0;
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+  text-align: center;
+}
+
+/* The grid reserved 104px of bottom padding for the order bar. With a control
+   sitting under it that gap became a hole; the wrap carries the spacing now. */
+.grid { padding-bottom: var(--fk-s-4); }
