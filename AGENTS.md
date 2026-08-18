@@ -19,6 +19,21 @@ outranks anything written before it.
 Do not reconstruct those rules from old code comments, and do not treat them as
 binding. They are history.
 
+**2026-08-18 — the palette half of that verdict is REVERSED.** Shown both
+palettes rendered on the real catalogue and asked to pick, the owner chose
+black and lime: "black only as many prefer dark themes nowadays". So
+`app/_design/tokens.css` (#070707 ground, #84cc16 accent) is CURRENT and
+correct, and the warm-paper direction is dead. Do not "fix" the palette back
+to warm on the strength of the paragraph above; it lost a fair comparison.
+
+What the 2026-08-12 verdict still governs, unchanged, is the part he actually
+called unparseable: uppercase-everything, 8.5px labels, monospace captions,
+tracked-out display type, and a meal represented by a diagram instead of a
+photograph. Dark is the ground, not a licence for a trading terminal.
+
+The empty photo wells are also SETTLED as intentional (2026-08-18): "placeholder
+are there for a reason". Do not open a brief by asking for photography.
+
 What holds instead:
 
 - FitFuel sells food. Food has to look like food and make someone hungry. A
