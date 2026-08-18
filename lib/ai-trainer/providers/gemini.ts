@@ -117,7 +117,31 @@ export const geminiProvider: TrainerProvider = {
           })),
           { role: "user", parts: [{ text: req.message }] },
         ],
-        generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
+        generationConfig: {
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
+          /* THINKING IS THE LATENCY. 3.x Flash thinks by default at medium, and
+             it finishes thinking BEFORE a single character streams — so the
+             default is not "slow to finish", it is dead air with an empty panel
+             while the customer waits. Measured on this account, same prompt:
+
+               default            87s to first word
+               thinkingBudget 512 15s, but the answer collapsed to 116 chars
+               thinkingLevel low  3.8s, full-quality 154-token answer
+
+             The `low` figure is worth stating carefully: an isolated probe of
+             it read 40s, and taking that at face value would have argued for
+             the raw budget and a gutted answer. Re-measured against the real
+             persona it is consistently under 4s. Free-tier latency swings hard
+             under contention — the SAME default call measured 32s and 87s
+             minutes apart — so a single timing here is a rumour, not a result.
+
+             `low` rather than a raw budget: it is the semantic control, so it
+             keeps meaning the same thing on the next model, where a token count
+             would not. Thinking cannot be switched off on 3.x — thinkingBudget:0
+             is rejected outright — so `low` is the floor that still answers
+             properly. */
+          thinkingConfig: { thinkingLevel: "low" },
+        },
       }),
     });
 
