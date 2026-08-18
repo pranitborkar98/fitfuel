@@ -62,14 +62,34 @@ export const geminiProvider: TrainerProvider = {
   id: `gemini:${MODEL}`,
   label: "Google Gemini Flash (free tier)",
 
-  /* Google's keys are ~39 chars and start AIza. Checked by shape so the screen
-     can say "not switched on" instead of surfacing a 400 as a broken panel —
-     the same reasoning as the Anthropic key check. */
+  /* WHY THIS IS A LENGTH CHECK AND NOT A PREFIX CHECK.
+     It was `KEY.startsWith("AIza")`, written from memory of the older Google
+     key format. AI Studio issued the owner a key beginning `AQ.` on
+     2026-08-18, so that check rejected a perfectly valid key and the screen
+     said "not switched on" with the key sitting right there in .env — the
+     exact silent failure the check exists to prevent, caused by the check.
+
+     Enumerating both prefixes would just move the bug to Google's next format
+     change. The only thing this gate actually needs to separate is "somebody
+     pasted a real key" from "this is still the placeholder", and length does
+     that: every Google key is comfortably over 30 characters and every
+     placeholder that has been in this repo is under 15. An unknown-prefix key
+     now warns once at call time (below) rather than being silently refused. */
   isConfigured() {
-    return KEY.startsWith("AIza") && KEY.length > 30;
+    return KEY.length >= 30;
   },
 
   async *stream(req: ProviderRequest): AsyncIterable<ProviderDelta> {
+    /* Diagnosable rather than silent: an unfamiliar prefix is very likely still
+       a valid key (Google has changed the format at least once), so it is not
+       refused — but if the call then fails on auth, this line is what tells the
+       next person why to look at the key rather than at the request body. */
+    if (!KEY.startsWith("AIza") && !KEY.startsWith("AQ.")) {
+      console.warn(
+        `[ai-trainer] GEMINI_API_KEY has an unrecognised prefix (${KEY.slice(0, 3)}...). Proceeding anyway; if this 401s, check the key.`,
+      );
+    }
+
     const res = await fetch(ENDPOINT(MODEL), {
       method: "POST",
       headers: {
