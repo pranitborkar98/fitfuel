@@ -32,7 +32,8 @@ export type RateLimitPreset =
   | "creditPreview"
   | "partnerApply"
   | "mutation"
-  | "read";
+  | "read"
+  | "aiChat";
 
 interface PresetConfig {
   tokens: number;
@@ -58,6 +59,11 @@ const PRESETS: Record<RateLimitPreset, PresetConfig> = {
   mutation:       { tokens: 60, window: "1 m",  windowMs: 60_000 },
   // Generic read.
   read:           { tokens: 120, window: "1 m", windowMs: 60_000 },
+  // The AI coach. Every call spends real money on a frontier model, so this is
+  // the one preset that exists to protect the bill rather than the database.
+  // Tight per minute to stop a held-down key, roomier than `mutation` would be
+  // over an hour so a genuine coaching conversation is never cut off mid-thread.
+  aiChat:         { tokens: 12, window: "5 m",  windowMs: 5 * 60_000 },
 };
 
 /* ───────────────────────── Client IP ───────────────────────── */

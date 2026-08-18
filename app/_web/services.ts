@@ -34,6 +34,17 @@ export const SERVICES: Service[] = [
     blurb:
       "Four weigh-ins that disagree with your goal move your target, with the arithmetic shown.",
   },
+  /* The conversational half, added with Phase 12B. Listed separately from the
+     coach above because they are genuinely different products: that one is
+     arithmetic you can audit, this one is a conversation. Pointing both at one
+     card would have hidden whichever the customer wasn't shown. */
+  {
+    href: "/dashboard/trainer",
+    label: "Ask the coach",
+    stat: "Reads your last 30 days",
+    blurb:
+      "Why the scale stalled, whether your protein is short, what to eat tonight — answered against your own logged numbers.",
+  },
   {
     href: "/dashboard/exercises",
     label: "Training",

@@ -173,28 +173,28 @@ enum DeliveryWindow {
 // ============================================================
 
 model User {
-  id            String    @id @default(cuid())
-  phone         String?   @unique
-  email         String?   @unique
-  emailVerified DateTime?
-  name          String?
-  image         String?
-  avatarUrl     String?
-  role          Role      @default(CUSTOMER)
-  isActive      Boolean   @default(true)
-  referralCode  String?   @unique // generated on signup
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                     String                  @id @default(cuid())
+  phone                  String?                 @unique
+  email                  String?                 @unique
+  emailVerified          DateTime?
+  name                   String?
+  image                  String?
+  avatarUrl              String?
+  role                   Role                    @default(CUSTOMER)
+  isActive               Boolean                 @default(true)
+  referralCode           String?                 @unique // generated on signup
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
   notificationPreference NotificationPreference?
 
-  profile     UserProfile?
-  addresses   Address[]
-  orders      Order[]
-  bodyMetrics BodyMetric[]
-  activePlans ActivePlan[]
-  accounts    Account[]
-  sessions    Session[]
-  supplementClicks       SupplementClick[]
+  profile          UserProfile?
+  addresses        Address[]
+  orders           Order[]
+  bodyMetrics      BodyMetric[]
+  activePlans      ActivePlan[]
+  accounts         Account[]
+  sessions         Session[]
+  supplementClicks SupplementClick[]
 
   // ── Phase 6 — Nutrition Tracker ──
   foodItems     FoodItem[]
@@ -211,15 +211,17 @@ model User {
 
   consistencySnapshots ConsistencySnapshot[]
 
+  // ── Phase 12C — AI coach conversations ──
+  aiConversations AiConversation[]
+
+  // Phase 17A — partner system
+  referredByPartnerCode String?           @db.VarChar(64)
+  creditsBalanceRs      Int               @default(0)
+  ownedPartner          Partner?          @relation("PartnerOwner")
+  referralsAsReferee    PartnerReferral[] @relation("ReferralReferee")
+  creditLedger          CreditLedger[]    @relation("UserCredits")
+
   @@map("users")
-
-// Phase 17A — partner system
-  referredByPartnerCode    String?            @db.VarChar(64)
-  creditsBalanceRs         Int                @default(0)
-  ownedPartner             Partner?           @relation("PartnerOwner")
-  referralsAsReferee       PartnerReferral[]  @relation("ReferralReferee")
-  creditLedger             CreditLedger[]     @relation("UserCredits")
-
 }
 
 model UserProfile {
@@ -338,7 +340,6 @@ model PlanPrice {
   bundle DigitalBundle @default(STARTER)
 
   @@unique([productId, diet, duration, mealsPerDay])
-
   @@unique([mealPlanId, duration, mealsPerDay, bundle, isDigital])
   @@map("plan_prices")
 }
@@ -347,8 +348,8 @@ model PlanPrice {
 model WaitlistSignup {
   id        String   @id @default(cuid())
   email     String
-  tier      String   // "PREMIUM" | "LUXURY"
-  source    String?  // "plans_page", etc.
+  tier      String // "PREMIUM" | "LUXURY"
+  source    String? // "plans_page", etc.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -386,25 +387,24 @@ model Order {
   deliveries      Delivery[]
   payment         Payment?
   userActivePlans UserActivePlan[] // ← NEW: link to active plan record
+  mrpSubtotalRs   Int?
+  discountRs      Int              @default(0)
+  couponCode      String?
+  cgstRs          Int              @default(0)
+  sgstRs          Int              @default(0)
+  igstRs          Int              @default(0)
+  buyerStateCode  String?
+  hsnSacCode      String?
+
+  // Phase 17A — referral attribution snapshot
+  referralAttribution String?
+  creditAppliedRs     Int               @default(0)
+  referralUsage       PartnerReferral[] @relation("ReferralOrder")
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
-  mrpSubtotalRs  Int?
-  discountRs     Int     @default(0)
-  couponCode     String?
-  cgstRs         Int     @default(0)
-  sgstRs         Int     @default(0)
-  igstRs         Int     @default(0)
-  buyerStateCode String?
-  hsnSacCode     String?
-
   @@map("orders")
-
-  // Phase 17A — referral attribution snapshot
-  referralAttribution      String?
-  creditAppliedRs          Int                @default(0)
-  referralUsage            PartnerReferral[]  @relation("ReferralOrder")
 }
 
 /// What a line on an order actually is. Until 2026-08-13 an OrderItem could
@@ -418,10 +418,10 @@ enum OrderItemKind {
 }
 
 model OrderItem {
-  id          String        @id @default(cuid())
-  orderId     String
-  productId   String?
-  kind        OrderItemKind @default(PLAN)
+  id        String        @id @default(cuid())
+  orderId   String
+  productId String?
+  kind      OrderItemKind @default(PLAN)
 
   /// Subscription columns. NULLABLE as of the à la carte migration — required
   /// when kind = PLAN, meaningless when kind = DISH. Existing rows are
@@ -436,15 +436,15 @@ model OrderItem {
   /// live in lib/menu-alacarte.ts rather than in a table. `dishName` and
   /// `addOnLabel` are denormalised on purpose so an old invoice still reads
   /// correctly after the menu is edited.
-  dishId      String?
-  dishName    String?
-  addOnKind   String?
-  addOnLabel  String?
+  dishId     String?
+  dishName   String?
+  addOnKind  String?
+  addOnLabel String?
 
-  priceRs     Int
-  gstRs       Int
-  totalRs     Int
-  quantity    Int           @default(1)
+  priceRs  Int
+  gstRs    Int
+  totalRs  Int
+  quantity Int @default(1)
 
   order   Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product MealPlanProduct? @relation(fields: [productId], references: [id])
@@ -482,17 +482,17 @@ model Payment {
 // ============================================================
 
 model Delivery {
-  id             String          @id @default(cuid())
-  orderId        String
-  deliveryDate   DateTime
-  status         DeliveryStatus  @default(PREPARING)
-  mealsIncluded  String[]
-  driverName     String?
-  driverPhone    String?
-  trackingNotes  String?
-  deliveredAt    DateTime?
-  dispatchNotifiedAt   DateTime?
-  deliveryWindow DeliveryWindow?
+  id                 String          @id @default(cuid())
+  orderId            String
+  deliveryDate       DateTime
+  status             DeliveryStatus  @default(PREPARING)
+  mealsIncluded      String[]
+  driverName         String?
+  driverPhone        String?
+  trackingNotes      String?
+  deliveredAt        DateTime?
+  dispatchNotifiedAt DateTime?
+  deliveryWindow     DeliveryWindow?
 
   // ── Phase 10 — driver assignment + customer confirmation ──
   assignedDriverId    String?
@@ -622,11 +622,10 @@ model Exercise {
   secondaryMuscles String[]
   instructions     String[]
   images           String[]
-  modality         String  @default("strength") // strength | cardio | hiit | calisthenics | mobility | sport
-  met              Float   @default(4.0)         // real metabolic equivalent
+  modality         String   @default("strength") // strength | cardio | hiit | calisthenics | mobility | sport
+  met              Float    @default(4.0) // real metabolic equivalent
   progressionGroup String? // skill-chain id (e.g. "pushup") for calisthenics progressions
-  progressionLevel Int?    // 1..n position within the chain
-
+  progressionLevel Int? // 1..n position within the chain
 
   workoutExercises WorkoutExercise[]
 
@@ -1054,13 +1053,12 @@ model UserActivePlan {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([userId, status])
-  @@index([endDate])
-  isDigital Boolean @default(false)
+  isDigital Boolean  @default(false)
 
   bundle DigitalBundle @default(STARTER)
 
+  @@index([userId, status])
+  @@index([endDate])
   @@map("user_active_plans")
 }
 
@@ -1197,7 +1195,7 @@ model CouponRedemption {
   @@index([couponId, userId])
   @@map("coupon_redemptions")
 }
- 
+
 enum DigitalBundle {
   STARTER
   PRO
@@ -1237,14 +1235,14 @@ model BlogPost {
 }
 
 model Faq {
-  id        String   @id @default(cuid())
-  category  String // Delivery & Areas, Plans & Menu, Tracking, Dietary & Allergens, Pricing & Payment, Account
-  question  String
+  id         String   @id @default(cuid())
+  category   String // Delivery & Areas, Plans & Menu, Tracking, Dietary & Allergens, Pricing & Payment, Account
+  question   String
   answerHtml String // light HTML — allows inline links to legal pages
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([category, sortOrder])
   @@map("faqs")
@@ -1268,6 +1266,7 @@ model Testimonial {
   @@index([isActive, sortOrder])
   @@map("testimonials")
 }
+
 enum NotificationChannel {
   WHATSAPP
   EMAIL
@@ -1282,42 +1281,42 @@ enum NotificationStatus {
 }
 
 model NotificationTemplate {
-  id                   String              @id @default(cuid())
-  key                  String              @unique
-  name                 String
-  description          String?
-  channel              NotificationChannel
-  category             String
+  id          String              @id @default(cuid())
+  key         String              @unique
+  name        String
+  description String?
+  channel     NotificationChannel
+  category    String
 
   whatsappTemplateName String?
-  whatsappLanguage     String?             @default("en")
+  whatsappLanguage     String? @default("en")
   whatsappVariables    String?
 
-  emailSubject         String?
-  emailBody            String?
+  emailSubject String?
+  emailBody    String?
 
-  active               Boolean             @default(true)
-  isStaff              Boolean             @default(false)
+  active  Boolean @default(true)
+  isStaff Boolean @default(false)
 
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("notification_templates")
 }
 
 model NotificationLog {
-  id           String              @id @default(cuid())
-  userId       String?
-  userEmail    String?
-  userPhone    String?
-  templateKey  String
-  channel      NotificationChannel
-  status       NotificationStatus
-  provider     String?
-  providerRef  String?
-  payload      Json?
-  error        String?
-  createdAt    DateTime            @default(now())
+  id          String              @id @default(cuid())
+  userId      String?
+  userEmail   String?
+  userPhone   String?
+  templateKey String
+  channel     NotificationChannel
+  status      NotificationStatus
+  provider    String?
+  providerRef String?
+  payload     Json?
+  error       String?
+  createdAt   DateTime            @default(now())
 
   @@index([userId, createdAt])
   @@index([templateKey, createdAt])
@@ -1325,23 +1324,24 @@ model NotificationLog {
 }
 
 model NotificationPreference {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orderUpdates     Boolean  @default(true)
-  deliveryUpdates  Boolean  @default(true)
-  weeklyDigest     Boolean  @default(true)
-  morningPush      Boolean  @default(true)
-  nudges           Boolean  @default(true)
-  marketing        Boolean  @default(false)
-  whatsappEnabled  Boolean  @default(true)
-  emailEnabled     Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  eveningRecap     Boolean  @default(true)
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderUpdates    Boolean  @default(true)
+  deliveryUpdates Boolean  @default(true)
+  weeklyDigest    Boolean  @default(true)
+  morningPush     Boolean  @default(true)
+  nudges          Boolean  @default(true)
+  marketing       Boolean  @default(false)
+  whatsappEnabled Boolean  @default(true)
+  emailEnabled    Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  eveningRecap    Boolean  @default(true)
 
   @@map("notification_preferences")
 }
+
 enum PartnerType {
   CUSTOMER
   GYM
@@ -1385,71 +1385,71 @@ enum PayoutStatus {
 }
 
 model Partner {
-  id                 String              @id @default(cuid())
-  type               PartnerType
-  status             PartnerStatus       @default(PENDING)
+  id     String        @id @default(cuid())
+  type   PartnerType
+  status PartnerStatus @default(PENDING)
 
-  name               String
-  contactEmail       String?
-  contactPhone       String?
+  name         String
+  contactEmail String?
+  contactPhone String?
 
   // The user that "owns" this partner (logs in to see their dashboard).
   // For CUSTOMER: same as the customer user. For others: their FitFuel account.
-  ownerUserId        String?             @unique
-  ownerUser          User?               @relation("PartnerOwner", fields: [ownerUserId], references: [id])
+  ownerUserId String? @unique
+  ownerUser   User?   @relation("PartnerOwner", fields: [ownerUserId], references: [id])
 
   // Tracking
-  code               String              @unique
-  customLandingSlug  String?             @unique
+  code              String  @unique
+  customLandingSlug String? @unique
 
   // Reward config (per-partner, set by admin)
-  rewardType         PartnerRewardType
-  rewardValueRs      Int                 @default(0)
-  refereeDiscountRs  Int                 @default(0)
+  rewardType        PartnerRewardType
+  rewardValueRs     Int               @default(0)
+  refereeDiscountRs Int               @default(0)
 
   // Type-specific fields (nullable, only set when relevant)
   // GYM
-  gymAddress         String?
-  gymManagerName     String?
+  gymAddress          String?
+  gymManagerName      String?
   // TRAINER / INFLUENCER
-  bio                String?
-  specialty          String?
-  profilePhotoUrl    String?
-  socialHandle       String?
-  followerCount      Int?
+  bio                 String?
+  specialty           String?
+  profilePhotoUrl     String?
+  socialHandle        String?
+  followerCount       Int?
   // DIETICIAN / DOCTOR
-  qualification      String?
-  registrationNumber String?
-  clinicName         String?
-  credentialDocUrl   String?
+  qualification       String?
+  registrationNumber  String?
+  clinicName          String?
+  credentialDocUrl    String?
   hospitalAffiliation String?
   // CORPORATE
-  companyLogoUrl     String?
-  allowedEmailDomain String?
-  hrContactName      String?
+  companyLogoUrl      String?
+  allowedEmailDomain  String?
+  hrContactName       String?
   // RESIDENCE
-  treasurerContact   String?
-  societyAddress     String?
+  treasurerContact    String?
+  societyAddress      String?
 
   // Tax/payout (schema only \u2014 admin UI deferred to 17C)
-  panNumber          String?
-  gstNumber          String?
-  bankAccountName    String?
-  bankAccountNumber  String?
-  bankIfsc           String?
+  panNumber         String?
+  gstNumber         String?
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIfsc          String?
 
   // Admin
-  adminNotes         String?
-  internalLabel      String?
-  createdById        String?
-  approvedAt         DateTime?
-  approvedById       String?
+  adminNotes    String?
+  internalLabel String?
+  createdById   String?
+  approvedAt    DateTime?
+  approvedById  String?
 
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  referrals          PartnerReferral[]
-  payouts            PartnerPayout[]
+  referrals PartnerReferral[]
+  payouts   PartnerPayout[]
 
   @@index([type, status])
   @@index([code])
@@ -1457,25 +1457,25 @@ model Partner {
 }
 
 model PartnerReferral {
-  id              String              @id @default(cuid())
-  partnerId       String
-  partner         Partner             @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  partnerId String
+  partner   Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
 
-  refereeUserId   String?
-  refereeUser     User?               @relation("ReferralReferee", fields: [refereeUserId], references: [id])
-  refereeOrderId  String?
-  refereeOrder    Order?              @relation("ReferralOrder", fields: [refereeOrderId], references: [id])
+  refereeUserId  String?
+  refereeUser    User?   @relation("ReferralReferee", fields: [refereeUserId], references: [id])
+  refereeOrderId String?
+  refereeOrder   Order?  @relation("ReferralOrder", fields: [refereeOrderId], references: [id])
 
-  status          ReferralStatus      @default(SIGNED_UP)
+  status ReferralStatus @default(SIGNED_UP)
 
   // Snapshot of reward at time of trigger
-  rewardType      PartnerRewardType
-  rewardAmountRs  Int                 @default(0)
+  rewardType     PartnerRewardType
+  rewardAmountRs Int               @default(0)
 
-  payoutId        String?
+  payoutId String?
 
-  createdAt       DateTime            @default(now())
-  rewardEarnedAt  DateTime?
+  createdAt      DateTime  @default(now())
+  rewardEarnedAt DateTime?
 
   @@index([partnerId, status])
   @@index([refereeUserId])
@@ -1483,163 +1483,220 @@ model PartnerReferral {
 }
 
 model PartnerPayout {
-  id                String         @id @default(cuid())
-  partnerId         String
-  partner           Partner        @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  partnerId String
+  partner   Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
 
-  periodYearMonth   String
-  amountRs          Int
-  referralCount     Int            @default(0)
+  periodYearMonth String
+  amountRs        Int
+  referralCount   Int    @default(0)
 
-  status            PayoutStatus   @default(PENDING)
-  paidAt            DateTime?
-  paymentRef        String?
+  status     PayoutStatus @default(PENDING)
+  paidAt     DateTime?
+  paymentRef String?
 
-  createdAt         DateTime       @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([partnerId, periodYearMonth])
   @@map("partner_payouts")
 }
 
 model CreditLedger {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation("UserCredits", fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("UserCredits", fields: [userId], references: [id], onDelete: Cascade)
 
-  deltaRs         Int
-  reason          String
-  refReferralId   String?
-  refOrderId      String?
+  deltaRs       Int
+  reason        String
+  refReferralId String?
+  refOrderId    String?
 
-  createdAt       DateTime      @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
   @@map("credit_ledger")
 }
 
 model SupplementCategory {
-  id           String       @id @default(cuid())
-  slug         String       @unique
-  name         String
-  description  String?
-  emoji        String?
-  accentColor  String?
-  sortOrder    Int          @default(0)
-  isActive     Boolean      @default(true)
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  emoji       String?
+  accentColor String?
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
 
-  supplements  Supplement[]
+  supplements Supplement[]
 
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("supplement_categories")
 }
 
 model Supplement {
-  id                String              @id @default(cuid())
-  slug              String              @unique
-  name              String
-  brandName         String?
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  name      String
+  brandName String?
 
   // ── Educational content (preserves rich data from static file) ──
-  aka               String[]
-  tagline           String?
-  description       String?             @db.Text
-  mechanism         String?             @db.Text
-  benefits          String[]
-  dosage            String?
-  timing            String?
-  onsetTime         String?
-  halfLife          String?
-  form              String?
-  cyclingRequired   Boolean             @default(false)
-  cyclingProtocol   String?
-  stacksWith        String[]
-  avoidWith         String[]
-  warnings          String?             @db.Text
-  sideEffects       String[]
-  genderNotes       String?             @db.Text
-  ageNotes          String?             @db.Text
+  aka             String[]
+  tagline         String?
+  description     String?  @db.Text
+  mechanism       String?  @db.Text
+  benefits        String[]
+  dosage          String?
+  timing          String?
+  onsetTime       String?
+  halfLife        String?
+  form            String?
+  cyclingRequired Boolean  @default(false)
+  cyclingProtocol String?
+  stacksWith      String[]
+  avoidWith       String[]
+  warnings        String?  @db.Text
+  sideEffects     String[]
+  genderNotes     String?  @db.Text
+  ageNotes        String?  @db.Text
 
   // ── Evidence ──
-  evidenceLevel     String?   // "very_high" | "high" | "moderate" | "low" | "preliminary"
-  studyCount        String?
-  keyStudyFindings  String[]
+  evidenceLevel    String? // "very_high" | "high" | "moderate" | "low" | "preliminary"
+  studyCount       String?
+  keyStudyFindings String[]
 
   // ── Commercial / display ──
-  priceRange        String?   // display only — real prices live on SupplementLink rows
-  valueRating       String?   // "exceptional" | "good" | "moderate" | "expensive"
-  veganFriendly     Boolean   @default(false)
-  certificationNote String?   @db.Text
-  popular           Boolean   @default(false)
+  priceRange        String? // display only — real prices live on SupplementLink rows
+  valueRating       String? // "exceptional" | "good" | "moderate" | "expensive"
+  veganFriendly     Boolean @default(false)
+  certificationNote String? @db.Text
+  popular           Boolean @default(false)
   indiaAvailability String?
-  indiaNote         String?   @db.Text
+  indiaNote         String? @db.Text
 
-  imageUrl          String?
-  emoji             String?
-  accentColor       String?
+  imageUrl    String?
+  emoji       String?
+  accentColor String?
 
   // ── Targeting (multi-goal: a Whey Isolate serves MUSCLE_GAIN + BALANCED) ──
-  recommendedFor    SupplementGoal[]
+  recommendedFor SupplementGoal[]
 
-  categoryId        String
-  category          SupplementCategory  @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   SupplementCategory @relation(fields: [categoryId], references: [id])
 
-  sortOrder         Int                 @default(0)
-  isFeatured        Boolean             @default(false)
-  isActive          Boolean             @default(true)
+  sortOrder  Int     @default(0)
+  isFeatured Boolean @default(false)
+  isActive   Boolean @default(true)
 
-  links             SupplementLink[]
-  clicks            SupplementClick[]
+  links  SupplementLink[]
+  clicks SupplementClick[]
 
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([categoryId, isActive])
   @@map("supplements")
 }
 
 model SupplementLink {
-  id              String              @id @default(cuid())
-  supplementId    String
-  supplement      Supplement          @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  supplementId String
+  supplement   Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
 
-  network         AffiliateNetwork
-  merchantLabel   String?             // override label, used when network=OTHER (e.g. "iHerb")
-  affiliateUrl    String              @db.Text
-  priceRs         Int?
-  mrpRs           Int?
-  notes           String?             // "1kg pack, 30 servings"
+  network       AffiliateNetwork
+  merchantLabel String? // override label, used when network=OTHER (e.g. "iHerb")
+  affiliateUrl  String           @db.Text
+  priceRs       Int?
+  mrpRs         Int?
+  notes         String? // "1kg pack, 30 servings"
 
-  sortOrder       Int                 @default(0)
-  isActive        Boolean             @default(true)
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
 
-  clicks          SupplementClick[]
+  clicks SupplementClick[]
 
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([supplementId, isActive])
   @@map("supplement_links")
 }
 
 model SupplementClick {
-  id              String              @id @default(cuid())
-  userId          String?
-  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
-  supplementId    String
-  supplement      Supplement          @relation(fields: [supplementId], references: [id], onDelete: Cascade)
-  linkId          String
-  link            SupplementLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
-  network         AffiliateNetwork
-  referrer        String?             @db.Text
-  ipHash          String?             // hashed for privacy — never raw IP
-  userAgent       String?             @db.Text
+  id           String           @id @default(cuid())
+  userId       String?
+  user         User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supplementId String
+  supplement   Supplement       @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+  linkId       String
+  link         SupplementLink   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  network      AffiliateNetwork
+  referrer     String?          @db.Text
+  ipHash       String? // hashed for privacy — never raw IP
+  userAgent    String?          @db.Text
 
-  createdAt       DateTime            @default(now())
+  createdAt DateTime @default(now())
 
   @@index([supplementId, createdAt])
   @@index([linkId, createdAt])
   @@index([userId, createdAt])
   @@map("supplement_clicks")
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PHASE 12C — AI COACH CONVERSATIONS
+//
+// WRITTEN BUT NOT YET PUSHED. Applying these needs `prisma db push` against
+// the live Neon database, which is a production change and not one to make
+// unasked. Until it runs, app/dashboard/trainer holds the thread in component
+// state: a reload starts fresh, and nothing is lost, because every fact the
+// coach uses is read from the customer's logged rows rather than from the
+// thread.
+//
+// The coach reads health data and answers about a customer's own body, so the
+// retention posture is deliberate: `onDelete: Cascade` means a DPDP erasure
+// request that deletes the user takes the conversations with it, with no
+// second sweep to remember.
+// ══════════════════════════════════════════════════════════════════════════
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  /// First line of the opening question, for the history list. Never generated
+  /// by the model — a title round trip costs a request and can hallucinate.
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId, updatedAt])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           AiRole
+  content        String   @db.Text
+  /// Per-turn token counts, for the cost dashboard Phase 12H needs. Nullable
+  /// because a turn that failed mid-stream still deserves to be recorded.
+  inputTokens    Int?
+  outputTokens   Int?
+  /// Set when Opus 5's classifiers declined the turn, so a run of refusals is
+  /// visible as a pattern rather than as silence.
+  refusedReason  String?
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+enum AiRole {
+  USER
+  ASSISTANT
 }

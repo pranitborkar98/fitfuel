@@ -142,6 +142,7 @@ const MORE = [
      coach. Those were orphaned when `/` became the app — reachable from nowhere
      — so this link is not decoration, it is the only way back to them. */
   { href: "/why", label: "Why FitFuel" },
+  { href: "/dashboard/trainer", label: "Ask the coach" },
   { href: "/how-it-works", label: "How a day works" },
   { href: "/our-kitchen", label: "The kitchen" },
   { href: "/corporate", label: "For offices" },

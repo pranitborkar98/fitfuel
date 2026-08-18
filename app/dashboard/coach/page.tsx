@@ -11,6 +11,7 @@
 // Apply action is a client component, because only the Apply action has state.
 
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
@@ -126,6 +127,20 @@ export default async function CoachPage() {
                     color: C.ink, margin: 0, maxWidth: "22ch" }}>
           {review.headline}
         </p>
+        {/* The conversational half. This page states what changed and applies
+            it; the chat is where "why" and "what do I do about it" get
+            answered. Neither is much use without the other, so each links
+            across rather than leaving the customer to find the other one. */}
+        <Link
+          href="/dashboard/trainer"
+          style={{
+            display: "inline-flex", alignItems: "center", minHeight: 44,
+            marginTop: 14, color: C.lime, fontFamily: "var(--font-archivo), sans-serif",
+            fontSize: 14, fontWeight: 600,
+          }}
+        >
+          Ask the coach about this →
+        </Link>
       </header>
 
       <Rule />
