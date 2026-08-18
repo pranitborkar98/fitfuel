@@ -2305,3 +2305,96 @@
 /* The grid reserved 104px of bottom padding for the order bar. With a control
    sitting under it that gap became a hole; the wrap carries the spacing now. */
 .grid { padding-bottom: var(--fk-s-4); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ORDERING LUNCH IS THE SMALLEST THING YOU GET
+
+   A LIST, deliberately, not a card grid. The page had just been cut from 23.5
+   screens to 11 by capping a wall of near-identical cards; answering "we don't
+   express enough" by building a second wall of cards would have reintroduced
+   the exact problem with different content. Eight rows, each a stat, a name and
+   one line — the whole section reads in the time someone gives a homepage.
+   ══════════════════════════════════════════════════════════════════════════ */
+.platform { border-top: 1px solid var(--fk-line); background: var(--fk-surface); }
+.platformInner {
+  max-width: var(--fk-max);
+  margin: 0 auto;
+  padding: var(--fk-s-8) var(--fk-s-5);
+}
+.platformH {
+  font-family: var(--fk-display);
+  font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--fk-ink);
+  margin: 0;
+  text-wrap: balance;
+}
+.platformDeck {
+  font-size: var(--fk-t-sm);
+  line-height: 1.55;
+  color: var(--fk-ink-2);
+  margin: 10px 0 0;
+  max-width: 62ch;
+}
+.platformList {
+  list-style: none;
+  margin: var(--fk-s-6) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--fk-line);
+}
+.platformList li { border-bottom: 1px solid var(--fk-line); }
+
+/* The whole row is the target, so it clears 44px on its own without a min-height
+   fudge — the text alone is taller than that at every width. */
+.platformRow {
+  display: grid;
+  grid-template-columns: minmax(88px, 128px) 1fr auto;
+  gap: var(--fk-s-4);
+  align-items: baseline;
+  padding: var(--fk-s-5) 0;
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--fk-dur) var(--fk-ease);
+}
+.platformRow:hover { background: var(--fk-paper); }
+.platformRow:hover .platformArrow { transform: translateX(3px); color: var(--fk-green-deep); }
+
+.platformStat {
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-green);
+  line-height: 1.4;
+}
+.platformBody { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.platformBody b {
+  font-size: var(--fk-t-sm);
+  font-weight: 650;
+  color: var(--fk-ink);
+  line-height: 1.35;
+}
+.platformBody span {
+  font-size: var(--fk-t-xs);
+  line-height: 1.5;
+  color: var(--fk-ink-3);
+}
+.platformArrow {
+  align-self: center;
+  color: var(--fk-ink-3);
+  flex: none;
+  transition: transform var(--fk-dur) var(--fk-ease), color var(--fk-dur) var(--fk-ease);
+}
+
+/* On a phone the stat column starves the sentence, so it becomes a label ABOVE
+   the row rather than a column beside it. */
+@media (max-width: 560px) {
+  .platformRow { grid-template-columns: 1fr auto; gap: var(--fk-s-3); }
+  .platformStat { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platformRow, .platformArrow { transition: none; }
+  .platformRow:hover .platformArrow { transform: none; }
+}

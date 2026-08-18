@@ -38,6 +38,7 @@ import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import { SERVICES } from "./services";
 import HomeBands, { type BandCounts, type Quote } from "./HomeBands";
+import Platform from "./Platform";
 import s from "./app.module.css";
 
 /* Alias so helper components can reach the stylesheet without shadowing the
@@ -1395,6 +1396,14 @@ export default function FitFuelApp({
           </div>
         </div>
       </div>
+
+      {/* ── What you actually get ────────────────────────────────────────
+          Placed HERE — directly under the catalogue, ahead of the bands — on
+          purpose. The owner's complaint was that the page shows food and
+          nothing else, while eleven dashboard screens and 54 models sit behind
+          it unmentioned. It goes above conditions and proof because "there is
+          an app" has to land before "the app is good". */}
+      <Platform counts={bandCounts} />
 
       {/* ── The bands ────────────────────────────────────────────────────
           Scale, conditions and proof. All three were built for v2 and left on
