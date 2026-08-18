@@ -1,80 +1,57 @@
 // lib/ai-trainer/client.ts
 //
-// Phase 12B — the model call. The one place in the codebase that talks to an LLM.
+// Phase 12B — the coach's turn. Provider-independent since 2026-08-18.
 //
-// WHAT WAS ALREADY HERE AND WHAT WAS NOT. lib/ai-trainer/context.ts (403 lines)
-// and serialise.ts (161) have existed since 2026-07-29 and were imported by
-// NOTHING — a complete context engine with no consumer, because Phase 12B was
-// parked pending an API key. This file is the consumer. It adds no new
-// interpretation: the arithmetic, the plateau detection and the momentum call
-// all still happen in TypeScript upstream, exactly as context.ts intended.
+// WHAT THIS FILE OWNS, and what it deliberately does not. It owns the shape of
+// a turn: build the context, pick a provider, stream NDJSON to the browser,
+// translate a stop reason into something a customer can act on, and hand the
+// finished reply to the caller for storage. It does NOT own the model call —
+// that is behind ./provider, so the coach runs on a free provider today and on
+// Claude the day there is budget, with no change here.
 //
-// ── THE PROMPT IS BUILT FOR THE CACHE ──────────────────────────────────────
-// Caching is a prefix match, so the request is assembled stable-first:
+// The Anthropic integration that used to live in this file is intact in
+// ./providers/anthropic.ts, not diluted: same Opus 5, same adaptive thinking,
+// same cache breakpoint, same refusal fallback.
 //
-//   system[0]  TRAINER_SYSTEM      frozen string, identical for every user
-//   system[1]  serialised context  per user, changes about once a day  <- breakpoint
-//   messages   the conversation    changes every turn
+// ── THE PROMPT IS STILL BUILT FOR THE CACHE ────────────────────────────────
+// Assembled stable-first, and handed to every provider in the same order:
 //
-// serialise.ts was written for this — its header says the block is assembled
-// deterministically precisely so it can be cached. The breakpoint sits on the
-// context block, so a returning customer re-reads both blocks at ~0.1x instead
-// of paying full price for a 2k-token profile on every message.
+//   system   TRAINER_SYSTEM      frozen string, identical for every user
+//   context  serialised context  per user, changes about once a day
+//   messages the conversation    changes every turn
 //
-// SERVER ONLY. Never import from a client component: it reads the API key.
-
-import Anthropic from "@anthropic-ai/sdk";
+// The Anthropic provider puts a cache breakpoint on the context block, so a
+// returning customer re-reads persona + profile at ~0.1x. The Gemini provider
+// has no equivalent and re-sends it — free, so it does not matter yet, and
+// documented there so nobody assumes parity later.
+//
+// SERVER ONLY. Never import from a client component: providers read API keys.
 
 import { buildTrainerContext } from "./context";
 import { serialiseTrainerContext } from "./serialise";
 import { TRAINER_SYSTEM, toneFor } from "./persona";
+import type { TrainerProvider } from "./provider";
+import { anthropicProvider } from "./providers/anthropic";
+import { geminiProvider } from "./providers/gemini";
+import type { TrainerChunk, TrainerOutcome, TrainerTurn } from "./types";
 
-/* ── Configuration ─────────────────────────────────────────────────────────
-   A real key is `sk-ant-...` and around a hundred characters. `.env` currently
-   carries a 12-character placeholder, which would fail at request time with an
-   authentication error the customer would see as a broken screen. Checking the
-   shape up front lets the UI say "not switched on yet", which is true, instead
-   of "something went wrong", which is not. */
-const KEY = process.env.CLAUDE_API_KEY?.trim() ?? "";
+/* Re-exported so every existing importer of these types keeps working — they
+   moved to ./types only to break a cycle with the providers. */
+export type { TrainerChunk, TrainerOutcome, TrainerTurn } from "./types";
 
-export function isTrainerConfigured(): boolean {
-  return KEY.startsWith("sk-ant-") && KEY.length > 40;
+/* QUALITY FIRST, THEN FREE. Order is the whole policy: the day a real
+   CLAUDE_API_KEY lands in the environment the coach upgrades itself with no
+   code change and no deploy, and until then it runs rather than sitting dark. */
+const PROVIDERS: TrainerProvider[] = [anthropicProvider, geminiProvider];
+
+/** The provider that will answer, or null if none has a usable credential. */
+export function activeTrainerProvider(): TrainerProvider | null {
+  return PROVIDERS.find((p) => p.isConfigured()) ?? null;
 }
 
-/* Claude Opus 5. The coach reasons over a month of one person's data and has to
-   get medical boundaries right every time; this is not the surface to save on. */
-const MODEL = "claude-opus-5";
-
-/* Effort is the latency lever for this screen, and it is left at the API
-   default deliberately rather than tuned down on a guess. `medium` is the first
-   thing to try if replies feel slow in use — Opus 5 holds up unusually well
-   below `high` — but that is a product call to make against a real reply, not
-   one to bake in blind. */
-const EFFORT = "high" as const;
-
-/* Thinking counts against max_tokens on Opus 5, and thinking is ON by default
-   here — so this figure is the reply PLUS the reasoning, not the reply alone. A
-   4k budget sized for chat text would truncate mid-sentence once the coach
-   thinks about a plateau. */
-const MAX_TOKENS = 16_000;
-
-/** One turn of the stored conversation. */
-export type TrainerTurn = { role: "user" | "assistant"; content: string };
-
-/** A line of the response stream. Newline-delimited JSON: `t` is text to
- *  append, `e` is a notice to show in place of a reply, `c` is the conversation
- *  id to send back with the next turn. */
-export type TrainerChunk = { t: string } | { e: string } | { c: string };
-
-/** What the turn produced, handed to the caller once the stream has drained so
- *  persistence lives in the route rather than in here. Reported even when the
- *  turn failed — a refusal and a half-written reply are both worth recording. */
-export type TrainerOutcome = {
-  reply: string;
-  inputTokens?: number;
-  outputTokens?: number;
-  refusedReason?: string;
-};
+export function isTrainerConfigured(): boolean {
+  return activeTrainerProvider() !== null;
+}
 
 const enc = new TextEncoder();
 const line = (c: TrainerChunk) => enc.encode(JSON.stringify(c) + "\n");
@@ -93,7 +70,7 @@ export async function streamTrainerReply(
   message: string,
   onFinish?: (outcome: TrainerOutcome) => Promise<void> | void,
 ): Promise<ReadableStream<Uint8Array>> {
-  const anthropic = new Anthropic({ apiKey: KEY });
+  const provider = activeTrainerProvider();
 
   /* Built before the stream opens: a context failure should surface as a clean
      message, not as a dead stream half a second in. */
@@ -107,70 +84,46 @@ export async function streamTrainerReply(
       const push = (c: TrainerChunk) => controller.enqueue(line(c));
       /* Accumulated alongside the stream so the finished reply can be stored
          without the route having to re-read what it just sent. */
-      const outcome: TrainerOutcome = { reply: "" };
-      try {
-        const stream = anthropic.beta.messages.stream({
-          model: MODEL,
-          max_tokens: MAX_TOKENS,
-          /* Opus 5 thinks by default; stating it keeps the intent legible next
-             to max_tokens, which it shares a budget with. */
-          thinking: { type: "adaptive" },
-          output_config: { effort: EFFORT },
-          /* Opus 5's safety classifiers can decline a request outright. A
-             nutrition coach is not the expected trigger, but a customer asking
-             about a medication interaction is exactly the adjacent-to-clinical
-             shape that occasionally trips one — and a silent stop would look
-             like the app breaking. `default` routes by refusal category rather
-             than pinning a model that will eventually be deprecated. */
-          betas: ["server-side-fallback-2026-07-01"],
-          fallbacks: "default",
-          system: [
-            { type: "text", text: TRAINER_SYSTEM },
-            {
-              type: "text",
-              text: contextBlock,
-              /* The breakpoint. Everything above it — persona plus this
-                 customer's profile — is served at cache-read price on their
-                 next message. */
-              cache_control: { type: "ephemeral" },
-            },
-          ],
-          messages: [
-            ...history.map((t) => ({ role: t.role, content: t.content })),
-            { role: "user" as const, content: message },
-          ],
-        });
+      const outcome: TrainerOutcome = { reply: "", model: provider?.id };
 
-        for await (const event of stream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta" &&
-            event.delta.text
-          ) {
-            outcome.reply += event.delta.text;
-            push({ t: event.delta.text });
-          }
+      try {
+        if (!provider) {
+          /* Reachable if the key is unset between the route's check and here.
+             Says the true thing rather than a generic failure. */
+          push({ e: "The coach is not switched on yet." });
+          return;
         }
 
-        const final = await stream.finalMessage();
-        outcome.inputTokens = final.usage?.input_tokens;
-        outcome.outputTokens = final.usage?.output_tokens;
+        for await (const delta of provider.stream({
+          system: TRAINER_SYSTEM,
+          context: contextBlock,
+          history,
+          message,
+        })) {
+          if (delta.type === "text") {
+            outcome.reply += delta.text;
+            push({ t: delta.text });
+            continue;
+          }
 
-        /* Checked AFTER the stream drains rather than instead of reading it: a
-           mid-stream decline keeps the partial text, so the customer should see
-           what was written plus an explanation, not a blank panel. */
-        if (final.stop_reason === "refusal") {
-          outcome.refusedReason =
-            (final.stop_details as { category?: string } | null)?.category ?? "refusal";
-          push({
-            e: "I can't take that one on. If it's about your health or your medication, that's a question for your doctor — I can pick up anything to do with your plan and your numbers.",
-          });
-        } else if (final.stop_reason === "max_tokens") {
-          push({ e: "That answer ran long and got cut off. Ask me for the short version." });
+          outcome.inputTokens = delta.inputTokens;
+          outcome.outputTokens = delta.outputTokens;
+
+          if (delta.stop === "refusal") {
+            outcome.refusedReason = delta.refusedReason ?? "refusal";
+            /* One line for every provider's refusal. The coach's boundary is
+               ours, not the vendor's, so the customer reads the same sentence
+               whichever model declined and never sees a vendor enum. */
+            push({
+              e: "I can't take that one on. If it's about your health or your medication, that's a question for your doctor — I can pick up anything to do with your plan and your numbers.",
+            });
+          } else if (delta.stop === "max_tokens") {
+            push({ e: "That answer ran long and got cut off. Ask me for the short version." });
+          }
         }
       } catch (err) {
         const status = (err as { status?: number })?.status;
-        console.error("[ai-trainer] stream failed", err);
+        console.error(`[ai-trainer] stream failed (${provider?.id ?? "none"})`, err);
         push({
           e:
             status === 429

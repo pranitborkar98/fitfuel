@@ -1688,9 +1688,16 @@ model AiMessage {
   /// because a turn that failed mid-stream still deserves to be recorded.
   inputTokens    Int?
   outputTokens   Int?
-  /// Set when Opus 5's classifiers declined the turn, so a run of refusals is
-  /// visible as a pattern rather than as silence.
+  /// Set when the provider declined the turn, so a run of refusals is visible
+  /// as a pattern rather than as silence. Not Anthropic-specific: Gemini's
+  /// finishReason (SAFETY, PROHIBITED_CONTENT, ...) lands here too.
   refusedReason  String?
+  /// Which provider actually answered — "anthropic:claude-opus-5",
+  /// "gemini:gemini-2.5-flash". Added when the coach gained a second provider:
+  /// without it a thread that spans a switch from the free tier to Claude is
+  /// unreadable after the fact, and the Phase 12H cost dashboard cannot price a
+  /// turn it cannot attribute. Nullable — rows written before this existed.
+  model          String?
   createdAt      DateTime @default(now())
 
   conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

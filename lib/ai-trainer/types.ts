@@ -115,3 +115,30 @@ export interface TrainerContext {
     momentum: Momentum;
   };
 }
+
+/* ── The provider boundary (Phase 12B) ──────────────────────────────────────
+   These three lived in client.ts until the coach gained a second provider.
+   They moved here so a provider module can import them without importing the
+   client — which would be a cycle, and would drag the Anthropic SDK into the
+   Gemini path for no reason. Re-exported from client.ts so nothing that
+   already imports them had to change. */
+
+/** One turn of the stored conversation. */
+export type TrainerTurn = { role: "user" | "assistant"; content: string };
+
+/** A line of the response stream. Newline-delimited JSON: `t` is text to
+ *  append, `e` is a notice to show in place of a reply, `c` is the conversation
+ *  id to send back with the next turn. */
+export type TrainerChunk = { t: string } | { e: string } | { c: string };
+
+/** What the turn produced, handed to the caller once the stream has drained so
+ *  persistence lives in the route rather than in the client. Reported even when
+ *  the turn failed — a refusal and a half-written reply are both worth keeping. */
+export type TrainerOutcome = {
+  reply: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  refusedReason?: string;
+  /** Which provider actually answered, for the stored message row. */
+  model?: string;
+};

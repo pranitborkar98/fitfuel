@@ -83,9 +83,16 @@ export default async function TrainerPage() {
             <p style={body(14, { color: C.ink, margin: 0, maxWidth: "60ch" })}>
               {TRAINER_OFFLINE}
             </p>
+            {/* Two keys named, cheapest first, because the blocker was budget
+                rather than engineering. Gemini's free tier needs no billing
+                enabled and no card — that is the whole reason it is here. */}
             <p style={body(13, { color: C.dim, marginTop: 12, maxWidth: "60ch" })}>
-              Set <code style={{ fontFamily: SANS, color: C.mute }}>CLAUDE_API_KEY</code>{" "}
-              and this screen starts working with no further code change.
+              Set either{" "}
+              <code style={{ fontFamily: SANS, color: C.mute }}>GEMINI_API_KEY</code>{" "}
+              (free tier, no card) or{" "}
+              <code style={{ fontFamily: SANS, color: C.mute }}>CLAUDE_API_KEY</code>{" "}
+              and this screen starts working with no further code change. If both
+              are set, Claude answers.
             </p>
             <Link
               href="/dashboard/coach"

@@ -123,12 +123,23 @@ export async function beginTurn(
  * `refusedReason` is stored rather than dropped so a run of refusals shows up
  * as a pattern in the data instead of as silence — that is the difference
  * between "the classifier is miscalibrated for nutrition questions" being
- * discoverable and being folklore.
+ * discoverable and being folklore. `model` is stored for the same reason once
+ * there are two providers: a refusal rate is meaningless if you cannot tell
+ * which model produced it.
  */
 export async function finishTurn(
   conversationId: string | null,
   reply: string,
-  usage: { inputTokens?: number; outputTokens?: number; refusedReason?: string },
+  usage: {
+    inputTokens?: number;
+    outputTokens?: number;
+    refusedReason?: string;
+    /* Which provider answered. Recorded per MESSAGE rather than per thread
+       because a single conversation can legitimately span providers — the
+       coach upgrades from the free tier to Claude the moment a key appears,
+       mid-thread if need be. */
+    model?: string;
+  },
 ): Promise<void> {
   if (!conversationId) return;
   /* An empty reply with no refusal means the stream died before a word was
@@ -144,6 +155,7 @@ export async function finishTurn(
           inputTokens: usage.inputTokens ?? null,
           outputTokens: usage.outputTokens ?? null,
           refusedReason: usage.refusedReason ?? null,
+          model: usage.model ?? null,
         },
       }),
       /* Touch the parent so loadLatestThread finds this thread next time. */
