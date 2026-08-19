@@ -2724,23 +2724,6 @@
 }
 
 /* ── The lede ───────────────────────────────────────────────────────────── */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 12px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--fk-green);
-}
-.eyebrow i {
-  width: 22px;
-  height: 1px;
-  background: var(--fk-green);
-}
-
 /* One column since the six figures were removed — there is no second column
    left to balance the claim against. */
 .lede {
@@ -4284,6 +4267,8 @@
   font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
   line-height: 1.08;
   letter-spacing: -0.02em;
+  /* .fk h2 zeroes this the same way it zeroed the size. */
+  margin: 0 0 8px;
 }
 
 .app .closeH {
@@ -4302,6 +4287,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fk-ink-3);
+  /* Same rule, same loss: the column label was sitting on its first link. */
+  margin: 0 0 var(--fk-s-2);
 }
 
 /* Same class of bug, in the delivery-area sheet. */
@@ -4310,4 +4297,52 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.015em;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AND EVERY PARAGRAPH MARGIN, FOR THE SAME REASON
+
+   The heading block above fixed .fk h1–h4 beating the module's heading
+   classes. app/_design/base.css does the same thing one rule further down:
+
+       .fk p { margin: 0; text-wrap: pretty; }
+
+   Also (0,1,1), also beating every (0,1,0) class in this file. Measured on
+   the live page, twelve paragraph classes were declaring a margin and getting
+   none of it — so a heading sat flush against the sentence under it in eight
+   bands, the rail's trial card had its three lines touching, and the footer's
+   base line had no rule-gap above it.
+
+   THE RESET ITSELF IS RIGHT. Zeroing browser paragraph margins is what a
+   design system should do; the mistake is only that it did it at a
+   specificity a component cannot answer without shouting. Same fix as the
+   headings: restate at (0,2,0), same values, base.css untouched.
+
+   The classes that legitimately want `margin: 0` — .dayFigs, .dayTracks,
+   .dayNote, .railOfferKicker, .faqA, .bandLede, .dishBlurb, .showAllNote —
+   are NOT listed here. They were already getting what they asked for, by
+   accident, and restating them would only add noise.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.app .claimDeck { margin: 6px 0 0; }
+.app .dishTop { margin: 0 0 2px; }
+
+.app .railOfferPrice,
+.app .railOfferNote { margin: 6px 0 0; }
+.app .railNote { margin-top: var(--fk-s-5); }
+
+.app .bandLedeWide { margin: 8px 0 28px; }
+.app .condLede { margin: 14px 0 0; }
+.app .coachLede { margin: 0 0 26px; }
+.app .coachSum { margin: 26px 0 0; }
+.app .areaNote { margin: 14px 0 0; }
+.app .closeP { margin: 10px 0 0; }
+.app .footerBase { margin: var(--fk-s-6) auto 0; }
+
+/* Not a margin, but the same family: a heading with a grid or a card directly
+   under it and no gap between them. The eyebrow used to hold that space open
+   in these two bands, and it went with the others. */
+.app .bandH2 + .trioGrid,
+.app .bandH2 + .condChips {
+  margin-top: 28px;
 }

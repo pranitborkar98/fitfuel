@@ -52,15 +52,11 @@ import s from "./app.module.css";
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-/** The eyebrow every band opens with: a hairline, then four words in lime. */
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <span className={s.eyebrow}>
-      <i aria-hidden="true" />
-      {children}
-    </span>
-  );
-}
+/* NO EYEBROWS. Each band opened with a hairline and two or three words in lime
+   — "The day", "The platform", "Clinical" — sitting above its own heading. The
+   owner removed them on 2026-08-19, and they were saying twice what the heading
+   says once: "The day" over "Between 4am and your door" is a label on a
+   sentence that is already the label. Eight bands, eight of them. */
 
 /* The four durations a homepage calculator should offer. The matrix carries
    seven, including TRIAL_DAY and the Mon–Fri month; the trial has its own panel
@@ -109,7 +105,7 @@ export default function HomeSections({
       <DayBand />
       <PlatformBand counts={counts} goalCount={goalCount} />
       <ServicesBand />
-      <PlanBand prices={prices} planCount={counts.plans} />
+      <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
       <AreasFaqBand areaCount={areaCount} cutoffLabel={cutoffLabel} />
@@ -127,7 +123,6 @@ function DayBand() {
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
-            <Eyebrow>The day</Eyebrow>
             <h2 id="day-h" className={s.bandH2}>
               Between 4am and your door
             </h2>
@@ -211,7 +206,6 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
   return (
     <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="platform2-h">
       <div className={s.bandWrap}>
-        <Eyebrow>The platform</Eyebrow>
         <h2 id="platform2-h" className={s.bandH2}>
           The food is the front door
         </h2>
@@ -244,7 +238,6 @@ function ServicesBand() {
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="services-h">
       <div className={s.bandWrap}>
-        <Eyebrow>Beyond the menu</Eyebrow>
         <h2 id="services-h" className={s.bandH2}>
           Everything else the kitchen runs
         </h2>
@@ -306,7 +299,9 @@ function ServicesBand() {
    for the same meal combo, so it is a real comparison rather than a percentage
    somebody typed. Premium and Luxury have no MealPlan rows yet, so they price
    as estimates and their button says so instead of taking money. */
-function PlanBand({ prices, planCount }: { prices: PriceRow[]; planCount: number }) {
+/* planCount went with the "126 plans" eyebrow. The count is still on the page
+   — the platform band leads with it, and the close offers "See the N plans". */
+function PlanBand({ prices }: { prices: PriceRow[] }) {
   const [duration, setDuration] = useState<DurationKey>("ONE_MONTH");
   const [diet, setDiet] = useState<DietKey>("VEG");
   const [meals, setMeals] = useState<MealKey>("BREAKFAST_LUNCH");
@@ -390,7 +385,6 @@ function PlanBand({ prices, planCount }: { prices: PriceRow[]; planCount: number
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
-            <Eyebrow>{planCount.toLocaleString("en-IN")} plans</Eyebrow>
             <h2 id="plan-h" className={s.bandH2}>
               Build the plan, see the arithmetic
             </h2>
@@ -543,7 +537,6 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="cond-h">
       <div className={`${s.bandWrap} ${s.splitWrap}`}>
         <div>
-          <Eyebrow>Clinical</Eyebrow>
           <h2 id="cond-h" className={`${s.bandH2} ${s.bandH2Narrow}`}>
             Cooked for a diagnosis
           </h2>
@@ -598,7 +591,6 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
     <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="coach-h">
       <div className={`${s.bandWrap} ${s.coachWrap}`}>
         <div className={s.coachCard}>
-          <Eyebrow>The coach</Eyebrow>
           <h2 id="coach-h" className={s.coachH}>
             When the scale disagrees, the target moves
           </h2>
@@ -680,7 +672,6 @@ function AreasFaqBand({ areaCount, cutoffLabel }: { areaCount: number; cutoffLab
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="faq-h">
       <div className={`${s.bandWrap} ${s.splitWrap}`}>
         <div>
-          <Eyebrow>Where and when</Eyebrow>
           <h2 id="faq-h" className={`${s.bandH2} ${s.bandH2Narrow}`}>
             Eight morning drops, one kitchen
           </h2>
