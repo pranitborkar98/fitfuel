@@ -32,14 +32,14 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
 import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
+import type { PriceRow } from "@/lib/plan-tier-pricing";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
-import { SERVICES } from "./services";
-import HomeBands, { type BandCounts, type Quote } from "./HomeBands";
-import Platform from "./Platform";
-import Behind from "./Behind";
+import type { BandCounts } from "./HomeBands";
+import HomeSections from "./HomeSections";
+import { GOALS } from "./home-data";
 import s from "./app.module.css";
 
 /* Alias so helper components can reach the stylesheet without shadowing the
@@ -152,7 +152,7 @@ const MORE = [
   { href: "/faq", label: "Questions" },
 ] as const;
 
-export type Course = { key: string; label: string; n: number };
+export type Course = { key: string; label: string; n: number; note: string };
 
 /** A plan row from the database, shaped so PlanSheet can consume it unchanged. */
 export type PlanMeal = { slot: string; name: string; kcal: number };
@@ -218,18 +218,22 @@ export type AppProps = {
   menuFrom: string;
   planCount: number;
   licence: string;
-  /** Resolved server-side — lib/site-images.ts reads the filesystem and must
-   *  never be called from a client component. Keyed by the service's href. */
-  serviceImages: Record<string, string | null>;
   /** The delivery-area map, rendered on the server and handed down as a node so
    *  the location chip can open it without this file importing a server
    *  component. */
   areaPanel?: React.ReactNode;
-  /** Counts and quotes for the bands below the catalog. Both come from the
-   *  database in page.tsx so a figure here cannot disagree with the catalogue
-   *  it describes. */
+  /** Counts for the bands below the catalog. They come from the database in
+   *  page.tsx so a figure here cannot disagree with the catalogue it
+   *  describes. */
   bandCounts: BandCounts;
-  quotes: Quote[];
+  /** Distinct subCategory values across the plans — goals and conditions. */
+  goalCount: number;
+  /** The seeded PlanPrice matrix, for the plan builder band. */
+  prices: PriceRow[];
+  /** The trial day itemised by lib/pricing-decomposition, for the receipt. */
+  trial: { rows: { k: string; v: string }[]; total: string };
+  /** Suburbs in app/_hp/areas-data.ts, kitchen included. */
+  areaCount: number;
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -272,12 +276,16 @@ function MacroSplit({
   f,
   kcal,
   unit = "kcal",
+  contrib,
 }: {
   p: number;
   c: number;
   f: number;
   kcal?: number;
   unit?: string;
+  /** What this dish does to the target the visitor picked, printed under the
+   *  ring. Optional: a plan card has no single day to contribute to. */
+  contrib?: string;
 }) {
   const kp = p * 4, kc = c * 4, kf = f * 9;
   const total = kp + kc + kf;
@@ -353,6 +361,8 @@ function MacroSplit({
           </span>
         ))}
       </span>
+
+      {contrib ? <span className={sx.macroContrib}>{contrib}</span> : null}
     </div>
   );
 }
@@ -499,8 +509,12 @@ function useCardTilt<T extends HTMLElement>() {
       for (const p of ["--mx", "--my", "--rx", "--ry", "--edge"]) el.style.removeProperty(p);
     };
 
+    /* `li[data-card]`, not `li`. The menu-order grid nests card <li>s inside a
+       course group whose heading is ALSO an <li> — a bare closest("li") tilts
+       the heading and, worse, matches the wrapper <li> that spans the row, so
+       an entire course lifts as one slab. */
     const cardOf = (n: EventTarget | null) =>
-      n instanceof Element ? (n.closest("li") as HTMLElement | null) : null;
+      n instanceof Element ? (n.closest("li[data-card]") as HTMLElement | null) : null;
 
     const onMove = (e: PointerEvent) => {
       const el = cardOf(e.target);
@@ -621,10 +635,12 @@ export default function FitFuelApp({
   menuFrom,
   planCount,
   licence,
-  serviceImages,
   areaPanel,
   bandCounts,
-  quotes,
+  goalCount,
+  prices,
+  trial,
+  areaCount,
 }: AppProps) {
   const cart = useCart();
   const [q, setQ] = useState("");
@@ -647,16 +663,56 @@ export default function FitFuelApp({
      Dismissing costs nothing: the basket is one tap away in the header and the
      badge there still carries the count. */
   const [barHidden, setBarHidden] = useState(false);
+  /* ── THE DAY TARGET ───────────────────────────────────────────────────────
+     The one thing a food app can do that a menu cannot: say what a dish does to
+     the day you are trying to have. The goal picker sets a kcal and a protein
+     target, the basket fills two bars against it, and every card prints its own
+     share of both. The numbers are the dish's own macros against the target the
+     visitor picked — nothing per-dish is invented. */
+  const [goal, setGoal] = useState("maintain");
+  /* Sort is deliberately NOT a default the page ships in. "Menu order" is the
+     kitchen's own grouping and it is what someone browsing wants; the other
+     three exist for someone shopping a number, and they switch the grid out of
+     course groups into one flat ranked list. */
+  const [sort, setSort] = useState<"menu" | "gap" | "protein" | "kcal">("menu");
+  /* Which course headers have been opened past their first four. Per course, so
+     opening Salads does not dump all 48 dishes on the page. */
+  const [openCourse, setOpenCourse] = useState<Record<string, boolean>>({});
   /* openVariants / openMenu are gone with the two disclosure buttons on the
      plan card. Both contents live in the Configure sheet now — see the comment
      on the plan card foot for why an inline panel was the wrong container. */
   const searchRef = useRef<HTMLInputElement>(null);
   const gridRef = useCardTilt<HTMLDivElement>();
+  const headRef = useRef<HTMLElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const [areaOpen, setAreaOpen] = useState(false);
 
   /* Keeps typing responsive on a long list: the input updates every keystroke,
      the 48-item filter runs at React's leisure. */
   const dq = useDeferredValue(q);
+
+  /* ── THE HEADER MEASURES ITSELF ───────────────────────────────────────────
+     Everything sticky below the header has to clear it, and the header is not
+     one height: the chip row wraps at some widths, plans mode carries a second
+     chip row, and the day bar stacks under 900px. Both the rail and the plan
+     summary previously used a typed offset (24px and, in the imported design,
+     205/224px) — so at every width but the one they were measured at they slid
+     under the header, or floated a gap below it.
+
+     One ResizeObserver, one custom property, and the two sticky offsets are
+     derived rather than guessed. */
+  useEffect(() => {
+    const head = headRef.current;
+    const shell = shellRef.current;
+    if (!head || !shell || typeof ResizeObserver !== "function") return;
+    const apply = () => {
+      shell.style.setProperty("--fk-head", `${Math.round(head.getBoundingClientRect().height)}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(head);
+    return () => ro.disconnect();
+  }, []);
 
   /* "/" focuses search, the convention every catalog app follows. Ignored while
      the user is already typing somewhere. */
@@ -676,10 +732,34 @@ export default function FitFuelApp({
 
   const results = useMemo(() => {
     const needle = dq.trim().toLowerCase();
+    /* ── THE SEARCH BOX TAKES A NUMBER ──────────────────────────────────────
+       The placeholder offers "30g protein", and a placeholder that promises
+       something the field cannot do is worse than a plain one. Three shapes are
+       understood, and each is a floor or a ceiling rather than an exact match,
+       because nobody wants a dish with EXACTLY 30g of protein:
+
+         "30g protein" / "protein 30"   → at least 30g (also carbs, fat)
+         "under 400 kcal" / "<400 cal"  → at most 400
+         "400 kcal"                     → at most 400, same intent
+
+       Anything it does not recognise falls through to the text search
+       unchanged, so typing "protein bar" still finds the bars. */
+    const macro = /(?:(\d+)\s*g?\s*(protein|carb|carbs|fat)|(protein|carb|carbs|fat)\s*(\d+))/.exec(needle);
+    const energy = /(?:under|below|max|<|less than)?\s*(\d+)\s*(?:k?cal|calories|kcals)/.exec(needle);
+
     return dishes.filter((d) => {
       if (course !== "all" && d.category !== course) return false;
       if (onlyOrderable && !d.orderable) return false;
       if (!needle) return true;
+
+      if (macro) {
+        const n = Number(macro[1] ?? macro[4]);
+        const which = macro[2] ?? macro[3];
+        const have = which === "fat" ? d.fat : which === "protein" ? d.protein : d.carbs;
+        return d.kcal > 0 && have >= n;
+      }
+      if (energy) return d.kcal > 0 && d.kcal <= Number(energy[1]);
+
       return (
         d.name.toLowerCase().includes(needle) ||
         d.blurb.toLowerCase().includes(needle) ||
@@ -687,6 +767,32 @@ export default function FitFuelApp({
       );
     });
   }, [dishes, dq, course, onlyOrderable]);
+
+  /* ── THE DAY SO FAR, FROM THE BASKET ──────────────────────────────────────
+     Counted over the dish catalogue rather than over cart lines because a line
+     carries an add-on and a quantity but not the macros. Enquiry rows have no
+     price and no quantity, so they contribute nothing here — which is correct:
+     you have not decided to eat them. */
+  const target = GOALS.find((g) => g.key === goal) ?? GOALS[1];
+  const day = useMemo(() => {
+    let kcal = 0;
+    let protein = 0;
+    let count = 0;
+    for (const d of dishes) {
+      const n = cart.qtyOf(d.id);
+      if (!n) continue;
+      count += n;
+      kcal += n * d.kcal;
+      protein += n * d.protein;
+    }
+    return {
+      kcal,
+      protein,
+      count,
+      gapKcal: Math.max(0, target.kcal - kcal),
+      gapProtein: Math.max(0, target.protein - protein),
+    };
+  }, [dishes, cart, target]);
 
   const planResults = useMemo(() => {
     const needle = dq.trim().toLowerCase();
@@ -775,6 +881,181 @@ export default function FitFuelApp({
     );
 
   const orderableCount = results.filter((d) => d.orderable).length;
+
+  /* ── SORTING, AND WHY IT SWITCHES THE LAYOUT ──────────────────────────────
+     "Menu order" is the kitchen's own grouping, and in that mode the grid is
+     broken into courses with a heading and a note apiece — the shape of a menu.
+     The other three are queries over a number, and a query has no courses: they
+     collapse the grid to one flat ranked list, because "most protein" split
+     into six sections is not a ranking.
+
+     Grouping also only holds while nothing is filtered. A search or a chip is
+     already a narrowing, and narrowing twice reads as a bug. */
+  const sortedDishes = useMemo(() => {
+    if (sort === "protein") return [...results].sort((a, b) => b.protein - a.protein);
+    if (sort === "kcal") return [...results].sort((a, b) => a.kcal - b.kcal);
+    if (sort === "gap") {
+      return [...results].sort(
+        (a, b) => b.protein / Math.max(1, b.kcal) - a.protein / Math.max(1, a.kcal),
+      );
+    }
+    return results;
+  }, [results, sort]);
+
+  const grouped =
+    mode === "dishes" &&
+    sort === "menu" &&
+    !dq.trim() &&
+    course === "all" &&
+    !onlyOrderable;
+
+  /** Dishes shown per course before its own "Show all" is offered. */
+  const PER_COURSE = 4;
+
+  const SORTS = [
+    { key: "menu", label: "Menu order" },
+    { key: "gap", label: "Best protein per calorie" },
+    { key: "protein", label: "Most protein" },
+    { key: "kcal", label: "Fewest calories" },
+  ] as const;
+
+  /**
+   * ONE DISH CARD.
+   *
+   * A render HELPER, not a component, for the reason showAllControl gives
+   * above: a component declared inside render gets a new identity on every
+   * pass, so React unmounts and remounts all 48 of these on each keystroke —
+   * replaying the entrance animation and dropping the pointer's tilt.
+   *
+   * It exists because the grid now has two shapes. In menu order the cards sit
+   * inside six course groups; under any other sort they are one flat ranked
+   * list. Both render the identical card, and writing it twice is how the two
+   * drift apart.
+   */
+  function dishCard(d: ShopDish) {
+    /* "Fits your day" is the only badge on this page that is not a property of
+       the dish — it is a property of the dish AGAINST the target the visitor
+       picked, and it disappears the moment the day is full. The protein floor
+       is a quarter of what is left, capped at 20g, so it marks dishes that make
+       a real dent rather than every 8g juice that happens to fit. */
+    const fits =
+      day.gapProtein > 0 &&
+      d.protein >= Math.min(20, day.gapProtein * 0.25) &&
+      d.kcal > 0 &&
+      d.kcal <= day.gapKcal;
+
+    return (
+      <li key={d.id} className={s.card} data-card="">
+        {!images[d.slot] ? (
+          /* The reserved space a photograph drops into. Drop a file into
+             public/images/dishes/<slug> and it fills with no layout change.
+
+             ⚠ THE MONOGRAM IS THE ONE PLACE THE REDESIGN CONTRADICTS
+             AGENTS.md. That document bans "a macro ring, a glyph or a
+             typographic stand-in" where someone is choosing what to eat, and
+             this well is empty on purpose today for exactly that reason. The
+             imported design puts the dish's initial in a ring here. It is
+             implemented as drawn because the design is the brief; it is one
+             className away from being empty again if the ruling goes the other
+             way. */
+          <button
+            type="button"
+            className={s.shotPlaceholder}
+            style={dishField(d)}
+            onClick={() => setSheet(d)}
+            aria-label={`See ${d.name}`}
+          >
+            <span className={s.wellGrain} aria-hidden="true" />
+            <span className={s.wellGloss} aria-hidden="true" />
+            <span className={s.wellMark} aria-hidden="true">
+              <span>{d.name.charAt(0).toUpperCase()}</span>
+            </span>
+            <span className={s.wellFoot} aria-hidden="true" />
+            {fits ? <span className={s.fits}>Fits your day</span> : null}
+            {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={s.shot}
+            onClick={() => setSheet(d)}
+            aria-label={`See ${d.name}`}
+          >
+            {/* Slot is mounted ONLY when a real photograph exists. Its no-image
+                branch draws a macro glyph, and a diagram standing in for a dish
+                is exactly what the well above is arguing about — so that branch
+                is deliberately unreachable from here. */}
+            <Slot
+              images={images}
+              name={d.slot}
+              alt={d.name}
+              sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
+            />
+            {fits ? <span className={s.fits}>Fits your day</span> : null}
+            {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
+          </button>
+        )}
+
+        <div className={s.cardBody}>
+          {/* Course and badges share one line. The badges were an overlay on
+              the image well; as text beside the course they survive the mobile
+              row layout, stop covering the photograph, and read as what they
+              are — a measurement, not a sticker on the food. */}
+          <p className={s.dishTop}>
+            <span className={s.dishCourse}>{d.categoryLabel}</span>
+            {badgesFor(d).map((b) => (
+              <span key={b} className={s.tag}>{b}</span>
+            ))}
+          </p>
+          <Link href={`/menu/${d.id}`} className={s.dishName}>
+            {d.name}
+          </Link>
+          <p className={s.dishBlurb}>{d.blurb}</p>
+          {d.kcal ? (
+            <MacroSplit
+              p={d.protein}
+              c={d.carbs}
+              f={d.fat}
+              kcal={d.kcal}
+              /* THE LINE THE WHOLE DAY BAR EXISTS FOR. Grams are a fact about
+                 the dish; this is what the dish does to the day the visitor
+                 said they wanted, and it moves when they change the target. */
+              contrib={
+                `${Math.round((d.protein / target.protein) * 100)}% of your protein · ` +
+                `${Math.round((d.kcal / target.kcal) * 100)}% of your calories`
+              }
+            />
+          ) : null}
+          {d.orderable && (d.addOns?.length || d.variantNote) ? (
+            <button type="button" className={s.addOnHint} onClick={() => setSheet(d)}>
+              {d.addOns?.length ? `+ ${d.addOns.length} add-ons` : null}
+              {d.addOns?.length && d.variantNote ? " · " : null}
+              {d.variantNote ? d.variantNote : null}
+            </button>
+          ) : null}
+
+          <div className={s.cardFoot}>
+            {d.orderable ? (
+              <span className={s.priceBlock}>
+                <b className={s.price}>{d.priceLabel}</b>
+                {d.protein > 0 && d.price ? (
+                  /* The unit that matters to the person this catalogue is for,
+                     and the one no competitor prints. It is division the reader
+                     would otherwise do in their head across 48 cards. */
+                  <span className={s.perProtein}>
+                    ₹{Math.round(d.price / d.protein)} per gram of protein
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              <span className={s.askPrice}>Price on request</span>
+            )}
+            <AddControl dish={d} />
+          </div>
+        </div>
+      </li>
+    );
+  }
   const basketCount = cart.totals.count;
   /* Adding another dish brings the bar back. Without this one dismissal
      silences it for the session and later additions give no feedback at all.
@@ -793,13 +1074,30 @@ export default function FitFuelApp({
   const basketTotal = receipt(cart.lines).totalRs;
 
   return (
-    <div className={`fk ${s.app}`}>
+    <div className={`fk ${s.app}`} ref={shellRef}>
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
-      <header className={s.top}>
+      <header className={s.top} ref={headRef}>
         <div className={s.topRow}>
-          <Link href="/" className={s.brand}>
-            Fit<em>Fuel</em>
-          </Link>
+          <span className={s.brandWrap}>
+            <Link href="/" className={s.brand}>
+              Fit<em>Fuel</em>
+            </Link>
+            {/* THE CUTOFF STRIP, AS A CHIP. It was a full-width band under the
+                header saying the same sentence in 14px across 1440px. The
+                promise is worth two seconds of a customer's attention, not a
+                whole row of the fold — and it stays mode-aware, because a
+                single salad tonight and a plan starting tomorrow are different
+                promises and printing the plan one over a 48-dish menu tells a
+                customer buying a salad it arrives in the morning. */}
+            <span className={s.live}>
+              <i aria-hidden="true" />
+              {mode === "plans"
+                ? `Order by ${cutoffLabel} · at your door by 8am`
+                : mode === "supps"
+                  ? "Researched, not stocked"
+                  : `Cooking today · ${area}`}
+            </span>
+          </span>
 
           <div className={s.searchWrap}>
             <span className={s.searchIcon}>
@@ -814,7 +1112,7 @@ export default function FitFuelApp({
               className={s.search}
               type="search"
               inputMode="search"
-              placeholder={`Search ${dishes.length} dishes`}
+              placeholder={`Search ${dishes.length} dishes — or a number: “30g protein”`}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               autoComplete="off"
@@ -860,32 +1158,6 @@ export default function FitFuelApp({
             </button>
           </div>
         </div>
-        <div className={s.cutoff}>
-          {/* Two products, two promises. The 9pm/8am line is the SUBSCRIPTION
-              schedule (lib/order-cutoff models plan deliveries); single meals
-              are ordered and delivered like any food app. Showing the plan
-              promise over a 48-dish catalog was telling a customer buying one
-              salad that it arrives tomorrow morning. */}
-          <p className={s.cutoffRow}>
-            {mode === "plans" ? (
-              <span>
-                Plans start tomorrow — order by <b>{cutoffLabel}</b>, at your door by 8am.
-              </span>
-            ) : mode === "supps" ? (
-              /* Supplements are not cooked and not delivered by our drivers —
-                 they are researched and linked out. Saying "cooked to order"
-                 over a nootropic is the kind of copy that erodes trust. */
-              <span>
-                Researched against your plan, not stocked. Priced across six retailers.
-              </span>
-            ) : (
-              <span>
-                Cooked to order and delivered across <b>{area}</b> today.
-              </span>
-            )}
-          </p>
-        </div>
-
         {/* ── Rail + content ──────────────────────────────────────────────── */}
         <div className={s.filters}>
           {/* Catalog switch. A subscription and a single meal are different
@@ -1002,6 +1274,93 @@ export default function FitFuelApp({
           </div>
           )}
         </div>
+
+        {/* ── THE DAY BAR ──────────────────────────────────────────────────
+            A menu tells you what a dish is. This tells you what it does to the
+            day you are trying to have, which is the only thing a nutrition
+            company can offer that a delivery app cannot.
+
+            Everything in it is arithmetic on figures already on the page: the
+            target is one of three the TDEE calculator hands out, and the fill
+            is the basket's own macros against it. It is NOT a diagram standing
+            in for food — it sits above the catalogue in the shell, and every
+            card below still leads with the dish.
+
+            It stays in the header so it never scrolls away while you add. */}
+        <div className={s.dayBar}>
+          <div className={s.dayBarInner}>
+            <div className={s.goalPick}>
+              <span className={s.goalLabel}>Your day</span>
+              <div className={s.goalSeg} role="group" aria-label="Your daily target">
+                {GOALS.map((g) => (
+                  <button
+                    key={g.key}
+                    type="button"
+                    className={`${s.goalBtn} ${goal === g.key ? s.goalOn : ""}`}
+                    onClick={() => setGoal(g.key)}
+                    aria-pressed={goal === g.key}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={s.dayMeters}>
+              <p className={s.dayFigs}>
+                <span className="fk-num">
+                  {day.kcal.toLocaleString("en-IN")} / {target.kcal.toLocaleString("en-IN")} kcal
+                </span>
+                <span className={`${s.dayProteinFig} fk-num`}>
+                  {day.protein} / {target.protein}g protein
+                </span>
+              </p>
+              <p className={s.dayTracks}>
+                <span className={s.dayTrack}>
+                  <span
+                    className={s.dayFillK}
+                    style={{ width: `${Math.min(100, Math.round((day.kcal / target.kcal) * 100))}%` }}
+                  />
+                </span>
+                <span className={s.dayTrack}>
+                  <span
+                    className={s.dayFillP}
+                    style={{
+                      width: `${Math.min(100, Math.round((day.protein / target.protein) * 100))}%`,
+                    }}
+                  />
+                </span>
+              </p>
+              {/* One live region for the whole bar. Announcing both meters
+                  separately reads as two unrelated numbers changing. */}
+              <p className={s.dayNote} aria-live="polite">
+                {day.count === 0
+                  ? "Pick a target, then add dishes — the bars fill as you go."
+                  : day.gapProtein > 0
+                    ? `${day.gapProtein}g protein and ${day.gapKcal.toLocaleString("en-IN")} kcal left in the day.`
+                    : `Protein target met. ${day.gapKcal.toLocaleString("en-IN")} kcal still spare.`}
+              </p>
+            </div>
+
+            <div className={s.dayBasket}>
+              <span className={s.dayBasketFig}>
+                <b className="fk-num">{rs(basketTotal)}</b>
+                <span>
+                  {basketCount
+                    ? `${basketCount} item${basketCount === 1 ? "" : "s"} · incl. GST`
+                    : "delivery from ₹49"}
+                </span>
+              </span>
+              {basketCount > 0 ? (
+                <button type="button" className={s.dayView} onClick={() => cart.setOpen(true)}>
+                  View order
+                </button>
+              ) : (
+                <span className={s.dayEmpty}>Basket empty</span>
+              )}
+            </div>
+          </div>
+        </div>
       </header>
 
       <div className={s.body}>
@@ -1028,6 +1387,38 @@ export default function FitFuelApp({
               </li>
             ))}
           </ul>
+
+          {/* ── THE OFFER, MOVED OFF THE FOLD AND INTO THE RAIL ────────────
+              It was a row above the first dish card. The rail is where a
+              persistent shell keeps the thing that is always on offer — it is
+              in view for the whole session instead of scrolling away after two
+              swipes, and the fold gets the food back.
+
+              THE ROW BELOW 1024px IS NOT REDUNDANT. The rail does not exist on
+              a phone, so the same offer stays inline there; CSS shows exactly
+              one of the two. Dropping the row and keeping only this card would
+              have deleted the trial from every phone. */}
+          <div className={s.railOffer}>
+            <span className={s.railOfferShot}>
+              <Image
+                src="/images/hero-bowl.jpg"
+                alt=""
+                fill
+                sizes="220px"
+                style={{ objectFit: "cover" }}
+              />
+            </span>
+            <div className={s.railOfferBody}>
+              <p className={s.railOfferKicker}>First day</p>
+              <p className={s.railOfferPrice}>Two meals, {trialTotal}</p>
+              <p className={s.railOfferNote}>
+                Breakfast and lunch weighed to your macros. Nothing to cancel.
+              </p>
+              <Link href="/checkout" className={s.railOfferCta}>
+                Start the trial
+              </Link>
+            </div>
+          </div>
 
           <ul className={s.railList} style={{ marginTop: "var(--fk-s-5)" }}>
             {MORE.map((m) => (
@@ -1079,40 +1470,58 @@ export default function FitFuelApp({
                 fold — measured after, the first dish card sits at essentially
                 the same height, because the sr-only h1 was already occupying
                 the block and the offer row shrank to pay for the deck. */}
-            <h1 className={s.claim}>Food cooked to your numbers.</h1>
-            {/* The deck must NOT repeat the delivery promise. The cutoff row
-                above it is mode-aware — "delivered across Kharadi today" for a
-                single meal, "at your door by 8am" for a plan — and an earlier
-                draft of this line said "by 8am" over a 48-dish menu, which is
-                the exact mistake that row's own comment was written to prevent.
-                So this says the part nothing else on the fold says. */}
-            <p className={s.claimDeck}>
-              Weighed to your macros, cooked in our own kitchen, and logged in
-              the app for you.
-            </p>
+            {/* ── THE LEDE ──────────────────────────────────────────────────
+                Claim on the left, scale on the right, one hairline under both.
+                The six figures already existed — in HomeBands, at 13,920px,
+                seventeen screens down under the entire 48-card grid, which is
+                to say nowhere. Same numbers, same source (counted from the
+                database in page.tsx, never typed), set beside the sentence they
+                are the evidence for.
 
-            {/* ── THE SCALE, WHERE IT CAN ACTUALLY BE READ ──────────────────
-                These six figures already existed, in HomeBands, at 13,920px —
-                seventeen screens down, under the entire 48-card grid. They are
-                the whole argument for the price and nobody had ever reached
-                them. Same numbers, same source (counted from the database in
-                page.tsx, never typed), moved to where they do work. */}
-            <ul className={s.proof} aria-label="What the kitchen runs">
-              {[
-                [bandCounts.dishes, "dishes"],
-                [bandCounts.plans, "meal plans"],
-                [bandCounts.conditionPlans, "for a condition"],
-                [bandCounts.exercises, "exercises"],
-                [bandCounts.supplements, "supplements"],
-              ].map(([n, label]) => (
-                <li key={String(label)}>
-                  <b className="fk-num">{Number(n).toLocaleString("en-IN")}</b>
-                  <span>{label}</span>
-                </li>
-              ))}
-            </ul>
+                Two columns rather than a stack because the figures are not a
+                second paragraph to read; they are a column to glance at while
+                reading the first. Below 900px they fall under the deck as a
+                three-across grid and the h1 keeps the full width. */}
+            <div className={s.lede}>
+              <div className={s.ledeText}>
+                <span className={s.eyebrow}>
+                  <i aria-hidden="true" />
+                  {area}, Pune
+                </span>
+                <h1 className={s.claim}>Food cooked to your numbers.</h1>
+                {/* The deck must NOT repeat the delivery promise. The chip in
+                    the header is mode-aware — "Cooking today · Kharadi" for a
+                    single meal, the cutoff for a plan — and an earlier draft of
+                    this line said "by 8am" over a 48-dish menu, which is the
+                    exact mistake that chip's own comment was written to
+                    prevent. So this says the part nothing else on the fold
+                    says: what the bar above it is for. */}
+                <p className={s.claimDeck}>
+                  Set today&apos;s target above, then add dishes until the bars
+                  fill. Every portion is weighed in our Kharadi kitchen and lands
+                  logged in your diary.
+                </p>
+              </div>
+              <ul className={s.proof} aria-label="What the kitchen runs">
+                {[
+                  [bandCounts.dishes.toLocaleString("en-IN"), "dishes"],
+                  [bandCounts.plans.toLocaleString("en-IN"), "meal plans"],
+                  [bandCounts.conditionPlans.toLocaleString("en-IN"), "for a condition"],
+                  [bandCounts.exercises.toLocaleString("en-IN"), "exercises"],
+                  [bandCounts.supplements.toLocaleString("en-IN"), "supplements"],
+                  ["1", "kitchen, ours"],
+                ].map(([n, label]) => (
+                  <li key={label}>
+                    <b className="fk-num">{n}</b>
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            {/* The offer is a row, not a hero. It never pushes food below the fold. */}
+            {/* The offer row is the PHONE half of the trial card in the rail —
+                CSS shows exactly one of the two, and this one only exists below
+                1024px where there is no rail to hold it. */}
             <div className={s.offer}>
               <span className={s.offerText}>
                 <b>Try one day for {trialTotal}</b>
@@ -1124,6 +1533,7 @@ export default function FitFuelApp({
             </div>
 
             <div className={s.resultBar}>
+              <div className={s.resultHead}>
               <h2>
                 {q.trim()
                   ? `Results for “${q.trim()}”`
@@ -1132,26 +1542,52 @@ export default function FitFuelApp({
                   : mode === "plans"
                     ? PLAN_CATS.find((c) => c.key === planCat)?.label
                     : course === "all"
-                      ? "Everything on the menu"
+                      ? "Tonight’s menu, by course"
                       : courses.find((c) => c.key === course)?.label}
               </h2>
               <p>
                 {mode === "supps"
                   ? `${suppResults.length} of ${supplements.length} · researched, not stocked`
                   : mode === "plans"
-                  ? `${planResults.length} of ${planCount} plans · 59 goals and conditions`
+                  ? `${planResults.length} of ${planCount} plans · ${goalCount} goals and conditions`
                   : `${results.length} dish${results.length === 1 ? "" : "es"}` +
                     (orderableCount !== results.length
                       ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
                       : ` · from ${menuFrom}`)}
               </p>
+              </div>
+
+              {/* ── SORT ────────────────────────────────────────────────────
+                  Only over dishes. Plans are a subscription ranked by what they
+                  are FOR, not by a macro, and supplements are not ranked at all
+                  — offering "most protein" over a magnesium tablet is a control
+                  that answers nothing.
+
+                  "Best protein per calorie" is the one nobody else offers and
+                  the one this catalogue is actually built to answer. */}
+              {mode === "dishes" ? (
+                <div className={s.sortRow} role="group" aria-label="Sort the menu">
+                  <span className={s.sortLabel}>Sort</span>
+                  {SORTS.map((sv) => (
+                    <button
+                      key={sv.key}
+                      type="button"
+                      className={`${s.sortBtn} ${sort === sv.key ? s.sortOn : ""}`}
+                      onClick={() => setSort(sv.key)}
+                      aria-pressed={sort === sv.key}
+                    >
+                      {sv.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             {mode === "supps" ? (
               <>
               <ul className={s.grid}>
                 {cap(suppResults).map((x) => (
-                  <li key={x.slug} className={s.card}>
+                  <li key={x.slug} className={s.card} data-card="">
                     <div className={s.shotPlaceholder} aria-hidden="true">
                       <span>{x.category}</span>
                     </div>
@@ -1184,7 +1620,7 @@ export default function FitFuelApp({
               <>
               <ul className={s.grid}>
                 {cap(planResults).map((p) => (
-                  <li key={p.slug} className={s.card}>
+                  <li key={p.slug} className={s.card} data-card="">
                     {/* The image slot is KEPT as a labelled placeholder. There is
                         no photography pipeline yet; when one lands, this well
                         takes the file with no layout change. */}
@@ -1282,183 +1718,78 @@ export default function FitFuelApp({
                   </button>
                 </span>
               </div>
+            ) : grouped ? (
+              /* ── THE MENU, IN COURSES ──────────────────────────────────────
+                 Six headings with a note apiece and the first four dishes of
+                 each, rather than 48 identical cards in one undifferentiated
+                 wall. The note is the kitchen's own — COURSES carries it — and
+                 it is the sentence that tells someone why a course exists
+                 before they scan the price of a single dish in it.
+
+                 Each course opens on its own. Opening Salads must not dump the
+                 other five on the page. */
+              <ul className={s.grid}>
+                {courses.map((c) => {
+                  const list = results.filter((d) => d.category === c.key);
+                  if (!list.length) return null;
+                  const open = !!openCourse[c.key];
+                  const shown = open ? list : list.slice(0, PER_COURSE);
+                  return (
+                    <li key={c.key} className={s.courseSpan}>
+                      <ul className={s.courseGroup}>
+                        <li className={s.courseHead}>
+                          <span>
+                            <span className={s.courseTitle}>
+                              <b>{c.label}</b>
+                              <span className="fk-num">{list.length} dishes</span>
+                            </span>
+                            <span className={s.courseNote}>{c.note}</span>
+                          </span>
+                          {!open && list.length > PER_COURSE ? (
+                            <button
+                              type="button"
+                              className={s.courseMore}
+                              onClick={() =>
+                                setOpenCourse((o) => ({ ...o, [c.key]: true }))
+                              }
+                            >
+                              Show all {list.length}
+                            </button>
+                          ) : null}
+                        </li>
+                        {shown.map((d) => dishCard(d))}
+                      </ul>
+                    </li>
+                  );
+                })}
+              </ul>
             ) : (
               <>
-              <ul className={s.grid}>
-                {cap(results).map((d) => (
-                  <li key={d.id} className={s.card}>
-                    {!images[d.slot] ? (
-                      /* The reserved space a photograph drops into. Drop a file
-                         into public/images/dishes/<slug> and it fills with no
-                         layout change.
-
-                         EMPTY ON PURPOSE. It used to print the course name and
-                         carry the badges. The course was already printed
-                         immediately below it in .dishTop, so every card said
-                         "SALADS" twice; and the badges sat ON the well, which
-                         is exactly where the food goes — chips over a
-                         photograph is the wrong instinct, and at the mobile row
-                         size this well is 104px wide and could not hold them at
-                         all. Both now live in the body. */
-                      <button
-                        type="button"
-                        className={s.shotPlaceholder}
-                        style={dishField(d)}
-                        onClick={() => setSheet(d)}
-                        aria-label={`See ${d.name}`}
-                      />
-                    ) : (
-                    <button
-                      type="button"
-                      className={s.shot}
-                      onClick={() => setSheet(d)}
-                      aria-label={`See ${d.name}`}
-                    >
-                      {/* Slot is mounted ONLY when a real photograph exists. Its
-                          no-image branch draws a macro glyph, and AGENTS.md
-                          forbids a diagram standing in for a dish where someone
-                          is choosing what to eat — so that branch is
-                          deliberately unreachable from here. */}
-                      <Slot
-                        images={images}
-                        name={d.slot}
-                        alt={d.name}
-                        sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
-                      />
-                      {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
-                    </button>
-                    )}
-
-                    <div className={s.cardBody}>
-                      {/* The kcal figure used to sit here as well. It is now the
-                          number inside the ring, which is the one place on the
-                          card where it is the denominator of something rather
-                          than a loose statistic. Printing it twice made the top
-                          row compete with the dish name for no gain. */}
-                      {/* Course and badges share one line. The badges were an
-                          overlay on the image well; as text beside the course
-                          they survive the mobile row layout, stop covering the
-                          photograph, and read as what they are — a measurement,
-                          not a sticker on the food. */}
-                      <p className={s.dishTop}>
-                        <span className={s.dishCourse}>{d.categoryLabel}</span>
-                        {badgesFor(d).map((b) => (
-                          <span key={b} className={s.tag}>{b}</span>
-                        ))}
-                      </p>
-                      {/* Every dish now has a URL. It was reachable only as a
-                          card and a modal, so it could not be linked, shared,
-                          indexed or sent to a customer. The sheet stays as the
-                          quick look; this is the page. */}
-                      <Link href={`/menu/${d.id}`} className={s.dishName}>
-                        {d.name}
-                      </Link>
-                      <p className={s.dishBlurb}>{d.blurb}</p>
-                      {d.kcal ? (
-                        <MacroSplit p={d.protein} c={d.carbs} f={d.fat} kcal={d.kcal} />
-                      ) : null}
-                      {/* The add-on ladder (paneer/tofu, egg, grilled chicken)
-                          and any variant already live in DishSheet. The card
-                          only has to say they exist, or nobody opens it. */}
-                      {/* CLICKABLE. This was a <p> with cursor:auto — it
-                          advertised paneer/egg/chicken and every variant and
-                          then did nothing when tapped. It opens the sheet that
-                          actually holds them. */}
-                      {d.orderable && (d.addOns?.length || d.variantNote) ? (
-                        <button type="button" className={s.addOnHint} onClick={() => setSheet(d)}>
-                          {d.addOns?.length ? `+ ${d.addOns.length} add-ons` : null}
-                          {d.addOns?.length && d.variantNote ? " · " : null}
-                          {d.variantNote ? d.variantNote : null}
-                        </button>
-                      ) : null}
-
-                      <div className={s.cardFoot}>
-                        {d.orderable ? (
-                          <span className={s.priceBlock}>
-                            <b className={s.price}>{d.priceLabel}</b>
-                            {d.kcal ? (
-                              <span className={s.perProtein}>
-                                {d.protein}g protein
-                              </span>
-                            ) : null}
-                          </span>
-                        ) : (
-                          <span className={s.askPrice}>Price on request</span>
-                        )}
-                        <AddControl dish={d} />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {showAllControl(results.length, "dishes")}
+              <ul className={s.grid}>{cap(sortedDishes).map((d) => dishCard(d))}</ul>
+              {showAllControl(sortedDishes.length, "dishes")}
               </>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── What you actually get ────────────────────────────────────────
-          Placed HERE — directly under the catalogue, ahead of the bands — on
-          purpose. The owner's complaint was that the page shows food and
-          nothing else, while eleven dashboard screens and 54 models sit behind
-          it unmentioned. It goes above conditions and proof because "there is
-          an app" has to land before "the app is good". */}
-      <Platform counts={bandCounts} />
+      {/* ── EVERYTHING BELOW THE FOOD ──────────────────────────────────
+          Eight bands, in app/_web/HomeSections.tsx: the day from 04:00 to your
+          door, the platform behind the menu, the seven services, the plan
+          builder with its arithmetic in the open, the conditions, the coach and
+          the trial receipt, the drop times and the questions, then the close.
 
-      {/* ── The bands ────────────────────────────────────────────────────
-          Scale, conditions and proof. All three were built for v2 and left on
-          no route; all three are the arguments that make this hard to copy.
-          They sit here, BELOW the catalog, because AGENTS.md is explicit that
-          nothing pushes food down the page. */}
-      <HomeBands counts={bandCounts} quotes={quotes} />
-
-      {/* ── The operation, and the buyers who are not the eater ──────────
-          The recipe production system, the delivery chain, the partner network
-          and corporate. All four are real, all four had no presence on this
-          page beyond at most one card near the footer. */}
-      <Behind counts={bandCounts} />
-
-      {/* ── Services ─────────────────────────────────────────────────────
-          The v2 homepage argued these as scrolling sections. A webapp carries
-          them as destinations — the AI coach, training, corporate, digital
-          plans and the gym network were all real and none was reachable. */}
-      <section className={s.services} aria-labelledby="services-h">
-        <div className={s.servicesInner}>
-          <h2 id="services-h" className={s.servicesH}>Everything else the kitchen runs</h2>
-          <ul className={s.serviceGrid}>
-            {SERVICES.map((sv) => (
-              <li key={sv.href}>
-                <Link href={sv.href}>
-                  {/* The three that have a real photograph get it; the three
-                      that do not get the same colour ground the dish wells use,
-                      hashed off the route so each is its own. Both branches are
-                      the same height, so the row never goes ragged. */}
-                  <span
-                    className={s.serviceShot}
-                    style={serviceImages[sv.href] ? undefined : fieldStyle(sv.href)}
-                    aria-hidden="true"
-                  >
-                    {serviceImages[sv.href] ? (
-                      <Image
-                        src={serviceImages[sv.href]!}
-                        alt=""
-                        fill
-                        sizes="(min-width: 1024px) 240px, (min-width: 640px) 45vw, 92vw"
-                        style={{ objectFit: "cover" }}
-                        loading="lazy"
-                      />
-                    ) : null}
-                  </span>
-                  <span className={s.serviceStat}>{sv.stat}</span>
-                  <b>{sv.label}</b>
-                  <span className={s.serviceBlurb}>{sv.blurb}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+          They sit HERE, below the catalogue, because AGENTS.md is explicit that
+          nothing pushes food down the page. Each is a section someone scrolls
+          TO, not one they scroll PAST. */}
+      <HomeSections
+        counts={bandCounts}
+        goalCount={goalCount}
+        prices={prices}
+        trial={trial}
+        areaCount={areaCount}
+        cutoffLabel={cutoffLabel}
+      />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className={s.footer}>

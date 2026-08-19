@@ -5,15 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { FSSAI_LICENCE } from "@/lib/trust-marks";
 import { MENU_FROM } from "@/lib/menu-alacarte";
 import { cutoffLabel } from "@/lib/order-cutoff";
-import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
+import { TRIAL, TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
+import type { PriceRow } from "@/lib/plan-tier-pricing";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
 import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
 import Areas from "./_hp/Areas";
-import { slot } from "@/lib/site-images";
+import { AREAS_AT } from "./_hp/areas-data";
 import { decodeRow } from "@/lib/decode-entities";
 import FitFuelApp from "./_web/FitFuelApp";
-import { SERVICES } from "./_web/services";
 import type { BandCounts, Quote } from "./_web/HomeBands";
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -262,11 +262,87 @@ async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
   }
 }
 
+/**
+ * THE PLAN PRICE MATRIX, for the builder band on the homepage.
+ *
+ * 3,614 PlanPrice rows collapse to 65 distinct (diet × duration × meals)
+ * combinations, because the matrix is a property of the SHAPE of a plan rather
+ * than of any one plan — a 30-day vegetarian breakfast-and-lunch subscription
+ * costs the same whether it is the PCOS sheet or the weight-loss one.
+ *
+ * WHY THE HOMEPAGE READS THE REAL ROWS RATHER THAN CARRYING ITS OWN NUMBERS.
+ * lib/trial-price.ts exists because seven marketing surfaces once hardcoded a
+ * price no customer ever paid. A calculator on the front door is the single
+ * easiest place to reintroduce exactly that bug, so it gets the same rows
+ * /plans and checkout price against.
+ *
+ * Fails soft to an empty matrix: the builder then says which combination is not
+ * priced yet and links to the catalogue, rather than rendering ₹NaN.
+ */
+async function getPrices(): Promise<PriceRow[]> {
+  try {
+    const rows = await prisma.planPrice.groupBy({
+      by: ["diet", "duration", "mealsPerDay", "priceRs"],
+      where: { isActive: true, isDigital: false },
+      _count: { _all: true },
+    });
+    /* One price per combination: the one the most plans are sold at. A handful
+       of rows carry the ₹299/₹699 digital figures against ONE_MONTH/ALL_FOUR,
+       and taking a min or a first would let those two rows price the whole
+       subscription. */
+    const best = new Map<string, { row: PriceRow; n: number }>();
+    for (const r of rows) {
+      const key = `${r.diet}|${r.duration}|${r.mealsPerDay}`;
+      const n = r._count._all;
+      const prev = best.get(key);
+      if (!prev || n > prev.n) {
+        best.set(key, {
+          n,
+          row: {
+            diet: String(r.diet),
+            duration: String(r.duration),
+            mealsPerDay: String(r.mealsPerDay),
+            priceRs: r.priceRs,
+          },
+        });
+      }
+    }
+    return [...best.values()].map((x) => x.row);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * ONE TRIAL DAY, ITEMISED.
+ *
+ * Straight off lib/trial-price.ts, which is decomposePrice() run on the same
+ * ₹400 subtotal checkout runs it on: ₹300 of food, ₹50 delivery, ₹50 packaging,
+ * ₹20 of GST, ₹420 collected. Not one figure here is typed.
+ *
+ * The imported design shipped its own five-line receipt (₹190 + ₹230 + ₹49 +
+ * ₹20 + ₹24) that totalled ₹513 under a heading reading ₹420. This is the same
+ * panel with the real arithmetic in it.
+ */
+function trialReceipt() {
+  const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+  return {
+    rows: [
+      { k: "Two meals — breakfast and lunch", v: rs(TRIAL.baseRs) },
+      { k: "Delivery", v: rs(TRIAL.deliveryRs) },
+      { k: "Packaging", v: rs(TRIAL.packagingRs) },
+      { k: `GST ${TRIAL.gstPercent}%`, v: rs(TRIAL.gstRs) },
+    ],
+    total: TRIAL_TOTAL_GLYPH,
+  };
+}
+
 export default async function AppPage() {
-  const [plans, supplements, bands] = await Promise.all([
+  const [plans, supplements, bands, prices] = await Promise.all([
     getPlans(),
     getSupplements(),
     getBandData(),
+    getPrices(),
   ]);
 
   return (
@@ -275,7 +351,12 @@ export default async function AppPage() {
       <FitFuelApp
         dishes={SHOP_DISHES}
         images={imageMap()}
-        courses={COURSES.map((c) => ({ key: c.key, label: c.label, n: c.n }))}
+        /* `note` is the kitchen's own sentence about the course, already on
+           COURSES and previously rendered nowhere. The menu-order grid heads
+           each of the six groups with it. */
+        courses={COURSES.map((c) => ({
+          key: c.key, label: c.label, n: c.n, note: c.note,
+        }))}
         area="Kharadi"
         cutoffLabel={cutoffLabel()}
         trialTotal={TRIAL_TOTAL_GLYPH}
@@ -284,23 +365,27 @@ export default async function AppPage() {
         supplements={supplements}
         planCount={plans.length || 126}
         licence={FSSAI_LICENCE}
-        /* Resolved here because lib/site-images.ts touches the filesystem and
-           must not be called from a client component. Three of the six services
-           have an honest photograph; the rest resolve to null and the card
-           renders its colour ground instead of borrowing an unrelated picture. */
-        serviceImages={Object.fromEntries(
-          SERVICES.map((sv) => [
-            sv.href,
-            sv.slot && sv.folder ? (slot(sv.folder, sv.slot)?.src ?? null) : null,
-          ]),
-        )}
+        /* The 126 rows collapse to this many concepts — 59 goals and conditions,
+           one per subCategory. Counted, never typed, so the figure on the
+           conditions band cannot drift from the catalogue it describes. */
+        goalCount={plans.length}
+        prices={prices}
+        trial={trialReceipt()}
+        /* +1 for the kitchen itself, which AREAS_AT excludes. */
+        areaCount={AREAS_AT.length + 1}
         /* app/_hp/Areas.tsx was written for the v2 homepage and then imported by
            nothing — the plotted delivery map, on no route at all. It is a server
            component, so it is rendered here and passed down as a node for the
            location chip to open. */
         areaPanel={<Areas />}
         bandCounts={bands.counts}
-        quotes={bands.quotes}
+        /* `bands.quotes` IS NOT PASSED, and that is the one thing the redesign
+           drops. It is still queried above — three featured Testimonial rows
+           carrying the result, the plan and the area — but the imported design
+           has no proof band anywhere in its eight sections, so there is nowhere
+           on `/` to render them today. The query stays so re-wiring is one prop
+           rather than a re-write, and the loss is called out in the handover
+           instead of disappearing quietly. */
       />
     </>
   );
