@@ -1148,6 +1148,10 @@ export default function FitFuelApp({
               onClick={() => setAreaOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={areaOpen}
+              /* The label is explicit because the visible word is dropped below
+                 640px — the pin alone is the control there, and the button must
+                 still announce which area it opens. */
+              aria-label={`Delivering to ${area}. See where we deliver`}
             >
               <Icon d={I.pin} size={16} />
               {area}
@@ -1311,7 +1315,12 @@ export default function FitFuelApp({
               </div>
             </div>
 
-            <div className={s.dayMeters}>
+            {/* The live region is the METER BLOCK, not the sentence under it.
+                Below 640px that sentence is dropped for room and the figures
+                stay — announcing the change has to survive both layouts, and a
+                region that exists on one breakpoint and not the other is a
+                screen-reader bug nobody sees. */}
+            <div className={s.dayMeters} aria-live="polite">
               <p className={s.dayFigs}>
                 <span className="fk-num">
                   {day.kcal.toLocaleString("en-IN")} / {target.kcal.toLocaleString("en-IN")} kcal
@@ -1336,9 +1345,7 @@ export default function FitFuelApp({
                   />
                 </span>
               </p>
-              {/* One live region for the whole bar. Announcing both meters
-                  separately reads as two unrelated numbers changing. */}
-              <p className={s.dayNote} aria-live="polite">
+              <p className={s.dayNote}>
                 {day.count === 0
                   ? "Pick a target, then add dishes — the bars fill as you go."
                   : day.gapProtein > 0

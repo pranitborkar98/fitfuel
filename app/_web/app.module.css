@@ -4130,3 +4130,230 @@
   .trioCard,
   .minorCard { transition: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE PHONE HAS 812 PIXELS AND THE CHROME WAS TAKING 486 OF THEM
+
+   Measured on a 375x812 phone after the redesign landed:
+
+     header  427px   topRow 112 + filters 127 + day bar 187
+     tabs     59px   fixed, bottom
+     ────────────────
+     content 326px   40% of the screen, and less than one dish card
+
+   On a 667px phone that leaves 181px. The header is sticky and the tab bar is
+   fixed, so none of it can be scrolled out of the way — the 326px is the whole
+   window onto the menu, permanently.
+
+   Four cuts, in order of what they returned:
+
+   1. THE DAY BAR STOPS BEING THREE ROWS. Its basket column is deleted here —
+      the bag badge in the header and the fixed order bar already carry the
+      same total twice — and the instructional sentence goes with it. The
+      target picker and the two labelled meters stay, because those are the
+      thing itself.                                                      -101px
+   2. THE MODE ROW GOES. It is the SAME control as the first three items of the
+      bottom tab bar, which is fixed on screen 59px below it: Order tonight /
+      Meal plans / Supplements, with the same active state. Two copies of one
+      switch, both permanently visible, is the clearest duplication on the
+      phone layout.                                                       -51px
+   3. THE TOP ROW COLLAPSES TO ONE LINE. Brand, search, location and bag fit
+      across 375px once the location button is its pin alone — at 360px the
+      search field still gets 180, well past the 90px collapse that split this
+      into two rows in the first place.                                   -56px
+   4. Tighter block padding on all three.                                 -18px
+
+     header  201px
+     content 552px   69% more room, and the same controls
+
+   NOTHING IS REMOVED THAT IS NOT SOMEWHERE ELSE ON THE SCREEN. Modes are the
+   tab bar, the basket total is the badge and the order bar, and the target
+   sentence is re-derivable from the two meters it describes.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 639px) {
+  /* ── 3. One row ─────────────────────────────────────────────────────────
+     The two-row split existed because brand + search + location + basket left
+     the search field 90px. The location word is what cost 46 of those, and the
+     pin says the same thing in 20 — so the row fits and the search keeps a
+     usable width. */
+  .topRow {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "brand search actions";
+    gap: var(--fk-s-2);
+    padding: 6px var(--fk-gutter);
+  }
+  .brand {
+    font-size: 1.15rem;
+  }
+  /* Pin only. The word is dropped with font-size rather than by removing the
+     node, so the button keeps a text child — and the explicit aria-label in
+     FitFuelApp.tsx names the area regardless. */
+  .place {
+    gap: 0;
+    /* 14, not 11. At 11 the button measured 40x44 — the height rule was met and
+       the width one was not, and a 44px target is 44 in both directions. */
+    padding: 0 14px;
+    font-size: 0;
+  }
+  .topActions {
+    gap: 4px;
+  }
+
+  /* ── 2. The mode row is the tab bar ─────────────────────────────────────
+     Hidden, not deleted: it is the only place the three catalogue counts are
+     printed, and above 640px there is room for both. The result line under the
+     heading still prints the count for whichever catalogue is open. */
+  .modeRow {
+    display: none;
+  }
+  .filters {
+    padding-block: var(--fk-s-2);
+  }
+
+  /* ── 1. The day bar, at a phone's scale ─────────────────────────────────
+     Target picker on its own line at a full 44px — it is a control and the
+     44px rule is not negotiable — then the two meters with their figures
+     directly above them.
+
+     The basket column is gone: its total is already in the header badge and,
+     the moment anything is in the basket, in the fixed order bar. Three copies
+     of one number, on the screen with the least room for any of them. */
+  .dayBarInner {
+    gap: 8px;
+    padding: 8px var(--fk-gutter);
+  }
+  .goalPick {
+    gap: var(--fk-s-2);
+  }
+  /* The picker takes the width the basket column gave up, so the three targets
+     are three real 44px buttons rather than three 52px ones. */
+  .goalSeg {
+    flex: 1;
+  }
+  .goalBtn {
+    flex: 1;
+    min-height: var(--fk-tap);
+    padding: 0 8px;
+  }
+  .dayMeters {
+    gap: 4px;
+  }
+  .dayFigs {
+    font-size: var(--fk-t-xs);
+  }
+  .dayTracks {
+    gap: 8px;
+  }
+  .dayTrack {
+    height: 6px;
+  }
+  /* The sentence the meters already say, in words. First to go: it is the only
+     part of this bar that is explanation rather than instrument. */
+  .dayNote,
+  .dayBasket {
+    display: none;
+  }
+
+  /* ── The lede ───────────────────────────────────────────────────────────
+     Two columns collapse to one above 900px already; this only pulls the
+     block padding in so the first course heading is not pushed further down by
+     chrome the phone cannot afford. */
+  .lede {
+    padding: var(--fk-s-4) 0 var(--fk-s-3);
+    gap: var(--fk-s-3);
+  }
+  /* Four lines at this width, and the first sentence describes the bar sitting
+     directly above it. Two lines is the claim; the rest is the page explaining
+     itself to someone already looking at the thing it explains. */
+  .claimDeck {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  .proof {
+    gap: var(--fk-s-4);
+  }
+  .proof b {
+    font-size: var(--fk-t-md);
+  }
+
+  /* Sort is four chips and a label on a 335px row — it wrapped to three lines.
+     Scrolls sideways like every other chip row in this shell. */
+  .sortRow {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .sortRow::-webkit-scrollbar {
+    display: none;
+  }
+  .sortBtn {
+    flex: none;
+  }
+
+  /* The course note is the kitchen's sentence about a course, and at this
+     width it pushed the first card of every group down by two lines. The
+     heading and the count carry the group on a phone. */
+  .courseNote {
+    display: none;
+  }
+  .courseHead {
+    padding: var(--fk-s-4) 0 6px;
+  }
+
+  /* ── The bands ──────────────────────────────────────────────────────────
+     64px of vertical padding per band is eight bands' worth of scrolling on a
+     phone before the close. */
+  .bandWrap {
+    padding: var(--fk-s-6) var(--fk-gutter);
+  }
+  .coachCard,
+  .receiptCard,
+  .axis {
+    padding: var(--fk-s-4);
+  }
+  .weekRow {
+    gap: 8px;
+  }
+  .weekBar {
+    height: 84px;
+  }
+  .faqA {
+    padding: 0 4px 18px 4px;
+  }
+  .closeWrap {
+    padding: var(--fk-s-7) var(--fk-gutter);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   44 PIXELS, EVERYWHERE, NOT 36 / 40 / 42
+
+   The imported design sized its new controls at 36 (sort, the target picker),
+   40 (a course's "Show all", the condition chips) and 42 (the plan builder's
+   options). Measured on the phone, that is eleven controls under the minimum.
+
+   AGENTS.md does not leave this open: "Accessibility is not up for
+   reinterpretation: AA contrast, 44px targets, visible focus". So the design's
+   proportions are kept — the padding, the pill shape, the type size are all as
+   drawn — and only the height floor is raised. The cost is 8px on two rows of
+   a desktop layout that has the room; the alternative is a menu whose sort and
+   whose plan builder cannot be reliably tapped.
+   ══════════════════════════════════════════════════════════════════════════ */
+.sortBtn,
+.goalBtn,
+.courseMore,
+.axisBtn {
+  min-height: var(--fk-tap);
+}
+.app .condChips a {
+  min-height: var(--fk-tap);
+}
+/* Grid children ignore min-height when the row is shorter than the box; the
+   explicit floor on the button itself is what the browser honours. */
+.tierBtn {
+  min-height: var(--fk-tap);
+}
