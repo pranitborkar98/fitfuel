@@ -9,6 +9,8 @@
 // `.map()` on the server throws at prerender after tsc and eslint pass clean.
 // Shared data lives here.
 //
+import type { FitnessGoal } from "@/lib/tdee";
+
 // NOTHING IN THIS FILE IS A PRICE THAT A CUSTOMER PAYS. Plan prices come from
 // the seeded PlanPrice matrix and the trial from lib/trial-price.ts, both
 // resolved on the server — lib/trial-price.ts exists precisely to stop a second
@@ -165,12 +167,23 @@ export const MINOR: Minor[] = [
    The three goals the TDEE calculator already hands a customer, as round
    targets. Nothing per-dish is invented from these: the arithmetic printed on
    a card is the dish's own macros against the target the visitor picked. */
-export type Goal = { key: string; label: string; kcal: number; protein: number };
+export type Goal = {
+  key: string;
+  label: string;
+  /** The goal as lib/tdee.ts names it, so a profile can be run through the real
+   *  engine rather than against a second table of adjustments living here. */
+  goal: FitnessGoal;
+  /** The round figure someone who has NOT set their numbers gets. Deliberately
+   *  coarse: it is a placeholder for a real calculation, and dressing it up as
+   *  a precise figure would hide that. */
+  kcal: number;
+  protein: number;
+};
 
 export const GOALS: Goal[] = [
-  { key: "cut", label: "Cut", kcal: 1600, protein: 120 },
-  { key: "maintain", label: "Maintain", kcal: 2000, protein: 140 },
-  { key: "build", label: "Build", kcal: 2600, protein: 170 },
+  { key: "cut", label: "Cut", goal: "weight_loss", kcal: 1600, protein: 120 },
+  { key: "maintain", label: "Maintain", goal: "maintenance", kcal: 2000, protein: 140 },
+  { key: "build", label: "Build", goal: "muscle_gain", kcal: 2600, protein: 170 },
 ];
 
 /* ── The coach, as four weigh-ins ───────────────────────────────────────────

@@ -45,6 +45,7 @@ import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import type { BandCounts } from "./HomeBands";
 import HomeSections from "./HomeSections";
 import { GOALS } from "./home-data";
+import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
 import s from "./app.module.css";
 
 /* Alias so helper components can reach the stylesheet without shadowing the
@@ -673,6 +674,17 @@ export default function FitFuelApp({
      share of both. The numbers are the dish's own macros against the target the
      visitor picked — nothing per-dish is invented. */
   const [goal, setGoal] = useState("maintain");
+  /* ── THE TARGET IS THE READER'S, IF THEY WANT IT TO BE ────────────────────
+     Read from localStorage after mount by useNumbers. Null until then and null
+     for anyone who has not set them, in which case the three goals fall back to
+     their round figures. Nothing on the page is gated behind having a profile.
+
+     This is app/_hp/Finder.tsx's calculator, which has sat on no route since
+     the v2 homepage was built. What makes it worth importing is not the form —
+     it is that every "% of your protein" on every card below stops being a
+     percentage of an average person's day. */
+  const [numbers, setNumbers] = useNumbers();
+  const [numbersOpen, setNumbersOpen] = useState(false);
   /* Which course headers have been opened past their first four. Per course, so
      opening Salads does not dump all 48 dishes on the page. */
   const [openCourse, setOpenCourse] = useState<Record<string, boolean>>({});
@@ -727,7 +739,8 @@ export default function FitFuelApp({
      carries an add-on and a quantity but not the macros. Enquiry rows have no
      price and no quantity, so they contribute nothing here — which is correct:
      you have not decided to eat them. */
-  const target = GOALS.find((g) => g.key === goal) ?? GOALS[1];
+  const goalSpec = GOALS.find((g) => g.key === goal) ?? GOALS[1];
+  const target = targetFor(numbers, goalSpec.goal, goalSpec);
   const day = useMemo(() => {
     let kcal = 0;
     let protein = 0;
@@ -1195,7 +1208,6 @@ export default function FitFuelApp({
         <div className={s.dayBar}>
           <div className={s.dayBarInner}>
             <div className={s.goalPick}>
-              <span className={s.goalLabel}>Your day</span>
               <div className={s.goalSeg} role="group" aria-label="Your daily target">
                 {GOALS.map((g) => (
                   <button
@@ -1209,6 +1221,19 @@ export default function FitFuelApp({
                   </button>
                 ))}
               </div>
+              {/* "Your day" was a label on a control that already says what it
+                  is. The room goes to the thing that changes the answer. */}
+              <button
+                type="button"
+                className={`${s.numbersBtn} ${target.personal ? s.numbersBtnOn : ""}`}
+                onClick={() => setNumbersOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={numbersOpen}
+              >
+                {target.personal
+                  ? `${numbers!.weightKg}kg · ${numbers!.age}`
+                  : "Set your numbers"}
+              </button>
             </div>
 
             {/* The live region is the METER BLOCK, not the sentence under it.
@@ -1243,7 +1268,9 @@ export default function FitFuelApp({
               </p>
               <p className={s.dayNote}>
                 {day.count === 0
-                  ? "Pick a target, then add dishes — the bars fill as you go."
+                  ? target.personal
+                    ? "Your target, from your own numbers. Add dishes and the bars fill."
+                    : "Pick a target, then add dishes — the bars fill as you go."
                   : day.gapProtein > 0
                     ? `${day.gapProtein}g protein and ${day.gapKcal.toLocaleString("en-IN")} kcal left in the day.`
                     : `Protein target met. ${day.gapKcal.toLocaleString("en-IN")} kcal still spare.`}
@@ -1728,6 +1755,16 @@ export default function FitFuelApp({
             </button>
           </div>
         </div>
+      ) : null}
+
+      {numbersOpen ? (
+        <YourNumbers
+          goal={goalSpec.goal}
+          goalLabel={goalSpec.label}
+          initial={numbers}
+          onSave={setNumbers}
+          onClose={() => setNumbersOpen(false)}
+        />
       ) : null}
 
       {sheet ? <DishSheet dish={sheet} images={images} onClose={() => setSheet(null)} /> : null}

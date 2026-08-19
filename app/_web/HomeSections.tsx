@@ -47,6 +47,7 @@ import {
   TRIO,
 } from "./home-data";
 import type { BandCounts } from "./HomeBands";
+import DeliveryMap from "./DeliveryMap";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
 
@@ -670,11 +671,30 @@ function AreasFaqBand({ areaCount, cutoffLabel }: { areaCount: number; cutoffLab
 
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="faq-h">
-      <div className={`${s.bandWrap} ${s.splitWrap}`}>
-        <div>
+      <div className={s.bandWrap}>
+        {/* ── THE MAP, ON THE PAGE ────────────────────────────────────────
+            "Do we deliver to you" is the first question a cold visitor has and
+            the map that answers it was reachable only by tapping the location
+            chip — a full-screen sheet most people never open. It leads the band
+            now, and the drop times and questions sit under it. */}
+        <div className={s.mapHead}>
           <h2 id="faq-h" className={`${s.bandH2} ${s.bandH2Narrow}`}>
-            Eight morning drops, one kitchen
+            Do we deliver to you?
           </h2>
+          <p className={s.bandLede}>
+            Cooked from 04:00 in Kharadi, at your door by 08:00. {areaCount} areas,
+            one kitchen. We would rather serve east Pune properly than the whole
+            city badly.
+          </p>
+        </div>
+
+        <div data-reveal="up">
+          <DeliveryMap />
+        </div>
+
+        <div className={s.splitWrap} style={{ marginTop: "var(--fk-s-6)" }}>
+        <div>
+          <h3 className={s.areaH3}>The morning run</h3>
           <ul className={s.areaList}>
             {AREA_DROPS.map((a) => (
               <li key={a.a}>
@@ -687,9 +707,9 @@ function AreasFaqBand({ areaCount, cutoffLabel }: { areaCount: number; cutoffLab
             ))}
           </ul>
           <p className={s.areaNote}>
-            Breakfast drop times. Lunch runs 12:15–13:30 across all eight, and we
-            deliver to {areaCount} suburbs in all —{" "}
-            <Link href="/locations">see the map</Link>.
+            Breakfast drop times for the eight busiest. Lunch runs 12:15–13:30
+            across all of them — <Link href="/locations">every area and its
+            times</Link>.
           </p>
         </div>
 
@@ -726,6 +746,7 @@ function AreasFaqBand({ areaCount, cutoffLabel }: { areaCount: number; cutoffLab
             );
           })}
         </ul>
+        </div>
       </div>
     </section>
   );

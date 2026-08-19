@@ -4367,3 +4367,311 @@
 .app a.dishName:hover {
   color: var(--fk-green-deep);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   YOUR NUMBERS
+
+   The v2 homepage's calculator, at app density. app/_hp/Finder.tsx renders it
+   at clamp(3.4rem, 8vw, 6rem) inside a full-bleed panel — correct for a page
+   read once, hostile in a sheet opened from a header on the third visit. Same
+   arithmetic, same ledger, a third of the type size.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The control in the day bar. Reads "Set your numbers" until there are some,
+   then the two figures that change the answer most, so the reader can see at a
+   glance whose day the bars belong to. */
+.numbersBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--fk-tap);
+  padding: 0 14px;
+  border: 1px dashed var(--fk-line-strong);
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  font-family: var(--fk-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fk-ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease),
+    background-color var(--fk-dur) var(--fk-ease);
+}
+.numbersBtn:hover {
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
+}
+.numbersBtnOn,
+.numbersBtnOn:hover {
+  border-style: solid;
+  border-color: rgba(132, 204, 22, 0.42);
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
+  font-family: var(--fk-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.numbersTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fk-s-4);
+  padding: var(--fk-s-4) var(--fk-s-5);
+  border-bottom: 1px solid var(--fk-line);
+}
+.app .numbersH {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-lg);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--fk-ink);
+}
+
+.numbers {
+  display: grid;
+  gap: var(--fk-s-5);
+  padding: var(--fk-s-5);
+}
+.app .numbersLede {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--fk-t-sm);
+  line-height: 1.5;
+  color: var(--fk-ink-3);
+}
+
+.numbersField {
+  display: grid;
+  gap: 10px;
+}
+.numbersLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+}
+.numbersHint {
+  font-size: var(--fk-t-xs);
+  line-height: 1.45;
+  color: var(--fk-ink-3);
+}
+
+/* Wraps rather than scrolls: five activity levels at 375px is three lines, and
+   a control the reader has to discover by dragging is a control they miss. */
+.numbersSeg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.numbersOpt {
+  flex: none;
+  min-height: var(--fk-tap);
+  padding: 0 14px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  font-family: var(--fk-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fk-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease);
+}
+.numbersOpt:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+.numbersOn,
+.numbersOn:hover {
+  border-color: var(--fk-green);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font-weight: 700;
+}
+
+.numbersDialHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fk-s-4);
+}
+.numbersDialHead b {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+}
+
+/* The track is styled per-engine because a bare range input inherits the OS
+   accent, which on a near-black ground is a light-grey slab. 44px of hit area
+   with a 6px visible track: the thumb is what you grab, the rail is what you
+   read. */
+.numbersRange {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--fk-tap);
+  background: transparent;
+  cursor: pointer;
+}
+.numbersRange::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-warm-2);
+}
+.numbersRange::-moz-range-track {
+  height: 6px;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-warm-2);
+}
+.numbersRange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border: 0;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green);
+  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.8);
+}
+.numbersRange::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green);
+}
+
+/* ── The ledger ───────────────────────────────────────────────────────────── */
+.numbersOut {
+  display: grid;
+  gap: 12px;
+  padding: var(--fk-s-5);
+  border: 1px solid rgba(132, 204, 22, 0.34);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+.numbersBig {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--fk-mono);
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--fk-green-deep);
+}
+.numbersBig > span {
+  font-family: var(--fk-sans);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+}
+
+.numbersMacros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fk-s-4) var(--fk-s-5);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--fk-line);
+}
+.numbersMacros > span {
+  display: grid;
+  gap: 3px;
+}
+.numbersMacros b {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+}
+.numbersMacros > span > span {
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+}
+
+.numbersLedger {
+  display: grid;
+}
+.numbersLedger > span {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--fk-s-4);
+  padding: 7px 0;
+  font-size: var(--fk-t-sm);
+  color: var(--fk-ink-2);
+}
+.numbersLedger b {
+  font-family: var(--fk-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+  white-space: nowrap;
+}
+/* Amber, and only when the floor actually bit. The same hue the coach band
+   hatches a stalled week in — "this number stopped following the arithmetic". */
+.numbersFloor {
+  color: var(--fk-terracotta);
+}
+
+.numbersActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.numbersSave {
+  flex: 1;
+  min-width: 180px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--fk-dur) var(--fk-ease);
+}
+.numbersSave:hover {
+  background: var(--fk-green-deep);
+}
+.numbersClear {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: transparent;
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  color: var(--fk-ink-3);
+  cursor: pointer;
+}
+.numbersClear:hover {
+  color: var(--fk-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .numbersBtn,
+  .numbersOpt,
+  .numbersSave {
+    transition: none;
+  }
+}
