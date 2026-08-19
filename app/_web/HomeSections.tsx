@@ -45,10 +45,12 @@ import {
   FAQS,
   MINOR,
   TRIO,
+  SURFACES,
   WEDGE_COLS,
   wedgeRows,
 } from "./home-data";
 import type { BandCounts, Quote } from "./HomeBands";
+import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
 import DeliveryMap from "./DeliveryMap";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
@@ -93,6 +95,8 @@ export type HomeSectionsProps = {
   cutoffLabel: string;
   /** Featured Testimonial rows. Empty renders nothing at all — see ProofBand. */
   quotes: Quote[];
+  /** Seven seeded days of weight-loss-veg. Empty renders nothing — see WeekBand. */
+  week: Dish[];
 };
 
 export default function HomeSections({
@@ -103,6 +107,7 @@ export default function HomeSections({
   areaCount,
   cutoffLabel,
   quotes,
+  week,
 }: HomeSectionsProps) {
   const revealRef = useReveal<HTMLDivElement>();
 
@@ -111,11 +116,13 @@ export default function HomeSections({
       <DayBand />
       <PlatformBand counts={counts} goalCount={goalCount} />
       <WedgeBand counts={counts} />
+      <WeekBand week={week} recipes={counts.recipes} />
       <ServicesBand />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
       <AreasFaqBand areaCount={areaCount} cutoffLabel={cutoffLabel} />
+      <SurfacesBand />
       <ProofBand quotes={quotes} />
       <CtaBand
         trialTotal={trial.total}
@@ -356,6 +363,168 @@ function ProofBand({ quotes }: { quotes: Quote[] }) {
                 <span className={s.quoteResult}>{q.resultLabel}</span>
                 <span>{q.planLabel}</span>
               </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/* ── 2c. The rotation ────────────────────────────────────────────────
+   app/_web/Behind.tsx has argued "nothing repeats for sixty days" in prose
+   since it was written, and no surface has ever shown a single day of it. This
+   is seven real days of the one plan of 126 with a seeded schedule.
+
+   A <table>, and not as a fallback. This is about as tabular as data gets —
+   seven days down, four meals across — and a grid of divs cannot be walked by
+   assistive tech. app/_hp/Week.tsx makes the same call for the same reason.
+
+   RENDERS NOTHING WHEN THE QUERY COMES BACK EMPTY. A rotation band carrying
+   invented dish names would falsify the exact claim it exists to prove. */
+function WeekBand({ week, recipes }: { week: Dish[]; recipes: number }) {
+  if (!week.length) return null;
+
+  const days = [...new Set(week.map((d) => d.day))].sort((a, b) => a - b);
+  if (!days.length) return null;
+
+  const at = (day: number, slot: string) =>
+    week.find((d) => d.day === day && d.slot === slot);
+  /* Counted, not claimed: how many DIFFERENT dishes these seven days hold. If
+     the seed ever repeats one, this figure drops and says so. */
+  const distinct = new Set(week.map((d) => d.name)).size;
+  const dayKcal = (day: number) =>
+    week.filter((d) => d.day === day).reduce((n, d) => n + (d.kcal ?? 0), 0);
+
+  return (
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="week-h">
+      <div className={s.bandWrap}>
+        <div className={s.bandHead}>
+          <div>
+            <h2 id="week-h" className={s.bandH2}>
+              A week you can read before you buy it
+            </h2>
+          </div>
+          <p className={s.bandLede}>
+            Seven real days of the weight-loss plan, out of the database.{" "}
+            {distinct} different dishes across {days.length} days — every recipe
+            carries a rotation group, so a plan cannot serve you the same lunch
+            twice in two months.
+          </p>
+        </div>
+
+        <div className={s.specWrap} data-reveal="up">
+          <table className={s.spec}>
+            <caption className="fk-sr-only">
+              Seven days of the weight-loss vegetarian plan, four meals a day,
+              with each day&apos;s total calories.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Day</th>
+                {SLOT_ORDER.map((slot) => (
+                  <th key={slot} scope="col">
+                    {SLOT_LABEL[slot] ?? slot}
+                  </th>
+                ))}
+                <th scope="col" className={s.specUs}>
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {days.map((day) => (
+                <tr key={day}>
+                  <th scope="row">Day {day}</th>
+                  {SLOT_ORDER.map((slot) => {
+                    const dish = at(day, slot);
+                    return (
+                      <td key={slot}>
+                        {dish ? (
+                          <>
+                            <b className={s.weekDish}>{dish.name}</b>
+                            {dish.kcal ? (
+                              <span className={`${s.weekKcal} fk-num`}>
+                                {Math.round(dish.kcal)} kcal
+                              </span>
+                            ) : null}
+                          </>
+                        ) : (
+                          /* An em dash, never a plausible dish name. */
+                          <span aria-label="not scheduled">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                  <td className={`${s.specMine} fk-num`}>
+                    {dayKcal(day).toLocaleString("en-IN")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className={s.weekNoteFoot}>
+          {recipes.toLocaleString("en-IN")} recipes are written this way so far —
+          each one a production sheet carrying its station, its numbered steps,
+          its temperatures and its allergens, which is also how a second kitchen
+          in a second city cooks food that tastes the same.{" "}
+          <Link href="/plans">See the full thirty days</Link>.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ── 7c. Every surface, listed ────────────────────────────────────────
+   app/_hp/Inside.tsx — and also the content the redesign quietly dropped:
+   Platform.tsx carried eight of these as rows and was replaced by four stat
+   columns, so `/` went from naming eleven dashboard screens to naming none.
+
+   A DIRECTORY, not eleven feature blocks. Inside's own comment: giving each of
+   these a section is exactly how the last homepage reached 39,708px and 35
+   headings. Ten rows cost one screen; ten cards would have cost ten. */
+function SurfacesBand() {
+  return (
+    <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="inside-h">
+      <div className={s.bandWrap}>
+        <div className={s.bandHead}>
+          <div>
+            <h2 id="inside-h" className={s.bandH2}>
+              What you get after you order
+            </h2>
+          </div>
+          <p className={s.bandLede}>
+            Ordering lunch is the smallest thing here. Every one of these is a
+            screen that already exists, with the figure that proves it beside it.
+          </p>
+        </div>
+
+        <ul className={s.surfaces}>
+          {SURFACES.map((sv) => (
+            <li key={sv.href} data-reveal="left">
+              <Link href={sv.href}>
+                <b className={`${s.surfaceStat} fk-num`}>{sv.stat}</b>
+                <span className={s.surfaceBody}>
+                  <b>{sv.name}</b>
+                  <span>{sv.desc}</span>
+                </span>
+                <svg
+                  className={s.surfaceGo}
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
             </li>
           ))}
         </ul>

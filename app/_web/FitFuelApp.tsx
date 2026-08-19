@@ -38,6 +38,7 @@ import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
 import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
 import type { PriceRow } from "@/lib/plan-tier-pricing";
+import type { Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
@@ -243,6 +244,9 @@ export type AppProps = {
    *  imported redesign had no band to render them in, so for four days they
    *  were fetched and dropped. The proof band takes them now. */
   quotes: Quote[];
+  /** Seven days of the one plan with a seeded schedule, for the rotation band.
+   *  Empty when the query fails, and the band then renders nothing. */
+  week: Dish[];
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -651,6 +655,7 @@ export default function FitFuelApp({
   trial,
   areaCount,
   quotes,
+  week,
 }: AppProps) {
   const cart = useCart();
   const [course, setCourse] = useState("all");
@@ -1685,6 +1690,7 @@ export default function FitFuelApp({
         areaCount={areaCount}
         cutoffLabel={cutoffLabel}
         quotes={quotes}
+        week={week}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}

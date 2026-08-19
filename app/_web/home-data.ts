@@ -349,3 +349,93 @@ export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[]
     },
   ];
 }
+
+/* ── Every surface, listed ──────────────────────────────────────────────────
+   From app/_hp/Inside.tsx, verbatim, and its own comment is the argument for
+   the shape: "The temptation is to give each of these a section, and that is
+   exactly how the last homepage reached 39,708px and 35 headings. A directory
+   solves it: one row per surface, hairline separated, the number that proves
+   it is real on the right. Ten surfaces cost one screen here and would have
+   cost ten screens as feature blocks."
+
+   THIS IS ALSO THE CONTENT THE IMPORTED REDESIGN DROPPED. app/_web/Platform.tsx
+   carried eight of these as rows and the redesign replaced it with four stat
+   columns — so `/` went from naming eleven dashboard screens to naming none of
+   them. The four columns stay (they are the scale); this is what you get after
+   you order, which is a different question.
+
+   Every href was checked against app/ before it was written. */
+export type Surface = { href: string; name: string; desc: string; stat: string };
+
+export const SURFACES: Surface[] = [
+  {
+    href: "/dashboard",
+    name: "Today",
+    stat: "1",
+    desc:
+      "Your day on one screen: what is being delivered, what is logged, what is left, and the delivery you confirm with one tap.",
+  },
+  {
+    href: "/dashboard/nutrition",
+    name: "The diary",
+    stat: "154",
+    desc:
+      "FitFuel meals arrive pre-logged with weighed macros. Everything else you add per gram from an Indian food database, with water alongside it.",
+  },
+  {
+    href: "/dashboard/exercises",
+    name: "Training",
+    stat: "952",
+    desc:
+      "Your programme for the day, the exercise library behind it, and sets, reps and load logged against each session.",
+  },
+  {
+    href: "/dashboard/body-metrics",
+    name: "Body metrics",
+    stat: "18",
+    desc:
+      "Weight, body fat, muscle mass, visceral fat, BMI and twelve more, read straight off a Bluetooth scale in the browser. No companion app.",
+  },
+  {
+    href: "/dashboard/progress",
+    name: "Progress",
+    stat: "30d",
+    desc:
+      "Thirty-day charts, the consistency score with its five components, the weekly review, and the recalibration you approve or ignore.",
+  },
+  {
+    href: "/dashboard/supplements",
+    name: "Supplements",
+    stat: "46",
+    desc:
+      "A stack recommended from your goal and your gaps, not from what has the best margin. Educational first, links second.",
+  },
+  {
+    href: "/dashboard/referrals",
+    name: "Referrals",
+    stat: "Rs 500",
+    desc:
+      "Your code, your link, who used it, and the credit ledger behind it. Rs 500 to you, Rs 500 to them.",
+  },
+  {
+    href: "/dashboard/partners",
+    name: "Partner console",
+    stat: "8",
+    desc:
+      "For gyms, trainers, dieticians, doctors, offices and residences: referrals, conversions, rewards and payouts.",
+  },
+  {
+    href: "/dashboard/notification-settings",
+    name: "Notifications",
+    stat: "18",
+    desc:
+      "Eighteen message templates across WhatsApp and email, every one of them switchable per channel. Nothing is sent that you did not leave on.",
+  },
+  {
+    href: "/order",
+    name: "Order tracking",
+    stat: "06:00",
+    desc:
+      "Where today's box is, confirmed against the driver's own app rather than a status we typed in ourselves.",
+  },
+];

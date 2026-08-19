@@ -12,6 +12,7 @@ import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
 import Areas from "./_hp/Areas";
 import { AREAS_AT } from "./_hp/areas-data";
+import { getWeek } from "./_hp/menu-data";
 import { decodeRow } from "@/lib/decode-entities";
 import FitFuelApp from "./_web/FitFuelApp";
 import type { BandCounts, Quote } from "./_web/HomeBands";
@@ -337,12 +338,25 @@ function trialReceipt() {
   };
 }
 
+/**
+ * ONE REAL WEEK OF A REAL PLAN.
+ *
+ * app/_hp/menu-data.ts's getWeek() — seven days of weight-loss-veg, which is
+ * the ONE plan of 126 with a seeded PlanScheduleSlot set. Behind.tsx has
+ * argued "nothing repeats for sixty days" in prose since it was written and
+ * nothing on the page has ever shown a single day of it.
+ *
+ * Returns [] on any failure and the band then renders nothing at all, which is
+ * correct: a rotation section with invented dish names in it would be the
+ * exact claim it is trying to prove, falsified.
+ */
 export default async function AppPage() {
-  const [plans, supplements, bands, prices] = await Promise.all([
+  const [plans, supplements, bands, prices, week] = await Promise.all([
     getPlans(),
     getSupplements(),
     getBandData(),
     getPrices(),
+    getWeek(),
   ]);
 
   return (
@@ -384,6 +398,9 @@ export default async function AppPage() {
            design had no proof band in any of its eight sections. app/_hp/
            Proof.tsx had the right shape sitting on no route the whole time. */
         quotes={bands.quotes}
+        /* Seven days of the one plan that has a seeded schedule. Decimal macro
+           columns are already coerced to numbers inside menu-data. */
+        week={week}
       />
     </>
   );

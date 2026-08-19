@@ -5034,3 +5034,126 @@
   font-variant-numeric: tabular-nums;
   color: var(--fk-green);
 }
+
+/* ── The week, and the directory ───────────────────────────────────────────
+   Both reuse .specWrap / .spec from the wedge: three tables on this page now,
+   all with the same sideways scroll and sticky row header, which is one
+   behaviour for the reader to learn rather than three. */
+.weekDish {
+  display: block;
+  font-weight: 500;
+  color: var(--fk-ink);
+  line-height: 1.35;
+}
+.weekKcal {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink-3);
+}
+.app .weekNoteFoot {
+  margin: var(--fk-s-4) 0 0;
+  max-width: 76ch;
+  font-size: var(--fk-t-sm);
+  line-height: 1.55;
+  color: var(--fk-ink-3);
+}
+
+/* Directory rows, the shape Inside.tsx argues for: hairline separated, the
+   figure that proves the row on the left, one line of what it is. Ten of these
+   cost a screen; ten cards would have cost ten. */
+.surfaces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid var(--fk-line-2);
+}
+.surfaces > li {
+  border-bottom: 1px solid var(--fk-line);
+}
+.app .surfaces a {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--fk-s-4);
+  min-height: var(--fk-tap);
+  padding: var(--fk-s-4) var(--fk-s-3);
+  color: var(--fk-ink);
+  text-decoration: none;
+  transition: background-color var(--fk-dur) var(--fk-ease);
+}
+.app .surfaces a:hover {
+  background: var(--fk-paper);
+  color: var(--fk-ink);
+}
+.app .surfaces a:hover .surfaceGo {
+  transform: translateX(3px);
+  color: var(--fk-green-deep);
+}
+.surfaceStat {
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-green);
+  line-height: 1.1;
+}
+.surfaceBody {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.app .surfaceBody > b {
+  font-size: var(--fk-t-base);
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+.app .surfaceBody > span {
+  font-size: var(--fk-t-sm);
+  line-height: 1.5;
+  color: var(--fk-ink-3);
+}
+.surfaceGo {
+  flex: none;
+  color: var(--fk-ink-3);
+  transition:
+    transform var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease);
+}
+
+@media (max-width: 639px) {
+  /* The stat column and the arrow both go: at 335px they were taking 100px
+     between them from a description that needed all of it. The figure moves
+     above the name, where it reads as the kicker it always was. */
+  .app .surfaces a {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: var(--fk-s-4) 0;
+  }
+  .surfaceStat {
+    font-size: var(--fk-t-sm);
+  }
+  .surfaceGo {
+    display: none;
+  }
+  /* Two of the seven days fit a phone screen; the rest is a sideways scroll,
+     same as the wedge. */
+  .spec {
+    min-width: 640px;
+  }
+  .spec th,
+  .spec td {
+    padding: 11px var(--fk-s-3);
+  }
+  .spec tbody th {
+    min-width: 96px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app .surfaces a,
+  .surfaceGo { transition: none; }
+}
