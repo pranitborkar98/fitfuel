@@ -2175,44 +2175,11 @@
   max-width: 46ch;
 }
 
-/* The six figures that were stranded at 13,920px. Horizontally scrollable on a
-   phone rather than wrapped to three rows: this is a glance, not a table, and
-   it must not itself become a wall. */
-.proof {
-  display: flex;
-  gap: var(--fk-s-5);
-  margin: 10px 0 0;
-  padding: 0 0 2px;
-  list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.proof::-webkit-scrollbar { display: none; }
-.proof li {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.proof b {
-  font-family: var(--fk-mono);
-  font-size: var(--fk-t-md);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--fk-green);
-  line-height: 1.1;
-}
-.proof span {
-  font-size: var(--fk-t-xs);
-  color: var(--fk-ink-3);
-  white-space: nowrap;
-}
-
 /* ── Show the rest ─────────────────────────────────────────────────────────
    The grid renders twelve and this reveals the remainder. Full width and 44px
    so it reads as the end of a section rather than as a dropped link, and the
    note under it exists so nobody thinks the other thirty-six dishes are gone —
-   search and the chips have been running over all of them the whole time. */
+   the chips have been running over all of them the whole time. */
 .showAllWrap {
   display: flex;
   flex-direction: column;
@@ -2774,34 +2741,14 @@
   background: var(--fk-green);
 }
 
+/* One column since the six figures were removed — there is no second column
+   left to balance the claim against. */
 .lede {
-  display: grid;
-  gap: var(--fk-s-4);
   padding: var(--fk-s-5) 0 18px;
   border-bottom: 1px solid var(--fk-line);
 }
-@media (min-width: 900px) {
-  .lede {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: var(--fk-s-6);
-  }
-}
-.ledeText { min-width: 0; }
 .claim { max-width: 20ch; }
 .claimDeck { max-width: 56ch; }
-
-/* Three across from 480px, so six figures are two tidy rows rather than a
-   scrolling strip that hides the last two. */
-@media (min-width: 480px) {
-  .proof {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(78px, auto));
-    gap: 14px 26px;
-    overflow: visible;
-  }
-}
-.proof b { font-size: 1.375rem; }
 
 /* ── Sort ───────────────────────────────────────────────────────────────── */
 /* ── Courses inside the grid ────────────────────────────────────────────────
@@ -4136,12 +4083,6 @@
     line-clamp: 2;
     overflow: hidden;
   }
-  .proof {
-    gap: var(--fk-s-4);
-  }
-  .proof b {
-    font-size: var(--fk-t-md);
-  }
 
   /* The course note is the kitchen's sentence about a course, and at this
      width it pushed the first card of every group down by two lines. The
@@ -4204,4 +4145,169 @@
    explicit floor on the button itself is what the browser honours. */
 .tierBtn {
   min-height: var(--fk-tap);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ONE DISH CARD WAS 421 PIXELS TALL
+
+   The header fix gave the phone 533px of window back. This is what was in it:
+   a single card, 335x421, so a 48-dish menu was 48 screens of scrolling and
+   the answer to "what can I eat tonight" was one dish at a time.
+
+   Measured inside that card at 375px:
+
+     well          124px wide, 37% of the card, and EMPTY — a colour ground
+     body          197px, which is what everything else had to fit in
+     dish name     67px — three lines, because 165px is not a headline width
+     macro panel   164px, of which the contribution line was 61px on its own
+                   ("10% of your protein · 16% of your calories", four lines
+                   inside a 139px box)
+     card foot     89px, of which "₹16 per gram of protein" was 58px — FOUR
+                   lines of 12px mono inside a 69px column
+
+   Two of those are figures that exist to be glanced at. A figure that takes
+   four lines is not glanced at, it is decoded, and it was pushing the thing it
+   annotates off the screen. Both come out on the phone and both stay on
+   desktop, where they read in one line each and cost nothing.
+
+   The well drops to 104. It stays — the owner ruled the placeholders
+   intentional on 2026-08-18 and a photograph drops into it with no layout
+   change — but at 124 it was taking more of the card than the dish name.
+
+   Result: 421 -> ~250px. Roughly two cards per phone screen instead of one.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 639px) {
+  .card .shotPlaceholder,
+  .card .shot {
+    width: 104px;
+    min-height: 104px;
+    max-height: 128px;
+  }
+  .card {
+    grid-template-columns: minmax(0, 1fr) 116px;
+  }
+
+  /* Four lines of 12px mono in a 69px column. The price above it is the number
+     someone is actually reading; this is arithmetic on it. */
+  .perProtein {
+    display: none;
+  }
+
+  /* Same reasoning. The day bar at the top of the screen already says what is
+     left of the target, in a sentence, at full width — this line says the same
+     thing per dish inside 139px, and pays 61px for it. */
+  .macroContrib {
+    display: none;
+  }
+  .macro {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* With the contribution line gone the panel has one row, so its bottom rule
+     and padding have nothing to separate. */
+  .macro > span:last-child {
+    padding-bottom: 0;
+  }
+}
+
+/* ── The coach's four weigh-ins ────────────────────────────────────────────
+   repeat(4, 1fr) resolved to 69px columns at 375px, each carrying a bar, a
+   weight, a delta, a week label and a sentence. Two across is 160px a column,
+   which is a readable width for "Baseline set at 2,000 kcal"; four is not. */
+@media (max-width: 559px) {
+  .weekRow {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--fk-s-3);
+  }
+  .weekBar {
+    height: 72px;
+  }
+
+  /* Three 2.5rem figures side by side inside 335px left each of them 78-106px
+     and their labels stacked to three lines. */
+  .condStats {
+    flex-wrap: wrap;
+    gap: var(--fk-s-4) var(--fk-s-5);
+  }
+  .condStats b {
+    font-size: 2rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EVERY HEADING ON THIS PAGE WAS RENDERING AT THE WRONG SIZE
+
+   app/_design/base.css sets the display scale on the ELEMENT inside the theme
+   root:
+
+       .fk h1 { font-size: var(--fk-t-4xl); }    -> clamp(2.75rem … 5rem)
+       .fk h2 { font-size: var(--fk-t-3xl); }    -> clamp(2.25rem … 3.75rem)
+
+   That selector is (0,1,1). Every heading class in this file — .claim,
+   .bandH2, .coachH, .closeH, .footerTitle — is (0,1,0). The element rule wins
+   every time, so none of the sizes written beside those classes has ever been
+   what shipped. Measured at 1440px:
+
+       .claim        80px   its own rule says 32px
+       .bandH2       60px   42px
+       .coachH       60px   34px
+       .closeH       60px   40px
+       .footerTitle  60px   11px  ← the footer's column labels — Order,
+                                    FitFuel, Proof, Legal — set in 60px
+                                    display type
+
+   On a 375px phone the same clamps floor at 44px and 36px, which is what a
+   headline and four footer labels were being set in. This is the largest part
+   of "it is not mobile responsive" and it was never a layout problem.
+
+   THE FIX IS SPECIFICITY, NOT NEW VALUES. Each rule below re-states what the
+   class already said, at (0,2,0), so it outranks the element rule. base.css is
+   untouched — it is the design system and it is right to set a default scale;
+   a component that wants a different one just has to say so loudly enough.
+   Any future heading class in this file needs the same `.app` prefix.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.app .claim {
+  font-size: clamp(1.3rem, 1.05rem + 1.3vw, 2rem);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+.app .bandH2 {
+  font-size: clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem);
+  line-height: 1.05;
+  letter-spacing: -0.022em;
+}
+
+.app .coachH {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.app .closeH {
+  font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+}
+
+/* The worst of them. A footer column label is a 11px uppercase kicker; it was
+   set at the h1-adjacent end of the display scale, four times, side by side. */
+.app .footerTitle {
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+}
+
+/* Same class of bug, in the delivery-area sheet. */
+.app .areaSheetH {
+  font-size: var(--fk-t-lg);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }

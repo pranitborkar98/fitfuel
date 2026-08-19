@@ -1378,53 +1378,28 @@ export default function FitFuelApp({
                 fold — measured after, the first dish card sits at essentially
                 the same height, because the sr-only h1 was already occupying
                 the block and the offer row shrank to pay for the deck. */}
-            {/* ── THE LEDE ──────────────────────────────────────────────────
-                Claim on the left, scale on the right, one hairline under both.
-                The six figures already existed — in HomeBands, at 13,920px,
-                seventeen screens down under the entire 48-card grid, which is
-                to say nowhere. Same numbers, same source (counted from the
-                database in page.tsx, never typed), set beside the sentence they
-                are the evidence for.
-
-                Two columns rather than a stack because the figures are not a
-                second paragraph to read; they are a column to glance at while
-                reading the first. Below 900px they fall under the deck as a
-                three-across grid and the h1 keeps the full width. */}
+            {/* ── THE LEDE ────────────────────────────────────────
+                Two lines of type. The "KHARADI, PUNE" eyebrow and the six
+                figures beside it are BOTH GONE on the owner's call
+                (2026-08-19), and both were already said elsewhere: the area is
+                the chip beside the wordmark and the location button, and all
+                six figures are the platform band's own four plus the dish and
+                plan counts printed on the result line under this. Nothing here
+                was load-bearing; it was the fold repeating itself. */}
             <div className={s.lede}>
-              <div className={s.ledeText}>
-                <span className={s.eyebrow}>
-                  <i aria-hidden="true" />
-                  {area}, Pune
-                </span>
-                <h1 className={s.claim}>Food cooked to your numbers.</h1>
-                {/* The deck must NOT repeat the delivery promise. The chip in
-                    the header is mode-aware — "Cooking today · Kharadi" for a
-                    single meal, the cutoff for a plan — and an earlier draft of
-                    this line said "by 8am" over a 48-dish menu, which is the
-                    exact mistake that chip's own comment was written to
-                    prevent. So this says the part nothing else on the fold
-                    says: what the bar above it is for. */}
-                <p className={s.claimDeck}>
-                  Set today&apos;s target above, then add dishes until the bars
-                  fill. Every portion is weighed in our Kharadi kitchen and lands
-                  logged in your diary.
-                </p>
-              </div>
-              <ul className={s.proof} aria-label="What the kitchen runs">
-                {[
-                  [bandCounts.dishes.toLocaleString("en-IN"), "dishes"],
-                  [bandCounts.plans.toLocaleString("en-IN"), "meal plans"],
-                  [bandCounts.conditionPlans.toLocaleString("en-IN"), "for a condition"],
-                  [bandCounts.exercises.toLocaleString("en-IN"), "exercises"],
-                  [bandCounts.supplements.toLocaleString("en-IN"), "supplements"],
-                  ["1", "kitchen, ours"],
-                ].map(([n, label]) => (
-                  <li key={label}>
-                    <b className="fk-num">{n}</b>
-                    <span>{label}</span>
-                  </li>
-                ))}
-              </ul>
+              <h1 className={s.claim}>Food cooked to your numbers.</h1>
+              {/* The deck must NOT repeat the delivery promise. The chip in the
+                  header is mode-aware — "Cooking today · Kharadi" for a single
+                  meal, the cutoff for a plan — and an earlier draft of this line
+                  said "by 8am" over a 48-dish menu, which is the exact mistake
+                  that chip's own comment was written to prevent. So this says
+                  the part nothing else on the fold says: what the bar above it
+                  is for. */}
+              <p className={s.claimDeck}>
+                Set today&apos;s target above, then add dishes until the bars
+                fill. Every portion is weighed in our Kharadi kitchen and lands
+                logged in your diary.
+              </p>
             </div>
 
             {/* The offer row is the PHONE half of the trial card in the rail —
