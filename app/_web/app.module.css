@@ -4675,3 +4675,219 @@
     transition: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE DELIVERY MAP, AT APP SCALE
+
+   app/_hp/Areas.tsx draws the same figure at 1000x520 inside a full-bleed v2
+   panel. This is 720x420 on the band's own ground, sized so the fifteen labels
+   are legible at 375px without the frame needing to scroll sideways.
+
+   Every value is a token. The one exception is the graticule, which is drawn
+   in --fk-surface against --fk-paper deliberately: it has to be *just* visible,
+   and --fk-line reads as structure rather than as a grid.
+   ══════════════════════════════════════════════════════════════════════════ */
+.mapHead {
+  display: grid;
+  gap: var(--fk-s-3);
+  margin-bottom: var(--fk-s-5);
+}
+@media (min-width: 900px) {
+  .mapHead {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: var(--fk-s-6);
+  }
+}
+
+.map {
+  margin: 0;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-paper);
+  padding: var(--fk-s-4);
+  overflow: hidden;
+}
+.map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mapGrid { stroke: var(--fk-surface); stroke-width: 1; }
+.mapRing { stroke: var(--fk-line-2); stroke-width: 1; }
+.mapSpoke { stroke: var(--fk-line); stroke-width: 1; }
+.mapDot { fill: var(--fk-ink-2); }
+
+.mapRingLabel,
+.mapLabel,
+.mapKitchenLabel {
+  font-family: var(--fk-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.mapRingLabel { fill: var(--fk-ink-3); }
+.mapLabel { fill: var(--fk-ink-3); }
+/* The kitchen is the only square, the only lime, and the only ink label —
+   three channels, so the mark survives both a greyscale print and a reader who
+   cannot separate the hues. */
+.mapKitchen { fill: var(--fk-green); }
+.mapKitchenLabel { fill: var(--fk-ink); font-weight: 700; }
+
+.mapCap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px var(--fk-s-4);
+  margin-top: var(--fk-s-3);
+  padding-top: var(--fk-s-3);
+  border-top: 1px solid var(--fk-line);
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-xs);
+  letter-spacing: 0.04em;
+  color: var(--fk-ink-3);
+}
+.mapCapKitchen { color: var(--fk-green); }
+
+.app .areaH3 {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-lg);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--fk-ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE CLOSE, WITH SOMETHING IN IT
+
+   It was a headline, a paragraph, two buttons and a photograph — the shape of
+   a page that has run out of things to say, sitting under eight bands of
+   evidence. Three steps of what actually happens, then the three answers
+   people look for before paying, each linking to the page that carries the
+   whole answer rather than asserting it here.
+   ══════════════════════════════════════════════════════════════════════════ */
+.closeSteps {
+  position: relative;
+  list-style: none;
+  max-width: var(--fk-max);
+  margin: 0 auto;
+  padding: 0 var(--fk-gutter);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+}
+@media (min-width: 780px) {
+  .closeSteps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.closeSteps > li {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: var(--fk-s-5) 0;
+  border-top: 1px solid rgba(132, 204, 22, 0.24);
+}
+@media (min-width: 780px) {
+  .closeSteps > li { padding: var(--fk-s-5) var(--fk-s-5) var(--fk-s-5) 0; }
+}
+.closeStepN {
+  font-family: var(--fk-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fk-green-deep);
+}
+.closeStepLabel {
+  font-family: var(--fk-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--fk-ink);
+}
+.closeStepLine {
+  font-size: var(--fk-t-sm);
+  line-height: 1.55;
+  color: var(--fk-ink-2);
+}
+
+.closeAssure {
+  position: relative;
+  list-style: none;
+  max-width: var(--fk-max);
+  margin: 0 auto;
+  padding: 0 var(--fk-gutter) var(--fk-s-8);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 780px) {
+  .closeAssure { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.app .closeAssure a {
+  display: grid;
+  gap: 4px;
+  min-height: var(--fk-tap);
+  padding: var(--fk-s-4);
+  border: 1px solid rgba(132, 204, 22, 0.24);
+  border-radius: var(--fk-r);
+  background: rgba(7, 7, 7, 0.26);
+  color: var(--fk-ink);
+  text-decoration: none;
+  transition:
+    border-color var(--fk-dur) var(--fk-ease),
+    background-color var(--fk-dur) var(--fk-ease);
+}
+.app .closeAssure a:hover {
+  border-color: var(--fk-green);
+  background: rgba(7, 7, 7, 0.42);
+  color: var(--fk-ink);
+}
+.app .closeAssure b {
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  color: var(--fk-green-deep);
+}
+.app .closeAssure span {
+  font-size: var(--fk-t-xs);
+  line-height: 1.5;
+  color: var(--fk-ink-2);
+}
+
+/* The close now carries three rows, so its own block padding comes off the
+   bottom — the steps and the assurances bring their own. */
+.closeWrap { padding-bottom: var(--fk-s-6); }
+
+@media (prefers-reduced-motion: reduce) {
+  .app .closeAssure a { transition: none; }
+}
+
+/* ── The map on a phone ─────────────────────────────────────────────────────
+   Measured: at 375px the frame renders 301px wide against a 720-unit viewBox,
+   a scale of 0.42 — so the 11px area labels landed at 4.6 effective pixels.
+   Fifteen of them, illegible, overlapping.
+
+   The NAMES come off and the SHAPE stays. That is the right half to keep: the
+   argument this figure makes is the cluster, and every name is printed as text
+   in the list directly under it and in the sheet behind the location chip. The
+   two labels that carry the frame itself — the rings and the kitchen — are
+   scaled up in viewBox units so they land at roughly 10 real pixels. */
+@media (max-width: 639px) {
+  .mapLabel {
+    display: none;
+  }
+  .mapRingLabel,
+  .mapKitchenLabel {
+    font-size: 24px;
+    letter-spacing: 0;
+  }
+  .mapDot {
+    r: 6;
+  }
+  .map {
+    padding: var(--fk-s-3);
+  }
+  .mapCap {
+    gap: 6px var(--fk-s-3);
+  }
+}

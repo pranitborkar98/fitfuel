@@ -110,7 +110,12 @@ export default function HomeSections({
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
       <AreasFaqBand areaCount={areaCount} cutoffLabel={cutoffLabel} />
-      <CtaBand trialTotal={trial.total} planCount={counts.plans} />
+      <CtaBand
+        trialTotal={trial.total}
+        planCount={counts.plans}
+        cutoffLabel={cutoffLabel}
+        areaCount={areaCount}
+      />
     </div>
   );
 }
@@ -755,7 +760,45 @@ function AreasFaqBand({ areaCount, cutoffLabel }: { areaCount: number; cutoffLab
 /* ── 8. Eat one day of it ───────────────────────────────────────────────────
    The close. One price, both actions, and the only photograph on the page
    whose job is simply to make someone hungry. */
-function CtaBand({ trialTotal, planCount }: { trialTotal: string; planCount: number }) {
+function CtaBand({
+  trialTotal,
+  planCount,
+  cutoffLabel,
+  areaCount,
+}: {
+  trialTotal: string;
+  planCount: number;
+  cutoffLabel: string;
+  areaCount: number;
+}) {
+  /* ── WHAT ACTUALLY HAPPENS, IN ORDER ──────────────────────────────────────
+     The close was a headline, a paragraph, two buttons and a photograph — the
+     shape of a landing page that has run out of things to say. Eight bands of
+     evidence sat above it and it asked for the sale without naming a single
+     step of what the reader is agreeing to.
+
+     Every line below is a fact stated somewhere else on this page or modelled
+     in a real module: the cutoff is lib/order-cutoff, the drop window is the
+     day band's own 04:00→08:00, the area count is areas-data, and the trial
+     total is lib/trial-price. Nothing here is a new promise. */
+  const steps: { n: string; label: string; line: string }[] = [
+    {
+      n: "Tonight",
+      label: "Tell us your numbers and pick two meals",
+      line: `Order by ${cutoffLabel}. The target you set at the top of this page is the sheet the kitchen cooks to.`,
+    },
+    {
+      n: "04:00",
+      label: "Produce lands and your tray is weighed",
+      line: "Cooked to your macros in Kharadi, on a scale, against the recipe sheet — not an eyeballed ladle.",
+    },
+    {
+      n: "By 08:00",
+      label: "Breakfast and lunch, at your door",
+      line: `Our own riders across ${areaCount} areas. It arrives already logged in your diary, macros counted.`,
+    },
+  ];
+
   return (
     <section className={s.close} aria-labelledby="close-h">
       <span aria-hidden="true" className={s.closeGlow} />
@@ -768,7 +811,7 @@ function CtaBand({ trialTotal, planCount }: { trialTotal: string; planCount: num
           <p className={s.closeP}>
             Breakfast and lunch, weighed to your macros, delivered tomorrow
             morning. {trialTotal} all in — delivery, packaging and GST included.
-            Nothing to cancel afterwards.
+            No account needed to look, nothing to cancel afterwards.
           </p>
           <div className={s.closeActions}>
             <Link href="/checkout" className={s.closeCta}>
@@ -790,6 +833,39 @@ function CtaBand({ trialTotal, planCount }: { trialTotal: string; planCount: num
           />
         </span>
       </div>
+
+      <ol className={s.closeSteps}>
+        {steps.map((st) => (
+          <li key={st.n} data-reveal="up">
+            <b className={`${s.closeStepN} fk-num`}>{st.n}</b>
+            <b className={s.closeStepLabel}>{st.label}</b>
+            <span className={s.closeStepLine}>{st.line}</span>
+          </li>
+        ))}
+      </ol>
+
+      {/* The three answers people look for before paying, and each is a link to
+          the page that carries the whole answer rather than a reassurance. */}
+      <ul className={s.closeAssure}>
+        <li>
+          <Link href="/refund-policy">
+            <b>Pro-rata refund</b>
+            <span>Unserved days come back, on any plan length.</span>
+          </Link>
+        </li>
+        <li>
+          <Link href="/faq">
+            <b>Skip any day</b>
+            <span>Until the cutoff the night before. Skipped days extend the plan.</span>
+          </Link>
+        </li>
+        <li>
+          <Link href="/allergen-policy">
+            <b>Allergens declared</b>
+            <span>On the dish, from the production sheet — not remembered by a cook.</span>
+          </Link>
+        </li>
+      </ul>
     </section>
   );
 }
