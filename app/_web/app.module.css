@@ -4252,18 +4252,21 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .app .claim {
+  font-weight: 600;
   font-size: clamp(1.3rem, 1.05rem + 1.3vw, 2rem);
   line-height: 1.12;
   letter-spacing: -0.015em;
 }
 
 .app .bandH2 {
+  font-weight: 600;
   font-size: clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem);
   line-height: 1.05;
   letter-spacing: -0.022em;
 }
 
 .app .coachH {
+  font-weight: 600;
   font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
   line-height: 1.08;
   letter-spacing: -0.02em;
@@ -4272,6 +4275,7 @@
 }
 
 .app .closeH {
+  font-weight: 600;
   font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
   line-height: 1.08;
   letter-spacing: -0.015em;
@@ -4345,4 +4349,21 @@
 .app .bandH2 + .trioGrid,
 .app .bandH2 + .condChips {
   margin-top: 28px;
+}
+
+/* ── And .fk a { color: inherit } ──────────────────────────────────────────
+   The third property this cascade was quietly winning, after font-size and
+   margin. `.dishName` declares `color: var(--fk-ink)` at (0,1,0); `.fk a` is
+   (0,1,1), so every dish name on the page inherited .cardBody's ink-2 instead
+   — the single most repeated piece of text in the catalogue, rendering one
+   step down the ink scale from the thing it is supposed to lead.
+
+   Still AA on surface, so this was hierarchy rather than accessibility: the
+   name read at the same weight as the blurb under it. The hover already had
+   the specificity it needed and is restated only to keep the pair together. */
+.app a.dishName {
+  color: var(--fk-ink);
+}
+.app a.dishName:hover {
+  color: var(--fk-green-deep);
 }
