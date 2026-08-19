@@ -379,13 +379,11 @@ export default async function AppPage() {
            location chip to open. */
         areaPanel={<Areas />}
         bandCounts={bands.counts}
-        /* `bands.quotes` IS NOT PASSED, and that is the one thing the redesign
-           drops. It is still queried above — three featured Testimonial rows
-           carrying the result, the plan and the area — but the imported design
-           has no proof band anywhere in its eight sections, so there is nowhere
-           on `/` to render them today. The query stays so re-wiring is one prop
-           rather than a re-write, and the loss is called out in the handover
-           instead of disappearing quietly. */
+        /* Passed again. For four days these three featured Testimonial rows
+           were queried here and dropped on the floor, because the imported
+           design had no proof band in any of its eight sections. app/_hp/
+           Proof.tsx had the right shape sitting on no route the whole time. */
+        quotes={bands.quotes}
       />
     </>
   );

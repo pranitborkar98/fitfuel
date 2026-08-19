@@ -4891,3 +4891,146 @@
     gap: 6px var(--fk-s-3);
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE WEDGE, AND THE PROOF
+
+   Two more sections that had been sitting on no route — app/_hp/Wedge.tsx and
+   app/_hp/Proof.tsx — rebuilt at app density on --fk-* tokens.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Five columns will not fit 375px and must not try. It scrolls sideways, and
+   the row header is sticky INSIDE that scroll so the thing being compared never
+   leaves the screen while the reader pans across the answers. */
+.specWrap {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-paper);
+}
+.spec {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: var(--fk-t-sm);
+}
+.spec th,
+.spec td {
+  padding: 14px var(--fk-s-4);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--fk-line);
+}
+.spec thead th {
+  position: sticky;
+  top: 0;
+  background: var(--fk-warm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fk-ink-3);
+  white-space: nowrap;
+}
+.spec tbody th {
+  position: sticky;
+  left: 0;
+  min-width: 190px;
+  background: var(--fk-paper);
+  font-weight: 600;
+  color: var(--fk-ink);
+}
+.spec td {
+  color: var(--fk-ink-3);
+}
+.spec tbody tr:last-child th,
+.spec tbody tr:last-child td {
+  border-bottom: 0;
+}
+/* Our column is lit, and it is lit with GROUND rather than with colour alone —
+   the sentence in it is ink either way, so the emphasis survives greyscale. */
+.spec .specUs {
+  color: var(--fk-green);
+  background: var(--fk-green-wash);
+}
+.spec .specMine {
+  color: var(--fk-ink);
+  background: rgba(132, 204, 22, 0.06);
+  font-weight: 500;
+}
+
+/* ── Proof ───────────────────────────────────────────────────────────────── */
+.quotes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fk-s-4);
+}
+@media (min-width: 720px) {
+  .quotes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.quotes > li {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: var(--fk-s-5);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+.app .quoteText {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-md);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--fk-ink);
+}
+/* Typographic quotes drawn by CSS rather than typed into the row, so the
+   database keeps the sentence and the page keeps the punctuation. */
+.app .quoteText::before { content: "\201C"; }
+.app .quoteText::after { content: "\201D"; }
+
+.app .quoteWho {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--fk-line);
+}
+.app .quoteWho b {
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+.app .quoteWho span {
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+}
+.app .quoteMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: var(--fk-t-xs);
+  color: var(--fk-ink-3);
+}
+.quoteResult {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--fk-r-full);
+  border: 1px solid rgba(132, 204, 22, 0.32);
+  background: rgba(132, 204, 22, 0.09);
+  font-family: var(--fk-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-green);
+}

@@ -267,3 +267,85 @@ export type PriceMatrix = Record<string, number>;
 
 export const priceKey = (duration: string, meals: string, diet: string) =>
   `${duration}|${meals}|${diet}`;
+
+/* ── The positioning, as a comparison you can audit ─────────────────────────
+   Verbatim from app/_hp/Wedge.tsx, which has been on no route since it was
+   written. Its own comment carries the reasoning and it is worth repeating:
+   this is a TABLE and not four cards because a comparison IS a table. A screen
+   reader walks rows and columns; a sighted reader scans one column instead of
+   holding three paragraphs in memory to spot the difference.
+
+   And every cell is a sentence, never a tick or a cross. A glyph alone puts the
+   whole meaning of the row on a 1.5:1 shape, which is exactly the kind of thing
+   AGENTS.md rules out.
+
+   The two figures in the last column are the live ones — 952 exercises and the
+   condition-plan count — and they are passed in rather than typed here so this
+   table cannot drift from the catalogue the rest of the page describes. */
+export type WedgeRow = {
+  what: string;
+  tiffin: string;
+  app: string;
+  supp: string;
+  us: string;
+};
+
+export const WEDGE_COLS = [
+  "A tiffin service",
+  "A fitness app",
+  "A supplement brand",
+] as const;
+
+export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[] {
+  return [
+    {
+      what: "Cooks your food",
+      tiffin: "Yes, to one shared menu",
+      app: "No",
+      supp: "No",
+      us: "Yes, to your macros",
+    },
+    {
+      what: "Weighs the portion",
+      tiffin: "No, ladled by eye",
+      app: "No, you estimate it",
+      supp: "Only the scoop",
+      us: "On a scale, before sealing",
+    },
+    {
+      what: "Logs what you ate",
+      tiffin: "No",
+      app: "Only what you type in",
+      supp: "No",
+      us: "Automatically — it is the same system",
+    },
+    {
+      what: "Programmes your training",
+      tiffin: "No",
+      app: "Sometimes, sold separately",
+      supp: "No",
+      us: `${exercises.toLocaleString("en-IN")} exercises, in your week`,
+    },
+    {
+      what: "Tracks the body, not the intent",
+      tiffin: "No",
+      app: "If you own the scale and remember",
+      supp: "No",
+      us: "13 measures, read off your scale",
+    },
+    {
+      what: "Moves the target when you stall",
+      tiffin: "No",
+      app: "No, it just keeps counting",
+      supp: "No",
+      us: "Recalculated from your own numbers",
+    },
+    {
+      what: "Built for a diagnosis",
+      tiffin: "No",
+      app: "Generic macro maths",
+      supp: "No",
+      us: `${conditionPlans} condition plans`,
+    },
+  ];
+}

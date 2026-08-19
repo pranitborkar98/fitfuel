@@ -45,8 +45,10 @@ import {
   FAQS,
   MINOR,
   TRIO,
+  WEDGE_COLS,
+  wedgeRows,
 } from "./home-data";
-import type { BandCounts } from "./HomeBands";
+import type { BandCounts, Quote } from "./HomeBands";
 import DeliveryMap from "./DeliveryMap";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
@@ -89,6 +91,8 @@ export type HomeSectionsProps = {
   areaCount: number;
   /** The order cutoff sentence, from lib/order-cutoff. */
   cutoffLabel: string;
+  /** Featured Testimonial rows. Empty renders nothing at all — see ProofBand. */
+  quotes: Quote[];
 };
 
 export default function HomeSections({
@@ -98,6 +102,7 @@ export default function HomeSections({
   trial,
   areaCount,
   cutoffLabel,
+  quotes,
 }: HomeSectionsProps) {
   const revealRef = useReveal<HTMLDivElement>();
 
@@ -105,11 +110,13 @@ export default function HomeSections({
     <div ref={revealRef}>
       <DayBand />
       <PlatformBand counts={counts} goalCount={goalCount} />
+      <WedgeBand counts={counts} />
       <ServicesBand />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
       <AreasFaqBand areaCount={areaCount} cutoffLabel={cutoffLabel} />
+      <ProofBand quotes={quotes} />
       <CtaBand
         trialTotal={trial.total}
         planCount={counts.plans}
@@ -228,6 +235,127 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
               </b>
               <b className={s.statLabel}>{c.label}</b>
               <span className={s.statNote}>{c.note}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/* ── 2b. The wedge ──────────────────────────────────────────────────────────
+   app/_hp/Wedge.tsx, on no route since it was written, and it holds the single
+   best line the old page had: every app trusts you to log it, we already know.
+
+   It sits HERE, directly after the platform band, because that band says what
+   we run and this one says why none of the cheaper things does it. Answering
+   "why not a tiffin service" after the reader has already scrolled past the
+   price is answering it too late.
+
+   A table, not four cards, and every cell a sentence rather than a tick. Both
+   choices are Wedge's own and both are right — see the note in home-data.ts. */
+function WedgeBand({ counts }: { counts: BandCounts }) {
+  const rows = wedgeRows(counts.exercises, counts.conditionPlans);
+
+  return (
+    <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="wedge-h">
+      <div className={s.bandWrap}>
+        <div className={s.bandHead}>
+          <div>
+            <h2 id="wedge-h" className={s.bandH2}>
+              Every app trusts you to log it. We already know.
+            </h2>
+          </div>
+          <p className={s.bandLede}>
+            Four things you could buy instead, and what each of them actually
+            does. The same claim as a table, so you can check it rather than
+            believe it.
+          </p>
+        </div>
+
+        {/* Scrolls sideways on a phone rather than shrinking to five illegible
+            columns. The row header is sticky inside that scroll, so the thing
+            being compared never leaves the screen. */}
+        <div className={s.specWrap} data-reveal="up">
+          <table className={s.spec}>
+            <caption className="fk-sr-only">
+              What a tiffin service, a fitness app, a supplement brand and
+              FitFuel each do
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Does it</th>
+                {WEDGE_COLS.map((c) => (
+                  <th key={c} scope="col">
+                    {c}
+                  </th>
+                ))}
+                <th scope="col" className={s.specUs}>
+                  FitFuel
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.what}>
+                  <th scope="row">{r.what}</th>
+                  <td>{r.tiffin}</td>
+                  <td>{r.app}</td>
+                  <td>{r.supp}</td>
+                  <td className={s.specMine}>{r.us}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── 7b. Proof ──────────────────────────────────────────────────────────────
+   THE ONE THING THE IMPORTED REDESIGN DROPPED, put back.
+
+   app/page.tsx has been querying three featured Testimonial rows the whole
+   time; the design had no band to render them in, so they were fetched and
+   thrown away. This is app/_hp/Proof.tsx's shape at app density: the result,
+   the plan, and the AREA — which matters more than it looks, because "Kharadi"
+   tells a Kharadi reader this is a real local business, and that is the single
+   hardest thing for a national brand to fake.
+
+   RENDERS NOTHING WHEN THE TABLE IS EMPTY. This is one of the few sections
+   where disappearing is correct: an empty testimonials block is worse than no
+   testimonials block, and a placeholder quote would be a lie. */
+function ProofBand({ quotes }: { quotes: Quote[] }) {
+  if (!quotes.length) return null;
+
+  return (
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="proof-h">
+      <div className={s.bandWrap}>
+        <div className={s.bandHead}>
+          <div>
+            <h2 id="proof-h" className={s.bandH2}>
+              From people eating it
+            </h2>
+          </div>
+          <p className={s.bandLede}>
+            Every one of these is a row in the database with a result and a plan
+            attached, not a line a copywriter wrote for a stock photograph.
+          </p>
+        </div>
+
+        <ul className={s.quotes}>
+          {quotes.map((q) => (
+            <li key={q.id} data-reveal="up">
+              <blockquote className={s.quoteText}>{q.quote}</blockquote>
+              <p className={s.quoteWho}>
+                <b>{q.name}</b>
+                <span>{q.location}</span>
+              </p>
+              <p className={s.quoteMeta}>
+                <span className={s.quoteResult}>{q.resultLabel}</span>
+                <span>{q.planLabel}</span>
+              </p>
             </li>
           ))}
         </ul>

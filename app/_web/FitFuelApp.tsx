@@ -42,7 +42,7 @@ import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
-import type { BandCounts } from "./HomeBands";
+import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
 import { GOALS } from "./home-data";
 import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
@@ -239,6 +239,10 @@ export type AppProps = {
   trial: { rows: { k: string; v: string }[]; total: string };
   /** Suburbs in app/_hp/areas-data.ts, kitchen included. */
   areaCount: number;
+  /** Featured Testimonial rows. app/page.tsx has queried these all along; the
+   *  imported redesign had no band to render them in, so for four days they
+   *  were fetched and dropped. The proof band takes them now. */
+  quotes: Quote[];
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -646,6 +650,7 @@ export default function FitFuelApp({
   prices,
   trial,
   areaCount,
+  quotes,
 }: AppProps) {
   const cart = useCart();
   const [course, setCourse] = useState("all");
@@ -1679,6 +1684,7 @@ export default function FitFuelApp({
         trial={trial}
         areaCount={areaCount}
         cutoffLabel={cutoffLabel}
+        quotes={quotes}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
