@@ -24,30 +24,22 @@
   border-bottom: 1px solid var(--fk-line);
 }
 
-/* MOBILE FIRST, and this is not cosmetic. With brand + search + location +
-   basket on one row at 375px the search field collapsed to 90px — the primary
-   control of the whole app, unusable. Below 640px it gets its own full-width
-   row, which is what every food app does. */
+/* ONE ROW, TWO ENDS. This was a two-row grid with named areas because brand +
+   search + location + basket on one line at 375px squeezed the search field to
+   90px. With the field gone there is nothing to squeeze: identity on the left,
+   the two controls on the right, at every width. */
 .topRow {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    "brand actions"
-    "search search";
+  display: flex;
   align-items: center;
-  gap: 8px var(--fk-s-3);
+  justify-content: space-between;
+  gap: var(--fk-s-3);
   padding: 8px var(--fk-gutter);
   max-width: 1440px;
   margin-inline: auto;
 }
-.topRow > a[class*="brand"] {
-  grid-area: brand;
-}
 
 @media (min-width: 640px) {
   .topRow {
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas: "brand search actions";
     padding: 10px var(--fk-gutter);
   }
 }
@@ -87,58 +79,6 @@
 }
 .place:hover {
   background: var(--fk-warm);
-}
-
-.searchWrap {
-  grid-area: search;
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-.searchIcon {
-  position: absolute;
-  left: 14px;
-  color: var(--fk-ink-3);
-  pointer-events: none;
-  display: flex;
-}
-.search {
-  width: 100%;
-  min-height: var(--fk-tap);
-  padding: 0 40px 0 42px;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r-full);
-  background: var(--fk-surface);
-  font-family: var(--fk-sans);
-  font-size: var(--fk-t-base); /* 16px — never smaller, or iOS zooms on focus */
-  color: var(--fk-ink);
-}
-.search::placeholder {
-  color: var(--fk-ink-3);
-}
-.search:focus {
-  border-color: var(--fk-green);
-  outline: 3px solid var(--fk-green-deep);
-  outline-offset: 1px;
-}
-.searchClear {
-  position: absolute;
-  right: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: var(--fk-r-full);
-  background: transparent;
-  color: var(--fk-ink-3);
-  cursor: pointer;
-}
-.searchClear:hover {
-  background: var(--fk-warm);
-  color: var(--fk-ink);
 }
 
 .topActions {
@@ -2864,53 +2804,6 @@
 .proof b { font-size: 1.375rem; }
 
 /* ── Sort ───────────────────────────────────────────────────────────────── */
-.resultBar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--fk-s-4);
-  flex-wrap: wrap;
-}
-.resultHead { min-width: 0; }
-.sortRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.sortLabel {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fk-ink-3);
-}
-.sortBtn {
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r-full);
-  background: transparent;
-  font-family: var(--fk-sans);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--fk-ink-3);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background-color var(--fk-dur) var(--fk-ease),
-    color var(--fk-dur) var(--fk-ease),
-    border-color var(--fk-dur) var(--fk-ease);
-}
-.sortBtn:hover { background: var(--fk-warm); color: var(--fk-ink); }
-.sortOn,
-.sortOn:hover {
-  border-color: var(--fk-green);
-  background: var(--fk-green-wash);
-  color: var(--fk-green-deep);
-  font-weight: 700;
-}
-
 /* ── Courses inside the grid ────────────────────────────────────────────────
    The group is a nested <ul> spanning every column, and it declares the SAME
    auto-fill track as its parent — so a card in Salads lines up with a card in
@@ -2990,7 +2883,6 @@
    a typographic stand-in for a dish, and it is one element from being gone. */
 .wellGrain,
 .wellGloss,
-.wellMark,
 .wellFoot {
   position: absolute;
   inset: 0;
@@ -3006,26 +2898,6 @@
 }
 .wellGloss {
   background: linear-gradient(150deg, rgba(255, 255, 255, 0.09) 0%, transparent 46%);
-}
-.wellMark {
-  display: grid;
-  place-items: center;
-}
-.wellMark > span {
-  display: grid;
-  place-items: center;
-  height: 66%;
-  aspect-ratio: 1;
-  border-radius: var(--fk-r-full);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow:
-    inset 0 0 0 7px rgba(255, 255, 255, 0.035),
-    0 10px 30px -14px rgba(0, 0, 0, 0.8);
-  font-family: var(--fk-display);
-  font-size: 2.25rem;
-  font-weight: 500;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.24);
 }
 /* Darkens the foot of the well so the kcal chip keeps its contrast whatever
    hue the course happens to land on. */
@@ -4171,32 +4043,24 @@
    sentence is re-derivable from the two meters it describes.
    ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 639px) {
-  /* ── 3. One row ─────────────────────────────────────────────────────────
-     The two-row split existed because brand + search + location + basket left
-     the search field 90px. The location word is what cost 46 of those, and the
-     pin says the same thing in 20 — so the row fits and the search keeps a
-     usable width. */
+  /* ── 3. One row ───────────────────────────────────────────
+     With the search field gone the row is brand + location + basket, which fits
+     375px with room to spare — so the location button KEEPS ITS WORD here. An
+     earlier cut reduced it to the pin alone to make space for the field; there
+     is no longer a field to make space for, and an unlabelled pin is worse. */
   .topRow {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: "brand search actions";
     gap: var(--fk-s-2);
     padding: 6px var(--fk-gutter);
   }
   .brand {
     font-size: 1.15rem;
   }
-  /* Pin only. The word is dropped with font-size rather than by removing the
-     node, so the button keeps a text child — and the explicit aria-label in
-     FitFuelApp.tsx names the area regardless. */
   .place {
-    gap: 0;
-    /* 14, not 11. At 11 the button measured 40x44 — the height rule was met and
-       the width one was not, and a 44px target is 44 in both directions. */
-    padding: 0 14px;
-    font-size: 0;
+    padding: 0 12px;
+    font-size: var(--fk-t-xs);
   }
   .topActions {
-    gap: 4px;
+    gap: 6px;
   }
 
   /* ── 2. The mode row is the tab bar ─────────────────────────────────────
@@ -4279,21 +4143,6 @@
     font-size: var(--fk-t-md);
   }
 
-  /* Sort is four chips and a label on a 335px row — it wrapped to three lines.
-     Scrolls sideways like every other chip row in this shell. */
-  .sortRow {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-  .sortRow::-webkit-scrollbar {
-    display: none;
-  }
-  .sortBtn {
-    flex: none;
-  }
-
   /* The course note is the kitchen's sentence about a course, and at this
      width it pushed the first card of every group down by two lines. The
      heading and the count carry the group on a phone. */
@@ -4343,7 +4192,6 @@
    a desktop layout that has the room; the alternative is a menu whose sort and
    whose plan builder cannot be reliably tapped.
    ══════════════════════════════════════════════════════════════════════════ */
-.sortBtn,
 .goalBtn,
 .courseMore,
 .axisBtn {

@@ -11,13 +11,18 @@
 // and the owner asked for the shape a food app has. Those are different
 // products, and no palette change turns one into the other.
 //
-// So the primary gesture here is search-and-add, not scroll-and-read:
+// So the primary gesture here is browse-and-add, not scroll-and-read:
 //
-//   - The shell is persistent. Search, location and basket never scroll away.
-//     Sidebar >=1024px, bottom tab bar below, exactly one visible.
+//   - The shell is persistent. The target, location and basket never scroll
+//     away. Sidebar >=1024px, bottom tab bar below, exactly one visible.
 //   - The catalog is filterable in the client, instantly, over all 48 dishes.
 //     No round trip, no skeleton, no "loading dishes…".
 //   - Adding is one tap and the control morphs into a stepper in place.
+//
+// THE SEARCH FIELD WAS REMOVED on 2026-08-19. It was the widest element of a
+// phone header on a page whose measured problem was that the header took 40%
+// of the screen; the course chips filter exactly and carry live counts, and
+// /menu keeps a full searchable list. See the note where it used to sit.
 //   - The basket surfaces itself as a bar the moment it has something in it.
 //
 // The long-form argument (moats, the rotation, the coach, the day timeline)
@@ -27,7 +32,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
@@ -50,7 +55,6 @@ const sx = s;
    Inline, 1.6 stroke, one family. SVG rather than an icon package so the
    shell has no runtime dependency and no version surprise, and never emoji. */
 const I = {
-  search: "M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm10 2-4.35-4.35",
   x: "M18 6 6 18M6 6l12 12",
   bag: "M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6ZM3 6h18M16 10a4 4 0 0 1-8 0",
   pin: "M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0ZM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
@@ -643,7 +647,6 @@ export default function FitFuelApp({
   areaCount,
 }: AppProps) {
   const cart = useCart();
-  const [q, setQ] = useState("");
   const [course, setCourse] = useState("all");
   const [onlyOrderable, setOnlyOrderable] = useState(false);
   const [sheet, setSheet] = useState<ShopDish | null>(null);
@@ -670,26 +673,16 @@ export default function FitFuelApp({
      share of both. The numbers are the dish's own macros against the target the
      visitor picked — nothing per-dish is invented. */
   const [goal, setGoal] = useState("maintain");
-  /* Sort is deliberately NOT a default the page ships in. "Menu order" is the
-     kitchen's own grouping and it is what someone browsing wants; the other
-     three exist for someone shopping a number, and they switch the grid out of
-     course groups into one flat ranked list. */
-  const [sort, setSort] = useState<"menu" | "gap" | "protein" | "kcal">("menu");
   /* Which course headers have been opened past their first four. Per course, so
      opening Salads does not dump all 48 dishes on the page. */
   const [openCourse, setOpenCourse] = useState<Record<string, boolean>>({});
   /* openVariants / openMenu are gone with the two disclosure buttons on the
      plan card. Both contents live in the Configure sheet now — see the comment
      on the plan card foot for why an inline panel was the wrong container. */
-  const searchRef = useRef<HTMLInputElement>(null);
   const gridRef = useCardTilt<HTMLDivElement>();
   const headRef = useRef<HTMLElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const [areaOpen, setAreaOpen] = useState(false);
-
-  /* Keeps typing responsive on a long list: the input updates every keystroke,
-     the 48-item filter runs at React's leisure. */
-  const dq = useDeferredValue(q);
 
   /* ── THE HEADER MEASURES ITSELF ───────────────────────────────────────────
      Everything sticky below the header has to clear it, and the header is not
@@ -719,59 +712,15 @@ export default function FitFuelApp({
        compositing. Belt and braces on a measurement two sticky offsets read. */
   }, [mode]);
 
-  /* "/" focuses search, the convention every catalog app follows. Ignored while
-     the user is already typing somewhere. */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
-      if (e.key === "/" && !typing) {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-      if (e.key === "Escape" && document.activeElement === searchRef.current) setQ("");
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const results = useMemo(() => {
-    const needle = dq.trim().toLowerCase();
-    /* ── THE SEARCH BOX TAKES A NUMBER ──────────────────────────────────────
-       The placeholder offers "30g protein", and a placeholder that promises
-       something the field cannot do is worse than a plain one. Three shapes are
-       understood, and each is a floor or a ceiling rather than an exact match,
-       because nobody wants a dish with EXACTLY 30g of protein:
-
-         "30g protein" / "protein 30"   → at least 30g (also carbs, fat)
-         "under 400 kcal" / "<400 cal"  → at most 400
-         "400 kcal"                     → at most 400, same intent
-
-       Anything it does not recognise falls through to the text search
-       unchanged, so typing "protein bar" still finds the bars. */
-    const macro = /(?:(\d+)\s*g?\s*(protein|carb|carbs|fat)|(protein|carb|carbs|fat)\s*(\d+))/.exec(needle);
-    const energy = /(?:under|below|max|<|less than)?\s*(\d+)\s*(?:k?cal|calories|kcals)/.exec(needle);
-
-    return dishes.filter((d) => {
-      if (course !== "all" && d.category !== course) return false;
-      if (onlyOrderable && !d.orderable) return false;
-      if (!needle) return true;
-
-      if (macro) {
-        const n = Number(macro[1] ?? macro[4]);
-        const which = macro[2] ?? macro[3];
-        const have = which === "fat" ? d.fat : which === "protein" ? d.protein : d.carbs;
-        return d.kcal > 0 && have >= n;
-      }
-      if (energy) return d.kcal > 0 && d.kcal <= Number(energy[1]);
-
-      return (
-        d.name.toLowerCase().includes(needle) ||
-        d.blurb.toLowerCase().includes(needle) ||
-        d.category.toLowerCase().includes(needle)
-      );
-    });
-  }, [dishes, dq, course, onlyOrderable]);
+  const results = useMemo(
+    () =>
+      dishes.filter((d) => {
+        if (course !== "all" && d.category !== course) return false;
+        if (onlyOrderable && !d.orderable) return false;
+        return true;
+      }),
+    [dishes, course, onlyOrderable],
+  );
 
   /* ── THE DAY SO FAR, FROM THE BASKET ──────────────────────────────────────
      Counted over the dish catalogue rather than over cart lines because a line
@@ -799,23 +748,15 @@ export default function FitFuelApp({
     };
   }, [dishes, cart, target]);
 
-  const planResults = useMemo(() => {
-    const needle = dq.trim().toLowerCase();
-    return plans.filter((p) => {
-      if (planCat !== "all" && p.cat !== planCat) return false;
-      if (planDiet !== "all" && !p.variants.some((v) => v.diet === planDiet)) return false;
-      if (!needle) return true;
-      /* `sub` is the condition slug — searching it is what lets someone type
-         "pcos", "thyroid" or "fatty liver" and land on their plan across 59
-         conditions, which a label-only search would miss. */
-      return (
-        p.label.toLowerCase().includes(needle) ||
-        p.note.toLowerCase().includes(needle) ||
-        p.sub.replace(/_/g, " ").includes(needle) ||
-        p.macroLine.toLowerCase().includes(needle)
-      );
-    });
-  }, [plans, dq, planCat, planDiet]);
+  const planResults = useMemo(
+    () =>
+      plans.filter((p) => {
+        if (planCat !== "all" && p.cat !== planCat) return false;
+        if (planDiet !== "all" && !p.variants.some((v) => v.diet === planDiet)) return false;
+        return true;
+      }),
+    [plans, planCat, planDiet],
+  );
 
   /** Live counts per category, so a chip never leads to an empty grid. */
   const catCount = useMemo(() => {
@@ -830,19 +771,10 @@ export default function FitFuelApp({
     return [...m.entries()].sort((a, b) => b[1] - a[1]);
   }, [supplements]);
 
-  const suppResults = useMemo(() => {
-    const needle = dq.trim().toLowerCase();
-    return supplements.filter((x) => {
-      if (suppCat !== "all" && x.category !== suppCat) return false;
-      if (!needle) return true;
-      return (
-        x.name.toLowerCase().includes(needle) ||
-        x.tagline.toLowerCase().includes(needle) ||
-        x.category.toLowerCase().includes(needle) ||
-        x.benefits.some((b) => b.toLowerCase().includes(needle))
-      );
-    });
-  }, [supplements, dq, suppCat]);
+  const suppResults = useMemo(
+    () => supplements.filter((x) => suppCat === "all" || x.category === suppCat),
+    [supplements, suppCat],
+  );
 
   /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
      Measured: 48 dish cards ran 13,396px of a 19,058px page — sixteen phone
@@ -862,7 +794,7 @@ export default function FitFuelApp({
   /* Keyed on the filter signature rather than reset in an effect — expanding
      "keto" and then searching "juice" should not silently keep you expanded,
      and doing it this way needs no effect and cannot desync. */
-  const filterKey = `${mode}|${dq}|${course}|${planCat}|${planDiet}|${suppCat}|${onlyOrderable}`;
+  const filterKey = `${mode}|${course}|${planCat}|${planDiet}|${suppCat}|${onlyOrderable}`;
   const [expandedFor, setExpandedFor] = useState<string | null>(null);
   const expanded = expandedFor === filterKey;
   const cap = <T,>(list: T[]): T[] => (expanded ? list : list.slice(0, PREVIEW));
@@ -887,42 +819,21 @@ export default function FitFuelApp({
 
   const orderableCount = results.filter((d) => d.orderable).length;
 
-  /* ── SORTING, AND WHY IT SWITCHES THE LAYOUT ──────────────────────────────
-     "Menu order" is the kitchen's own grouping, and in that mode the grid is
-     broken into courses with a heading and a note apiece — the shape of a menu.
-     The other three are queries over a number, and a query has no courses: they
-     collapse the grid to one flat ranked list, because "most protein" split
-     into six sections is not a ranking.
+  /* ── THE MENU IS ALWAYS IN COURSES ────────────────────────────────────────
+     The sort row is gone (owner's call, 2026-08-19): four chips and a label
+     cost 44px directly above the first card on every screen, and the ranking
+     they offered is a question a browsing customer does not open a menu to
+     ask. "Best protein per calorie" is still answerable — every card prints
+     its own ₹-per-gram and its share of the day.
 
-     Grouping also only holds while nothing is filtered. A search or a chip is
-     already a narrowing, and narrowing twice reads as a bug. */
-  const sortedDishes = useMemo(() => {
-    if (sort === "protein") return [...results].sort((a, b) => b.protein - a.protein);
-    if (sort === "kcal") return [...results].sort((a, b) => a.kcal - b.kcal);
-    if (sort === "gap") {
-      return [...results].sort(
-        (a, b) => b.protein / Math.max(1, b.kcal) - a.protein / Math.max(1, a.kcal),
-      );
-    }
-    return results;
-  }, [results, sort]);
-
-  const grouped =
-    mode === "dishes" &&
-    sort === "menu" &&
-    !dq.trim() &&
-    course === "all" &&
-    !onlyOrderable;
+     What is left is the kitchen's own grouping: six courses, a heading and a
+     note apiece, first four of each. It holds while nothing is filtered — a
+     course chip is already a narrowing, and narrowing twice reads as a bug, so
+     a filtered view falls back to one flat capped list. */
+  const grouped = mode === "dishes" && course === "all" && !onlyOrderable;
 
   /** Dishes shown per course before its own "Show all" is offered. */
   const PER_COURSE = 4;
-
-  const SORTS = [
-    { key: "menu", label: "Menu order" },
-    { key: "gap", label: "Best protein per calorie" },
-    { key: "protein", label: "Most protein" },
-    { key: "kcal", label: "Fewest calories" },
-  ] as const;
 
   /**
    * ONE DISH CARD.
@@ -955,14 +866,13 @@ export default function FitFuelApp({
           /* The reserved space a photograph drops into. Drop a file into
              public/images/dishes/<slug> and it fills with no layout change.
 
-             ⚠ THE MONOGRAM IS THE ONE PLACE THE REDESIGN CONTRADICTS
-             AGENTS.md. That document bans "a macro ring, a glyph or a
-             typographic stand-in" where someone is choosing what to eat, and
-             this well is empty on purpose today for exactly that reason. The
-             imported design puts the dish's initial in a ring here. It is
-             implemented as drawn because the design is the brief; it is one
-             className away from being empty again if the ruling goes the other
-             way. */
+             NO MONOGRAM. The imported design set the dish's initial in a ring
+             here; AGENTS.md bans "a macro ring, a glyph or a typographic
+             stand-in" on a surface where someone is choosing what to eat, and
+             the owner ruled for AGENTS.md on 2026-08-19. What is left is a
+             course-hued ground with a dot texture and a gloss — a SURFACE,
+             which the same paragraph explicitly allows, and which nothing
+             invites the reader to decode. */
           <button
             type="button"
             className={s.shotPlaceholder}
@@ -972,9 +882,6 @@ export default function FitFuelApp({
           >
             <span className={s.wellGrain} aria-hidden="true" />
             <span className={s.wellGloss} aria-hidden="true" />
-            <span className={s.wellMark} aria-hidden="true">
-              <span>{d.name.charAt(0).toUpperCase()}</span>
-            </span>
             <span className={s.wellFoot} aria-hidden="true" />
             {fits ? <span className={s.fits}>Fits your day</span> : null}
             {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
@@ -1104,30 +1011,19 @@ export default function FitFuelApp({
             </span>
           </span>
 
-          <div className={s.searchWrap}>
-            <span className={s.searchIcon}>
-              <Icon d={I.search} size={18} />
-            </span>
-            <label htmlFor="fk-search" className="fk-sr-only">
-              Search dishes
-            </label>
-            <input
-              id="fk-search"
-              ref={searchRef}
-              className={s.search}
-              type="search"
-              inputMode="search"
-              placeholder={`Search ${dishes.length} dishes — or a number: “30g protein”`}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              autoComplete="off"
-            />
-            {q ? (
-              <button type="button" className={s.searchClear} onClick={() => setQ("")} aria-label="Clear search">
-                <Icon d={I.x} size={18} />
-              </button>
-            ) : null}
-          </div>
+          {/* THE SEARCH FIELD IS GONE, on the owner's call (2026-08-19), and
+              this note is here so it is not re-derived as an oversight.
+
+              It was the primary control of the shell: a live filter over all 48
+              dishes, a "/" shortcut, and a numeric mode that read "30g protein"
+              and "under 400 kcal". It also cost the widest element of a phone
+              header on a page whose complaint was that the header ate 40% of
+              the screen.
+
+              WHAT NARROWS THE MENU NOW: the course chips, which are exact and
+              have live counts, and the bottom tab bar for the three catalogues.
+              Nothing is unreachable — the grid renders every course in menu
+              order, and /menu carries the full list with its own search. */}
 
           <div className={s.topActions}>
             {/* A DEAD CONTROL UNTIL NOW. This was a <button> with no onClick —
@@ -1545,12 +1441,11 @@ export default function FitFuelApp({
             </div>
 
             <div className={s.resultBar}>
-              <div className={s.resultHead}>
               <h2>
-                {q.trim()
-                  ? `Results for “${q.trim()}”`
-                  : mode === "supps"
-                    ? (suppCat === "all" ? "Supplements" : suppCat)
+                {mode === "supps"
+                  ? suppCat === "all"
+                    ? "Supplements"
+                    : suppCat
                   : mode === "plans"
                     ? PLAN_CATS.find((c) => c.key === planCat)?.label
                     : course === "all"
@@ -1567,32 +1462,6 @@ export default function FitFuelApp({
                       ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
                       : ` · from ${menuFrom}`)}
               </p>
-              </div>
-
-              {/* ── SORT ────────────────────────────────────────────────────
-                  Only over dishes. Plans are a subscription ranked by what they
-                  are FOR, not by a macro, and supplements are not ranked at all
-                  — offering "most protein" over a magnesium tablet is a control
-                  that answers nothing.
-
-                  "Best protein per calorie" is the one nobody else offers and
-                  the one this catalogue is actually built to answer. */}
-              {mode === "dishes" ? (
-                <div className={s.sortRow} role="group" aria-label="Sort the menu">
-                  <span className={s.sortLabel}>Sort</span>
-                  {SORTS.map((sv) => (
-                    <button
-                      key={sv.key}
-                      type="button"
-                      className={`${s.sortBtn} ${sort === sv.key ? s.sortOn : ""}`}
-                      onClick={() => setSort(sv.key)}
-                      aria-pressed={sort === sv.key}
-                    >
-                      {sv.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
             </div>
 
             {mode === "supps" ? (
@@ -1718,13 +1587,20 @@ export default function FitFuelApp({
                   plans on subscription. Try a different word, or look through the plans.
                 </p>
                 <span className={s.emptyActions}>
-                  <button type="button" className={s.add} onClick={() => { setQ(""); setCourse("all"); setOnlyOrderable(false); }}>
-                    Clear the search
+                  {/* The only way to empty this grid now is a course chip
+                      crossed with "priced tonight" — so the way out is to drop
+                      both, not to clear a field that no longer exists. */}
+                  <button
+                    type="button"
+                    className={s.add}
+                    onClick={() => { setCourse("all"); setOnlyOrderable(false); }}
+                  >
+                    Show the whole menu
                   </button>
                   <button
                     type="button"
                     className={`${s.add} ${s.ghost}`}
-                    onClick={() => { setQ(""); setMode("plans"); }}
+                    onClick={() => setMode("plans")}
                   >
                     Browse {planCount} plans
                   </button>
@@ -1777,8 +1653,8 @@ export default function FitFuelApp({
               </ul>
             ) : (
               <>
-              <ul className={s.grid}>{cap(sortedDishes).map((d) => dishCard(d))}</ul>
-              {showAllControl(sortedDishes.length, "dishes")}
+              <ul className={s.grid}>{cap(results).map((d) => dishCard(d))}</ul>
+              {showAllControl(results.length, "dishes")}
               </>
             )}
           </div>
