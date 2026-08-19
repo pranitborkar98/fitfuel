@@ -712,7 +712,12 @@ export default function FitFuelApp({
     const ro = new ResizeObserver(apply);
     ro.observe(head);
     return () => ro.disconnect();
-  }, []);
+    /* `mode` is in the deps as well as the observer, deliberately. Switching to
+       plans adds a second chip row and the header grows by 54px in the same
+       commit — measuring here is immediate and certain, where a ResizeObserver
+       callback is a frame away and does not fire at all in a tab that is not
+       compositing. Belt and braces on a measurement two sticky offsets read. */
+  }, [mode]);
 
   /* "/" focuses search, the convention every catalog app follows. Ignored while
      the user is already typing somewhere. */
