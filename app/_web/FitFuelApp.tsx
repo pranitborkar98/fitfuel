@@ -241,6 +241,9 @@ export type AppProps = {
   trial: { rows: { k: string; v: string }[]; total: string };
   /** Suburbs in app/_hp/areas-data.ts, kitchen included. */
   areaCount: number;
+  /** Which catalogue to open on, from `?mode=` — the rail on every dish page
+   *  and on /menu links here with it. Defaults to dishes. */
+  initialMode: "dishes" | "plans" | "supps";
   /** Featured Testimonial rows. app/page.tsx has queried these all along; the
    *  imported redesign had no band to render them in, so for four days they
    *  were fetched and dropped. The proof band takes them now. */
@@ -655,6 +658,7 @@ export default function FitFuelApp({
   prices,
   trial,
   areaCount,
+  initialMode,
   quotes,
   week,
 }: AppProps) {
@@ -665,7 +669,7 @@ export default function FitFuelApp({
   /* Two catalogs, one shell. Dishes are a single meal tonight; plans are a
      subscription configured by duration x diet x meals x tier. Both are the
      product, and the old page made you scroll past one to reach the other. */
-  const [mode, setMode] = useState<"dishes" | "plans" | "supps">("dishes");
+  const [mode, setMode] = useState<"dishes" | "plans" | "supps">(initialMode);
   const [suppCat, setSuppCat] = useState("all");
   const [planCat, setPlanCat] = useState("all");
   const [planDiet, setPlanDiet] = useState("all");

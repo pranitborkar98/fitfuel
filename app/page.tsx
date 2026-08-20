@@ -350,7 +350,22 @@ function trialReceipt() {
  * correct: a rotation section with invented dish names in it would be the
  * exact claim it is trying to prove, falsified.
  */
-export default async function AppPage() {
+/** The catalogue `?mode=` opens on. app/_web/AppChrome.tsx has linked
+ *  /?mode=plans and /?mode=supps from every dish page and from /menu since it
+ *  was written, and until the link sweep on 2026-08-20 this page read no query
+ *  parameters at all — so both links quietly opened the dish catalogue.
+ *  Anything unrecognised falls through to dishes. */
+function modeFrom(v: string | string[] | undefined): "dishes" | "plans" | "supps" {
+  const m = Array.isArray(v) ? v[0] : v;
+  return m === "plans" || m === "supps" ? m : "dishes";
+}
+
+export default async function AppPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string | string[] }>;
+}) {
+  const { mode } = await searchParams;
   const [plans, supplements, bands, prices, week] = await Promise.all([
     getPlans(),
     getSupplements(),
@@ -392,6 +407,7 @@ export default async function AppPage() {
            component, so it is rendered here and passed down as a node for the
            location chip to open. */
         areaPanel={<Areas />}
+        initialMode={modeFrom(mode)}
         bandCounts={bands.counts}
         /* Passed again. For four days these three featured Testimonial rows
            were queried here and dropped on the floor, because the imported

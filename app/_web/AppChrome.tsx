@@ -18,22 +18,25 @@
 //
 // TWO DELIBERATE DIFFERENCES FROM THE HOMEPAGE HEADER:
 //
-//   Search NAVIGATES rather than filters. On `/` the field filters the grid in
-//   place. There is no grid here, so it pushes to /?q=… and the homepage picks
-//   the query up. Submitting is a real form submit so the enter key works and
-//   the control keeps its meaning with JavaScript still loading.
+//   THERE IS NO SEARCH FIELD. There used to be: it pushed to /?q=… and the
+//   homepage picked the query up. The owner removed search from `/` on
+//   2026-08-19, which left this box submitting a parameter nothing reads — a
+//   customer on a dish page typed a name, pressed enter, landed on the homepage
+//   and their search was silently discarded. Removed rather than repointed,
+//   because the catalogue it used to search is now browsed by course chip.
 //
 //   The three catalog tabs are LINKS, not buttons. Mode is homepage state; from
 //   here the honest thing is a link to the homepage in that mode, so /?mode=plans
 //   opens the plans catalog rather than pretending to switch a view that is not
-//   mounted.
+//   mounted — and `/` now READS that parameter, which it did not until the link
+//   sweep of 2026-08-20 found all three of these pointing at nothing.
 //
 // The basket is the SAME cart: useCart is a context provider mounted in the
 // layout, so the count and the drawer are shared, not duplicated per route.
 
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
@@ -110,23 +113,21 @@ function activeTab(pathname: string): number {
   return best;
 }
 
+/* `dishCount` is gone with the search field it sized the placeholder for
+   ("Search 48 dishes"). Nothing else in this header counted anything. */
 export default function AppChrome({
   area = "Kharadi",
   cutoff,
-  dishCount,
   areaPanel,
   children,
 }: {
   area?: string;
   cutoff?: string;
-  dishCount: number;
   areaPanel?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const cart = useCart();
-  const router = useRouter();
   const pathname = usePathname() || "";
-  const [q, setQ] = useState("");
   const [areaOpen, setAreaOpen] = useState(false);
   const active = activeTab(pathname);
   /* badgeCount, not count: it includes price-on-request enquiries, so the
@@ -139,44 +140,7 @@ export default function AppChrome({
         <div className={s.topRow}>
           <Wordmark className={s.brand} />
 
-          {/* A real form: enter submits, and the control still means something
-              before hydration finishes. */}
-          <form
-            className={s.searchWrap}
-            action="/"
-            onSubmit={(e) => {
-              e.preventDefault();
-              router.push(q.trim() ? `/?q=${encodeURIComponent(q.trim())}` : "/");
-            }}
-          >
-            <span className={s.searchIcon}>
-              <Icon d={I.search} size={18} />
-            </span>
-            <label htmlFor="fk-chrome-search" className="fk-sr-only">
-              Search dishes
-            </label>
-            <input
-              id="fk-chrome-search"
-              name="q"
-              className={s.search}
-              type="search"
-              inputMode="search"
-              placeholder={`Search ${dishCount} dishes`}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              autoComplete="off"
-            />
-            {q ? (
-              <button
-                type="button"
-                className={s.searchClear}
-                onClick={() => setQ("")}
-                aria-label="Clear search"
-              >
-                <Icon d={I.x} size={18} />
-              </button>
-            ) : null}
-          </form>
+
 
           <div className={s.topActions}>
             <button

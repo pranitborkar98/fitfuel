@@ -85,7 +85,6 @@ export default async function Page({ params }: Props) {
      the basket count does not reset when you open a dish. */
   return (
     <AppChrome
-      dishCount={SHOP_DISHES.length}
       cutoff={cutoffLabel()}
       areaPanel={<Areas />}
     >

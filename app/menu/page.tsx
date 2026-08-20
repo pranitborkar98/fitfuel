@@ -69,9 +69,6 @@ export default async function MenuPage() {
 
   return (
     <AppChrome
-      /* The chrome's dish count is the à la carte catalogue on `/`, which is
-         what its search box searches — not this page's rotation. */
-      dishCount={48}
       cutoff={cutoffLabel()}
       areaPanel={<Areas />}
     >
