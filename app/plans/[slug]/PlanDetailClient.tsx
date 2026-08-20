@@ -378,8 +378,19 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
     background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 0, ...extra,
   })
 
+  /* THE `fk` CLASS IS NOT DECORATION. app/globals.css bans every corner
+     radius on marketing surfaces with an !important rule, and its own comment
+     names `.fk` as the exemption the new system opts out through. Without it
+     the radius scale set in the style block below is silently flattened to 0
+     and the page keeps the rejected square-cornered look no matter what the
+     CSS says — measured: .btn-lime computed 0px until this landed.
+
+     It also pulls in app/_design/base.css, whose `.fk h1..h4` rule is (0,1,1)
+     and would outrank the (0,1,0) .h1/.h2/.h3 classes below. That is the same
+     specificity trap that had every heading on the homepage rendering at the
+     wrong size for weeks, so those three rules are .ff-root-prefixed. */
   return (
-    <div className="ff-root">
+    <div className="ff-root fk">
       <style>{`
 
 
@@ -391,15 +402,24 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
              inversion survives as ink-on-bg, which is the house way to flip a
              panel; the orange is gone, because category is never carried by
              hue. */
-          --bg:#070707; --panel:#050504; --line:#232320; --line-2:#33332f;
-          --lime:#84cc16; --lime-d:#84cc16; --ink:#f7f7f5; --dim:#85857e; --faint:#85857e;
-          --bone:#f7f7f5; --bone-ink:#070707; --ember:#85857e;
+          /* MAPPED ONTO app/_design/tokens.css, 2026-08-20. The colours were
+             already the homepage's values by coincidence of an earlier pass;
+             what made this page read as a different SITE was the type and the
+             zero radius, handled below. --dim/--faint were #85857e against the
+             system's #9a9a94, the one colour that actually differed. */
+          --bg:var(--fk-paper); --panel:var(--fk-surface); --line:var(--fk-line); --line-2:var(--fk-line-2);
+          --lime:var(--fk-green); --lime-d:var(--fk-green-deep); --ink:var(--fk-ink); --dim:var(--fk-ink-3); --faint:var(--fk-ink-3);
+          --bone:var(--fk-ink); --bone-ink:var(--fk-paper); --ember:var(--fk-ink-3);
           background:var(--bg); color:var(--ink); min-height:100vh; position:relative; padding-top:68px;
           overflow-x:hidden; font-family:inherit;
           -webkit-font-smoothing:antialiased;
         }
-        .ff-root .syne{ font-family:var(--ff-cond); }
-        .ff-root .cond{ font-family:var(--ff-cond); font-variant-numeric:tabular-nums; }
+        /* .syne was decorative display; it becomes the display face. .cond is
+           used for FIGURES (day numbers, prices, counters) so it takes the
+           mono, which is what the homepage sets numbers in and what makes a
+           column of them line up. */
+        .ff-root .syne{ font-family:var(--fk-display); }
+        .ff-root .cond{ font-family:var(--fk-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
         .ff-root .mono{ font-family:var(--font-mono),monospace; font-variant-numeric:tabular-nums; }
 
         .grain{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
@@ -409,7 +429,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
           background-size:64px 64px; mask-image:radial-gradient(ellipse 100% 70% at 50% 0%, #000 0%, transparent 75%); }
 
         .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; position:relative; z-index:2; }
-        .sec{ padding:104px 0; border-top:1px solid var(--line); position:relative; z-index:2; }
+        /* 104px was a band rhythm from the long-form system. The homepage
+           bands are 48 on a phone and 64 above 900px; matching them is what
+           makes the two pages feel like one site when you move between them. */
+        .sec{ padding:clamp(var(--fk-s-7),7vw,var(--fk-s-8)) 0; border-top:1px solid var(--line); position:relative; z-index:2; }
         .sec:first-of-type{ border-top:none; }
 
         .reveal{ opacity:0; transform:translateY(34px); transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
@@ -420,32 +443,50 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
         @keyframes enter{ to{ opacity:1; transform:none; } }
         .e1{animation-delay:.05s}.e2{animation-delay:.13s}.e3{animation-delay:.21s}.e4{animation-delay:.29s}.e5{animation-delay:.37s}.e6{animation-delay:.45s}
 
-        .h1{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(44px,7.5vw,92px); line-height:.93; letter-spacing:-.03em; }
-        .h2{ font-family:var(--ff-cond); font-weight:800; font-size:clamp(30px,4vw,52px); line-height:1.02; letter-spacing:-.025em; }
-        .h3{ font-family:var(--ff-cond); font-weight:700; font-size:clamp(22px,2.4vw,30px); line-height:1.08; letter-spacing:-.02em; }
+        /* NEWSREADER, NOT BARLOW CONDENSED AT 800. This is the single change
+           that stops 59 plan pages reading as a different website. The old ramp
+           was condensed display type at 800/700 up to 92px with -.03em
+           tracking — the "trading terminal" texture the 2026-08-12 verdict
+           rejected, which the homepage moved off and this page never did.
 
-        .btn{ display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14.5px; text-decoration:none; border-radius:0; transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, background .25s, border-color .25s; cursor:pointer; }
-        .btn-lime{ background:var(--lime); color:#070707; padding:15px 30px; border:1px solid var(--lime); }
-        .btn-lime:hover{ background:var(--ink); border-color:var(--ink); }
-        .btn-ghost{ background:transparent; color:var(--ink); padding:15px 26px; border:1px solid var(--line-2); }
-        .btn-ghost:hover{ border-color:#3a3a3a; background:#101010; }
+           Sizes come down with it: a 92px condensed headline and a 42px serif
+           one occupy about the same optical space, and the homepage's own band
+           heading is clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem) — .h2 below is
+           that exact clamp, so a heading here and a heading on the homepage are the
+           same size on the same screen. */
+        .ff-root .h1{ font-family:var(--fk-display); font-weight:600; font-size:clamp(2rem,1.4rem + 2.4vw,3.25rem); line-height:1.04; letter-spacing:-.025em; }
+        .ff-root .h2{ font-family:var(--fk-display); font-weight:600; font-size:clamp(1.75rem,1.3rem + 1.7vw,2.625rem); line-height:1.05; letter-spacing:-.022em; }
+        .ff-root .h3{ font-family:var(--fk-display); font-weight:600; font-size:var(--fk-t-lg); line-height:1.15; letter-spacing:-.015em; }
+
+        /* The homepage's button: 8px radius, lime that goes lime-DEEP on
+           hover rather than flipping to ink. border-radius:0 on every control
+           was part of the rejected system — tokens.css carries a radius scale
+           and this page was the last surface ignoring it. */
+        .btn{ display:inline-flex; align-items:center; justify-content:center; gap:9px; font-family:var(--fk-sans); font-weight:700; font-size:15px; min-height:48px; text-decoration:none; border-radius:var(--fk-r); transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, background .25s, border-color .25s; cursor:pointer; }
+        .btn-lime{ background:var(--lime); color:var(--fk-on-green); padding:0 26px; border:1px solid var(--lime); }
+        .btn-lime:hover{ background:var(--fk-green-deep); border-color:var(--fk-green-deep); }
+        .btn-ghost{ background:transparent; color:var(--ink); padding:0 22px; border:1px solid var(--line-2); }
+        .btn-ghost:hover{ border-color:var(--fk-line-strong); background:var(--fk-warm); }
         .btn-wa{ background:#101512; color:#dcf2e3; padding:15px 24px; border:1px solid #1f3a2a; }
         .btn-wa:hover{ border-color:#2c5a3e; background:#0f1a13; }
 
         .ticker-wrap{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:18px 0; position:relative; z-index:2; background:#0a0a0a; }
         .ticker{ display:inline-flex; white-space:nowrap; animation:tick 32s linear infinite; }
-        .ticker span{ font-family:var(--ff-cond); font-weight:600; font-size:18px; letter-spacing:.04em; color:#85857e; text-transform:uppercase; padding:0 22px; display:inline-flex; align-items:center; gap:22px; }
+        .ticker span{ font-family:var(--fk-sans); font-weight:600; font-size:15px; letter-spacing:.01em; color:var(--fk-ink-3); text-transform:none; padding:0 22px; display:inline-flex; align-items:center; gap:22px; }
         .ticker b{ color:var(--lime); font-weight:600; }
         @keyframes tick{ to{ transform:translateX(-50%); } }
 
         .ledger-row{ display:grid; grid-template-columns:96px repeat(4,1fr); border:1px solid var(--line); border-top:none; transition:background .25s; }
-        .ledger-row:first-child{ border-top:1px solid var(--line); border-radius:0 4px 0 0; }
-        .ledger-row:last-child{ border-radius:0 0 4px 4px; }
-        .ledger-row:hover{ background:#0d0d0d; }
+        .ledger-row:first-child{ border-top:1px solid var(--line); border-radius:var(--fk-r-lg) var(--fk-r-lg) 0 0; }
+        .ledger-row:last-child{ border-radius:0 0 var(--fk-r-lg) var(--fk-r-lg); }
+        .ledger-row:hover{ background:var(--fk-surface); }
         .ledger-cell{ padding:16px 18px; border-left:1px solid var(--line); }
         .ledger-cell:first-child{ border-left:none; }
 
-        .seg{ font-family:var(--ff-cond); font-size:12px; letter-spacing:.05em; padding:11px 20px; border:1px solid var(--line-2); border-radius:0; background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:uppercase; }
+        /* A pill, sentence case, at a 44px target. Was 12px uppercase
+           condensed in a square box at 11px of padding — 34px tall, under the
+           minimum, and the same texture the rest of this pass is removing. */
+        .seg{ font-family:var(--fk-sans); font-size:13px; font-weight:600; letter-spacing:normal; min-height:var(--fk-tap); padding:0 16px; border:1px solid var(--line-2); border-radius:var(--fk-r-full); background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:none; }
         .seg:hover{ color:var(--ink); border-color:#3a3a3a; }
         .seg.on{ background:var(--lime); color:#0a0a0a; border-color:var(--lime); font-weight:700; }
 
