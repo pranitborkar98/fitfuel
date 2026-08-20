@@ -198,18 +198,53 @@ export const COACH_WEEKS: { w: string; kg: number; note: string }[] = [
   { w: "Week 4", kg: 78.1, note: "Target moved to 1,840" },
 ];
 
-/* ── The 29 conditions the kitchen cooks for ────────────────────────────────
-   This is the app's canonical list, previously the single copy inside
-   HomeBands.tsx. The redesign shipped its own 28-item list carrying conditions
-   we have no plan for — CKD staging, sleep apnoea, endometriosis — and a chip
-   that leads to nothing is worse than a shorter list that all resolves. */
-export const CONDITIONS = [
-  "Diabetes", "Pre-diabetes", "Thyroid", "PCOS", "PCOD", "Hypertension",
-  "Heart health", "Fatty liver", "Kidney health", "Gout", "Cholesterol",
-  "Anaemia", "Vitamin D", "B12 deficiency", "Obesity", "Post-surgery",
-  "Post-Covid", "Cancer recovery", "Postpartum", "Menopause", "Fertility",
-  "PMS", "Hormonal acne", "Gut health", "Seniors", "Kids and teens",
-  "Ramadan", "Navratri", "Shravan",
+/* ── The 29 conditions, each pointing at the plan that cooks for it ─────────
+   These chips used to link to `/plans?q=<label>`. A link sweep found that
+   `app/plans/page.tsx` reads exactly two search params — `diet` and `trial` —
+   and has never read `q`, so all 29 landed on the unfiltered list of every
+   plan. The reader tapped "PCOS" and got 126 plans with no explanation.
+
+   So they resolve to the plan itself. Every slug below was checked against the
+   database (grouped by subCategory, VEG variant preferred) and every one of
+   them returns 200. Six needed a name the label does not spell — Diabetes is
+   "Diabetic-Friendly", Postpartum is "Post-Pregnancy", Cholesterol shares
+   "Heart & Cholesterol", and PCOD shares the "PCOS / PCOD Management" sheet.
+
+   A chip with no plan behind it does not belong in this list at all; that is
+   why this is a table and not a slugify() call, which would silently invent
+   `/plans/kids-and-teens` and 404. */
+export type ConditionLink = { label: string; slug: string };
+
+export const CONDITIONS: ConditionLink[] = [
+  { label: "Diabetes", slug: "diabetic-veg" },
+  { label: "Pre-diabetes", slug: "pre-diabetic-veg" },
+  { label: "Thyroid", slug: "thyroid-veg" },
+  { label: "PCOS", slug: "pcos-veg" },
+  { label: "PCOD", slug: "pcos-veg" },
+  { label: "Hypertension", slug: "hypertension-veg" },
+  { label: "Heart health", slug: "heart-health-veg" },
+  { label: "Fatty liver", slug: "fatty-liver-veg" },
+  { label: "Kidney health", slug: "kidney-health-veg" },
+  { label: "Gout", slug: "gout-veg" },
+  { label: "Cholesterol", slug: "heart-health-veg" },
+  { label: "Anaemia", slug: "anaemia-veg" },
+  { label: "Vitamin D", slug: "vitamin-d-veg" },
+  { label: "B12 deficiency", slug: "b12-deficiency-veg" },
+  { label: "Obesity", slug: "obesity-veg" },
+  { label: "Post-surgery", slug: "post-surgery-veg" },
+  { label: "Post-Covid", slug: "post-covid-veg" },
+  { label: "Cancer recovery", slug: "cancer-recovery-veg" },
+  { label: "Postpartum", slug: "post-pregnancy-veg" },
+  { label: "Menopause", slug: "menopause-veg" },
+  { label: "Fertility", slug: "fertility-veg" },
+  { label: "PMS", slug: "pms-veg" },
+  { label: "Hormonal acne", slug: "hormonal-acne-veg" },
+  { label: "Gut health", slug: "gut-health-veg" },
+  { label: "Seniors", slug: "senior-veg" },
+  { label: "Kids and teens", slug: "kids-teen-veg" },
+  { label: "Ramadan", slug: "ramadan" },
+  { label: "Navratri", slug: "navratri" },
+  { label: "Shravan", slug: "shravan" },
 ];
 
 /* ── Breakfast drop times ───────────────────────────────────────────────────

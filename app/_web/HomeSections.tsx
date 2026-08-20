@@ -647,9 +647,14 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
   const mealMeta = MEALS.find((m) => m.key === meals)!;
   const durMeta = DURATIONS.find((d) => d.key === duration)!;
 
-  const href =
-    `/plans?dur=${durMeta.legacy}&meal=${mealMeta.legacy}` +
-    `&diet=${dietMeta.legacy}&tier=${tier}`;
+  /* ONLY `diet` SURVIVES THE JOURNEY. app/plans/page.tsx reads `diet` and
+     `trial` and nothing else, so the dur / meal / tier this link used to carry
+     were dropped on arrival — a URL that looks like it hands over the
+     configuration and does not. Sending the one parameter that is actually
+     read, and the button says "see the plans" rather than implying the build
+     travels with it. Carrying the rest properly means a plan has to be chosen
+     first, which is what /plans is for. */
+  const href = `/plans?diet=${dietMeta.legacy}`;
 
   /* A render HELPER, not a component. Declaring a component inside render gives
      it a new identity every pass, so React unmounts and remounts the whole axis
@@ -795,7 +800,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
 
                 {tierMeta.available ? (
                   <Link href={href} className={s.planCta}>
-                    Start this plan
+                    See {dietMeta.label.toLowerCase()} plans
                   </Link>
                 ) : (
                   <Link href={href} className={`${s.planCta} ${s.planCtaGhost}`}>
@@ -866,8 +871,10 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
         <div>
           <ul className={s.condChips}>
             {CONDITIONS.map((c) => (
-              <li key={c} data-reveal="scale">
-                <Link href={`/plans?q=${encodeURIComponent(c)}`}>{c}</Link>
+              <li key={c.label} data-reveal="scale">
+                {/* Straight to the plan. See the note in home-data.ts — the
+                    `?q=` these used to carry was read by nothing. */}
+                <Link href={`/plans/${c.slug}`}>{c.label}</Link>
               </li>
             ))}
             <li>

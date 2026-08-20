@@ -36,6 +36,9 @@
 }
 
 .card {
+  /* Clears the sticky site header when the card is reached as an anchor
+     target, so #creatine lands the card under the nav rather than behind it. */
+  scroll-margin-top: 96px;
   position: relative;
   background: #070707;
   border: 0;
