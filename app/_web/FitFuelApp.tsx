@@ -48,11 +48,9 @@ import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
 import { GOALS } from "./home-data";
 import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
+import { MacroSplit, dishField, fieldStyle } from "./DishVisuals";
 import s from "./app.module.css";
 
-/* Alias so helper components can reach the stylesheet without shadowing the
-   `s` name used for props inside the main component. */
-const sx = s;
 
 /* ── Icons ─────────────────────────────────────────────────────────────────
    Inline, 1.6 stroke, one family. SVG rather than an icon package so the
@@ -282,107 +280,6 @@ const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
  * the card body beside the name, blurb and price, and visualises numbers the
  * card already prints in words.
  */
-const RING_R = 26;
-const RING_C = 2 * Math.PI * RING_R;
-/** Visual separation between arcs, in path units. Three gaps, so three×. */
-const RING_GAP = 3.5;
-
-function MacroSplit({
-  p,
-  c,
-  f,
-  kcal,
-  unit = "kcal",
-  contrib,
-}: {
-  p: number;
-  c: number;
-  f: number;
-  kcal?: number;
-  unit?: string;
-  /** What this dish does to the target the visitor picked, printed under the
-   *  ring. Optional: a plan card has no single day to contribute to. */
-  contrib?: string;
-}) {
-  const kp = p * 4, kc = c * 4, kf = f * 9;
-  const total = kp + kc + kf;
-  if (!total) return null;
-
-  /* Shares are taken from the raw kcal fractions, not from the rounded
-     percentages, so three roundings cannot leave the ring 1% short or long. */
-  const segs = [
-    { key: "protein", label: "P", g: p, share: kp / total, cls: sx.segP, arc: sx.arcP },
-    { key: "carbs", label: "C", g: c, share: kc / total, cls: sx.segC, arc: sx.arcC },
-    { key: "fat", label: "F", g: f, share: kf / total, cls: sx.segF, arc: sx.arcF },
-  ];
-  const usable = RING_C - RING_GAP * segs.length;
-  let cursor = 0;
-  const arcs = segs.map((sg) => {
-    const len = sg.share * usable;
-    const start = cursor;
-    cursor += len + RING_GAP;
-    return { ...sg, len, start };
-  });
-
-  const proteinPct = Math.round((kp / total) * 100);
-
-  return (
-    <div className={sx.macro}>
-      {/* One sentence for the whole graphic. The ring is decorative so a screen
-          reader is not read three unlabelled shapes. */}
-      <span className="fk-sr-only">
-        {`${p} grams protein, ${c} grams carbohydrate, ${f} grams fat. ${proteinPct} per cent of calories from protein.`}
-      </span>
-
-      <svg className={sx.donut} viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
-        <circle className={sx.donutTrack} cx="32" cy="32" r={RING_R} />
-        {arcs.map((a) => (
-          <circle
-            key={a.key}
-            className={`${sx.donutArc} ${a.arc}`}
-            cx="32"
-            cy="32"
-            r={RING_R}
-            style={
-              {
-                "--len": a.len.toFixed(2),
-                "--circ": RING_C.toFixed(2),
-                strokeDashoffset: -a.start,
-              } as React.CSSProperties
-            }
-          />
-        ))}
-        {/* The denominator, in the middle of the thing it is the denominator of.
-            Printed without a thousands separator: a plan's daily figure is four
-            digits, and "1,800" does not fit the 45px well inside the ring. The
-            narrow class drops the size for those. */}
-        {kcal ? (
-          <>
-            <text
-              className={`${sx.donutNum} ${kcal >= 1000 ? sx.donutNumWide : ""}`}
-              x="32"
-              y="31"
-            >
-              {kcal}
-            </text>
-            <text className={sx.donutUnit} x="32" y="42">{unit}</text>
-          </>
-        ) : null}
-      </svg>
-
-      <span className={sx.macroKeys} aria-hidden="true">
-        {segs.map((sg) => (
-          <span key={sg.key} className={sx.macroKey}>
-            <i className={sg.cls} />
-            {sg.g}g {sg.label}
-          </span>
-        ))}
-      </span>
-
-      {contrib ? <span className={sx.macroContrib}>{contrib}</span> : null}
-    </div>
-  );
-}
 
 /**
  * BADGES, computed from the macros rather than typed by a marketer.
@@ -439,44 +336,6 @@ function badgesFor(d: ShopDish): string[] {
    and a keto dish could land on the same colour and the family cue was false
    exactly where most of the menu sits. Centres re-spaced to 20° apart and the
    jitter cut to ±7, which separates every pair. */
-const COURSE_HUE: Record<string, number> = {
-  bowls: 14,      // roast
-  keto: 34,       // butter
-  breakfast: 54,  // morning
-  salads: 96,     // leaf
-  juices: 168,    // cold-press
-  bars: 344,      // berry
-};
-/** Half-width of the within-course spread, in degrees. */
-const HUE_JITTER = 7;
-
-/** Stable small integer from a string, for the within-course jitter. */
-function hashOf(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 4096;
-  return h;
-}
-
-function field(hue: number): React.CSSProperties {
-  const h = ((hue % 360) + 360) % 360;
-  return {
-    backgroundImage:
-      `radial-gradient(120% 100% at 20% 0%, hsl(${h} 45% 22% / 0.85), transparent 62%),` +
-      `radial-gradient(90% 90% at 90% 100%, hsl(${(h + 48) % 360} 40% 18% / 0.7), transparent 60%)`,
-  };
-}
-
-/** Dishes: the course sets the family, the id sets the variation within it. */
-function dishField(d: ShopDish): React.CSSProperties {
-  const base = COURSE_HUE[d.category] ?? 96;
-  return field(base + (hashOf(d.id) % (HUE_JITTER * 2 + 1)) - HUE_JITTER);
-}
-
-/** Plans have no course, so they keep the hash. */
-function fieldStyle(id: string): React.CSSProperties {
-  return field(hashOf(id) % 360);
-}
-
 /**
  * POINTER-TRACKED DEPTH, at a cost the grid can afford.
  *

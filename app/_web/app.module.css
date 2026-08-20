@@ -5199,107 +5199,16 @@
 /* Four meals across on a desktop, one column on a phone. auto-fit rather than
    a fixed four, because a day with a slot missing from the seed should close
    the gap instead of leaving a hole where a meal is not. */
-.weekMeals {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--fk-s-3);
-}
-@media (min-width: 760px) {
-  .weekMeals { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--fk-s-4); }
-}
-.weekMeals > li {
-  display: grid;
-  align-content: start;
-  gap: 5px;
-  padding: var(--fk-s-4);
-  border: 1px solid var(--fk-line);
-  border-radius: var(--fk-r-lg);
-  background: var(--fk-surface);
-}
-.weekSlot {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--fk-green);
-}
-/* .weekDishName, NOT .weekName — the coach band on `/` already owns
-   `.weekName` for its "WEEK 1" axis label, which is 11px uppercase at 0.08em.
-   A dish name landing on that rule rendered "MAHARASHTRIAN MOONG DAL CHILLA
-   WITH GREEN CHUTNEY & POMEGRANATE RAITA" in caps across this whole page,
-   which is exactly the texture AGENTS.md rejects. One stylesheet shared by two
-   pages means class names are a global namespace; check before adding one. */
-.app .weekDishName {
-  font-family: var(--fk-display);
-  font-size: var(--fk-t-md);
-  font-weight: 500;
-  line-height: 1.25;
-  text-transform: none;
-  letter-spacing: normal;
-  color: var(--fk-ink);
-}
+/* .weekMeals / .weekSlot / .weekDishName / .weekCuisine / .weekBlurb /
+   .weekMacros ARE GONE. They were a bespoke card written inside the shared
+   stylesheet — same tokens, same colours, and none of the homepage's actual
+   dish card: no image well, no macro ring, no card chrome. Consistent in
+   palette and in nothing else, which is the failure mode that looks most like
+   success in a diff.
 
-/* The four figures at the head of the week. `.proof` used to carry this shape
-   on the homepage and was deleted with the six figures the owner removed, so
-   this is its own rule rather than a reference to a class that no longer
-   exists — which is what it was, rendering class="undefined". */
-.weekStats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px var(--fk-s-5);
-  margin: 0 0 var(--fk-s-4);
-  padding: 0 0 var(--fk-s-4);
-  border-bottom: 1px solid var(--fk-line);
-  list-style: none;
-}
-.weekStats li {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.weekStats b {
-  font-family: var(--fk-mono);
-  font-size: 1.375rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--fk-green);
-  line-height: 1.1;
-}
-.weekStats span {
-  font-size: var(--fk-t-xs);
-  color: var(--fk-ink-3);
-  white-space: nowrap;
-}
-.weekCuisine {
-  font-size: var(--fk-t-xs);
-  color: var(--fk-ink-3);
-}
-/* Two lines. The dish's own page carries the rest, and a ragged third line
-   here would break the row's alignment across four cards. */
-.weekBlurb {
-  margin-top: 2px;
-  font-size: var(--fk-t-sm);
-  line-height: 1.45;
-  color: var(--fk-ink-3);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-clamp: 2;
-  overflow: hidden;
-}
-.weekMacros {
-  margin-top: 6px;
-  padding-top: 8px;
-  border-top: 1px solid var(--fk-line);
-  font-family: var(--fk-mono);
-  font-size: var(--fk-t-xs);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.4;
-  color: var(--fk-ink-2);
-}
+   /menu renders `.grid` + `.card` + `.shotPlaceholder` + `.cardBody` now, the
+   same classes `/` renders, with MacroSplit imported from DishVisuals. There is
+   no second card to keep in step. */
 
 .weekClose {
   padding: var(--fk-s-7) 0 var(--fk-s-8);

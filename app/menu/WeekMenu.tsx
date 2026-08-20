@@ -38,6 +38,7 @@
 import Link from "next/link";
 
 import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
+import { MacroSplit, slotField } from "@/app/_web/DishVisuals";
 import Breadcrumb from "@/components/Breadcrumb";
 import s from "@/app/_web/app.module.css";
 
@@ -129,25 +130,55 @@ export default function WeekMenu({
               </span>
             </div>
 
-            <ul className={s.weekMeals}>
+            {/* THE HOMEPAGE DISH CARD, not a box in the same colours. Same
+                .card, same .shotPlaceholder well with its texture, gloss and
+                foot scrim, same .cardBody, same MacroSplit ring — all of it
+                imported from app/_web/DishVisuals so neither page can drift
+                from the other. The first build of this page wrote its own
+                classes inside the shared stylesheet, which produced a card
+                with no image well and no ring: consistent in colour and in
+                nothing else. */}
+            <ul className={s.grid}>
               {meals.map(({ slot, dish }) => (
-                <li key={slot}>
-                  <span className={s.weekSlot}>{SLOT_LABEL[slot] ?? slot}</span>
-                  <b className={s.weekDishName}>{dish!.name}</b>
-                  {dish!.cuisine ? (
-                    <span className={s.weekCuisine}>{dish!.cuisine}</span>
-                  ) : null}
-                  {dish!.blurb ? (
-                    <span className={s.weekBlurb}>{dish!.blurb}</span>
-                  ) : null}
-                  {dish!.kcal ? (
-                    <span className={`${s.weekMacros} fk-num`}>
-                      {Math.round(dish!.kcal)} kcal
-                      {dish!.protein != null ? ` · ${Math.round(dish!.protein)}g P` : ""}
-                      {dish!.carbs != null ? ` · ${Math.round(dish!.carbs)}g C` : ""}
-                      {dish!.fat != null ? ` · ${Math.round(dish!.fat)}g F` : ""}
-                    </span>
-                  ) : null}
+                <li key={slot} className={s.card} data-card="">
+                  {/* The reserved space a photograph drops into, hued by MEAL
+                      SLOT rather than by course — these are plan recipes and
+                      carry no course, and a reader scanning a week is scanning
+                      by meal anyway. Drop a file in and it fills with no
+                      layout change. */}
+                  <span
+                    className={s.shotPlaceholder}
+                    style={slotField(slot, dish!.name)}
+                    aria-hidden="true"
+                  >
+                    <span className={s.wellGrain} />
+                    <span className={s.wellGloss} />
+                    <span className={s.wellFoot} />
+                    {dish!.kcal ? (
+                      <span className={s.kcalTag}>{Math.round(dish!.kcal)} kcal</span>
+                    ) : null}
+                  </span>
+
+                  <div className={s.cardBody}>
+                    <p className={s.dishTop}>
+                      <span className={s.dishCourse}>{SLOT_LABEL[slot] ?? slot}</span>
+                      {dish!.cuisine ? (
+                        <span className={s.tag}>{dish!.cuisine}</span>
+                      ) : null}
+                    </p>
+                    <b className={s.dishName}>{dish!.name}</b>
+                    {dish!.blurb ? (
+                      <p className={s.dishBlurb}>{dish!.blurb}</p>
+                    ) : null}
+                    {dish!.kcal ? (
+                      <MacroSplit
+                        p={Math.round(dish!.protein ?? 0)}
+                        c={Math.round(dish!.carbs ?? 0)}
+                        f={Math.round(dish!.fat ?? 0)}
+                        kcal={Math.round(dish!.kcal)}
+                      />
+                    ) : null}
+                  </div>
                 </li>
               ))}
             </ul>
