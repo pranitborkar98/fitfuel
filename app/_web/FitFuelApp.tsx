@@ -113,7 +113,7 @@ const NAV: NavItem[] = [
    disclaimer being unreachable is not a UX nicety, it is a compliance problem. */
 const FOOTER: { title: string; links: { href: string; label: string }[] }[] = [
   { title: "Order", links: [
-    { href: "/menu", label: "Full menu" },
+    { href: "/menu", label: "This week’s menu" },
     { href: "/plans", label: "All meal plans" },
     { href: "/plans/digital", label: "Digital plans" },
     { href: "/corporate", label: "For offices" },

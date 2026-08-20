@@ -112,7 +112,7 @@ export default function OurIngredientsPage() {
         title="See it on a plate"
         body="Every dish on the menu prints its own weighed calories, protein, carbs and fat."
         href="/menu"
-        cta="See the menu"
+        cta="See this week’s menu"
         secondary={{ href: "/our-kitchen", label: "Our kitchen" }}
       />
     </Shell>

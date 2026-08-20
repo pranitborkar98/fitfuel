@@ -20,7 +20,8 @@ const planLinks = [
   { label: "Medical & Lifestyle", href: "/plans?category=LIFESTYLE_MEDICAL" },
   { label: "Sports Nutrition",    href: "/plans?category=SPORTS" },
   { label: "All 126 Plans",       href: "/plans" },
-  { label: "Single Meals",        href: "/menu" },
+  { label: "Single Meals",        href: "/" },
+  { label: "This Week’s Menu",   href: "/menu" },
 ];
 
 const companyLinks = [

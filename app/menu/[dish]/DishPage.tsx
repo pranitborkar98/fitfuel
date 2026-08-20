@@ -51,12 +51,14 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
       <div className={s.wrap}>
         {/* components/Breadcrumb — the same trail every detail page draws.
             The last crumb carries the arrow and is the back button. */}
+        {/* The parent is `/`, NOT /menu. This is one of the 48 à la carte
+            singles, and /menu is now the plan's weekly rotation — a different
+            set of recipes that does not contain this dish. Pointing a dish's
+            breadcrumb at a page the dish is not on is a broken trail even
+            though the link returns 200. */}
         <Breadcrumb
           className={s.crumb}
-          trail={[
-            { href: "/", label: "Order" },
-            { href: "/menu", label: "The menu" },
-          ]}
+          trail={[{ href: "/", label: "All dishes" }]}
           current={dish.categoryLabel}
         />
 
