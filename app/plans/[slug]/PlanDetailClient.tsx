@@ -62,11 +62,17 @@ interface PriceRow {
   mrpRs?: number | null
 }
 
+import type { SampleWeek } from './page'
+
 interface Props {
   plan: Plan
   schedule: Record<number, Slot[]>
   day1Slots: Slot[]
   prices: PriceRow[]
+  /** An illustrative week off the Recipe library, for plans with no schedule
+   *  of their own. Null when the plan HAS one, and null on clinical plans —
+   *  see the note in page.tsx for why those get the honest blank instead. */
+  sampleWeek: SampleWeek | null
 }
 
 type MealSlotKey = 'BREAKFAST' | 'LUNCH' | 'SNACK' | 'DINNER'
@@ -295,7 +301,7 @@ function CalorieRing({ kcal }: { kcal: number }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: Props) {
+export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sampleWeek }: Props) {
   const [activeWeek, setActiveWeek] = useState(1)
   const [showAll, setShowAll] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
@@ -340,6 +346,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
   useScrollReveal()
   useEffect(() => { setLoaded(true) }, [])
 
+  /* `|| 30` is why the empty pages claimed a month: with no schedule rows,
+     totalDays fell back to 30 and the heading printed "30 days. Zero repeats."
+     over seven blank rows. hasSchedule is the honest question. */
+  const hasSchedule = Object.keys(schedule).length > 0
   const totalDays = Object.keys(schedule).length || 30
   const weeks = [1, 2, 3, 4]
   const weekDays = Array.from({ length: 7 }, (_, i) => (activeWeek - 1) * 7 + i + 1).filter((d) => d <= totalDays)
@@ -645,14 +655,29 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
         <div className="wrap">
           <div className="reveal" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 18, marginBottom: 40 }}>
             <div>
-              <Eyebrow index="04" label="The full menu" />
-              <h2 className="h2">{totalDays} days. Zero repeats.<br /><span style={{ color: 'var(--lime)' }}>Every dish, every macro.</span></h2>
+              <Eyebrow index="04" label={hasSchedule ? 'The full menu' : 'How a week is built'} />
+              {/* THIS HEADING USED TO LIE ON 58 OF 59 PLANS. One MealPlan of
+                  126 has PlanScheduleSlot rows; the rest rendered "30 days.
+                  Zero repeats." over a ledger of Day 01 · 0 KCAL. It now says
+                  what is actually below it. */}
+              {hasSchedule ? (
+                <h2 className="h2">{totalDays} days. Zero repeats.<br /><span style={{ color: 'var(--lime)' }}>Every dish, every macro.</span></h2>
+              ) : sampleWeek ? (
+                <h2 className="h2">An example week.<br /><span style={{ color: 'var(--lime)' }}>Not this plan&rsquo;s own rotation.</span></h2>
+              ) : (
+                <h2 className="h2">This plan&rsquo;s menu<br /><span style={{ color: 'var(--lime)' }}>is being written.</span></h2>
+              )}
             </div>
             <p className="mono" style={{ fontSize: 12, color: 'var(--faint)', maxWidth: 250, lineHeight: 1.7, letterSpacing: '0.02em' }}>
-              No auth wall. No blur. The whole menu is public. Because the food is the sales pitch.
+              {hasSchedule
+                ? 'No auth wall. No blur. The whole menu is public. Because the food is the sales pitch.'
+                : sampleWeek
+                  ? `Seven days from the kitchen\u2019s ${sampleWeek.poolSize} written recipes, to show the shape a day takes. This plan\u2019s own rotation is still being written.`
+                  : 'Cooked for a diagnosis, so the rotation is written against the condition rather than borrowed from another plan. It is published here the day it is signed off.'}
             </p>
           </div>
 
+          {hasSchedule ? (
           <div className="reveal d1" style={{ display: 'flex', gap: 8, marginBottom: 26, flexWrap: 'wrap' }}>
             {weeks.map((w) => (
               <button key={w} className={`seg ${activeWeek === w && !showAll ? 'on' : ''}`} onClick={() => { setActiveWeek(w); setShowAll(false) }}>Week {w}</button>
@@ -661,6 +686,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               {showAll ? '\u2212 Collapse' : '+ All 30 days'}
             </button>
           </div>
+          ) : null}
 
           {/* Ledger header */}
           <div className="ledger-row" style={{ background: '#0a0a0a' }}>
@@ -670,6 +696,70 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             ))}
           </div>
 
+          {/* THE SAMPLE LEDGER, for a plan with no schedule of its own. Same
+              row shape as the real one so the reader learns one layout, but
+              every row is stamped EXAMPLE and the dish cells do not open a
+              recipe sheet — clicking through to a full recipe would be the
+              point at which "illustrative" stops being true. */}
+          {!hasSchedule && sampleWeek ? (
+            <div>
+              {sampleWeek.week.map(({ day, meals }) => {
+                const byKey: Partial<Record<MealSlotKey, (typeof meals)[number]>> = {}
+                meals.forEach((m) => { byKey[m.slot as MealSlotKey] = m })
+                return (
+                  <div key={day} className="ledger-row">
+                    <div className="ledger-cell" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <span className="cond" style={{ fontSize: 30, fontWeight: 600, color: 'var(--ink)', lineHeight: 0.9 }}>{String(day).padStart(2, '0')}</span>
+                      <span className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 6 }}>
+                        {meals.reduce((a, m) => a + m.kcal, 0)} KCAL
+                      </span>
+                      <span className="mono" style={{ fontSize: 10.5, color: 'var(--lime)', marginTop: 5, letterSpacing: '0.1em' }}>EXAMPLE</span>
+                    </div>
+                    {(['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as MealSlotKey[]).map((sk) => {
+                      const m = byKey[sk]
+                      const CellIcon = SLOT_ICON[sk]
+                      return (
+                        <div key={sk} className="ledger-cell">
+                          {m ? (
+                            <>
+                              <div style={{ width: '100%', height: 84, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,#161616,#0b0b0b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <span style={{ color: 'var(--line-2)' }}><CellIcon size={22} /></span>
+                              </div>
+                              <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{m.name}</div>
+                              <div className="mono" style={{ fontSize: 12.5, color: 'var(--faint)', letterSpacing: '0.02em' }}>
+                                <span style={{ color: 'var(--lime)' }}>{m.kcal}</span> kcal · {m.protein}P {m.carbs}C {m.fat}F
+                              </div>
+                            </>
+                          ) : <span className="mono" style={{ fontSize: 12, color: '#2c2c2c' }}>—</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+              {/* A section about not repeating must not hide a repeat. */}
+              {sampleWeek.repeatingSlots.length ? (
+                <p className="mono" style={{ fontSize: 12, color: 'var(--faint)', marginTop: 18, lineHeight: 1.7, letterSpacing: '0.02em' }}>
+                  The kitchen has written {sampleWeek.poolSize} recipes so far, fewer than seven in{' '}
+                  {sampleWeek.repeatingSlots.map((x) => x.toLowerCase()).join(' and ')}, so those repeat inside this example.
+                  A real plan rotation does not — every recipe carries a rotation group and no dish returns inside sixty days.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* The honest blank, when there is neither a schedule nor a sample.
+              Clinical plans land here on purpose — see page.tsx. */}
+          {!hasSchedule && !sampleWeek ? (
+            <p className="mono" style={{ fontSize: 13, color: 'var(--faint)', lineHeight: 1.8, letterSpacing: '0.02em', maxWidth: '54ch' }}>
+              Nothing is shown here rather than a borrowed week. Every recipe on
+              this plan is written against the condition it is for, and showing
+              another plan&rsquo;s food in the meantime would be the wrong kind of
+              helpful. The trial day and the price below are real and available now.
+            </p>
+          ) : null}
+
+          {hasSchedule ? (
           <div>
             {(showAll ? Array.from({ length: totalDays }, (_, i) => i + 1) : weekDays).map((day) => {
               const daySlots = schedule[day] ?? []
@@ -708,6 +798,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
               )
             })}
           </div>
+          ) : null}
         </div>
       </section>
 

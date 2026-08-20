@@ -34,6 +34,86 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
+export type SampleMeal = {
+  slot: string
+  name: string
+  blurb: string | null
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+}
+export type SampleWeek = {
+  week: { day: number; meals: SampleMeal[] }[]
+  poolSize: number
+  repeatingSlots: string[]
+}
+
+/** An illustrative week off the Recipe library, cycled by meal type. Pure
+ *  read, no writes, and the caller decides whether a plan may show one. */
+async function buildSampleWeek(): Promise<SampleWeek | null> {
+  try {
+    const pool = await prisma.recipe.findMany({
+      select: {
+        id: true,
+        name: true,
+        shortDescription: true,
+        mealType: true,
+        caloriesPerServing: true,
+        proteinGrams: true,
+        carbsGrams: true,
+        fatGrams: true,
+      },
+      orderBy: [{ rotationGroup: 'asc' }, { name: 'asc' }],
+    })
+    if (!pool.length) return null
+
+    const by = (t: string) => pool.filter((r: (typeof pool)[number]) => String(r.mealType) === t)
+    const slotsByType = {
+      BREAKFAST: by('BREAKFAST'),
+      LUNCH: by('LUNCH'),
+      SNACK: by('SNACK'),
+      DINNER: by('DINNER'),
+    }
+    /* Deterministic: day N takes the Nth recipe of that meal type, wrapping.
+       No randomness, so the same plan page renders the same week on every
+       request and in the build output. */
+    const week = Array.from({ length: 7 }, (_, i) => {
+      const day = i + 1
+      const meals = (['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as const)
+        .map((t) => {
+          const list = slotsByType[t]
+          if (!list.length) return null
+          const r = list[i % list.length]
+          /* proteinGrams / carbsGrams / fatGrams are Prisma Decimal, not
+             number. They cross the server boundary as objects and adding two
+             with `+` concatenates them into a string, which Math.round then
+             turns into NaN. Coerced here, once, so everything downstream is a
+             real number. */
+          return {
+            slot: t as string,
+            name: r.name,
+            blurb: r.shortDescription ?? null,
+            kcal: Number(r.caloriesPerServing) || 0,
+            protein: Number(r.proteinGrams) || 0,
+            carbs: Number(r.carbsGrams) || 0,
+            fat: Number(r.fatGrams) || 0,
+          }
+        })
+        .filter(Boolean) as SampleMeal[]
+      return { day, meals }
+    })
+    /* How many meal types could not fill seven distinct days. Printed by the
+       component, because a section about repetition must not hide a repeat. */
+    const short = (['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as const).filter(
+      (t) => slotsByType[t].length > 0 && slotsByType[t].length < 7
+    )
+    return { week, poolSize: pool.length, repeatingSlots: short as unknown as string[] }
+  } catch {
+    return null
+  }
+}
+
 export default async function PlanPage({ params }: Props) {
   const { slug } = await params
   const db = prisma as any
@@ -117,6 +197,34 @@ export default async function PlanPage({ params }: Props) {
 
   const day1Slots = schedule[1] ?? []
 
+  /* ── A SAMPLE WEEK FOR THE 58 PLANS THAT HAVE NO SCHEDULE ────────────────
+     ONE MealPlan of 126 has PlanScheduleSlot rows. The other 58 concepts were
+     rendering "30 days. Zero repeats." above a ledger reading Day 01 · 0 KCAL,
+     Day 02 · 0 KCAL — a claim of a non-repeating month over seven empty rows,
+     on the pages that sell the product.
+
+     So an illustrative week is built from the Recipe library instead: 30
+     recipes, 8 breakfast / 10 lunch / 5 snack / 7 dinner, cycled by meal type.
+     It is labelled in the component as an EXAMPLE of how a week is built, and
+     never as this plan's own rotation.
+
+     ⚠ NOT ON CLINICAL PLANS. Every one of those 30 recipes belongs to
+     weight-loss-veg — it is the only seeded plan — so the "shared pool" is in
+     fact one plan's food. Putting it under Kidney Health or Diabetic-Friendly
+     would show a reader managing a diagnosis a week of somebody else's diet,
+     which is a worse failure than an honest blank. LIFESTYLE_MEDICAL is the 70
+     rows cooked for a condition; those keep the "being written" line. Flip
+     SAMPLE_FOR to include it if that call changes.
+
+     Five snacks across seven days means two repeat. That is stated in the
+     component rather than hidden, because the section's whole claim is about
+     repetition. */
+  const SAMPLE_FOR = ['STANDARD', 'SPORTS']
+  const sampleWeek =
+    Object.keys(schedule).length === 0 && SAMPLE_FOR.includes(String(plan.category))
+      ? await buildSampleWeek()
+      : null
+
   // Product + Offer schema. A plan page states a price, a diet, a calorie
   // target and an availability, all of which were previously readable only
   // as prose. Emitted server-side so it is in the initial HTML.
@@ -165,6 +273,7 @@ export default async function PlanPage({ params }: Props) {
       <PlanDetailClient
         plan={plan as any}
         schedule={schedule as any}
+        sampleWeek={sampleWeek}
         day1Slots={day1Slots as any}
         prices={prices as any}
       />
