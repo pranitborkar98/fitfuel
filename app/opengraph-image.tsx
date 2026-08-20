@@ -8,14 +8,21 @@ import { ImageResponse } from "next/og";
 // radius-12 logo tile with a high-voltage emoji in it, and the headline set in
 // generic "sans-serif".
 //
-// On the ramp now, square, with the bolt drawn as a path so the mark is
-// identical to the Navbar and does not depend on which font the OG renderer
-// falls back to for an emoji.
+// THE BOLT IS GONE, 2026-08-20. It was drawn as a path here so the mark would
+// be "identical to the Navbar" — and the Navbar no longer has a mark. The site
+// settled on a wordmark alone (components/Wordmark), so this card was the last
+// place a lime-square-and-bolt survived, on the single most-shared brand asset
+// there is.
 //
-// The face stays a generic stack on purpose: next/og cannot use the next/font
-// variables, and loading Barlow Condensed here would mean shipping the font
+// THE FACE STILL DIFFERS, on purpose and knowingly: next/og cannot read the
+// next/font variables, so matching Newsreader here would mean shipping a font
 // binary to an edge function on every crawl. A share card set in the fallback
-// is a reasonable trade; a share card whose glyphs vary per platform is not.
+// stack is a reasonable trade; a share card whose glyphs vary per platform is
+// not. So the COMPOSITION matches the site — wordmark only, lime "Fuel" — and
+// the typeface does not.
+//
+// WHEN THE NEW LOGO LANDS this is the second of exactly two places to change.
+// The other is components/Wordmark. There is no third.
 
 export const runtime = "edge";
 export const alt = "FitFuel. Meals that train with you";
@@ -37,27 +44,10 @@ export default function OG() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 0,
-              background: "#84cc16",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg width="27" height="27" viewBox="0 0 24 24" fill="#070707">
-              <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-          </div>
-          {/* Satori needs an explicit display on any node with more than one
-              child, and "Fit" + <span>Fuel</span> is two. */}
-          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, color: "#f7f7f5", letterSpacing: -1 }}>
-            Fit<span style={{ color: "#84cc16" }}>Fuel</span>
-          </div>
+        {/* Satori needs an explicit display on any node with more than one
+            child, and "Fit" + <span>Fuel</span> is two. */}
+        <div style={{ display: "flex", fontSize: 34, fontWeight: 600, color: "#f7f7f5", letterSpacing: -1 }}>
+          Fit<span style={{ color: "#84cc16" }}>Fuel</span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
