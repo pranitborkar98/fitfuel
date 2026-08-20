@@ -69,7 +69,7 @@ const companyLinks = [
 // single thing you can buy in one click, and until /menu existed the site had
 // no route at all for the customer who is just hungry tonight.
 const topLinks = [
-  { label: "Menu",         href: "/menu" },
+  { label: "Menu",         href: "/" },
   { label: "Supplements",  href: "/supplements" },
   { label: "How It Works", href: "/how-it-works" },
   { label: "Results",      href: "/results" },

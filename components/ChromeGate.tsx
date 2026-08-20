@@ -28,6 +28,9 @@ const BARE_PREFIXES = ["/driver", "/admin", "/dashboard"];
 // of the app onto the marketing site: different header, no search, no location,
 // no basket, no tab bar. They render app/_web/AppChrome instead, so the site
 // navbar here would be a second header.
+/* "/menu" stays in this list even though /menu itself is now a 308 to `/`:
+   this is a PREFIX list and the 48 /menu/<dish> product pages still draw their
+   own AppChrome header. Removing it drops the header off all 48. */
 const SELF_CHROMED = ["/", "/menu"];
 
 // Path prefixes that are the logged-in APPLICATION, not marketing pages.

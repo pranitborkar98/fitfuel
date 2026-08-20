@@ -111,8 +111,8 @@ export default function OurIngredientsPage() {
       <Band
         title="See it on a plate"
         body="Every dish on the menu prints its own weighed calories, protein, carbs and fat."
-        href="/menu"
-        cta="See this week’s menu"
+        href="/"
+        cta="See the menu"
         secondary={{ href: "/our-kitchen", label: "Our kitchen" }}
       />
     </Shell>

@@ -282,7 +282,7 @@ export default function LocationsPage() {
         body="Trial day, no commitment, no subscription. Fresh food at your door tomorrow morning."
         href="/plans?trial=true"
         cta="Start trial day"
-        secondary={{ href: "/menu", label: "See the menu" }}
+        secondary={{ href: "/", label: "See the menu" }}
       />
     </Shell>
   );

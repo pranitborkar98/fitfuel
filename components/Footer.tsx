@@ -21,7 +21,6 @@ const planLinks = [
   { label: "Sports Nutrition",    href: "/plans?category=SPORTS" },
   { label: "All 126 Plans",       href: "/plans" },
   { label: "Single Meals",        href: "/" },
-  { label: "This Week’s Menu",   href: "/menu" },
 ];
 
 const companyLinks = [

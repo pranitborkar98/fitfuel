@@ -135,7 +135,7 @@ export default function OurKitchenPage() {
         body="One bundled delivery a day, in your Morning or Evening window, cooked that same morning."
         href="/plans"
         cta="See the plans"
-        secondary={{ href: "/menu", label: "See the menu" }}
+        secondary={{ href: "/", label: "See the menu" }}
       />
     </Shell>
   );
