@@ -373,7 +373,7 @@ export const SURFACES: Surface[] = [
     name: "Today",
     stat: "1",
     desc:
-      "Your day on one screen: what is being delivered, what is logged, what is left, and the delivery you confirm with one tap.",
+      "Your day on one screen: where today's box is, what is logged, what is left, and the delivery you confirm with one tap against the driver's own app rather than a status we typed in ourselves.",
   },
   {
     href: "/dashboard/nutrition",
@@ -431,11 +431,21 @@ export const SURFACES: Surface[] = [
     desc:
       "Eighteen message templates across WhatsApp and email, every one of them switchable per channel. Nothing is sent that you did not leave on.",
   },
-  {
-    href: "/order",
-    name: "Order tracking",
-    stat: "06:00",
-    desc:
-      "Where today's box is, confirmed against the driver's own app rather than a status we typed in ourselves.",
-  },
+  /* THE "ORDER TRACKING" ROW IS DELIBERATELY GONE, and this note is here so it
+     is not helpfully restored.
+
+     Inside.tsx listed it as a tenth surface pointing at `/order`. A link sweep
+     of all 122 hrefs the homepage renders found exactly one 404, and it was
+     that one: `app/order/` holds `confirmation/page.tsx` and `success/route.ts`
+     (a PayU webhook, not a page) and nothing else. Inside.tsx's own comment
+     claims every href was checked against app/ — it was stale, and the
+     component being on no route is why nobody noticed.
+
+     It is not restored with a corrected href either, because the surface it
+     describes is `app/dashboard/DeliveryConfirmCard.tsx` — which is the "Today"
+     row above, whose description already ends "and the delivery you confirm
+     with one tap". Pointing both rows at /dashboard would be padding a
+     directory of real screens with the same screen twice, which is the exact
+     habit the rest of this page was built to avoid. Nine surfaces that exist
+     beats ten where one is a duplicate and a 404. */
 ];
