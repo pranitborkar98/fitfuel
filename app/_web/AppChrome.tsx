@@ -32,6 +32,7 @@
 // layout, so the count and the drawer are shared, not duplicated per route.
 
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -136,9 +137,7 @@ export default function AppChrome({
     <div className={`fk ${s.app}`}>
       <header className={s.top}>
         <div className={s.topRow}>
-          <Link href="/" className={s.brand}>
-            Fit<em>Fuel</em>
-          </Link>
+          <Wordmark className={s.brand} />
 
           {/* A real form: enter submits, and the control still means something
               before hydration finishes. */}

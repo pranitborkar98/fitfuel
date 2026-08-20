@@ -17,6 +17,7 @@
 // on close.
 
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -108,13 +109,12 @@ export default function AppShell({
 
       {/* ── Sidebar, desktop ─────────────────────────────────────────── */}
       <nav className={s.sidebar} aria-label="Application">
-        <Link href="/dashboard" className={s.brand}>
-          <span className={s.brandMark} aria-hidden="true" />
-          <span style={{ fontFamily: "var(--ff-cond), sans-serif", fontWeight: 900, fontSize: 19,
-                         letterSpacing: "-0.01em", textTransform: "uppercase", color: C.ink }}>
-            FitFuel
-          </span>
-        </Link>
+        {/* Was condensed 900 UPPERCASE beside a bare lime square — the exact
+            style AGENTS.md rejects by name, and the third of four logos on the
+            site. The link still goes to /dashboard, because a reader inside the
+            app expects the wordmark to return them to their own home rather
+            than to the marketing front door. */}
+        <Wordmark href="/dashboard" size={20} className={s.brand} title="FitFuel dashboard" />
 
         {NAV.map((group) => {
           const items = group.items.filter(visible);

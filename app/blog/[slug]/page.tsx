@@ -19,7 +19,7 @@
 // work, so it keeps its structured data. A canonical was added, because
 // every public page needs one and this one did not have it.
 
-import Link from "next/link";
+import Breadcrumb from "@/components/Breadcrumb";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -98,9 +98,17 @@ export default async function BlogArticlePage({
 
       <article>
         <Wrap style={{ paddingTop: "clamp(96px,13vw,150px)" }}>
-          <Link href="/blog" className={k.link} style={{ marginBottom: 28, display: "inline-block" }}>
-            &larr; All articles
-          </Link>
+          {/* Was the site's only lone back-link, in its own style. Now the
+              same breadcrumb the dish and plan pages draw. */}
+          <div style={{ marginBottom: 28 }}>
+            <Breadcrumb
+              trail={[
+                { href: "/", label: "FitFuel" },
+                { href: "/blog", label: "All articles" },
+              ]}
+              current={post.category}
+            />
+          </div>
 
           <div style={{ maxWidth: 900 }}>
             <span style={label("#84cc16")}>{post.category}</span>

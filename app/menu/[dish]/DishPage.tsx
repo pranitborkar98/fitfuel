@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import Breadcrumb from "@/components/Breadcrumb";
 import { useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
@@ -48,13 +49,16 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
       ) : null}
 
       <div className={s.wrap}>
-        <nav className={s.crumb} aria-label="Breadcrumb">
-          <Link href="/">Order</Link>
-          <span aria-hidden="true">/</span>
-          <Link href="/menu">Menu</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">{dish.categoryLabel}</span>
-        </nav>
+        {/* components/Breadcrumb — the same trail every detail page draws.
+            The last crumb carries the arrow and is the back button. */}
+        <Breadcrumb
+          className={s.crumb}
+          trail={[
+            { href: "/", label: "Order" },
+            { href: "/menu", label: "The menu" },
+          ]}
+          current={dish.categoryLabel}
+        />
 
         <div className={s.top}>
           {/* The image slot, kept as a placeholder. Drop a file into
@@ -185,9 +189,13 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
           </section>
         ) : null}
 
+        {/* The second way back is gone. It sat at the BOTTOM of the page
+            inside this compliance sentence, said "Back to the menu", and went
+            to `/` — while the breadcrumb at the top said "The menu" and went
+            to `/menu`. Two exits, two destinations, one of them buried below
+            the fold on 48 product pages. The breadcrumb is the way back. */}
         <p className={s.foot}>
-          Cooked in our own kitchen in Pune. FSSAI <span className="fk-num">{licence}</span>.{" "}
-          <Link href="/">Back to the menu</Link>
+          Cooked in our own kitchen in Pune. FSSAI <span className="fk-num">{licence}</span>.
         </p>
       </div>
     </div>

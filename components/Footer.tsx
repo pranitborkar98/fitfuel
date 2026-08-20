@@ -5,7 +5,8 @@
 // prisma/seed-meal-plans.ts). Tools and program surfaces are no longer orphaned.
 
 import Link from "next/link";
-import { Zap, MapPin, Phone, Mail } from "lucide-react";
+import Wordmark from "@/components/Wordmark";
+import { MapPin, Phone, Mail } from "lucide-react";
 import { waLink } from "@/lib/site";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 
@@ -105,14 +106,9 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <Link href="/" className="ff-fbrand" style={{ display: "inline-flex", alignItems: "center", gap: 11, textDecoration: "none", marginBottom: 20 }}>
-              <div style={{ width: 34, height: 34, background: "#84cc16", borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Zap style={{ width: 18, height: 18, color: "#000" }} fill="#000" />
-              </div>
-              <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.025em", color: "var(--ff-ink)" }}>
-                Fit<span style={{ color: "#84cc16" }}>Fuel</span>
-              </span>
-            </Link>
+            <span style={{ display: "block", marginBottom: 20 }}>
+              <Wordmark size={21} className="ff-fbrand" />
+            </span>
 
             <p style={{ color: "var(--ff-dim)", fontSize: 13.5, lineHeight: 1.75, marginBottom: 28, maxWidth: 260 }}>
               The only health coach that controls the plate. Chef-cooked, condition-specific meals, delivered daily in Pune. Verified intake, not self-reported.

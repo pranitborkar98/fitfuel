@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Breadcrumb from "@/components/Breadcrumb"
 import { decomposePrice } from '@/lib/pricing-decomposition'
 import { waLink } from '@/lib/site'
 
@@ -474,15 +475,17 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices }: 
             flex row of loose links with "/" separators at #2e2e2e (1.47:1),
             which is invisible and also read aloud as "slash" by a screen
             reader. Separators are now decorative and the trail is navigable. */}
-        <nav aria-label="Breadcrumb" className="mono" style={{ fontSize: 12, letterSpacing: '0.2em' }}>
-          <ol style={{ display: 'flex', gap: 10, alignItems: 'center', listStyle: 'none', margin: 0, padding: 0, color: 'var(--dim)' }}>
-            <li><Link href="/" style={{ color: 'var(--dim)', textDecoration: 'none' }}>FITFUEL</Link></li>
-            <li aria-hidden style={{ color: 'var(--ff-dim)' }}>/</li>
-            <li><Link href="/plans" style={{ color: 'var(--dim)', textDecoration: 'none' }}>PLANS</Link></li>
-            <li aria-hidden style={{ color: 'var(--ff-dim)' }}>/</li>
-            <li><span aria-current="page" style={{ color: 'var(--lime)' }}>{plan.slug}</span></li>
-          </ol>
-        </nav>
+        {/* components/Breadcrumb. Was 12px mono at 0.2em tracking in
+            UPPERCASE — the trading-terminal texture AGENTS.md rejects — and its
+            current-page node printed the raw SLUG at the reader: "gout-veg".
+            A breadcrumb names where you are in words a person would say. */}
+        <Breadcrumb
+          trail={[
+            { href: "/", label: "FitFuel" },
+            { href: "/plans", label: "All plans" },
+          ]}
+          current={plan.name}
+        />
         <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.18em', color: 'var(--faint)' }}>PUNE · IND</div>
       </div>
 

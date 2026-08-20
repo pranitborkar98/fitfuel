@@ -21,6 +21,7 @@
 // is forty.
 
 import Link from "next/link";
+import SiteWordmark from "@/components/Wordmark";
 import { useEffect, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
@@ -72,12 +73,11 @@ export function Mark({ size = 30 }: { size?: number }) {
   );
 }
 
+/* The local wordmark is gone — it was a fifth definition, in sans. It now
+   re-exports the one in components/Wordmark so existing call sites in this file
+   keep working and there is a single place the new logo lands. */
 function Wordmark({ size = 18 }: { size?: number }) {
-  return (
-    <span style={{ fontFamily: SANS, fontSize: size, fontWeight: 600, letterSpacing: "-0.025em", color: C.ink }}>
-      Fit<span style={{ color: C.lime }}>Fuel</span>
-    </span>
-  );
+  return <SiteWordmark size={size} />;
 }
 
 /* ── The 9pm cut-off, live ────────────────────────────────────────────────

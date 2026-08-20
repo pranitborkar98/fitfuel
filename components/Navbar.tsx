@@ -7,10 +7,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
-  Menu, X, Zap, User, LogOut, LayoutDashboard, ChevronDown,
+  Menu, X, User, LogOut, LayoutDashboard, ChevronDown,
   Flame, HeartPulse, Dumbbell, Building2, FileText, Calculator, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -251,14 +252,12 @@ export default function Navbar() {
         {/* Logo */}
         {/* minHeight 44 is the touch target, not a layout change: the bar is
             68px tall and this is centred in it, so nothing moves on screen. */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", flexShrink: 0, minHeight: 44 }}>
-          <div style={{ width: 36, height: 36, background: LIME, borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Zap style={{ width: 19, height: 19, color: "#000" }} fill="#000" />
-          </div>
-          <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", color: "var(--ff-ink)" }}>
-            Fit<span style={{ color: LIME }}>Fuel</span>
-          </span>
-        </Link>
+        {/* components/Wordmark. Was a 36px lime square + a bolt icon + bold
+            sans, one of four logos the site carried; the mark comes off here
+            because the approved homepage design has none and a bolt on half
+            the surfaces was the inconsistency. A new logo lands in that one
+            component, not here. */}
+        <Wordmark size={22} />
 
         {/* Desktop nav */}
         <nav className="ff-nav-desktop" style={{ display: "flex", alignItems: "center", gap: 2 }} onClick={e => e.stopPropagation()}>

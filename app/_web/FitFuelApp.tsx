@@ -32,6 +32,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
@@ -1014,9 +1015,7 @@ export default function FitFuelApp({
       <header className={s.top} ref={headRef}>
         <div className={s.topRow}>
           <span className={s.brandWrap}>
-            <Link href="/" className={s.brand}>
-              Fit<em>Fuel</em>
-            </Link>
+            <Wordmark className={s.brand} />
             {/* THE CUTOFF STRIP, AS A CHIP. It was a full-width band under the
                 header saying the same sentence in 14px across 1440px. The
                 promise is worth two seconds of a customer's attention, not a

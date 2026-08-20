@@ -24,8 +24,7 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Zap } from "lucide-react";
-import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
 
 import { waLink } from "@/lib/site";
 import { Shell, Wrap, A } from "@/app/_ui/Page";
@@ -44,27 +43,10 @@ function SignInInner() {
       <Wrap style={{ paddingTop: "clamp(110px,15vw,180px)", paddingBottom: "clamp(60px,9vw,120px)" }}>
         {/* Flush left, in a measured column. Not a centred card on a glow. */}
         <div style={{ maxWidth: 460 }}>
-          <Link
-            href="/"
-            style={{ display: "inline-flex", alignItems: "center", gap: 11, textDecoration: "none", marginBottom: 34 }}
-          >
-            <span
-              style={{
-                width: 34,
-                height: 34,
-                background: "#84cc16",
-                borderRadius: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Zap style={{ width: 18, height: 18, color: "#070707" }} fill="#070707" />
-            </span>
-            <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", color: INK }}>
-              Fit<span style={{ color: "#84cc16" }}>Fuel</span>
-            </span>
-          </Link>
+          {/* One logo, from components/Wordmark. */}
+          <span style={{ display: "block", marginBottom: 34 }}>
+            <Wordmark size={22} />
+          </span>
 
           <span style={label()}>Sign in</span>
           <h1 style={{ ...display("clamp(2.4rem,7vw,4.4rem)"), margin: "16px 0 16px" }}>
