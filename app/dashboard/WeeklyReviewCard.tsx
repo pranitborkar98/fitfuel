@@ -121,7 +121,7 @@ export default function WeeklyReviewCard() {
 
       <div style={{ padding: 16 }}>
         <p style={{
-          fontFamily: "var(--ff-cond), sans-serif", fontWeight: 900, fontSize: 22,
+          fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 900, fontSize: 22,
           lineHeight: 1.1, letterSpacing: "-0.02em", textTransform: "uppercase",
           color: C.ink, margin: 0, maxWidth: "26ch",
         }}>

@@ -8,12 +8,21 @@
 // This file replaces that screen. It is the only place in the app permitted to
 // render <html> and <body>, because the real ones never mounted.
 //
-// CONSEQUENCE: next/font never ran, so --font-barlow-condensed and
-// --font-archivo are not on the document. globals.css declares --ff-cond and
-// --ff-body with 'Arial Narrow' / sans-serif fallbacks behind those variables,
-// so importing it here degrades to a condensed stack rather than to Times. Do
-// not "fix" that by hardcoding a family: the font ban list still
-// applies to anything a user can actually see.
+// CONSEQUENCE: next/font never ran, so --font-newsreader and --font-archivo are
+// NOT on the document, and every --fk-*/--ff-* family token is defined in terms
+// of them. `var(--font-newsreader), Georgia, serif` does not degrade gracefully:
+// an undefined custom property inside var() with no fallback makes the whole
+// declaration invalid at computed-value time, so the font-family is dropped
+// entirely rather than falling through to Georgia.
+//
+// THIS FILE THEREFORE NAMES ITS FAMILIES LITERALLY, and it is the only file on
+// the site allowed to. Everywhere else a hardcoded family would be wrong; here a
+// token is the thing that fails. Georgia is the closest widely-installed serif
+// to Newsreader, so this screen still reads as FitFuel with no webfont at all.
+//
+// MIGRATED 2026-08-21 (Decision #223). Was --ff-cond at 900, UPPERCASE, up to
+// 96px, radius 0 — the rejected register on the one screen a customer sees when
+// everything else has already failed.
 //
 // Red is deliberate, and matches error.tsx for the same reason given there:
 // this is the case where colour carries meaning instead of decorating.
@@ -40,6 +49,7 @@ export default function GlobalError({
           margin: 0,
           background: "#070707",
           color: "#f7f7f5",
+          fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
           display: "flex",
           alignItems: "center",
           padding: "120px clamp(18px,4vw,40px)",
@@ -48,25 +58,29 @@ export default function GlobalError({
         <style>{`
           .geWrap { width: 100%; max-width: 1180px; margin: 0 auto; }
           .geTag {
-            font-family: var(--font-mono), monospace; font-weight: 500; font-size: 12px;
-            letter-spacing: .22em; text-transform: uppercase; color: #f87171;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            font-weight: 700; font-size: 11.5px; letter-spacing: .12em;
+            text-transform: uppercase; color: #f87171;
             display: block; padding-bottom: 14px; border-bottom: 1px solid #232320;
           }
           .geH {
-            font-family: var(--ff-cond); font-weight: 900; font-size: clamp(34px,8vw,6rem);
-            text-transform: uppercase; letter-spacing: -.03em; line-height: .84;
-            margin: 26px 0 16px; max-width: 14ch;
+            font-family: Georgia, "Times New Roman", serif; font-weight: 600;
+            font-size: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+            text-transform: none; letter-spacing: -.025em; line-height: 1.04;
+            color: #f7f7f5; margin: 26px 0 16px; max-width: 20ch;
           }
           .geP {
-            font-family: var(--ff-body); font-size: 15.5px; color: #9a9a94;
-            line-height: 1.62; max-width: 46ch; margin: 0 0 30px;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            font-size: 15.5px; color: #9a9a94; line-height: 1.62;
+            max-width: 46ch; margin: 0 0 30px;
           }
           .geRow { display: flex; gap: 14px; flex-wrap: wrap; }
           .geBtn {
             display: inline-flex; align-items: center; justify-content: center;
-            font-family: var(--ff-cond); font-weight: 900; font-size: 15px;
-            letter-spacing: .06em; text-transform: uppercase; text-decoration: none;
-            padding: 15px 26px; min-height: 52px; border-radius: 0; cursor: pointer;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            font-weight: 600; font-size: 15px; letter-spacing: 0;
+            text-transform: none; text-decoration: none;
+            padding: 15px 26px; min-height: 52px; border-radius: 8px; cursor: pointer;
             transition: background .2s linear, color .2s linear, border-color .2s linear;
           }
           .geBtn.primary { background: #84cc16; color: #070707; border: 1px solid #84cc16; }
@@ -75,7 +89,8 @@ export default function GlobalError({
           .geBtn.ghost:hover { border-color: #84cc16; color: #84cc16; }
           .geBtn:focus-visible { outline: 2px solid #84cc16; outline-offset: 3px; }
           .geDigest {
-            font-family: var(--font-mono), monospace; font-size: 12px; color: #85857e;
+            font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+            font-size: 12px; color: #85857e;
             letter-spacing: .1em; margin-top: 30px; padding-top: 14px;
             border-top: 1px solid #232320;
           }

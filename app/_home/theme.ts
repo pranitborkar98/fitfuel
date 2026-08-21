@@ -19,7 +19,10 @@ export const DIM = "#85857e"; // 5.4:1 on BG, passes AA at small sizes
 export const RULE = "#232320";
 export const LIME = "#84cc16";
 
-export const COND = "var(--ff-cond)";
+/** @deprecated The condensed face is retired; this now resolves to the
+ *  display serif. Nothing in this file uses it any more - it is exported only
+ *  in case an outside import still names it. */
+export const COND = "var(--fk-display), Georgia, serif";
 export const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 export const WRAP: CSSProperties = {

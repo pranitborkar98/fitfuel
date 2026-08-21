@@ -515,7 +515,7 @@
   bottom: 2px;
   z-index: 2;
   pointer-events: none;
-  font-family: var(--ff-cond), sans-serif;
+  font-family: var(--fk-display), Georgia, serif;
   font-weight: 900;
   font-size: clamp(3.4rem, 6vw, 5.4rem);
   line-height: 0.8;
@@ -629,7 +629,7 @@
   min-height: 4px;
 }
 .weekKcal {
-  font-family: var(--ff-cond), sans-serif;
+  font-family: var(--fk-display), Georgia, serif;
   font-weight: 900;
   font-size: clamp(14px, 1.5vw, 19px);
   letter-spacing: -0.02em;
@@ -941,7 +941,7 @@
   border: 0;
   padding: 15px 14px;
   min-height: 52px;
-  font-family: var(--ff-cond), sans-serif;
+  font-family: var(--fk-display), Georgia, serif;
   font-weight: 800;
   font-size: 15px;
   letter-spacing: 0.05em;
@@ -1062,7 +1062,7 @@
   top: 0;
   left: 0;
   padding: clamp(16px, 2vw, 22px);
-  font-family: var(--ff-cond), sans-serif;
+  font-family: var(--fk-display), Georgia, serif;
   font-weight: 900;
   font-size: clamp(3.4rem, 7vw, 5.6rem);
   line-height: 0.82;

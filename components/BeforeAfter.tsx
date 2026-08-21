@@ -160,12 +160,12 @@ export function BeforeAfterSlot({ story }: { story?: Story }) {
           <>
             <div
               style={{
-                fontFamily: "var(--font-barlow-condensed), sans-serif",
-                fontWeight: 900,
-                fontSize: 22,
-                lineHeight: 0.95,
-                letterSpacing: "-0.02em",
-                textTransform: "uppercase",
+                fontFamily: "var(--fk-display), Georgia, serif",
+                fontWeight: 600,
+                fontSize: 20,
+                lineHeight: 1.2,
+                letterSpacing: "-0.015em",
+                textTransform: "none",
                 color: INK,
                 fontVariantNumeric: "tabular-nums",
               }}

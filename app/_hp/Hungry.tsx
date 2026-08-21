@@ -122,7 +122,7 @@ function media(name: string) {
         display: "flex", alignItems: "center", justifyContent: "center",
         width: "100%", height: "100%",
         background: "radial-gradient(120% 100% at 50% 0%, #14140f 0%, #050504 72%)",
-        fontFamily: "var(--ff-cond)", fontWeight: 800,
+        fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600,
         fontSize: "clamp(38px,6vw,54px)", letterSpacing: "-0.02em",
         color: "#1f1f1b",
       }}

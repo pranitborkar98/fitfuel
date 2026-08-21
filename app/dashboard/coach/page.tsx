@@ -121,7 +121,7 @@ export default async function CoachPage() {
             {new Date(review.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </span>
         </div>
-        <p style={{ fontFamily: "var(--ff-cond), sans-serif", fontWeight: 900,
+        <p style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 900,
                     fontSize: "clamp(1.6rem,4.2vw,2.4rem)", lineHeight: 0.98,
                     letterSpacing: "-0.025em", textTransform: "uppercase",
                     color: C.ink, margin: 0, maxWidth: "22ch" }}>
@@ -272,9 +272,9 @@ export default async function CoachPage() {
       {/* ── The one question ─────────────────────────────────────────── */}
       <section style={{ ...PANEL, padding: "20px 18px", marginBottom: 8 }}>
         <span style={label(12, { display: "block", marginBottom: 10 })}>One question</span>
-        <p style={{ fontFamily: "var(--ff-cond), sans-serif", fontWeight: 800,
+        <p style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600,
                     fontSize: "clamp(1.2rem,2.6vw,1.6rem)", lineHeight: 1.08,
-                    letterSpacing: "-0.015em", textTransform: "uppercase",
+                    letterSpacing: "-0.015em", textTransform: "none",
                     color: C.ink, margin: 0, maxWidth: "30ch" }}>
           {review.oneQuestion}
         </p>

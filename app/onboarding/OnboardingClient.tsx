@@ -265,7 +265,7 @@ export default function OnboardingClient({ userName }: Props) {
       fontSize: 26,
       fontWeight: 700,
       color: '#ffffff',
-      fontFamily: 'var(--ff-cond)',
+      fontFamily: "var(--fk-display), Georgia, serif",
       lineHeight: 1.2,
       margin: 0,
     },
@@ -348,7 +348,7 @@ export default function OnboardingClient({ userName }: Props) {
       gap: 8,
       marginTop: 24,
       transition: 'all 0.2s',
-      fontFamily: 'var(--ff-cond)',
+      fontFamily: "var(--fk-display), Georgia, serif",
     }),
     backBtn: {
       background: 'none',
@@ -373,7 +373,7 @@ export default function OnboardingClient({ userName }: Props) {
       fontSize: 36,
       fontWeight: 800,
       color: '#84cc16',
-      fontFamily: 'var(--ff-cond)',
+      fontFamily: "var(--fk-display), Georgia, serif",
       lineHeight: 1,
     },
     statLabel: {
@@ -565,7 +565,7 @@ export default function OnboardingClient({ userName }: Props) {
                               </div>
                               <div style={{ fontSize: 12, color: '#555', marginTop: 1 }}>{a.desc}</div>
                             </div>
-                            <div style={{ fontSize: 12, color: '#85857e', fontFamily: 'var(--ff-cond)' }}>{a.multiplier}</div>
+                            <div style={{ fontSize: 12, color: '#85857e', fontFamily: "var(--fk-display), Georgia, serif" }}>{a.multiplier}</div>
                           </button>
                         ))}
                       </div>
@@ -672,7 +672,7 @@ export default function OnboardingClient({ userName }: Props) {
                           { label: 'Fat',     value: Math.round((calorieTarget * 0.27) / 9), unit: 'g', color: '#f87171' },
                         ].map(m => (
                           <div key={m.label} style={{ flex: 1, textAlign: 'center' as const }}>
-                            <div style={{ fontSize: 22, fontWeight: 700, color: m.color, fontFamily: 'var(--ff-cond)' }}>
+                            <div style={{ fontSize: 22, fontWeight: 700, color: m.color, fontFamily: "var(--fk-display), Georgia, serif" }}>
                               {m.value}{m.unit}
                             </div>
                             <div style={{ fontSize: 12, color: '#555', marginTop: 2 }}>{m.label}</div>
@@ -700,7 +700,7 @@ export default function OnboardingClient({ userName }: Props) {
                       </div>
                       <div>
                         <div style={{ fontSize: 12, color: '#666', marginBottom: 3 }}>YOUR ASSIGNED PLAN</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: 'var(--ff-cond)' }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: "var(--fk-display), Georgia, serif" }}>
                           {/* Will be confirmed by server — show best guess */}
                           {form.goal === 'weight_loss' || form.goal === 'aggressive_weight_loss'
                             ? 'Weight Loss Plan'

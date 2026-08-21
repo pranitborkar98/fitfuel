@@ -117,7 +117,7 @@ export default function ApplyClient({ prefill }: { prefill: { name: string; emai
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700 }}>Partner with FitFuel</div>
-          <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 34, fontWeight: 800, margin: "8px 0 0", lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 34, fontWeight: 800, margin: "8px 0 0", lineHeight: 1.1 }}>
             {step === "select" && "Apply to become a partner"}
             {step === "form" && `${TYPE_LABEL[type as PartnerType]}`}
             {step === "done" && "Application received"}
@@ -290,7 +290,7 @@ function DonePane() {
   return (
     <div style={{ background: T.card, border: `1px solid ${T.accent}`, borderRadius: 16, padding: 32, textAlign: "center" }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>{'\u2713'}</div>
-      <h2 style={{ fontFamily: 'var(--ff-cond)', fontSize: 24, fontWeight: 800, margin: 0 }}>Thanks for applying</h2>
+      <h2 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 24, fontWeight: 800, margin: 0 }}>Thanks for applying</h2>
       <div style={{ color: T.dim, fontSize: 14, marginTop: 10, lineHeight: 1.6 }}>
         We{'\u2019'}ll review your application and email you within 2{'\u20133'} business days. Once approved, your partner dashboard becomes active and you can start sharing your code.
       </div>

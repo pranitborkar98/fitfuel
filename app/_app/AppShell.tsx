@@ -160,7 +160,7 @@ export default function AppShell({
         <div className={s.topbar}>
           <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
             <span className={s.brandMark} aria-hidden="true" />
-            <span style={{ fontFamily: "var(--ff-cond), sans-serif", fontWeight: 900, fontSize: 18,
+            <span style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 900, fontSize: 18,
                            letterSpacing: "-0.01em", textTransform: "uppercase", color: C.ink }}>
               FitFuel
             </span>
@@ -230,8 +230,8 @@ export default function AppShell({
               <Link key={item.href} href={item.href} className={s.sheetRow} onClick={close}>
                 <Icon name={item.icon} size={18} color={C.dim} />
                 <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontFamily: "var(--ff-cond), sans-serif",
-                                 fontWeight: 800, fontSize: 16, textTransform: "uppercase",
+                  <span style={{ display: "block", fontFamily: "var(--fk-display), Georgia, serif",
+                                 fontWeight: 600, fontSize: 16, textTransform: "none",
                                  color: C.ink, lineHeight: 1.1 }}>
                     {item.label}
                   </span>
@@ -247,8 +247,8 @@ export default function AppShell({
               style={{ width: "100%", background: "transparent", cursor: "pointer", textAlign: "left" }}
             >
               <LogOut size={18} color={C.dim} strokeWidth={1.75} />
-              <span style={{ fontFamily: "var(--ff-cond), sans-serif", fontWeight: 800, fontSize: 16,
-                             textTransform: "uppercase", color: C.ink }}>
+              <span style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600, fontSize: 16,
+                             textTransform: "none", color: C.ink }}>
                 Sign out
               </span>
             </button>

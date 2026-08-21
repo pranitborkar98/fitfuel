@@ -38,7 +38,9 @@ export const LIME_LIGHT = "var(--fk-green-deep)";
  *  live one carries a radius scale, so this now names the scale's base. */
 export const RADIUS = "var(--fk-r)";
 
-export const COND = "var(--font-barlow-condensed), 'Arial Narrow', sans-serif";
+/** @deprecated The condensed face is retired; this now resolves to the
+ *  display serif so any straggling import cannot reintroduce it. */
+export const COND = "var(--fk-display), Georgia, serif";
 export const SANS = "var(--font-archivo), sans-serif";
 export const MONO = "var(--font-mono), ui-monospace, monospace";
 

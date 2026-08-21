@@ -69,11 +69,11 @@ export default function WhatsAppOrder() {
           gap: 10px;
           background: #25d366;
           color: #06140b;
-          font-family: var(--ff-cond), sans-serif;
-          font-weight: 800;
+          font-family: var(--font-archivo), system-ui, sans-serif;
+          font-weight: 600;
           font-size: 15px;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
+          letter-spacing: 0;
+          text-transform: none;
           padding: 14px 20px;
           min-height: 52px;
           border: 1px solid #25d366;

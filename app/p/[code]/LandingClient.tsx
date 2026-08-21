@@ -86,7 +86,7 @@ export default function LandingClient({ view }: { view: View }) {
         {/* Offer card */}
         <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 28, marginTop: 28 }}>
           <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Your welcome offer</div>
-          <div style={{ fontFamily: 'var(--ff-cond)', fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>{offer}</div>
+          <div style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>{offer}</div>
           <div style={{ color: T.dim, fontSize: 14, marginTop: 8 }}>
             Applied automatically at checkout. Valid on your first FitFuel meal plan or digital plan.
           </div>
@@ -164,7 +164,7 @@ function Hero({ view }: { view: View }) {
       )}
 
       <div>
-        <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 38, fontWeight: 800, lineHeight: 1.05, margin: 0 }}>
+        <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 38, fontWeight: 800, lineHeight: 1.05, margin: 0 }}>
           {headlineFor(view)}
         </h1>
         <div style={{ color: T.dim, fontSize: 15, marginTop: 12, lineHeight: 1.5 }}>{sub}</div>

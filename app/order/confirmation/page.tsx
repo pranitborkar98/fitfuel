@@ -146,7 +146,7 @@ function ConfirmationInner() {
                     <span
                       style={{
                         display: "block",
-                        fontFamily: "var(--font-barlow-condensed), sans-serif",
+                        fontFamily: "var(--fk-display), Georgia, serif",
                         fontWeight: 800,
                         fontSize: 17,
                         letterSpacing: "-0.01em",

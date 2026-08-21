@@ -881,7 +881,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
           <div>
             <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Phase 5 · Body Metrics</p>
-            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 38, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em", lineHeight: 1 }}>
+            <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 26, fontWeight: 600, textTransform: "none", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               Your Body <span style={{ color: T.accent }}>Data</span>
             </h1>
           </div>
@@ -1025,7 +1025,7 @@ function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => vo
         <div style={{ width: 64, height: 64, borderRadius: 0, background: T.trough, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
           <Scale size={28} />
         </div>
-        <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 28, fontWeight: 900, textTransform: "uppercase", marginBottom: 10 }}>
+        <h2 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 19, fontWeight: 600, textTransform: "none", letterSpacing: "-0.015em", marginBottom: 10 }}>
           No measurements yet, {firstName}
         </h2>
         <p style={{ fontSize: 14, color: T.textMuted, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.7 }}>
@@ -1079,7 +1079,7 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
             <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{def.label}</p>
             {value !== null ? (
               <>
-                <p style={{ fontSize: 26, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: T.text, lineHeight: 1, marginBottom: 6 }}>
+                <p style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", color: T.text, lineHeight: 1, marginBottom: 6 }}>
                   {value.toFixed(def.decimals)}
                   <span style={{ fontSize: 13, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>{def.unit}</span>
                 </p>
@@ -1290,7 +1290,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                       {expandedStats.map(s => (
                         <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
                           <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
-                          <p style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: s.color, lineHeight: 1 }}>
+                          <p style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", color: s.color, lineHeight: 1 }}>
                             {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "Not measured"}
                             {s.value != null && (
                               <span style={{ fontSize: 12, fontWeight: 500, color: T.textMuted, marginLeft: 3 }}>{s.unit}</span>
@@ -1338,7 +1338,7 @@ function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; o
         {/* Value + badge */}
         {value !== null && (
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
-            <span style={{ fontSize: 36, fontWeight: 900, fontFamily: "'Barlow Condensed', sans-serif", color: def.color }}>
+            <span style={{ fontSize: 32, fontWeight: 700, fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", color: def.color }}>
               {value.toFixed(def.decimals)}
             </span>
             <span style={{ fontSize: 16, color: T.textMuted }}>{def.unit}</span>

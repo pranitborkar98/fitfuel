@@ -304,7 +304,7 @@ export default function More() {
                   display: "flex",
                   alignItems: "baseline",
                   gap: 10,
-                  fontFamily: "var(--ff-cond), sans-serif",
+                  fontFamily: "var(--fk-display), Georgia, serif",
                   fontWeight: 900,
                   letterSpacing: "-0.03em",
                 }}

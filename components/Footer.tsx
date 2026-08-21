@@ -177,13 +177,13 @@ export default function Footer() {
               <span style={{ display: "block", fontFamily: "var(--font-mono), monospace", fontWeight: 500, fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ff-dim)", marginBottom: 14 }}>
                 Trial day
               </span>
-              <div style={{ fontFamily: "var(--ff-cond)", fontWeight: 900, fontSize: 40, lineHeight: 0.86, letterSpacing: "-0.035em", color: "var(--ff-ink)", fontVariantNumeric: "tabular-nums", marginBottom: 12 }}>
+              <div style={{ fontFamily: "var(--font-mono), ui-monospace, monospace", fontWeight: 700, fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em", color: "var(--ff-ink)", fontVariantNumeric: "tabular-nums", marginBottom: 12 }}>
                 {TRIAL_TOTAL_LABEL}
               </div>
               <p style={{ color: "var(--ff-mute)", fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>
                 Breakfast plus Lunch delivered tomorrow. No commitment, no lock-in.
               </p>
-              <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "var(--ff-lime)", color: "#070707", fontFamily: "var(--ff-cond)", fontSize: 15, fontWeight: 900, padding: "14px 0", minHeight: 48, borderRadius: 0, textDecoration: "none", letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s linear, color 0.2s linear" }}>
+              <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "var(--ff-lime)", color: "#070707", fontFamily: "var(--font-archivo), sans-serif", fontSize: 15, fontWeight: 600, padding: "14px 0", minHeight: 48, borderRadius: "var(--fk-r)", textDecoration: "none", letterSpacing: 0, textTransform: "none", transition: "background 0.2s linear, color 0.2s linear" }}>
                 Start trial
               </Link>
             </div>

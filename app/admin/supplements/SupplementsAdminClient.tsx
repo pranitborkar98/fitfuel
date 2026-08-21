@@ -42,7 +42,7 @@ export default function SupplementsAdminClient() {
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
-          <h1 style={{ fontFamily: 'var(--ff-cond)', fontSize: 28, fontWeight: 800, margin: 0 }}>Supplements</h1>
+          <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 28, fontWeight: 800, margin: 0 }}>Supplements</h1>
           <div style={{ fontSize: 12, color: T.dim }}>Affiliate catalog + click analytics</div>
         </div>
 
@@ -566,7 +566,7 @@ function Stat({ label, value, accent }: { label: string; value: any; accent?: bo
   return (
     <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 0, padding: 14 }}>
       <div style={{ fontSize: 10, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: '"Barlow Condensed", var(--ff-cond)', fontSize: 28, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
+      <div style={{ fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", fontSize: 26, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
     </div>
   );
 }

@@ -14,11 +14,27 @@
 //
 // The "app scale" is the type ramp here. The editorial ramp (display
 // to 9rem) belongs to marketing pages and must not appear on these screens.
+//
+// MIGRATED 2026-08-21 (Decision #223). Every helper below was condensed at
+// 800/900, UPPERCASE, with radius 0 - the register AGENTS.md rejected by name
+// on 2026-08-12 for being unparseable on a phone. AGENTS.md does say "the app
+// half and the marketing half may look different", and that still holds: this
+// file keeps its OWN, much tighter scale (24px titles, not 52px), its 12px
+// floor and its dense hairline grids. What it does not get to keep is the
+// shouting. DENSITY is the difference that was licensed; uppercase condensed
+// display type is not.
+//
+// This is the lever for 25 files. Changing it here is the only way to move
+// every logged-in screen together.
 
 import type { CSSProperties } from "react";
 
 /* ── Faces ─────────────────────────────────────────────────────────────── */
-export const COND = "var(--ff-cond), 'Arial Narrow', sans-serif";
+export const DISPLAY = "var(--fk-display), Georgia, serif";
+/** @deprecated The condensed face is retired. Kept as an alias only so the
+ *  files importing `COND` keep compiling; it resolves to DISPLAY now.
+ *  Do not reference it in new code. */
+export const COND = DISPLAY;
 export const SANS = "var(--font-archivo), sans-serif";
 export const MONO = "var(--font-mono), ui-monospace, monospace";
 
@@ -53,17 +69,18 @@ export const C = {
 
 export const MIN_TYPE_PX = 12;
 
-/** The one screen title. 22px condensed 800. */
+/** The one screen title. Newsreader 600 at 24px - app scale, not editorial:
+ *  the marketing hero is 52px and must not appear on these screens. */
 export const screen = (extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: COND, fontWeight: 800, fontSize: 22, lineHeight: 1.05,
-  letterSpacing: "-0.01em", textTransform: "uppercase", color: C.ink,
+  fontFamily: DISPLAY, fontWeight: 600, fontSize: 24, lineHeight: 1.15,
+  letterSpacing: "-0.02em", textTransform: "none", color: C.ink,
   margin: 0, ...extra,
 });
 
-/** A card or block heading. 16px condensed 800. */
+/** A card or block heading. Newsreader 600 at 17px. */
 export const section = (extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: COND, fontWeight: 800, fontSize: 16, lineHeight: 1.1,
-  letterSpacing: "0.01em", textTransform: "uppercase", color: C.ink,
+  fontFamily: DISPLAY, fontWeight: 600, fontSize: 17, lineHeight: 1.25,
+  letterSpacing: "-0.012em", textTransform: "none", color: C.ink,
   margin: 0, ...extra,
 });
 
@@ -73,10 +90,14 @@ export const body = (size = 14, extra: CSSProperties = {}): CSSProperties => ({
   color: C.mute, margin: 0, ...extra,
 });
 
-/** A mono label. One per block, uppercase, wide, dim. */
+/** A small kicker. Uppercase SURVIVES here - AGENTS.md rejects uppercase
+ *  display type, not an 11-12px label, and the homepage keeps its own at
+ *  0.12em. What is gone is 0.18em, which at 12px is a shout rather than a
+ *  label, and the mono face: mono is the voice of NUMBERS on this site, and
+ *  a word is not one. */
 export const label = (size = 12, extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: MONO, fontWeight: 700, fontSize: Math.max(size, MIN_TYPE_PX),
-  letterSpacing: "0.18em", textTransform: "uppercase", color: C.dim, ...extra,
+  fontFamily: SANS, fontWeight: 700, fontSize: Math.max(size, MIN_TYPE_PX),
+  letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim, ...extra,
 });
 
 /** Any number that sits in a column. Tabular so digits do not shift. */
@@ -85,27 +106,42 @@ export const num = (size = 12, extra: CSSProperties = {}): CSSProperties => ({
   fontVariantNumeric: "tabular-nums", color: C.ink, ...extra,
 });
 
-/** The number being reported: condensed 900, tabular, 28-56px. */
+/** The number being reported. MONO, matching num() directly above it and
+ *  every figure on the marketing half - a column of these has to line up, and
+ *  lining up is the one thing condensed 900 could not do. */
 export const figure = (size = 44, extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: COND, fontWeight: 900, fontSize: size, lineHeight: 0.88,
-  letterSpacing: "-0.035em", fontVariantNumeric: "tabular-nums", color: C.ink,
+  fontFamily: MONO, fontWeight: 700, fontSize: size, lineHeight: 1,
+  letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: C.ink,
   ...extra,
 });
 
 /* ── Structure ─────────────────────────────────────────────────────────────
-   Radius is 0, so a "card" is a hairline and a recessed ground. */
+   Was "radius is 0, so a card is a hairline and a recessed ground" - the old
+   system's radius ban, retired with the rest of it. A card is still a hairline
+   and a recessed ground; it just has corners now, on the scale the homepage
+   already uses. */
 
-export const PANEL: CSSProperties = { background: C.panel, border: `1px solid ${C.rule}` };
+export const RADIUS = "var(--fk-r)";
+export const RADIUS_LG = "var(--fk-r-lg)";
+
+export const PANEL: CSSProperties = {
+  background: C.panel, border: `1px solid ${C.rule}`, borderRadius: RADIUS_LG,
+};
 
 /** Promoted panel: lime hairline for the one thing per screen being acted on.
  *  Never more than one visible at a time. */
-export const PANEL_LIVE: CSSProperties = { background: C.panel, border: `1px solid ${C.lime}` };
+export const PANEL_LIVE: CSSProperties = {
+  background: C.panel, border: `1px solid ${C.lime}`, borderRadius: RADIUS_LG,
+};
 
 /** A hairline grid: 1px gaps over the rule colour, so dividers ARE the gap.
  *  Never double-draws at a seam. */
 export const grid = (cols: string, extra: CSSProperties = {}): CSSProperties => ({
   display: "grid", gridTemplateColumns: cols, gap: 1,
-  background: C.rule, border: `1px solid ${C.rule}`, ...extra,
+  background: C.rule, border: `1px solid ${C.rule}`,
+  /* The children draw the seams, so the corners must be clipped - otherwise a
+     square cell pokes out through the grid's own rounded corner. */
+  borderRadius: RADIUS_LG, overflow: "hidden", ...extra,
 });
 
 /* ── Controls ──────────────────────────────────────────────────────────────
@@ -113,18 +149,19 @@ export const grid = (cols: string, extra: CSSProperties = {}): CSSProperties => 
 
 export const solidBtn = (extra: CSSProperties = {}): CSSProperties => ({
   display: "inline-flex", alignItems: "center", justifyContent: "center",
-  minHeight: 44, padding: "0 16px", background: C.lime,
-  border: `1px solid ${C.lime}`, color: C.onLime,
-  fontFamily: COND, fontWeight: 900, fontSize: 15, letterSpacing: "0.06em",
-  textTransform: "uppercase", cursor: "pointer", ...extra,
+  minHeight: 44, padding: "0 18px", background: C.lime,
+  border: `1px solid ${C.lime}`, color: C.onLime, borderRadius: RADIUS,
+  fontFamily: SANS, fontWeight: 600, fontSize: 15, letterSpacing: 0,
+  textTransform: "none", cursor: "pointer", ...extra,
 });
 
 export const ghostBtn = (on = false, extra: CSSProperties = {}): CSSProperties => ({
   display: "inline-flex", alignItems: "center", justifyContent: "center",
-  minHeight: 44, padding: "0 16px", background: "transparent",
+  minHeight: 44, padding: "0 18px", background: "transparent",
   border: `1px solid ${on ? C.lime : C.rule2}`, color: on ? C.lime : C.ink,
-  fontFamily: COND, fontWeight: 800, fontSize: 14, letterSpacing: "0.06em",
-  textTransform: "uppercase", cursor: "pointer", ...extra,
+  borderRadius: RADIUS,
+  fontFamily: SANS, fontWeight: 600, fontSize: 14.5, letterSpacing: 0,
+  textTransform: "none", cursor: "pointer", ...extra,
 });
 
 /* ── The app measure ───────────────────────────────────────────────────────

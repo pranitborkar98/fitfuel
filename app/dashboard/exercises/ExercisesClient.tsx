@@ -374,7 +374,7 @@ function ExerciseModal({
         <div style={{ padding: "0 22px 28px", marginTop: -8, position: "relative", zIndex: 1 }}>
           {/* Title row */}
           <div style={{ marginBottom: 16 }}>
-            <h2 style={{ fontFamily: "var(--ff-cond)", fontSize: 20, fontWeight: 700, color: T.text, margin: "0 0 8px" }}>
+            <h2 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 20, fontWeight: 700, color: T.text, margin: "0 0 8px" }}>
               {detail.name}
             </h2>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -488,7 +488,7 @@ function ExerciseModal({
                 padding: "14px",
                 fontSize: 13,
                 fontWeight: 700,
-                fontFamily: "var(--ff-cond)",
+                fontFamily: "var(--fk-display), Georgia, serif",
                 letterSpacing: "0.05em",
                 cursor: "pointer",
                 transition: "background 0.15s",
@@ -1020,7 +1020,7 @@ function WorkoutTab({
   const btnPrimary: React.CSSProperties = {
     background: T.accent, color: T.onLime, border: "none", borderRadius: 0,
     padding: "14px", fontSize: 13, fontWeight: 700,
-    fontFamily: "var(--ff-cond)", letterSpacing: "0.04em",
+    fontFamily: "var(--fk-display), Georgia, serif", letterSpacing: "0.04em",
     cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
   };
 
@@ -1030,7 +1030,7 @@ function WorkoutTab({
         <div style={{ width: 72, height: 72, borderRadius: 0, background: T.wash, border: `1px solid ${T.wash}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
           <Zap size={32} color={T.accent} />
         </div>
-        <h3 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 700, color: T.text, margin: "0 0 8px" }}>
+        <h3 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 22, fontWeight: 700, color: T.text, margin: "0 0 8px" }}>
           Start a Workout
         </h3>
         <p style={{ fontSize: 13, color: T.textMuted, margin: "0 0 28px", maxWidth: 280, lineHeight: 1.6, fontFamily: "var(--font-archivo), sans-serif" }}>
@@ -1069,7 +1069,7 @@ function WorkoutTab({
             <ArrowLeft size={15} />
           </button>
           <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.text, fontFamily: "var(--ff-cond)" }}>Add Exercise</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>Add Exercise</p>
             <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>{addedIds.size} added</p>
           </div>
         </div>
@@ -1091,7 +1091,7 @@ function WorkoutTab({
         <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${T.wash} 0%, transparent 60%)`, pointerEvents: "none" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.text, fontFamily: "var(--ff-cond)" }}>{activeSession.name ?? "Workout"}</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>{activeSession.name ?? "Workout"}</p>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>In progress</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, background: T.wash, border: `1px solid ${T.wash}`, borderRadius: 0, padding: "6px 12px" }}>
@@ -1106,7 +1106,7 @@ function WorkoutTab({
             { val: `~${Math.round(elapsed / 60 * 5 + totalCompletedSets * 3)}`, label: "kcal est." },
           ].map(({ val, label }) => (
             <div key={label} style={{ background: T.cardHover, borderRadius: 0, padding: "10px 0", textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text, fontFamily: "var(--ff-cond)" }}>{val}</p>
+              <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>{val}</p>
               <p style={{ margin: "2px 0 0", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</p>
             </div>
           ))}
@@ -1214,7 +1214,7 @@ function HistoryTab() {
                     <div style={{ textAlign: "right", marginRight: 6 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4, color: T.accent, justifyContent: "flex-end" }}>
                         <Flame size={12} />
-                        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--ff-cond)" }}>{s.caloriesBurned}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--fk-display), Georgia, serif" }}>{s.caloriesBurned}</span>
                       </div>
                       <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>kcal</p>
                     </div>
@@ -1301,7 +1301,7 @@ export default function ExercisesClient({
               <Dumbbell size={18} color={T.accent} />
             </div>
             <div>
-              <h1 style={{ fontFamily: "var(--ff-cond)", fontSize: 22, fontWeight: 800, color: T.text, margin: 0, letterSpacing: "-0.02em" }}>
+              <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 22, fontWeight: 800, color: T.text, margin: 0, letterSpacing: "-0.02em" }}>
                 Exercise Library
               </h1>
               <p style={{ fontSize: 12, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
@@ -1333,7 +1333,7 @@ export default function ExercisesClient({
                 border: "none",
                 background: tab === t.id ? T.accent : "transparent",
                 color: tab === t.id ? T.onLime : T.textMuted,
-                fontFamily: tab === t.id ? "var(--ff-cond)" : "var(--font-archivo), sans-serif",
+                fontFamily: "var(--font-archivo), sans-serif",
                 fontSize: 13,
                 fontWeight: 700,
                 cursor: "pointer",

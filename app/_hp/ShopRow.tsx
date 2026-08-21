@@ -66,9 +66,9 @@ export default function ShopRow({ dishes, label }: { dishes: ShelfDish[]; label:
 
               <h3
                 style={{
-                  fontFamily: "var(--ff-cond)", fontWeight: 800,
+                  fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600,
                   fontSize: "clamp(17px,1.9vw,21px)", lineHeight: 1.05,
-                  letterSpacing: "-0.015em", textTransform: "uppercase",
+                  letterSpacing: "-0.015em", textTransform: "none",
                   color: INK, margin: "9px 0 0",
                 }}
               >
