@@ -7,7 +7,7 @@
 // the shared .prose block rather than redefining a .ff-prose in a style tag.
 //
 // Removed: radius 16/18 and three border-radius:999px runs (the tag row, the
-// CTA button and the related cards), the #111111 CTA card, and `MONO` declared
+// CTA button and the related cards), the var(--fk-surface) CTA card, and `MONO` declared
 // as "var(--ff-cond), monospace" — the fourth file carrying that same
 // copy-paste, so the byline and every tag were set in the display face rather
 // than in JetBrains Mono.
@@ -111,7 +111,7 @@ export default async function BlogArticlePage({
           </div>
 
           <div style={{ maxWidth: 900 }}>
-            <span style={label("#84cc16")}>{post.category}</span>
+            <span style={label("var(--fk-green)")}>{post.category}</span>
             <h1 style={{ ...display("clamp(2.2rem,6.4vw,5rem)"), margin: "18px 0 24px", maxWidth: "20ch" }}>
               {post.title}
             </h1>
@@ -137,7 +137,7 @@ export default async function BlogArticlePage({
                 width: "100%",
                 height: "auto",
                 display: "block",
-                border: "1px solid #232320",
+                border: "1px solid var(--fk-line)",
                 margin: "clamp(28px,4vw,44px) 0",
                 /* The house grade: food keeps its colour, lifted slightly. */
                 filter: "saturate(1.06) contrast(1.07)",
@@ -211,12 +211,12 @@ const BYLINE = {
   gap: "10px 14px",
   alignItems: "baseline",
   paddingTop: 14,
-  borderTop: "1px solid #232320",
+  borderTop: "1px solid var(--fk-line)",
   fontFamily: "var(--font-mono), monospace",
   fontSize: 12,
   letterSpacing: "0.18em",
   textTransform: "uppercase",
-  color: "#85857e",
+  color: "var(--fk-ink-3)",
 } as const;
 
 /* Tags were border-radius:999px chips. They are a hairline-jointed mono rail
@@ -225,19 +225,19 @@ const TAGS = {
   display: "flex",
   flexWrap: "wrap",
   gap: 1,
-  background: "#232320",
-  border: "1px solid #232320",
+  background: "var(--fk-line)",
+  border: "1px solid var(--fk-line)",
   marginTop: "clamp(34px,4.5vw,52px)",
 } as const;
 
 const TAG = {
   flex: "1 1 auto",
   textAlign: "center",
-  background: "#070707",
+  background: "var(--fk-paper)",
   padding: "12px 15px",
   fontFamily: "var(--font-mono), monospace",
   fontSize: 12,
   letterSpacing: "0.16em",
   textTransform: "uppercase",
-  color: "#85857e",
+  color: "var(--fk-ink-3)",
 } as const;

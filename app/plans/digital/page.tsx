@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
-const T = { bg: "#0a0a0a", card: "#111111", cardBorder: "#1f1f1f", accent: "#84cc16", accentLight: "#a3e635", textPrimary: "#fff", textSecond: "#a3a3a3", textMuted: "#9a9a94" };
+const T = { bg: "var(--fk-paper)", card: "var(--fk-surface)", cardBorder: "var(--fk-line)", accent: "var(--fk-green)", accentLight: "var(--fk-green-deep)", textPrimary: "#fff", textSecond: "var(--fk-ink-3)", textMuted: "var(--fk-ink-2)" };
 const DUR_KEY: Record<string, string> = { ONE_MONTH: "monthly", TWO_MONTH: "two_month", THREE_MONTH: "three_month" };
 const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
 
@@ -46,7 +46,7 @@ export default async function DigitalPlansPage() {
               const href = `/checkout/digital?planSlug=${p.mealPlan.slug}&dur=${DUR_KEY[p.duration] ?? "monthly"}&bundle=${p.bundle}&sale=${p.priceRs}&mrp=${mrp}&name=${encodeURIComponent(p.mealPlan.displayName)}&tier=${encodeURIComponent(c.label)}`;
               return (
                 <div key={p.id} style={{ background: T.card, border: `1px solid ${c.popular ? "rgba(132,204,22,0.5)" : T.cardBorder}`, borderRadius: 16, padding: 28, position: "relative", boxShadow: c.popular ? "0 0 30px rgba(132,204,22,0.08)" : "none" }}>
-                  {c.popular && <span style={{ position: "absolute", top: -11, left: 28, background: T.accent, color: "#0a0a0a", fontSize: 12, fontWeight: 800, padding: "4px 12px", borderRadius: 999, letterSpacing: "0.05em" }}>MOST POPULAR</span>}
+                  {c.popular && <span style={{ position: "absolute", top: -11, left: 28, background: T.accent, color: "var(--fk-paper)", fontSize: 12, fontWeight: 800, padding: "4px 12px", borderRadius: 999, letterSpacing: "0.05em" }}>MOST POPULAR</span>}
                   {off > 0 && <span style={{ position: "absolute", top: 18, right: 18, background: "rgba(132,204,22,0.12)", color: T.accentLight, fontSize: 12, fontWeight: 800, padding: "4px 10px", borderRadius: 999 }}>{off}% OFF</span>}
                   <p style={{ color: T.accent, fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", marginBottom: 4 }}>{c.tag}</p>
                   <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{c.label}</h3>
@@ -58,7 +58,7 @@ export default async function DigitalPlansPage() {
                   <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", color: T.textSecond, fontSize: 14, lineHeight: 1.9 }}>
                     {c.bullets.map((b, i) => <li key={i}>✓ {b}</li>)}
                   </ul>
-                  <Link href={href} style={{ display: "block", textAlign: "center", background: c.popular ? T.accent : "transparent", color: c.popular ? "#0a0a0a" : T.accent, border: `1px solid ${T.accent}`, fontWeight: 700, padding: "13px 0", borderRadius: 10, textDecoration: "none" }}>
+                  <Link href={href} style={{ display: "block", textAlign: "center", background: c.popular ? T.accent : "transparent", color: c.popular ? "var(--fk-paper)" : T.accent, border: `1px solid ${T.accent}`, fontWeight: 700, padding: "13px 0", borderRadius: 10, textDecoration: "none" }}>
                     Get {c.label}
                   </Link>
                 </div>

@@ -113,7 +113,7 @@
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--fk-ink-3);
 }
 .metaVal {
@@ -125,7 +125,7 @@
    Replaces the rgba(132,204,22,0.06) rounded tint box that every page had one
    of. A recessed well with a 2px lime edge: square, no tint, no glow. */
 .note {
-  background: #050504;
+  background: var(--fk-surface);
   border: 1px solid var(--fk-line);
   border-left: 2px solid var(--fk-green);
   padding: clamp(18px, 2.4vw, 26px) clamp(18px, 2.6vw, 30px);
@@ -164,7 +164,7 @@
    the single most repeated slop object in this codebase. */
 .band {
   border-top: 1px solid var(--fk-line);
-  background: #050504;
+  background: var(--fk-surface);
   margin-top: clamp(64px, 9vw, 120px);
 }
 .bandGrid {
@@ -235,12 +235,12 @@
   padding-top: 5px;
 }
 .clauseTitle {
-  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
-  font-weight: 900;
+  font-family: var(--fk-display);
+  font-weight: 600;
   font-size: clamp(1.4rem, 2.6vw, 1.95rem);
   line-height: 0.96;
   letter-spacing: -0.015em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--fk-ink);
   margin: 0 0 14px;
   max-width: 22ch;
@@ -327,7 +327,7 @@
 }
 .qa details[open] {
   border-left-color: var(--fk-green);
-  background: #050504;
+  background: var(--fk-surface);
 }
 .qa summary {
   list-style: none;
@@ -338,12 +338,12 @@
   gap: 18px;
   padding: clamp(16px, 2vw, 22px) clamp(14px, 2vw, 20px);
   min-height: 60px;
-  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
-  font-weight: 800;
+  font-family: var(--fk-display);
+  font-weight: 600;
   font-size: clamp(1.05rem, 1.9vw, 1.35rem);
   line-height: 1.05;
   letter-spacing: -0.01em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--fk-ink);
 }
 .qa summary::-webkit-details-marker {

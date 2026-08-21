@@ -58,8 +58,8 @@ function AffiliateDisclosure() {
   return (
     <section
       style={{
-        background: "#050504",
-        borderTop: "1px solid #232320",
+        background: "var(--fk-surface)",
+        borderTop: "1px solid var(--fk-line)",
         padding: "clamp(28px,4vw,44px) 0",
       }}
     >
@@ -72,7 +72,7 @@ function AffiliateDisclosure() {
             fontSize: 12,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "#85857e",
+            color: "var(--fk-ink-3)",
             marginBottom: 12,
           }}
         >
@@ -85,7 +85,7 @@ function AffiliateDisclosure() {
             fontFamily: "var(--font-archivo), sans-serif",
             fontSize: 13.5,
             lineHeight: 1.7,
-            color: "#9a9a94",
+            color: "var(--fk-ink-2)",
           }}
         >
           FitFuel recommends supplements from trusted third-party retailers. Some links on this
@@ -96,7 +96,7 @@ function AffiliateDisclosure() {
           <a
             href="/terms"
             style={{
-              color: "#84cc16",
+              color: "var(--fk-green)",
               textDecoration: "none",
               borderBottom: "1px solid rgba(132,204,22,0.4)",
             }}

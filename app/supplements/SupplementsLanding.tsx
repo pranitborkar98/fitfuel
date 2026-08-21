@@ -78,7 +78,7 @@ function Monogram({ name, size }: { name: string; size: number }) {
     .map((w) => w[0]!.toUpperCase())
     .join("");
   return (
-    <span aria-hidden="true" style={{ ...figure(`${size}px`, "#33332f"), userSelect: "none" }}>
+    <span aria-hidden="true" style={{ ...figure(`${size}px`, "var(--fk-line-2)"), userSelect: "none" }}>
       {initials || "FF"}
     </span>
   );
@@ -192,7 +192,7 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
               <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}>
                 {supp.keyStudyFindings.map((f) => (
                   <li key={f} style={{ display: "flex", gap: 10, marginBottom: 9 }}>
-                    <CheckCircle2 size={13} color="#84cc16" style={{ flexShrink: 0, marginTop: 3 }} />
+                    <CheckCircle2 size={13} color="var(--fk-green)" style={{ flexShrink: 0, marginTop: 3 }} />
                     <span style={body(14)}>{f}</span>
                   </li>
                 ))}
@@ -206,7 +206,7 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {supp.benefits.map((b) => (
                   <li key={b} style={{ display: "flex", gap: 10, marginBottom: 9 }}>
-                    <CheckCircle2 size={13} color="#84cc16" style={{ flexShrink: 0, marginTop: 3 }} />
+                    <CheckCircle2 size={13} color="var(--fk-green)" style={{ flexShrink: 0, marginTop: 3 }} />
                     <span style={body(14)}>{b}</span>
                   </li>
                 ))}
@@ -347,7 +347,7 @@ export default function SupplementsLanding({
         ].map(({ Icon, l, v }) => (
           <div key={l} className={k.cell}>
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Icon size={13} color="#85857e" aria-hidden="true" />
+              <Icon size={13} color="var(--fk-ink-3)" aria-hidden="true" />
               <span style={label()}>{l}</span>
             </span>
             <span style={sub("clamp(1.3rem,2.6vw,1.9rem)")}>{v}</span>

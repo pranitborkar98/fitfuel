@@ -3,7 +3,7 @@
    The contact page.
 
    The version this replaces was carrying, in one file: gradient text on the
-   headline (`linear-gradient(135deg,#fff 30%,#84cc16)` with background-clip),
+   headline (`linear-gradient(135deg,#fff 30%,var(--fk-green))` with background-clip),
    a fading lime "glow divider", radius 10/11/12/14/16/24 across the controls,
    border-radius:50% radio dots, two lime box-shadow glows on the send button
    that grew on hover, translateY lifts on every card, and framer-motion
@@ -19,8 +19,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 /* The breakpoint the old one meant to have. */
 @media (max-width: 900px) {
@@ -30,11 +30,11 @@
 }
 
 .panel {
-  background: #070707;
+  background: var(--fk-paper);
   padding: clamp(20px, 3vw, 34px);
 }
 .panelAside {
-  background: #050504;
+  background: var(--fk-surface);
   padding: 0;
 }
 
@@ -45,10 +45,10 @@
   font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #85857e;
+  color: var(--fk-ink-3);
   padding-bottom: 11px;
   margin-bottom: 14px;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
 }
 
 /* ── fields ───────────────────────────────────────────────────────────── */
@@ -57,13 +57,13 @@
   width: 100%;
   min-height: 48px;
   box-sizing: border-box;
-  background: #050504;
-  border: 1px solid #232320;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
   border-radius: 0;
   padding: 13px 15px;
   font-family: var(--font-archivo), sans-serif;
   font-size: 14.5px;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   outline: none;
   transition: border-color 0.2s linear;
 }
@@ -73,12 +73,12 @@
 }
 .input::placeholder,
 .textarea::placeholder {
-  color: #85857e;
+  color: var(--fk-ink-3);
 }
 .input:focus-visible,
 .textarea:focus-visible {
-  border-color: #84cc16;
-  outline: 2px solid #84cc16;
+  border-color: var(--fk-green);
+  outline: 2px solid var(--fk-green);
   outline-offset: 1px;
 }
 
@@ -90,8 +90,8 @@
 .reasons {
   display: grid;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 .reason {
   display: flex;
@@ -103,51 +103,51 @@
   min-height: 50px;
   border: 0;
   border-left: 2px solid transparent;
-  background: #070707;
-  color: #9a9a94;
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
   cursor: pointer;
   font-family: var(--font-archivo), sans-serif;
   font-size: 14.5px;
   transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear;
 }
 .reason:hover {
-  background: #0c0c0a;
-  color: #f7f7f5;
+  background: var(--fk-surface);
+  color: var(--fk-ink);
 }
 .reasonOn {
-  border-left-color: #84cc16;
-  background: #0c0c0a;
-  color: #f7f7f5;
+  border-left-color: var(--fk-green);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
 }
 .reason:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .mark {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  border: 1px solid #33332f;
+  border: 1px solid var(--fk-line-2);
   background: transparent;
   transition: background 0.18s linear, border-color 0.18s linear;
 }
 .reasonOn .mark {
-  background: #84cc16;
-  border-color: #84cc16;
+  background: var(--fk-green);
+  border-color: var(--fk-green);
 }
 
 /* ── message preview ──────────────────────────────────────────────────── */
 .preview {
-  background: #050504;
-  border: 1px solid #232320;
-  border-left: 2px solid #84cc16;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
+  border-left: 2px solid var(--fk-green);
   padding: 14px 16px;
 }
 .preview p {
   font-family: var(--font-archivo), sans-serif;
   font-size: 13.5px;
   line-height: 1.65;
-  color: #9a9a94;
+  color: var(--fk-ink-2);
   margin: 8px 0 0;
 }
 
@@ -163,13 +163,13 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: #84cc16;
-  color: #070707;
-  border: 1px solid #84cc16;
+  background: var(--fk-green);
+  color: var(--fk-paper);
+  border: 1px solid var(--fk-green);
   padding: 16px 24px;
   min-height: 54px;
   cursor: pointer;
-  font-family: var(--font-barlow-condensed), sans-serif;
+  font-family: var(--fk-display);
   font-weight: 900;
   font-size: 16px;
   letter-spacing: 0.06em;
@@ -181,7 +181,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: #f7f7f5;
+  background: var(--fk-ink);
   transform: translateY(101%);
   transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -197,15 +197,15 @@
 }
 .send:disabled {
   background: transparent;
-  border-color: #232320;
-  color: #85857e;
+  border-color: var(--fk-line);
+  color: var(--fk-ink-3);
   cursor: not-allowed;
 }
 .send:disabled::after {
   display: none;
 }
 .send:focus-visible {
-  outline: 2px solid #a3e635;
+  outline: 2px solid var(--fk-green-deep);
   outline-offset: 3px;
 }
 
@@ -213,7 +213,7 @@
   font-family: var(--font-archivo), sans-serif;
   font-size: 13px;
   line-height: 1.6;
-  color: #85857e;
+  color: var(--fk-ink-3);
   margin: 12px 0 0;
 }
 
@@ -228,7 +228,7 @@
 .row {
   display: block;
   padding: clamp(18px, 2.2vw, 24px) clamp(16px, 2vw, 24px);
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
   border-left: 2px solid transparent;
   color: inherit;
   text-decoration: none;
@@ -236,23 +236,23 @@
     border-color 0.2s linear;
 }
 a.row:hover {
-  background: #0c0c0a;
+  background: var(--fk-surface);
   padding-left: calc(clamp(16px, 2vw, 24px) + 6px);
-  border-left-color: #84cc16;
+  border-left-color: var(--fk-green);
 }
 .row:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .rowVal {
   display: block;
-  font-family: var(--font-barlow-condensed), sans-serif;
+  font-family: var(--fk-display);
   font-weight: 800;
   font-size: clamp(1.15rem, 2vw, 1.45rem);
   line-height: 1;
   letter-spacing: -0.01em;
   text-transform: uppercase;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   margin: 10px 0 8px;
 }
 .rowSub {
@@ -260,7 +260,7 @@ a.row:hover {
   font-family: var(--font-archivo), sans-serif;
   font-size: 13.5px;
   line-height: 1.6;
-  color: #9a9a94;
+  color: var(--fk-ink-2);
 }
 .rowGo {
   display: inline-block;
@@ -269,7 +269,7 @@ a.row:hover {
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #84cc16;
+  color: var(--fk-green);
 }
 a.row:hover .rowGo {
   text-decoration: underline;

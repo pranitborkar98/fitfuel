@@ -194,7 +194,7 @@ export default function PartnersPage() {
           is that this is running software and not a monthly promise. */}
       <section
         aria-labelledby="attribution-heading"
-        style={{ padding: "clamp(64px,8vw,110px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}
+        style={{ padding: "clamp(64px,8vw,110px) 0", borderTop: `1px solid ${RULE}`, background: "var(--fk-surface)" }}
       >
         <div style={WRAP}>
           <IndexHead n="002" label="How attribution runs" />
@@ -292,7 +292,7 @@ export default function PartnersPage() {
       {/* ═══ 004 INTEGRATIONS ═══ */}
       <section
         aria-labelledby="integrations-heading"
-        style={{ padding: "clamp(64px,8vw,110px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}
+        style={{ padding: "clamp(64px,8vw,110px) 0", borderTop: `1px solid ${RULE}`, background: "var(--fk-surface)" }}
       >
         <div style={WRAP}>
           <IndexHead n="004" label="Integration partners" />
@@ -343,7 +343,7 @@ export default function PartnersPage() {
       </section>
 
       {/* ═══ CLOSE ═══ */}
-      <section style={{ padding: "clamp(64px,8vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "#050504" }}>
+      <section style={{ padding: "clamp(64px,8vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "var(--fk-surface)" }}>
         <div style={WRAP}>
           <Reveal>
             <h2 style={{ ...huge("clamp(2.2rem,6vw,4.8rem)"), maxWidth: "15ch" }}>

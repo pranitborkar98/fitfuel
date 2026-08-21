@@ -9,15 +9,15 @@ import { useState } from "react";
 import Link from "next/link";
 
 const T = {
-  bg: "#080808",
-  card: "#101010",
-  border: "#1f1f1f",
+  bg: "var(--fk-paper)",
+  card: "var(--fk-warm)",
+  border: "var(--fk-line)",
   text: "#f5f5f4",
   dim: "#888",
-  accent: "#a3e635",
-  accent2: "#84cc16",
+  accent: "var(--fk-green-deep)",
+  accent2: "var(--fk-green)",
   ok: "#22c55e",
-  warn: "#f59e0b",
+  warn: "var(--fk-terracotta)",
   err: "#ef4444",
 };
 const RUPEE = "\u20B9";
@@ -264,7 +264,7 @@ function FormSection({
       </>)}
 
       {/* Notice */}
-      <div style={{ background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, marginTop: 18, fontSize: 12, color: T.dim, lineHeight: 1.6 }}>
+      <div style={{ background: "var(--fk-paper)", border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, marginTop: 18, fontSize: 12, color: T.dim, lineHeight: 1.6 }}>
         Your application will be reviewed by FitFuel within 2{'\u20133'} business days. You{'\u2019'}ll receive an email once approved, then you can start sharing your code.
       </div>
 

@@ -8,7 +8,7 @@
 // Pills, lift and gradient are all on the reject list.
 //
 // The rating also stopped being carried by glyphs alone. It was five ★, with
-// the unearned ones in #1f1f1f at about 1.1:1 against the card, so a 3-star
+// the unearned ones in var(--fk-line) at about 1.1:1 against the card, so a 3-star
 // review and a 5-star review were very nearly the same object visually and
 // identical to anyone who cannot resolve that grey. The figure is printed as
 // "3.0" in mono beside the stars now, and the stars are aria-hidden.
@@ -55,7 +55,7 @@ function Rating({ n }: { n: number }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
       <span style={{ ...num("15px", INK) }}>{n.toFixed(1)}</span>
-      <span aria-hidden="true" style={{ color: "#84cc16", fontSize: 13, letterSpacing: 1 }}>
+      <span aria-hidden="true" style={{ color: "var(--fk-green)", fontSize: 13, letterSpacing: 1 }}>
         {"★".repeat(n)}
         <span style={{ color: DIM }}>{"☆".repeat(5 - n)}</span>
       </span>
@@ -137,7 +137,7 @@ export default async function TestimonialsPage({
                     >
                       <Rating n={t.rating} />
                       <span
-                        style={{ ...label("#84cc16") }}
+                        style={{ ...label("var(--fk-green)") }}
                         dangerouslySetInnerHTML={{ __html: t.resultLabel }}
                       />
                     </div>
@@ -147,7 +147,7 @@ export default async function TestimonialsPage({
                       dangerouslySetInnerHTML={{ __html: `&ldquo;${t.quote}&rdquo;` }}
                     />
 
-                    <div style={{ borderTop: "1px solid #232320", paddingTop: 13, marginTop: 4 }}>
+                    <div style={{ borderTop: "1px solid var(--fk-line)", paddingTop: 13, marginTop: 4 }}>
                       <div
                         style={{
                           fontFamily: "var(--font-barlow-condensed), sans-serif",

@@ -6,7 +6,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const T = { bg: "#070707", card: "#050504", cardBorder: "#232320", accent: "#84cc16", accentLight: "#84cc16", textPrimary: "#f7f7f5", textSecond: "#9a9a94", textMuted: "#85857e" };
+const T = { bg: "var(--fk-paper)", card: "var(--fk-surface)", cardBorder: "var(--fk-line)", accent: "var(--fk-green)", accentLight: "var(--fk-green)", textPrimary: "var(--fk-ink)", textSecond: "var(--fk-ink-2)", textMuted: "var(--fk-ink-3)" };
 const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
 
 function Field({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; type?: string }) {
@@ -15,7 +15,7 @@ function Field({ label, value, onChange, placeholder, type = "text" }: { label: 
     <div style={{ marginBottom: 16 }}>
       <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</label>
       <input type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onFocus={() => setF(true)} onBlur={() => setF(false)}
-        style={{ width: "100%", background: "#161616", border: `1px solid ${f ? "rgba(132,204,22,0.5)" : T.cardBorder}`, borderRadius: 0, padding: "13px 16px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box" }} />
+        style={{ width: "100%", background: "var(--fk-warm)", border: `1px solid ${f ? "rgba(132,204,22,0.5)" : T.cardBorder}`, borderRadius: 0, padding: "13px 16px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box" }} />
     </div>
   );
 }
@@ -93,7 +93,7 @@ function DigitalCheckout() {
   if (!planSlug || !sale) return (
     <main style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, display: "grid", placeItems: "center", padding: 24 }}>
       <div style={{ textAlign: "center" }}><p style={{ marginBottom: 20 }}>No plan selected.</p>
-        <button onClick={() => router.push("/plans/digital")} style={{ background: T.accent, color: "#070707", fontWeight: 700, padding: "12px 22px", borderRadius: 0, border: "none", cursor: "pointer" }}>View digital plans</button></div>
+        <button onClick={() => router.push("/plans/digital")} style={{ background: T.accent, color: "var(--fk-paper)", fontWeight: 700, padding: "12px 22px", borderRadius: 0, border: "none", cursor: "pointer" }}>View digital plans</button></div>
     </main>
   );
 
@@ -126,7 +126,7 @@ function DigitalCheckout() {
         <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: 24 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase" }}>Coupon code</label>
           <div style={{ display: "flex", gap: 10 }}>
-            <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. FITFUEL50" style={{ flex: 1, background: "#161616", border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "12px 14px", color: T.textPrimary, outline: "none", textTransform: "uppercase" }} />
+            <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="e.g. FITFUEL50" style={{ flex: 1, background: "var(--fk-warm)", border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: "12px 14px", color: T.textPrimary, outline: "none", textTransform: "uppercase" }} />
             <button onClick={applyCouponFn} style={{ background: "transparent", color: T.accent, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "0 18px", fontWeight: 700, cursor: "pointer" }}>Apply</button>
           </div>
           {couponMsg && <p style={{ marginTop: 8, fontSize: 13, color: couponMsg.ok ? T.accentLight : "#f87171" }}>{couponMsg.text}</p>}
@@ -145,7 +145,7 @@ function DigitalCheckout() {
         <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 0, padding: 24 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700 }}>Personalise my plan</h3>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#070707", background: T.accent, padding: "2px 8px", borderRadius: 0 }}>OPTIONAL</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--fk-paper)", background: T.accent, padding: "2px 8px", borderRadius: 0 }}>OPTIONAL</span>
           </div>
           <p style={{ color: T.textMuted, fontSize: 12.5, marginBottom: 16 }}>
             Add your stats and your PDF opens with your own numbers {'\u2014'} BMI, calorie target, deficit and a weight-projection chart. Skip it and you{'\u2019'}ll get the standard plan; you can add these later in your dashboard.
@@ -158,7 +158,7 @@ function DigitalCheckout() {
           </div>
         </div>
 
-        <button onClick={pay} disabled={busy} style={{ background: T.accent, color: "#070707", fontWeight: 800, fontSize: 16, padding: "15px 0", borderRadius: 0, border: "none", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
+        <button onClick={pay} disabled={busy} style={{ background: T.accent, color: "var(--fk-paper)", fontWeight: 800, fontSize: 16, padding: "15px 0", borderRadius: 0, border: "none", cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1 }}>
           {busy ? "Redirecting to PayU..." : `Pay ${fmt(payableTotal)} securely`}
         </button>
       </div>

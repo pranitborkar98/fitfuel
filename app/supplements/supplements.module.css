@@ -21,8 +21,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 @media (max-width: 980px) {
   .grid {
@@ -40,7 +40,7 @@
      target, so #creatine lands the card under the nav rather than behind it. */
   scroll-margin-top: 96px;
   position: relative;
-  background: #070707;
+  background: var(--fk-paper);
   border: 0;
   border-left: 2px solid transparent;
   padding: clamp(18px, 2.2vw, 24px);
@@ -54,11 +54,11 @@
   transition: background 0.2s linear, border-color 0.2s linear;
 }
 .card:hover {
-  background: #0c0c0a;
-  border-left-color: #84cc16;
+  background: var(--fk-surface);
+  border-left-color: var(--fk-green);
 }
 .card:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 
@@ -74,8 +74,8 @@
   width: 52px;
   height: 52px;
   flex-shrink: 0;
-  border: 1px solid #232320;
-  background: #050504;
+  border: 1px solid var(--fk-line);
+  background: var(--fk-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,14 +89,18 @@
   filter: saturate(1.06) contrast(1.07);
 }
 
+/* The supplement's name, on 46 cards. Was Barlow Condensed 900 UPPERCASE —
+   "CREATINE MONOHYDRATE" shouted across the whole catalogue. Newsreader at the
+   dish card's own size, so a product name here and a dish name on `/` read the
+   same weight. */
 .name {
-  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
-  font-weight: 900;
-  font-size: clamp(1.2rem, 2.1vw, 1.55rem);
-  line-height: 0.98;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
-  color: #f7f7f5;
+  font-family: var(--fk-display);
+  font-weight: 500;
+  font-size: var(--fk-t-md);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--fk-ink);
   margin: 0;
 }
 
@@ -105,7 +109,7 @@
   font-weight: 700;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   white-space: nowrap;
 }
 
@@ -116,15 +120,15 @@
   gap: 10px 14px;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #85857e;
+  color: var(--fk-ink-3);
 }
 .flagOn {
-  color: #84cc16;
+  color: var(--fk-green);
 }
 
 /* ── the evidence scale ───────────────────────────────────────────────────
@@ -139,10 +143,10 @@
 .seg {
   width: 14px;
   height: 4px;
-  background: #232320;
+  background: var(--fk-line);
 }
 .segOn {
-  background: #84cc16;
+  background: var(--fk-green);
 }
 
 /* ── the modal ────────────────────────────────────────────────────────── */
@@ -161,9 +165,9 @@
   position: relative;
   width: 100%;
   max-width: 760px;
-  background: #070707;
-  border: 1px solid #232320;
-  border-top: 2px solid #84cc16;
+  background: var(--fk-paper);
+  border: 1px solid var(--fk-line);
+  border-top: 2px solid var(--fk-green);
 }
 .modalHead {
   display: flex;
@@ -171,7 +175,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: clamp(20px, 3vw, 30px);
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
 }
 .close {
   flex-shrink: 0;
@@ -181,18 +185,18 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid #33332f;
-  border-radius: 0;
-  color: #9a9a94;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  color: var(--fk-ink-2);
   cursor: pointer;
   transition: border-color 0.2s linear, color 0.2s linear;
 }
 .close:hover {
-  border-color: #84cc16;
-  color: #84cc16;
+  border-color: var(--fk-green);
+  color: var(--fk-green);
 }
 .close:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: 2px;
 }
 .modalBody {
@@ -207,8 +211,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 @media (max-width: 560px) {
   .facts {
@@ -216,7 +220,7 @@
   }
 }
 .fact {
-  background: #050504;
+  background: var(--fk-surface);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -226,12 +230,12 @@
   font-family: var(--font-archivo), sans-serif;
   font-size: 14px;
   line-height: 1.55;
-  color: #f7f7f5;
+  color: var(--fk-ink);
 }
 
 /* The buy links. Directory rows, not pills. */
 .buys {
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
 }
 .buy {
   display: flex;
@@ -240,26 +244,26 @@
   gap: 14px;
   padding: 14px 16px;
   min-height: 56px;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
   border-left: 2px solid transparent;
   text-decoration: none;
   color: inherit;
   transition: background 0.2s linear, border-color 0.2s linear, padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .buy:hover {
-  background: #0c0c0a;
-  border-left-color: #84cc16;
+  background: var(--fk-surface);
+  border-left-color: var(--fk-green);
   padding-left: 22px;
 }
 .buy:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 
 /* A warning block. Red is meaning-carrying here: these are contraindications. */
 .warn {
-  background: #050504;
-  border: 1px solid #232320;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
   border-left: 2px solid #f87171;
   padding: 16px 18px;
 }
@@ -269,6 +273,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }

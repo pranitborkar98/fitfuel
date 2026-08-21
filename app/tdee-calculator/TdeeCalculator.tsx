@@ -7,7 +7,7 @@
 // THE THING THAT HAD TO GO. Each goal carried its own accent hue, piped
 // through a `--ac` custom property that then coloured the eyebrow, every
 // segmented button, the progress ring, the protein bar, the input focus state
-// and the CTA. Lose fat was #a3e635, Maintain was sky #38bdf8 and Build muscle
+// and the CTA. Lose fat was var(--fk-green-deep), Maintain was sky #38bdf8 and Build muscle
 // was orange #f97316 — two of the three are on the reject list,
 // and the mechanism itself is exactly what "no per-category accent hues"
 // exists to prevent. Goals are distinguished by label and rule weight now.
@@ -96,9 +96,9 @@ export default function TdeeCalculator() {
      two are greys from the ramp, and every share is printed as a percentage
      beside its bar. */
   const MACROS = [
-    { name: "Protein", g: result.proteinG, pct: result.pPct, fill: "#84cc16" },
+    { name: "Protein", g: result.proteinG, pct: result.pPct, fill: "var(--fk-green)" },
     { name: "Carbs", g: result.carbG, pct: result.cPct, fill: "#5c5c56" },
-    { name: "Fat", g: result.fatG, pct: result.fPct, fill: "#33332f" },
+    { name: "Fat", g: result.fatG, pct: result.fPct, fill: "var(--fk-line-2)" },
   ];
 
   return (

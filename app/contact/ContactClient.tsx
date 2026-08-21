@@ -227,7 +227,7 @@ export default function ContactPage() {
                   const inner = (
                     <>
                       <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                        <Icon size={13} color="#85857e" aria-hidden="true" />
+                        <Icon size={13} color="var(--fk-ink-3)" aria-hidden="true" />
                         <span style={label()}>{item.label}</span>
                       </span>
                       <span className={s.rowVal}>{item.value}</span>

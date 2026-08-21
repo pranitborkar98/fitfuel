@@ -98,7 +98,7 @@ const MEAL_COUNT: Record<MealKey, number> = {
 const ARCHETYPES: { sub: string; tag: string; title: string; accent: string }[] = [
   { sub: "weight_loss", tag: "Lose fat", title: "Weight loss", accent: LIME_LIGHT },
   { sub: "muscle_gain", tag: "Build muscle", title: "Muscle gain", accent: LIME },
-  { sub: "maintenance", tag: "Hold steady", title: "Balanced", accent: "#6f6d5e" },
+  { sub: "maintenance", tag: "Hold steady", title: "Balanced", accent: "var(--fk-ink-3)" },
 ];
 
 /* The one amber on the site, and it is not decoration: it marks a plan our
@@ -285,8 +285,8 @@ export default function PlansNarrowed({
     const tot = p.protein * 4 + p.carbs * 4 + p.fat * 9 || 1;
     return [
       { pct: Math.round(((p.protein * 4) / tot) * 100), colour: LIME_LIGHT, name: `Protein ${p.protein} g` },
-      { pct: Math.round(((p.carbs * 4) / tot) * 100), colour: "#6f6d5e", name: `Carbohydrate ${p.carbs} g` },
-      { pct: Math.round(((p.fat * 9) / tot) * 100), colour: "#3a3a35", name: `Fat ${p.fat} g` },
+      { pct: Math.round(((p.carbs * 4) / tot) * 100), colour: "var(--fk-ink-3)", name: `Carbohydrate ${p.carbs} g` },
+      { pct: Math.round(((p.fat * 9) / tot) * 100), colour: "var(--fk-line-strong)", name: `Fat ${p.fat} g` },
     ];
   };
 
@@ -647,8 +647,8 @@ export default function PlansNarrowed({
               width: "100%",
               justifyContent: "space-between",
               gap: 16,
-              background: "#0c0c0a",
-              borderColor: "#232320",
+              background: "var(--fk-surface)",
+              borderColor: "var(--fk-line)",
               minHeight: 56,
               padding: "0 clamp(16px,2.2vw,24px)",
               fontSize: 15,

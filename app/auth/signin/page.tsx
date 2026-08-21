@@ -60,8 +60,8 @@ function SignInInner() {
             <div
               role="alert"
               style={{
-                background: "#050504",
-                border: "1px solid #232320",
+                background: "var(--fk-surface)",
+                border: "1px solid var(--fk-line)",
                 borderLeft: "2px solid #f87171",
                 padding: "13px 16px",
                 marginBottom: 24,
@@ -87,7 +87,7 @@ function SignInInner() {
               justifyContent: "center",
               gap: 12,
               background: "#ffffff",
-              color: "#070707",
+              color: "var(--fk-paper)",
               fontFamily: "var(--font-archivo), sans-serif",
               fontWeight: 600,
               fontSize: 15,
@@ -108,9 +108,9 @@ function SignInInner() {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "22px 0" }}>
-            <span style={{ flex: 1, height: 1, background: "#232320" }} />
+            <span style={{ flex: 1, height: 1, background: "var(--fk-line)" }} />
             <span style={label()}>or</span>
-            <span style={{ flex: 1, height: 1, background: "#232320" }} />
+            <span style={{ flex: 1, height: 1, background: "var(--fk-line)" }} />
           </div>
 
           <a

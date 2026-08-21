@@ -5,7 +5,7 @@
    This page was the clearest per-category-accent violation in the codebase:
    each goal carried its own hue, piped through a --ac custom property that
    then coloured the eyebrow, the segmented buttons, the ring, the protein bar,
-   the input focus ring and the CTA. Lose fat was #a3e635, Maintain was sky
+   the input focus ring and the CTA. Lose fat was var(--fk-green-deep), Maintain was sky
    #38bdf8 and Build muscle was orange #f97316 — two of the three named in
    the reject list, and the whole mechanism is what "no per-category
    accent hues" exists to stop.
@@ -21,8 +21,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 @media (max-width: 860px) {
   .grid {
@@ -31,12 +31,12 @@
 }
 
 .panel {
-  background: #070707;
+  background: var(--fk-paper);
   padding: clamp(20px, 2.8vw, 32px);
 }
 /* The results half is recessed: darker than the page, a well cut into it. */
 .panelOut {
-  background: #050504;
+  background: var(--fk-surface);
   display: flex;
   flex-direction: column;
   gap: clamp(22px, 3vw, 32px);
@@ -49,10 +49,10 @@
   font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #85857e;
+  color: var(--fk-ink-3);
   padding-bottom: 11px;
   margin-bottom: 16px;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
 }
 
 /* ── the segmented rail ───────────────────────────────────────────────── */
@@ -60,8 +60,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   margin-bottom: 26px;
 }
 .seg button {
@@ -71,8 +71,8 @@
   padding: 12px 10px;
   border: 0;
   cursor: pointer;
-  background: #070707;
-  color: #9a9a94;
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -80,15 +80,15 @@
   transition: background 0.18s linear, color 0.18s linear;
 }
 .seg button:hover {
-  background: #0c0c0a;
-  color: #f7f7f5;
+  background: var(--fk-surface);
+  color: var(--fk-ink);
 }
 .seg button.on {
-  background: #84cc16;
-  color: #070707;
+  background: var(--fk-green);
+  color: var(--fk-paper);
 }
 .seg button:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 
@@ -99,12 +99,12 @@
   justify-content: space-between;
   gap: 14px;
   padding: 12px 0;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
 }
 .field label {
   font-family: var(--font-archivo), sans-serif;
   font-size: 14.5px;
-  color: #9a9a94;
+  color: var(--fk-ink-2);
 }
 .field input {
   width: 104px;
@@ -114,17 +114,17 @@
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  color: #f7f7f5;
-  background: #050504;
-  border: 1px solid #232320;
+  color: var(--fk-ink);
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
   border-radius: 0;
   padding: 10px 12px;
   outline: none;
   transition: border-color 0.2s linear;
 }
 .field input:focus-visible {
-  border-color: #84cc16;
-  outline: 2px solid #84cc16;
+  border-color: var(--fk-green);
+  outline: 2px solid var(--fk-green);
   outline-offset: 1px;
 }
 
@@ -132,8 +132,8 @@
 .opt {
   display: grid;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   margin-bottom: 26px;
 }
 .opt button {
@@ -146,41 +146,41 @@
   min-height: 50px;
   border: 0;
   border-left: 2px solid transparent;
-  background: #070707;
-  color: #9a9a94;
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
   cursor: pointer;
   font-family: var(--font-archivo), sans-serif;
   font-size: 14.5px;
   transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear;
 }
 .opt button:hover {
-  background: #0c0c0a;
-  color: #f7f7f5;
+  background: var(--fk-surface);
+  color: var(--fk-ink);
 }
 .opt button.on {
-  border-left-color: #84cc16;
-  background: #0c0c0a;
-  color: #f7f7f5;
+  border-left-color: var(--fk-green);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
 }
 .opt button:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .opt small {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
-  color: #85857e;
+  color: var(--fk-ink-3);
   white-space: nowrap;
 }
 
 /* ── the result ───────────────────────────────────────────────────────── */
 .figure {
-  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-family: var(--fk-display);
   font-weight: 900;
   font-size: clamp(4rem, 12vw, 8rem);
   line-height: 0.8;
   letter-spacing: -0.04em;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   font-variant-numeric: tabular-nums;
   display: block;
 }
@@ -190,7 +190,7 @@
   font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #85857e;
+  color: var(--fk-ink-3);
   margin-top: 12px;
 }
 
@@ -199,11 +199,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 .read {
-  background: #050504;
+  background: var(--fk-surface);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -214,7 +214,7 @@
   font-weight: 700;
   font-size: 18px;
   font-variant-numeric: tabular-nums;
-  color: #f7f7f5;
+  color: var(--fk-ink);
 }
 
 /* ── macros ───────────────────────────────────────────────────────────── */
@@ -223,7 +223,7 @@
   height: 6px;
   gap: 1px;
   overflow: hidden;
-  background: #161616;
+  background: var(--fk-warm);
   margin-bottom: 14px;
 }
 .macbar > span {
@@ -233,11 +233,11 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 .mac {
-  background: #050504;
+  background: var(--fk-surface);
   padding: 13px 14px;
   display: flex;
   flex-direction: column;
@@ -248,26 +248,26 @@
   font-weight: 700;
   font-size: 17px;
   font-variant-numeric: tabular-nums;
-  color: #f7f7f5;
+  color: var(--fk-ink);
 }
 .macName {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #85857e;
+  color: var(--fk-ink-3);
 }
 /* The share is printed as a percentage as well as drawn as a width, so the
    bar is never the only channel carrying the split. */
 .macPct {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
-  color: #85857e;
+  color: var(--fk-ink-3);
   font-variant-numeric: tabular-nums;
 }
 
 .cta {
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
   padding-top: 20px;
   margin-top: auto;
 }
@@ -275,7 +275,7 @@
   font-family: var(--font-archivo), sans-serif;
   font-size: 13px;
   line-height: 1.6;
-  color: #85857e;
+  color: var(--fk-ink-3);
   margin: 16px 0 0;
   max-width: 56ch;
 }

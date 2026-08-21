@@ -1,7 +1,7 @@
 // app/how-it-works/page.tsx
 //
 // Six steps, one loop. Rebuilt onto the Instrument System: the page previously
-// carried its own `const C` palette (#080808, #a3e635, #111111 cards), radius
+// carried its own `const C` palette (#080808, var(--fk-green-deep), var(--fk-surface) cards), radius
 // 16 tiles in a uniform three-up grid, and a centred gradient CTA — the exact
 // object the slop list rejects by name.
 //
@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
             <div className={k.rows} style={{ marginTop: "clamp(30px,4vw,48px)" }}>
               {STEPS.map((s) => (
                 <Row key={s.n} cols="72px minmax(0,1fr) minmax(0,1.35fr)">
-                  <span style={{ ...figure("2rem", "#84cc16") }}>{s.n}</span>
+                  <span style={{ ...figure("2rem", "var(--fk-green)") }}>{s.n}</span>
                   <h3 style={{ ...sub("clamp(1.15rem,2vw,1.5rem)") }}>{s.t}</h3>
                   <p style={{ ...body(15), maxWidth: "52ch" }}>{s.d}</p>
                 </Row>

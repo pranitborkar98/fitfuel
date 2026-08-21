@@ -85,7 +85,7 @@ export default async function FAQPage() {
       <section style={{ ...SECTION, paddingTop: 0 }}>
         <Wrap>
           {faqs.length === 0 ? (
-            <p style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 15.5, color: "#9a9a94" }}>
+            <p style={{ fontFamily: "var(--font-archivo), sans-serif", fontSize: 15.5, color: "var(--fk-ink-2)" }}>
               FAQs are being prepared. Check back soon.
             </p>
           ) : (

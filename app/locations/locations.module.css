@@ -34,8 +34,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 @media (max-width: 520px) {
   .zones {
@@ -43,7 +43,7 @@
   }
 }
 .zone {
-  background: #070707;
+  background: var(--fk-paper);
   padding: 14px 16px;
   min-height: 62px;
   display: flex;
@@ -53,16 +53,16 @@
   border-left: 2px solid transparent;
 }
 .zoneBase {
-  background: #0c0c0a;
-  border-left-color: #84cc16;
+  background: var(--fk-surface);
+  border-left-color: var(--fk-green);
 }
 .zoneName {
-  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  font-family: var(--fk-display);
   font-weight: 800;
   font-size: 16px;
   letter-spacing: -0.01em;
   text-transform: uppercase;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -74,34 +74,34 @@
   font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #84cc16;
+  color: var(--fk-green);
 }
 .zonePin {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: #85857e;
+  color: var(--fk-ink-3);
 }
 
 /* ── the pincode checker ──────────────────────────────────────────────── */
 .checker {
-  background: #050504;
-  border: 1px solid #232320;
-  border-top: 2px solid #84cc16;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line);
+  border-top: 2px solid var(--fk-green);
   padding: clamp(20px, 2.8vw, 30px);
 }
 .checkRow {
   display: flex;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   margin-bottom: 16px;
 }
 .checkInput {
   flex: 1;
   min-width: 0;
   min-height: 50px;
-  background: #070707;
+  background: var(--fk-paper);
   border: 0;
   border-radius: 0;
   padding: 14px 16px;
@@ -110,15 +110,15 @@
   font-size: 15px;
   letter-spacing: 0.12em;
   font-variant-numeric: tabular-nums;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   outline: none;
 }
 .checkInput::placeholder {
-  color: #85857e;
+  color: var(--fk-ink-3);
   font-weight: 500;
 }
 .checkInput:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .checkBtn {
@@ -127,10 +127,10 @@
   padding: 14px 26px;
   border: 0;
   border-radius: 0;
-  background: #84cc16;
-  color: #070707;
+  background: var(--fk-green);
+  color: var(--fk-paper);
   cursor: pointer;
-  font-family: var(--font-barlow-condensed), sans-serif;
+  font-family: var(--fk-display);
   font-weight: 900;
   font-size: 15px;
   letter-spacing: 0.06em;
@@ -139,10 +139,10 @@
   transition: background 0.2s linear;
 }
 .checkBtn:hover {
-  background: #f7f7f5;
+  background: var(--fk-ink);
 }
 .checkBtn:focus-visible {
-  outline: 2px solid #a3e635;
+  outline: 2px solid var(--fk-green-deep);
   outline-offset: 2px;
 }
 
@@ -150,39 +150,39 @@
    not deliver), and each states its answer in words as well, so the colour is
    reinforcement rather than the message. */
 .result {
-  border: 1px solid #232320;
-  border-left: 2px solid #84cc16;
-  background: #070707;
+  border: 1px solid var(--fk-line);
+  border-left: 2px solid var(--fk-green);
+  background: var(--fk-paper);
   padding: 14px 16px;
 }
 .resultNo {
   border-left-color: #f87171;
 }
 .resultTitle {
-  font-family: var(--font-barlow-condensed), sans-serif;
+  font-family: var(--fk-display);
   font-weight: 900;
   font-size: 18px;
   letter-spacing: -0.01em;
   text-transform: uppercase;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   margin: 0 0 6px;
 }
 .resultBody {
   font-family: var(--font-archivo), sans-serif;
   font-size: 13.5px;
   line-height: 1.65;
-  color: #9a9a94;
+  color: var(--fk-ink-2);
   margin: 0;
 }
 
 /* ── the map ──────────────────────────────────────────────────────────── */
 .map {
-  border: 1px solid #232320;
-  background: #050504;
+  border: 1px solid var(--fk-line);
+  background: var(--fk-surface);
 }
 .mapHead {
   padding: 16px 20px;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
 }
 .mapFrame {
   border: 0;
@@ -193,7 +193,7 @@
 }
 .mapFoot {
   padding: 14px 20px;
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
 }
 
 /* ── the delivery info strip ──────────────────────────────────────────── */
@@ -201,8 +201,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 @media (max-width: 820px) {
   .info {
@@ -210,7 +210,7 @@
   }
 }
 .infoCell {
-  background: #050504;
+  background: var(--fk-surface);
   padding: clamp(20px, 2.6vw, 30px);
   display: flex;
   flex-direction: column;
@@ -220,10 +220,10 @@
 .note {
   margin-top: 18px;
   padding: 14px 16px;
-  border: 1px solid #232320;
-  background: #050504;
+  border: 1px solid var(--fk-line);
+  background: var(--fk-surface);
   font-family: var(--font-archivo), sans-serif;
   font-size: 13.5px;
   line-height: 1.65;
-  color: #9a9a94;
+  color: var(--fk-ink-2);
 }

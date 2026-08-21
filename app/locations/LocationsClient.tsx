@@ -22,8 +22,8 @@
 // glows under two buttons, translateY lifts, a dashed-border note box, and
 // framer-motion fading every block in from blur(4px).
 //
-// The zone dot was also doing real work with colour alone: #84cc16 for the
-// base kitchen against #3a3a3a (1.5:1) for everything else. "Base" was already
+// The zone dot was also doing real work with colour alone: var(--fk-green) for the
+// base kitchen against var(--fk-line-strong) (1.5:1) for everything else. "Base" was already
 // printed in words beside it, so the dot is gone and the word does the job.
 
 import { useState } from "react";

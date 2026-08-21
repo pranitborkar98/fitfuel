@@ -72,11 +72,11 @@ function ConfirmationInner() {
         <div style={{ maxWidth: 720 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {isCOD ? (
-              <Banknote size={16} color="#84cc16" aria-hidden="true" />
+              <Banknote size={16} color="var(--fk-green)" aria-hidden="true" />
             ) : (
-              <CheckCircle size={16} color="#84cc16" aria-hidden="true" />
+              <CheckCircle size={16} color="var(--fk-green)" aria-hidden="true" />
             )}
-            <span style={label("#84cc16")}>{isCOD ? "Order placed" : "Payment confirmed"}</span>
+            <span style={label("var(--fk-green)")}>{isCOD ? "Order placed" : "Payment confirmed"}</span>
           </span>
 
           <h1 style={{ ...display("clamp(2.4rem,8vw,5rem)"), margin: "18px 0 18px" }}>
@@ -100,7 +100,7 @@ function ConfirmationInner() {
 
           {/* The receipt. Mono, tabular, flush rows on hairlines. */}
           <Idx label="Order details" />
-          <div style={{ borderTop: "1px solid #232320", marginBottom: "clamp(30px,4vw,44px)" }}>
+          <div style={{ borderTop: "1px solid var(--fk-line)", marginBottom: "clamp(30px,4vw,44px)" }}>
             {orderNo && (
               <div style={ROW}>
                 <span style={label()}>Order ID</span>
@@ -137,11 +137,11 @@ function ConfirmationInner() {
           )}
 
           <Idx label="What happens next" />
-          <div style={{ borderTop: "1px solid #232320", marginBottom: "clamp(30px,4vw,44px)" }}>
+          <div style={{ borderTop: "1px solid var(--fk-line)", marginBottom: "clamp(30px,4vw,44px)" }}>
             {steps.map(({ Icon, title, sub }) => (
               <div key={title} style={{ ...ROW, alignItems: "flex-start", gap: 16 }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                  <Icon size={15} color="#85857e" aria-hidden="true" style={{ flexShrink: 0 }} />
+                  <Icon size={15} color="var(--fk-ink-3)" aria-hidden="true" style={{ flexShrink: 0 }} />
                   <span>
                     <span
                       style={{
@@ -193,7 +193,7 @@ const ROW = {
   alignItems: "center",
   gap: 16,
   padding: "15px 0",
-  borderBottom: "1px solid #232320",
+  borderBottom: "1px solid var(--fk-line)",
 } as const;
 
 export default function ConfirmationPage() {

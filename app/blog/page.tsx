@@ -118,7 +118,7 @@ export default async function BlogPage({
                   gradient bar on a card. */}
               {featured && (
                 <Link href={`/blog/${featured.slug}`} className={k.rows} style={LEAD}>
-                  <span style={label("#84cc16")}>{featured.category}</span>
+                  <span style={label("var(--fk-green)")}>{featured.category}</span>
                   <h2 style={{ ...display("clamp(2.1rem,6vw,4.6rem)"), maxWidth: "18ch", margin: "16px 0 18px" }}>
                     {featured.title}
                   </h2>
@@ -184,6 +184,6 @@ const LEAD = {
   display: "block",
   textDecoration: "none",
   color: "inherit",
-  borderBottom: "1px solid #232320",
+  borderBottom: "1px solid var(--fk-line)",
   padding: "clamp(28px,4vw,44px) 0",
 } as const;

@@ -247,7 +247,7 @@ function useInViewOnce<T extends Element>() {
 
 // ─── Small composed pieces ────────────────────────────────────────────────────
 
-function Eyebrow({ index, label, color = '#84cc16' }: { index?: string; label: string; color?: string }) {
+function Eyebrow({ index, label, color = 'var(--fk-green)' }: { index?: string; label: string; color?: string }) {
   void index; // section markers removed — numbers belong only to real sequences
   return (
     <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12.5, letterSpacing: '0.18em', color, textTransform: 'uppercase', marginBottom: 18 }}>
@@ -264,8 +264,8 @@ function MacroBar({ p, c, f, height = 8 }: { p: number; c: number; f: number; he
     <div key={key} style={{ width: `${(v / total) * 100}%`, background: col, height: '100%' }} />
   )
   return (
-    <div style={{ display: 'flex', height, borderRadius: 0, overflow: 'hidden', background: '#161616', border: '1px solid #1f1f1f' }}>
-      {seg(pk, '#84cc16', 'p')}{seg(ck, '#5c5c56', 'c')}{seg(fk, '#33332f', 'f')}
+    <div style={{ display: 'flex', height, borderRadius: 0, overflow: 'hidden', background: 'var(--fk-warm)', border: '1px solid var(--fk-line)' }}>
+      {seg(pk, 'var(--fk-green)', 'p')}{seg(ck, '#5c5c56', 'c')}{seg(fk, 'var(--fk-line-2)', 'f')}
     </div>
   )
 }
@@ -287,13 +287,13 @@ function CalorieRing({ kcal }: { kcal: number }) {
         />
         <defs>
           <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#84cc16" /><stop offset="100%" stopColor="#84cc16" />
+            <stop offset="0%" stopColor="var(--fk-green)" /><stop offset="100%" stopColor="var(--fk-green)" />
           </linearGradient>
         </defs>
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'grid', placeContent: 'center', textAlign: 'center' }}>
         <div className="cond" style={{ fontSize: 52, lineHeight: 0.9, color: '#fff', fontWeight: 600 }}>{kcal.toLocaleString('en-IN')}</div>
-        <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.22em', color: '#84cc16', marginTop: 6 }}>KCAL / DAY</div>
+        <div className="mono" style={{ fontSize: 12.5, letterSpacing: '0.22em', color: 'var(--fk-green)', marginTop: 6 }}>KCAL / DAY</div>
       </div>
     </div>
   )
@@ -395,7 +395,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
 
 
         .ff-root {
-          /* The locked ramp. --lime was #a3e635 (lime-LIGHT), which the ramp
+          /* The locked ramp. --lime was var(--fk-green-deep) (lime-LIGHT), which the ramp
              reserves for a single live value; here it drove every accent on
              the page. --bone and --ember were a second and third palette: a
              cream inverted card and an orange 'what we leave out' accent. The
@@ -405,8 +405,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
           /* MAPPED ONTO app/_design/tokens.css, 2026-08-20. The colours were
              already the homepage's values by coincidence of an earlier pass;
              what made this page read as a different SITE was the type and the
-             zero radius, handled below. --dim/--faint were #85857e against the
-             system's #9a9a94, the one colour that actually differed. */
+             zero radius, handled below. --dim/--faint were var(--fk-ink-3) against the
+             system's var(--fk-ink-2), the one colour that actually differed. */
           --bg:var(--fk-paper); --panel:var(--fk-surface); --line:var(--fk-line); --line-2:var(--fk-line-2);
           --lime:var(--fk-green); --lime-d:var(--fk-green-deep); --ink:var(--fk-ink); --dim:var(--fk-ink-3); --faint:var(--fk-ink-3);
           --bone:var(--fk-ink); --bone-ink:var(--fk-paper); --ember:var(--fk-ink-3);
@@ -470,7 +470,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
         .btn-wa{ background:#101512; color:#dcf2e3; padding:15px 24px; border:1px solid #1f3a2a; }
         .btn-wa:hover{ border-color:#2c5a3e; background:#0f1a13; }
 
-        .ticker-wrap{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:18px 0; position:relative; z-index:2; background:#0a0a0a; }
+        .ticker-wrap{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:18px 0; position:relative; z-index:2; background:var(--fk-paper); }
         .ticker{ display:inline-flex; white-space:nowrap; animation:tick 32s linear infinite; }
         .ticker span{ font-family:var(--fk-sans); font-weight:600; font-size:15px; letter-spacing:.01em; color:var(--fk-ink-3); text-transform:none; padding:0 22px; display:inline-flex; align-items:center; gap:22px; }
         .ticker b{ color:var(--lime); font-weight:600; }
@@ -487,8 +487,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
            condensed in a square box at 11px of padding — 34px tall, under the
            minimum, and the same texture the rest of this pass is removing. */
         .seg{ font-family:var(--fk-sans); font-size:13px; font-weight:600; letter-spacing:normal; min-height:var(--fk-tap); padding:0 16px; border:1px solid var(--line-2); border-radius:var(--fk-r-full); background:transparent; color:var(--dim); cursor:pointer; transition:all .25s; text-transform:none; }
-        .seg:hover{ color:var(--ink); border-color:#3a3a3a; }
-        .seg.on{ background:var(--lime); color:#0a0a0a; border-color:var(--lime); font-weight:700; }
+        .seg:hover{ color:var(--ink); border-color:var(--fk-line-strong); }
+        .seg.on{ background:var(--lime); color:var(--fk-paper); border-color:var(--lime); font-weight:700; }
 
         .faq-q{ width:100%; text-align:left; background:transparent; border:none; cursor:pointer; padding:22px 0; display:flex; justify-content:space-between; align-items:center; gap:20px; color:var(--ink); font-weight:600; font-size:16px; }
         .faq-body{ max-height:0; overflow:hidden; opacity:0; transition:max-height .5s cubic-bezier(.16,1,.3,1), opacity .4s, padding .4s; }
@@ -523,7 +523,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
       {/* ── Document header bar ─────────────────────────────────────────── */}
       <div className="wrap enter" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 32px', borderBottom: '1px solid var(--line)' }}>
         {/* This is a breadcrumb trail, so it is marked up as one. It was a
-            flex row of loose links with "/" separators at #2e2e2e (1.47:1),
+            flex row of loose links with "/" separators at var(--fk-line-2) (1.47:1),
             which is invisible and also read aloud as "slash" by a screen
             reader. Separators are now decorative and the trail is navigable. */}
         {/* components/Breadcrumb. Was 12px mono at 0.2em tracking in
@@ -558,7 +558,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
               </p>
 
               {/* Spec strip — instrument readout */}
-              <div className="enter e4" style={{ display: 'flex', flexWrap: 'wrap', marginTop: 40, border: '1px solid var(--line)', borderRadius: 0, background: '#0a0a0a' }}>
+              <div className="enter e4" style={{ display: 'flex', flexWrap: 'wrap', marginTop: 40, border: '1px solid var(--line)', borderRadius: 0, background: 'var(--fk-paper)' }}>
                 {heroStats.map((s, i) => (
                   <div key={i} ref={(s as { ref?: React.RefObject<HTMLDivElement> }).ref} style={{ flex: '1 1 130px', padding: '20px 22px', borderLeft: i === 0 ? 'none' : '1px solid var(--line)' }}>
                     <div className="cond" style={{ fontSize: 46, lineHeight: 0.85, color: 'var(--ink)', fontWeight: 600 }}>
@@ -588,9 +588,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
               <div style={{ marginTop: 26 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }} className="mono">
                   {[
-                    { k: 'P', v: plan.avgProteinGrams, c: '#84cc16' },
+                    { k: 'P', v: plan.avgProteinGrams, c: 'var(--fk-green)' },
                     { k: 'C', v: plan.avgCarbsGrams, c: '#5c5c56' },
-                    { k: 'F', v: plan.avgFatGrams, c: '#85857e' },
+                    { k: 'F', v: plan.avgFatGrams, c: 'var(--fk-ink-3)' },
                   ].map((m) => (
                     <span key={m.k} style={{ fontSize: 12, color: 'var(--dim)' }}>
                       <span style={{ color: m.c }}>{m.k}</span> {m.v}g
@@ -730,7 +730,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
           ) : null}
 
           {/* Ledger header */}
-          <div className="ledger-row" style={{ background: '#0a0a0a' }}>
+          <div className="ledger-row" style={{ background: 'var(--fk-paper)' }}>
             <div className="ledger-cell mono" style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--faint)' }}>DAY</div>
             {(['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as MealSlotKey[]).map((s) => (
               <div key={s} className="ledger-cell mono" style={{ fontSize: 12, letterSpacing: '0.14em', color: 'var(--faint)', textTransform: 'uppercase' }}>{SLOT_LABEL[s]}</div>
@@ -763,7 +763,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                         <div key={sk} className="ledger-cell">
                           {m ? (
                             <>
-                              <div style={{ width: '100%', height: 84, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,#161616,#0b0b0b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: '100%', height: 84, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,var(--fk-warm),var(--fk-surface))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <span style={{ color: 'var(--line-2)' }}><CellIcon size={22} /></span>
                               </div>
                               <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 7 }}>{m.name}</div>
@@ -771,7 +771,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                                 <span style={{ color: 'var(--lime)' }}>{m.kcal}</span> kcal · {m.protein}P {m.carbs}C {m.fat}F
                               </div>
                             </>
-                          ) : <span className="mono" style={{ fontSize: 12, color: '#2c2c2c' }}>—</span>}
+                          ) : <span className="mono" style={{ fontSize: 12, color: 'var(--fk-line-2)' }}>—</span>}
                         </div>
                       )
                     })}
@@ -821,7 +821,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                       <div key={sk} className="ledger-cell" onClick={s ? () => setSel(s.recipe) : undefined} onMouseEnter={(e) => { if (s) e.currentTarget.style.background = 'var(--panel)' }} onMouseLeave={(e) => { e.currentTarget.style.background = '' }} style={s ? { cursor: 'pointer' } : undefined}>
                         {s ? (
                           <>
-                            <div style={{ width: '100%', height: 84, borderRadius: 0, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,#161616,#0b0b0b)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '100%', height: 84, borderRadius: 0, overflow: 'hidden', marginBottom: 9, background: 'linear-gradient(135deg,var(--fk-warm),var(--fk-surface))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               {s.recipe.imageUrl
                                 ? <img src={s.recipe.imageUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 : <span style={{ color: 'var(--line-2)' }}><CellIcon size={22} /></span>}
@@ -831,7 +831,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                               <span style={{ color: 'var(--lime)' }}>{s.recipe.caloriesPerServing}</span> kcal · {s.recipe.proteinGrams}P {s.recipe.carbsGrams}C {s.recipe.fatGrams}F
                             </div>
                           </>
-                        ) : <span className="mono" style={{ fontSize: 12, color: '#2c2c2c' }}>—</span>}
+                        ) : <span className="mono" style={{ fontSize: 12, color: 'var(--fk-line-2)' }}>—</span>}
                       </div>
                     )
                   })}
@@ -878,10 +878,10 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
 
                     <div className="four" style={{ gap: 8, marginBottom: 14 }}>
                       {[
-                        { l: 'Protein', v: `${r.proteinGrams}g`, c: '#84cc16' },
+                        { l: 'Protein', v: `${r.proteinGrams}g`, c: 'var(--fk-green)' },
                         { l: 'Carbs', v: `${r.carbsGrams}g`, c: '#5c5c56' },
-                        { l: 'Fat', v: `${r.fatGrams}g`, c: '#85857e' },
-                        { l: 'Fibre', v: r.fibreGrams != null ? `${r.fibreGrams}g` : '—', c: '#85857e' },
+                        { l: 'Fat', v: `${r.fatGrams}g`, c: 'var(--fk-ink-3)' },
+                        { l: 'Fibre', v: r.fibreGrams != null ? `${r.fibreGrams}g` : '—', c: 'var(--fk-ink-3)' },
                       ].map((m) => (
                         <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid var(--line)', borderRadius: 0, padding: '11px 8px', textAlign: 'center' }}>
                           <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>
@@ -1002,7 +1002,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
               <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--faint)', marginBottom: 8 }}>
                 <span>NET PROGRESS</span><span style={{ color: 'var(--lime)' }}>42%</span>
               </div>
-              <div style={{ height: 6, background: '#161616', borderRadius: 0, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: 'var(--fk-warm)', borderRadius: 0, overflow: 'hidden' }}>
                 <div style={{ width: '42%', height: '100%', background: 'var(--lime)' }} />
               </div>
             </div>
@@ -1051,7 +1051,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                 return (
                   <button key={m.key} onClick={() => setPickMeal(m.key)} style={{
                     flex: '1 1 140px',
-                    background: active ? '#101807' : '#0a0a0a',
+                    background: active ? '#101807' : 'var(--fk-paper)',
                     border: active ? '1px solid var(--lime)' : '1px solid var(--line)',
                     borderRadius: 0, padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
                     transition: 'all .25s cubic-bezier(.16,1,.3,1)',
@@ -1081,7 +1081,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
               return (
                 <div key={tier.key} style={{
                   background: 'var(--panel)',
-                  border: '1px solid #1f1f1f',
+                  border: '1px solid var(--fk-line)',
                   borderLeft: `3px solid ${tier.accent}`,
                   borderRadius: 0,
                   padding: 22,
@@ -1120,8 +1120,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                           onClick={() => available && setPickDur(d.key)}
                           disabled={!available}
                           style={{
-                            background: isActiveDur ? `${tier.accent}1a` : '#0a0a0a',
-                            border: isActiveDur ? `1px solid ${tier.accent}` : '1px solid #1a1a1a',
+                            background: isActiveDur ? `${tier.accent}1a` : 'var(--fk-paper)',
+                            border: isActiveDur ? `1px solid ${tier.accent}` : '1px solid var(--fk-warm-2)',
                             borderRadius: 0,
                             padding: '10px 12px',
                             cursor: available ? 'pointer' : 'not-allowed',
@@ -1134,7 +1134,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                             textAlign: 'left',
                           }}
                           onMouseEnter={(e) => { if (!isActiveDur && available) e.currentTarget.style.borderColor = '#333' }}
-                          onMouseLeave={(e) => { if (!isActiveDur && available) e.currentTarget.style.borderColor = '#1a1a1a' }}
+                          onMouseLeave={(e) => { if (!isActiveDur && available) e.currentTarget.style.borderColor = 'var(--fk-warm-2)' }}
                         >
                           <div>
                             <div className="mono" style={{ fontSize: 12.5, color: isActiveDur ? tier.accent : 'var(--dim)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 700 }}>
@@ -1267,8 +1267,8 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                     onChange={(e) => setWlEmail(e.target.value)}
                     disabled={wlStatus === 'submitting'}
                     style={{
-                      flex: '1 1 200px', padding: '12px 14px', background: '#0a0a0a',
-                      border: '1px solid #1a1a1a', borderRadius: 0,
+                      flex: '1 1 200px', padding: '12px 14px', background: 'var(--fk-paper)',
+                      border: '1px solid var(--fk-warm-2)', borderRadius: 0,
                       color: 'var(--ink)', fontSize: 14, outline: 'none',
                       fontFamily: "inherit",
                     }}
@@ -1279,7 +1279,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
                     style={{
                       padding: '12px 22px',
                       background: TIER_META.find((t) => t.key === wlTier)!.accent,
-                      color: '#0a0a0a', border: 'none', borderRadius: 0,
+                      color: 'var(--fk-paper)', border: 'none', borderRadius: 0,
                       fontSize: 14, fontWeight: 700,
                       cursor: wlStatus === 'submitting' ? 'wait' : 'pointer',
                       opacity: wlStatus === 'submitting' ? 0.7 : 1,
@@ -1334,7 +1334,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
           <div className="three">
             {TESTIMONIALS.map((t, i) => (
               <div key={t.name} className={`reveal d${i + 1}`} style={{ ...card({ padding: 28, display: 'flex', flexDirection: 'column', transition: 'border-color .3s' }) }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#2a2a2a' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--fk-line-2)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)' }}>
                 <div style={{ display: 'flex', gap: 3, color: 'var(--lime)', marginBottom: 18 }}>
                   {Array.from({ length: 5 }).map((_, s) => <IconStar key={s} size={13} />)}
@@ -1403,7 +1403,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
 
       {sel && (
         <div onClick={() => setSel(null)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.78)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: 0, maxWidth: 480, width: '100%', maxHeight: '88vh', overflow: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--fk-surface)', border: '1px solid #222', borderRadius: 0, maxWidth: 480, width: '100%', maxHeight: '88vh', overflow: 'auto' }}>
             {sel.imageUrl && <img src={sel.imageUrl} alt={sel.name} style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block', borderRadius: '14px 14px 0 0' }} />}
             <div style={{ padding: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
@@ -1419,9 +1419,9 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 18 }}>
                 {[
                   { l: 'Kcal', v: String(sel.caloriesPerServing), c: 'var(--lime)' },
-                  { l: 'Protein', v: `${sel.proteinGrams}g`, c: '#84cc16' },
+                  { l: 'Protein', v: `${sel.proteinGrams}g`, c: 'var(--fk-green)' },
                   { l: 'Carbs', v: `${sel.carbsGrams}g`, c: '#5c5c56' },
-                  { l: 'Fat', v: `${sel.fatGrams}g`, c: '#85857e' },
+                  { l: 'Fat', v: `${sel.fatGrams}g`, c: 'var(--fk-ink-3)' },
                 ].map((m) => (
                   <div key={m.l} style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 0, padding: '12px 8px', textAlign: 'center' }}>
                     <div className="cond" style={{ fontSize: 20, fontWeight: 600, color: m.c }}>{m.v}</div>

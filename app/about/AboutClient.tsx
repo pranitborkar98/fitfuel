@@ -132,7 +132,7 @@ export default function AboutClient() {
               nutritious meals, delivered daily, so that eating well stops being the hard part.
             </blockquote>
             <div className={s.byline}>
-              <span style={label("#84cc16")}>Pranit Borkar</span>
+              <span style={label("var(--fk-green)")}>Pranit Borkar</span>
               <span style={{ ...body(14) }}>Founder, FitFuel</span>
             </div>
           </Wrap>
@@ -192,7 +192,7 @@ export default function AboutClient() {
             <div className={k.rows} style={{ marginTop: "clamp(28px,4vw,46px)" }}>
               {TIMELINE.map((t) => (
                 <Row key={t.year} cols="96px minmax(0,1fr) minmax(0,1.35fr)">
-                  <span style={figure("clamp(1.7rem,3vw,2.3rem)", "#84cc16")}>{t.year}</span>
+                  <span style={figure("clamp(1.7rem,3vw,2.3rem)", "var(--fk-green)")}>{t.year}</span>
                   <h3 style={sub("clamp(1.15rem,2vw,1.5rem)")}>{t.title}</h3>
                   <p style={{ ...body(14.5), maxWidth: "52ch" }}>{t.desc}</p>
                 </Row>
@@ -215,7 +215,7 @@ export default function AboutClient() {
                 const Icon = v.icon;
                 return (
                   <Tile key={v.title}>
-                    <Icon size={16} color="#85857e" aria-hidden="true" />
+                    <Icon size={16} color="var(--fk-ink-3)" aria-hidden="true" />
                     <span style={{ ...label(), marginTop: 4 }}>{v.title}</span>
                     <p style={{ ...body(14.5), marginTop: 2 }}>{v.desc}</p>
                   </Tile>

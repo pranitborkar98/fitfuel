@@ -36,7 +36,13 @@ export function Grain() {
  */
 export function Shell({ children }: { children: ReactNode }) {
   return (
-    <main className={p.shell}>
+    /* `fk` on the shell, so every page built from _ui/Page opts out of the
+       marketing radius ban in app/globals.css in one place. That rule is
+       !important and silently flattens every rounded corner on the subtree;
+       globals.css's own comment names this class as the exemption the new
+       system opts out through. Doing it here rather than per page is what
+       stops the next page from being built square by default. */
+    <main className={`${p.shell} fk`}>
       <Grain />
       <div className={p.body}>{children}</div>
     </main>

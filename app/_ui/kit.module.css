@@ -8,7 +8,7 @@
    the signature devices that exist to replace generic patterns, so
    a page built out of these cannot drift back into card grids.
 
-   Radius is 0 throughout, structure is 1px #232320 hairlines, and the only
+   Radius is 0 throughout, structure is 1px var(--fk-line) hairlines, and the only
    chromatic value is lime. Motion is the one allowed reveal: opacity
    plus 16px, scroll-driven, dead under prefers-reduced-motion.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -57,14 +57,14 @@
   font-weight: 500;
   font-size: 12px;
   letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #85857e;
+  text-transform: none;
+  color: var(--fk-ink-3);
   white-space: nowrap;
 }
 .idxRule {
   flex: 1 1 auto;
   height: 1px;
-  background: #232320;
+  background: var(--fk-line);
 }
 
 /* The heading-and-deck pair that opens a section. Asymmetric on purpose:
@@ -89,19 +89,19 @@
   gap: 14px;
   flex-wrap: wrap;
   padding-bottom: 12px;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #85857e;
+  text-transform: none;
+  color: var(--fk-ink-3);
 }
 
 /* ── signature device 3: the directory row ────────────────────────────────
    A hairline-separated list that shifts right and takes a lime edge on hover.
    This is what replaces a card grid for an index. */
 .rows {
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
 }
 .row {
   display: grid;
@@ -109,9 +109,9 @@
   gap: clamp(12px, 2vw, 26px);
   width: 100%;
   text-align: left;
-  background: #070707;
+  background: var(--fk-paper);
   border: 0;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
   border-left: 2px solid transparent;
   padding: clamp(16px, 1.8vw, 22px) clamp(14px, 2vw, 20px);
   min-height: 68px;
@@ -121,12 +121,12 @@
     border-color 0.2s linear;
 }
 .row:hover {
-  background: #0c0c0a;
+  background: var(--fk-surface);
   padding-left: calc(clamp(14px, 2vw, 20px) + 6px);
-  border-left-color: #84cc16;
+  border-left-color: var(--fk-green);
 }
 .row:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .rowBtn {
@@ -146,7 +146,7 @@
    assistive tech cannot parse the latter. */
 .specWrap {
   overflow-x: auto;
-  border: 1px solid #232320;
+  border: 1px solid var(--fk-line);
 }
 .spec {
   width: 100%;
@@ -158,9 +158,9 @@
   padding: 13px 14px;
   text-align: left;
   font-size: 13.5px;
-  border-bottom: 1px solid #232320;
-  border-right: 1px solid #232320;
-  color: #9a9a94;
+  border-bottom: 1px solid var(--fk-line);
+  border-right: 1px solid var(--fk-line);
+  color: var(--fk-ink-2);
   vertical-align: top;
 }
 .spec th:last-child,
@@ -176,38 +176,38 @@
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #85857e;
-  background: #050504;
+  text-transform: none;
+  color: var(--fk-ink-3);
+  background: var(--fk-surface);
 }
 .spec tbody th {
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 800;
+  font-family: var(--fk-display);
+  font-weight: 600;
   font-size: 15px;
   letter-spacing: -0.01em;
-  text-transform: uppercase;
-  color: #f7f7f5;
+  text-transform: none;
+  color: var(--fk-ink);
   white-space: nowrap;
 }
 .specNum {
   font-family: var(--font-mono), monospace;
   font-variant-numeric: tabular-nums;
-  color: #f7f7f5;
+  color: var(--fk-ink);
   white-space: nowrap;
 }
 
 /* ── tiles ────────────────────────────────────────────────────────────────
-   A hairline grid where the gap IS the rule: 1px gap over a #232320 ground.
+   A hairline grid where the gap IS the rule: 1px gap over a var(--fk-line) ground.
    Set --cols to change the track count. */
 .tiles {
   display: grid;
   grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 .tile {
-  background: #070707;
+  background: var(--fk-paper);
   padding: clamp(18px, 2.4vw, 28px);
   display: flex;
   flex-direction: column;
@@ -217,10 +217,10 @@
   transition: background 0.2s linear;
 }
 .tile:hover {
-  background: #0c0c0a;
+  background: var(--fk-surface);
 }
 .tile:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 @media (max-width: 980px) {
@@ -239,8 +239,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 .chip {
   flex: 1 1 auto;
@@ -248,8 +248,8 @@
   text-align: center;
   padding: 14px 15px;
   min-height: 48px;
-  background: #070707;
-  color: #9a9a94;
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
   border: 0;
   cursor: pointer;
   font-family: var(--font-mono), monospace;
@@ -258,20 +258,20 @@
   transition: background 0.2s linear, color 0.2s linear;
 }
 .chip:hover {
-  background: #0c0c0a;
-  color: #f7f7f5;
+  background: var(--fk-surface);
+  color: var(--fk-ink);
 }
 .chip:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .chipOn {
-  background: #84cc16;
-  color: #070707;
+  background: var(--fk-green);
+  color: var(--fk-paper);
 }
 .chipOn:hover {
-  background: #84cc16;
-  color: #070707;
+  background: var(--fk-green);
+  color: var(--fk-paper);
 }
 
 /* A segmented control: the same rail, condensed, for a small option set. */
@@ -279,8 +279,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
 }
 .seg button {
   flex: 1 1 auto;
@@ -289,21 +289,21 @@
   padding: 12px 8px;
   border: 0;
   cursor: pointer;
-  background: #070707;
-  color: #9a9a94;
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
+  text-transform: none;
   transition: background 0.18s linear, color 0.18s linear;
 }
 .seg button:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: -2px;
 }
 .segOn {
-  background: #f7f7f5 !important;
-  color: #070707 !important;
+  background: var(--fk-ink) !important;
+  color: var(--fk-paper) !important;
 }
 
 /* ── buttons ──────────────────────────────────────────────────────────────
@@ -314,24 +314,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #84cc16;
-  color: #070707;
-  border: 1px solid #84cc16;
+  background: var(--fk-green);
+  color: var(--fk-paper);
+  border: 1px solid var(--fk-green);
   padding: 16px 28px;
   min-height: 52px;
   cursor: pointer;
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 900;
+  font-family: var(--fk-display);
+  font-weight: 600;
   font-size: 16px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   text-decoration: none;
 }
 .btn::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: #f7f7f5;
+  background: var(--fk-ink);
   transform: translateY(101%);
   transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -343,7 +343,7 @@
   transform: translateY(0);
 }
 .btn:focus-visible {
-  outline: 2px solid #a3e635;
+  outline: 2px solid var(--fk-green-deep);
   outline-offset: 3px;
 }
 
@@ -352,26 +352,26 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: #f7f7f5;
-  border: 1px solid #33332f;
+  color: var(--fk-ink);
+  border: 1px solid var(--fk-line-2);
   padding: 15px 26px;
   min-height: 52px;
   cursor: pointer;
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 800;
+  font-family: var(--fk-display);
+  font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   text-decoration: none;
   transition: border-color 0.2s linear, color 0.2s linear, background 0.2s linear;
 }
 .ghost:hover {
-  border-color: #84cc16;
-  color: #84cc16;
+  border-color: var(--fk-green);
+  color: var(--fk-green);
   background: rgba(132, 204, 22, 0.06);
 }
 .ghost:focus-visible {
-  outline: 2px solid #a3e635;
+  outline: 2px solid var(--fk-green-deep);
   outline-offset: 3px;
 }
 
@@ -379,12 +379,12 @@
 .link {
   position: relative;
   display: inline-block;
-  color: #84cc16;
+  color: var(--fk-green);
   text-decoration: none;
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
+  text-transform: none;
   padding-bottom: 3px;
 }
 .link::after {
@@ -416,20 +416,20 @@
 .readout {
   display: grid;
   grid-template-columns: repeat(var(--cells, 4), minmax(0, 1fr));
-  background: #050504;
-  border-top: 1px solid #232320;
-  border-bottom: 1px solid #232320;
+  background: var(--fk-surface);
+  border-top: 1px solid var(--fk-line);
+  border-bottom: 1px solid var(--fk-line);
 }
 .cell {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: clamp(18px, 2.4vw, 28px) clamp(14px, 2.2vw, 26px);
-  border-left: 1px solid #232320;
+  border-left: 1px solid var(--fk-line);
   transition: background 0.25s linear;
 }
 .cell:hover {
-  background: #0c0c0a;
+  background: var(--fk-surface);
 }
 .readout > :first-child {
   border-left: 0;
@@ -442,7 +442,7 @@
     border-left: 0;
   }
   .readout > :nth-child(n + 3) {
-    border-top: 1px solid #232320;
+    border-top: 1px solid var(--fk-line);
   }
 }
 @media (max-width: 520px) {
@@ -453,7 +453,7 @@
     border-left: 0;
   }
   .readout > :nth-child(n + 2) {
-    border-top: 1px solid #232320;
+    border-top: 1px solid var(--fk-line);
   }
 }
 
@@ -464,7 +464,7 @@
   height: 5px;
   gap: 1px;
   overflow: hidden;
-  background: #161616;
+  background: var(--fk-warm);
 }
 .split > span {
   display: block;
