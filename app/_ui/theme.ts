@@ -19,23 +19,24 @@ import type { CSSProperties } from "react";
    Recessed bands are DARKER than the page, never lighter. A lighter band
    reads as a card floating on a page; a darker one reads as a well cut
    into it, which is the instrument register. */
-export const BG = "#070707";
-export const PANEL = "#050504";
-export const PANEL_2 = "#0c0c0a";
+export const BG = "var(--fk-paper)";
+export const PANEL = "var(--fk-surface)";
+export const PANEL_2 = "var(--fk-warm)";
 
-export const INK = "#f7f7f5"; // 19.0:1 on BG
-export const MUTE = "#9a9a94"; //  7.1:1 — body copy
-export const DIM = "#85857e"; //  5.4:1 — metadata, fine print
+export const INK = "var(--fk-ink)"; // 19.0:1 on BG
+export const MUTE = "var(--fk-ink-2)"; //  7.1:1 — body copy
+export const DIM = "var(--fk-ink-3)"; //  5.4:1 — metadata, fine print
 
-export const RULE = "#232320";
-export const RULE_2 = "#33332f";
+export const RULE = "var(--fk-line)";
+export const RULE_2 = "var(--fk-line-2)";
 
-export const LIME = "#84cc16";
-export const LIME_LIGHT = "#a3e635";
+export const LIME = "var(--fk-green)";
+export const LIME_LIGHT = "var(--fk-green-deep)";
 
-/** Radius is 0. Stated as a constant so a card that wants one has to import
- *  something that says zero, rather than typing a number. */
-export const RADIUS = 0;
+/** Was 0 — "stated as a constant so a card that wants one has to import
+ *  something that says zero". The ban was part of the rejected system; the
+ *  live one carries a radius scale, so this now names the scale's base. */
+export const RADIUS = "var(--fk-r)";
 
 export const COND = "var(--font-barlow-condensed), 'Arial Narrow', sans-serif";
 export const SANS = "var(--font-archivo), sans-serif";
@@ -48,28 +49,50 @@ export const WRAP: CSSProperties = {
   padding: "0 clamp(18px,4vw,40px)",
 };
 
-/* Display. UPPERCASE, flush left, 900, tight. The size argument is expected to
-   be a clamp() with a vw middle term: type is meant to scale with the viewport,
-   not sit at three fixed breakpoints. */
+/* ── DISPLAY TYPE, MIGRATED 2026-08-21 ─────────────────────────────────────
+   Was Barlow Condensed 900, UPPERCASE, lineHeight .86. That is the rejected
+   system in three properties: AGENTS.md names "uppercase condensed everything"
+   as a reason the old screen read as a trading terminal, and the homepage and
+   the 59 plan pages have both moved off it.
+
+   TWENTY-FOUR FILES SPREAD THESE TWO HELPERS — about, blog, contact, faq,
+   how-it-works, locations, our-*, results, supplements, tdee-calculator,
+   testimonials, the legal set and more. Changing them here is the only way to
+   move those pages together; page-by-page would be twenty-four chances to
+   leave one behind.
+
+   THE calc(...) IS NOT A TRICK, it is the point. Every call site passes a
+   clamp() tuned for CONDENSED type at 900 — "clamp(2.6rem,6.4vw,5.4rem)" is a
+   sensible 86px in Barlow and an enormous one in a serif at 600, because
+   condensed faces set far more characters per em. Scaling the incoming string
+   keeps every call site's RELATIVE hierarchy intact while bringing the whole
+   ramp to the new face's scale. One number to tune instead of twenty-four
+   files to re-measure.
+
+   0.62 puts the largest display heading at ~53px against the plan detail
+   page's own .h1 ceiling of 52px, so a hero here and a hero there match. */
+const DISPLAY_SCALE = 0.62;
+const SUB_SCALE = 0.78;
+
 export const display = (size: string): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 900,
-  fontSize: size,
-  lineHeight: 0.86,
-  letterSpacing: "-0.02em",
-  textTransform: "uppercase",
-  color: INK,
+  fontFamily: "var(--fk-display)",
+  fontWeight: 600,
+  fontSize: `calc(${size} * ${DISPLAY_SCALE})`,
+  lineHeight: 1.05,
+  letterSpacing: "-0.022em",
+  textTransform: "none",
+  color: "var(--fk-ink)",
   margin: 0,
 });
 
 export const sub = (size: string): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 800,
-  fontSize: size,
-  lineHeight: 0.98,
-  letterSpacing: "-0.01em",
-  textTransform: "uppercase",
-  color: INK,
+  fontFamily: "var(--fk-display)",
+  fontWeight: 600,
+  fontSize: `calc(${size} * ${SUB_SCALE})`,
+  lineHeight: 1.15,
+  letterSpacing: "-0.015em",
+  textTransform: "none",
+  color: "var(--fk-ink)",
   margin: 0,
 });
 
@@ -86,22 +109,28 @@ export const body = (size = 15.5): CSSProperties => ({
 /* Labels and every number are mono: the measurement voice. 12px floor, because
    below that it is unreadable on the mid-range Androids our customers order
    from. */
+/* Small uppercase kickers survive the migration — the homepage uses them for
+   band eyebrows and field labels at 11px/0.12em. What does not survive is
+   0.22em, which at 12px is a shout rather than a label. */
 export const label = (color = DIM): CSSProperties => ({
-  fontFamily: MONO,
-  fontWeight: 500,
-  fontSize: 12,
-  letterSpacing: "0.22em",
+  fontFamily: SANS,
+  fontWeight: 700,
+  fontSize: 11.5,
+  letterSpacing: "0.12em",
   textTransform: "uppercase",
   color,
   display: "block",
 });
 
+/* Figures are MONO, which is what the homepage sets every number in and what
+   makes a column of them line up. Was condensed 900 at -0.035em — a display
+   face doing a measurement job. */
 export const figure = (size: string, color = INK): CSSProperties => ({
-  fontFamily: COND,
-  fontWeight: 900,
-  fontSize: size,
-  lineHeight: 0.82,
-  letterSpacing: "-0.035em",
+  fontFamily: MONO,
+  fontWeight: 700,
+  fontSize: `calc(${size} * 0.72)`,
+  lineHeight: 1,
+  letterSpacing: "-0.01em",
   color,
   fontVariantNumeric: "tabular-nums",
 });

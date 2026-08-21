@@ -366,7 +366,10 @@ export default function PlansNarrowed({
   const toPrice = () => priceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <main style={{ background: "#070707", minHeight: "100vh" }}>
+    /* `fk` opts this subtree out of globals.css's marketing radius ban — see
+       the note in PlanDetailClient. Without it every chip and card here stays
+       square whatever plans.module.css says. */
+    <main className="fk" style={{ background: "var(--fk-paper)", minHeight: "100vh" }}>
       <div className={s.wrap}>
         {/* ── masthead ─────────────────────────────────────────────────── */}
         <div className={s.top}>
@@ -377,9 +380,24 @@ export default function PlansNarrowed({
             <h1
               className={s.in}
               style={{
+                /* display() returns the Barlow Condensed ramp — 5.4rem at
+                   lineHeight .84 and -.035em, the condensed hero this pass is
+                   removing. Spread first so its layout keys survive, then
+                   overridden with the homepage's display face. The size is the
+                   plan detail page's own .h1 clamp, so the listing and the 59
+                   pages it opens are set at the same scale. */
                 ...display("clamp(2.6rem,6.4vw,5.4rem)"),
-                lineHeight: 0.84,
-                letterSpacing: "-0.035em",
+                fontFamily: "var(--fk-display)",
+                /* display() from app/_ui/theme.ts also sets
+                   textTransform:"uppercase" — the rule AGENTS.md rejects by
+                   name. Overriding the face alone left the headline in
+                   Newsreader CAPS, which is worse than the condensed original.
+                   Any other page spreading display() has the same problem. */
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "clamp(2rem,1.4rem + 2.4vw,3.25rem)",
+                lineHeight: 1.04,
+                letterSpacing: "-0.025em",
                 marginTop: 18,
                 animationDelay: "0.06s",
               }}

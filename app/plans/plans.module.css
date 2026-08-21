@@ -1,3 +1,17 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   ON THE HOMEPAGE SYSTEM, 2026-08-21.
+
+   This module was already on the right PALETTE — every hex in it was a
+   tokens.css value, written out by hand. What it was not on was the token
+   NAMES, the radius scale, or the type: `.setLabel` was Barlow Condensed 800
+   uppercase at 0.16em, the texture the 2026-08-12 verdict rejected, and every
+   control was square because app/globals.css bans radius on marketing
+   surfaces unless the subtree carries `.fk`.
+
+   Hard hex replaced with the token it already equalled, so a palette move on
+   the design system now reaches this page instead of stranding it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 /* app/plans/plans.module.css
    ═══════════════════════════════════════════════════════════════════════════
    /plans, narrowed.
@@ -12,7 +26,7 @@
    Devices come from app/_ui/kit.module.css wherever the shape matches (both
    buttons, the ghost, the split bar). What lives here is the page's own
    furniture: the setter rail, the price readout, the four columns and the
-   index. Radius is 0 throughout, structure is 1px #232320 hairlines, and lime
+   index. Radius is 0 throughout, structure is 1px var(--fk-line) hairlines, and lime
    is the only chromatic value apart from the FSSAI diet dots, which carry
    regulated meaning and are paired with their text label everywhere they
    appear.
@@ -58,8 +72,8 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   margin-top: clamp(32px, 4.4vw, 56px);
 }
 .setRow {
@@ -67,16 +81,19 @@
   flex-wrap: wrap;
   align-items: center;
   gap: clamp(12px, 2vw, 22px);
-  background: #070707;
+  background: var(--fk-paper);
   padding: clamp(16px, 2vw, 22px) clamp(16px, 2.2vw, 24px);
 }
+/* Was Barlow Condensed 800 at 15px/0.16em uppercase. The homepage keeps small
+   uppercase kickers — .numbersLabel and the band eyebrows are 11px at 0.12em —
+   so the case survives; the condensed 800 face and the 0.16em shout do not. */
 .setLabel {
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 0.16em;
+  font-family: var(--fk-sans);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #85857e;
+  color: var(--fk-ink-3);
   min-width: 74px;
 }
 
@@ -90,9 +107,10 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  border: 1px solid #33332f;
-  background: #0c0c0a;
-  color: #9a9a94;
+  border-radius: var(--fk-r-full);
+  border: 1px solid var(--fk-line-2);
+  background: var(--fk-surface);
+  color: var(--fk-ink-3);
   font-family: var(--font-archivo), sans-serif;
   font-size: 14px;
   font-weight: 600;
@@ -101,18 +119,18 @@
   transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear;
 }
 .chip:hover {
-  color: #f7f7f5;
-  border-color: #33332f;
+  color: var(--fk-ink);
+  border-color: var(--fk-line-2);
 }
 .chip:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: 2px;
 }
 .chipOn,
 .chipOn:hover {
-  background: #a3e635;
-  border-color: #a3e635;
-  color: #070707;
+  background: var(--fk-green-deep);
+  border-color: var(--fk-green-deep);
+  color: var(--fk-paper);
 }
 /* 7px square, never a circle, and never the only channel: every dot sits
    beside its own text label. */
@@ -126,9 +144,9 @@
    Signature device 1, welded to the bottom edge of the setter: the number is
    a consequence of the three chips above it, so there is no rule between. */
 .price {
-  border: 1px solid #232320;
+  border: 1px solid var(--fk-line);
   border-top: 0;
-  background: #0c0c0a;
+  background: var(--fk-surface);
   padding: clamp(22px, 3vw, 34px) clamp(16px, 2.2vw, 24px);
   scroll-margin-top: 24px;
 }
@@ -159,12 +177,12 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   margin-top: clamp(20px, 2.6vw, 28px);
 }
 .receiptCell {
-  background: #0c0c0a;
+  background: var(--fk-surface);
   padding: 14px 16px;
 }
 
@@ -177,27 +195,27 @@
   flex-wrap: wrap;
   margin-top: clamp(44px, 5.6vw, 80px);
   padding-bottom: 12px;
-  border-bottom: 1px solid #232320;
+  border-bottom: 1px solid var(--fk-line);
   scroll-margin-top: 24px;
 }
 .cols {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   border-top: 0;
 }
 .col {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: #070707;
+  background: var(--fk-paper);
   padding: clamp(18px, 2.2vw, 26px);
   transition: background 0.18s linear;
 }
 .col:hover {
-  background: #0c0c0a;
+  background: var(--fk-surface);
 }
 /* The plan name is the way into the plan's own page, so it is a link. At rest
    it is indistinguishable from the heading the design drew; the rule draws on
@@ -205,24 +223,24 @@
 .colTitle {
   color: inherit;
   text-decoration: none;
-  background-image: linear-gradient(#84cc16, #84cc16);
+  background-image: linear-gradient(var(--fk-green), var(--fk-green));
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: 0 1px;
   transition: background-size 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s linear;
 }
 .colTitle:hover {
-  color: #84cc16;
+  color: var(--fk-green);
   background-size: 100% 1px;
 }
 .colTitle:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: 3px;
 }
 .colFoot {
   margin-top: auto;
   padding-top: 16px;
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
 }
 .kcal {
   display: flex;
@@ -236,13 +254,13 @@
   font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.04em;
-  color: #85857e;
+  color: var(--fk-ink-3);
   font-variant-numeric: tabular-nums;
 }
 .bar {
   display: flex;
   height: 6px;
-  background: #161616;
+  background: var(--fk-warm);
   margin-top: 14px;
 }
 .bar > span {
@@ -256,10 +274,10 @@
 }
 .select {
   width: 100%;
-  background: #0c0c0a;
-  border: 1px solid #33332f;
-  border-radius: 0;
-  color: #f7f7f5;
+  background: var(--fk-surface);
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  color: var(--fk-ink);
   font-family: var(--font-archivo), sans-serif;
   font-size: 14px;
   font-weight: 600;
@@ -268,27 +286,27 @@
   transition: border-color 0.2s linear;
 }
 .select:hover {
-  border-color: #84cc16;
+  border-color: var(--fk-green);
 }
 .select:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: 2px;
 }
 
 /* A link inside a running sentence: lime, with the rule already drawn, because
    at 13.5px in dim grey a rule that only appears on hover is invisible. */
 .inlineLink {
-  color: #84cc16;
+  color: var(--fk-green);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   transition: color 0.18s linear;
 }
 .inlineLink:hover {
-  color: #a3e635;
+  color: var(--fk-green-deep);
 }
 .inlineLink:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: 3px;
 }
 
@@ -297,12 +315,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 1px;
-  background: #232320;
-  border: 1px solid #232320;
+  background: var(--fk-line);
+  border: 1px solid var(--fk-line);
   border-top: 0;
 }
 .group {
-  background: #070707;
+  background: var(--fk-paper);
   padding: clamp(16px, 2vw, 22px);
 }
 .items {
@@ -321,7 +339,7 @@
   font-family: var(--font-archivo), sans-serif;
   font-size: 13.5px;
   line-height: 1.4;
-  color: #9a9a94;
+  color: var(--fk-ink-3);
   text-decoration: none;
   padding: 5px 0;
   min-height: 30px;
@@ -329,17 +347,17 @@
   transition: color 0.16s linear, border-color 0.16s linear;
 }
 .item:hover {
-  color: #f7f7f5;
-  border-bottom-color: #232320;
+  color: var(--fk-ink);
+  border-bottom-color: var(--fk-line);
 }
 .item:focus-visible {
-  outline: 2px solid #84cc16;
+  outline: 2px solid var(--fk-green);
   outline-offset: 2px;
 }
 .itemKcal {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
-  color: #85857e;
+  color: var(--fk-ink-3);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -363,7 +381,7 @@
 .foot {
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid #232320;
+  border-top: 1px solid var(--fk-line);
   margin-top: clamp(28px, 3.4vw, 44px);
   padding-top: 16px;
 }
