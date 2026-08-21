@@ -350,6 +350,13 @@
 .v2-stage {
   perspective: 1500px;
   perspective-origin: 50% 44%;
+  /* THE DRUM MUST BE CLIPPED. Its faces are absolutely positioned and rotated
+     in 3D, so by construction they swing outside this box — that is what makes
+     it read as a drum. With overflow visible they were also spilling out of
+     the PAGE: /why measured a document 498px wide inside a 375px viewport, so
+     the whole page scrolled sideways on a phone. `clip` rather than `hidden`
+     so this never becomes a scroll container of its own. */
+  overflow-x: clip;
 }
 .v2-drum {
   transform-style: preserve-3d;
@@ -360,8 +367,10 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: 340px;
-  margin-left: -170px;
+  /* Was a flat 340px against a stage that is 334px wide at 375px viewport.
+     The offset is derived from the width so the two cannot drift apart. */
+  width: min(340px, 100%);
+  margin-left: calc(min(340px, 100%) / -2);
   height: 100%;
   backface-visibility: hidden;
   overflow: hidden;

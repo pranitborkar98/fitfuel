@@ -36,7 +36,7 @@ import {
 } from "@/app/_hp/v2/data";
 
 const MONO = "var(--font-mono), monospace";
-const COND = "var(--fk-display), Georgia, serif";
+const DISPLAY = "var(--fk-display), Georgia, serif";
 const SANS = "var(--font-archivo), sans-serif";
 
 type Msg = { who: string; text: string; figures?: string[] };
@@ -179,8 +179,13 @@ export default function V2Sections({
   // Home calls, not a second derivation that would drift from it.
   const barcode = useMemo(() => barcodeBars(), []);
 
+  /* Was clamp(2.4rem,6.6vw,5.4rem) — 86px at the top, which made a SECTION
+     heading here larger than the page TITLE on every other route (52px). The
+     ramp now matches .bandTitle in app/_ui/page.module.css, so a band on /why
+     and a band on /about are the same size. */
   const h2 = (max: string) => ({
-    fontFamily: COND, fontWeight: 600, fontSize: "clamp(2.4rem,6.6vw,5.4rem)", lineHeight: 1.06,
+    fontFamily: DISPLAY, fontWeight: 600,
+    fontSize: "clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem)", lineHeight: 1.06,
     letterSpacing: "-0.03em", textTransform: "none" as const, color: "var(--fk-ink)", margin: 0, maxWidth: max,
   });
   const deck = { fontFamily: SANS, fontSize: 16.5, lineHeight: 1.62, color: "var(--fk-ink-2)", margin: 0, maxWidth: "48ch" };

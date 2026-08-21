@@ -1382,7 +1382,7 @@ export default function PlanDetailClient({ plan, schedule, day1Slots, prices, sa
       {/* ── 12 · Final CTA ──────────────────────────────────────────────── */}
       <section className="sec" style={{ paddingBottom: 120, textAlign: 'center' }}>
         <div className="wrap reveal">
-          <h2 className="syne" style={{ fontWeight: 800, fontSize: 'clamp(36px,6vw,72px)', lineHeight: 0.98, letterSpacing: '-0.03em', marginBottom: 22 }}>
+          <h2 className="syne" style={{ fontWeight: 600, fontSize: 'clamp(1.85rem, 1.35rem + 1.9vw, 2.75rem)', lineHeight: 1.06, letterSpacing: '-0.025em', marginBottom: 22 }}>
             Start eating right tomorrow.<br /><span style={{ color: 'var(--lime)' }}>Not next Monday.</span>
           </h2>
           <p style={{ color: 'var(--dim)', fontSize: 16, lineHeight: 1.7, maxWidth: 480, margin: '0 auto 40px' }}>

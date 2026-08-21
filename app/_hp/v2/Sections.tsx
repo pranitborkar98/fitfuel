@@ -330,7 +330,7 @@ export function FilmSection({
       <div style={{ ...wrap, padding: "clamp(56px,8vw,110px) clamp(18px,4vw,40px) clamp(26px,3.4vw,42px)" }}>
         <div aria-hidden="true" style={rule} />
         <div className={c("v2-split")} style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1fr)", gap: "clamp(24px,4vw,56px)", alignItems: "end" }}>
-          <h2 id="v2-film-h" style={{ fontFamily: COND, fontWeight: 600, fontSize: "clamp(2.2rem,6vw,4.8rem)", lineHeight: 1.06, letterSpacing: "-0.03em", textTransform: "none", color: "var(--fk-ink)", margin: 0, maxWidth: "16ch" }}>Everything we built, in the order you meet it</h2>
+          <h2 id="v2-film-h" style={{ fontFamily: COND, fontWeight: 600, fontSize: "clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem)", lineHeight: 1.06, letterSpacing: "-0.03em", textTransform: "none", color: "var(--fk-ink)", margin: 0, maxWidth: "16ch" }}>Everything we built, in the order you meet it</h2>
           <p style={{ ...deck, maxWidth: "44ch" }}>One rotation of the drum is one day: 04:00 in the kitchen to the Sunday recalibration. Pick an hour and it turns to it.</p>
         </div>
 

@@ -79,7 +79,10 @@
   text-transform: uppercase;
   color: var(--fk-green);
 }
-.title {
+/* Doubled: `.fk h1` in app/_design/base.css is (0,1,1) and a single class is
+   (0,1,0), so this whole rule was being discarded and all 48 dish pages
+   rendered their name at the raw 80px default. See Decision #222. */
+.title.title {
   margin: 0;
   font-family: var(--fk-display);
   font-size: var(--fk-t-2xl);
