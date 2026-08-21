@@ -150,11 +150,14 @@ export default async function TestimonialsPage({
                     <div style={{ borderTop: "1px solid var(--fk-line)", paddingTop: 13, marginTop: 4 }}>
                       <div
                         style={{
-                          fontFamily: "var(--font-barlow-condensed), sans-serif",
-                          fontWeight: 800,
+                          fontFamily: "var(--fk-display)",
+                          fontWeight: 600,
                           fontSize: 17,
-                          letterSpacing: "-0.01em",
-                          textTransform: "uppercase",
+                          letterSpacing: "-0.015em",
+                          /* A customer's name is not a label. Uppercase here
+                             also flattened "D'Souza" and "van Rooyen" into a
+                             shout with the apostrophe left hanging. */
+                          textTransform: "none",
                           color: INK,
                         }}
                       >

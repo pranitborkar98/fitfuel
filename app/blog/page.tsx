@@ -140,12 +140,12 @@ export default async function BlogPage({
                     >
                       <h3
                         style={{
-                          fontFamily: "var(--font-barlow-condensed), sans-serif",
-                          fontWeight: 800,
+                          fontFamily: "var(--fk-display)",
+                          fontWeight: 600,
                           fontSize: "clamp(1.1rem,2vw,1.45rem)",
-                          lineHeight: 1.02,
-                          letterSpacing: "-0.01em",
-                          textTransform: "uppercase",
+                          lineHeight: 1.2,
+                          letterSpacing: "-0.015em",
+                          textTransform: "none",
                           color: INK,
                           margin: 0,
                         }}

@@ -104,6 +104,7 @@
   border-top: 1px solid var(--fk-line);
 }
 .row {
+  border-radius: var(--fk-r);
   display: grid;
   align-items: center;
   gap: clamp(12px, 2vw, 26px);
@@ -130,6 +131,7 @@
   outline-offset: -2px;
 }
 .rowBtn {
+  border-radius: var(--fk-r);
   cursor: pointer;
 }
 /* The arrow that leans out on hover. */
@@ -149,6 +151,7 @@
   border: 1px solid var(--fk-line);
 }
 .spec {
+  border-radius: var(--fk-r-lg);
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-archivo), sans-serif;
@@ -207,6 +210,7 @@
   border: 1px solid var(--fk-line);
 }
 .tile {
+  border-radius: var(--fk-r-lg);
   background: var(--fk-paper);
   padding: clamp(18px, 2.4vw, 28px);
   display: flex;
@@ -243,6 +247,7 @@
   border: 1px solid var(--fk-line);
 }
 .chip {
+  border-radius: var(--fk-r-full);
   flex: 1 1 auto;
   min-width: 120px;
   text-align: center;
@@ -266,6 +271,7 @@
   outline-offset: -2px;
 }
 .chipOn {
+  border-radius: var(--fk-r-full);
   background: var(--fk-green);
   color: var(--fk-paper);
 }
@@ -276,6 +282,7 @@
 
 /* A segmented control: the same rail, condensed, for a small option set. */
 .seg {
+  border-radius: var(--fk-r);
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
@@ -302,6 +309,7 @@
   outline-offset: -2px;
 }
 .segOn {
+  border-radius: var(--fk-r);
   background: var(--fk-ink) !important;
   color: var(--fk-paper) !important;
 }
@@ -309,6 +317,7 @@
 /* ── buttons ──────────────────────────────────────────────────────────────
    The fill wipes up from the bottom on hover. No radius, no shadow, no glow. */
 .btn {
+  border-radius: var(--fk-r);
   position: relative;
   overflow: hidden;
   display: inline-flex;
@@ -348,6 +357,7 @@
 }
 
 .ghost {
+  border-radius: var(--fk-r);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -414,6 +424,7 @@
    A full-bleed band welded to a section edge, hairline rules, condensed 900
    numerals against dim labels. */
 .readout {
+  border-radius: var(--fk-r-lg);
   display: grid;
   grid-template-columns: repeat(var(--cells, 4), minmax(0, 1fr));
   background: var(--fk-surface);
@@ -421,6 +432,7 @@
   border-bottom: 1px solid var(--fk-line);
 }
 .cell {
+  border-radius: var(--fk-r-lg);
   display: flex;
   flex-direction: column;
   gap: 10px;

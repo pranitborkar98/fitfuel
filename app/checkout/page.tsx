@@ -299,7 +299,11 @@ function CheckoutInner() {
 
   if (!rawPrice && !isTest) {
     return (
-      <div style={{ textAlign: "center", padding: "120px 20px", color: T.textSecond }}>
+      /* `fk` here as well as on the main return: this early branch is a screen
+         customers actually reach (any /checkout without a plan in the query),
+         and without the class its button is flattened by the global radius
+         ban while the real form's is not. */
+      <div className="fk" style={{ textAlign: "center", padding: "120px 20px", color: T.textSecond }}>
         <p style={{ fontSize: 16, marginBottom: 24 }}>No plan selected. Please choose a plan first.</p>
         <button onClick={() => router.push("/plans")} style={{
           background: T.accent, color: "#000", fontWeight: 800, fontSize: 13,
@@ -440,14 +444,17 @@ function CheckoutInner() {
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 8 }} />
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", color: T.accent, textTransform: "uppercase" }}>Checkout</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: T.accent, textTransform: "uppercase" }}>Checkout</span>
           </div>
           <h1 style={{
-            fontFamily: "var(--ff-cond)",
-            fontSize: "clamp(2rem, 6vw, 3.5rem)",
-            fontWeight: 900, textTransform: "uppercase",
-            color: T.textPrimary, lineHeight: 1, letterSpacing: "-0.01em",
-          }}>Complete Your Order</h1>
+            /* Was Barlow Condensed 900 UPPERCASE at 3.5rem. The clamp is the
+               plan detail page's own .h1, so the last step of the funnel is
+               set at the same size as the step before it. */
+            fontFamily: "var(--fk-display)",
+            fontSize: "clamp(2rem, 1.4rem + 2.4vw, 3.25rem)",
+            fontWeight: 600, textTransform: "none",
+            color: T.textPrimary, lineHeight: 1.04, letterSpacing: "-0.025em",
+          }}>Complete your order</h1>
         </div>
 
         {/* Test mode banner */}
@@ -645,7 +652,7 @@ function CheckoutInner() {
 
             <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>Order Summary</div>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>Order Summary</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 {[
                   { label: "Diet",     value: DIET_LABELS[diet] || diet },

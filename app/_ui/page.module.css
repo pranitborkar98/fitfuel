@@ -73,7 +73,21 @@
    Newsreader 600 at the plan detail page's own ceiling, so a hero here and a
    hero on /plans/<slug> are the same size. Ragged right is kept: the line
    still breaks where the words do. */
-.h1 {
+/* ── WHY EVERY DISPLAY CLASS BELOW IS DOUBLED ────────────────────────────
+   `.h1.h1` is not a typo and not a hack for its own sake. app/_design/base.css
+   sets the system defaults on `.fk h1, .fk h2, .fk h3, .fk h4` — a selector of
+   specificity (0,1,1). A single class is (0,1,0), so it LOSES, and every one
+   of these rules was being silently discarded on the 24 pages that use them.
+   The symptom was measurable: /about, /supplements, /testimonials and /blog
+   all rendered their hero at Newsreader 500 / 80px (the raw --fk-t-4xl
+   default) while /plans and the homepage rendered 600 / 52px from an inline
+   style that happened to outrank the cascade. Same design system, two
+   different heroes.
+
+   Repeating the class lifts these to (0,2,0) so the tuned values win, without
+   !important and without touching base.css, whose defaults are still correct
+   for any heading that has not opted into a named class. */
+.h1.h1 {
   font-family: var(--fk-display);
   font-weight: 600;
   font-size: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
@@ -121,10 +135,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── CORNER RADIUS, RESTORED 2026-08-21 ─────────────────────────────────
+   Every surface in this file and in kit.module.css was authored square,
+   under the old system's "hard ban on any corner radius". AGENTS.md retired
+   that rule with the rest of the trading-terminal register, and the homepage
+   has carried a radius scale since; measured on the live pages, / had 380
+   rounded elements and /about, /supplements, /testimonials and /partners had
+   one between them. Same design system, two different card shapes.
+
+   Values are taken from what the homepage actually uses, not invented:
+   --fk-r-lg on cards and wells, --fk-r on controls and rows,
+   --fk-r-full on small status chips only. */
+
 /* ── the note ─────────────────────────────────────────────────────────────
    Replaces the rgba(132,204,22,0.06) rounded tint box that every page had one
    of. A recessed well with a 2px lime edge: square, no tint, no glow. */
 .note {
+  border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
   border: 1px solid var(--fk-line);
   border-left: 2px solid var(--fk-green);
@@ -148,6 +175,7 @@
    accessibility rule is written around. The word "Important" leads the copy
    regardless, so the meaning never rests on the colour alone. */
 .noteWarn {
+  border-radius: var(--fk-r-lg);
   border-left-color: #f87171;
 }
 .noteWarn p {
@@ -183,7 +211,7 @@
 /* The closing band's headline, on every page built from _ui/Page. Same
    migration as .h1 above; it takes the homepage band heading's clamp so a
    closing band here and one on `/` are the same size. */
-.bandTitle {
+.bandTitle.bandTitle {
   font-family: var(--fk-display);
   font-weight: 600;
   font-size: clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem);
@@ -212,6 +240,7 @@
   border-top: 1px solid var(--fk-line);
 }
 .clause {
+  border-radius: var(--fk-r-lg);
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
   gap: clamp(14px, 2.6vw, 34px);
@@ -234,7 +263,7 @@
   font-variant-numeric: tabular-nums;
   padding-top: 5px;
 }
-.clauseTitle {
+.clauseTitle.clauseTitle {
   font-family: var(--fk-display);
   font-weight: 600;
   font-size: clamp(1.4rem, 2.6vw, 1.95rem);
@@ -317,6 +346,7 @@
    the real state is carried by <details open> for assistive tech, and the
    marker is aria-hidden. */
 .qa {
+  border-radius: var(--fk-r-lg);
   border-top: 1px solid var(--fk-line);
 }
 .qa details {

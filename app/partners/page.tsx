@@ -66,7 +66,7 @@ function Status({ live }: { live: boolean }) {
       style={{
         ...tag(live ? LIME : DIM),
         fontSize: 11.5,
-        letterSpacing: "0.22em",
+        letterSpacing: "0.12em",
         whiteSpace: "nowrap",
       }}
     >
@@ -77,13 +77,13 @@ function Status({ live }: { live: boolean }) {
 
 export default function PartnersPage() {
   return (
-    <div style={{ background: "var(--ff-bg)" }}>
+    <div className="fk" style={{ background: "var(--ff-bg)" }}>
       {/* ═══ MASTHEAD ═══ */}
       <section style={{ padding: "clamp(60px,8vw,110px) 0 0" }}>
         <div style={WRAP}>
           <Reveal>
             <span style={tag(LIME)}>Partner programme</span>
-            <h1 style={{ ...huge("clamp(2.6rem,7.4vw,6.2rem)"), maxWidth: "14ch", marginTop: 18 }}>
+            <h1 style={{ ...huge("clamp(2rem,1.4rem + 2.4vw,3.25rem)"), maxWidth: "14ch", marginTop: 18 }}>
               Everyone who sends us a client earns
             </h1>
           </Reveal>
@@ -125,7 +125,7 @@ export default function PartnersPage() {
                   borderLeft: i === 0 ? "none" : `1px solid ${RULE}`,
                 }}
               >
-                <div style={{ ...huge("clamp(1.9rem,3.4vw,2.9rem)"), lineHeight: 0.84 }}>{fig}</div>
+                <div style={{ ...huge("clamp(1.6rem,1.3rem + 1.2vw,2.1rem)"), lineHeight: 1.02 }}>{fig}</div>
                 <div style={{ ...tag(DIM), fontSize: 12, marginTop: 12 }}>{label}</div>
               </div>
             ))}
@@ -141,7 +141,7 @@ export default function PartnersPage() {
         <div style={WRAP}>
           <IndexHead n="001" label="The programmes" />
           <Reveal>
-            <h2 id="programmes-heading" style={{ ...huge("clamp(2.1rem,5.4vw,4.2rem)"), maxWidth: "18ch" }}>
+            <h2 id="programmes-heading" style={{ ...huge("clamp(1.75rem,1.3rem + 1.7vw,2.625rem)"), maxWidth: "18ch" }}>
               Eight programmes, five reward models
             </h2>
           </Reveal>
@@ -170,7 +170,7 @@ export default function PartnersPage() {
               <tbody>
                 {PROGRAMS.map((p) => (
                   <tr key={p.type}>
-                    <th scope="row" style={{ ...mid("clamp(1.05rem,1.7vw,1.35rem)"), paddingRight: 24, whiteSpace: "nowrap" }}>
+                    <th scope="row" style={{ ...mid("clamp(1.05rem,1rem + 0.3vw,1.2rem)"), paddingRight: 24, whiteSpace: "nowrap" }}>
                       {p.label}
                     </th>
                     <td style={{ color: MUTE, minWidth: 220 }}>{p.who}</td>
@@ -199,7 +199,7 @@ export default function PartnersPage() {
         <div style={WRAP}>
           <IndexHead n="002" label="How attribution runs" />
           <Reveal>
-            <h2 id="attribution-heading" style={{ ...huge("clamp(2.1rem,5.4vw,4.2rem)"), maxWidth: "17ch" }}>
+            <h2 id="attribution-heading" style={{ ...huge("clamp(1.75rem,1.3rem + 1.7vw,2.625rem)"), maxWidth: "17ch" }}>
               You do not have to trust our arithmetic
             </h2>
           </Reveal>
@@ -214,11 +214,11 @@ export default function PartnersPage() {
           <ol className="ff-attr" style={{ marginTop: "clamp(32px,4vw,52px)" }}>
             {ATTRIBUTION.map((s) => (
               <li key={s.n} className="ff-attr-row">
-                <span aria-hidden style={{ ...huge("clamp(1.5rem,2.6vw,2.1rem)"), color: LIME }}>
+                <span aria-hidden style={{ ...huge("clamp(1.3rem,1.15rem + 0.7vw,1.6rem)"), color: LIME }}>
                   {s.n}
                 </span>
                 <div>
-                  <h3 style={mid("clamp(1.25rem,2.2vw,1.75rem)")}>{s.title}</h3>
+                  <h3 style={mid("clamp(1.15rem,1.05rem + 0.5vw,1.4rem)")}>{s.title}</h3>
                   <p style={{ ...copy(15), marginTop: 10, maxWidth: "54ch" }}>{s.body}</p>
                 </div>
                 <span style={{ ...tag(DIM), fontSize: 12, lineHeight: 1.5, letterSpacing: "0.16em" }}>
@@ -238,7 +238,7 @@ export default function PartnersPage() {
         <div style={WRAP}>
           <IndexHead n="003" label="The network" />
           <Reveal>
-            <h2 id="network-heading" style={{ ...huge("clamp(2.1rem,5.4vw,4.2rem)"), maxWidth: "16ch" }}>
+            <h2 id="network-heading" style={{ ...huge("clamp(1.75rem,1.3rem + 1.7vw,2.625rem)"), maxWidth: "16ch" }}>
               Who we are onboarding
             </h2>
           </Reveal>
@@ -253,7 +253,7 @@ export default function PartnersPage() {
           <div className="ff-netcols" style={{ marginTop: "clamp(32px,4vw,52px)" }}>
             {NETWORK_GROUPS.map((g) => (
               <div key={g.key} className="ff-netgroup">
-                <h3 style={{ ...mid("clamp(1.3rem,2.2vw,1.7rem)"), paddingBottom: 14, borderBottom: `2px solid ${LIME}` }}>
+                <h3 style={{ ...mid("clamp(1.15rem,1.05rem + 0.5vw,1.4rem)"), paddingBottom: 14, borderBottom: `2px solid ${LIME}` }}>
                   {g.label}
                 </h3>
                 <p style={{ ...copy(13.5), color: DIM, marginTop: 14, maxWidth: "40ch" }}>{g.blurb}</p>
@@ -297,7 +297,7 @@ export default function PartnersPage() {
         <div style={WRAP}>
           <IndexHead n="004" label="Integration partners" />
           <Reveal>
-            <h2 id="integrations-heading" style={{ ...huge("clamp(2.1rem,5.4vw,4.2rem)"), maxWidth: "18ch" }}>
+            <h2 id="integrations-heading" style={{ ...huge("clamp(1.75rem,1.3rem + 1.7vw,2.625rem)"), maxWidth: "18ch" }}>
               What we plug into, and what we do not
             </h2>
           </Reveal>
@@ -311,7 +311,7 @@ export default function PartnersPage() {
           <ul style={{ listStyle: "none", margin: "clamp(30px,4vw,48px) 0 0", padding: 0 }}>
             {INTEGRATIONS.map((it) => (
               <li key={it.name} className="ff-introw">
-                <div style={{ ...mid("clamp(1.3rem,2.2vw,1.8rem)") }}>{it.name}</div>
+                <div style={{ ...mid("clamp(1.15rem,1.05rem + 0.5vw,1.45rem)") }}>{it.name}</div>
                 <div style={{ ...tag(DIM), fontSize: 12 }}>{it.role}</div>
                 <p style={{ ...copy(14.5), maxWidth: "56ch", margin: 0 }}>{it.detail}</p>
                 <Status live={it.status === "LIVE"} />
@@ -326,7 +326,7 @@ export default function PartnersPage() {
         <div style={WRAP}>
           <IndexHead n="005" label="Commercials" />
           <Reveal>
-            <h2 id="terms-heading" style={{ ...huge("clamp(2.1rem,5.4vw,4.2rem)"), maxWidth: "16ch" }}>
+            <h2 id="terms-heading" style={{ ...huge("clamp(1.75rem,1.3rem + 1.7vw,2.625rem)"), maxWidth: "16ch" }}>
               The terms, before you apply
             </h2>
           </Reveal>
@@ -346,7 +346,7 @@ export default function PartnersPage() {
       <section style={{ padding: "clamp(64px,8vw,120px) 0", borderTop: `1px solid ${RULE}`, background: "var(--fk-surface)" }}>
         <div style={WRAP}>
           <Reveal>
-            <h2 style={{ ...huge("clamp(2.2rem,6vw,4.8rem)"), maxWidth: "15ch" }}>
+            <h2 style={{ ...huge("clamp(1.85rem,1.35rem + 1.9vw,2.75rem)"), maxWidth: "15ch" }}>
               Send us one client and see what lands
             </h2>
           </Reveal>

@@ -29,7 +29,7 @@ export default async function DigitalPlansPage() {
   prices.sort((a: any, b: any) => order.indexOf(a.bundle) - order.indexOf(b.bundle));
 
   return (
-    <main style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, padding: "64px 20px" }}>
+    <main className="fk" style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, padding: "64px 20px" }}>
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ color: T.accent, fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Digital Meal Plans</span>
