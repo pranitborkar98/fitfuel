@@ -19,14 +19,17 @@
    itself stays flush with everything above it. */
 .quote {
   margin: 0;
-  max-width: 22ch;
-  font-family: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
-  font-weight: 900;
-  font-size: clamp(1.9rem, 5.2vw, 4rem);
-  line-height: 0.92;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: #f7f7f5;
+  max-width: 26ch;
+  font-family: var(--fk-display);
+  font-weight: 600;
+  /* Was clamp(1.9rem,5.2vw,4rem) at condensed 900 UPPERCASE — 64px of shouting,
+     wider than the 52px hero above it. A serif needs fewer characters per em,
+     so the ramp comes down with the face. */
+  font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  line-height: 1.24;
+  letter-spacing: -0.018em;
+  text-transform: none;
+  color: var(--fk-ink);
 }
 
 .byline {

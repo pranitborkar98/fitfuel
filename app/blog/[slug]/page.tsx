@@ -172,12 +172,12 @@ export default async function BlogArticlePage({
                 <Row key={r.id} href={`/blog/${r.slug}`} cols="minmax(0,1.5fr) minmax(0,1.5fr) 78px 28px">
                   <h2
                     style={{
-                      fontFamily: "var(--font-barlow-condensed), sans-serif",
-                      fontWeight: 800,
+                      fontFamily: "var(--fk-display)",
+                      fontWeight: 600,
                       fontSize: "clamp(1.1rem,2vw,1.45rem)",
-                      lineHeight: 1.02,
-                      letterSpacing: "-0.01em",
-                      textTransform: "uppercase",
+                      lineHeight: 1.2,
+                      letterSpacing: "-0.015em",
+                      textTransform: "none",
                       color: INK,
                       margin: 0,
                     }}

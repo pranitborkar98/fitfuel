@@ -1,21 +1,27 @@
 // app/not-found.tsx — branded 404.
 //
-// This file mattered more than its traffic suggests: Next ships the not-found
-// boundary in the RSC payload of every route, so its #080808 ground, #a3e635
-// numerals and radius-5 buttons were being served on top of every page on the
-// site, including the ones already migrated.
+// This file matters more than its traffic suggests: Next ships the not-found
+// boundary in the RSC payload of every route, so whatever it sets is being
+// served on top of every page on the site, including the migrated ones.
 //
-// Rebuilt flush left on the system. The 404 is set as a display figure, which
-// is the one place on this site a number is allowed to be that large.
+// MIGRATED 2026-08-21 (Decision #222). It was the last surface still in the
+// rejected register and it had all of it at once: --ff-cond at weight 900,
+// an UPPERCASE h1, `border-radius: 0` stated explicitly on the buttons, and
+// eleven hard-coded hex values that no palette change would ever reach. Now
+// Newsreader in sentence case on the --fk-* tokens, with the radius scale.
+//
+// THE 404 STAYS A LARGE FIGURE, but mono rather than display: numbers are set
+// in mono everywhere else on this site, and this is a number.
 import Link from "next/link";
 
 export default function NotFound() {
   return (
     <main
+      className="fk"
       style={{
         minHeight: "100vh",
-        background: "#070707",
-        color: "#f7f7f5",
+        background: "var(--fk-paper)",
+        color: "var(--fk-ink)",
         display: "flex",
         alignItems: "center",
         padding: "120px clamp(18px,4vw,40px)",
@@ -24,36 +30,49 @@ export default function NotFound() {
       <style>{`
         .nfWrap { width: 100%; max-width: 1180px; margin: 0 auto; }
         .nfTag {
-          font-family: var(--font-mono), monospace; font-weight: 500; font-size: 12px;
-          letter-spacing: .22em; text-transform: uppercase; color: #85857e;
-          display: block; padding-bottom: 14px; border-bottom: 1px solid #232320;
+          font-family: var(--font-archivo), system-ui, sans-serif;
+          font-weight: 700; font-size: 11.5px; letter-spacing: .12em;
+          text-transform: uppercase; color: var(--fk-ink-3);
+          display: block; padding-bottom: 14px;
+          border-bottom: 1px solid var(--fk-line);
         }
         .nfCode {
-          font-family: var(--ff-cond); font-weight: 900; font-size: clamp(96px,24vw,15rem);
-          line-height: .82; letter-spacing: -.04em; color: #f7f7f5; margin: 26px 0 0;
-          font-variant-numeric: tabular-nums;
+          font-family: var(--font-mono), ui-monospace, monospace;
+          font-weight: 700; font-size: clamp(72px, 14vw, 8rem);
+          line-height: 1; letter-spacing: -.03em; color: var(--fk-green);
+          margin: 30px 0 0; font-variant-numeric: tabular-nums;
         }
-        .nfH {
-          font-family: var(--ff-cond); font-weight: 900; font-size: clamp(28px,5vw,3rem);
-          text-transform: uppercase; letter-spacing: -.02em; line-height: .9; margin: 10px 0 14px;
+        /* .fk h1 in app/_design/base.css is (0,1,1); a single class is (0,1,0)
+           and would lose. Doubled, same as .h1 in app/_ui/page.module.css. */
+        .nfH.nfH {
+          font-family: var(--fk-display); font-weight: 600;
+          font-size: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+          text-transform: none; letter-spacing: -.025em; line-height: 1.04;
+          color: var(--fk-ink); margin: 14px 0 16px;
         }
         .nfP {
-          font-family: var(--font-archivo), sans-serif; font-size: 15.5px; color: #9a9a94;
-          line-height: 1.62; max-width: 46ch; margin: 0 0 30px;
+          font-family: var(--font-archivo), sans-serif; font-size: 15.5px;
+          color: var(--fk-ink-2); line-height: 1.62; max-width: 46ch;
+          margin: 0 0 30px;
         }
         .nfRow { display: flex; gap: 14px; flex-wrap: wrap; }
         .nfBtn {
           display: inline-flex; align-items: center; justify-content: center;
-          font-family: var(--ff-cond); font-weight: 900; font-size: 15px;
-          letter-spacing: .06em; text-transform: uppercase; text-decoration: none;
-          padding: 15px 26px; min-height: 52px; border-radius: 0;
+          font-family: var(--font-archivo), sans-serif; font-weight: 600;
+          font-size: 15px; letter-spacing: 0; text-transform: none;
+          text-decoration: none; padding: 15px 26px; min-height: 52px;
+          border-radius: var(--fk-r);
           transition: background .2s linear, color .2s linear, border-color .2s linear;
         }
-        .nfBtn.primary { background: #84cc16; color: #070707; border: 1px solid #84cc16; }
-        .nfBtn.primary:hover { background: #f7f7f5; border-color: #f7f7f5; }
-        .nfBtn.ghost { border: 1px solid #33332f; color: #f7f7f5; }
-        .nfBtn.ghost:hover { border-color: #84cc16; color: #84cc16; }
-        .nfBtn:focus-visible { outline: 2px solid #84cc16; outline-offset: 3px; }
+        .nfBtn.primary {
+          background: var(--fk-green); color: var(--fk-paper);
+          border: 1px solid var(--fk-green);
+        }
+        .nfBtn.primary:hover { background: var(--fk-ink); border-color: var(--fk-ink); }
+        .nfBtn.ghost { border: 1px solid var(--fk-line-2); color: var(--fk-ink); }
+        .nfBtn.ghost:hover { border-color: var(--fk-green); color: var(--fk-green); }
+        .nfBtn:focus-visible { outline: 2px solid var(--fk-green); outline-offset: 3px; }
+        @media (prefers-reduced-motion: reduce) { .nfBtn { transition: none; } }
       `}</style>
       <div className="nfWrap">
         <span className="nfTag">FitFuel / not found</span>

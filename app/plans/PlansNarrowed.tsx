@@ -691,7 +691,7 @@ export default function PlansNarrowed({
         {/* ── one day ──────────────────────────────────────────────────── */}
         <section aria-label="Trial day" className={s.trial}>
           <div>
-            <h2 style={{ ...display("clamp(1.8rem,4vw,3rem)"), lineHeight: 0.9, letterSpacing: "-0.03em" }}>
+            <h2 style={{ ...display("clamp(1.8rem,4vw,3rem)"), lineHeight: 1.12, letterSpacing: "-0.022em" }}>
               Try one day first, {trialTotal === null ? "one price" : money(trialTotal)}
             </h2>
             <p style={{ ...body(15), maxWidth: "52ch", marginTop: 12 }}>

@@ -278,6 +278,41 @@
 /* ── prose ────────────────────────────────────────────────────────────────
    The measured column. 66ch is the reading limit; body copy never runs the
    full 1180. */
+/* ── PROSE HEADINGS ──────────────────────────────────────────────────────
+   .prose styled p, strong, ul and li but never h2/h3, so every section
+   heading inside a blog article fell through to `.fk h2` in base.css and
+   rendered at a MEASURED 60px — larger than the 52px article TITLE above it.
+   A section cannot outrank the thing it is a section of.
+
+   Doubled for the same reason as .h1 above: `.fk h2` is (0,1,1) and `.prose
+   h2` would only tie, leaving the winner down to stylesheet order. */
+.prose.prose h2 {
+  font-family: var(--fk-display);
+  font-weight: 600;
+  font-size: clamp(1.375rem, 1.15rem + 0.9vw, 1.75rem);
+  line-height: 1.22;
+  letter-spacing: -0.018em;
+  text-transform: none;
+  color: var(--fk-ink);
+  margin: 34px 0 12px;
+  max-width: 40ch;
+}
+.prose.prose h3 {
+  font-family: var(--fk-display);
+  font-weight: 600;
+  font-size: clamp(1.15rem, 1.05rem + 0.45vw, 1.35rem);
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+  text-transform: none;
+  color: var(--fk-ink);
+  margin: 26px 0 10px;
+  max-width: 44ch;
+}
+.prose.prose h2:first-child,
+.prose.prose h3:first-child {
+  margin-top: 0;
+}
+
 .prose p {
   font-family: var(--font-archivo), sans-serif;
   font-size: 15.5px;

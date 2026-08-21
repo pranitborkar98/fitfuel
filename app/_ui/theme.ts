@@ -74,10 +74,18 @@ export const WRAP: CSSProperties = {
 const DISPLAY_SCALE = 0.62;
 const SUB_SCALE = 0.78;
 
+/* THE SCALE IS BOUNDED, and this is the correction to the note above.
+   Multiplying the whole clamp is right at the CEILING and wrong at the FLOOR:
+   it shrinks the 375px end by the same 0.62, which took the /blog article
+   title to a MEASURED 22px while every other page title on the site sat at
+   32px, and took a /plans section h2 to 18px. The outer clamp pins both ends
+   to the site's own ramp — the same 1.75rem/3.25rem that .h1 and .bandTitle
+   in app/_ui/page.module.css use — while the middle term still carries each
+   call site's relative hierarchy between them. One lever, both ends sane. */
 export const display = (size: string): CSSProperties => ({
   fontFamily: "var(--fk-display)",
   fontWeight: 600,
-  fontSize: `calc(${size} * ${DISPLAY_SCALE})`,
+  fontSize: `clamp(1.75rem, calc(${size} * ${DISPLAY_SCALE}), 3.25rem)`,
   lineHeight: 1.05,
   letterSpacing: "-0.022em",
   textTransform: "none",
