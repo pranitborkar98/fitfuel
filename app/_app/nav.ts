@@ -51,7 +51,7 @@ export const NAV: NavGroup[] = [
     label: "Output",
     items: [
       { href: "/dashboard/exercises", label: "Training", blurb: "Sessions, sets, and the exercise library", icon: "Dumbbell", tab: true },
-      { href: "/dashboard/body-metrics", label: "Body", blurb: "Weigh-ins over Bluetooth, no typing", icon: "Activity", tab: true },
+      { href: "/dashboard/body-metrics", label: "Body", blurb: "Weigh-ins over Bluetooth, no typing", icon: "Activity" },
       { href: "/dashboard/progress", label: "Progress", blurb: "Consistency and the trend line", icon: "TrendingUp" },
     ],
   },
@@ -70,7 +70,7 @@ export const NAV: NavGroup[] = [
 /** Flat list, in sidebar order. */
 export const ALL_ITEMS: NavItem[] = NAV.flatMap((g) => g.items);
 
-/** The five that get a bottom tab on phones. The sixth slot is always More. */
+/** Four direct destinations plus More: five total phone tabs. */
 export const TAB_ITEMS: NavItem[] = ALL_ITEMS.filter((i) => i.tab);
 
 /**

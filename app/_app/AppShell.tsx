@@ -22,22 +22,22 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Zap, Utensils, Dumbbell, Activity, Sparkles, TrendingUp, Pill, Gift,
-  Briefcase, Truck, Bell, User, MoreHorizontal, X, LogOut,
+  Briefcase, Truck, Bell, User, MoreHorizontal, X, LogOut, ShoppingBag,
+  type LucideIcon,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import s from "./shell.module.css";
-import { C, label, screen, body, SANS } from "./theme";
 import { NAV, TAB_ITEMS, activeHref, type IconName, type NavItem } from "./nav";
 
-const ICONS: Record<IconName, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
+const ICONS: Record<IconName, LucideIcon> = {
   Zap, Utensils, Dumbbell, Activity, Sparkles, TrendingUp, Pill, Gift,
   Briefcase, Truck, Bell, User,
 };
 
-function Icon({ name, size = 17, color }: { name: IconName; size?: number; color?: string }) {
+function Icon({ name, size = 17 }: { name: IconName; size?: number }) {
   const Cmp = ICONS[name];
-  return <Cmp size={size} color={color} strokeWidth={1.75} />;
+  return <Cmp size={size} strokeWidth={1.75} aria-hidden="true" />;
 }
 
 export default function AppShell({
@@ -105,7 +105,7 @@ export default function AppShell({
   const moreItems = NAV.flatMap((g) => g.items).filter((i) => !i.tab && visible(i));
 
   return (
-    <div className={s.shell}>
+    <div className={`fk ${s.shell}`}>
 
       {/* ── Sidebar, desktop ─────────────────────────────────────────── */}
       <nav className={s.sidebar} aria-label="Application">
@@ -121,7 +121,7 @@ export default function AppShell({
           if (!items.length) return null;
           return (
             <div key={group.key}>
-              <p className={s.groupLabel} style={label(12)}>{group.label}</p>
+              <p className={s.groupLabel}>{group.label}</p>
               {items.map((item) => {
                 const on = active === item.href;
                 return (
@@ -131,7 +131,7 @@ export default function AppShell({
                     className={`${s.navRow} ${on ? s.navRowOn : ""}`}
                     aria-current={on ? "page" : undefined}
                   >
-                    <Icon name={item.icon} color={on ? C.lime : C.dim} />
+                    <Icon name={item.icon} />
                     <span className={s.navLabel}>{item.label}</span>
                   </Link>
                 );
@@ -140,14 +140,17 @@ export default function AppShell({
           );
         })}
 
+        <Link href="/" className={s.orderCard}>
+          <span className={s.orderCardIcon}><ShoppingBag size={18} aria-hidden="true" /></span>
+          <span><b>Order food</b><small>Meals and plans from the same kitchen</small></span>
+          <ChevronArrow />
+        </Link>
+
         <div className={s.sidebarFoot}>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
-            style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 44, width: "100%",
-                     background: "transparent", border: 0, padding: 0, cursor: "pointer",
-                     color: C.dim, fontFamily: SANS, fontWeight: 600, fontSize: 14,
-                     letterSpacing: 0, textTransform: "none" }}
+            className={s.signOut}
           >
             <LogOut size={16} strokeWidth={1.75} />
             Sign out
@@ -158,10 +161,15 @@ export default function AppShell({
       {/* ── Main column ──────────────────────────────────────────────── */}
       <div className={s.main}>
         <div className={s.topbar}>
-          <Wordmark href="/dashboard" size={20} title="FitFuel dashboard" />
+          <span className={s.mobileBrand}><Wordmark href="/dashboard" size={20} title="FitFuel dashboard" /></span>
+          <span className={s.workspaceStatus}><i aria-hidden="true" /> Your FitFuel workspace</span>
+          <span className={s.topbarActions}>
+            <Link href="/"><ShoppingBag size={17} aria-hidden="true" /> Order food</Link>
+            <Link href="/dashboard/profile"><User size={17} aria-hidden="true" /> Profile</Link>
+          </span>
         </div>
 
-        <main className={s.content} id="app-main">{children}</main>
+        <div className={s.content} id="app-main" tabIndex={-1}>{children}</div>
       </div>
 
       {/* ── Bottom tabs, phones ──────────────────────────────────────── */}
@@ -175,7 +183,7 @@ export default function AppShell({
               className={`${s.tab} ${on ? s.tabOn : ""}`}
               aria-current={on ? "page" : undefined}
             >
-              <Icon name={item.icon} size={18} color={on ? C.lime : C.dim} />
+              <Icon name={item.icon} size={19} />
               <span className={s.tabLabel}>{item.label}</span>
             </Link>
           );
@@ -187,7 +195,7 @@ export default function AppShell({
           aria-expanded={moreOpen}
           aria-haspopup="dialog"
         >
-          <MoreHorizontal size={18} color={moreOpen ? C.lime : C.dim} strokeWidth={1.75} />
+          <MoreHorizontal size={19} strokeWidth={1.75} aria-hidden="true" />
           <span className={s.tabLabel}>More</span>
         </button>
       </nav>
@@ -209,7 +217,7 @@ export default function AppShell({
             aria-labelledby="more-h"
           >
             <div className={s.sheetHead}>
-              <h2 id="more-h" style={screen()}>More</h2>
+              <h2 id="more-h">More</h2>
               <button
                 type="button"
                 className={s.sheetClose}
@@ -222,14 +230,10 @@ export default function AppShell({
 
             {moreItems.map((item) => (
               <Link key={item.href} href={item.href} className={s.sheetRow} onClick={close}>
-                <Icon name={item.icon} size={18} color={C.dim} />
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontFamily: "var(--fk-display), Georgia, serif",
-                                 fontWeight: 600, fontSize: 16, textTransform: "none",
-                                 color: C.ink, lineHeight: 1.1 }}>
-                    {item.label}
-                  </span>
-                  <span style={body(13, { display: "block", marginTop: 2 })}>{item.blurb}</span>
+                <Icon name={item.icon} size={18} />
+                <span className={s.sheetRowBody}>
+                  <b>{item.label}</b>
+                  <span>{item.blurb}</span>
                 </span>
               </Link>
             ))}
@@ -237,18 +241,22 @@ export default function AppShell({
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
-              className={s.sheetRow}
-              style={{ width: "100%", background: "transparent", cursor: "pointer", textAlign: "left" }}
+              className={`${s.sheetRow} ${s.sheetSignOut}`}
             >
-              <LogOut size={18} color={C.dim} strokeWidth={1.75} />
-              <span style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600, fontSize: 16,
-                             textTransform: "none", color: C.ink }}>
-                Sign out
-              </span>
+              <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
+              <span className={s.sheetRowBody}><b>Sign out</b></span>
             </button>
           </div>
         </>
       )}
     </div>
+  );
+}
+
+function ChevronArrow() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
   );
 }

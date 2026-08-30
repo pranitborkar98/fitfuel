@@ -1,289 +1,421 @@
-/* app/_app/shell.module.css
- *
- * The one breakpoint, the two chromes, and the states a style attribute
- * cannot express. The shell is deliberately quiet: food and daily actions,
- * not the navigation, should own the customer's attention.
- *
- * Under 1024px the app is a phone: a bottom tab bar, no sidebar.
- * At and above it, the sidebar appears and the tab bar goes. Exactly one of
- * the two is ever visible, so nothing double-draws at the seam.
- */
-
 .shell {
   min-height: 100dvh;
-  background: var(--ff-bg);
+  background:
+    radial-gradient(circle at 78% -8%, rgb(132 204 22 / 6%), transparent 30rem),
+    var(--fk-paper);
+  color: var(--fk-ink);
+  font-family: var(--fk-sans);
 }
 
-/* ── Sidebar ──────────────────────────────────────────────────────────── */
+.shell *,
+.shell *::before,
+.shell *::after { box-sizing: border-box; }
 
-.sidebar {
-  display: none;
+.shell button,
+.shell a { -webkit-tap-highlight-color: transparent; }
+
+.shell button:focus-visible,
+.shell a:focus-visible,
+.content:focus-visible {
+  outline: 3px solid var(--fk-green-deep);
+  outline-offset: 3px;
 }
 
-@media (min-width: 1024px) {
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: 252px;
-    background: var(--ff-panel);
-    border-right: 1px solid var(--ff-rule);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
+.sidebar { display: none; }
+.main { min-width: 0; }
 
-  .main {
-    padding-left: 252px;
-  }
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 68px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--ff-rule);
-  text-decoration: none;
-  flex: none;
-}
-
-.groupLabel {
-  padding: 22px 20px 7px;
-}
-
-.navRow {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 46px;
-  margin: 2px 10px;
-  padding: 0 12px;
-  text-decoration: none;
-  border: 1px solid transparent;
-  border-radius: var(--fk-r);
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
-}
-
-.navRow:hover {
-  background: var(--ff-panel-2);
-  border-color: var(--ff-rule);
-}
-
-.navRow:focus-visible {
-  outline: 2px solid var(--ff-lime);
-  outline-offset: -2px;
-}
-
-/* Active is carried by the wash, border, icon and ink label, never hue alone. */
-.navRowOn {
-  border-color: color-mix(in srgb, var(--ff-lime) 38%, transparent);
-  background: color-mix(in srgb, var(--ff-lime) 10%, var(--ff-panel));
-}
-
-.navRowOn .navLabel {
-  color: var(--ff-ink);
-}
-
-.navLabel {
-  font-family: var(--font-archivo), sans-serif;
-  font-size: 14.5px;
-  font-weight: 550;
-  color: var(--ff-mute);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebarFoot {
-  margin-top: auto;
-  border-top: 1px solid var(--ff-rule);
-  padding: 14px 20px 18px;
-}
-
-/* ── Main column ──────────────────────────────────────────────────────── */
-
-.main {
-  min-width: 0;
-}
-
-/* The tab bar covers the last 60px plus the safe area on phones, and nothing
-   at all once it is gone. */
 .content {
-  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 24px);
+  min-width: 0;
+  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 24px);
 }
-
-@media (min-width: 1024px) {
-  .content {
-    padding-bottom: 48px;
-  }
-}
-
-/* ── Top bar (phones only: the sidebar carries the brand at desktop) ──── */
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--fk-z-header);
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  min-height: 60px;
-  padding: 0 18px;
-  background: color-mix(in srgb, var(--ff-bg) 94%, transparent);
-  border-bottom: 1px solid var(--ff-rule);
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  gap: 14px;
+  padding: 0 16px;
+  background: rgb(7 7 7 / 94%);
+  border-bottom: 1px solid var(--fk-line-2);
+  backdrop-filter: blur(18px);
 }
 
-@media (min-width: 1024px) {
-  .topbar {
-    display: none;
-  }
+.mobileBrand { display: inline-flex; }
+.workspaceStatus { display: none; }
+
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ── Bottom tab bar ───────────────────────────────────────────────────── */
+.topbarActions a {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  color: var(--fk-ink-2);
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  font-size: 0.76rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.topbarActions a:first-child {
+  color: var(--fk-on-green);
+  background: var(--fk-green);
+  border-color: var(--fk-green);
+}
+
+.topbarActions a:hover {
+  color: var(--fk-ink);
+  background: var(--fk-warm);
+  border-color: var(--fk-line-strong);
+}
+
+.topbarActions a:first-child:hover {
+  color: var(--fk-on-green);
+  background: var(--fk-green-deep);
+  border-color: var(--fk-green-deep);
+}
 
 .tabbar {
   position: fixed;
-  inset: auto 0 0 0;
-  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--fk-z-header);
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1px;
-  gap: 0;
-  background: color-mix(in srgb, var(--ff-panel) 96%, transparent);
-  border-top: 1px solid var(--ff-rule);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-@media (min-width: 1024px) {
-  .tabbar {
-    display: none;
-  }
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 5px 8px env(safe-area-inset-bottom, 0px);
+  background: rgb(10 10 9 / 96%);
+  border-top: 1px solid var(--fk-line-2);
+  backdrop-filter: blur(18px);
 }
 
 .tab {
+  min-height: 58px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 60px;
-  padding: 0 2px;
+  padding: 0 3px;
+  color: var(--fk-ink-3);
   background: transparent;
   border: 0;
-  border-top: 2px solid transparent;
-  color: var(--ff-dim);
+  border-radius: var(--fk-r);
+  font: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.16s ease, border-color 0.16s ease;
+  transition: color var(--fk-dur-fast) var(--fk-ease), background var(--fk-dur-fast) var(--fk-ease);
 }
 
-.tab:focus-visible {
-  outline: 2px solid var(--ff-lime);
-  outline-offset: -2px;
-}
-
+.tab:hover,
 .tabOn {
-  border-top-color: var(--ff-lime);
-  color: var(--ff-ink);
+  color: var(--fk-green-deep);
+  background: var(--fk-green-wash);
 }
 
 .tabLabel {
-  font-family: var(--font-archivo), sans-serif;
-  font-weight: 600;
-  font-size: 11.5px;
-  letter-spacing: 0;
-  text-transform: none;
+  font-size: 0.64rem;
+  font-weight: 650;
   line-height: 1;
 }
-
-/* ── More sheet ───────────────────────────────────────────────────────── */
 
 .scrim {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  background: rgba(0, 0, 0, 0.62);
-  border: 0;
+  z-index: var(--fk-z-scrim);
   padding: 0;
+  background: rgb(0 0 0 / 68%);
+  border: 0;
   cursor: pointer;
 }
 
 .sheet {
   position: fixed;
-  inset: auto 0 0 0;
-  z-index: 41;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--fk-z-sheet);
   max-height: 82dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--ff-bg);
-  border-top: 1px solid var(--ff-rule);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  background: var(--fk-surface);
+  border-top: 1px solid var(--fk-line-strong);
   border-radius: var(--fk-r-lg) var(--fk-r-lg) 0 0;
   box-shadow: var(--fk-shadow-3);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-  animation: sheetIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: sheetIn var(--fk-dur) var(--fk-ease);
 }
 
 @keyframes sheetIn {
-  from { transform: translateY(14px); opacity: 0; }
-  to   { transform: none;             opacity: 1; }
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: none; opacity: 1; }
 }
 
 .sheetHead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 52px;
   padding: 0 16px;
-  border-bottom: 1px solid var(--ff-rule);
-  position: sticky;
-  top: 0;
-  background: var(--ff-bg);
+  background: var(--fk-surface);
+  border-bottom: 1px solid var(--fk-line-2);
+}
+
+.sheetHead h2 {
+  margin: 0;
+  font-family: var(--fk-sans);
+  font-size: 1.18rem;
+  letter-spacing: -0.02em;
 }
 
 .sheetClose {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 44px;
   height: 44px;
-  margin-right: -10px;
+  display: grid;
+  place-items: center;
+  margin-right: -8px;
+  color: var(--fk-ink-2);
   background: transparent;
   border: 0;
-  color: var(--ff-mute);
+  border-radius: var(--fk-r);
   cursor: pointer;
 }
 
-.sheetClose:focus-visible {
-  outline: 2px solid var(--ff-lime);
-  outline-offset: -2px;
+.sheetClose:hover {
+  color: var(--fk-ink);
+  background: var(--fk-warm);
 }
 
 .sheetRow {
-  display: flex;
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  gap: 13px;
-  min-height: 56px;
+  gap: 12px;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--ff-rule);
+  color: var(--fk-ink-3);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--fk-line);
+  text-align: left;
   text-decoration: none;
-  border-left: 2px solid transparent;
-  transition: border-color 0.16s ease, background-color 0.16s ease;
+  cursor: pointer;
 }
 
-.sheetRow:hover,
-.sheetRow:focus-visible {
-  background: var(--ff-panel-2);
-  border-left-color: var(--ff-lime);
-  outline: none;
+.sheetRow:hover {
+  color: var(--fk-green-deep);
+  background: var(--fk-warm);
+}
+
+.sheetRowBody {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.sheetRowBody b {
+  color: var(--fk-ink);
+  font-size: 0.9rem;
+  font-weight: 680;
+}
+
+.sheetRowBody span {
+  color: var(--fk-ink-3);
+  font-size: 0.71rem;
+  line-height: 1.4;
+}
+
+.sheetSignOut { color: var(--fk-danger); }
+
+@media (max-width: 520px) {
+  .topbarActions a {
+    width: 42px;
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: var(--fk-z-sticky);
+    width: 244px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: rgb(12 12 11 / 92%);
+    border-right: 1px solid var(--fk-line-2);
+  }
+
+  .main { padding-left: 244px; }
+  .content { padding-bottom: 48px; }
+
+  .brand {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--fk-line-2);
+  }
+
+  .groupLabel {
+    margin: 0;
+    padding: 22px 20px 7px;
+    color: var(--fk-ink-3);
+    font-size: 0.69rem;
+    font-weight: 700;
+  }
+
+  .navRow {
+    min-height: 44px;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    align-items: center;
+    gap: 11px;
+    margin: 3px 10px;
+    padding: 0 12px;
+    color: var(--fk-ink-3);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--fk-r);
+    text-decoration: none;
+    transition: color var(--fk-dur-fast) var(--fk-ease), background var(--fk-dur-fast) var(--fk-ease), border-color var(--fk-dur-fast) var(--fk-ease);
+  }
+
+  .navRow:hover {
+    color: var(--fk-ink);
+    background: var(--fk-surface);
+    border-color: var(--fk-line);
+  }
+
+  .navRowOn {
+    color: var(--fk-green-deep);
+    background: var(--fk-green-wash);
+    border-color: rgb(132 204 22 / 28%);
+  }
+
+  .navRowOn .navLabel { color: var(--fk-ink); }
+
+  .navLabel {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--fk-ink-2);
+    font-size: 0.84rem;
+    font-weight: 570;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .orderCard {
+    min-height: 74px;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 10px;
+    margin: auto 12px 12px;
+    padding: 12px;
+    color: var(--fk-ink-2);
+    background:
+      radial-gradient(circle at 100% 0, rgb(132 204 22 / 16%), transparent 7rem),
+      var(--fk-surface);
+    border: 1px solid var(--fk-line-2);
+    border-radius: var(--fk-r);
+    text-decoration: none;
+  }
+
+  .orderCard:hover { border-color: rgb(132 204 22 / 38%); }
+
+  .orderCardIcon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    color: var(--fk-on-green);
+    background: var(--fk-green);
+    border-radius: var(--fk-r);
+  }
+
+  .orderCard > span:nth-child(2) {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .orderCard b {
+    color: var(--fk-ink);
+    font-size: 0.78rem;
+  }
+
+  .orderCard small {
+    color: var(--fk-ink-3);
+    font-size: 0.63rem;
+    line-height: 1.35;
+  }
+
+  .sidebarFoot { padding: 0 18px 16px; }
+
+  .signOut {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px;
+    color: var(--fk-ink-3);
+    background: transparent;
+    border: 0;
+    border-radius: var(--fk-r);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 620;
+    cursor: pointer;
+  }
+
+  .signOut:hover { color: var(--fk-danger); }
+
+  .topbar { padding: 0 clamp(20px, 3vw, 36px); }
+  .mobileBrand { display: none; }
+
+  .workspaceStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fk-ink-2);
+    font-size: 0.78rem;
+    font-weight: 620;
+  }
+
+  .workspaceStatus i {
+    width: 7px;
+    height: 7px;
+    background: var(--fk-green);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgb(132 204 22 / 12%);
+  }
+
+  .tabbar { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sheet { animation: none; }
-  .navRow,
   .tab,
-  .sheetRow { transition: none; }
+  .navRow { transition: none; }
 }
