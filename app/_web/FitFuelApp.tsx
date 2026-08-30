@@ -37,9 +37,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
+import { waLink } from "@/lib/site";
 import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
 import type { PriceRow } from "@/lib/plan-tier-pricing";
-import type { Dish } from "@/app/_hp/menu-types";
+import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
@@ -66,6 +67,9 @@ const I = {
   book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z",
   user: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
   search: "m21 21-4.35-4.35M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z",
+  message: "M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z",
+  chart: "M4 19V9M10 19V5M16 19v-7M22 19H2",
+  arrow: "M7 17 17 7M8 7h9v9",
 } as const;
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
@@ -102,7 +106,7 @@ const NAV: NavItem[] = [
   { kind: "mode", mode: "dishes", label: "Order tonight", icon: I.bowl },
   { kind: "mode", mode: "plans", label: "Meal plans", icon: I.layers },
   { kind: "mode", mode: "supps", label: "Supplements", icon: I.spark },
-  { kind: "link", href: "/dashboard/coach", label: "Coach", icon: I.spark },
+  { kind: "link", href: "/dashboard/trainer", label: "AI coach", icon: I.message },
   { kind: "link", href: "/dashboard", label: "Your account", icon: I.user },
 ];
 
@@ -151,7 +155,7 @@ const MORE = [
      coach. Those were orphaned when `/` became the app — reachable from nowhere
      — so this link is not decoration, it is the only way back to them. */
   { href: "/why", label: "Why FitFuel" },
-  { href: "/dashboard/trainer", label: "Ask the coach" },
+  { href: "/dashboard/coach", label: "Weekly coach" },
   { href: "/how-it-works", label: "How a day works" },
   { href: "/our-kitchen", label: "The kitchen" },
   { href: "/corporate", label: "For offices" },
@@ -248,6 +252,8 @@ export type AppProps = {
    *  imported redesign had no band to render them in, so for four days they
    *  were fetched and dropped. The proof band takes them now. */
   quotes: Quote[];
+  /** True when at least one server-side AI provider has a usable credential. */
+  aiConfigured: boolean;
   /** Seven days of the one plan with a seeded schedule, for the rotation band.
    *  Empty when the query fails, and the band then renders nothing. */
   week: Dish[];
@@ -421,6 +427,7 @@ export default function FitFuelApp({
   areaCount,
   initialMode,
   quotes,
+  aiConfigured,
   week,
 }: AppProps) {
   const cart = useCart();
@@ -613,8 +620,10 @@ export default function FitFuelApp({
      a filtered view falls back to one flat capped list. */
   const grouped = mode === "dishes" && course === "all" && !onlyOrderable;
 
-  /** Dishes shown per course before its own "Show all" is offered. */
-  const PER_COURSE = 2;
+  /** Four per course puts 24 photographed meals in the first catalogue view.
+   *  It is still a useful preview, but no longer makes a 48-dish kitchen look
+   *  like it serves two things. */
+  const PER_COURSE = 4;
 
   /**
    * ONE DISH CARD.
@@ -801,6 +810,17 @@ export default function FitFuelApp({
     }
   };
 
+  const planDayOne = week.filter((dish) => dish.day === 1).slice(0, 4);
+  const planDayImages: Record<string, string> = {
+    BREAKFAST: "/images/ai/recipes/maharashtrian-moong-dal-chilla-with-green.webp",
+    LUNCH: "/images/ai/recipes/chettinad-cauliflower-steak-with-black-pepper.webp",
+    SNACK: "/images/ai/recipes/rajasthani-makhana-chaat-with-tamarind-chutney.webp",
+    DINNER: "/images/ai/recipes/north-indian-palak-paneer-with-jowar.webp",
+  };
+  const whatsappOrder = waLink(
+    "Hi FitFuel! I’d like help choosing and ordering a meal or meal plan.",
+  );
+
   return (
     <div className={`fk ${s.app}`}>
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
@@ -864,55 +884,108 @@ export default function FitFuelApp({
           </div>
         </div>
 
-        <section className={r.hero} aria-labelledby="home-title">
-          <div className={r.heroCopy}>
-            <p className={r.heroKicker}>
-              <span aria-hidden="true" /> Healthy food, built around you
-            </p>
-            <h1 id="home-title" className={r.heroTitle}>
-              Your goal shouldn&apos;t end where dinner begins.
-            </h1>
-            <p className={r.heroDeck}>
-              Pick one chef-cooked meal or run a complete plan. We weigh every
-              portion in Kharadi, connect it to your daily target, and keep the
-              diary, training and coach in the same app.
-            </p>
-            <div className={r.heroActions}>
-              <button type="button" className={r.heroPrimary} onClick={() => switchMode("dishes", true)}>
-                Order a meal
-              </button>
-              <button type="button" className={r.heroSecondary} onClick={() => switchMode("plans", true)}>
-                Find my plan
-              </button>
+        <section className={r.command} aria-labelledby="home-title">
+          <div className={r.commandTop}>
+            <div className={r.commandIntro}>
+              <p className={r.commandKicker}>
+                <span aria-hidden="true" /> Your FitFuel home · Kharadi
+              </p>
+              <h1 id="home-title" className={r.commandTitle}>What do you need today?</h1>
+              <p className={r.commandDeck}>
+                Order dinner, continue a plan, log your day or ask a coach—without
+                leaving the same app.
+              </p>
+              <div className={r.commandLinks}>
+                <button type="button" onClick={() => switchMode("dishes", true)}>
+                  Browse tonight&apos;s food
+                </button>
+                <Link href="/dashboard/nutrition">Open my diary</Link>
+              </div>
             </div>
-            <Link href="/plans?trial=true" className={r.trialLink}>
-              Prefer to test it first? Breakfast + lunch for {trialTotal}, once.
-            </Link>
-            <ul className={r.heroStats} aria-label="FitFuel at a glance">
-              <li><b className="fk-num">{dishes.length}</b><span>real dishes</span></li>
-              <li><b className="fk-num">{goalCount}</b><span>goals and conditions</span></li>
-              <li><b className="fk-num">{bandCounts.exercises.toLocaleString("en-IN")}</b><span>training movements</span></li>
-            </ul>
+
+            <nav className={r.quickTools} aria-label="FitFuel tools">
+              <Link href="/dashboard/trainer" className={`${r.quickTool} ${r.aiTool}`}>
+                <span className={r.toolIcon}><Icon d={I.spark} size={22} /></span>
+                <span className={r.toolCopy}>
+                  <b>Ask FitFuel AI</b>
+                  <span>{aiConfigured ? "Online · answers from your live plan" : "Ready when your AI key is connected"}</span>
+                </span>
+                <Icon d={I.arrow} size={18} />
+              </Link>
+              <a
+                href={whatsappOrder}
+                target="_blank"
+                rel="noreferrer"
+                className={`${r.quickTool} ${r.whatsappTool}`}
+              >
+                <span className={r.toolIcon}><Icon d={I.message} size={22} /></span>
+                <span className={r.toolCopy}>
+                  <b>Order on WhatsApp</b>
+                  <span>Talk to the kitchen team</span>
+                </span>
+                <Icon d={I.arrow} size={18} />
+              </a>
+              <Link href="/dashboard/coach" className={r.quickTool}>
+                <span className={r.toolIcon}><Icon d={I.chart} size={22} /></span>
+                <span className={r.toolCopy}>
+                  <b>Weekly coach</b>
+                  <span>Trend-based check-in and changes</span>
+                </span>
+                <Icon d={I.arrow} size={18} />
+              </Link>
+              <button type="button" className={r.quickTool} onClick={() => switchMode("plans", true)}>
+                <span className={r.toolIcon}><Icon d={I.layers} size={22} /></span>
+                <span className={r.toolCopy}>
+                  <b>Find my plan</b>
+                  <span>{goalCount} goals and conditions</span>
+                </span>
+                <Icon d={I.arrow} size={18} />
+              </button>
+            </nav>
           </div>
 
-          <div className={r.heroVisual}>
-            <Image
-              src="/images/hero-bowl-v2.png"
-              alt="A FitFuel bowl with grilled paneer, brown rice, spinach, chickpeas, pickled onion and cucumber yoghurt"
-              fill
-              priority
-              sizes="(min-width: 1024px) 52vw, 100vw"
-              className={r.heroImage}
-            />
-            <div className={r.heroPlateNote}>
-              <span>One connected day</span>
-              <b>Cooked → delivered → logged</b>
+          <ul className={r.commandFacts} aria-label="What is inside FitFuel">
+            <li><b className="fk-num">{dishes.length}</b><span>meal catalogue</span></li>
+            <li><b className="fk-num">{bandCounts.plans}</b><span>plan profiles</span></li>
+            <li><b className="fk-num">{bandCounts.exercises.toLocaleString("en-IN")}</b><span>training movements</span></li>
+            <li><b className="fk-num">{bandCounts.supplements}</b><span>supplement guides</span></li>
+          </ul>
+
+          {planDayOne.length ? (
+            <div className={r.planToday}>
+              <div className={r.planTodayHead}>
+                <span>
+                  <small>Inside a real plan · day one</small>
+                  <h2>Weight Loss Vegetarian, from breakfast to dinner</h2>
+                  <p>A complete 30-day kitchen schedule, published in the app.</p>
+                </span>
+                <Link href="/plans/weight-loss-veg">See the 30-day schedule</Link>
+              </div>
+              <ul className={r.planMealRail}>
+                {planDayOne.map((dish, index) => (
+                  <li key={`${dish.day}-${dish.slot}`} className={r.planMeal}>
+                    <div className={r.planMealImage}>
+                      <Image
+                        src={planDayImages[dish.slot]}
+                        alt={dish.name}
+                        fill
+                        priority={index === 0}
+                        sizes="(max-width: 639px) 78vw, (max-width: 1023px) 42vw, 25vw"
+                      />
+                      <span className="fk-sr-only">
+                        Illustrative AI-generated image; not a photograph of the meal as delivered.
+                      </span>
+                    </div>
+                    <span className={r.planMealMeta}>
+                      <small>{SLOT_LABEL[dish.slot] ?? dish.slot}</small>
+                      <b>{dish.name}</b>
+                      <span>{dish.kcal ? `${dish.kcal} kcal` : "Kitchen portion"}{dish.protein ? ` · ${dish.protein}g protein` : ""}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className={r.heroTrust}>
-              <span><i aria-hidden="true" /> Own Kharadi kitchen</span>
-              <span>FSSAI <b className="fk-num">{licence}</b></span>
-            </div>
-          </div>
+          ) : null}
         </section>
 
         {/* ── Rail + content ──────────────────────────────────────────────── */}

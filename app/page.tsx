@@ -14,6 +14,7 @@ import Areas from "./_hp/Areas";
 import { AREAS_AT } from "./_hp/areas-data";
 import { getWeek } from "./_hp/menu-data";
 import { decodeRow } from "@/lib/decode-entities";
+import { isTrainerConfigured } from "@/lib/ai-trainer/client";
 import FitFuelApp from "./_web/FitFuelApp";
 import type { BandCounts, Quote } from "./_web/HomeBands";
 
@@ -422,6 +423,9 @@ export default async function AppPage({
            design had no proof band in any of its eight sections. app/_hp/
            Proof.tsx had the right shape sitting on no route the whole time. */
         quotes={bands.quotes}
+        /* The AI entry point states its real runtime status. The server checks
+           the configured providers; the client never sees an API key. */
+        aiConfigured={isTrainerConfigured()}
         /* Seven days of the one plan that has a seeded schedule. Decimal macro
            columns are already coerced to numbers inside menu-data. */
         week={week}
