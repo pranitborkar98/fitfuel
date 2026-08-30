@@ -54,6 +54,7 @@ import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
 import DeliveryMap from "./DeliveryMap";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
+import r from "./refresh.module.css";
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -760,7 +761,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
             </div>
           </div>
 
-          <div className={s.planSum}>
+          <div className={`${s.planSum} ${r.planSummary}`}>
             <span className={s.planSumKicker}>Your plan</span>
             <b className={s.planSumLine}>
               {tierMeta.label} · {dietMeta.label} · {mealMeta.label} · {durMeta.label}

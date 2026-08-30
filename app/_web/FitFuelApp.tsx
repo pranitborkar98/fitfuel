@@ -48,8 +48,9 @@ import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
 import { GOALS } from "./home-data";
 import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
-import { MacroSplit, dishField, fieldStyle } from "./DishVisuals";
+import { MacroSplit, dishField } from "./DishVisuals";
 import s from "./app.module.css";
+import r from "./refresh.module.css";
 
 
 /* ── Icons ─────────────────────────────────────────────────────────────────
@@ -64,6 +65,7 @@ const I = {
   spark: "M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18",
   book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z",
   user: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
+  search: "m21 21-4.35-4.35M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z",
 } as const;
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
@@ -336,106 +338,6 @@ function badgesFor(d: ShopDish): string[] {
    and a keto dish could land on the same colour and the family cue was false
    exactly where most of the menu sits. Centres re-spaced to 20° apart and the
    jitter cut to ±7, which separates every pair. */
-/**
- * POINTER-TRACKED DEPTH, at a cost the grid can afford.
- *
- * ONE listener on the grid, not one per card: a 126-plan grid would otherwise
- * attach 252 handlers. Reads are rAF-throttled to a single write per frame, and
- * the only thing written is four custom properties on one element — CSS
- * composes the transform and the gradient from there. Writing .style.transform
- * on several children per pointermove, which is the usual shape of this effect,
- * forces layout on every event.
- *
- * Bails entirely on coarse pointers and under prefers-reduced-motion, so a
- * phone never runs any of it. Everything degrades to the plain card.
- */
-function useCardTilt<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-
-  useEffect(() => {
-    const root = ref.current;
-    if (!root || typeof window.matchMedia !== "function") return;
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    /* Tilt in degrees at the corners. 8° — the figure the effect is usually
-       written with — visibly skews a paragraph of body copy. 5 reads as depth
-       and leaves the blurb flat enough to finish reading. */
-    const MAX = 5;
-    let frame = 0;
-    let next: { el: HTMLElement; x: number; y: number } | null = null;
-
-    const paint = () => {
-      frame = 0;
-      if (!next) return;
-      const { el, x, y } = next;
-      el.style.setProperty("--mx", `${x.toFixed(1)}%`);
-      el.style.setProperty("--my", `${y.toFixed(1)}%`);
-      el.style.setProperty("--rx", `${((50 - y) / 50) * MAX}deg`);
-      el.style.setProperty("--ry", `${((x - 50) / 50) * MAX}deg`);
-      /* Where the chromatic edge is brightest. atan2 puts 0 at three o'clock
-         and the conic gradient starts its band a little after `from`, so the
-         quarter turn lands the bright part under the cursor rather than
-         trailing it. */
-      const deg = (Math.atan2(y - 50, x - 50) * 180) / Math.PI - 90;
-      el.style.setProperty("--edge", `${deg.toFixed(1)}deg`);
-    };
-
-    const clear = (el: HTMLElement) => {
-      for (const p of ["--mx", "--my", "--rx", "--ry", "--edge"]) el.style.removeProperty(p);
-    };
-
-    /* `li[data-card]`, not `li`. The menu-order grid nests card <li>s inside a
-       course group whose heading is ALSO an <li> — a bare closest("li") tilts
-       the heading and, worse, matches the wrapper <li> that spans the row, so
-       an entire course lifts as one slab. */
-    const cardOf = (n: EventTarget | null) =>
-      n instanceof Element ? (n.closest("li[data-card]") as HTMLElement | null) : null;
-
-    const onMove = (e: PointerEvent) => {
-      const el = cardOf(e.target);
-      if (!el || !root.contains(el)) return;
-      const r = el.getBoundingClientRect();
-      if (!r.width || !r.height) return;
-      next = {
-        el,
-        x: ((e.clientX - r.left) / r.width) * 100,
-        y: ((e.clientY - r.top) / r.height) * 100,
-      };
-      if (!frame) frame = requestAnimationFrame(paint);
-    };
-
-    /* pointerout bubbles (pointerleave does not), so it is the one that works
-       for a delegated listener — but it also fires when crossing between
-       children of the same card. relatedTarget tells those apart. */
-    const onOut = (e: PointerEvent) => {
-      const el = cardOf(e.target);
-      if (!el) return;
-      const to = e.relatedTarget;
-      if (to instanceof Node && el.contains(to)) return;
-      if (next?.el === el) next = null;
-      clear(el);
-    };
-
-    root.addEventListener("pointermove", onMove, { passive: true });
-    root.addEventListener("pointerout", onOut, { passive: true });
-    /* Marks in the DOM that the effect engaged, so "is the tilt live?" is a
-       question the page can answer directly. The effect has four separate
-       reasons to bail (no ref, no matchMedia, coarse pointer, reduced motion)
-       and without this the only way to tell a bail from a broken listener is
-       to watch for motion — which a non-compositing preview pane cannot show. */
-    root.dataset.tilt = "on";
-    return () => {
-      root.removeEventListener("pointermove", onMove);
-      root.removeEventListener("pointerout", onOut);
-      delete root.dataset.tilt;
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  return ref;
-}
-
 /** Add / stepper. One control, two states, same footprint. */
 function AddControl({ dish }: { dish: ShopDish }) {
   const cart = useCart();
@@ -522,6 +424,7 @@ export default function FitFuelApp({
   week,
 }: AppProps) {
   const cart = useCart();
+  const [query, setQuery] = useState("");
   const [course, setCourse] = useState("all");
   const [onlyOrderable, setOnlyOrderable] = useState(false);
   const [sheet, setSheet] = useState<ShopDish | null>(null);
@@ -559,53 +462,29 @@ export default function FitFuelApp({
      percentage of an average person's day. */
   const [numbers, setNumbers] = useNumbers();
   const [numbersOpen, setNumbersOpen] = useState(false);
-  /* Which course headers have been opened past their first four. Per course, so
+  /* Which course headers have been opened past their first two. Per course, so
      opening Salads does not dump all 48 dishes on the page. */
   const [openCourse, setOpenCourse] = useState<Record<string, boolean>>({});
   /* openVariants / openMenu are gone with the two disclosure buttons on the
      plan card. Both contents live in the Configure sheet now — see the comment
      on the plan card foot for why an inline panel was the wrong container. */
-  const gridRef = useCardTilt<HTMLDivElement>();
-  const headRef = useRef<HTMLElement>(null);
-  const shellRef = useRef<HTMLDivElement>(null);
+  const catalogRef = useRef<HTMLDivElement>(null);
   const [areaOpen, setAreaOpen] = useState(false);
 
-  /* ── THE HEADER MEASURES ITSELF ───────────────────────────────────────────
-     Everything sticky below the header has to clear it, and the header is not
-     one height: the chip row wraps at some widths, plans mode carries a second
-     chip row, and the day bar stacks under 900px. Both the rail and the plan
-     summary previously used a typed offset (24px and, in the imported design,
-     205/224px) — so at every width but the one they were measured at they slid
-     under the header, or floated a gap below it.
-
-     One ResizeObserver, one custom property, and the two sticky offsets are
-     derived rather than guessed. */
-  useEffect(() => {
-    const head = headRef.current;
-    const shell = shellRef.current;
-    if (!head || !shell || typeof ResizeObserver !== "function") return;
-    const apply = () => {
-      shell.style.setProperty("--fk-head", `${Math.round(head.getBoundingClientRect().height)}px`);
-    };
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(head);
-    return () => ro.disconnect();
-    /* `mode` is in the deps as well as the observer, deliberately. Switching to
-       plans adds a second chip row and the header grows by 54px in the same
-       commit — measuring here is immediate and certain, where a ResizeObserver
-       callback is a frame away and does not fire at all in a tab that is not
-       compositing. Belt and braces on a measurement two sticky offsets read. */
-  }, [mode]);
+  const normalizedQuery = query.trim().toLowerCase();
 
   const results = useMemo(
     () =>
       dishes.filter((d) => {
         if (course !== "all" && d.category !== course) return false;
         if (onlyOrderable && !d.orderable) return false;
+        if (
+          normalizedQuery &&
+          !`${d.name} ${d.blurb} ${d.categoryLabel}`.toLowerCase().includes(normalizedQuery)
+        ) return false;
         return true;
       }),
-    [dishes, course, onlyOrderable],
+    [dishes, course, onlyOrderable, normalizedQuery],
   );
 
   /* ── THE DAY SO FAR, FROM THE BASKET ──────────────────────────────────────
@@ -640,9 +519,15 @@ export default function FitFuelApp({
       plans.filter((p) => {
         if (planCat !== "all" && p.cat !== planCat) return false;
         if (planDiet !== "all" && !p.variants.some((v) => v.diet === planDiet)) return false;
+        if (
+          normalizedQuery &&
+          !`${p.label} ${p.note} ${p.sub} ${p.variants.map((v) => v.label).join(" ")}`
+            .toLowerCase()
+            .includes(normalizedQuery)
+        ) return false;
         return true;
       }),
-    [plans, planCat, planDiet],
+    [plans, planCat, planDiet, normalizedQuery],
   );
 
   /** Live counts per category, so a chip never leads to an empty grid. */
@@ -659,8 +544,17 @@ export default function FitFuelApp({
   }, [supplements]);
 
   const suppResults = useMemo(
-    () => supplements.filter((x) => suppCat === "all" || x.category === suppCat),
-    [supplements, suppCat],
+    () => supplements.filter((x) => {
+      if (suppCat !== "all" && x.category !== suppCat) return false;
+      if (
+        normalizedQuery &&
+        !`${x.name} ${x.tagline} ${x.category} ${x.benefits.join(" ")}`
+          .toLowerCase()
+          .includes(normalizedQuery)
+      ) return false;
+      return true;
+    }),
+    [supplements, suppCat, normalizedQuery],
   );
 
   /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
@@ -681,7 +575,7 @@ export default function FitFuelApp({
   /* Keyed on the filter signature rather than reset in an effect — expanding
      "keto" and then searching "juice" should not silently keep you expanded,
      and doing it this way needs no effect and cannot desync. */
-  const filterKey = `${mode}|${course}|${planCat}|${planDiet}|${suppCat}|${onlyOrderable}`;
+  const filterKey = `${mode}|${course}|${planCat}|${planDiet}|${suppCat}|${onlyOrderable}|${normalizedQuery}`;
   const [expandedFor, setExpandedFor] = useState<string | null>(null);
   const expanded = expandedFor === filterKey;
   const cap = <T,>(list: T[]): T[] => (expanded ? list : list.slice(0, PREVIEW));
@@ -714,21 +608,20 @@ export default function FitFuelApp({
      its own ₹-per-gram and its share of the day.
 
      What is left is the kitchen's own grouping: six courses, a heading and a
-     note apiece, first four of each. It holds while nothing is filtered — a
+     note apiece, first two of each. It holds while nothing is filtered — a
      course chip is already a narrowing, and narrowing twice reads as a bug, so
      a filtered view falls back to one flat capped list. */
   const grouped = mode === "dishes" && course === "all" && !onlyOrderable;
 
   /** Dishes shown per course before its own "Show all" is offered. */
-  const PER_COURSE = 4;
+  const PER_COURSE = 2;
 
   /**
    * ONE DISH CARD.
    *
    * A render HELPER, not a component, for the reason showAllControl gives
    * above: a component declared inside render gets a new identity on every
-   * pass, so React unmounts and remounts all 48 of these on each keystroke —
-   * replaying the entrance animation and dropping the pointer's tilt.
+   * pass, so React unmounts and remounts all 48 of these on each keystroke.
    *
    * It exists because the grid now has two shapes. In menu order the cards sit
    * inside six course groups; under any other sort they are one flat ranked
@@ -748,7 +641,7 @@ export default function FitFuelApp({
       d.kcal <= day.gapKcal;
 
     return (
-      <li key={d.id} className={s.card} data-card="">
+      <li key={d.id} className={`${s.card} ${r.productCard}`} data-card="">
         {!images[d.slot] ? (
           /* The reserved space a photograph drops into. Drop a file into
              public/images/dishes/<slug> and it fills with no layout change.
@@ -762,7 +655,7 @@ export default function FitFuelApp({
              invites the reader to decode. */
           <button
             type="button"
-            className={s.shotPlaceholder}
+            className={`${s.shotPlaceholder} ${r.productMedia}`}
             style={dishField(d)}
             onClick={() => setSheet(d)}
             aria-label={`See ${d.name}`}
@@ -776,7 +669,7 @@ export default function FitFuelApp({
         ) : (
           <button
             type="button"
-            className={s.shot}
+            className={`${s.shot} ${r.productMedia}`}
             onClick={() => setSheet(d)}
             aria-label={`See ${d.name}`}
           >
@@ -795,7 +688,7 @@ export default function FitFuelApp({
           </button>
         )}
 
-        <div className={s.cardBody}>
+        <div className={`${s.cardBody} ${r.productBody}`}>
           {/* Course and badges share one line. The badges were an overlay on
               the image well; as text beside the course they survive the mobile
               row layout, stop covering the photograph, and read as what they
@@ -806,10 +699,10 @@ export default function FitFuelApp({
               <span key={b} className={s.tag}>{b}</span>
             ))}
           </p>
-          <Link href={`/menu/${d.id}`} className={s.dishName}>
+          <Link href={`/menu/${d.id}`} className={`${s.dishName} ${r.productTitle}`}>
             {d.name}
           </Link>
-          <p className={s.dishBlurb}>{d.blurb}</p>
+          <p className={`${s.dishBlurb} ${r.productDescription}`}>{d.blurb}</p>
           {d.kcal ? (
             <MacroSplit
               p={d.protein}
@@ -872,11 +765,47 @@ export default function FitFuelApp({
      charges none of them when the basket is enquiries only. */
   const basketTotal = receipt(cart.lines).totalRs;
 
+  const switchMode = (next: "dishes" | "plans" | "supps", moveToCatalog = false) => {
+    setMode(next);
+    setQuery("");
+    setExpandedFor(null);
+    if (moveToCatalog) {
+      requestAnimationFrame(() => catalogRef.current?.scrollIntoView({ block: "start" }));
+    }
+  };
+
+  const searchPlaceholder =
+    mode === "plans"
+      ? "Search goals, conditions or diets"
+      : mode === "supps"
+        ? "Search supplements or benefits"
+        : "Search dishes or ingredients";
+
+  const noResults =
+    mode === "plans"
+      ? planResults.length === 0
+      : mode === "supps"
+        ? suppResults.length === 0
+        : results.length === 0;
+
+  const clearCurrentView = () => {
+    setQuery("");
+    if (mode === "plans") {
+      setPlanCat("all");
+      setPlanDiet("all");
+    } else if (mode === "supps") {
+      setSuppCat("all");
+    } else {
+      setCourse("all");
+      setOnlyOrderable(false);
+    }
+  };
+
   return (
-    <div className={`fk ${s.app}`} ref={shellRef}>
+    <div className={`fk ${s.app}`}>
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
-      <header className={s.top} ref={headRef}>
-        <div className={s.topRow}>
+      <header className={`${s.top} ${r.header}`}>
+        <div className={`${s.topRow} ${r.topRow}`}>
           <span className={s.brandWrap}>
             <Wordmark className={s.brand} />
             {/* THE CUTOFF STRIP, AS A CHIP. It was a full-width band under the
@@ -895,20 +824,6 @@ export default function FitFuelApp({
                   : `Cooking today · ${area}`}
             </span>
           </span>
-
-          {/* THE SEARCH FIELD IS GONE, on the owner's call (2026-08-19), and
-              this note is here so it is not re-derived as an oversight.
-
-              It was the primary control of the shell: a live filter over all 48
-              dishes, a "/" shortcut, and a numeric mode that read "30g protein"
-              and "under 400 kcal". It also cost the widest element of a phone
-              header on a page whose complaint was that the header ate 40% of
-              the screen.
-
-              WHAT NARROWS THE MENU NOW: the course chips, which are exact and
-              have live counts, and the bottom tab bar for the three catalogues.
-              Nothing is unreachable — the grid renders every course in menu
-              order, and /menu carries the full list with its own search. */}
 
           <div className={s.topActions}>
             {/* A DEAD CONTROL UNTIL NOW. This was a <button> with no onClick —
@@ -948,36 +863,107 @@ export default function FitFuelApp({
             </button>
           </div>
         </div>
+
+        <section className={r.hero} aria-labelledby="home-title">
+          <div className={r.heroCopy}>
+            <p className={r.heroKicker}>
+              <span aria-hidden="true" /> Healthy food, built around you
+            </p>
+            <h1 id="home-title" className={r.heroTitle}>
+              Your goal shouldn&apos;t end where dinner begins.
+            </h1>
+            <p className={r.heroDeck}>
+              Pick one chef-cooked meal or run a complete plan. We weigh every
+              portion in Kharadi, connect it to your daily target, and keep the
+              diary, training and coach in the same app.
+            </p>
+            <div className={r.heroActions}>
+              <button type="button" className={r.heroPrimary} onClick={() => switchMode("dishes", true)}>
+                Order a meal
+              </button>
+              <button type="button" className={r.heroSecondary} onClick={() => switchMode("plans", true)}>
+                Find my plan
+              </button>
+            </div>
+            <Link href="/plans?trial=true" className={r.trialLink}>
+              Prefer to test it first? Breakfast + lunch for {trialTotal}, once.
+            </Link>
+            <ul className={r.heroStats} aria-label="FitFuel at a glance">
+              <li><b className="fk-num">{dishes.length}</b><span>real dishes</span></li>
+              <li><b className="fk-num">{goalCount}</b><span>goals and conditions</span></li>
+              <li><b className="fk-num">{bandCounts.exercises.toLocaleString("en-IN")}</b><span>training movements</span></li>
+            </ul>
+          </div>
+
+          <div className={r.heroVisual}>
+            <Image
+              src="/images/hero-bowl-v2.png"
+              alt="A FitFuel bowl with grilled paneer, brown rice, spinach, chickpeas, pickled onion and cucumber yoghurt"
+              fill
+              priority
+              sizes="(min-width: 1024px) 52vw, 100vw"
+              className={r.heroImage}
+            />
+            <div className={r.heroPlateNote}>
+              <span>One connected day</span>
+              <b>Cooked → delivered → logged</b>
+            </div>
+            <div className={r.heroTrust}>
+              <span><i aria-hidden="true" /> Own Kharadi kitchen</span>
+              <span>FSSAI <b className="fk-num">{licence}</b></span>
+            </div>
+          </div>
+        </section>
+
         {/* ── Rail + content ──────────────────────────────────────────────── */}
-        <div className={s.filters}>
+        <div className={`${s.filters} ${r.filters}`} ref={catalogRef} id="catalog">
           {/* Catalog switch. A subscription and a single meal are different
               purchases, so they get different chip sets rather than one mixed
               grid where a Rs 230 salad sits beside a Rs 17,849 month. */}
-          <div className={s.modeRow} role="group" aria-label="What are you ordering">
-            <button
-              type="button"
-              className={`${s.mode} ${mode === "dishes" ? s.modeOn : ""}`}
-              onClick={() => setMode("dishes")}
-              aria-pressed={mode === "dishes"}
-            >
-              Single meals <span className={s.fcount}>{dishes.length}</span>
-            </button>
-            <button
-              type="button"
-              className={`${s.mode} ${mode === "plans" ? s.modeOn : ""}`}
-              onClick={() => setMode("plans")}
-              aria-pressed={mode === "plans"}
-            >
-              Meal plans <span className={s.fcount}>{planCount}</span>
-            </button>
-            <button
-              type="button"
-              className={`${s.mode} ${mode === "supps" ? s.modeOn : ""}`}
-              onClick={() => setMode("supps")}
-              aria-pressed={mode === "supps"}
-            >
-              Supplements <span className={s.fcount}>{supplements.length}</span>
-            </button>
+          <div className={r.catalogControls}>
+            <div className={`${s.modeRow} ${r.modeRow}`} role="group" aria-label="What are you ordering">
+              <button
+                type="button"
+                className={`${s.mode} ${mode === "dishes" ? s.modeOn : ""}`}
+                onClick={() => switchMode("dishes")}
+                aria-pressed={mode === "dishes"}
+              >
+                Single meals <span className={s.fcount}>{dishes.length}</span>
+              </button>
+              <button
+                type="button"
+                className={`${s.mode} ${mode === "plans" ? s.modeOn : ""}`}
+                onClick={() => switchMode("plans")}
+                aria-pressed={mode === "plans"}
+              >
+                Meal plans <span className={s.fcount}>{planCount}</span>
+              </button>
+              <button
+                type="button"
+                className={`${s.mode} ${mode === "supps" ? s.modeOn : ""}`}
+                onClick={() => switchMode("supps")}
+                aria-pressed={mode === "supps"}
+              >
+                Supplements <span className={s.fcount}>{supplements.length}</span>
+              </button>
+            </div>
+
+            <label className={r.search}>
+              <span className="fk-sr-only">{searchPlaceholder}</span>
+              <Icon d={I.search} size={18} />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={searchPlaceholder}
+                autoComplete="off"
+              />
+              {query ? (
+                <button type="button" onClick={() => setQuery("")} aria-label="Clear search">
+                  <Icon d={I.x} size={16} />
+                </button>
+              ) : null}
+            </label>
           </div>
 
           {mode === "supps" ? (
@@ -1076,8 +1062,9 @@ export default function FitFuelApp({
             in for food — it sits above the catalogue in the shell, and every
             card below still leads with the dish.
 
-            It stays in the header so it never scrolls away while you add. */}
-        <div className={s.dayBar}>
+            It sits directly above the catalogue, where it can guide an order
+            without occupying the viewport after the customer scrolls on. */}
+        <div className={`${s.dayBar} ${r.dayBar}`}>
           <div className={s.dayBarInner}>
             <div className={s.goalPick}>
               <div className={s.goalSeg} role="group" aria-label="Your daily target">
@@ -1171,7 +1158,7 @@ export default function FitFuelApp({
       </header>
 
       <div className={s.body}>
-        <nav className={s.rail} aria-label="Sections">
+        <nav className={`${s.rail} ${r.sideRail}`} aria-label="Sections">
           <ul className={s.railList}>
             {NAV.map((n) => (
               <li key={n.label}>
@@ -1179,7 +1166,7 @@ export default function FitFuelApp({
                   <button
                     type="button"
                     className={`${s.railLink} ${mode === n.mode ? s.railOn : ""}`}
-                    onClick={() => setMode(n.mode)}
+                    onClick={() => switchMode(n.mode)}
                     aria-current={mode === n.mode ? "page" : undefined}
                   >
                     <Icon d={n.icon} />
@@ -1250,12 +1237,7 @@ export default function FitFuelApp({
             legacy pages. `main:has(.fk)` flips ChromeGate's outer main to warm
             paper, but it cannot match a <main> nested INSIDE the .fk subtree,
             so this element was rendering dark ink on #070707. */}
-        {/* The tilt listener lives on this stable wrapper rather than on the
-            grid: the three catalog modes each mount their own <ul>, so a ref on
-            the grid would go stale the moment someone switched to plans. One
-            listener here covers dishes, plans and supplements for the life of
-            the app. */}
-        <div className={s.main} ref={gridRef}>
+        <div className={s.main}>
           {/* Filters. Counts are real, so a chip never leads to an empty grid. */}
           <div className={s.pad}>
             {/* The app's one h1. Visually hidden because the shell states the
@@ -1285,36 +1267,7 @@ export default function FitFuelApp({
                 six figures are the platform band's own four plus the dish and
                 plan counts printed on the result line under this. Nothing here
                 was load-bearing; it was the fold repeating itself. */}
-            <div className={s.lede}>
-              <h1 className={s.claim}>Food cooked to your numbers.</h1>
-              {/* The deck must NOT repeat the delivery promise. The chip in the
-                  header is mode-aware — "Cooking today · Kharadi" for a single
-                  meal, the cutoff for a plan — and an earlier draft of this line
-                  said "by 8am" over a 48-dish menu, which is the exact mistake
-                  that chip's own comment was written to prevent. So this says
-                  the part nothing else on the fold says: what the bar above it
-                  is for. */}
-              <p className={s.claimDeck}>
-                Set today&apos;s target above, then add dishes until the bars
-                fill. Every portion is weighed in our Kharadi kitchen and is
-                ready to confirm in your diary.
-              </p>
-            </div>
-
-            {/* The offer row is the PHONE half of the trial card in the rail —
-                CSS shows exactly one of the two, and this one only exists below
-                1024px where there is no rail to hold it. */}
-            <div className={s.offer}>
-              <span className={s.offerText}>
-                <b>Try one day for {trialTotal}</b>
-                <span>Breakfast and lunch, cooked to your macros. Nothing to cancel.</span>
-              </span>
-              <Link href="/plans?trial=true" className={s.add} style={{ textDecoration: "none" }}>
-                Start the trial
-              </Link>
-            </div>
-
-            <div className={s.resultBar}>
+            <div className={`${s.resultBar} ${r.resultBar}`}>
               <h2>
                 {mode === "supps"
                   ? suppCat === "all"
@@ -1338,21 +1291,79 @@ export default function FitFuelApp({
               </p>
             </div>
 
-            {mode === "supps" ? (
+            {mode !== "dishes" ? (
+              <div className={r.modeFeature}>
+                <div className={r.modeFeatureImage}>
+                  <Image
+                    src={mode === "plans" ? "/images/hero-bowl-v2.png" : "/images/supplements.jpg"}
+                    alt={
+                      mode === "plans"
+                        ? "A balanced FitFuel meal with paneer, rice, greens, chickpeas and raita"
+                        : "A person preparing a measured supplement serving"
+                    }
+                    fill
+                    sizes="(min-width: 1024px) 38vw, 100vw"
+                    className={r.cardImage}
+                  />
+                </div>
+                <div className={r.modeFeatureCopy}>
+                  <span>{mode === "plans" ? "Complete nutrition" : "Evidence before products"}</span>
+                  <h3>
+                    {mode === "plans"
+                      ? "A menu, a target and a feedback loop—not a PDF you forget."
+                      : "Understand the evidence, dosage and timing before you buy anywhere."}
+                  </h3>
+                  <p>
+                    {mode === "plans"
+                      ? "Choose your goal, diet and meal schedule. Your diary arrives pre-filled, your training counts, and the coach proposes changes only when the trend supports them."
+                      : "FitFuel does not stock supplements. The catalogue compares mechanisms, benefits, warnings, timing and study depth without turning the recommendation into a sales pitch."}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {noResults ? (
+              <div className={s.empty}>
+                <h3>Nothing matches that.</h3>
+                <p>
+                  {mode === "plans" ? (
+                    <>There are {planCount} plans across goals, sports and {goalCount} conditions. </>
+                  ) : mode === "supps" ? (
+                    <>There are {supplements.length} researched supplements across {suppCats.length} categories. </>
+                  ) : (
+                    <>We cook {dishes.length} dishes across {courses.length} courses. </>
+                  )}
+                  Clear the search or try a different filter.
+                </p>
+                <span className={s.emptyActions}>
+                  <button type="button" className={s.add} onClick={clearCurrentView}>
+                    Show everything here
+                  </button>
+                  <button
+                    type="button"
+                    className={[s.add, s.ghost].join(" ")}
+                    onClick={() => switchMode(mode === "dishes" ? "plans" : "dishes")}
+                  >
+                    {mode === "dishes" ? (
+                      <>Browse {planCount} plans</>
+                    ) : (
+                      <>Browse {dishes.length} meals</>
+                    )}
+                  </button>
+                </span>
+              </div>
+            ) : mode === "supps" ? (
               <>
-              <ul className={s.grid}>
+              <ul className={`${s.grid} ${r.productGrid}`}>
                 {cap(suppResults).map((x) => (
-                  <li key={x.slug} className={s.card} data-card="">
-                    <div className={s.shotPlaceholder} aria-hidden="true">
-                      <span>{x.category}</span>
-                    </div>
-                    <div className={s.cardBody}>
+                  <li key={x.slug} className={`${s.card} ${r.productCard} ${r.textCard}`} data-card="">
+                    <div className={`${s.cardBody} ${r.productBody}`}>
                       <p className={s.dishTop}>
                         <span className={s.dishCourse}>{x.category}</span>
                         {x.evidence ? <span className="fk-num">{x.evidence.replace(/_/g, " ")}</span> : null}
                       </p>
-                      <Link href={`/supplements#${x.slug}`} className={s.dishName}>{x.name}</Link>
-                      {x.tagline ? <p className={s.dishBlurb}>{x.tagline}</p> : null}
+                      <Link href={`/supplements#${x.slug}`} className={`${s.dishName} ${r.productTitle}`}>{x.name}</Link>
+                      {x.tagline ? <p className={`${s.dishBlurb} ${r.productDescription}`}>{x.tagline}</p> : null}
                       {x.benefits.length ? (
                         <ul className={s.benefits}>
                           {x.benefits.map((b) => <li key={b}>{b}</li>)}
@@ -1373,17 +1384,10 @@ export default function FitFuelApp({
               </>
             ) : mode === "plans" ? (
               <>
-              <ul className={s.grid}>
+              <ul className={`${s.grid} ${r.productGrid}`}>
                 {cap(planResults).map((p) => (
-                  <li key={p.slug} className={s.card} data-card="">
-                    {/* The image slot is KEPT as a labelled placeholder. There is
-                        no photography pipeline yet; when one lands, this well
-                        takes the file with no layout change. */}
-                    <div className={s.shotPlaceholder} style={fieldStyle(p.slug)} aria-hidden="true">
-                      <span>{p.sub.replace(/_/g, " ")}</span>
-                    </div>
-
-                    <div className={s.cardBody}>
+                  <li key={p.slug} className={`${s.card} ${r.productCard} ${r.textCard}`} data-card="">
+                    <div className={`${s.cardBody} ${r.productBody}`}>
                       <p className={s.planCat}>
                         {p.variants.length} diet{p.variants.length === 1 ? "" : "s"} · 4 meals a day
                       </p>
@@ -1392,10 +1396,10 @@ export default function FitFuelApp({
                           Product/Offer schema — it has existed all along and
                           the app never linked to it. The card title is the way
                           in; the buttons below stay for quick answers. */}
-                      <Link href={`/plans/${p.slug}`} className={s.dishName}>
+                      <Link href={`/plans/${p.slug}`} className={`${s.dishName} ${r.productTitle}`}>
                         {p.label}
                       </Link>
-                      <p className={s.dishBlurb}>{p.note}</p>
+                      <p className={`${s.dishBlurb} ${r.productDescription}`}>{p.note}</p>
                       {/* The daily kcal was a line of its own above the bar.
                           It is the ring's centre now, labelled "a day" so the
                           per-day basis survives the move. Falls back to the
@@ -1450,39 +1454,9 @@ export default function FitFuelApp({
               </ul>
               {showAllControl(planResults.length, "plans")}
               </>
-            ) : results.length === 0 ? (
-              /* No off-domain escape hatch here either. An empty search result
-                 is not a reason to hand the customer to another company's app —
-                 the two useful actions are both on this page. */
-              <div className={s.empty}>
-                <h3>Nothing matches that.</h3>
-                <p>
-                  We cook {dishes.length} dishes across {courses.length} courses, and {planCount}{" "}
-                  plans on subscription. Try a different word, or look through the plans.
-                </p>
-                <span className={s.emptyActions}>
-                  {/* The only way to empty this grid now is a course chip
-                      crossed with "priced tonight" — so the way out is to drop
-                      both, not to clear a field that no longer exists. */}
-                  <button
-                    type="button"
-                    className={s.add}
-                    onClick={() => { setCourse("all"); setOnlyOrderable(false); }}
-                  >
-                    Show the whole menu
-                  </button>
-                  <button
-                    type="button"
-                    className={`${s.add} ${s.ghost}`}
-                    onClick={() => setMode("plans")}
-                  >
-                    Browse {planCount} plans
-                  </button>
-                </span>
-              </div>
             ) : grouped ? (
               /* ── THE MENU, IN COURSES ──────────────────────────────────────
-                 Six headings with a note apiece and the first four dishes of
+                 Six headings with a note apiece and the first two dishes of
                  each, rather than 48 identical cards in one undifferentiated
                  wall. The note is the kitchen's own — COURSES carries it — and
                  it is the sentence that tells someone why a course exists
@@ -1490,17 +1464,33 @@ export default function FitFuelApp({
 
                  Each course opens on its own. Opening Salads must not dump the
                  other five on the page. */
-              <ul className={s.grid}>
+              <ul className={`${s.grid} ${r.productGrid}`}>
                 {courses.map((c) => {
                   const list = results.filter((d) => d.category === c.key);
                   if (!list.length) return null;
                   const open = !!openCourse[c.key];
                   const shown = open ? list : list.slice(0, PER_COURSE);
+                  const cover = list.find((d) => images[d.slot]);
                   return (
                     <li key={c.key} className={s.courseSpan}>
                       <ul className={s.courseGroup}>
-                        <li className={s.courseHead}>
-                          <span>
+                        <li className={`${s.courseHead} ${r.courseHead}`}>
+                          {cover ? (
+                            <button
+                              type="button"
+                              className={r.courseCover}
+                              onClick={() => setSheet(cover)}
+                              aria-label={`See ${cover.name}`}
+                            >
+                              <Slot
+                                images={images}
+                                name={cover.slot}
+                                alt=""
+                                sizes="96px"
+                              />
+                            </button>
+                          ) : null}
+                          <span className={r.courseCopy}>
                             <span className={s.courseTitle}>
                               <b>{c.label}</b>
                               <span className="fk-num">{list.length} dishes</span>
@@ -1527,7 +1517,7 @@ export default function FitFuelApp({
               </ul>
             ) : (
               <>
-              <ul className={s.grid}>{cap(results).map((d) => dishCard(d))}</ul>
+              <ul className={`${s.grid} ${r.productGrid}`}>{cap(results).map((d) => dishCard(d))}</ul>
               {showAllControl(results.length, "dishes")}
               </>
             )}
@@ -1587,7 +1577,7 @@ export default function FitFuelApp({
               key={n.label}
               type="button"
               className={`${s.tab} ${mode === n.mode ? s.tabOn : ""}`}
-              onClick={() => setMode(n.mode)}
+              onClick={() => switchMode(n.mode)}
               aria-current={mode === n.mode ? "page" : undefined}
             >
               <Icon d={n.icon} size={22} />

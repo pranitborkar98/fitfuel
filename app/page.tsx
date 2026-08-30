@@ -38,7 +38,16 @@ import type { BandCounts, Quote } from "./_web/HomeBands";
    ══════════════════════════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
+  title: "Healthy meals, meal plans and nutrition coaching in Pune",
+  description:
+    "Order chef-cooked healthy meals in Pune or build a complete nutrition plan with delivery, food logging, training and coaching in one FitFuel app.",
   alternates: { canonical: "/" },
+  openGraph: {
+    title: "FitFuel — healthy food built around you",
+    description:
+      "Chef-cooked meals, personalised plans, food logging, training and coaching from one Kharadi kitchen.",
+    images: [{ url: "/images/hero-bowl-v2.png", alt: "A chef-cooked FitFuel meal" }],
+  },
 };
 
 export const viewport: Viewport = {

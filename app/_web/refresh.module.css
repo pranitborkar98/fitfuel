@@ -1,0 +1,740 @@
+/*
+ * The food-first storefront layer.
+ *
+ * app.module.css still owns the mature application behaviour: basket, sheets,
+ * plan configuration, goal arithmetic and the large directory below the menu.
+ * This module owns the front-door composition and gives the catalogue enough
+ * visual space to sell food rather than read like a database.
+ */
+
+.header {
+  position: relative !important;
+  top: auto !important;
+  z-index: var(--fk-z-base) !important;
+  border-bottom: 0 !important;
+  background: var(--fk-paper);
+}
+
+.topRow {
+  min-height: 72px;
+  border-bottom: 1px solid var(--fk-line);
+}
+
+/* ── Food-first opening ────────────────────────────────────────────────── */
+.hero {
+  width: min(100%, 1440px);
+  margin-inline: auto;
+  padding: clamp(28px, 4vw, 60px) var(--fk-gutter) clamp(36px, 5vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(440px, 1.1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 76px);
+}
+
+.heroCopy {
+  max-width: 650px;
+}
+
+.heroKicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--fk-s-4);
+  color: var(--fk-green-deep);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.heroKicker > span {
+  width: 24px;
+  height: 2px;
+  background: var(--fk-green);
+}
+
+.heroTitle {
+  max-width: 12ch;
+  margin: 0;
+  color: var(--fk-ink);
+  font-family: var(--fk-display);
+  font-size: clamp(3.25rem, 5.3vw, 5.75rem);
+  font-weight: 520;
+  letter-spacing: -0.045em;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.heroDeck {
+  max-width: 58ch;
+  margin: var(--fk-s-5) 0 0;
+  color: var(--fk-ink-2);
+  font-size: clamp(1rem, 0.92rem + 0.28vw, 1.18rem);
+  line-height: 1.65;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--fk-s-6);
+}
+
+.heroPrimary,
+.heroSecondary {
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: var(--fk-r);
+  font: 700 var(--fk-t-base)/1 var(--fk-sans);
+  cursor: pointer;
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease),
+    transform var(--fk-dur-fast) var(--fk-ease);
+}
+
+.heroPrimary {
+  border: 1px solid var(--fk-green);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+}
+
+.heroPrimary:hover {
+  border-color: var(--fk-green-deep);
+  background: var(--fk-green-deep);
+}
+
+.heroSecondary {
+  border: 1px solid var(--fk-line-strong);
+  background: transparent;
+  color: var(--fk-ink);
+}
+
+.heroSecondary:hover {
+  border-color: var(--fk-ink-2);
+  background: var(--fk-surface);
+}
+
+.heroPrimary:active,
+.heroSecondary:active {
+  transform: scale(0.98);
+}
+
+.hero a.trialLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--fk-tap);
+  margin-top: 8px;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  text-decoration-color: var(--fk-line-strong);
+  text-underline-offset: 4px;
+}
+
+.hero a.trialLink:hover {
+  color: var(--fk-green-deep);
+  text-decoration-color: var(--fk-green);
+}
+
+.heroStats {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--fk-s-4);
+  margin: var(--fk-s-5) 0 0;
+  padding: var(--fk-s-5) 0 0;
+  border-top: 1px solid var(--fk-line);
+}
+
+.heroStats li {
+  display: grid;
+  gap: 3px;
+}
+
+.heroStats b {
+  color: var(--fk-ink);
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  line-height: 1;
+}
+
+.heroStats span {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+  line-height: 1.35;
+}
+
+.heroVisual {
+  position: relative;
+  min-height: clamp(480px, 48vw, 650px);
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.heroVisual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 52%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), transparent 35%);
+}
+
+.heroImage,
+.cardImage {
+  object-fit: cover;
+}
+
+.heroPlateNote {
+  position: absolute;
+  z-index: 2;
+  left: var(--fk-s-5);
+  bottom: 58px;
+  display: grid;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 3px solid var(--fk-green);
+  color: var(--fk-ink);
+}
+
+.heroPlateNote span {
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-xs);
+}
+
+.heroPlateNote b {
+  font-size: var(--fk-t-base);
+}
+
+.heroTrust {
+  position: absolute;
+  z-index: 2;
+  right: var(--fk-s-4);
+  bottom: var(--fk-s-4);
+  left: var(--fk-s-4);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-xs);
+}
+
+.heroTrust span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.heroTrust i {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green);
+}
+
+/* ── Catalogue controls ────────────────────────────────────────────────── */
+.filters {
+  scroll-margin-top: var(--fk-s-4);
+  padding-top: var(--fk-s-5) !important;
+  padding-bottom: var(--fk-s-5) !important;
+  border-top: 1px solid var(--fk-line) !important;
+  border-bottom: 1px solid var(--fk-line) !important;
+  background: var(--fk-surface) !important;
+}
+
+.catalogControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 390px);
+  align-items: center;
+  gap: var(--fk-s-4);
+  margin-bottom: 14px !important;
+}
+
+.modeRow {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px !important;
+  padding: 4px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+}
+
+.modeRow > button {
+  min-height: 46px;
+  border-radius: var(--fk-r-sm) !important;
+}
+
+.search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 54px;
+  padding: 0 8px 0 16px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+  color: var(--fk-ink-3);
+}
+
+.search:focus-within {
+  border-color: var(--fk-green-deep);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--fk-green) 24%, transparent);
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  padding: 0 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fk-ink);
+  font: 500 var(--fk-t-base)/1 var(--fk-sans);
+}
+
+.search input::placeholder {
+  color: var(--fk-ink-3);
+  opacity: 1;
+}
+
+.search button {
+  display: inline-grid;
+  place-items: center;
+  width: var(--fk-tap);
+  height: var(--fk-tap);
+  border: 0;
+  border-radius: var(--fk-r-sm);
+  background: transparent;
+  color: var(--fk-ink-3);
+  cursor: pointer;
+}
+
+.search button:hover {
+  background: var(--fk-warm);
+  color: var(--fk-ink);
+}
+
+.dayBar {
+  padding: 12px var(--fk-gutter);
+  border-top: 0 !important;
+  border-bottom: 1px solid var(--fk-line) !important;
+  background: var(--fk-paper) !important;
+}
+
+.dayBar > div {
+  padding: 14px var(--fk-s-4) !important;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.sideRail {
+  top: var(--fk-s-5) !important;
+  max-height: calc(100dvh - var(--fk-s-7)) !important;
+}
+
+.planSummary {
+  top: var(--fk-s-5) !important;
+}
+
+/* ── Browsing and product cards ────────────────────────────────────────── */
+.resultBar {
+  padding-top: clamp(30px, 4vw, 56px) !important;
+  padding-bottom: var(--fk-s-5) !important;
+}
+
+.resultBar h2 {
+  font-size: clamp(2rem, 3.2vw, 3rem) !important;
+  letter-spacing: -0.025em;
+}
+
+.resultBar p {
+  font-size: var(--fk-t-base) !important;
+}
+
+.modeFeature {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+  min-height: 330px;
+  margin-bottom: var(--fk-s-5);
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.modeFeatureImage {
+  position: relative;
+  min-height: 300px;
+  background: var(--fk-warm);
+}
+
+.modeFeatureCopy {
+  align-self: center;
+  padding: clamp(28px, 5vw, 64px);
+}
+
+.modeFeatureCopy > span {
+  color: var(--fk-green-deep);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+}
+
+.modeFeatureCopy h3 {
+  max-width: 17ch;
+  margin: 10px 0 0;
+  color: var(--fk-ink);
+  font-family: var(--fk-display);
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  font-weight: 520;
+  letter-spacing: -0.025em;
+  line-height: 1.06;
+}
+
+.modeFeatureCopy p {
+  max-width: 58ch;
+  margin: var(--fk-s-4) 0 0;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-base);
+  line-height: 1.65;
+}
+
+.productGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: clamp(14px, 2vw, 24px) !important;
+}
+
+.productCard.productCard {
+  overflow: hidden;
+  border-color: var(--fk-line-2);
+  background: var(--fk-surface);
+  box-shadow: none;
+  transform: none;
+  animation: none;
+  will-change: auto;
+}
+
+.productCard.productCard::before,
+.productCard.productCard::after {
+  display: none;
+}
+
+.productCard.productCard:hover {
+  border-color: var(--fk-line-strong);
+  box-shadow: var(--fk-shadow-2);
+  transform: translateY(-2px);
+}
+
+.productMedia {
+  display: block !important;
+  aspect-ratio: 4 / 3 !important;
+  border-bottom: 1px solid var(--fk-line) !important;
+  background: var(--fk-warm);
+}
+
+.productMedia img {
+  transition: transform var(--fk-dur-slow) var(--fk-ease);
+}
+
+.productCard:hover .productMedia img {
+  transform: scale(1.025);
+}
+
+.productBody {
+  gap: 8px !important;
+  padding: clamp(16px, 2vw, 22px) !important;
+}
+
+.productCard .productTitle {
+  min-height: auto;
+  padding: 3px 0;
+  color: var(--fk-ink);
+  font-size: clamp(1.15rem, 1.5vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.productCard .productTitle:hover {
+  color: var(--fk-green-deep);
+}
+
+.productDescription {
+  color: var(--fk-ink-2) !important;
+  font-size: var(--fk-t-sm) !important;
+  line-height: 1.55 !important;
+}
+
+.textCard {
+  min-height: 320px;
+}
+
+.textCard .productBody {
+  padding: clamp(20px, 2.5vw, 28px) !important;
+}
+
+/* Course headers contain a real meal preview. This makes the six-way menu
+ * structure scannable without representing food as an icon or a macro chart. */
+.courseHead {
+  display: grid !important;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center !important;
+  gap: var(--fk-s-4) !important;
+  padding: clamp(24px, 3vw, 38px) 0 12px !important;
+}
+
+.courseCover {
+  position: relative;
+  width: 96px;
+  height: 72px;
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  background: var(--fk-warm);
+  cursor: pointer;
+}
+
+.courseCover img {
+  object-fit: cover;
+}
+
+.courseCopy {
+  display: block;
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .hero {
+    grid-template-columns: minmax(0, 0.95fr) minmax(390px, 1.05fr);
+    gap: 34px;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .heroCopy {
+    max-width: 760px;
+  }
+
+  .heroTitle {
+    max-width: 13ch;
+  }
+
+  .heroVisual {
+    min-height: min(70vw, 560px);
+  }
+
+  .catalogControls {
+    grid-template-columns: 1fr;
+  }
+
+  .modeFeature {
+    grid-template-columns: 1fr;
+  }
+
+  .modeFeatureImage {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 639px) {
+  .topRow {
+    min-height: 64px;
+  }
+
+  .hero {
+    padding-top: var(--fk-s-5);
+    padding-bottom: var(--fk-s-7);
+    gap: var(--fk-s-6);
+  }
+
+  .heroTitle {
+    max-width: 12ch;
+    font-size: clamp(2.75rem, 13.5vw, 4rem);
+    line-height: 0.98;
+  }
+
+  .heroDeck {
+    margin-top: 18px;
+    font-size: var(--fk-t-base);
+    line-height: 1.58;
+  }
+
+  .heroActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: var(--fk-s-5);
+  }
+
+  .heroPrimary,
+  .heroSecondary {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 12px;
+    font-size: var(--fk-t-sm);
+  }
+
+  .heroStats {
+    gap: 10px;
+  }
+
+  .heroStats span {
+    font-size: 0.6875rem;
+  }
+
+  .heroVisual {
+    min-height: 102vw;
+    max-height: 520px;
+  }
+
+  .heroPlateNote {
+    left: var(--fk-s-4);
+    bottom: 72px;
+  }
+
+  .heroTrust {
+    justify-content: flex-start;
+  }
+
+  .filters {
+    padding-top: var(--fk-s-4) !important;
+    padding-bottom: var(--fk-s-4) !important;
+  }
+
+  .modeRow > button {
+    padding-inline: 6px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .modeRow > button span {
+    display: none;
+  }
+
+  .search {
+    min-height: 50px;
+  }
+
+  .search input {
+    height: 48px;
+  }
+
+  .dayBar {
+    padding: 10px var(--fk-gutter) 14px;
+  }
+
+  .dayBar > div {
+    padding: var(--fk-s-3) !important;
+  }
+
+  .resultBar {
+    padding-top: var(--fk-s-6) !important;
+  }
+
+  .resultBar h2 {
+    font-size: 2rem !important;
+  }
+
+  .modeFeature {
+    min-height: 0;
+  }
+
+  .modeFeatureImage {
+    min-height: 230px;
+  }
+
+  .modeFeatureCopy {
+    padding: var(--fk-s-5);
+  }
+
+  .productGrid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .productCard.productCard:not(.textCard) {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+  }
+
+  .productCard:not(.textCard) .productMedia {
+    width: 132px;
+    height: 100%;
+    min-height: 220px;
+    aspect-ratio: auto !important;
+    border-right: 1px solid var(--fk-line) !important;
+    border-bottom: 0 !important;
+  }
+
+  .productBody {
+    min-width: 0;
+    padding: 14px !important;
+  }
+
+  .productCard .productTitle {
+    font-size: 1.05rem;
+  }
+
+  .productDescription {
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+  }
+
+  .textCard {
+    min-height: 0;
+  }
+
+  .courseHead {
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .courseCover {
+    width: 76px;
+    height: 64px;
+  }
+
+  .courseHead > button:last-child {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 390px) {
+  .heroActions {
+    grid-template-columns: 1fr;
+  }
+
+  .productCard.productCard:not(.textCard) {
+    grid-template-columns: 116px minmax(0, 1fr);
+  }
+
+  .productCard:not(.textCard) .productMedia {
+    width: 116px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroPrimary,
+  .heroSecondary,
+  .productCard.productCard,
+  .productMedia img {
+    transition: none !important;
+  }
+
+  .productCard.productCard:hover,
+  .productCard:hover .productMedia img {
+    transform: none !important;
+  }
+}
