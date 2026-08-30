@@ -121,8 +121,8 @@ export default function WeeklyReviewCard() {
 
       <div style={{ padding: 16 }}>
         <p style={{
-          fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 900, fontSize: 22,
-          lineHeight: 1.1, letterSpacing: "-0.02em", textTransform: "uppercase",
+          fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600, fontSize: 24,
+          lineHeight: 1.1, letterSpacing: "-0.02em", textTransform: "none",
           color: C.ink, margin: 0, maxWidth: "26ch",
         }}>
           {review.headline}

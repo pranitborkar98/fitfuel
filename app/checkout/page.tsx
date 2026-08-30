@@ -6,10 +6,11 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, ShieldCheck, MessageCircle, AlertCircle,
-  Banknote, CreditCard, FlaskConical, MapPin, Plus, Pencil,
+  Banknote, CreditCard, MapPin, Plus,
 } from "lucide-react";
 import DeliveryWindowToggle from "@/components/DeliveryWindowToggle";
 import FirstDeliveryNotice from "@/components/FirstDeliveryNotice";
+import { DELIVERY_WINDOWS } from "@/lib/delivery-windows";
 import { decomposePrice, durationKeyFromShort } from "@/lib/pricing-decomposition";
 import { WHATSAPP_NUMBER } from "@/lib/site";
 
@@ -43,9 +44,9 @@ const DIET_LABELS: Record<string, string> = {
   veg: "Vegetarian", egg: "Eggetarian", nonveg: "Non-Vegetarian", jain: "Jain",
 };
 const DUR_LABELS: Record<string, string> = {
-  trial: "Trial Day", weekly: "Weekly (7 days)", biweekly: "Bi-weekly (15 days)",
-  monthly_ex: "Monthly excl. weekends", monthly: "1 Month",
-  two_month: "2 Months", three_month: "3 Months",
+  trial: "Trial day", weekly: "1 week (7 days)", biweekly: "2 weeks (14 days)",
+  monthly_ex: "Weekdays for a month", monthly: "1 month",
+  two_month: "2 months", three_month: "3 months",
 };
 const MEAL_LABELS: Record<string, string> = {
   bl: "Breakfast + Lunch", sd: "Snack + Dinner", all: "All 4 meals",
@@ -75,11 +76,11 @@ function Field({
   const [focused, setFocused] = useState(false);
   return (
     <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+      <label htmlFor={name} style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.textSecond, marginBottom: 7 }}>
         {label}{required && <span style={{ color: T.accent, marginLeft: 2 }}>*</span>}
       </label>
       <input
-        type={type} name={name} value={value}
+        id={name} type={type} name={name} value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder} required={required} maxLength={maxLength}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
@@ -100,13 +101,13 @@ type PayMethod = "online" | "cod";
 
 function PayToggle({ value, onChange }: { value: PayMethod; onChange: (v: PayMethod) => void }) {
   const options: { id: PayMethod; label: string; sub: string; icon: React.ReactNode }[] = [
-    { id: "online", label: "Pay Online",        sub: "UPI, cards, net banking via PayU", icon: <CreditCard size={18} /> },
-    { id: "cod",    label: "Cash on Delivery",  sub: "Pay when your meals arrive",        icon: <Banknote size={18} /> },
+    { id: "online", label: "Pay online",       sub: "UPI, cards and net banking via PayU", icon: <CreditCard size={18} /> },
+    { id: "cod",    label: "Cash on delivery", sub: "Pay when your meals arrive",          icon: <Banknote size={18} /> },
   ];
   return (
     <div style={{ marginBottom: 28 }}>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-        Payment Method <span style={{ color: T.accent }}>*</span>
+      <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.textSecond, marginBottom: 10 }}>
+        Payment method <span style={{ color: T.accent }}>*</span>
       </label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {options.map(opt => {
@@ -160,7 +161,7 @@ function AddressCard({
       </div>
       <div style={{ flex: 1 }}>
         {address.label && (
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.accent, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.accent, marginBottom: 3 }}>
             {address.label}
           </div>
         )}
@@ -188,13 +189,16 @@ function CheckoutInner() {
   const dur      = params.get("dur")     || "monthly_ex";
   const meal     = params.get("meal")    || "sd";
   const planSlug = params.get("planSlug") || "";   // LOOP-3: carry the chosen plan to the order
-  const rawPrice = Number(params.get("price") || 0);
   const error    = params.get("error");
   const errMsg   = params.get("msg");
+  const [verifiedSubtotal, setVerifiedSubtotal] = useState<number | null>(null);
+  const [selectionLoading, setSelectionLoading] = useState(true);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [verifiedPlanName, setVerifiedPlanName] = useState<string | null>(null);
+  const rawPrice = verifiedSubtotal ?? 0;
 
-  const isTest   = params.get("test") === "1";
-  const price    = isTest ? 1 : rawPrice;
-  const priceGST = isTest ? 1 : Math.round(rawPrice * 1.05);
+  // Public query parameters never create a reduced-value payment path. The
+  // preview and the server-authoritative charge use the selected-plan subtotal.
 
   // R-PRICE — coupon state (declared before the total computation that reads `discount`)
   const [coupon, setCoupon] = useState("");
@@ -202,21 +206,19 @@ function CheckoutInner() {
   const [couponApplied, setCouponApplied] = useState<string | null>(null);
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
+  const [discountSource, setDiscountSource] = useState<"coupon" | "referral" | null>(null);
+  const [pricingNotice, setPricingNotice] = useState<string | null>(null);
 
   // R-PRICE (#189) — marketing decomposition of the (GST-exclusive) anchor price.
   // base + delivery + packaging = subtotal (rawPrice); GST on top → total.
   // Display-only: the order still records subtotal/gst/total exactly as before.
-  const bd = isTest
-    ? null
-    : decomposePrice({ subtotalRs: rawPrice, duration: durationKeyFromShort(dur) });
+  const bd = decomposePrice({ subtotalRs: rawPrice, duration: durationKeyFromShort(dur) });
   // coupon discount reduces the taxable subtotal; GST recomputes on the net.
   const effSubtotal = Math.max(0, rawPrice - discount);
-  const effGst = bd ? Math.round(effSubtotal * 0.05) : 0;
-  const grandTotal = isTest ? priceGST : effSubtotal + effGst; // GST-inclusive collected
+  const effGst = Math.round(effSubtotal * 0.05);
+  const grandTotal = effSubtotal + effGst; // GST-inclusive collected
 
-  const productinfo = isTest
-    ? "FitFuel TEST TRANSACTION, ignore"
-    : `FitFuel ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
+  const productinfo = `${verifiedPlanName || "FitFuel meal plan"} · ${DUR_LABELS[dur] || dur} · ${MEAL_LABELS[meal] || meal} · ${DIET_LABELS[diet] || diet}`;
 
   // Saved addresses state
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -238,11 +240,49 @@ function CheckoutInner() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditApplicable, setCreditApplicable] = useState(0);
   const [useCredit, setUseCredit] = useState(true);
+  const payableTotal = Math.max(payMethod === "online" ? 1 : 0, grandTotal - (useCredit ? creditApplicable : 0));
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadSelection = async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setSelectionLoading(true);
+      setSelectionError(null);
+      setVerifiedSubtotal(null);
+      try {
+        const response = await fetch("/api/checkout/physical-selection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ planSlug, diet, dur, meal }),
+        });
+        const data: unknown = await response.json().catch(() => null);
+        const message = data && typeof data === "object" && "error" in data && typeof data.error === "string"
+          ? data.error
+          : "This plan selection is not available.";
+        if (!response.ok) throw new Error(message);
+        if (!cancelled && data && typeof data === "object") {
+          const subtotal = "subtotalRs" in data ? Number(data.subtotalRs) : Number.NaN;
+          const plan = "plan" in data && data.plan && typeof data.plan === "object" ? data.plan : null;
+          setVerifiedSubtotal(Number.isFinite(subtotal) ? subtotal : null);
+          setVerifiedPlanName(plan && "name" in plan && typeof plan.name === "string" ? plan.name : null);
+        }
+      } catch (fetchError: unknown) {
+        if (!cancelled) setSelectionError(fetchError instanceof Error ? fetchError.message : "This plan selection is not available.");
+      } finally {
+        if (!cancelled) setSelectionLoading(false);
+      }
+    };
+    void loadSelection();
+    return () => { cancelled = true; };
+  }, [planSlug, diet, dur, meal]);
 
   // Pre-fill name + email from session
   useEffect(() => {
     if (session?.user) {
       const parts = session.user.name?.split(" ") ?? [];
+      // Session data is an external source; this is the editable-form prefill.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(f => ({
         ...f,
         firstname: parts[0] ?? f.firstname,
@@ -255,6 +295,8 @@ function CheckoutInner() {
   // Fetch saved addresses for logged-in users
   useEffect(() => {
     if (authStatus === "authenticated") {
+      // This flag represents the external address request, not derived UI state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingAddresses(true);
       fetch("/api/user/addresses")
         .then(r => r.json())
@@ -297,22 +339,6 @@ function CheckoutInner() {
     return { address: form.address, city: form.city, pincode: form.pincode };
   }
 
-  if (!rawPrice && !isTest) {
-    return (
-      /* `fk` here as well as on the main return: this early branch is a screen
-         customers actually reach (any /checkout without a plan in the query),
-         and without the class its button is flattened by the global radius
-         ban while the real form's is not. */
-      <div className="fk" style={{ textAlign: "center", padding: "120px 20px", color: T.textSecond }}>
-        <p style={{ fontSize: 16, marginBottom: 24 }}>No plan selected. Please choose a plan first.</p>
-        <button onClick={() => router.push("/plans")} style={{
-          background: T.accent, color: "#000", fontWeight: 800, fontSize: 13,
-          padding: "12px 28px", borderRadius: 8, border: "none", cursor: "pointer",
-        }}>View Plans</button>
-      </div>
-    );
-  }
-
   async function applyCouponFn() {
     const code = coupon.trim().toUpperCase();
     if (!code) return;
@@ -329,13 +355,15 @@ function CheckoutInner() {
       const data = await res.json();
       if (data.ok) {
         setDiscount(data.discountRs); setCouponApplied(code);
+        setDiscountSource("coupon");
+        setPricingNotice(null);
         setCouponMsg({ ok: true, text: `Applied, you save ${data.display.discount}` });
       } else {
-        setDiscount(0); setCouponApplied(null);
+        setDiscount(0); setCouponApplied(null); setDiscountSource(null);
         setCouponMsg({ ok: false, text: data.reason || "Invalid coupon." });
       }
     } catch {
-      setDiscount(0); setCouponApplied(null);
+      setDiscount(0); setCouponApplied(null); setDiscountSource(null);
       setCouponMsg({ ok: false, text: "Could not validate coupon." });
     } finally {
       setCouponBusy(false);
@@ -343,7 +371,22 @@ function CheckoutInner() {
   }
 
   function clearCoupon() {
-    setCoupon(""); setDiscount(0); setCouponApplied(null); setCouponMsg(null);
+    setCoupon(""); setDiscount(0); setCouponApplied(null); setCouponMsg(null); setDiscountSource(null); setPricingNotice(null);
+  }
+
+  function acceptServerTotal(data: unknown, status: number): boolean {
+    if (status !== 409 || !data || typeof data !== "object" || !("totalRs" in data) || !Number.isFinite(Number(data.totalRs))) return false;
+    const serverDiscount = Math.max(0, Number("discountRs" in data ? data.discountRs : 0));
+    const serverCoupon = "couponCode" in data && typeof data.couponCode === "string" ? data.couponCode : null;
+    const fromReferral = Number("referralDiscountRs" in data ? data.referralDiscountRs : 0) > 0 && !serverCoupon;
+    setDiscount(serverDiscount);
+    setDiscountSource(fromReferral ? "referral" : serverCoupon ? "coupon" : null);
+    setCouponApplied(serverCoupon);
+    setCreditApplicable(Math.max(0, Number("creditAppliedRs" in data ? data.creditAppliedRs : 0)));
+    setPricingNotice(fromReferral
+      ? "Your referral welcome discount is now included. Review the new total, then place your order again."
+      : "Your price or available credit changed. Review the new total, then place your order again.");
+    return true;
   }
 
   async function handleCOD() {
@@ -360,11 +403,13 @@ function CheckoutInner() {
           diet, dur, meal, price: rawPrice, deliveryWindow, planSlug,
           useCredit: useCredit && creditApplicable > 0,
           couponCode: couponApplied || undefined,
+          expectedTotalRs: payableTotal,
         }),
       });
       const data = await res.json();
+      if (acceptServerTotal(data, res.status)) { setLoading(false); return; }
       if (!res.ok) throw new Error(data.error || "Failed to place order");
-      router.push(`/order/confirmation?txnid=COD-${Date.now()}&amount=${grandTotal}&cod=1&order=${data.orderNumber}`);
+      router.push(`/order/confirmation?txnid=COD-${encodeURIComponent(data.orderNumber)}&amount=${data.total}&cod=1&order=${data.orderNumber}&window=${deliveryWindow}`);
     } catch (err) {
       console.error("[COD]", err);
       alert("Something went wrong. Please try WhatsApp ordering instead.");
@@ -387,14 +432,16 @@ function CheckoutInner() {
         amount: grandTotal.toFixed(2), productinfo,
         useCredit: useCredit && creditApplicable > 0,
         couponCode: couponApplied || undefined,
+        expectedTotalRs: payableTotal,
       }),
     });
-    if (!res.ok) throw new Error("Failed to initiate payment");
     const data = await res.json();
+    if (acceptServerTotal(data, res.status)) { setLoading(false); return; }
+    if (!res.ok) throw new Error(data.error || "Failed to initiate payment");
     setPayuData(data);
   } catch (err) {
     console.error(err);
-    alert("Something went wrong. Please try WhatsApp ordering instead.");
+    alert(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     setLoading(false);
   }
 }
@@ -420,7 +467,29 @@ function CheckoutInner() {
         }
       })
       .catch(() => { setCreditBalance(0); setCreditApplicable(0); });
-  }, [rawPrice, priceGST, grandTotal, payMethod]);
+  }, [rawPrice, grandTotal, payMethod]);
+
+  if (selectionLoading) {
+    return (
+      <main className="fk" aria-busy="true" style={{ minHeight: "70vh", display: "grid", placeItems: "center", padding: "120px 20px", color: T.textSecond }}>
+        <p>Checking this plan and its current price…</p>
+      </main>
+    );
+  }
+
+  if (selectionError || !rawPrice) {
+    return (
+      /* Keep this branch after every hook so `/checkout` without a selection
+         does not change the hook order when query parameters arrive. */
+      <div className="fk" style={{ textAlign: "center", padding: "120px 20px", color: T.textSecond }}>
+        <p role="alert" style={{ fontSize: 16, marginBottom: 24 }}>{selectionError || "No plan selected. Please choose a plan first."}</p>
+        <button onClick={() => router.push("/plans")} style={{
+          background: T.accent, color: "#000", fontWeight: 800, fontSize: 13,
+          padding: "12px 28px", borderRadius: 8, border: "none", cursor: "pointer",
+        }}>View plans</button>
+      </div>
+    );
+  }
 
   const showAddressForm = useNewAddress || savedAddresses.length === 0;
 
@@ -444,7 +513,7 @@ function CheckoutInner() {
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <div style={{ width: 24, height: 2, background: T.accent, borderRadius: 8 }} />
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: T.accent, textTransform: "uppercase" }}>Checkout</span>
+            <span style={{ fontSize: 14, fontWeight: 650, color: T.accent }}>Checkout</span>
           </div>
           <h1 style={{
             /* Was Barlow Condensed 900 UPPERCASE at 3.5rem. The clamp is the
@@ -456,25 +525,6 @@ function CheckoutInner() {
             color: T.textPrimary, lineHeight: 1.04, letterSpacing: "-0.025em",
           }}>Complete your order</h1>
         </div>
-
-        {/* Test mode banner */}
-        {isTest && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-            style={{
-              display: "flex", alignItems: "center", gap: 12,
-              background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.3)",
-              borderRadius: 8, padding: "14px 18px", marginBottom: 28,
-            }}
-          >
-            <FlaskConical size={18} color="var(--fk-terracotta-deep)" style={{ flexShrink: 0 }} />
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--fk-terracotta-deep)", marginBottom: 2 }}>Test mode: &#8377;1 charge</div>
-              <div style={{ fontSize: 13, color: T.textSecond }}>
-                Live &#8377;1 test transaction. Remove <code style={{ color: "var(--fk-terracotta-deep)" }}>?test=1</code> for production.
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {/* Error banner */}
         {error && (
@@ -493,6 +543,15 @@ function CheckoutInner() {
               </div>
             </div>
           </motion.div>
+        )}
+
+        {pricingNotice && (
+          <div role="status" style={{
+            background: "rgba(132,204,22,0.08)", border: "1px solid rgba(132,204,22,0.35)",
+            borderRadius: 12, color: T.textSecond, lineHeight: 1.55, marginBottom: 28, padding: "14px 18px",
+          }}>
+            <strong style={{ color: T.textPrimary }}>Your total was updated.</strong>{" "}{pricingNotice}
+          </div>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }} className="checkout-grid">
@@ -515,8 +574,8 @@ function CheckoutInner() {
 
               {/* Delivery address section */}
               <div style={{ marginBottom: 28 }}>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textSecond, marginBottom: 12, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  Delivery Address <span style={{ color: T.accent }}>*</span>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.textSecond, marginBottom: 12 }}>
+                  Delivery address <span style={{ color: T.accent }}>*</span>
                 </label>
 
                 {/* Saved addresses */}
@@ -585,7 +644,7 @@ function CheckoutInner() {
               {/* When the food actually starts. Sits directly above the window
                   picker because both answer "when", and this is the one a
                   customer is silently guessing at otherwise. */}
-              <FirstDeliveryNotice />
+              <FirstDeliveryNotice deliveryWindow={deliveryWindow} />
 
               {/* Delivery window */}
               <div style={{ marginBottom: 28 }}><DeliveryWindowToggle value={deliveryWindow} onChange={setDeliveryWindow} /></div>
@@ -607,7 +666,7 @@ function CheckoutInner() {
                       borderRadius: 8, padding: "12px 16px",
                       fontSize: 13, color: T.textSecond, lineHeight: 1.6,
                     }}>
-                      Keep <strong style={{ color: T.textPrimary }}>{fmt(grandTotal)}</strong> ready at delivery.
+                      Keep <strong style={{ color: T.textPrimary }}>{fmt(payableTotal)}</strong> ready at delivery.
                       Our delivery partner will collect cash when your meals arrive.
                     </div>
                   </motion.div>
@@ -619,19 +678,18 @@ function CheckoutInner() {
                 style={{
                   width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   background: loading ? "rgba(132,204,22,0.5)" : T.accent,
-                  color: "#000", fontWeight: 900, fontSize: 14,
+                  color: "#000", fontWeight: 750, fontSize: 15,
                   padding: "15px 0", borderRadius: 8, border: "none",
                   cursor: loading ? "not-allowed" : "pointer",
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                  boxShadow: loading ? "none" : "0 4px 20px rgba(132,204,22,0.35)",
+                  letterSpacing: 0, textTransform: "none",
                   transition: "all 0.2s",
                 }}
               >
                 {loading
                   ? (payMethod === "cod" ? "Placing order..." : "Redirecting to PayU...")
                   : payMethod === "cod"
-                    ? <><Banknote size={15} /> Place COD Order: {fmt(grandTotal)}</>
-                    : <>Pay {fmt(grandTotal)} securely <ArrowRight size={15} /></>
+                    ? <><Banknote size={15} /> Place COD order · {fmt(payableTotal)}</>
+                    : <>Pay {fmt(payableTotal)} securely <ArrowRight size={15} /></>
                 }
               </button>
 
@@ -640,7 +698,7 @@ function CheckoutInner() {
                 <span style={{ fontSize: 12, color: T.textMuted }}>
                   {payMethod === "cod"
                     ? "No payment now · Pay cash at delivery"
-                    : "Secured by PayU · 256-bit SSL encryption"}
+                    : "Secure payment handled by PayU"}
                 </span>
               </div>
 
@@ -650,9 +708,8 @@ function CheckoutInner() {
           {/* Right — order summary */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-            <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: T.accent, textTransform: "uppercase", marginBottom: 16 }}>Order Summary</div>
+            <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderTop: `2px solid ${T.accent}`, borderRadius: 8, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, marginBottom: 16 }}>Order summary</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 {[
                   { label: "Diet",     value: DIET_LABELS[diet] || diet },
@@ -667,13 +724,7 @@ function CheckoutInner() {
               </div>
               <div style={{ height: 1, background: T.cardBorder, marginBottom: 16 }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {isTest ? (
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>Test charge</span>
-                    <span style={{ fontSize: 22, fontWeight: 800, color: "var(--fk-terracotta-deep)" }}>&#8377;1</span>
-                  </div>
-                ) : (
-                  <>
+                <>
                     {/* R-PRICE (#189) — marketing decomposition */}
                     {bd && bd.mrpRs > bd.baseRs && (
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -683,7 +734,7 @@ function CheckoutInner() {
                     )}
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: T.textMuted }}>Base price</span>
-                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.baseRs : rawPrice)}</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd.baseRs)}</span>
                     </div>
                     {bd && bd.deliveryRs > 0 && (
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -700,17 +751,19 @@ function CheckoutInner() {
                     <div style={{ height: 1, background: T.cardBorder, margin: "4px 0" }} />
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: T.textMuted }}>Subtotal</span>
-                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? bd.subtotalRs : rawPrice)}</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd.subtotalRs)}</span>
                     </div>
                     {discount > 0 && (
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 13, color: T.accent }}>Coupon ({couponApplied})</span>
+                        <span style={{ fontSize: 13, color: T.accent }}>
+                          {discountSource === "referral" ? "Referral welcome" : `Coupon (${couponApplied})`}
+                        </span>
                         <span style={{ fontSize: 13, color: T.accent }}>{'\u2212'} {fmt(discount)}</span>
                       </div>
                     )}
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 13, color: T.textMuted }}>GST (5%)</span>
-                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(bd ? effGst : priceGST - rawPrice)}</span>
+                      <span style={{ fontSize: 13, color: T.textPrimary }}>{fmt(effGst)}</span>
                     </div>
                     {creditApplicable > 0 && useCredit && (
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -722,30 +775,28 @@ function CheckoutInner() {
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>{payMethod === "cod" ? "Pay at door" : "Total"}</span>
                       <span style={{ fontSize: 22, fontWeight: 800, color: T.accent }}>
-                        {fmt(Math.max(0, grandTotal - (useCredit ? creditApplicable : 0)))}
+                        {fmt(payableTotal)}
                       </span>
                     </div>
-                  </>
-                )}
+                </>
               </div>
 
               {/* R-PRICE — coupon input */}
-              {!isTest && (
-                <div style={{ marginTop: 14 }}>
+              <div style={{ marginTop: 14 }}>
+                  <label htmlFor="checkout-coupon" style={{ display: "block", fontSize: 13, fontWeight: 650, color: T.textSecond, marginBottom: 7 }}>Coupon code</label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Coupon code"
-                      style={{ flex: 1, background: "var(--fk-warm)", border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: T.textPrimary, fontSize: 13, outline: "none" }} />
+                    <input id="checkout-coupon" value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Enter code"
+                      style={{ flex: 1, minHeight: 44, background: "var(--fk-warm)", border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: T.textPrimary, fontSize: 13, outline: "none" }} />
                     {couponApplied ? (
                       <button type="button" onClick={clearCoupon}
-                        style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "0 14px", fontSize: 13, cursor: "pointer" }}>Remove</button>
+                        style={{ minHeight: 44, background: "transparent", color: T.textMuted, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "0 14px", fontSize: 13, cursor: "pointer" }}>Remove</button>
                     ) : (
                       <button type="button" onClick={applyCouponFn} disabled={couponBusy || !coupon.trim()}
-                        style={{ background: couponBusy || !coupon.trim() ? "rgba(132,204,22,0.4)" : T.accent, color: "#000", fontWeight: 800, border: "none", borderRadius: 8, padding: "0 16px", fontSize: 13, cursor: couponBusy ? "not-allowed" : "pointer" }}>{couponBusy ? "…" : "Apply"}</button>
+                        style={{ minHeight: 44, background: couponBusy || !coupon.trim() ? "rgba(132,204,22,0.4)" : T.accent, color: "#000", fontWeight: 800, border: "none", borderRadius: 8, padding: "0 16px", fontSize: 13, cursor: couponBusy ? "not-allowed" : "pointer" }}>{couponBusy ? "…" : "Apply"}</button>
                     )}
                   </div>
                   {couponMsg && <div style={{ fontSize: 12, marginTop: 6, color: couponMsg.ok ? T.accent : "#ef4444" }}>{couponMsg.text}</div>}
-                </div>
-              )}
+              </div>
 
               {/* 17C-2 — credit toggle (signed-in users only) */}
               {creditApplicable > 0 && (
@@ -765,16 +816,19 @@ function CheckoutInner() {
               background: "rgba(132,204,22,0.05)", border: "1px solid rgba(132,204,22,0.2)",
               borderRadius: 8, padding: "14px 18px", fontSize: 13, color: T.textSecond, lineHeight: 1.6,
             }}>
-              <strong style={{ color: T.textPrimary }}>Free delivery</strong>, 7am to 10am daily to your door in Kharadi, Viman Nagar &amp; nearby areas.
+              <strong style={{ color: T.textPrimary }}>
+                Selected window: {DELIVERY_WINDOWS[deliveryWindow].label}, {DELIVERY_WINDOWS[deliveryWindow].time}.
+              </strong>{" "}
+              The delivery charge is already included in the total above.
             </div>
 
             <a
-              href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi FitFuel! I want to order:\n${productinfo}\nTotal: ${fmt(rawPrice)} (excl. GST)`)}`}
+              href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi FitFuel! I want to order:\n${productinfo}\nCurrent checkout total: ${fmt(payableTotal)}. Please confirm any referral discount or credit before placing the order.`)}`}
               target="_blank" rel="noopener noreferrer"
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 background: "transparent", border: `1px solid ${T.cardBorder}`,
-                borderRadius: 8, padding: "13px 0",
+                borderRadius: 8, minHeight: 44, padding: "13px 0",
                 fontSize: 13, fontWeight: 700, color: T.textSecond, textDecoration: "none", transition: "all 0.2s",
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(132,204,22,0.3)"; (e.currentTarget as HTMLElement).style.color = T.textPrimary; }}

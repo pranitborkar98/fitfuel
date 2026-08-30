@@ -1,36 +1,38 @@
-// app/api/driver/[token]/deliveries/route.ts
-// Phase 10 — driver's today deliveries. Authed by the token in the URL (no session).
-// Phase 16A: fires `delivery_dispatched` to the customer on first GET per delivery
-//           (idempotent via Delivery.dispatchNotifiedAt). Atomic conditional update
-//           prevents duplicate sends if the driver opens the app multiple times.
+// Driver's India-calendar delivery list. The URL token is a bearer credential.
 
+import { todayIndiaDate } from "@/lib/date-only";
+import { DELIVERY_WINDOWS, normalizeDeliveryWindow } from "@/lib/delivery-windows";
+import { sendNotification } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
-import { fireNotification } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params;
+  if (!token || token.length > 200) {
+    return NextResponse.json({ error: "Invalid or inactive driver link" }, { status: 404 });
+  }
 
   const driver = await prisma.driver.findUnique({
     where: { accessToken: token },
     select: { id: true, name: true, phone: true, isActive: true },
   });
-  if (!driver || !driver.isActive) {
+  if (!driver?.isActive) {
     return NextResponse.json({ error: "Invalid or inactive driver link" }, { status: 404 });
   }
+  const rl = await enforceRateLimit(req, "read", `driver:${driver.id}`);
+  if (!rl.ok) return rl.response;
 
-  // today's window (UTC midnight, matches the app's date convention)
-  const start = new Date();
-  start.setUTCHours(0, 0, 0, 0);
+  const start = todayIndiaDate();
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
 
-  const deliveries = await (prisma as any).delivery.findMany({
+  const deliveries = await prisma.delivery.findMany({
     where: {
       assignedDriverId: driver.id,
       deliveryDate: { gte: start, lt: end },
@@ -49,12 +51,19 @@ export async function GET(
       order: {
         select: {
           orderNumber: true,
+          totalRs: true,
+          paymentMethod: true,
+          paymentStatus: true,
           userId: true,
           user: { select: { name: true, email: true, phone: true } },
           address: {
             select: {
-              line1: true, line2: true, area: true,
-              city: true, pincode: true, landmark: true,
+              line1: true,
+              line2: true,
+              area: true,
+              city: true,
+              pincode: true,
+              landmark: true,
             },
           },
         },
@@ -62,34 +71,53 @@ export async function GET(
     },
   });
 
-  // ────────────── Phase 16A: dispatch notification ──────────────
-  // Atomic per-delivery: conditional updateMany ensures only ONE GET
-  // triggers the notification even if the driver opens the app twice.
-  const candidates = deliveries.filter((d: any) => !d.dispatchNotifiedAt);
-  for (const d of candidates) {
-    try {
-      const res = await (prisma as any).delivery.updateMany({
-        where: { id: d.id, dispatchNotifiedAt: null },
-        data:  { dispatchNotifiedAt: new Date() },
-      });
-      if (res.count > 0) {
-        fireNotification({
-          userId: d.order?.userId,
-          toEmail: d.order?.user?.email || undefined,
-          toPhone: d.order?.user?.phone || undefined,
-          toName:  d.order?.user?.name  || undefined,
+  // Only an actually-dispatched stop may tell a customer that it is on the way.
+  const candidates = deliveries.filter(
+    (delivery) => delivery.status === "OUT_FOR_DELIVERY" && !delivery.dispatchNotifiedAt,
+  );
+  await Promise.all(
+    candidates.map(async (delivery) => {
+      try {
+        const claim = await prisma.delivery.updateMany({
+          where: {
+            id: delivery.id,
+            status: "OUT_FOR_DELIVERY",
+            dispatchNotifiedAt: null,
+          },
+          data: { dispatchNotifiedAt: new Date() },
+        });
+        if (!claim.count) return;
+
+        const result = await sendNotification({
+          userId: delivery.order.userId,
+          toEmail: delivery.order.user.email || undefined,
+          toPhone: delivery.order.user.phone || undefined,
+          toName: delivery.order.user.name || undefined,
           templateKey: "delivery_dispatched",
           vars: {
-            windowLabel: d.deliveryWindow === "EVENING" ? "5\u20138 PM" : "7\u201310 AM",
-            driverName:  driver.name || "Driver",
+            windowLabel: DELIVERY_WINDOWS[normalizeDeliveryWindow(delivery.deliveryWindow)].time,
+            driverName: driver.name || "Driver",
             driverPhone: driver.phone || "",
           },
         });
+        if (result.errors.length || result.email === "failed" || result.whatsapp === "failed") {
+          await prisma.delivery.updateMany({
+            where: { id: delivery.id, status: "OUT_FOR_DELIVERY" },
+            data: { dispatchNotifiedAt: null },
+          });
+        }
+      } catch (error: unknown) {
+        await prisma.delivery.updateMany({
+          where: { id: delivery.id, status: "OUT_FOR_DELIVERY" },
+          data: { dispatchNotifiedAt: null },
+        }).catch(() => undefined);
+        console.error("[driver/deliveries] dispatch notification failed", error);
       }
-    } catch (e) {
-      console.error("[driver/deliveries] dispatch-notify failed (non-blocking)", e);
-    }
-  }
+    }),
+  );
 
-  return NextResponse.json({ driverName: driver.name, deliveries });
+  return NextResponse.json({
+    driverName: driver.name,
+    deliveries,
+  });
 }

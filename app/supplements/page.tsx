@@ -25,7 +25,7 @@ import { Wrap } from "@/app/_ui/Page";
 export const metadata = {
   alternates: { canonical: "/supplements" },
   title: "Supplements",
-  description: "Goal-based supplement stacks personalised for you. Delivered with your meals.",
+  description: "An evidence-labelled supplement directory with goal-based shortlists, India price context and links to third-party sellers.",
 };
 
 export const dynamic = "force-dynamic";
@@ -67,11 +67,9 @@ function AffiliateDisclosure() {
         <span
           style={{
             display: "block",
-            fontFamily: "var(--font-mono), monospace",
-            fontWeight: 500,
-            fontSize: 12,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
+            fontFamily: "var(--fk-sans)",
+            fontWeight: 700,
+            fontSize: 14,
             color: "var(--fk-ink-3)",
             marginBottom: 12,
           }}
@@ -88,10 +86,10 @@ function AffiliateDisclosure() {
             color: "var(--fk-ink-2)",
           }}
         >
-          FitFuel recommends supplements from trusted third-party retailers. Some links on this
+          FitFuel lists supplements and links to third-party retailers. Some links on this
           page are affiliate links. If you buy through them, FitFuel may earn a small commission at
-          no extra cost to you. We only recommend products we believe in, and commissions never
-          change what we suggest. Supplements are sold, shipped and supported by the retailer, and
+          no extra cost to you. Affiliate commission does not change the evidence tier shown on an
+          entry. Supplements are sold, shipped and supported by the retailer, and
           their returns and refund terms apply. See our{" "}
           <a
             href="/terms"

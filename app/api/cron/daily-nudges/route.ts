@@ -65,13 +65,12 @@ async function handle(req: Request) {
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   try {
-    const unpaid = await (prisma as any).order.findMany({
+    const unpaid = await prisma.order.findMany({
       where: {
         paymentStatus: "PENDING",
         paymentMethod: { not: "CASH_ON_DELIVERY" },
         status: { notIn: ["CANCELLED", "DELIVERED"] },
         createdAt: { lt: oneDayAgo, gt: sevenDaysAgo },
-        userId: { not: null },
       },
       select: {
         id: true,
@@ -91,7 +90,7 @@ async function handle(req: Request) {
           userId: o.userId,
           templateKey: "payment_pending",
           vars: {
-            name: o.user?.name || "",
+            name: o.user.name || "",
             orderNumber: o.orderNumber,
             amount: String(o.totalRs),
           },
@@ -114,7 +113,7 @@ async function handle(req: Request) {
   fourDaysOut.setUTCDate(fourDaysOut.getUTCDate() + 4);
   fourDaysOut.setUTCHours(0, 0, 0, 0);
   try {
-    const ending = await (prisma as any).userActivePlan.findMany({
+    const ending = await prisma.userActivePlan.findMany({
       where: {
         status: "active",
         endDate: { gte: twoDaysOut, lt: fourDaysOut },
@@ -141,7 +140,7 @@ async function handle(req: Request) {
           templateKey: "plan_ending",
           vars: {
             planName:
-              p.mealPlan?.displayName || p.mealPlan?.slug || "your plan",
+              p.mealPlan.displayName || p.mealPlan.slug || "your plan",
             daysLeft: String(daysLeft),
           },
         });
@@ -158,7 +157,7 @@ async function handle(req: Request) {
   // ──────── 3. Re-engagement (max 1x/week) ────────
   const threeDaysAgo = new Date(now.getTime() - 3 * 86400000);
   try {
-    const active = await (prisma as any).userActivePlan.findMany({
+    const active = await prisma.userActivePlan.findMany({
       where: {
         status: "active",
         isDigital: false,
@@ -170,18 +169,11 @@ async function handle(req: Request) {
     });
     for (const { userId } of active) {
       try {
-        // Most recent meal log. Defensive: if MealLog model differs, skip silently.
-        let lastLog: { createdAt: Date } | null = null;
-        try {
-          lastLog = await (prisma as any).mealLog.findFirst({
-            where: { userId },
-            orderBy: { createdAt: "desc" },
-            select: { createdAt: true },
-          });
-        } catch {
-          // model name or field name differs; bail re-engagement quietly
-          break;
-        }
+        const lastLog = await prisma.mealLog.findFirst({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          select: { createdAt: true },
+        });
         if (!lastLog) {
           // never logged — don't nag yet, onboarding nudge belongs elsewhere
           reEngagement.skipped++;
@@ -214,7 +206,7 @@ async function handle(req: Request) {
   // Reuses the Coach spine: WeeklySummary → Recalibration → detectCoachNudges.
   // Per-user heavy work is fine at current scale; revisit if the active base grows.
   try {
-    const coachActive = await (prisma as any).userActivePlan.findMany({
+    const coachActive = await prisma.userActivePlan.findMany({
       where: {
         status: "active",
         isDigital: false,
@@ -258,7 +250,7 @@ async function handle(req: Request) {
   // ──────── 5. Low-rated meal (rated 1–2 in the last day) ────────
   try {
     const since = new Date(now.getTime() - 36 * 3600_000); // last ~1.5 days
-    const lowRated = await (prisma as any).mealLog.findMany({
+    const lowRated = await prisma.mealLog.findMany({
       where: { rating: { lte: 2, gt: 0 }, createdAt: { gt: since } },
       select: { userId: true },
       distinct: ["userId"],

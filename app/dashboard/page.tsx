@@ -6,18 +6,14 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { screen, label, APP_MAX } from "@/app/_app/theme";
+import { screen } from "@/app/_app/theme";
 import DashboardClient from "./DashboardClient";
+import { menuDayNumber, todayISTDate } from "@/lib/production";
+import { remainingServiceDays } from "@/lib/plan-service-dates";
+import s from "./dashboard.module.css";
 
 export const metadata: Metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
-
-const WRAP: React.CSSProperties = {
-  width: "100%", maxWidth: APP_MAX, margin: "0 auto",
-  padding: "0 clamp(16px,4vw,28px)",
-};
-
-const PLAN_DAYS = 30;
 
 export type ActivePlanView = {
   id: string;
@@ -30,8 +26,9 @@ export type ActivePlanView = {
   calorieTarget: number | null;
   proteinTarget: number | null;
   mealPlan: {
-    id: string; name: string; slug: string; tier: string;
+    id: string; name: string; displayName: string; slug: string; tier: string;
     category: string; dietaryVariant: string; avgCaloriesPerDay: number;
+    cycleLengthDays: number;
   } | null;
 };
 
@@ -40,6 +37,7 @@ export default async function DashboardPage() {
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard");
 
   const userId = session.user.id;
+  const today = todayISTDate();
 
   const [orders, rawActivePlan] = await Promise.all([
     prisma.order.findMany({
@@ -49,12 +47,13 @@ export default async function DashboardPage() {
       include: { items: true },
     }),
     prisma.userActivePlan.findFirst({
-      where: { userId, status: "active" },
+      where: { userId, status: "active", startDate: { lte: today }, endDate: { gte: today } },
+      orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
       include: {
         mealPlan: {
           select: {
-            id: true, name: true, slug: true, tier: true,
-            category: true, dietaryVariant: true, avgCaloriesPerDay: true,
+            id: true, name: true, displayName: true, slug: true, tier: true,
+            category: true, dietaryVariant: true, avgCaloriesPerDay: true, cycleLengthDays: true,
           },
         },
       },
@@ -64,17 +63,14 @@ export default async function DashboardPage() {
   let activePlan: ActivePlanView | null = null;
   if (rawActivePlan) {
     const startDate = new Date(rawActivePlan.startDate);
-    const today = new Date();
-    const elapsed = Math.floor((today.getTime() - startDate.getTime()) / 86_400_000);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + PLAN_DAYS);
+    const endDate = new Date(rawActivePlan.endDate);
 
     activePlan = {
       id: rawActivePlan.id,
-      currentDay: (elapsed % PLAN_DAYS) + 1,
+      currentDay: menuDayNumber(startDate, today, rawActivePlan.mealPlan.cycleLengthDays, rawActivePlan.duration),
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      daysRemaining: Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / 86_400_000)),
+      daysRemaining: remainingServiceDays(today, endDate, rawActivePlan.duration),
       isDigital: rawActivePlan.isDigital,
       status: rawActivePlan.status,
       calorieTarget: rawActivePlan.calorieTarget,
@@ -83,23 +79,38 @@ export default async function DashboardPage() {
     };
   }
 
-  const hasPendingOrder = !activePlan && orders.some((o) => o.status === "CONFIRMED");
+  const hasActivationIssue =
+    !activePlan &&
+    orders.some(
+      (order) =>
+        order.status === "CONFIRMED" &&
+        order.items.some((item) => item.kind === "PLAN") &&
+        !(() => {
+          try { return JSON.parse(order.notes ?? "{}").isDigital === true; }
+          catch { return false; }
+        })(),
+    );
 
   return (
-    <div style={{ ...WRAP, paddingTop: 26 }}>
-      <header style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <h1 style={screen()}>Today</h1>
-        <span style={label(12)}>
-          {activePlan
-            ? `Day ${activePlan.currentDay} of ${PLAN_DAYS}, ${activePlan.mealPlan?.dietaryVariant ?? ""}`.trim()
-            : "Your day, your meals, your targets"}
-        </span>
+    <div className={s.page}>
+      <header className={s.pageHeader}>
+        <div>
+          <h1 style={screen()}>Today</h1>
+          <p className={s.pageIntro}>
+            {activePlan
+              ? `Day ${activePlan.currentDay} of your ${activePlan.mealPlan?.displayName || activePlan.mealPlan?.name || "meal plan"}.`
+              : "Your meals, movement and coaching in one place."}
+          </p>
+        </div>
+        <time className={s.date} dateTime={todayISTDate().toISOString()}>
+          {todayISTDate().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+        </time>
       </header>
 
       <DashboardClient
         orders={JSON.parse(JSON.stringify(orders))}
         activePlan={activePlan}
-        hasPendingOrder={hasPendingOrder}
+        hasActivationIssue={hasActivationIssue}
       />
     </div>
   );

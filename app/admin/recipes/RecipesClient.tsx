@@ -10,10 +10,18 @@ import { T, Text, Select, Check, btn } from "./ui";
 
 const MEALS = ["", "BREAKFAST", "LUNCH", "SNACK", "DINNER"];
 
-type Recipe = any;
+export type RecipeSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  cuisineType: string;
+  mealType: string;
+  isActive: boolean;
+  _count: { steps: number; ingredients: number };
+};
 
-export default function RecipesClient({ initial }: { initial: Recipe[] }) {
-  const [recipes, setRecipes] = useState<Recipe[]>(initial);
+export default function RecipesClient({ initial }: { initial: RecipeSummary[] }) {
+  const [recipes, setRecipes] = useState<RecipeSummary[]>(initial);
   const [q, setQ] = useState("");
   const [meal, setMeal] = useState("");
   const [needsSteps, setNeedsSteps] = useState(false);
@@ -21,7 +29,7 @@ export default function RecipesClient({ initial }: { initial: Recipe[] }) {
 
   const needsCount = recipes.filter((r) => (r._count?.steps ?? 0) === 0).length;
 
-  function patchSummary(id: string, patch: any) {
+  function patchSummary(id: string, patch: Partial<RecipeSummary>) {
     setRecipes((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
 

@@ -4,16 +4,19 @@
 // only applies its own recommendation — never a client-supplied number.
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { buildWeeklySummary } from "@/lib/coach/weekly-summary";
 import { computeRecalibration } from "@/lib/coach/recalibration";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const userId = session.user.id;
+  const rl = await enforceRateLimit(req, "mutation", userId);
+  if (!rl.ok) return rl.response;
 
   const summary = await buildWeeklySummary(userId);
   const recal = computeRecalibration(summary);
@@ -25,18 +28,19 @@ export async function POST() {
     );
   }
 
-  const db = prisma as any;
   const target = recal.recommendedTarget;
 
   // update the active plan's personalised target (if any) + the profile target
-  await db.userActivePlan.updateMany({
-    where: { userId, status: "active" },
-    data: { calorieTarget: target },
-  });
-  await db.userProfile.updateMany({
-    where: { userId },
-    data: { calorieTarget: target },
-  });
+  await prisma.$transaction([
+    prisma.userActivePlan.updateMany({
+      where: { userId, status: "active" },
+      data: { calorieTarget: target },
+    }),
+    prisma.userProfile.updateMany({
+      where: { userId },
+      data: { calorieTarget: target },
+    }),
+  ]);
 
   return NextResponse.json({
     applied: true,

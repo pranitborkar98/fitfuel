@@ -13,8 +13,6 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { readQuery } from "@/lib/validation/core";
 import { creditPreviewQuerySchema } from "@/lib/validation/schemas";
 
-const db = prisma as any;
-
 export async function GET(req: NextRequest) {
   // SEC-1: credit-balance enumeration guard.
   const rl = await enforceRateLimit(req, "creditPreview");
@@ -35,7 +33,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const user = await db.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { creditsBalanceRs: true, email: true },
   });

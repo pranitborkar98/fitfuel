@@ -1,98 +1,106 @@
-// app/p/[code]/page.tsx
-// Phase 17B (FIX) — Polymorphic branded landing page.
-// /p/<CODE> → looks up Partner by code (or User.referralCode for P2P).
-// Cookie is set CLIENT-SIDE from LandingClient (Server Components in Next 16
-// cannot write cookies). Inactive/unknown codes → fall through to /plans.
-
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
-import LandingClient from "./LandingClient";
-
-const db = prisma as any;
+import LandingClient, { type PartnerLandingView } from "./LandingClient";
 
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ code: string }> };
 
-export default async function PartnerLandingPage({ params }: Props) {
-  const { code } = await params;
-  if (!code) notFound();
+const publicPartnerSelect = {
+  id: true,
+  type: true,
+  status: true,
+  name: true,
+  code: true,
+  bio: true,
+  specialty: true,
+  profilePhotoUrl: true,
+  socialHandle: true,
+  gymAddress: true,
+  gymManagerName: true,
+  qualification: true,
+  clinicName: true,
+  hospitalAffiliation: true,
+  companyLogoUrl: true,
+  treasurerContact: true,
+  societyAddress: true,
+  refereeDiscountRs: true,
+} satisfies Prisma.PartnerSelect;
 
-  // Try Partner first; if not found / inactive, try a P2P User.referralCode
-  const partner = await db.partner.findUnique({
-    where: { code },
-    select: {
-      id: true,
-      type: true,
-      status: true,
-      name: true,
-      code: true,
-      bio: true,
-      specialty: true,
-      profilePhotoUrl: true,
-      socialHandle: true,
-      gymAddress: true,
-      gymManagerName: true,
-      qualification: true,
-      clinicName: true,
-      hospitalAffiliation: true,
-      companyLogoUrl: true,
-      treasurerContact: true,
-      societyAddress: true,
-      refereeDiscountRs: true,
-      rewardType: true,
+type PublicPartner = Prisma.PartnerGetPayload<{ select: typeof publicPartnerSelect }>;
+
+function partnerView(partner: PublicPartner): PartnerLandingView {
+  return {
+    kind: "PARTNER",
+    type: partner.type,
+    name: partner.name,
+    code: partner.code,
+    bio: partner.bio,
+    specialty: partner.specialty,
+    profilePhotoUrl: partner.profilePhotoUrl,
+    socialHandle: partner.socialHandle,
+    gymAddress: partner.gymAddress,
+    gymManagerName: partner.gymManagerName,
+    qualification: partner.qualification,
+    clinicName: partner.clinicName,
+    hospitalAffiliation: partner.hospitalAffiliation,
+    companyLogoUrl: partner.companyLogoUrl,
+    societyAddress: partner.societyAddress,
+    treasurerContact: partner.treasurerContact,
+    refereeDiscountRs: partner.refereeDiscountRs,
+  };
+}
+
+export default async function PartnerLandingPage({ params }: Props) {
+  const raw = (await params).code?.trim().slice(0, 80);
+  if (!raw) notFound();
+
+  const partner = await prisma.partner.findFirst({
+    where: {
+      OR: [
+        { code: raw.toUpperCase() },
+        { customLandingSlug: raw.toLowerCase() },
+      ],
     },
+    select: publicPartnerSelect,
   });
 
-  let p2pUser: { id: string; name: string | null } | null = null;
-  if (!partner || partner.status !== "ACTIVE") {
-    p2pUser = await db.user.findFirst({
-      where: { referralCode: code },
-      select: { id: true, name: true },
-    });
+  if (partner) {
+    if (partner.status !== "ACTIVE") redirect("/plans");
+    return <LandingClient view={partnerView(partner)} />;
   }
 
-  if (!partner && !p2pUser) {
-    // Unknown code — silently fall through to /plans without attribution.
-    redirect("/plans");
+  const user = await prisma.user.findFirst({
+    where: { referralCode: raw.toUpperCase() },
+    select: {
+      name: true,
+      referralCode: true,
+      ownedPartner: { select: publicPartnerSelect },
+    },
+  });
+  if (!user) redirect("/plans");
+
+  if (user.ownedPartner) {
+    if (user.ownedPartner.status !== "ACTIVE") redirect("/plans");
+    return <LandingClient view={partnerView(user.ownedPartner)} />;
   }
 
-  // Build view model for client
-  const view = partner && partner.status === "ACTIVE"
-    ? {
-        kind: "PARTNER" as const,
-        type: partner.type as string,
-        name: partner.name,
-        code: partner.code,
-        bio: partner.bio,
-        specialty: partner.specialty,
-        profilePhotoUrl: partner.profilePhotoUrl,
-        socialHandle: partner.socialHandle,
-        gymAddress: partner.gymAddress,
-        gymManagerName: partner.gymManagerName,
-        qualification: partner.qualification,
-        clinicName: partner.clinicName,
-        hospitalAffiliation: partner.hospitalAffiliation,
-        companyLogoUrl: partner.companyLogoUrl,
-        societyAddress: partner.societyAddress,
-        treasurerContact: partner.treasurerContact,
-        refereeDiscountRs: partner.refereeDiscountRs || 0,
-      }
-    : {
-        kind: "P2P" as const,
-        type: "CUSTOMER",
-        name: p2pUser?.name || "A friend",
-        code,
-        refereeDiscountRs: 200,
-      };
-
-  return <LandingClient view={view as any} />;
+  const view: PartnerLandingView = {
+    kind: "P2P",
+    type: "CUSTOMER",
+    name: user.name || "A friend",
+    code: user.referralCode || raw.toUpperCase(),
+    refereeDiscountRs: 200,
+  };
+  return <LandingClient view={view} />;
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { code } = await params;
+  await params;
   return {
-    title: `Welcome via ${code}`,
-    description: "Get a special welcome offer on your first FitFuel plan.",
+    title: "A verified FitFuel invitation",
+    description: "See the FitFuel welcome offer attached to this verified referral page.",
+    robots: { index: false, follow: true },
   };
 }

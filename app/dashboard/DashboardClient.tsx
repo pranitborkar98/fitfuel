@@ -23,12 +23,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import DeliveryConfirmCard from "./DeliveryConfirmCard";
+import DeliveryScheduleCard from "./DeliveryScheduleCard";
 import WeeklyReviewCard from "./WeeklyReviewCard";
 import Dialog from "@/app/_app/Dialog";
 import {
-  C, COND, body, label, num, figure, section, PANEL, solidBtn, ghostBtn,
+  C, SANS, body, label, num, figure, section, PANEL, solidBtn, ghostBtn,
 } from "@/app/_app/theme";
 import type { ActivePlanView } from "./page";
+import s from "./dashboard.module.css";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -40,6 +42,7 @@ type Meal = {
     caloriesPerServing: number; proteinGrams: number;
     carbsGrams: number; fatGrams: number;
     prepTimeMins?: number; cookTimeMins?: number; cuisineType?: string;
+    imageUrl?: string | null;
   };
 };
 
@@ -68,13 +71,11 @@ type Balance = {
   proteinIn: number; proteinTarget: number;
 };
 
-type OrderItem = { mealsPerDay: string; duration: string };
+type OrderItem = { mealsPerDay?: string | null; duration?: string | null; dishName?: string | null };
 type Order = {
   id: string; orderNumber: string; status: string; totalRs: number;
   createdAt: string; items?: OrderItem[];
 };
-
-const PLAN_DAYS = 30;
 
 const MEAL_LABEL: Record<string, string> = {
   BREAKFAST_LUNCH: "Breakfast and lunch",
@@ -101,24 +102,24 @@ const ORDER_STATUS: Record<string, string> = {
 
 const n0 = (v: number) => Math.round(v).toLocaleString("en-IN");
 
+function cssImage(url: string | null | undefined): string | undefined {
+  const raw = String(url || "").trim();
+  if (!raw || /["\\\r\n]/.test(raw)) return undefined;
+  if (raw.startsWith("/") && !raw.startsWith("//")) return `url("${raw}")`;
+  try {
+    const parsed = new URL(raw);
+    return ["http:", "https:"].includes(parsed.protocol) ? `url("${parsed.toString()}")` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /* ── pieces ─────────────────────────────────────────────────────────────── */
 
 function Spine({ children }: { children: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "26px 0 16px" }}>
-      <span style={label(12)}>{children}</span>
-      <span style={{ flex: 1, height: 1, background: C.rule }} />
-    </div>
-  );
-}
-
-function Readout({ v, k, live = false, over = false }: {
-  v: string; k: string; live?: boolean; over?: boolean;
-}) {
-  return (
-    <div style={{ background: C.bg, padding: "14px 16px 16px" }}>
-      <span style={figure(30, { display: "block", color: over ? C.danger : live ? C.lime : C.ink })}>{v}</span>
-      <span style={label(12, { display: "block", marginTop: 8, lineHeight: 1.45 })}>{k}</span>
+    <div className={s.sectionBreak}>
+      <h2>{children}</h2>
     </div>
   );
 }
@@ -128,20 +129,20 @@ function Meter({ name, value, goal, unit, on }: {
 }) {
   const w = goal > 0 ? Math.min(100, (value / goal) * 100) : 0;
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 5 }}>
-        <span style={label(12)}>{name}</span>
-        <span style={num(12)}>{n0(value)} / {n0(goal)}{unit}</span>
+    <div className={s.meter}>
+      <div className={s.meterLabel}>
+        <span>{name}</span>
+        <strong>{n0(value)} / {n0(goal)}{unit}</strong>
       </div>
-      <div style={{ height: 10, background: C.trough }}>
-        <div style={{ height: 10, width: `${w}%`, background: on ? C.lime : C.fat }} />
+      <div className={s.meterTrack}>
+        <div className={s.meterFill} style={{ width: `${w}%`, background: on ? C.lime : C.fat }} />
       </div>
     </div>
   );
 }
 
-function MealDialog({ meal, logged, logging, onLog, onClose }: {
-  meal: Meal; logged: boolean; logging: boolean; onLog: () => void; onClose: () => void;
+function MealDialog({ meal, cycleDays, logged, logging, onLog, onClose }: {
+  meal: Meal; cycleDays: number; logged: boolean; logging: boolean; onLog: () => void; onClose: () => void;
 }) {
   const prep = (meal.recipe.prepTimeMins ?? 0) + (meal.recipe.cookTimeMins ?? 0);
   return (
@@ -174,7 +175,7 @@ function MealDialog({ meal, logged, logging, onLog, onClose }: {
         </div>
 
         <p style={body(13, { marginTop: 14 })}>
-          Day {meal.dayNumber} of {PLAN_DAYS}
+          Day {meal.dayNumber} of {cycleDays}
           {prep > 0 ? `, ${prep} min to prepare` : ""}
           {meal.recipe.cuisineType ? `, ${meal.recipe.cuisineType.replace(/_/g, " ").toLowerCase()}` : ""}
         </p>
@@ -232,7 +233,7 @@ function RatingDialog({ meal, onClose, onSubmit }: {
                 key={star}
                 type="button"
                 role="radio"
-                aria-checked={on}
+                aria-checked={star === selected}
                 aria-label={`${star} out of 5, ${LABELS[star].toLowerCase()}`}
                 onClick={() => setSelected(star)}
                 style={{
@@ -240,7 +241,7 @@ function RatingDialog({ meal, onClose, onSubmit }: {
                   background: on ? C.lime : "transparent",
                   border: `1px solid ${on ? C.lime : C.rule2}`,
                   color: on ? C.onLime : C.mute,
-                  fontFamily: COND, fontWeight: 900, fontSize: 16,
+                  fontFamily: SANS, fontWeight: 700, fontSize: 16,
                   transition: "background-color 180ms ease-out, border-color 180ms ease-out",
                 }}
               >
@@ -291,11 +292,11 @@ function RatingDialog({ meal, onClose, onSubmit }: {
 /* ── main ───────────────────────────────────────────────────────────────── */
 
 export default function DashboardClient({
-  orders, activePlan, hasPendingOrder,
+  orders, activePlan, hasActivationIssue,
 }: {
   orders: Order[];
   activePlan: ActivePlanView | null;
-  hasPendingOrder?: boolean;
+  hasActivationIssue?: boolean;
 }) {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [mealsLoading, setMealsLoading] = useState(!!activePlan);
@@ -365,7 +366,6 @@ export default function DashboardClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mealSlot: meal.mealSlot,
-          logDate: new Date().toISOString(),
           rating,
           note: note.trim() || undefined,
         }),
@@ -396,6 +396,9 @@ export default function DashboardClient({
   const eaten = balance?.caloriesIn ?? 0;
   const burned = balance?.caloriesOut ?? 0;
   const remaining = target - (eaten - burned);
+  const energyProgress = target > 0
+    ? Math.max(0, Math.min(100, ((eaten - burned) / target) * 100))
+    : 0;
   const setsLabel = (e: WorkoutExerciseView) =>
     e.durationSecs != null
       ? `${e.sets} x ${e.durationSecs >= 60 ? `${Math.round(e.durationSecs / 60)} min` : `${e.durationSecs}s`}`
@@ -407,23 +410,23 @@ export default function DashboardClient({
     return (
       <>
         <DeliveryConfirmCard />
-        <div style={{ ...PANEL, borderColor: hasPendingOrder ? C.lime : C.rule, padding: 20, marginTop: 20 }}>
-          <span style={label(12, { display: "block", marginBottom: 10, color: hasPendingOrder ? C.lime : C.dim })}>
-            {hasPendingOrder ? "Order confirmed" : "No active plan"}
+        <div style={{ ...PANEL, borderColor: hasActivationIssue ? C.danger : C.rule, padding: 20, marginTop: 20 }}>
+          <span style={label(12, { display: "block", marginBottom: 10, color: hasActivationIssue ? C.danger : C.dim })}>
+            {hasActivationIssue ? "Order needs attention" : "No active plan"}
           </span>
           <h2 style={section()}>
-            {hasPendingOrder ? "One step left, personalise your plan" : "You do not have a plan running"}
+            {hasActivationIssue ? "Your paid plan was not attached correctly" : "You do not have a plan running"}
           </h2>
           <p style={body(14, { margin: "10px 0 16px", maxWidth: "62ch" })}>
-            {hasPendingOrder
-              ? "Your order is confirmed. The two minute setup sets your calorie target, diet and goal before the meals start."
-              : "A trial day is four meals, personalised, for 399 rupees."}
+            {hasActivationIssue
+              ? "Your order is safe, but the dashboard needs our team to reconnect it before meal service starts."
+              : "Start with breakfast and lunch for one delivery day. The ₹420 total includes delivery, packaging and GST."}
           </p>
           <Link
-            href={hasPendingOrder ? "/onboarding" : "/plans"}
+            href={hasActivationIssue ? "/contact" : "/plans?trial=true"}
             style={solidBtn({ textDecoration: "none" })}
           >
-            {hasPendingOrder ? "Set up my plan" : "See the plans"}
+            {hasActivationIssue ? "Contact support" : "See the trial day"}
           </Link>
         </div>
         <RecentOrders orders={orders} />
@@ -437,41 +440,43 @@ export default function DashboardClient({
     <>
       <DeliveryConfirmCard />
 
-      <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
-                    gridTemplateColumns: "repeat(auto-fit,minmax(136px,1fr))", marginTop: 20 }}>
-        <Readout
-          v={remaining >= 0 ? n0(remaining) : `+${n0(-remaining)}`}
-          k={remaining >= 0 ? "Remaining kcal" : "Over by kcal"}
-          live={remaining >= 0}
-          over={remaining < 0}
-        />
-        <Readout v={n0(eaten)} k="Eaten" />
-        <Readout v={n0(burned)} k="Burned" />
-        <Readout v={n0(target)} k="Target" />
-      </div>
+      <section className={s.daySummary} aria-label="Today's energy and plan">
+        <div className={s.energy}>
+          <p className={s.eyebrow}>{remaining >= 0 ? "Still available today" : "Above today’s target"}</p>
+          <div className={s.energyLine}>
+            <span className={s.energyValue} style={{ color: remaining < 0 ? C.danger : undefined }}>
+              {remaining >= 0 ? n0(remaining) : `+${n0(-remaining)}`}
+            </span>
+            <span className={s.energyUnit}>kcal</span>
+          </div>
+          <div className={s.energyBar} aria-hidden="true">
+            <div className={s.energyFill} style={{ width: `${energyProgress}%` }} />
+          </div>
+          <p className={s.planLine}>
+            {activePlan.mealPlan?.displayName || activePlan.mealPlan?.name}
+            {`, ${activePlan.daysRemaining} service day${activePlan.daysRemaining === 1 ? "" : "s"} left.`}
+            {activePlan.isDigital && activePlan.mealPlan?.slug ? (
+              <> <a href={`/api/digital-plan/${activePlan.mealPlan.slug}/pdf`} target="_blank" rel="noopener noreferrer">Download your plan</a>.</>
+            ) : null}
+          </p>
+        </div>
+        <dl className={s.supportingStats}>
+          <div className={s.supportingStat}><dt>Eaten</dt><dd>{n0(eaten)}</dd></div>
+          <div className={s.supportingStat}><dt>Burned</dt><dd>{n0(burned)}</dd></div>
+          <div className={s.supportingStat}><dt>Daily target</dt><dd>{n0(target)}</dd></div>
+          <div className={s.supportingStat}><dt>Meals logged</dt><dd>{loggedSlots.size}/{meals.length || 4}</dd></div>
+        </dl>
+      </section>
 
-      <p style={body(13, { marginTop: 12 })}>
-        {activePlan.mealPlan?.name}
-        {activePlan.mealPlan?.tier ? `, ${activePlan.mealPlan.tier.toLowerCase()}` : ""}
-        {`, ${activePlan.daysRemaining} day${activePlan.daysRemaining === 1 ? "" : "s"} left`}
-        {activePlan.isDigital && activePlan.mealPlan?.slug ? ". " : "."}
-        {activePlan.isDigital && activePlan.mealPlan?.slug ? (
-          <a href={`/api/digital-plan/${activePlan.mealPlan.slug}/pdf`} target="_blank" rel="noopener noreferrer"
-             style={{ color: C.lime }}>
-            Download the plan as a PDF
-          </a>
-        ) : null}
-      </p>
+      {!activePlan.isDigital ? <DeliveryScheduleCard /> : null}
 
-      <div style={{ display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
-                    marginTop: 26, alignItems: "start" }}>
+      <div className={s.workspace}>
 
         {/* meals */}
-        <section style={PANEL}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-                        gap: 12, padding: "14px 16px", borderBottom: `1px solid ${C.rule}` }}>
+        <section className={s.card}>
+          <div className={s.cardHeader}>
             <h2 style={section()}>The day&apos;s meals</h2>
-            <span style={label(12)}>
+            <span className={s.cardMeta}>
               {loggedSlots.size} of {meals.length || 4} logged
             </span>
           </div>
@@ -493,50 +498,47 @@ export default function DashboardClient({
               return (
                 <div
                   key={meal.slotId}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-                    padding: "13px 16px", borderBottom: `1px solid ${C.rule}`,
-                    borderLeft: `2px solid ${isLogged ? C.lime : "transparent"}`,
-                  }}
+                  className={s.mealRow}
                 >
+                  <div
+                    className={s.mealPhoto}
+                    role={cssImage(meal.recipe?.imageUrl) ? "img" : undefined}
+                    aria-label={cssImage(meal.recipe?.imageUrl) ? meal.recipe.name : undefined}
+                    style={{ backgroundImage: cssImage(meal.recipe?.imageUrl) }}
+                  />
                   <button
                     type="button"
                     onClick={() => setOpenMeal(meal)}
-                    style={{
-                      flex: "1 1 180px", minWidth: 0, minHeight: 44, textAlign: "left",
-                      background: "transparent", border: 0, cursor: "pointer", padding: 0,
-                      color: "inherit",
-                    }}
+                    className={s.mealOpen}
                   >
-                    <span style={{ ...label(12, { color: isLogged ? C.lime : C.dim }), display: "block" }}>
+                    <span className={s.mealTime} style={{ color: isLogged ? C.lime : undefined }}>
                       {meal.label}, {meal.time}
                     </span>
-                    <span style={{ ...body(14, { color: C.ink }), display: "block", marginTop: 4 }}>
+                    <span className={s.mealName}>
                       {meal.recipe?.name ?? meal.label}
                     </span>
-                    <span style={{ ...num(12, { color: C.dim }), display: "block", marginTop: 3 }}>
-                      {n0(Number(meal.recipe?.proteinGrams ?? 0))} P,{" "}
-                      {n0(Number(meal.recipe?.carbsGrams ?? 0))} C,{" "}
-                      {n0(Number(meal.recipe?.fatGrams ?? 0))} F
+                    <span className={s.mealMacros}>
+                      {n0(Number(meal.recipe?.proteinGrams ?? 0))}g protein ·{" "}
+                      {n0(Number(meal.recipe?.carbsGrams ?? 0))}g carbs ·{" "}
+                      {n0(Number(meal.recipe?.fatGrams ?? 0))}g fat
                     </span>
                   </button>
 
-                  <span style={num(13, { flex: "none", minWidth: "8ch", textAlign: "right" })}>
-                    {n0(meal.recipe?.caloriesPerServing ?? 0)} kcal
-                  </span>
-
-                  {isLogged ? (
-                    <span style={label(12, { flex: "none", color: C.lime })}>Logged</span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => logMeal(meal)}
-                      disabled={isLogging}
-                      style={ghostBtn(false, { flex: "none", opacity: isLogging ? 0.55 : 1 })}
-                    >
-                      {isLogging ? "Logging" : "I ate this"}
-                    </button>
-                  )}
+                  <div className={s.mealAction}>
+                    <span className={s.mealCalories}>{n0(meal.recipe?.caloriesPerServing ?? 0)} kcal</span>
+                    {isLogged ? (
+                      <span className={s.logged}>Logged</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => logMeal(meal)}
+                        disabled={isLogging}
+                        style={ghostBtn(false, { flex: "none", opacity: isLogging ? 0.55 : 1 })}
+                      >
+                        {isLogging ? "Logging" : "I ate this"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })
@@ -544,24 +546,26 @@ export default function DashboardClient({
         </section>
 
         {/* right rail */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className={s.rail}>
           {balance && (
-            <section style={{ ...PANEL, padding: 18 }}>
-              <p style={label(12, { display: "block", marginBottom: 14 })}>Against target</p>
+            <section className={s.card}>
+              <div className={s.cardBody}>
+              <h2 style={section({ marginBottom: 16 })}>Today’s nutrition</h2>
               <Meter name="Calories" value={eaten} goal={target} unit=" kcal" on />
               <Meter name="Protein" value={balance.proteinIn} goal={balance.proteinTarget} unit="g" on />
               <p style={body(13, { marginTop: 4 })}>
                 {balance.mealsLogged} of {balance.mealsTotal} plan meals confirmed today.
               </p>
+              </div>
             </section>
           )}
 
           {workout?.hasWorkout && (
-            <section style={{ ...PANEL, borderColor: workout.completedToday ? C.lime : C.rule }}>
+            <section className={s.card} style={{ borderColor: workout.completedToday ? C.lime : C.rule }}>
               <div style={{ padding: "16px 18px 14px", borderBottom: `1px solid ${C.rule}` }}>
                 <p style={label(12, { display: "block", marginBottom: 8 })}>Training today</p>
-                <p style={{ fontFamily: COND, fontWeight: 900, fontSize: 26, lineHeight: 1,
-                            letterSpacing: "-0.02em", textTransform: "uppercase", color: C.ink, margin: 0 }}>
+                <p style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 600, fontSize: 24, lineHeight: 1.1,
+                            letterSpacing: "-0.02em", textTransform: "none", color: C.ink, margin: 0 }}>
                   {workout.isRestDay ? "Rest day" : workout.focusArea}
                 </p>
                 <p style={body(13, { marginTop: 8 })}>
@@ -606,7 +610,8 @@ export default function DashboardClient({
           )}
 
           {consistency && (
-            <section style={{ ...PANEL, padding: 18 }}>
+            <section className={s.card}>
+              <div className={s.cardBody}>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between",
                             gap: 12, marginBottom: 14 }}>
                 <p style={label(12)}>Consistency this week</p>
@@ -616,9 +621,8 @@ export default function DashboardClient({
                 <span style={figure(34, { color: C.lime })}>{Math.round(consistency.score)}</span>
                 <span style={num(12, { color: C.dim })}>of 100, {consistency.label.toLowerCase()}</span>
               </div>
-              <div style={{ height: 10, background: C.trough }}>
-                <div style={{ height: 10, width: `${Math.max(0, Math.min(100, consistency.score))}%`,
-                              background: C.lime }} />
+              <div className={s.consistencyTrack}>
+                <div className={s.consistencyFill} style={{ width: `${Math.max(0, Math.min(100, consistency.score))}%` }} />
               </div>
               <p style={body(13, { marginTop: 12 })}>
                 {consistency.meals.logged} of {consistency.meals.delivered} delivered meals logged
@@ -626,6 +630,7 @@ export default function DashboardClient({
                   ? `, and ${consistency.workouts.completed} of ${consistency.workouts.scheduled} sessions done`
                   : ""}.
               </p>
+              </div>
             </section>
           )}
         </div>
@@ -639,6 +644,7 @@ export default function DashboardClient({
       {openMeal && (
         <MealDialog
           meal={openMeal}
+          cycleDays={activePlan?.mealPlan?.cycleLengthDays ?? 30}
           logged={loggedSlots.has(openMeal.slotId)}
           logging={loggingSlot === openMeal.slotId}
           onLog={() => logMeal(openMeal)}
@@ -676,9 +682,11 @@ function RecentOrders({ orders }: { orders: Order[] }) {
                 <div style={{ flex: "1 1 220px", minWidth: 0 }}>
                   <p style={body(14, { color: C.ink, margin: 0 })}>{o.orderNumber}</p>
                   <p style={{ ...num(12, { color: C.dim }), margin: "3px 0 0" }}>
-                    {item
-                      ? `${MEAL_LABEL[item.mealsPerDay] ?? item.mealsPerDay}, ${DUR_LABEL[item.duration] ?? item.duration}, `
-                      : ""}
+                    {item?.dishName
+                      ? `${item.dishName}, `
+                      : item?.mealsPerDay && item?.duration
+                        ? `${MEAL_LABEL[item.mealsPerDay] ?? item.mealsPerDay}, ${DUR_LABEL[item.duration] ?? item.duration}, `
+                        : ""}
                     {new Date(o.createdAt).toLocaleDateString("en-IN", {
                       day: "numeric", month: "short", year: "numeric",
                     })}

@@ -1,8 +1,5 @@
-// app/api/partners/apply/route.ts  · WS-3 hardened (SEC-1/2)
-// Phase 17C-1 — Self-onboarding POST endpoint.
-// Creates a PENDING Partner row owned by the signed-in user.
-// Admin manually approves via /admin/partners (Decision #123).
-// Tax fields (PAN/bank) required for cash types (#122).
+// Self-onboarding creates a pending partner row. Staff approval is required
+// before its code can attribute a customer or earn a reward.
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
@@ -11,13 +8,17 @@ import { notifyStaffByRoles } from "@/lib/notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { partnerApplySchema } from "@/lib/validation/schemas";
+import { generateUniqueReferralCode } from "@/lib/partners";
+import {
+  encryptSensitiveData,
+  SensitiveDataConfigurationError,
+} from "@/lib/sensitive-data";
+import type { PartnerRewardType, PartnerType, Prisma } from "@prisma/client";
 
-const db = prisma as any;
-
-const CASH_TYPES = new Set(["TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR"]);
+const CASH_TYPES = new Set<PartnerType>(["TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "RESIDENCE"]);
 
 // Per-type reward defaults (matches Decision #121 / 17A TYPE_DEFAULTS).
-const TYPE_DEFAULTS: Record<string, { rewardType: string; rewardValueRs: number; refereeDiscountRs: number }> = {
+const TYPE_DEFAULTS: Record<Exclude<PartnerType, "CUSTOMER">, { rewardType: PartnerRewardType; rewardValueRs: number; refereeDiscountRs: number }> = {
   GYM:         { rewardType: "MEAL_VOUCHER",  rewardValueRs: 5,    refereeDiscountRs: 200 },
   TRAINER:     { rewardType: "CASH",          rewardValueRs: 500,  refereeDiscountRs: 200 },
   INFLUENCER:  { rewardType: "CASH",          rewardValueRs: 750,  refereeDiscountRs: 200 },
@@ -27,15 +28,12 @@ const TYPE_DEFAULTS: Record<string, { rewardType: string; rewardValueRs: number;
   RESIDENCE:   { rewardType: "HYBRID",        rewardValueRs: 200,  refereeDiscountRs: 200 },
 };
 
-function genCode(baseName: string): string {
-  const base = (baseName || "PARTNER").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 8) || "PARTNER";
-  const suffix = Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4) || "X3K7";
-  return `FF-${base}-${suffix}`;
+function isUniqueConflict(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // SEC-1: throttle self-onboarding spam, by IP (before auth + DB work).
     const rl = await enforceRateLimit(req, "partnerApply");
     if (!rl.ok) return rl.response;
 
@@ -45,14 +43,11 @@ export async function POST(req: NextRequest) {
     }
     const userId = session.user.id;
 
-    // SEC-2: validated body. type ∈ enum, form.name + form.contactEmail required.
-    // Detailed cash-type PAN/IFSC/bank checks stay below (preserve exact messages).
     const parsed = await readJson(req, partnerApplySchema);
     if (!parsed.ok) return parsed.response;
     const { type } = parsed.data;
     const form = parsed.data.form;
 
-    // Tax fields required for cash payout types
     if (CASH_TYPES.has(type)) {
       const missing: string[] = [];
       if (!form.panNumber || !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(String(form.panNumber).trim())) missing.push("valid PAN");
@@ -64,27 +59,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Already a non-CUSTOMER partner? Block.
-    const existing = await db.partner.findUnique({
+    const existing = await prisma.partner.findUnique({
       where: { ownerUserId: userId },
-      select: { id: true, type: true },
+      select: { id: true, type: true, code: true },
     });
     if (existing && existing.type !== "CUSTOMER") {
       return NextResponse.json({ error: "You already have a partner application." }, { status: 409 });
     }
 
-    // Generate a unique code
-    let code = "";
-    for (let i = 0; i < 8; i++) {
-      const candidate = genCode(form.name);
-      const clash = await db.partner.findUnique({ where: { code: candidate }, select: { id: true } });
-      if (!clash) { code = candidate; break; }
-    }
-    if (!code) code = `FF-${Date.now().toString(36).toUpperCase().slice(-8)}`;
-
+    const code = existing?.code || await generateUniqueReferralCode(form.name);
     const defaults = TYPE_DEFAULTS[type];
-
-    const data: any = {
+    const data: Prisma.PartnerUncheckedCreateInput = {
       type,
       status: "PENDING",
       name: String(form.name).trim(),
@@ -98,7 +83,6 @@ export async function POST(req: NextRequest) {
       createdById: userId,
     };
 
-    // Type-specific
     if (type === "GYM") {
       data.gymAddress = form.gymAddress || null;
       data.gymManagerName = form.gymManagerName || null;
@@ -120,21 +104,34 @@ export async function POST(req: NextRequest) {
       data.societyAddress = form.societyAddress || null;
     }
 
-    // Tax / payout (cash types)
     if (CASH_TYPES.has(type)) {
-      data.panNumber = String(form.panNumber).trim().toUpperCase();
-      data.bankAccountName = String(form.bankAccountName).trim();
-      data.bankAccountNumber = String(form.bankAccountNumber).trim();
-      data.bankIfsc = String(form.bankIfsc).trim().toUpperCase();
+      data.panNumber = encryptSensitiveData(String(form.panNumber).trim().toUpperCase());
+      data.bankAccountName = encryptSensitiveData(String(form.bankAccountName).trim());
+      data.bankAccountNumber = encryptSensitiveData(String(form.bankAccountNumber).trim());
+      data.bankIfsc = encryptSensitiveData(String(form.bankIfsc).trim().toUpperCase());
     }
 
-    const created = await db.partner.create({
-      data,
-      select: { id: true, code: true, name: true, type: true },
-    });
+    let created: { id: string; code: string; name: string; type: PartnerType };
+    if (existing) {
+      const claimed = await prisma.partner.updateMany({
+        where: { id: existing.id, type: "CUSTOMER" },
+        data,
+      });
+      if (claimed.count !== 1) {
+        return NextResponse.json({ error: "Your partner account changed. Refresh and try again." }, { status: 409 });
+      }
+      created = await prisma.partner.findUniqueOrThrow({
+        where: { id: existing.id },
+        select: { id: true, code: true, name: true, type: true },
+      });
+    } else {
+      created = await prisma.partner.create({
+        data,
+        select: { id: true, code: true, name: true, type: true },
+      });
+    }
 
-    // Notify staff (admin/owner) — non-blocking, fire-and-forget
-    notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_partner_application", {
+    await notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_partner_application", {
       partnerName: created.name,
       partnerType: created.type,
       partnerCode: created.code,
@@ -142,8 +139,17 @@ export async function POST(req: NextRequest) {
     }).catch((e: unknown) => console.error("[partners/apply] staff notify failed", e));
 
     return NextResponse.json({ ok: true, partner: created });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[partners/apply] error", err);
-    return NextResponse.json({ error: err?.message || "Internal error" }, { status: 500 });
+    if (err instanceof SensitiveDataConfigurationError) {
+      return NextResponse.json(
+        { error: "Partner applications with cash payouts are temporarily unavailable." },
+        { status: 503 },
+      );
+    }
+    if (isUniqueConflict(err)) {
+      return NextResponse.json({ error: "You already have a partner application. Refresh to see its status." }, { status: 409 });
+    }
+    return NextResponse.json({ error: "Could not submit the application." }, { status: 500 });
   }
 }

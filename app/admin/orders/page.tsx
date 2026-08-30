@@ -9,9 +9,8 @@ export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
   await requireSurface("orders");
-  const db = prisma as any;
 
-  const orders = await db.order.findMany({
+  const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     take: 200,
     select: {
@@ -19,8 +18,13 @@ export default async function OrdersPage() {
       subtotalRs: true, gstRs: true, discountRs: true, totalRs: true, couponCode: true,
       payuTxnId: true, createdAt: true, startDate: true, endDate: true,
       user: { select: { name: true, email: true, phone: true } },
-      address: { select: { area: true, city: true, pincode: true } },
-      items: { select: { diet: true, duration: true, mealsPerDay: true, totalRs: true, quantity: true } },
+      address: { select: { line1: true, line2: true, area: true, city: true, pincode: true, landmark: true } },
+      items: {
+        select: {
+          kind: true, dishName: true, addOnLabel: true, diet: true, duration: true,
+          mealsPerDay: true, totalRs: true, quantity: true,
+        },
+      },
     },
   });
 

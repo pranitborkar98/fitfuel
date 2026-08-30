@@ -53,8 +53,8 @@ export const DAY_STEPS: DayStep[] = [
   },
   {
     at: "08:00",
-    label: "Logged, not guessed",
-    line: "Breakfast arrives already in your diary — macros counted, nothing to type in.",
+    label: "Ready to confirm",
+    line: "Breakfast is pre-filled in your diary — confirm what you ate with one tap.",
   },
 ];
 
@@ -113,12 +113,12 @@ export const MINOR: Minor[] = [
     idx: "01",
     href: "/dashboard/coach",
     stat: "Recalibrates weekly",
-    label: "The AI coach",
+    label: "Weekly coach",
     blurb:
-      "Four weigh-ins that disagree with your goal move your target, with the arithmetic shown.",
+      "Two or more weigh-ins establish a trend; when it leaves your goal range, the arithmetic is shown before you apply a change.",
     rows: [
-      "Reads weight, adherence and training load",
-      "Moves kcal in 80-kcal steps, never blind",
+      "Reads your goal, current target and weight trend",
+      "Changes in 10-kcal increments, capped at 300 a day",
       "Every change is shown as a sum, not a verdict",
     ],
   },
@@ -156,9 +156,9 @@ export const MINOR: Minor[] = [
     blurb:
       "Researched against your plan and compared across six retailers. We hold no stock.",
     rows: [
-      "Only what your logged intake is short of",
-      "Live price across six sellers",
-      "We take no cut on the click",
+      "Matched to your goal and diet preference",
+      "Retailer prices shown side by side",
+      "Affiliate links are disclosed",
     ],
   },
 ];
@@ -186,16 +186,17 @@ export const GOALS: Goal[] = [
   { key: "build", label: "Build", goal: "muscle_gain", kcal: 2600, protein: 170 },
 ];
 
-/* ── The coach, as four weigh-ins ───────────────────────────────────────────
+/* ── The coach, as a four-week example ─────────────────────────────────────
    An ILLUSTRATION of lib/coach/recalibration.ts, not a customer's data: a
-   stall in week three moving the target by two 80-kcal steps is exactly what
-   that module does. The copy above it says "an example week" so nobody reads
+   a trend outside the goal tolerance moving the target by the engine's capped
+   300 kcal/day is exactly what that module does. The copy says "an example
+   month" so nobody reads
    these as somebody's results. */
 export const COACH_WEEKS: { w: string; kg: number; note: string }[] = [
   { w: "Week 1", kg: 78.4, note: "Baseline set at 2,000 kcal" },
   { w: "Week 2", kg: 78.1, note: "On track, no change" },
   { w: "Week 3", kg: 78.0, note: "Stall flagged" },
-  { w: "Week 4", kg: 78.1, note: "Target moved to 1,840" },
+  { w: "Week 4", kg: 78.1, note: "Target recommendation: 1,700 kcal" },
 ];
 
 /* ── The 29 conditions, each pointing at the plan that cooks for it ─────────
@@ -352,7 +353,7 @@ export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[]
       tiffin: "No",
       app: "Only what you type in",
       supp: "No",
-      us: "Automatically — it is the same system",
+      us: "Pre-filled from the meal we cooked; you confirm it",
     },
     {
       what: "Programmes your training",
@@ -366,7 +367,7 @@ export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[]
       tiffin: "No",
       app: "If you own the scale and remember",
       supp: "No",
-      us: "13 measures, read off your scale",
+      us: "18 measures, read off your scale",
     },
     {
       what: "Moves the target when you stall",
@@ -415,7 +416,7 @@ export const SURFACES: Surface[] = [
     name: "The diary",
     stat: "154",
     desc:
-      "FitFuel meals arrive pre-logged with weighed macros. Everything else you add per gram from an Indian food database, with water alongside it.",
+      "FitFuel meals arrive pre-filled with weighed macros for one-tap confirmation. Everything else you add per gram from an Indian food database, with water alongside it.",
   },
   {
     href: "/dashboard/exercises",
@@ -443,14 +444,14 @@ export const SURFACES: Surface[] = [
     name: "Supplements",
     stat: "46",
     desc:
-      "A stack recommended from your goal and your gaps, not from what has the best margin. Educational first, links second.",
+      "A goal- and diet-aware shortlist from the catalogue. Educational first, with affiliate links disclosed before you leave FitFuel.",
   },
   {
     href: "/dashboard/referrals",
     name: "Referrals",
     stat: "Rs 500",
     desc:
-      "Your code, your link, who used it, and the credit ledger behind it. Rs 500 to you, Rs 500 to them.",
+      "Your code, your link, who used it, and the credit ledger behind it. Rs 500 to you after their first order, Rs 200 off for them.",
   },
   {
     href: "/dashboard/partners",

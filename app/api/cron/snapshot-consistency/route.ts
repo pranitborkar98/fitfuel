@@ -10,6 +10,16 @@ import { sendNotification } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
+type SnapshotPayload = {
+  score: number;
+  label: string;
+  mealsPoints: number;
+  workoutsPoints: number;
+  waterPoints: number;
+  weighInPoints: number;
+  noSkipPoints: number;
+};
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -27,7 +37,7 @@ export async function GET(req: Request) {
 
   let written = 0;
   const failed: string[] = [];
-  const snapshotted: Array<{ userId: string; payload: any }> = [];
+  const snapshotted: Array<{ userId: string; payload: SnapshotPayload }> = [];
 
   for (const { userId } of plans) {
     try {

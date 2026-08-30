@@ -32,18 +32,52 @@ export default function CartDrawer() {
   const { lines, enquiries, totals, open, setOpen, setQty, remove, toggleEnquiry, clear } = useCart();
   const panel = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
   /* Declared ABOVE the Escape effect that closes over it. Left below, it still
      ran (the callback fires after render) but sat in the temporal dead zone at
      the point of capture, which the react-hooks rule rejects and is one edit
      away from being a real crash. */
   const [checkout, setCheckout] = useState(false);
 
-  // Escape closes, focus moves in, background stops scrolling. A drawer that
-  // traps neither focus nor scroll is the usual shortcut and it makes the
-  // whole page unusable behind it on a phone.
+  // Escape closes, Tab stays inside, focus moves in and returns to the control
+  // that opened the drawer, and the page behind it stops scrolling.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setCheckout(false); setOpen(false); } };
+    previousFocus.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const focusable = () => Array.from(
+      panel.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ) ?? []
+    ).filter((el) => !el.hasAttribute("hidden") && el.getAttribute("aria-hidden") !== "true");
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setCheckout(false);
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) {
+        e.preventDefault();
+        panel.current?.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!panel.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -51,6 +85,9 @@ export default function CartDrawer() {
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      const target = previousFocus.current;
+      if (target?.isConnected) target.focus();
+      previousFocus.current = null;
     };
   }, [open, setOpen]);
 
@@ -65,7 +102,7 @@ export default function CartDrawer() {
       <div
         className="ff-cart-scrim"
         data-open={open ? "1" : "0"}
-        onClick={() => setOpen(false)}
+        onClick={() => { setCheckout(false); setOpen(false); }}
         aria-hidden="true"
       />
 
@@ -74,12 +111,14 @@ export default function CartDrawer() {
         className="ff-cart"
         data-open={open ? "1" : "0"}
         role="dialog"
-        aria-modal="true"
+        aria-modal={open ? "true" : undefined}
+        aria-hidden={!open}
         aria-label="Your order"
+        tabIndex={-1}
       >
         <header className="ff-cart-head">
           <h2 className="ff-cart-title">Your order</h2>
-          <button ref={closeBtn} onClick={() => setOpen(false)} className="ff-cart-x" aria-label="Close order">
+          <button ref={closeBtn} onClick={() => { setCheckout(false); setOpen(false); }} className="ff-cart-x" aria-label="Close order">
             <X size={18} aria-hidden="true" />
           </button>
         </header>

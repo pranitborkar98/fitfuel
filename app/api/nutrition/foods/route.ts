@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, foodsPostSchema);
   if (!parsed.ok) return parsed.response;
-  const { name, brand, category, per100Calories, per100Protein, per100Carbs, per100Fat, per100Fiber } = parsed.data as any;
+  const { name, brand, category, per100Calories, per100Protein, per100Carbs, per100Fat, per100Fiber } = parsed.data;
 
   const food = await prisma.foodItem.create({
     data: {

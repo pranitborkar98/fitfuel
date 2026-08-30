@@ -32,10 +32,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/testimonials" },
   title: "Reviews",
   description:
-    "Real results from FitFuel members across Pune, weight loss, muscle gain and better daily eating, on plans we cook and deliver.",
+    "Published feedback from FitFuel members across Pune, with their plan and goal context.",
   openGraph: {
     title: "FitFuel Reviews",
-    description: "Real member results across Pune.",
+    description: "Published member feedback across Pune.",
     url: "https://fitfuel.in/testimonials",
     siteName: "FitFuel",
     type: "website",
@@ -88,8 +88,8 @@ export default async function TestimonialsPage({
     <Shell>
       <Masthead
         label="Reviews"
-        title="Real food, real results"
-        deck="Every review here is from a member who ate the plan. Filter by what they were training for."
+        title="What members told us"
+        deck="Published feedback with plan and goal context. Filter it by what each member was working toward."
         meta={[
           { k: "Average rating", v: `${avg} / 5` },
           { k: "Reviews", v: String(all.length) },
@@ -136,16 +136,12 @@ export default async function TestimonialsPage({
                       }}
                     >
                       <Rating n={t.rating} />
-                      <span
-                        style={{ ...label("var(--fk-green)") }}
-                        dangerouslySetInnerHTML={{ __html: t.resultLabel }}
-                      />
+                      <span style={{ ...label("var(--fk-green)") }}>{t.resultLabel}</span>
                     </div>
 
-                    <p
-                      style={{ ...body(14.5), flexGrow: 1, marginTop: 6 }}
-                      dangerouslySetInnerHTML={{ __html: `&ldquo;${t.quote}&rdquo;` }}
-                    />
+                    <p style={{ ...body(14.5), flexGrow: 1, marginTop: 6 }}>
+                      “{t.quote}”
+                    </p>
 
                     <div style={{ borderTop: "1px solid var(--fk-line)", paddingTop: 13, marginTop: 4 }}>
                       <div
@@ -162,12 +158,9 @@ export default async function TestimonialsPage({
                         }}
                       >
                         {t.name}
-                        <span style={{ color: MUTE, fontWeight: 400 }}> &middot; {t.location}</span>
+                        <span style={{ color: MUTE, fontWeight: 400 }}> · {t.location}</span>
                       </div>
-                      <span
-                        style={{ ...label(), marginTop: 6 }}
-                        dangerouslySetInnerHTML={{ __html: t.planLabel }}
-                      />
+                      <span style={{ ...label(), marginTop: 6 }}>{t.planLabel}</span>
                     </div>
                   </Tile>
                 ))}

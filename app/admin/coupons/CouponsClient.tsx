@@ -1,258 +1,460 @@
-// app/admin/coupons/CouponsClient.tsx
-// R-PRICE-c (#193) — coupon management UI. Create / toggle / delete + live list.
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-const T = {
-  bg: "#0a0a0a", card: "#111", border: "#1f1f1f", accent: "#84cc16",
-  text: "#fff", dim: "#a3a3a3", muted: "#737373", danger: "#ef4444",
-};
+import styles from "./coupons.module.css";
 
-const fmt = (n: number) => "\u20B9" + n.toLocaleString("en-IN");
-
+type DiscountType = "PERCENT" | "FLAT" | "FREE_DELIVERY";
 type Coupon = {
-  id: string; code: string; discountType: "PERCENT" | "FLAT" | "FREE_DELIVERY";
-  value: number; maxDiscountRs: number | null; minOrderRs: number | null;
-  appliesTo: string; firstOrderOnly: boolean; usageLimitGlobal: number | null;
-  usageLimitPerUser: number | null; validUntil: string | null; stackable: boolean;
-  source: string; isActive: boolean; redemptions: number;
+  id: string;
+  code: string;
+  discountType: DiscountType;
+  value: number;
+  maxDiscountRs: number | null;
+  minOrderRs: number | null;
+  appliesTo: string;
+  firstOrderOnly: boolean;
+  usageLimitGlobal: number | null;
+  usageLimitPerUser: number | null;
+  validFrom: string | null;
+  validUntil: string | null;
+  source: string;
+  isActive: boolean;
+  redemptions: number;
+  createdAt: string;
 };
 
-const EMPTY = {
-  code: "", discountType: "PERCENT" as Coupon["discountType"], value: "",
-  maxDiscountRs: "", minOrderRs: "", appliesTo: "ALL", firstOrderOnly: false,
-  usageLimitGlobal: "", usageLimitPerUser: "1", validUntil: "", stackable: false,
+type CouponForm = {
+  code: string;
+  discountType: DiscountType;
+  value: string;
+  maxDiscountRs: string;
+  minOrderRs: string;
+  appliesTo: string;
+  firstOrderOnly: boolean;
+  usageLimitGlobal: string;
+  usageLimitPerUser: string;
+  validFrom: string;
+  validUntil: string;
 };
 
-const inputStyle: React.CSSProperties = {
-  background: "#161616", border: `1px solid ${T.border}`, borderRadius: 0,
-  padding: "9px 12px", color: T.text, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box",
+type Message = { kind: "success" | "error"; text: string } | null;
+
+const EMPTY_FORM: CouponForm = {
+  code: "",
+  discountType: "PERCENT",
+  value: "",
+  maxDiscountRs: "",
+  minOrderRs: "",
+  appliesTo: "ALL",
+  firstOrderOnly: false,
+  usageLimitGlobal: "",
+  usageLimitPerUser: "1",
+  validFrom: "",
+  validUntil: "",
 };
-const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 600, color: T.dim, textTransform: "uppercase",
-  letterSpacing: "0.05em", marginBottom: 4, display: "block",
-};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function errorMessage(value: unknown, fallback: string): string {
+  return isRecord(value) && typeof value.error === "string" ? value.error : fallback;
+}
+
+function isCoupon(value: unknown): value is Coupon {
+  if (!isRecord(value)) return false;
+  return typeof value.id === "string"
+    && typeof value.code === "string"
+    && ["PERCENT", "FLAT", "FREE_DELIVERY"].includes(String(value.discountType))
+    && typeof value.value === "number"
+    && typeof value.appliesTo === "string"
+    && typeof value.isActive === "boolean"
+    && typeof value.redemptions === "number";
+}
+
+function dateInput(value: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function formFromCoupon(coupon: Coupon): CouponForm {
+  return {
+    code: coupon.code,
+    discountType: coupon.discountType,
+    value: coupon.discountType === "FREE_DELIVERY" ? "" : String(coupon.value),
+    maxDiscountRs: coupon.maxDiscountRs === null ? "" : String(coupon.maxDiscountRs),
+    minOrderRs: coupon.minOrderRs === null ? "" : String(coupon.minOrderRs),
+    appliesTo: coupon.appliesTo,
+    firstOrderOnly: coupon.firstOrderOnly,
+    usageLimitGlobal: coupon.usageLimitGlobal === null ? "" : String(coupon.usageLimitGlobal),
+    usageLimitPerUser: coupon.usageLimitPerUser === null ? "" : String(coupon.usageLimitPerUser),
+    validFrom: dateInput(coupon.validFrom),
+    validUntil: dateInput(coupon.validUntil),
+  };
+}
+
+function money(value: number): string {
+  return `₹${value.toLocaleString("en-IN")}`;
+}
+
+function humanDate(value: string | null): string {
+  if (!value) return "No end date";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Invalid date";
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function discountLabel(coupon: Coupon): string {
+  if (coupon.discountType === "PERCENT") {
+    return `${coupon.value}% off${coupon.maxDiscountRs ? `, up to ${money(coupon.maxDiscountRs)}` : ""}`;
+  }
+  if (coupon.discountType === "FLAT") return `${money(coupon.value)} off`;
+  return "Free delivery";
+}
+
+async function request(payload?: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const response = await fetch("/api/admin/coupons", payload ? {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  } : undefined);
+  const data: unknown = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(errorMessage(data, "Coupon request failed."));
+  return isRecord(data) ? data : {};
+}
 
 export default function CouponsClient() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState<typeof EMPTY>(EMPTY);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<CouponForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [workingId, setWorkingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message>(null);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<"ALL" | "ACTIVE" | "PAUSED" | "EXPIRED">("ALL");
+  const [now, setNow] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch("/api/admin/coupons");
-      const d = await r.json();
-      setCoupons(d.coupons ?? []);
-    } catch {
-      setMsg({ kind: "err", text: "Failed to load coupons." });
+      const data = await request();
+      const list = Array.isArray(data.coupons) ? data.coupons.filter(isCoupon) : [];
+      setCoupons(list);
+      setNow(Date.now());
+    } catch (error: unknown) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "Coupons could not be loaded." });
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    queueMicrotask(() => void load());
+  }, [load]);
 
-  function set<K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) {
-    setForm((f) => ({ ...f, [k]: v }));
-  }
+  const metrics = useMemo(() => ({
+    active: coupons.filter((coupon) => coupon.isActive && (!coupon.validUntil || new Date(coupon.validUntil).getTime() >= now)).length,
+    redemptions: coupons.reduce((sum, coupon) => sum + coupon.redemptions, 0),
+    paused: coupons.filter((coupon) => !coupon.isActive).length,
+  }), [coupons, now]);
 
-  async function post(payload: Record<string, unknown>) {
-    const r = await fetch("/api/admin/coupons", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+  const visibleCoupons = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return coupons.filter((coupon) => {
+      const expired = Boolean(coupon.validUntil && new Date(coupon.validUntil).getTime() < now);
+      const statusMatch = status === "ALL"
+        || (status === "ACTIVE" && coupon.isActive && !expired)
+        || (status === "PAUSED" && !coupon.isActive)
+        || (status === "EXPIRED" && expired);
+      const queryMatch = !needle || `${coupon.code} ${coupon.appliesTo} ${discountLabel(coupon)}`.toLowerCase().includes(needle);
+      return statusMatch && queryMatch;
     });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || "Request failed");
-    return d;
+  }, [coupons, now, query, status]);
+
+  function setField<K extends keyof CouponForm>(key: K, value: CouponForm[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
-  async function create() {
-    setSaving(true); setMsg(null);
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setMessage(null);
+    setShowForm(true);
+  }
+
+  function openEdit(coupon: Coupon) {
+    setEditingId(coupon.id);
+    setForm(formFromCoupon(coupon));
+    setMessage(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function closeForm() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setShowForm(false);
+  }
+
+  async function save() {
+    setSaving(true);
+    setMessage(null);
     try {
-      await post({ action: "create", ...form });
-      setMsg({ kind: "ok", text: `Coupon ${form.code.toUpperCase()} created.` });
-      setForm(EMPTY);
+      await request({
+        action: editingId ? "update" : "create",
+        ...(editingId ? { id: editingId } : { code: form.code }),
+        discountType: form.discountType,
+        value: form.discountType === "FREE_DELIVERY" ? 0 : form.value,
+        maxDiscountRs: form.maxDiscountRs || null,
+        minOrderRs: form.minOrderRs || null,
+        appliesTo: form.appliesTo,
+        firstOrderOnly: form.firstOrderOnly,
+        usageLimitGlobal: form.usageLimitGlobal || null,
+        usageLimitPerUser: form.usageLimitPerUser || null,
+        validFrom: form.validFrom || null,
+        validUntil: form.validUntil || null,
+        stackable: false,
+      });
+      const savedCode = form.code.toUpperCase();
+      closeForm();
+      setMessage({ kind: "success", text: `${savedCode} ${editingId ? "updated" : "created"}.` });
       await load();
-    } catch (e: any) {
-      setMsg({ kind: "err", text: e.message });
+    } catch (error: unknown) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "Coupon could not be saved." });
     } finally {
       setSaving(false);
     }
   }
 
-  async function toggle(id: string) {
-    try { await post({ action: "toggle", id }); await load(); }
-    catch (e: any) { setMsg({ kind: "err", text: e.message }); }
-  }
-
-  async function remove(id: string, code: string) {
-    if (!confirm(`Delete coupon ${code}? (If it has redemptions it will be deactivated instead.)`)) return;
+  async function setActive(coupon: Coupon, isActive: boolean) {
+    setWorkingId(coupon.id);
+    setMessage(null);
     try {
-      const d = await post({ action: "delete", id });
-      setMsg({ kind: "ok", text: d.deactivated ? `${code} had redemptions — deactivated.` : `${code} deleted.` });
+      await request({ action: "toggle", id: coupon.id, isActive });
+      setMessage({ kind: "success", text: `${coupon.code} ${isActive ? "resumed" : "paused"}.` });
       await load();
-    } catch (e: any) { setMsg({ kind: "err", text: e.message }); }
+    } catch (error: unknown) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "Status could not be changed." });
+    } finally {
+      setWorkingId(null);
+    }
   }
 
-  function describe(c: Coupon): string {
-    if (c.discountType === "PERCENT") return `${c.value}% off` + (c.maxDiscountRs ? ` (max ${fmt(c.maxDiscountRs)})` : "");
-    if (c.discountType === "FLAT") return `${fmt(c.value)} off`;
-    return "Free delivery";
+  async function remove(coupon: Coupon) {
+    const wording = coupon.redemptions > 0 ? "deactivate" : "permanently remove";
+    if (!window.confirm(`Do you want to ${wording} ${coupon.code}?`)) return;
+    setWorkingId(coupon.id);
+    setMessage(null);
+    try {
+      const result = await request({ action: "delete", id: coupon.id });
+      setMessage({
+        kind: "success",
+        text: result.deactivated === true
+          ? `${coupon.code} has order history, so it was safely deactivated.`
+          : `${coupon.code} removed.`,
+      });
+      await load();
+    } catch (error: unknown) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "Coupon could not be removed." });
+    } finally {
+      setWorkingId(null);
+    }
   }
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", color: T.text, padding: "24px 20px" }}>
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Coupons</h1>
-        <p style={{ fontSize: 13, color: T.muted, marginBottom: 24 }}>
-          Create and manage discount codes. Codes are validated live at checkout via the coupon engine.
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Promotions</p>
+          <h1>Coupons</h1>
+          <p>Create offers customers can actually understand, and see the usage limits before a campaign gets away from you.</p>
+        </div>
+        <button type="button" className={styles.newButton} onClick={openCreate}>Create coupon</button>
+      </header>
+
+      {message ? (
+        <p className={message.kind === "success" ? styles.success : styles.error} role={message.kind === "error" ? "alert" : "status"}>
+          {message.text}
         </p>
+      ) : null}
 
-        {msg && (
-          <div style={{
-            background: msg.kind === "ok" ? "rgba(132,204,22,0.08)" : "rgba(239,68,68,0.08)",
-            border: `1px solid ${msg.kind === "ok" ? "rgba(132,204,22,0.3)" : "rgba(239,68,68,0.3)"}`,
-            color: msg.kind === "ok" ? T.accent : T.danger,
-            borderRadius: 0, padding: "10px 14px", fontSize: 13, marginBottom: 18,
-          }}>{msg.text}</div>
-        )}
+      <section className={styles.metrics} aria-label="Coupon summary">
+        <article><span>Live offers</span><strong>{metrics.active}</strong><small>Available now</small></article>
+        <article><span>Redemptions</span><strong>{metrics.redemptions.toLocaleString("en-IN")}</strong><small>Across all coupons</small></article>
+        <article><span>Paused</span><strong>{metrics.paused}</strong><small>Kept for reporting</small></article>
+      </section>
 
-        {/* Create form */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 20, marginBottom: 28 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>New coupon</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      {showForm ? (
+        <section className={styles.form} aria-labelledby="coupon-form-title">
+          <div className={styles.formHeader}>
             <div>
-              <label style={labelStyle}>Code</label>
-              <input style={inputStyle} value={form.code} placeholder="LAUNCH20"
-                onChange={(e) => set("code", e.target.value.toUpperCase())} maxLength={40} />
+              <h2 id="coupon-form-title">{editingId ? "Edit coupon" : "New coupon"}</h2>
+              <p>Discounts are calculated before GST. If a referral is worth more, the customer automatically gets the better offer.</p>
             </div>
-            <div>
-              <label style={labelStyle}>Type</label>
-              <select style={inputStyle} value={form.discountType}
-                onChange={(e) => set("discountType", e.target.value as Coupon["discountType"])}>
-                <option value="PERCENT">Percent %</option>
-                <option value="FLAT">Flat ₹</option>
+            {editingId ? <span className={styles.codePreview}>{form.code}</span> : null}
+          </div>
+
+          <div className={styles.formGrid}>
+            <label>
+              Coupon code
+              <input
+                value={form.code}
+                disabled={Boolean(editingId)}
+                maxLength={40}
+                autoCapitalize="characters"
+                placeholder="PUNE20"
+                onChange={(event) => setField("code", event.target.value.toUpperCase().replace(/\s/g, ""))}
+              />
+            </label>
+            <label>
+              Offer type
+              <select value={form.discountType} onChange={(event) => setField("discountType", event.target.value as DiscountType)}>
+                <option value="PERCENT">Percentage off</option>
+                <option value="FLAT">Flat amount off</option>
                 <option value="FREE_DELIVERY">Free delivery</option>
               </select>
-            </div>
-            <div>
-              <label style={labelStyle}>{form.discountType === "PERCENT" ? "Percent" : "Amount ₹"}</label>
-              <input style={inputStyle} type="number" value={form.value}
+            </label>
+            <label>
+              {form.discountType === "PERCENT" ? "Percentage" : "Discount amount"}
+              <input
+                type="number"
+                min="1"
+                max={form.discountType === "PERCENT" ? "100" : undefined}
                 disabled={form.discountType === "FREE_DELIVERY"}
-                onChange={(e) => set("value", e.target.value)} placeholder={form.discountType === "PERCENT" ? "20" : "500"} />
-            </div>
-            <div>
-              <label style={labelStyle}>Max discount ₹</label>
-              <input style={inputStyle} type="number" value={form.maxDiscountRs}
-                onChange={(e) => set("maxDiscountRs", e.target.value)} placeholder="optional" />
-            </div>
-            <div>
-              <label style={labelStyle}>Min order ₹</label>
-              <input style={inputStyle} type="number" value={form.minOrderRs}
-                onChange={(e) => set("minOrderRs", e.target.value)} placeholder="optional" />
-            </div>
-            <div>
-              <label style={labelStyle}>Applies to</label>
-              <select style={inputStyle} value={form.appliesTo} onChange={(e) => set("appliesTo", e.target.value)}>
-                <option value="ALL">All</option>
-                <option value="PHYSICAL">Physical</option>
-                <option value="DIGITAL">Digital</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Per-user limit</label>
-              <input style={inputStyle} type="number" value={form.usageLimitPerUser}
-                onChange={(e) => set("usageLimitPerUser", e.target.value)} placeholder="1" />
-            </div>
-            <div>
-              <label style={labelStyle}>Global limit</label>
-              <input style={inputStyle} type="number" value={form.usageLimitGlobal}
-                onChange={(e) => set("usageLimitGlobal", e.target.value)} placeholder="optional" />
-            </div>
-            <div>
-              <label style={labelStyle}>Valid until</label>
-              <input style={inputStyle} type="date" value={form.validUntil}
-                onChange={(e) => set("validUntil", e.target.value)} />
-            </div>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.dim, alignSelf: "end", paddingBottom: 9 }}>
-              <input type="checkbox" checked={form.firstOrderOnly} onChange={(e) => set("firstOrderOnly", e.target.checked)} style={{ accentColor: T.accent }} />
-              First order only
+                value={form.value}
+                placeholder={form.discountType === "PERCENT" ? "20" : "500"}
+                onChange={(event) => setField("value", event.target.value)}
+              />
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.dim, alignSelf: "end", paddingBottom: 9 }}>
-              <input type="checkbox" checked={form.stackable} onChange={(e) => set("stackable", e.target.checked)} style={{ accentColor: T.accent }} />
-              Stackable
+            <label>
+              Maximum discount
+              <input type="number" min="1" value={form.maxDiscountRs} placeholder="No cap" onChange={(event) => setField("maxDiscountRs", event.target.value)} />
             </label>
-            <div style={{ alignSelf: "end" }}>
-              <button onClick={create} disabled={saving || !form.code}
-                style={{
-                  width: "100%", background: saving || !form.code ? "rgba(132,204,22,0.4)" : T.accent,
-                  color: "#000", fontWeight: 800, fontSize: 13, padding: "10px 0", borderRadius: 0,
-                  border: "none", cursor: saving || !form.code ? "not-allowed" : "pointer",
-                }}>
-                {saving ? "Creating..." : "Create coupon"}
+            <label>
+              Minimum order
+              <input type="number" min="0" value={form.minOrderRs} placeholder="No minimum" onChange={(event) => setField("minOrderRs", event.target.value)} />
+            </label>
+            <label>
+              Applies to
+              <input list="coupon-scopes" value={form.appliesTo} placeholder="ALL or a plan slug" onChange={(event) => setField("appliesTo", event.target.value)} />
+              <datalist id="coupon-scopes">
+                <option value="ALL" />
+                <option value="PHYSICAL" />
+                <option value="DIGITAL" />
+              </datalist>
+            </label>
+            <label>
+              Uses per customer
+              <input type="number" min="1" value={form.usageLimitPerUser} placeholder="No limit" onChange={(event) => setField("usageLimitPerUser", event.target.value)} />
+            </label>
+            <label>
+              Total uses
+              <input type="number" min="1" value={form.usageLimitGlobal} placeholder="No limit" onChange={(event) => setField("usageLimitGlobal", event.target.value)} />
+            </label>
+            <label className={styles.checkboxField}>
+              <input type="checkbox" checked={form.firstOrderOnly} onChange={(event) => setField("firstOrderOnly", event.target.checked)} />
+              First paid order only
+            </label>
+            <label>
+              Starts on
+              <input type="date" value={form.validFrom} onChange={(event) => setField("validFrom", event.target.value)} />
+            </label>
+            <label>
+              Ends after
+              <input type="date" value={form.validUntil} onChange={(event) => setField("validUntil", event.target.value)} />
+            </label>
+          </div>
+
+          <p className={styles.formNote}>The selected end date includes the full day in India. Coupons never combine with referral discounts; checkout gives the customer whichever single offer is better.</p>
+          <div className={styles.formActions}>
+            <span>{editingId ? "The code stays fixed so old orders remain easy to audit." : "New coupons become active immediately unless the start date is later."}</span>
+            <div>
+              <button type="button" onClick={closeForm} disabled={saving}>Cancel</button>
+              <button type="button" className={styles.primaryButton} onClick={() => void save()} disabled={saving || !form.code || (form.discountType !== "FREE_DELIVERY" && !form.value)}>
+                {saving ? "Saving…" : editingId ? "Save changes" : "Create coupon"}
               </button>
             </div>
           </div>
-        </div>
+        </section>
+      ) : null}
 
-        {/* List */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
-          {loading ? (
-            <div style={{ padding: 24, color: T.muted, fontSize: 13 }}>Loading…</div>
-          ) : coupons.length === 0 ? (
-            <div style={{ padding: 24, color: T.muted, fontSize: 13 }}>No coupons yet. Create one above.</div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr style={{ color: T.muted, textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  <th style={{ padding: "12px 16px" }}>Code</th>
-                  <th style={{ padding: "12px 16px" }}>Discount</th>
-                  <th style={{ padding: "12px 16px" }}>Scope</th>
-                  <th style={{ padding: "12px 16px" }}>Used</th>
-                  <th style={{ padding: "12px 16px" }}>Status</th>
-                  <th style={{ padding: "12px 16px" }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {coupons.map((c) => (
-                  <tr key={c.id} style={{ borderTop: `1px solid ${T.border}` }}>
-                    <td style={{ padding: "12px 16px", fontWeight: 700, fontFamily: "monospace" }}>
-                      {c.code}
-                      {c.firstOrderOnly && <span style={{ marginLeft: 6, fontSize: 10, color: T.muted }}>1st</span>}
-                    </td>
-                    <td style={{ padding: "12px 16px", color: T.dim }}>
-                      {describe(c)}
-                      {c.minOrderRs ? <span style={{ color: T.muted }}> · min {fmt(c.minOrderRs)}</span> : null}
-                    </td>
-                    <td style={{ padding: "12px 16px", color: T.muted }}>{c.appliesTo}</td>
-                    <td style={{ padding: "12px 16px", color: T.muted }}>
-                      {c.redemptions}{c.usageLimitGlobal ? ` / ${c.usageLimitGlobal}` : ""}
-                    </td>
-                    <td style={{ padding: "12px 16px" }}>
-                      <button onClick={() => toggle(c.id)} style={{
-                        background: c.isActive ? "rgba(132,204,22,0.12)" : "rgba(115,115,115,0.15)",
-                        color: c.isActive ? T.accent : T.muted, border: "none", borderRadius: 0,
-                        padding: "4px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                      }}>{c.isActive ? "Active" : "Inactive"}</button>
-                    </td>
-                    <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                      <button onClick={() => remove(c.id, c.code)} style={{
-                        background: "transparent", color: T.danger, border: `1px solid rgba(239,68,68,0.3)`,
-                        borderRadius: 0, padding: "4px 10px", fontSize: 12, cursor: "pointer",
-                      }}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+      <section className={styles.filters} aria-label="Filter coupons">
+        <label>
+          Search
+          <input type="search" value={query} placeholder="Code, scope or offer" onChange={(event) => setQuery(event.target.value)} />
+        </label>
+        <label>
+          Status
+          <select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
+            <option value="ALL">All coupons</option>
+            <option value="ACTIVE">Live now</option>
+            <option value="PAUSED">Paused</option>
+            <option value="EXPIRED">Expired</option>
+          </select>
+        </label>
+      </section>
+
+      {loading ? (
+        <div className={styles.loading}>Loading coupons…</div>
+      ) : visibleCoupons.length === 0 ? (
+        <div className={styles.empty}>
+          <strong>No coupons match</strong>
+          <span>Change the filters or create a new offer.</span>
         </div>
-      </div>
+      ) : (
+        <section className={styles.couponList} aria-label="Coupons">
+          {visibleCoupons.map((coupon) => {
+            const expired = Boolean(coupon.validUntil && new Date(coupon.validUntil).getTime() < now);
+            const statusLabel = expired ? "Expired" : coupon.isActive ? "Live" : "Paused";
+            const statusClass = expired ? styles.statusExpired : coupon.isActive ? styles.statusActive : styles.statusPaused;
+            return (
+              <article className={styles.couponCard} key={coupon.id}>
+                <div className={styles.identity}>
+                  <div><strong>{coupon.code}</strong><span className={`${styles.status} ${statusClass}`}>{statusLabel}</span></div>
+                  <small>{coupon.source === "MANUAL" ? "Created by your team" : coupon.source.toLowerCase().replaceAll("_", " ")}</small>
+                </div>
+                <div className={styles.details}>
+                  <div className={styles.discount}>
+                    {discountLabel(coupon)}
+                    {coupon.minOrderRs ? <span> · minimum {money(coupon.minOrderRs)}</span> : null}
+                  </div>
+                  <div className={styles.facts}>
+                    <span>{coupon.appliesTo === "ALL" ? "All orders" : coupon.appliesTo}</span>
+                    <span>{coupon.redemptions}{coupon.usageLimitGlobal ? ` of ${coupon.usageLimitGlobal}` : ""} used</span>
+                    <span>{coupon.usageLimitPerUser ? `${coupon.usageLimitPerUser} per customer` : "No customer limit"}</span>
+                    {coupon.firstOrderOnly ? <span>First order only</span> : null}
+                    <span>Ends: {humanDate(coupon.validUntil)}</span>
+                  </div>
+                </div>
+                <div className={styles.cardActions}>
+                  <button type="button" onClick={() => openEdit(coupon)} disabled={workingId === coupon.id}>Edit</button>
+                  <button type="button" className={styles.pauseButton} onClick={() => void setActive(coupon, !coupon.isActive)} disabled={workingId === coupon.id || expired}>
+                    {coupon.isActive ? "Pause" : "Resume"}
+                  </button>
+                  <button type="button" className={styles.dangerButton} onClick={() => void remove(coupon)} disabled={workingId === coupon.id}>
+                    {coupon.redemptions > 0 ? "Deactivate" : "Remove"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      )}
     </div>
   );
 }

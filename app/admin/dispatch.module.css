@@ -1,0 +1,155 @@
+.page { color: #f5f5f4; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.eyebrow { margin: 0 0 7px; color: #a3e635; font-size: 0.82rem; font-weight: 700; }
+.header h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.04; letter-spacing: -0.045em; }
+.header > div > p:last-child { margin: 8px 0 0; color: #a8a29e; font-size: 0.95rem; }
+.refresh,
+.toolbar button,
+.controls button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #3a3633;
+  border-radius: 12px;
+  background: #171513;
+  color: #e7e5e4;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.refresh:disabled,
+.toolbar button:disabled,
+.controls button:disabled { opacity: 0.52; cursor: wait; }
+.toolbar button,
+.controls button { border-color: #84cc16; background: #84cc16; color: #101408; }
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  border-radius: 13px;
+  background: rgba(127, 29, 29, 0.22);
+  color: #fecaca;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+}
+.error svg { flex: 0 0 auto; margin-top: 1px; }
+
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.summaryCard {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  border: 1px solid #292524;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #151514, #10100f);
+  padding: 13px 14px;
+}
+.summaryCard > span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: #20241a; color: #a3e635; }
+.summaryCard strong { font-size: 1.25rem; line-height: 1; }
+.summaryCard p { margin: 4px 0 0; color: #a8a29e; font-size: 0.76rem; }
+.summaryAlert { border-color: rgba(248, 113, 113, 0.42); }
+.summaryAlert > span { background: rgba(127, 29, 29, 0.28); color: #fca5a5; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 24px;
+  border: 1px solid #292524;
+  border-radius: 15px;
+  background: #111110;
+  padding: 12px;
+}
+.driverCash { display: flex; flex-wrap: wrap; gap: 7px; }
+.driverCash span { border-radius: 999px; background: #1c1917; color: #a8a29e; padding: 7px 10px; font-size: 0.76rem; }
+.driverCash strong { color: #e7e5e4; }
+.empty { border: 1px solid #292524; border-radius: 18px; background: #111110; color: #a8a29e; padding: 32px 20px; text-align: center; }
+
+.run { margin-bottom: 26px; }
+.runHeader { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
+.runHeader h2 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; }
+.runHeader p { margin: 3px 0 0; color: #a8a29e; font-size: 0.8rem; }
+.runHeader > span { color: #78716c; font-size: 0.8rem; }
+.cards { display: grid; gap: 12px; }
+.card {
+  border: 1px solid #292524;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #141413, #0f0f0e);
+  padding: 16px;
+}
+.issueCard { border-color: rgba(248, 113, 113, 0.48); box-shadow: inset 3px 0 #ef4444; }
+.cardTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.orderNumber { margin: 0 0 3px; color: #78716c; font-size: 0.76rem; }
+.card h3 { margin: 0; font-size: 1.08rem; }
+.badges { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
+.status,
+.cod { border-radius: 999px; padding: 6px 9px; font-size: 0.73rem; font-weight: 700; }
+.neutral { background: #292524; color: #d6d3d1; }
+.packed { background: rgba(30, 64, 175, 0.26); color: #bfdbfe; }
+.out { background: rgba(180, 83, 9, 0.25); color: #fde68a; }
+.done { background: rgba(63, 98, 18, 0.32); color: #bef264; }
+.failed { background: rgba(127, 29, 29, 0.3); color: #fecaca; }
+.cod { border: 1px solid rgba(245, 158, 11, 0.34); background: rgba(180, 83, 9, 0.18); color: #fde68a; }
+
+.address { display: flex; align-items: flex-start; gap: 8px; margin-top: 11px; color: #d6d3d1; }
+.address svg { flex: 0 0 auto; margin-top: 2px; color: #84cc16; }
+.address p { margin: 0; font-size: 0.86rem; line-height: 1.5; }
+.address span { display: block; color: #a8a29e; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 9px; color: #a8a29e; font-size: 0.77rem; }
+.meta a { display: inline-flex; align-items: center; gap: 5px; color: #c4e68b; text-decoration: none; }
+.issue { display: flex; align-items: flex-start; gap: 9px; margin-top: 13px; border-radius: 12px; background: rgba(127, 29, 29, 0.22); color: #fecaca; padding: 11px 12px; }
+.issue svg { flex: 0 0 auto; }
+.issue strong { display: block; font-size: 0.8rem; }
+.issue p { margin: 3px 0 0; font-size: 0.83rem; line-height: 1.45; }
+
+.controls { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+.controls select {
+  min-height: 44px;
+  min-width: 180px;
+  border: 1px solid #3a3633;
+  border-radius: 12px;
+  background: #090909;
+  color: #f5f5f4;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.86rem;
+}
+.withDriver { color: #a8a29e; font-size: 0.8rem; }
+.outcome { display: flex; align-items: center; gap: 7px; margin: 13px 0 0; color: #bef264; font-size: 0.82rem; }
+.failureOutcome { color: #fca5a5; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+.refresh:focus-visible,
+.toolbar button:focus-visible,
+.controls button:focus-visible,
+.controls select:focus-visible,
+.meta a:focus-visible { outline: 3px solid rgba(163, 230, 53, 0.52); outline-offset: 3px; }
+.spinning { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 850px) {
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .toolbar button { width: 100%; }
+}
+@media (max-width: 560px) {
+  .header { align-items: flex-start; flex-direction: column; }
+  .refresh { width: 100%; }
+  .cardTop { flex-direction: column; }
+  .badges { justify-content: flex-start; }
+  .controls { align-items: stretch; flex-direction: column; }
+  .controls label,
+  .controls select,
+  .controls button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinning { animation: none; }
+}

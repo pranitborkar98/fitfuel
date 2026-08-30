@@ -29,10 +29,10 @@ export type Service = {
 export const SERVICES: Service[] = [
   {
     href: "/dashboard/coach",
-    label: "The AI coach",
+    label: "Weekly coach",
     stat: "Recalibrates weekly",
     blurb:
-      "Four weigh-ins that disagree with your goal move your target, with the arithmetic shown.",
+      "Two or more weigh-ins establish a trend; when it leaves your goal range, the arithmetic is shown before you apply a change.",
   },
   /* The conversational half, added with Phase 12B. Listed separately from the
      coach above because they are genuinely different products: that one is

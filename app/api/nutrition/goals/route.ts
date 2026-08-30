@@ -7,7 +7,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { goalsPatchSchema } from "@/lib/validation/schemas";
 
-const DEFAULTS = { calories: 2000, protein: 150, carbs: 250, fat: 67, waterMl: 2500 };
+const DEFAULTS = { calories: 2000, protein: 150, carbs: 250, fat: 67, fiber: 28, waterMl: 2500 };
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, goalsPatchSchema);
   if (!parsed.ok) return parsed.response;
-  const { calories, protein, carbs, fat, waterMl } = parsed.data;
+  const { calories, protein, carbs, fat, fiber, waterMl } = parsed.data;
 
   const goal = await prisma.nutritionGoal.upsert({
     where:  { userId: session.user.id },
@@ -44,6 +44,7 @@ export async function PATCH(req: NextRequest) {
       ...(protein  !== undefined && { protein:  Number(protein)  }),
       ...(carbs    !== undefined && { carbs:    Number(carbs)    }),
       ...(fat      !== undefined && { fat:      Number(fat)      }),
+      ...(fiber    !== undefined && { fiber:    Math.round(Number(fiber)) }),
       ...(waterMl  !== undefined && { waterMl:  Number(waterMl)  }),
     },
     create: {
@@ -52,6 +53,7 @@ export async function PATCH(req: NextRequest) {
       protein:  protein  !== undefined ? Number(protein)  : DEFAULTS.protein,
       carbs:    carbs    !== undefined ? Number(carbs)    : DEFAULTS.carbs,
       fat:      fat      !== undefined ? Number(fat)      : DEFAULTS.fat,
+      fiber:    fiber    !== undefined ? Math.round(Number(fiber)) : DEFAULTS.fiber,
       waterMl:  waterMl  !== undefined ? Number(waterMl)  : DEFAULTS.waterMl,
     },
   });

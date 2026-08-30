@@ -6,6 +6,7 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppTemplate } from "@/lib/msg91-whatsapp";
+import type { NotificationPreference, Prisma, Role } from "@prisma/client";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -21,6 +22,8 @@ export interface SendNotificationInput {
   toName?: string;
   templateKey: string;
   vars?: Record<string, string | number>;
+  /** Keys containing application-built HTML fragments. Never populate from request input. */
+  trustedHtmlVars?: readonly string[];
 }
 
 export interface SendResult {
@@ -29,13 +32,30 @@ export interface SendResult {
   errors: string[];
 }
 
+type TemplateVars = Record<string, string | number>;
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error || "unknown");
+}
+
+function optedOut(preferences: NotificationPreference | null, category: string): boolean {
+  if (!preferences) return false;
+  if (category === "orderUpdates") return !preferences.orderUpdates;
+  if (category === "deliveryUpdates") return !preferences.deliveryUpdates;
+  if (category === "weeklyDigest") return !preferences.weeklyDigest;
+  if (category === "morningPush") return !preferences.morningPush;
+  if (category === "eveningRecap") return !preferences.eveningRecap;
+  if (category === "nudges") return !preferences.nudges;
+  if (category === "marketing") return !preferences.marketing;
+  return false;
+}
+
 export async function sendNotification(
   input: SendNotificationInput
 ): Promise<SendResult> {
   const result: SendResult = { errors: [] };
-  const db = prisma as any;
 
-  const tpl = await db.notificationTemplate.findUnique({
+  const tpl = await prisma.notificationTemplate.findUnique({
     where: { key: input.templateKey },
   });
   if (!tpl) {
@@ -50,10 +70,10 @@ export async function sendNotification(
   let phone = input.toPhone;
   let email = input.toEmail;
   let name = input.toName || "there";
-  let prefs: any = null;
+  let prefs: NotificationPreference | null = null;
 
   if (input.userId) {
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: input.userId },
       include: { notificationPreference: true },
     });
@@ -67,13 +87,13 @@ export async function sendNotification(
     prefs = user.notificationPreference;
   }
 
-  const vars: Record<string, any> = { ...(input.vars || {}), name };
+  const vars: TemplateVars = { ...(input.vars || {}), name };
 
   const wantsWhatsApp = tpl.channel === "WHATSAPP" || tpl.channel === "BOTH";
   const wantsEmail = tpl.channel === "EMAIL" || tpl.channel === "BOTH";
 
   if (!tpl.isStaff && prefs && tpl.category) {
-    if (prefs[tpl.category] === false) {
+    if (optedOut(prefs, tpl.category)) {
       await logSend({
         userId: input.userId || null,
         userEmail: email || null,
@@ -125,9 +145,9 @@ export async function sendNotification(
           providerRef: ref,
           payload: vars,
         });
-      } catch (e: any) {
+      } catch (error: unknown) {
         result.whatsapp = "failed";
-        result.errors.push(`WhatsApp: ${e?.message || "unknown"}`);
+        result.errors.push(`WhatsApp: ${errorMessage(error)}`);
         await logSend({
           userId: input.userId || null,
           userEmail: email || null,
@@ -136,7 +156,7 @@ export async function sendNotification(
           channel: "WHATSAPP",
           status: "FAILED",
           provider: "msg91",
-          error: String(e?.message || e || "unknown").slice(0, 500),
+          error: errorMessage(error).slice(0, 500),
           payload: vars,
         });
       }
@@ -165,13 +185,18 @@ export async function sendNotification(
     } else {
       try {
         const subject = renderTemplate(tpl.emailSubject || "FitFuel", vars);
-        const html = renderTemplate(tpl.emailBody || "", vars);
-        const r: any = await resend.emails.send({
+        const html = renderHtmlTemplate(
+          tpl.emailBody || "",
+          vars,
+          new Set(input.trustedHtmlVars || []),
+        );
+        const response = await resend.emails.send({
           from: FROM_EMAIL,
           to: email,
           subject,
           html,
         });
+        if (response.error) throw new Error(response.error.message);
         result.email = "sent";
         await logSend({
           userId: input.userId || null,
@@ -181,12 +206,12 @@ export async function sendNotification(
           channel: "EMAIL",
           status: "SENT",
           provider: "resend",
-          providerRef: r?.data?.id || r?.id || null,
+          providerRef: response.data?.id || null,
           payload: vars,
         });
-      } catch (e: any) {
+      } catch (error: unknown) {
         result.email = "failed";
-        result.errors.push(`Email: ${e?.message || "unknown"}`);
+        result.errors.push(`Email: ${errorMessage(error)}`);
         await logSend({
           userId: input.userId || null,
           userEmail: email || null,
@@ -195,7 +220,7 @@ export async function sendNotification(
           channel: "EMAIL",
           status: "FAILED",
           provider: "resend",
-          error: String(e?.message || e || "unknown").slice(0, 500),
+          error: errorMessage(error).slice(0, 500),
           payload: vars,
         });
       }
@@ -212,25 +237,26 @@ export function fireNotification(input: SendNotificationInput): void {
 }
 
 export async function notifyStaffByRoles(
-  roles: string[],
+  roles: readonly Role[],
   templateKey: string,
   vars: Record<string, string | number>
 ): Promise<void> {
-  const db = prisma as any;
-  const staff = await db.user.findMany({
-    where: { role: { in: roles as any } },
+  const staff = await prisma.user.findMany({
+    where: { role: { in: [...roles] } },
     select: { id: true, email: true, phone: true, name: true },
   });
-  for (const s of staff) {
-    fireNotification({
-      userId: s.id,
-      toEmail: s.email || undefined,
-      toPhone: s.phone || undefined,
-      toName: s.name || undefined,
+  const sends = await Promise.allSettled(staff.map((staffMember) =>
+    sendNotification({
+      userId: staffMember.id,
+      toEmail: staffMember.email || undefined,
+      toPhone: staffMember.phone || undefined,
+      toName: staffMember.name || undefined,
       templateKey,
       vars,
-    });
-  }
+    }),
+  ));
+  const failures = sends.filter((result) => result.status === "rejected");
+  if (failures.length) console.error(`[notify] ${failures.length} staff notification send(s) rejected`);
 }
 
 /**
@@ -244,7 +270,7 @@ export async function wasRecentlySent(
   withinHours: number
 ): Promise<boolean> {
   const cutoff = new Date(Date.now() - withinHours * 3600_000);
-  const recent = await (prisma as any).notificationLog.findFirst({
+  const recent = await prisma.notificationLog.findFirst({
     where: {
       userId,
       templateKey,
@@ -256,29 +282,50 @@ export async function wasRecentlySent(
   return !!recent;
 }
 
-function renderTemplate(tpl: string, vars: Record<string, any>): string {
-  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) =>
+function renderTemplate(tpl: string, vars: TemplateVars): string {
+  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) =>
     String(vars[key] ?? "")
   );
 }
 
+function renderHtmlTemplate(
+  template: string,
+  vars: Record<string, unknown>,
+  trustedHtmlVars: ReadonlySet<string>,
+): string {
+  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => {
+    const value = String(vars[key] ?? "");
+    return trustedHtmlVars.has(key) ? value : escapeHtml(value);
+  });
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function extractWhatsAppVars(
   varsJson: string | null,
-  vars: Record<string, any>
+  vars: TemplateVars,
 ): string[] {
   if (!varsJson) return [];
   try {
-    const list: string[] = JSON.parse(varsJson);
-    return list.map((k) => String(vars[k] ?? ""));
+    const parsed: unknown = JSON.parse(varsJson);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((key): key is string => typeof key === "string").map((key) => String(vars[key] ?? ""));
   } catch {
     return [];
   }
 }
 
-async function logSend(data: any) {
+async function logSend(data: Prisma.NotificationLogUncheckedCreateInput) {
   try {
-    await (prisma as any).notificationLog.create({ data });
-  } catch (e) {
-    console.error("[notify] log failed", e);
+    await prisma.notificationLog.create({ data });
+  } catch (error: unknown) {
+    console.error("[notify] log failed", error);
   }
 }

@@ -276,7 +276,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
 
         <p style={{ margin: "11px 0 20px", fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.dim }}>
           {tierRow.available
-            ? "Order before 9pm and the first delivery is tomorrow at 08:00. Pause, skip or swap any day from the dashboard."
+            ? "Order before 9pm and the first delivery is tomorrow at 08:00. Skip or restore upcoming days from Today before the kitchen cut-off."
             : `${tierRow.label} prices are an estimate at × ${tierMultiplier(tier).toFixed(2)} of Standard until those kitchens open.`}
         </p>
       </div>

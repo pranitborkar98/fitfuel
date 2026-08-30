@@ -55,7 +55,7 @@ export const PROGRAMS: Program[] = [
     reward: "MEAL_VOUCHER",
     rewardLine: "Voucher per member",
     who: "Strength gyms, CrossFit boxes, yoga and pilates studios.",
-    gets: "A QR at the desk, meal vouchers you can hand members, and a live count of who is eating to their macros.",
+    gets: "A tracked code and QR, a conversion list, and the voucher reward configured for each first paid customer.",
   },
   {
     type: "TRAINER",
@@ -63,7 +63,7 @@ export const PROGRAMS: Program[] = [
     reward: "CASH",
     rewardLine: "Cash commission",
     who: "Independent coaches running clients in person or online.",
-    gets: "Your own code, client progress you can actually see, and a cash commission on every order they place.",
+    gets: "Your own code, a visible conversion record, and the configured cash reward after a referred client's first paid order.",
   },
   {
     type: "INFLUENCER",
@@ -71,7 +71,7 @@ export const PROGRAMS: Program[] = [
     reward: "CASH",
     rewardLine: "Cash commission",
     who: "Fitness and food creators with a Pune audience.",
-    gets: "A custom landing page on your code, click to order attribution, and monthly cash payouts.",
+    gets: "A landing page on your code, first-touch attribution and monthly payout records for paid conversions.",
   },
   {
     type: "DIETICIAN",
@@ -79,7 +79,7 @@ export const PROGRAMS: Program[] = [
     reward: "CASH",
     rewardLine: "Cash commission",
     who: "Practising nutritionists who write plans but cannot cook them.",
-    gets: "We cook to your prescription. You keep the client, we keep the macros honest.",
+    gets: "A tracked referral route into goal-aware cooked plans. FitFuel does not expose a client's private health diary to the partner.",
   },
   {
     type: "DOCTOR",
@@ -87,7 +87,7 @@ export const PROGRAMS: Program[] = [
     reward: "CASH",
     rewardLine: "Cash commission",
     who: "Endocrinology, cardiology, gynaecology, general practice.",
-    gets: "Condition-specific plans for diabetic, PCOS and cardiac patients, with intake you can audit.",
+    gets: "A tracked referral route into the plans FitFuel has actually made kitchen-ready, with medical boundaries stated before purchase.",
   },
   {
     type: "CORPORATE",
@@ -95,7 +95,7 @@ export const PROGRAMS: Program[] = [
     reward: "DISCOUNT_ONLY",
     rewardLine: "Employee discount",
     who: "Offices running a wellness budget or a subsidised lunch programme.",
-    gets: "A subsidised rate for staff, one invoice, and reporting your HR team can use.",
+    gets: "An employee code, a configured discount and a visible count of converted orders. Invoicing terms are agreed manually.",
   },
   {
     type: "RESIDENCE",
@@ -103,7 +103,7 @@ export const PROGRAMS: Program[] = [
     reward: "HYBRID",
     rewardLine: "Hybrid, per building",
     who: "Residential societies and gated communities in our delivery zones.",
-    gets: "A single drop point for the tower, a resident discount, and a share back to the association.",
+    gets: "A resident code, a configured discount and a hybrid reward record. Drop-point operations are agreed for each building.",
   },
   {
     type: "CUSTOMER",
@@ -111,7 +111,7 @@ export const PROGRAMS: Program[] = [
     reward: "CREDIT",
     rewardLine: "Credit per referral",
     who: "Anyone already eating with us.",
-    gets: "Rs 500 in credit when a friend orders, and Rs 500 off for them. No application needed.",
+    gets: "Rs 500 in credit after a friend's first order, and Rs 200 off for them. No application needed.",
   },
 ];
 
@@ -123,19 +123,19 @@ export const ATTRIBUTION: { n: string; title: string; body: string; backed: stri
   {
     n: "01",
     title: "You get a code and a QR",
-    body: "Approved partners get a unique code and, if you want one, your own landing page at fitfuel.in on that code. The QR prints for a gym desk or a clinic counter.",
+    body: "Approved partners get a unique code, a landing page at fitfuel.in/p/code and a QR that can be printed for a desk, profile or counter.",
     backed: "Partner.code, Partner.customLandingSlug, /p/[code]",
   },
   {
     n: "02",
-    title: "Every scan is attributed",
-    body: "A scan or a click writes a referral row before anyone signs up, so the attribution survives the gap between interest and the first order.",
-    backed: "PartnerReferral: CLICKED, SIGNED_UP, FIRST_ORDER, REWARD_PAID",
+    title: "First touch survives checkout",
+    body: "Opening the partner page stores a 30-day first-touch cookie. When the person signs in or checks out, the verified code is attached to the account and order.",
+    backed: "ff_ref cookie, User.referredByPartnerCode, Order.referralAttribution",
   },
   {
     n: "03",
     title: "You watch it from a dashboard",
-    body: "Referrals, conversions, what is owed and what has been paid, on your own login. Not a monthly email you have to trust.",
+    body: "Paid conversions, the configured reward, what is pending and what has been paid are visible on the partner login.",
     backed: "/dashboard/partners",
   },
   {
@@ -275,8 +275,8 @@ export const INTEGRATIONS: Integration[] = [
 
 export const PAYOUT_TERMS: [string, string][] = [
   ["Approval", "Manual. Every application is reviewed before a code goes live, so a code that exists is a partner we have spoken to."],
-  ["Attribution window", "The referral is held from first scan through signup to first order, not just the session the link was clicked in."],
-  ["Payout cycle", "Monthly, reconciled against orders that were delivered and not refunded."],
+  ["Attribution window", "First touch is held for 30 days in the browser and then copied to the account and order after the code is verified."],
+  ["Payout cycle", "Cash reward records roll into monthly payout rows. A paid conversion earns once per referred customer."],
   ["Reward models", "Five: credit, cash, meal voucher, discount only, or a hybrid. Set per partner, not per programme."],
   ["Customer discount", "Referred customers get their own discount at checkout. The partner reward is not taken out of it."],
   ["Exclusivity", "None. Partnering with FitFuel does not stop you working with anyone else."],

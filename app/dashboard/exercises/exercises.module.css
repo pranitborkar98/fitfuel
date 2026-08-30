@@ -1,0 +1,137 @@
+.screen {
+  min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px clamp(16px, 4vw, 28px) 88px;
+}
+
+.header {
+  display: grid;
+  gap: 8px;
+  max-width: 680px;
+  margin-bottom: 24px;
+}
+
+.intro {
+  margin: 0;
+  color: var(--ff-mute);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 22px;
+  overflow: hidden;
+  border: 1px solid var(--ff-rule);
+  border-radius: var(--fk-r-lg);
+  background: var(--ff-panel-2);
+}
+
+.tab {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--ff-dim);
+  font: 650 14px var(--font-archivo), sans-serif;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: var(--ff-lime);
+  color: #06140b;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ff-rule);
+  border-radius: var(--fk-r-lg);
+  background: var(--ff-panel);
+  transition: border-color 180ms ease-out, background-color 180ms ease-out, transform 180ms ease-out;
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: var(--ff-rule-2);
+  background: var(--ff-panel-2);
+  transform: translateY(-2px);
+}
+
+.cardAction {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cardAction:focus-visible {
+  outline: 2px solid var(--ff-lime);
+  outline-offset: -3px;
+  border-radius: inherit;
+}
+
+.error {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ff-danger, #dc2626);
+  border-radius: var(--fk-r);
+  color: #ff8b8b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.exerciseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .screen {
+    padding-top: 24px;
+  }
+
+  .tab {
+    padding-inline: 6px;
+  }
+
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .exerciseGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .tab {
+    transition: none !important;
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: none;
+  }
+}

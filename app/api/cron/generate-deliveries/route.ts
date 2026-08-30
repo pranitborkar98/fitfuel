@@ -1,5 +1,5 @@
 // app/api/cron/generate-deliveries/route.ts
-// Phase 11 -- the delivery generator. Runs nightly (Vercel Cron, 17:30 UTC).
+// Phase 11 -- the delivery generator. Runs nightly (Vercel Cron, 15:30 UTC / 21:00 IST).
 // For every ACTIVE subscriber whose plan covers tomorrow (and didn't skip it),
 // it creates ONE delivery -- all their meals together -- stamped with the
 // customer's chosen window (MORNING / EVENING). Idempotent: re-running won't

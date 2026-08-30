@@ -9,17 +9,53 @@ export const dynamic = "force-dynamic";
 
 export default async function PlansPage() {
   await requireSurface("plans");
-  const db = prisma as any;
-
-  const plans = await db.mealPlan.findMany({
+  const plans = await prisma.mealPlan.findMany({
     orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }, { displayName: "asc" }],
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      displayName: true,
+      tagline: true,
+      description: true,
+      longDescription: true,
+      whoIsItFor: true,
+      keyPrinciples: true,
+      whatIsAvoided: true,
+      avgCaloriesPerDay: true,
+      avgProteinGrams: true,
+      avgCarbsGrams: true,
+      avgFatGrams: true,
+      nutritionistName: true,
+      nutritionistCred: true,
+      nutritionistBio: true,
+      medicalDisclaimer: true,
+      isActive: true,
+      isFeatured: true,
+      sortOrder: true,
+      imageUrl: true,
+      accentColor: true,
+      category: true,
+      tier: true,
+      dietaryVariant: true,
+      cycleLengthDays: true,
+      mealsPerDay: true,
+      _count: { select: { scheduleSlots: true } },
       planPrices: {
         orderBy: [{ bundle: "asc" }, { duration: "asc" }, { mealsPerDay: "asc" }],
+        select: {
+          id: true,
+          bundle: true,
+          isDigital: true,
+          diet: true,
+          duration: true,
+          mealsPerDay: true,
+          priceRs: true,
+          mrpRs: true,
+          gstPercent: true,
+          isActive: true,
+        },
       },
     },
   });
-
-  const plain = JSON.parse(JSON.stringify(plans));
-  return <PlansClient initial={plain} />;
+  return <PlansClient initial={plans} />;
 }

@@ -2,8 +2,9 @@
 // recommendations. Maps the buyer's FitnessGoal → SupplementGoal and returns a ranked,
 // diet-aware shortlist from the live catalogue. No external calls; safe to render server-side.
 import { prisma } from "@/lib/prisma";
+import type { SupplementGoal } from "@prisma/client";
 
-const GOAL_MAP: Record<string, { goal: string; label: string }> = {
+const GOAL_MAP: Record<string, { goal: SupplementGoal; label: string }> = {
   LOSE_WEIGHT:      { goal: "WEIGHT_LOSS", label: "fat loss" },
   GAIN_MUSCLE:      { goal: "MUSCLE_GAIN", label: "muscle gain" },
   MAINTAIN:         { goal: "BALANCED",    label: "staying balanced" },
@@ -29,7 +30,7 @@ export async function getRecommendedSupplements(
   userId: string,
   take = 4,
 ): Promise<SupplementRecommendation | null> {
-  const profile = await (prisma as any).userProfile.findUnique({
+  const profile = await prisma.userProfile.findUnique({
     where: { userId },
     select: { fitnessGoal: true, dietPreference: true },
   });
@@ -40,7 +41,7 @@ export async function getRecommendedSupplements(
   const { goal, label } = GOAL_MAP[goalKey];
   const vegan = profile?.dietPreference === "VEGAN";
 
-  const rows = await (prisma as any).supplement.findMany({
+  const rows = await prisma.supplement.findMany({
     where: {
       isActive: true,
       recommendedFor: { has: goal },
@@ -48,7 +49,7 @@ export async function getRecommendedSupplements(
       ...(vegan ? { veganFriendly: true } : {}),
     },
     orderBy: [{ isFeatured: "desc" }, { popular: "desc" }, { sortOrder: "asc" }],
-    take,
+    take: Math.min(12, Math.max(1, Math.round(take))),
     select: {
       slug: true,
       name: true,
@@ -66,13 +67,13 @@ export async function getRecommendedSupplements(
 
   if (!rows.length) return null;
 
-  const items: RecommendedSupplement[] = rows.map((r: any) => ({
-    slug: r.slug,
-    name: r.name,
-    emoji: r.emoji ?? null,
-    tagline: r.tagline ?? null,
-    accentColor: r.accentColor ?? null,
-    buyUrl: r.links?.[0]?.affiliateUrl ?? null,
+  const items: RecommendedSupplement[] = rows.map((row) => ({
+    slug: row.slug,
+    name: row.name,
+    emoji: row.emoji ?? null,
+    tagline: row.tagline ?? null,
+    accentColor: row.accentColor ?? null,
+    buyUrl: row.links[0]?.affiliateUrl ?? null,
   }));
 
   return { goalLabel: label, items };

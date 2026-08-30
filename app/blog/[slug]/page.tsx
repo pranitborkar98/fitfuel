@@ -24,6 +24,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { safeJsonLd, sanitizeRichHtml } from "@/lib/content-safety";
 import { Go, Idx, Row, k } from "@/app/_ui/Kit";
 import { Band, Shell, Wrap, p as pg } from "@/app/_ui/Page";
 import { DIM, INK, SECTION, body, display, label, num } from "@/app/_ui/theme";
@@ -94,7 +95,7 @@ export default async function BlogArticlePage({
 
   return (
     <Shell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <article>
         <Wrap style={{ paddingTop: "clamp(96px,13vw,150px)" }}>
@@ -148,7 +149,7 @@ export default async function BlogArticlePage({
           <div
             className={pg.prose}
             style={{ marginTop: post.coverImageUrl ? 0 : "clamp(28px,4vw,44px)" }}
-            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+            dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(post.contentHtml) }}
           />
 
           {post.tags.length > 0 && (

@@ -1,190 +1,280 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/payments/payu/route.ts  · WS-3 hardened (SEC-1/2)
-// PayU initiation — builds the signed hash AND creates a PENDING_PAYMENT order
-// keyed by txnid so the success callback can complete it after the redirect.
-// 17C-2: apply credit balance if signed in & opted in; stamp Order.creditAppliedRs.
-//        Credit is committed (recordCreditChange) only after CONFIRMED in success route.
-
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import type { DietType, Prisma } from "@prisma/client";
+
 import { auth } from "@/lib/auth";
-import { applyCreditAtCheckout } from "@/lib/partners";
+import { checkoutCreditReservation } from "@/lib/checkout-credit";
+import { resolveCheckoutCustomer } from "@/lib/checkout-customer";
+import { captureCheckoutReferral } from "@/lib/checkout-referral";
 import { applyCoupon } from "@/lib/coupons";
+import { getPayuConfig } from "@/lib/payu-config";
+import { resolvePhysicalCheckout } from "@/lib/physical-checkout";
+import { prisma } from "@/lib/prisma";
+import { decomposePrice, durationKeyFromShort } from "@/lib/pricing-decomposition";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { payuInitSchema } from "@/lib/validation/schemas";
 
-const PAYU_KEY  = process.env.PAYU_MERCHANT_KEY!;
-const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
-const PAYU_URL  = "https://secure.payu.in/_payment"; // production
-
-const DIET_MAP: Record<string, string> = {
-  veg: "VEGETARIAN", egg: "EGGETARIAN", nonveg: "NON_VEGETARIAN", jain: "VEGETARIAN",
-};
-const DUR_MAP: Record<string, string> = {
-  trial: "TRIAL_DAY", weekly: "WEEKLY", biweekly: "BI_WEEKLY",
-  monthly_ex: "MONTHLY_EXCL_WEEKENDS", monthly: "ONE_MONTH",
-  two_month: "TWO_MONTH", three_month: "THREE_MONTH",
-};
-const MEAL_MAP: Record<string, string> = {
-  bl: "BREAKFAST_LUNCH", sd: "SNACK_DINNER", all: "ALL_FOUR",
+const DIET_MAP: Record<string, DietType> = {
+  veg: "VEGETARIAN",
+  egg: "EGGETARIAN",
+  nonveg: "NON_VEGETARIAN",
+  jain: "VEGETARIAN",
+  vegan: "VEGETARIAN",
 };
 
-function genOrderNumber(): string {
-  const d = new Date();
-  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
-  return `FF-PAYU-${ymd}-${Math.floor(1000 + Math.random() * 9000)}`;
+class CheckoutTotalChanged extends Error {
+  constructor(public details: Record<string, unknown>) {
+    super("Checkout total changed");
+  }
 }
 
-async function upsertCustomer(email: string, phone: string, name: string) {
-  let user = await (prisma as any).user.findFirst({ where: { email } });
-  if (!user && phone) user = await (prisma as any).user.findFirst({ where: { phone } });
+function errorCode(error: unknown): string | null {
+  return typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : null;
+}
 
-  const phoneOwner = phone ? await (prisma as any).user.findFirst({ where: { phone } }) : null;
-
-  if (user) {
-    const data: any = { name };
-    if (phone && (!phoneOwner || phoneOwner.id === user.id)) data.phone = phone;
-    return (prisma as any).user.update({ where: { id: user.id }, data });
-  }
-  const data: any = { email, name };
-  if (phone && !phoneOwner) data.phone = phone;
-  return (prisma as any).user.create({ data });
+function orderNumber(): string {
+  const now = new Date();
+  const day = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  return `FF-PAYU-${day}-${crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // SEC-1: checkout-init flooding guard, by IP.
-    const rl = await enforceRateLimit(req, "checkout");
-    if (!rl.ok) return rl.response;
+    const limit = await enforceRateLimit(req, "checkout");
+    if (!limit.ok) return limit.response;
 
-    // SEC-2: size-capped, schema-validated body. Replaces raw req.json() +
-    // hand-rolled presence checks.
+    const payu = getPayuConfig();
+    if (!payu) {
+      console.error("[PayU physical init] Missing or invalid payment configuration");
+      return NextResponse.json(
+        { error: "Online payment is temporarily unavailable." },
+        { status: 503 },
+      );
+    }
+
     const parsed = await readJson(req, payuInitSchema);
     if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const {
-      firstname, lastname, email, phone,
-      address, city, pincode,
-      diet, dur, meal, price, deliveryWindow,
-      amount,       // total incl GST, what PayU charges (pre-credit)
-      productinfo,
-      useCredit,    // 17C-2
-      planSlug,     // LOOP-3: the plan the customer actually chose
-    } = parsed.data;
+      firstname,
+      lastname,
+      email,
+      phone,
+      address,
+      city,
+      pincode,
+      diet,
+      dur,
+      meal,
+      price,
+      deliveryWindow,
+      useCredit,
+      planSlug,
+      expectedTotalRs,
+    } = body;
 
-    const dietEnum = DIET_MAP[diet];
-    const durEnum  = DUR_MAP[dur];
-    const mealEnum = MEAL_MAP[meal];
+    const selection = await resolvePhysicalCheckout({
+      planSlug,
+      diet,
+      duration: dur,
+      meals: meal,
+      submittedSubtotalRs: price,
+    });
+    if (!selection.ok) {
+      return NextResponse.json({ error: selection.error }, { status: selection.status });
+    }
 
-    let creditAppliedRs = 0;
-    let user: any = null;
-    let couponDiscountRs = 0;
+    const dietType = DIET_MAP[diet];
+    if (!dietType) {
+      return NextResponse.json({ error: "Invalid diet selection." }, { status: 400 });
+    }
+
+    const session = await auth();
+    const user = await resolveCheckoutCustomer({
+      email,
+      phone,
+      name: `${firstname}${lastname ? ` ${lastname}` : ""}`,
+      authenticatedUserId: session?.user?.id,
+    });
+    const subtotalRs = selection.subtotalRs;
+    const referral = await captureCheckoutReferral({
+      userId: user.id,
+      candidateCode: req.cookies.get("ff_ref")?.value,
+      discountBaseRs: subtotalRs,
+    });
+
+    let discountRs = 0;
     let appliedCouponCode: string | null = null;
-    let appliedCouponId: string | null = null;
-    const subtotalRsServer = Math.round(Number(price));
-    let gstRsServer = Math.round(Number(amount)) - subtotalRsServer; // recomputed below
-    let chargeAmountRs = Math.round(Number(amount)); // recomputed server-side below
+    const couponCode = body.couponCode?.trim().toUpperCase();
+    if (couponCode) {
+      const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
+      if (!coupon) {
+        return NextResponse.json({ error: "That coupon code is not valid." }, { status: 400 });
+      }
+      const [userUses, globalUses, paidOrders] = await Promise.all([
+        prisma.couponRedemption.count({ where: { couponId: coupon.id, userId: user.id } }),
+        prisma.couponRedemption.count({ where: { couponId: coupon.id } }),
+        prisma.order.count({ where: { userId: user.id, paymentStatus: "SUCCESS" } }),
+      ]);
+      const result = applyCoupon(coupon, {
+        saleSubtotalRs: subtotalRs,
+        category: "PHYSICAL",
+        planSlug,
+        isFirstOrder: paidOrders === 0,
+        userRedemptionCount: userUses,
+        globalRedemptionCount: globalUses,
+        deliveryFeeRs: decomposePrice({
+          subtotalRs,
+          duration: durationKeyFromShort(dur),
+        }).deliveryRs,
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          { error: result.reason || "That coupon cannot be used for this plan." },
+          { status: 400 },
+        );
+      }
+      discountRs = Math.min(result.discountRs, Math.max(0, subtotalRs - 1));
+      appliedCouponCode = coupon.code;
+    }
 
-    // We need user.id BEFORE credit lookup. Upsert now (this is the order owner).
-    if (dietEnum && durEnum && mealEnum && price) {
-      user = await upsertCustomer(email, phone, `${firstname}${lastname ? " " + lastname : ""}`);
+    if ((referral?.discountRs ?? 0) > discountRs) {
+      discountRs = referral?.discountRs ?? 0;
+      appliedCouponCode = null;
+    }
 
-      // ── R-PRICE: server-side coupon re-validation (discount BEFORE GST) ──
-      const couponCode = (parsed.data.couponCode || "").trim().toUpperCase();
-      if (couponCode) {
-        const coupon = await (prisma as any).coupon.findUnique({ where: { code: couponCode } });
-        if (coupon) {
-          const [uCount, gCount, paid] = await Promise.all([
-            (prisma as any).couponRedemption.count({ where: { couponId: coupon.id, userId: user.id } }),
-            (prisma as any).couponRedemption.count({ where: { couponId: coupon.id } }),
-            (prisma as any).order.count({ where: { userId: user.id, paymentStatus: "SUCCESS" } }),
-          ]);
-          const cres = applyCoupon(coupon, {
-            saleSubtotalRs: subtotalRsServer, category: "PHYSICAL", planSlug,
-            isFirstOrder: paid === 0, userRedemptionCount: uCount, globalRedemptionCount: gCount, deliveryFeeRs: 0,
+    const discountedSubtotalRs = Math.max(1, subtotalRs - discountRs);
+    const gstRs = Math.round(discountedSubtotalRs * 0.05);
+    const baseTotalRs = Math.max(1, discountedSubtotalRs + gstRs);
+    const cgstRs = Math.ceil(gstRs / 2);
+    const sgstRs = gstRs - cgstRs;
+    const txnid = `FFP${Date.now()}${crypto.randomUUID().replaceAll("-", "").slice(0, 8)}`;
+    const normalizedCity = city || "Pune";
+    const window = deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
+
+    let created: { creditAppliedRs: number; chargeAmountRs: number } | null = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        created = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+          const creditAppliedRs = await checkoutCreditReservation(tx, {
+            userId: user.id,
+            totalRs: baseTotalRs,
+            enabled: Boolean(useCredit && session?.user?.id === user.id),
           });
-          if (cres.ok) {
-            couponDiscountRs = Math.min(cres.discountRs, Math.max(0, subtotalRsServer - 1));
-            appliedCouponCode = coupon.code;
-            appliedCouponId = coupon.id;
+          const chargeAmountRs = baseTotalRs - creditAppliedRs;
+
+          if (expectedTotalRs !== undefined && expectedTotalRs !== chargeAmountRs) {
+            throw new CheckoutTotalChanged({
+              error: "Your total changed. Please review the updated amount and try again.",
+              totalRs: chargeAmountRs,
+              discountRs,
+              couponCode: appliedCouponCode,
+              referralDiscountRs: referral?.discountRs ?? 0,
+              creditAppliedRs,
+            });
           }
-        }
-      }
-      // Recompute the authoritative charge from subtotal − discount + GST.
-      const discountedSubtotal = subtotalRsServer - couponDiscountRs;
-      gstRsServer = Math.round(discountedSubtotal * 0.05);
-      chargeAmountRs = discountedSubtotal + gstRsServer;
 
-      // 17C-2: apply credit only if signed in AND opted in AND owns this account
-      if (useCredit) {
-        const session = await auth();
-        if (session?.user?.id && session.user.id === user.id) {
-          const applied = await applyCreditAtCheckout(user.id, chargeAmountRs);
-          // Keep at least ₹1 for PayU (zero-amount orders rejected)
-          creditAppliedRs = Math.min(applied.creditAppliedRs, Math.max(0, chargeAmountRs - 1));
-          chargeAmountRs = chargeAmountRs - creditAppliedRs;
-        }
-      }
-    }
-
-    // PayU requires the amount field as a string with 2 decimals. Hash uses the exact same string.
-    const payuAmount = chargeAmountRs.toFixed(2);
-
-    const txnid = `FF${Date.now()}${Math.floor(Math.random() * 1000)}`;
-
-    // ── Hash (unchanged formula — all udf empty) ──
-    const hashString = `${PAYU_KEY}|${txnid}|${payuAmount}|${productinfo}|${firstname}|${email}|||||||||||${PAYU_SALT}`;
-    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
-
-    // ── Create the PENDING order now, keyed by txnid ──
-    if (user && dietEnum && durEnum && mealEnum && price) {
-      const subtotal = subtotalRsServer;     // pre-GST (gross)
-      const gst      = gstRsServer;          // GST on discounted subtotal
-      const window   = deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
-
-      const addr = await (prisma as any).address.create({
-        data: { userId: user.id, line1: address ?? "", area: city ?? "Pune", city: city ?? "Pune", pincode: pincode ?? "" },
-      });
-
-      await (prisma as any).order.create({
-        data: {
-          userId: user.id, addressId: addr.id, orderNumber: genOrderNumber(),
-          status: "PENDING_PAYMENT",
-          subtotalRs: subtotal, gstRs: gst, totalRs: chargeAmountRs,
-          creditAppliedRs, discountRs: couponDiscountRs, couponCode: appliedCouponCode,
-          paymentMethod: "PAYU", paymentStatus: "PENDING", payuTxnId: txnid,
-          notes: JSON.stringify({ diet, dur, meal, planSlug: planSlug || null, deliveryWindow: window, isJain: diet === "jain" }),
-          items: {
-            create: {
-              productId: null, diet: dietEnum, duration: durEnum, mealsPerDay: mealEnum,
-              priceRs: subtotal, gstRs: gst, totalRs: chargeAmountRs, quantity: 1,
+          const savedAddress = await tx.address.create({
+            data: {
+              userId: user.id,
+              line1: address,
+              area: normalizedCity,
+              city: normalizedCity,
+              pincode,
             },
-          },
-          payment: {
-            create: { method: "PAYU", status: "PENDING", amountRs: chargeAmountRs, payuTxnId: txnid },
-          },
-        },
-      });
+          });
+          await tx.order.create({
+            data: {
+              userId: user.id,
+              addressId: savedAddress.id,
+              orderNumber: orderNumber(),
+              status: "PENDING_PAYMENT",
+              paymentMethod: "PAYU",
+              paymentStatus: "PENDING",
+              payuTxnId: txnid,
+              subtotalRs: discountedSubtotalRs,
+              gstRs,
+              totalRs: chargeAmountRs,
+              mrpSubtotalRs: subtotalRs,
+              discountRs,
+              couponCode: appliedCouponCode,
+              creditAppliedRs,
+              referralAttribution: referral?.code ?? null,
+              cgstRs,
+              sgstRs,
+              igstRs: 0,
+              buyerStateCode: "MH",
+              hsnSacCode: "9963",
+              notes: JSON.stringify({
+                diet,
+                dur,
+                meal,
+                planSlug,
+                deliveryWindow: window,
+                isJain: diet === "jain",
+                referralDiscountRs: referral?.discountRs ?? 0,
+              }),
+              items: {
+                create: {
+                  productId: null,
+                  diet: dietType,
+                  duration: selection.duration,
+                  mealsPerDay: selection.meals,
+                  priceRs: discountedSubtotalRs,
+                  gstRs,
+                  totalRs: chargeAmountRs,
+                  quantity: 1,
+                },
+              },
+              payment: {
+                create: {
+                  method: "PAYU",
+                  status: "PENDING",
+                  amountRs: chargeAmountRs,
+                  payuTxnId: txnid,
+                },
+              },
+            },
+          });
+          return { creditAppliedRs, chargeAmountRs };
+        }, { isolationLevel: "Serializable" });
+        break;
+      } catch (error: unknown) {
+        if (error instanceof CheckoutTotalChanged) throw error;
+        if (errorCode(error) === "P2034" && attempt < 2) continue;
+        throw error;
+      }
     }
+    if (!created) throw new Error("Could not reserve checkout credit");
+
+    const amount = created.chargeAmountRs.toFixed(2);
+    const productinfo = `${selection.plan.displayName || selection.plan.name} · ${dur} · ${meal}`.slice(0, 200);
+    const hashInput = `${payu.key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${payu.salt}`;
+    const hash = crypto.createHash("sha512").update(hashInput).digest("hex");
 
     return NextResponse.json({
-      payuUrl:          PAYU_URL,
-      key:              PAYU_KEY,
+      payuUrl: payu.paymentUrl,
+      key: payu.key,
       txnid,
-      amount:           payuAmount,    // post-credit, what PayU will charge
+      amount,
       productinfo,
       firstname,
       email,
       phone,
       hash,
-      surl:             `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`,
-      furl:             `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`,
+      surl: `${payu.baseUrl}/api/payments/payu/success`,
+      furl: `${payu.baseUrl}/api/payments/payu/failed`,
       service_provider: "payu_paisa",
-      creditAppliedRs,
+      creditAppliedRs: created.creditAppliedRs,
     });
-  } catch (err) {
-    console.error("[PayU init error]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error: unknown) {
+    if (error instanceof CheckoutTotalChanged) {
+      return NextResponse.json(error.details, { status: 409 });
+    }
+    console.error("[PayU physical init error]", error);
+    return NextResponse.json({ error: "Payment could not be started." }, { status: 500 });
   }
 }

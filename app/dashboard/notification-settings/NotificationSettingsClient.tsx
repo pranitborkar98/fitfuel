@@ -39,7 +39,7 @@ const SECTIONS: Array<{ title: string; rows: Row[] }> = [
     title: "How you receive it",
     rows: [
       { key: "emailEnabled", label: "Email", desc: "Your primary channel." },
-      { key: "whatsappEnabled", label: "WhatsApp", desc: "Not sending yet. Turn it on to be included when it starts." },
+      { key: "whatsappEnabled", label: "WhatsApp", desc: "Delivery, meal and account updates when a template supports WhatsApp." },
     ],
   },
 ];
@@ -76,11 +76,12 @@ function Switch({ on, onToggle, name }: { on: boolean; onToggle: () => void; nam
 
 export default function NotificationSettingsClient({ initialPrefs }: { initialPrefs: Prefs }) {
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs);
+  const [baseline, setBaseline] = useState<Prefs>(initialPrefs);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const dirty = (Object.keys(prefs) as Array<keyof Prefs>).some((k) => prefs[k] !== initialPrefs[k]);
+  const dirty = (Object.keys(prefs) as Array<keyof Prefs>).some((key) => prefs[key] !== baseline[key]);
 
   function toggle(key: keyof Prefs) {
     setPrefs((p) => ({ ...p, [key]: !p[key] }));
@@ -98,7 +99,10 @@ export default function NotificationSettingsClient({ initialPrefs }: { initialPr
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) setError(j.error || "That did not save. Your settings are unchanged.");
-      else setSaved(true);
+      else {
+        setBaseline(prefs);
+        setSaved(true);
+      }
     } catch {
       setError("That did not save. Check your connection and try again.");
     } finally {

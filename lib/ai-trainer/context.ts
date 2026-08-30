@@ -159,7 +159,8 @@ export async function buildTrainerContext(userId: string): Promise<TrainerContex
         },
       }),
       prisma.userActivePlan.findFirst({
-        where: { userId, status: "active" },
+        where: { userId, status: "active", startDate: { lte: today }, endDate: { gte: today } },
+        orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
         select: {
           currentDay: true,
           startDate: true,

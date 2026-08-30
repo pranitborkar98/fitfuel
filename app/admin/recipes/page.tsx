@@ -9,9 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RecipesPage() {
   await requireSurface("recipes");
-  const db = prisma as any;
-
-  const recipes = await db.recipe.findMany({
+  const recipes = await prisma.recipe.findMany({
     orderBy: [{ mealType: "asc" }, { name: "asc" }],
     select: {
       id: true,
@@ -24,5 +22,5 @@ export default async function RecipesPage() {
     },
   });
 
-  return <RecipesClient initial={JSON.parse(JSON.stringify(recipes))} />;
+  return <RecipesClient initial={recipes} />;
 }

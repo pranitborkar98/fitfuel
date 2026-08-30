@@ -7,6 +7,8 @@
 //   MSG91_WA_INTEGRATED_NUMBER
 //   NEXT_PUBLIC_BASE_URL
 
+import { indiaMobileE164 } from "@/lib/phone";
+
 export interface NotifyDriverPayload {
   driverName: string;
   driverPhone: string;
@@ -29,6 +31,11 @@ export async function notifyDriverWhatsApp(payload: NotifyDriverPayload): Promis
 
   const firstName = payload.driverName.split(" ")[0];
   const driverLink = `${baseUrl}/driver/${payload.driverToken}`;
+  const recipient = indiaMobileE164(payload.driverPhone);
+  if (!recipient) {
+    console.error("[notify-driver] Invalid driver phone; notification not sent.");
+    return;
+  }
 
   const body = {
     integrated_number: integratedNumber,
@@ -50,7 +57,7 @@ export async function notifyDriverWhatsApp(payload: NotifyDriverPayload): Promis
           },
         ],
       },
-      to: `91${payload.driverPhone}`,
+      to: recipient,
     },
   };
 
@@ -63,11 +70,10 @@ export async function notifyDriverWhatsApp(payload: NotifyDriverPayload): Promis
       },
       body: JSON.stringify(body),
     });
-    const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      console.error("[notify-driver] MSG91 error", res.status, json);
+      console.error("[notify-driver] MSG91 request failed", res.status);
     } else {
-      console.log("[notify-driver] WhatsApp sent to", payload.driverPhone, json);
+      console.info("[notify-driver] WhatsApp dispatch notification sent.");
     }
   } catch (err) {
     console.error("[notify-driver] fetch failed", err);

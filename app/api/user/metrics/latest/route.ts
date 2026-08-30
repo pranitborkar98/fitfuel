@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // GET /api/user/metrics/latest
 // Returns the most recent BodyMetric row remapped to the client Metrics shape.
 // Used by BodyMetricsClient on mount to hydrate the Overview tab without a save.
 // Returns null (HTTP 200) when the user has no readings yet.
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
 
   const row = await prisma.bodyMetric.findFirst({
     where:   { userId: session.user.id },

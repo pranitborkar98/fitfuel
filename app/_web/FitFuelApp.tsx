@@ -1221,7 +1221,7 @@ export default function FitFuelApp({
               <p className={s.railOfferNote}>
                 Breakfast and lunch weighed to your macros. Nothing to cancel.
               </p>
-              <Link href="/checkout" className={s.railOfferCta}>
+              <Link href="/plans?trial=true" className={s.railOfferCta}>
                 Start the trial
               </Link>
             </div>
@@ -1296,8 +1296,8 @@ export default function FitFuelApp({
                   is for. */}
               <p className={s.claimDeck}>
                 Set today&apos;s target above, then add dishes until the bars
-                fill. Every portion is weighed in our Kharadi kitchen and lands
-                logged in your diary.
+                fill. Every portion is weighed in our Kharadi kitchen and is
+                ready to confirm in your diary.
               </p>
             </div>
 
@@ -1309,7 +1309,7 @@ export default function FitFuelApp({
                 <b>Try one day for {trialTotal}</b>
                 <span>Breakfast and lunch, cooked to your macros. Nothing to cancel.</span>
               </span>
-              <Link href="/checkout" className={s.add} style={{ textDecoration: "none" }}>
+              <Link href="/plans?trial=true" className={s.add} style={{ textDecoration: "none" }}>
                 Start the trial
               </Link>
             </div>

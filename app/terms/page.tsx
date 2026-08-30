@@ -29,7 +29,7 @@ export default function TermsPage() {
         title="Terms and conditions"
         deck="These govern your account, your subscription, our delivery and the health tools in the app. Clause 9 and clause 13A are the two most people need."
         meta={[
-          { k: "Last updated", v: "5 June 2026" },
+          { k: "Last updated", v: "30 August 2026" },
           { k: "Clauses", v: "19" },
           { k: "Governing law", v: "India" },
         ]}
@@ -42,7 +42,7 @@ export default function TermsPage() {
               These Terms and Conditions govern your access to and use of FitFuel, including our
               website, meal subscription plans, daily delivery, digital meal plans, supplement
               guidance and health tracking tools (together, the <strong>Services</strong>). FitFuel
-              is operated by [Registered Entity Name], based in Pune, Maharashtra, India (
+              is provided by FitFuel, a food service based in Pune, Maharashtra, India (
               <strong>FitFuel</strong>, <strong>we</strong>, <strong>us</strong>). By creating an
               account, placing an order or using any part of the Services, you agree to these Terms.
               If you do not agree, please do not use the Services.
@@ -87,8 +87,9 @@ export default function TermsPage() {
             <ul>
               <li>Your subscription covers the duration and meal selection you choose at checkout.</li>
               <li>
-                You may pause, skip or modify upcoming deliveries subject to our cut-off times,
-                which we will communicate in the app.
+                You may skip or restore an upcoming delivery from the Today screen before the
+                kitchen cut-off, or ask FitFuel support for help. A change applies only after the
+                app confirms it.
               </li>
               <li>
                 Deliveries are bundled into a single drop per day in your chosen Morning or Evening
@@ -194,12 +195,11 @@ export default function TermsPage() {
               you, and the meal you receive will differ in plating, garnish, colour and arrangement.
             </p>
             <p>
-              <strong>What is never illustrative is the data.</strong> Every dish name, calorie
-              figure, macronutrient value, ingredient list, allergen note, plan duration and price
-              shown on this site is real, comes from our own kitchen records, and is what we cook and
-              weigh to. Where you see a circular macro mark beside a dish, it is drawn directly from
-              that dish&rsquo;s own weighed protein, carbohydrate and fat values rather than from any
-              image.
+              <strong>The written offer governs.</strong> The dish name, nutrition values,
+              ingredients, allergen note, duration and checkout price shown for an item or plan are
+              the values the product uses. An item without a kitchen-approved price cannot be
+              purchased. Nutrition values remain estimates and can vary with ingredients and
+              preparation; they are not inferred from the photograph.
             </p>
             <p>
               If any image ever conflicts with the written macros, ingredients or allergen
@@ -251,9 +251,7 @@ export default function TermsPage() {
           <Clause no="18" title="Contact us">
             <p>Questions about these Terms? Reach us at:</p>
             <p>
-              <strong>FitFuel</strong> &middot; [Registered Entity Name]
-              <br />
-              [Full Registered Address, Pune, Maharashtra, PIN]
+              <strong>FitFuel</strong> &middot; Kharadi, Pune, Maharashtra, India
               <br />
               Email: <A href="mailto:contact@fitfuel.in">contact@fitfuel.in</A>
               <br />

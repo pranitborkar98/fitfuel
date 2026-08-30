@@ -1,18 +1,83 @@
-// app/api/admin/content/route.ts
-// Phase 15D — content CRUD for blog posts, FAQs, testimonials.
-// POST { type, action, id?, data } — type: 'blog'|'faq'|'testimonial',
-// action: 'create'|'update'|'delete'. Content surface (OWNER/ADMIN).
+// Content CRUD for blog posts, FAQs, and testimonials. OWNER/ADMIN only.
 
 import { requireApiRole } from "@/lib/admin-auth";
+import { richHtmlToText, sanitizeRichHtml } from "@/lib/content-safety";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const db = prisma as any;
+const idSchema = z.string().trim().min(1).max(60);
+const contentRequestSchema = z
+  .object({
+    type: z.enum(["blog", "faq", "testimonial"]),
+    action: z.enum(["create", "update", "delete"]),
+    id: idSchema.optional().nullable(),
+    data: z.unknown().optional().nullable(),
+  })
+  .strict();
 
-function slugify(s: string): string {
-  return s
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine(
+    (value) => !value || value.startsWith("/") || /^https:\/\//i.test(value),
+    "Use an HTTPS image URL or an app-relative path.",
+  );
+
+const blogSchema = z
+  .object({
+    title: z.string().trim().min(1, "Title is required.").max(160),
+    slug: z.string().trim().max(80).default(""),
+    excerpt: z.string().trim().max(500).default(""),
+    contentHtml: z.string().max(200_000).default(""),
+    coverImageUrl: imageUrlSchema.default(""),
+    category: z.string().trim().min(1).max(80).default("Guides"),
+    tags: z
+      .union([
+        z.array(z.string().trim().min(1).max(50)).max(20),
+        z.string().max(1_000),
+      ])
+      .default([]),
+    authorName: z.string().trim().min(1).max(100).default("Team FitFuel"),
+    readMinutes: z.coerce.number().int().min(1).max(120).default(5),
+    status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
+    isFeatured: z.boolean().default(false),
+  })
+  .strict();
+
+const faqSchema = z
+  .object({
+    category: z.string().trim().min(1).max(80).default("General"),
+    question: z.string().trim().min(1, "Question is required.").max(300),
+    answerHtml: z.string().min(1, "Answer is required.").max(20_000),
+    sortOrder: z.coerce.number().int().min(-10_000).max(10_000).default(0),
+    isActive: z.boolean().default(true),
+  })
+  .strict();
+
+const testimonialSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required.").max(100),
+    location: z.string().trim().max(100).default(""),
+    planLabel: z.string().trim().max(120).default(""),
+    goal: z.string().trim().max(60).default(""),
+    resultLabel: z.string().trim().max(160).default(""),
+    rating: z.coerce.number().int().min(1).max(5).default(5),
+    quote: z.string().trim().min(1, "Quote is required.").max(1_500),
+    avatarUrl: imageUrlSchema.default(""),
+    isFeatured: z.boolean().default(false),
+    isActive: z.boolean().default(true),
+    sortOrder: z.coerce.number().int().min(-10_000).max(10_000).default(0),
+  })
+  .strict();
+
+function slugify(value: string): string {
+  return value
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
@@ -20,118 +85,154 @@ function slugify(s: string): string {
     .slice(0, 80);
 }
 
-function int(v: any, def = 0): number {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.round(n) : def;
+function invalidData(error: z.ZodError): NextResponse {
+  return NextResponse.json(
+    {
+      error: error.issues[0]?.message || "Content is invalid.",
+      issues: error.issues.slice(0, 12).map((issue) => ({
+        field: issue.path.join(".") || "data",
+        message: issue.message,
+      })),
+    },
+    { status: 400 },
+  );
 }
 
-function str(v: any): string {
-  return typeof v === "string" ? v.trim() : "";
-}
+function buildBlog(input: z.infer<typeof blogSchema>) {
+  const slug = input.slug || slugify(input.title);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    return { error: "Slug must use lowercase letters, numbers, and hyphens only." } as const;
+  }
 
-// ── field builders per type ──
-function blogData(d: any) {
+  const contentHtml = sanitizeRichHtml(input.contentHtml);
+  if (input.status === "PUBLISHED") {
+    if (!input.excerpt) return { error: "Published posts need an excerpt." } as const;
+    if (!richHtmlToText(contentHtml)) return { error: "Published posts need a body." } as const;
+  }
+
+  const tags = Array.isArray(input.tags)
+    ? input.tags
+    : input.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
   return {
-    title: str(d.title),
-    slug: str(d.slug) || slugify(str(d.title)),
-    excerpt: str(d.excerpt),
-    contentHtml: typeof d.contentHtml === "string" ? d.contentHtml : "",
-    coverImageUrl: str(d.coverImageUrl) || null,
-    category: str(d.category) || "Guides",
-    tags: Array.isArray(d.tags)
-      ? d.tags.map((t: any) => str(t)).filter(Boolean)
-      : str(d.tags).split(",").map((t) => t.trim()).filter(Boolean),
-    authorName: str(d.authorName) || "Team FitFuel",
-    readMinutes: int(d.readMinutes, 5),
-    status: d.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
-    isFeatured: !!d.isFeatured,
+    data: {
+      title: input.title,
+      slug,
+      excerpt: input.excerpt,
+      contentHtml,
+      coverImageUrl: input.coverImageUrl || null,
+      category: input.category,
+      tags: [...new Set(tags)].slice(0, 20),
+      authorName: input.authorName,
+      readMinutes: input.readMinutes,
+      status: input.status,
+      isFeatured: input.isFeatured,
+    },
+  } as const;
+}
+
+function buildFaq(input: z.infer<typeof faqSchema>) {
+  const answerHtml = sanitizeRichHtml(input.answerHtml);
+  if (!richHtmlToText(answerHtml)) {
+    return { error: "Answer cannot be empty after unsafe markup is removed." } as const;
+  }
+  return {
+    data: {
+      category: input.category,
+      question: input.question,
+      answerHtml,
+      sortOrder: input.sortOrder,
+      isActive: input.isActive,
+    },
+  } as const;
+}
+
+function buildTestimonial(input: z.infer<typeof testimonialSchema>) {
+  return {
+    name: input.name,
+    location: input.location,
+    planLabel: input.planLabel,
+    goal: input.goal || null,
+    resultLabel: input.resultLabel,
+    rating: input.rating,
+    quote: input.quote,
+    avatarUrl: input.avatarUrl || null,
+    isFeatured: input.isFeatured,
+    isActive: input.isActive,
+    sortOrder: input.sortOrder,
   };
 }
 
-function faqData(d: any) {
-  return {
-    category: str(d.category) || "General",
-    question: str(d.question),
-    answerHtml: typeof d.answerHtml === "string" ? d.answerHtml : "",
-    sortOrder: int(d.sortOrder, 0),
-    isActive: d.isActive !== false,
-  };
+async function remove(type: z.infer<typeof contentRequestSchema>["type"], id: string) {
+  if (type === "blog") return prisma.blogPost.delete({ where: { id } });
+  if (type === "faq") return prisma.faq.delete({ where: { id } });
+  return prisma.testimonial.delete({ where: { id } });
 }
-
-function testimonialData(d: any) {
-  return {
-    name: str(d.name),
-    location: str(d.location),
-    planLabel: str(d.planLabel),
-    goal: str(d.goal) || null,
-    resultLabel: str(d.resultLabel),
-    rating: Math.min(5, Math.max(1, int(d.rating, 5))),
-    quote: str(d.quote),
-    avatarUrl: str(d.avatarUrl) || null,
-    isFeatured: !!d.isFeatured,
-    isActive: d.isActive !== false,
-    sortOrder: int(d.sortOrder, 0),
-  };
-}
-
-const MODELS: Record<string, { model: string; build: (d: any) => any; required: (d: any) => string | null }> = {
-  blog: {
-    model: "blogPost",
-    build: blogData,
-    required: (d) => (!str(d.title) ? "Title is required" : null),
-  },
-  faq: {
-    model: "faq",
-    build: faqData,
-    required: (d) => (!str(d.question) ? "Question is required" : !str(d.answerHtml) ? "Answer is required" : null),
-  },
-  testimonial: {
-    model: "testimonial",
-    build: testimonialData,
-    required: (d) => (!str(d.name) ? "Name is required" : !str(d.quote) ? "Quote is required" : null),
-  },
-};
 
 export async function POST(req: NextRequest) {
   const admin = await requireApiRole("content");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const body = (await req.json().catch(() => ({}))) as {
-    type?: string;
-    action?: string;
-    id?: string;
-    data?: any;
-  };
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const cfg = MODELS[body.type ?? ""];
-  if (!cfg) return NextResponse.json({ error: "Unknown content type" }, { status: 400 });
+  const parsed = await readJson(req, contentRequestSchema, { maxBytes: 256 * 1024 });
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
   try {
     if (body.action === "delete") {
-      if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-      await db[cfg.model].delete({ where: { id: body.id } });
+      if (!body.id) return NextResponse.json({ error: "Content id is required." }, { status: 400 });
+      await remove(body.type, body.id);
       return NextResponse.json({ ok: true, deleted: body.id });
     }
 
-    if (body.action === "create" || body.action === "update") {
-      const reqErr = cfg.required(body.data ?? {});
-      if (reqErr) return NextResponse.json({ error: reqErr }, { status: 400 });
-      const data = cfg.build(body.data ?? {});
-
-      if (body.action === "create") {
-        const record = await db[cfg.model].create({ data });
-        return NextResponse.json({ ok: true, record });
-      } else {
-        if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-        const record = await db[cfg.model].update({ where: { id: body.id }, data });
-        return NextResponse.json({ ok: true, record });
-      }
+    if (!body.data) return NextResponse.json({ error: "Content data is required." }, { status: 400 });
+    if (body.action === "update" && !body.id) {
+      return NextResponse.json({ error: "Content id is required." }, { status: 400 });
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
-  } catch (e: any) {
-    // unique-slug clashes etc.
-    const msg = e?.code === "P2002" ? "That slug is already taken, choose another." : "Save failed.";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    if (body.type === "blog") {
+      const input = blogSchema.safeParse(body.data);
+      if (!input.success) return invalidData(input.error);
+      const built = buildBlog(input.data);
+      if ("error" in built) return NextResponse.json({ error: built.error }, { status: 400 });
+      const record = body.action === "create"
+        ? await prisma.blogPost.create({ data: built.data })
+        : await prisma.blogPost.update({ where: { id: body.id! }, data: built.data });
+      return NextResponse.json({ ok: true, record });
+    }
+
+    if (body.type === "faq") {
+      const input = faqSchema.safeParse(body.data);
+      if (!input.success) return invalidData(input.error);
+      const built = buildFaq(input.data);
+      if ("error" in built) return NextResponse.json({ error: built.error }, { status: 400 });
+      const record = body.action === "create"
+        ? await prisma.faq.create({ data: built.data })
+        : await prisma.faq.update({ where: { id: body.id! }, data: built.data });
+      return NextResponse.json({ ok: true, record });
+    }
+
+    const input = testimonialSchema.safeParse(body.data);
+    if (!input.success) return invalidData(input.error);
+    const data = buildTestimonial(input.data);
+    const record = body.action === "create"
+      ? await prisma.testimonial.create({ data })
+      : await prisma.testimonial.update({ where: { id: body.id! }, data });
+    return NextResponse.json({ ok: true, record });
+  } catch (error: unknown) {
+    const code = typeof error === "object" && error && "code" in error ? error.code : null;
+    if (code === "P2002") {
+      return NextResponse.json({ error: "That slug is already taken. Choose another." }, { status: 409 });
+    }
+    if (code === "P2025") {
+      return NextResponse.json({ error: "Content was not found." }, { status: 404 });
+    }
+    console.error("[admin/content] operation failed", error);
+    return NextResponse.json({ error: "Content operation failed." }, { status: 500 });
   }
 }

@@ -9,22 +9,26 @@ export const dynamic = "force-dynamic";
 
 export default async function ContentPage() {
   await requireSurface("content");
-  const db = prisma as any;
-
   const [posts, faqs, testimonials] = await Promise.all([
-    db.blogPost.findMany({ orderBy: { publishedAt: "desc" } }),
-    db.faq.findMany({ orderBy: [{ category: "asc" }, { sortOrder: "asc" }] }),
-    db.testimonial.findMany({ orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }] }),
+    prisma.blogPost.findMany({
+      orderBy: { publishedAt: "desc" },
+      select: { id: true, slug: true, title: true, excerpt: true, contentHtml: true, coverImageUrl: true, category: true, tags: true, authorName: true, readMinutes: true, status: true, isFeatured: true },
+    }),
+    prisma.faq.findMany({
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+      select: { id: true, category: true, question: true, answerHtml: true, sortOrder: true, isActive: true },
+    }),
+    prisma.testimonial.findMany({
+      orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }],
+      select: { id: true, name: true, location: true, planLabel: true, goal: true, resultLabel: true, rating: true, quote: true, avatarUrl: true, isFeatured: true, isActive: true, sortOrder: true },
+    }),
   ]);
-
-  // serialize Date -> string for client props
-  const plain = (x: any) => JSON.parse(JSON.stringify(x));
 
   return (
     <ContentClient
-      posts={plain(posts)}
-      faqs={plain(faqs)}
-      testimonials={plain(testimonials)}
+      posts={posts}
+      faqs={faqs}
+      testimonials={testimonials}
     />
   );
 }

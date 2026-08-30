@@ -19,8 +19,8 @@ const planLinks = [
   { label: "PCOS",                href: "/plans/pcos-veg" },
   { label: "Medical & Lifestyle", href: "/plans?category=LIFESTYLE_MEDICAL" },
   { label: "Sports Nutrition",    href: "/plans?category=SPORTS" },
-  { label: "All 126 Plans",       href: "/plans" },
-  { label: "Single Meals",        href: "/" },
+  { label: "All plan concepts",   href: "/plans" },
+  { label: "Single Meals",        href: "/menu" },
 ];
 
 const companyLinks = [
@@ -77,7 +77,7 @@ function YoutubeIcon() {
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
-      <div style={{ fontFamily: "var(--font-mono), monospace", fontWeight: 500, fontSize: 12, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.22em", paddingBottom: 12, marginBottom: 16, borderBottom: "1px solid var(--ff-rule)" }}>
+      <div style={{ fontFamily: "var(--font-archivo), sans-serif", fontWeight: 700, fontSize: 14, color: "var(--ff-mute)", letterSpacing: 0, paddingBottom: 12, marginBottom: 16, borderBottom: "1px solid var(--ff-rule)" }}>
         {title}
       </div>
       <div className="ff-fcol-links" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -111,7 +111,7 @@ export default function Footer() {
             </span>
 
             <p style={{ color: "var(--ff-dim)", fontSize: 13.5, lineHeight: 1.75, marginBottom: 28, maxWidth: 260 }}>
-              The only health coach that controls the plate. Chef-cooked, condition-specific meals, delivered daily in Pune. Verified intake, not self-reported.
+              Chef-cooked meals linked to your nutrition target, with a chosen delivery window and a diary ready to confirm.
             </p>
 
             <div className="ff-fcol-links" style={{ display: "flex", flexDirection: "column", gap: 13 }}>
@@ -174,14 +174,14 @@ export default function Footer() {
               stated, and the house button under it. */}
           <div>
             <div style={{ background: "var(--ff-bg)", border: "1px solid var(--ff-rule)", borderTop: "2px solid var(--ff-lime)", borderRadius: 0, padding: 24 }}>
-              <span style={{ display: "block", fontFamily: "var(--font-mono), monospace", fontWeight: 500, fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ff-dim)", marginBottom: 14 }}>
+              <span style={{ display: "block", fontFamily: "var(--font-archivo), sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: 0, color: "var(--ff-mute)", marginBottom: 14 }}>
                 Trial day
               </span>
               <div style={{ fontFamily: "var(--font-mono), ui-monospace, monospace", fontWeight: 700, fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em", color: "var(--ff-ink)", fontVariantNumeric: "tabular-nums", marginBottom: 12 }}>
                 {TRIAL_TOTAL_LABEL}
               </div>
               <p style={{ color: "var(--ff-mute)", fontSize: 13, lineHeight: 1.7, marginBottom: 20 }}>
-                Breakfast plus Lunch delivered tomorrow. No commitment, no lock-in.
+                Breakfast plus lunch in your chosen delivery window. No subscription.
               </p>
               <Link href="/plans?trial=true" className="ff-trial-cta" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "var(--ff-lime)", color: "#070707", fontFamily: "var(--font-archivo), sans-serif", fontSize: 15, fontWeight: 600, padding: "14px 0", minHeight: 48, borderRadius: "var(--fk-r)", textDecoration: "none", letterSpacing: 0, textTransform: "none", transition: "background 0.2s linear, color 0.2s linear" }}>
                 Start trial

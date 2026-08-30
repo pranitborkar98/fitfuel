@@ -40,9 +40,10 @@ export function applyCoupon(coupon: CouponLike, ctx: CouponContext): CouponResul
   if (coupon.validFrom && now < coupon.validFrom) return fail("Coupon is not yet valid.");
   if (coupon.validUntil && now > coupon.validUntil) return fail("Coupon has expired.");
 
-  const scope = coupon.appliesTo;
-  const scopeOk = scope === "ALL" || scope === ctx.category ||
-    (ctx.planSlug !== undefined && scope === ctx.planSlug);
+  const scope = coupon.appliesTo.trim();
+  const scopeUpper = scope.toUpperCase();
+  const scopeOk = scopeUpper === "ALL" || scopeUpper === ctx.category.toUpperCase() ||
+    (ctx.planSlug !== undefined && scope.toLowerCase() === ctx.planSlug.toLowerCase());
   if (!scopeOk) return fail("Coupon doesn't apply to this item.");
 
   if (coupon.minOrderRs && ctx.saleSubtotalRs < coupon.minOrderRs) return fail("Order below coupon minimum.");

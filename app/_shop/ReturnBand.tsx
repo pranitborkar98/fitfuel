@@ -76,8 +76,10 @@ export default function ReturnBand() {
         // Private mode. The band simply will not persist, which is correct.
       }
     }
-    setVisits(next.n);
-    setReady(true);
+    queueMicrotask(() => {
+      setVisits(next.n);
+      setReady(true);
+    });
   }, []);
 
   const name = session?.user?.name?.split(" ")[0] ?? null;

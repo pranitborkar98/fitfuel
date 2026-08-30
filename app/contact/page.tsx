@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import ContactClient from "./ContactClient";
+import { safeJsonLd } from "@/lib/content-safety";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -54,7 +55,7 @@ export default function Page() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(contactLd) }}
       />
       <ContactClient />
     </>

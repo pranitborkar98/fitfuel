@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import Link from "next/link";
 import {
-  Activity, Bluetooth, BluetoothOff, ChevronLeft, Plus,
-  Zap, Scale, Droplets, Flame, Dumbbell, Heart, Brain,
-  TrendingDown, TrendingUp, Minus, Info, X, Check,
-  AlertCircle, BarChart3, Clock, Target, User, Lightbulb,
+  Activity, Bluetooth, BluetoothOff, Plus,
+  Zap, Scale, Droplets, Flame, Dumbbell, Brain,
+  TrendingDown, Info, X, Check,
+  AlertCircle, BarChart3, Target,
 } from "lucide-react";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -24,6 +23,7 @@ import {
 
 import { C } from "@/app/_app/theme";
 import Dialog from "@/app/_app/Dialog";
+import s from "./body-metrics.module.css";
 
 const T = {
   bg:          C.bg,
@@ -47,6 +47,9 @@ const T = {
   wash:        C.wash,
   onLime:      C.onLime,
 };
+
+const RADIUS = "var(--fk-r-lg)";
+const RADIUS_SM = "var(--fk-r)";
 
 // ─── All 18 parameters (13 original + 5 missing from Fitdays) ────────────────
 interface Metrics {
@@ -96,6 +99,40 @@ interface UserBio {
   heightCm: number;
   age:      number;
   gender:   "male" | "female";
+}
+
+interface BodyMetricsUser {
+  name?: string | null;
+  profile?: {
+    heightCm?: number | null;
+    age?: number | null;
+    gender?: string | null;
+  } | null;
+}
+
+interface BluetoothCharacteristicLike {
+  startNotifications(): Promise<unknown>;
+  addEventListener(type: "characteristicvaluechanged", listener: (event: Event) => void): void;
+  writeValue(value: Uint8Array<ArrayBufferLike>): Promise<unknown>;
+}
+
+interface BluetoothServiceLike {
+  getCharacteristic(uuid: string): Promise<BluetoothCharacteristicLike>;
+}
+
+interface BluetoothServerLike {
+  getPrimaryService(uuid: string): Promise<BluetoothServiceLike>;
+}
+
+interface BluetoothDeviceLike {
+  gatt: { connect(): Promise<BluetoothServerLike> };
+  addEventListener(type: "gattserverdisconnected", listener: () => void): void;
+}
+
+interface NavigatorWithBluetooth extends Navigator {
+  bluetooth: {
+    requestDevice(options: { acceptAllDevices: boolean; optionalServices: string[] }): Promise<BluetoothDeviceLike>;
+  };
 }
 
 // ─── Parameter definitions ────────────────────────────────────────────────────
@@ -341,7 +378,7 @@ const PARAM_DEFS: ParamDef[] = [
       "Muscle mass directly raises BMR, building 5 kg of muscle increases BMR by ~65 kcal/day.",
       "BMR decreases with severe caloric restriction (metabolic adaptation). Don't crash diet.",
     ],
-    insightFn: (v, m) => {
+    insightFn: (v) => {
       const tdee = Math.round(v * 1.55); // moderate activity
       const target = Math.round(tdee - 500);
       return `Estimated TDEE (moderate activity): ${tdee} kcal. For 0.5 kg/week fat loss, eat ${target} kcal/day. Never below ${v} kcal.`;
@@ -358,7 +395,6 @@ const PARAM_DEFS: ParamDef[] = [
     ],
     insightFn: (v, m) => {
       if (m.weight && m.bodyFatRate) {
-        const actual = new Date().getFullYear() - 1990; // placeholder, ideally use user.age
         return `A body age of ${v} means your metabolism is running older than ideal. Dropping visceral fat is the fastest fix.`;
       }
       return null;
@@ -512,40 +548,6 @@ function parseFitDaysPacket(
   return { weight, impedance, stable, stableCount: count };
 }
 
-// ─── Sparkline ────────────────────────────────────────────────────────────────
-function Sparkline({ values, color }: { values: number[]; color: string }) {
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const w = 80; const h = 28;
-  const pts = values.map((v, i) => {
-    const x = (i / (values.length - 1)) * w;
-    const y = h - ((v - min) / range) * (h - 4) - 2;
-    return `${x},${y}`;
-  }).join(" ");
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity={0.8} />
-    </svg>
-  );
-}
-
-// ─── Mini progress bar ────────────────────────────────────────────────────────
-function MiniBar({ value, min, max, color, label }: { value: number; min: number; max: number; color: string; label: string }) {
-  const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
-  return (
-    <div style={{ marginBottom: 6 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textMuted, marginBottom: 3 }}>
-        <span>{label}</span><span style={{ color }}>{value}</span>
-      </div>
-      <div style={{ height: 4, background: T.trough, borderRadius: 0, overflow: "hidden" }}>
-        <div style={{ height: 4, width: `${pct}%`, background: color, borderRadius: 0, transition: "width 0.6s ease" }} />
-      </div>
-    </div>
-  );
-}
-
 // ─── Bio prompt ───────────────────────────────────────────────────────────────
 function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => void; onClose: () => void }) {
   const [height, setHeight] = useState("");
@@ -555,7 +557,7 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
     background: T.card, border: `1px solid ${T.border}`,
-    borderRadius: 0, padding: "10px 12px", fontSize: 15, fontWeight: 600,
+    borderRadius: RADIUS_SM, padding: "10px 12px", fontSize: 16, fontWeight: 600,
     color: T.text, outline: "none",
   };
   function handleConfirm() {
@@ -580,23 +582,23 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
           </button>
         </div>
         <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24, lineHeight: 1.6 }}>
-          Your scale sends weight + impedance. We need your height, age, and sex to compute all 18 body metrics.
+          Your scale sends weight and impedance. Height, age and sex are used to estimate the remaining body-composition values.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Height (cm)</label>
-            <input type="number" placeholder="e.g. 170" value={height} onChange={e => setHeight(e.target.value)} style={inputStyle} />
+            <label htmlFor="body-height" style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 6 }}>Height (cm)</label>
+            <input id="body-height" type="number" min="100" max="250" inputMode="decimal" placeholder="e.g. 170" value={height} onChange={e => setHeight(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Age (years)</label>
-            <input type="number" placeholder="e.g. 28" value={age} onChange={e => setAge(e.target.value)} style={inputStyle} />
+            <label htmlFor="body-age" style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 6 }}>Age (years)</label>
+            <input id="body-age" type="number" min="10" max="110" inputMode="numeric" placeholder="e.g. 28" value={age} onChange={e => setAge(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Sex</label>
+            <span style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 6 }}>Sex used by the estimate</span>
             <div style={{ display: "flex", gap: 8 }}>
               {(["male", "female"] as const).map(g => (
-                <button key={g} onClick={() => setGender(g)} style={{
-                  flex: 1, padding: "10px", borderRadius: 0, fontSize: 13, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
+                <button type="button" key={g} aria-pressed={gender === g} onClick={() => setGender(g)} style={{
+                  flex: 1, padding: "10px", borderRadius: RADIUS_SM, fontSize: 14, fontWeight: 650, cursor: "pointer", textTransform: "capitalize",
                   background: gender === g ? T.wash : T.card,
                   border: `1px solid ${gender === g ? T.accent : T.border}`,
                   color: gender === g ? T.accent : T.textMuted,
@@ -605,12 +607,11 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
             </div>
           </div>
           {err && <p style={{ fontSize: 12, color: T.danger }}>{err}</p>}
-          <button onClick={handleConfirm} style={{
-            background: T.accent, color: T.onLime, border: "none", borderRadius: 0,
-            padding: "12px", fontSize: 14, fontWeight: 800, cursor: "pointer",
-            textTransform: "uppercase", letterSpacing: "0.05em",
+          <button type="button" onClick={handleConfirm} style={{
+            background: T.accent, color: T.onLime, border: "none", borderRadius: RADIUS_SM,
+            padding: "12px", fontSize: 14, fontWeight: 650, cursor: "pointer",
           }}>
-            Calculate my metrics
+            Continue to estimates
           </button>
         </div>
       </div>
@@ -619,19 +620,22 @@ function BiometricPrompt({ onConfirm, onClose }: { onConfirm: (bio: UserBio) => 
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
-export default function BodyMetricsClient({ user }: { user: any }) {
+export default function BodyMetricsClient({ user }: { user: BodyMetricsUser | null }) {
   const [tab, setTab]                 = useState<Tab>("overview");
   const [bleStatus, setBleStatus]     = useState<BleStatus>("idle");
   const [metrics, setMetrics]         = useState<Metrics>(EMPTY_METRICS);
   const [showManual, setShowManual]   = useState(false);
   const [manualDraft, setManualDraft] = useState<Partial<Record<keyof Metrics, string>>>({});
   const [saving, setSaving]           = useState(false);
+  const [saveError, setSaveError]     = useState<string | null>(null);
   const [savedFlash, setSavedFlash]   = useState(false);
   const [showInfo, setShowInfo]       = useState<keyof Metrics | null>(null);
   const [showBioPrompt, setShowBioPrompt] = useState(false);
   const [pendingRaw, setPendingRaw]   = useState<{ weight: number; impedance: number } | null>(null);
   const [bleError, setBleError]       = useState<string | null>(null);
   const [liveWeight, setLiveWeight]   = useState<number | null>(null);
+  const [calibrating, setCalibrating] = useState(false);
+  const [stableProgress, setStableProgress] = useState(0);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [history, setHistory]         = useState<HistoryRow[]>([]);
   const [loadingLatest, setLoadingLatest]   = useState(true);
@@ -642,11 +646,11 @@ export default function BodyMetricsClient({ user }: { user: any }) {
   const tareBufferRef   = useRef<number[]>([]);
   const tareWeightRef   = useRef<number | undefined>(undefined);
 
-  const profileBio: Partial<UserBio> = {
+  const profileBio = React.useMemo<Partial<UserBio>>(() => ({
     heightCm: user?.profile?.heightCm ?? undefined,
     age:      user?.profile?.age ?? undefined,
     gender:   user?.profile?.gender?.toLowerCase() === "female" ? "female" : "male",
-  };
+  }), [user?.profile?.age, user?.profile?.gender, user?.profile?.heightCm]);
   const hasSavedBio = !!(profileBio.heightCm && profileBio.age);
 
   // ── FIX: Load latest reading on mount so Overview is never empty ────────────
@@ -681,18 +685,22 @@ export default function BodyMetricsClient({ user }: { user: any }) {
     loadHistory();
   }, [tab]);
 
-  const subscribeToScale = useCallback((characteristic: any) => {
+  const subscribeToScale = useCallback((characteristic: BluetoothCharacteristicLike) => {
     characteristic.startNotifications().then(() => {
       setBleStatus("connected");
-      characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
-        const data: DataView = event.target.value;
+      characteristic.addEventListener("characteristicvaluechanged", (event: Event) => {
+        const target = event.target as (EventTarget & { value?: DataView }) | null;
+        if (!(target?.value instanceof DataView)) return;
+        const data = target.value;
         const parsed = parseFitDaysPacket(data, prevWeightRef.current, stableCountRef.current, tareWeightRef.current);
         if (!parsed) return;
         if (tareWeightRef.current === undefined) {
+          setCalibrating(true);
           tareBufferRef.current.push(parsed.weight);
           if (tareBufferRef.current.length >= 5) {
             const avg = tareBufferRef.current.reduce((a, b) => a + b, 0) / tareBufferRef.current.length;
             tareWeightRef.current = parseFloat(avg.toFixed(1));
+            setCalibrating(false);
           }
           setLiveWeight(parsed.weight);
           prevWeightRef.current = parsed.weight;
@@ -701,12 +709,14 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         setLiveWeight(parsed.weight);
         prevWeightRef.current  = parsed.weight;
         stableCountRef.current = parsed.stableCount;
+        setStableProgress(parsed.stableCount);
         if (!parsed.stable) return;
         if (stableFiredRef.current) return;
         stableFiredRef.current = true;
         setLiveWeight(null);
         prevWeightRef.current  = undefined;
         stableCountRef.current = 0;
+        setStableProgress(0);
         setPendingRaw({ weight: parsed.weight, impedance: parsed.impedance });
         if (hasSavedBio) {
           const bio = profileBio as UserBio;
@@ -724,15 +734,16 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         }
       });
     });
-  }, [hasSavedBio]);
+  }, [hasSavedBio, profileBio]);
 
   const connectBLE = useCallback(async () => {
     if (!("bluetooth" in navigator)) { setBleStatus("unsupported"); return; }
     setBleStatus("scanning"); setBleError(null);
     stableFiredRef.current = false; stableCountRef.current = 0;
     prevWeightRef.current = undefined; tareBufferRef.current = []; tareWeightRef.current = undefined;
+    setCalibrating(false); setStableProgress(0); setLiveWeight(null);
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
+      const device = await (navigator as NavigatorWithBluetooth).bluetooth.requestDevice({
         acceptAllDevices: true,
         optionalServices: [
           "0000fff0-0000-1000-8000-00805f9b34fb",
@@ -749,12 +760,12 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         "0000fff0-0000-1000-8000-00805f9b34fb",
         "0000fee0-0000-1000-8000-00805f9b34fb",
       ];
-      let service: any = null;
+      let service: BluetoothServiceLike | null = null;
       for (const uuid of serviceUuids) {
         try { service = await server.getPrimaryService(uuid); break; } catch { }
       }
       if (!service) {
-        setBleError("No scale data service found. Select your MEDITIVE scale and try again.");
+        setBleError("No supported scale data service was found. Select your scale and try again.");
         setBleStatus("failed"); return;
       }
       const charUuids = [
@@ -762,12 +773,12 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         "0000fff1-0000-1000-8000-00805f9b34fb",
         "0000fff4-0000-1000-8000-00805f9b34fb",
       ];
-      let characteristic: any = null;
+      let characteristic: BluetoothCharacteristicLike | null = null;
       for (const uuid of charUuids) {
         try { characteristic = await service.getCharacteristic(uuid); break; } catch { }
       }
       if (!characteristic) {
-        setBleError("Scale service found but couldn't read data. Try Manual Entry.");
+        setBleError("Scale service found but couldn't read data. Try manual entry.");
         setBleStatus("failed"); setShowManual(true); return;
       }
       subscribeToScale(characteristic);
@@ -779,31 +790,34 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           : new Uint8Array([0xAC,0x27,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xdf,0xe0]);
         await writeChar.writeValue(profilePkt);
       } catch { }
-    } catch (err: any) {
-      if (err?.name === "NotAllowedError") setBleError("Bluetooth permission denied.");
-      else if (err?.name !== "NotFoundError") setBleError(`Connection failed: ${err?.message ?? "unknown error"}.`);
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const message = err instanceof Error ? err.message : "unknown error";
+      if (name === "NotAllowedError") setBleError("Bluetooth permission denied.");
+      else if (name !== "NotFoundError") setBleError(`Connection failed: ${message}.`);
       setBleStatus("failed");
     }
-  }, [subscribeToScale]);
+  }, [hasSavedBio, profileBio, subscribeToScale]);
 
   const connectBLEFallback = useCallback(async () => {
     if (!("bluetooth" in navigator)) { setBleStatus("unsupported"); return; }
     setBleStatus("scanning"); setBleError(null);
     stableFiredRef.current = false; stableCountRef.current = 0;
     prevWeightRef.current = undefined; tareBufferRef.current = []; tareWeightRef.current = undefined;
+    setCalibrating(false); setStableProgress(0); setLiveWeight(null);
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
+      const device = await (navigator as NavigatorWithBluetooth).bluetooth.requestDevice({
         acceptAllDevices: true,
         optionalServices: ["0000fff0-0000-1000-8000-00805f9b34fb","0000ffb0-0000-1000-8000-00805f9b34fb","0000fee0-0000-1000-8000-00805f9b34fb"],
       });
       device.addEventListener("gattserverdisconnected", () => setBleStatus("idle"));
       const server = await device.gatt.connect();
-      let service: any = null;
+      let service: BluetoothServiceLike | null = null;
       for (const uuid of ["0000fff0-0000-1000-8000-00805f9b34fb","0000ffb0-0000-1000-8000-00805f9b34fb"]) {
         try { service = await server.getPrimaryService(uuid); break; } catch { }
       }
-      if (!service) { setBleError("No service found. Try Manual Entry."); setBleStatus("connected"); setShowManual(true); return; }
-      let characteristic: any = null;
+      if (!service) { setBleError("No service found. Try manual entry."); setBleStatus("connected"); setShowManual(true); return; }
+      let characteristic: BluetoothCharacteristicLike | null = null;
       for (const uuid of ["0000ffb2-0000-1000-8000-00805f9b34fb","0000fff1-0000-1000-8000-00805f9b34fb","0000fff4-0000-1000-8000-00805f9b34fb"]) {
         try { characteristic = await service.getCharacteristic(uuid); break; } catch { }
       }
@@ -816,12 +830,14 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           : new Uint8Array([0xAC,0x27,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xdf,0xe0]);
         await writeChar.writeValue(profilePkt);
       } catch { }
-    } catch (err: any) {
-      if (err?.name === "NotAllowedError") setBleError("Bluetooth permission denied.");
-      else if (err?.name !== "NotFoundError") setBleError(`Connection failed: ${err?.message ?? "unknown error"}.`);
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const message = err instanceof Error ? err.message : "unknown error";
+      if (name === "NotAllowedError") setBleError("Bluetooth permission denied.");
+      else if (name !== "NotFoundError") setBleError(`Connection failed: ${message}.`);
       setBleStatus("failed");
     }
-  }, [subscribeToScale]);
+  }, [hasSavedBio, profileBio, subscribeToScale]);
 
   function handleBioConfirm(bio: UserBio) {
     setShowBioPrompt(false);
@@ -840,16 +856,21 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
   const handleSave = useCallback(async () => {
     setSaving(true);
+    setSaveError(null);
     const payload: Partial<Metrics> = {};
     for (const def of PARAM_DEFS) {
       const v = manualDraft[def.key];
-      if (v !== undefined && v !== "") (payload as any)[def.key] = parseFloat(v);
+      if (v !== undefined && v !== "") payload[def.key] = parseFloat(v);
     }
     try {
       const res = await fetch("/api/user/metrics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, recordedAt: new Date().toISOString() }),
+        body: JSON.stringify({
+          ...payload,
+          source: bleStatus === "connected" ? "ble_estimate" : "manual",
+          recordedAt: new Date().toISOString(),
+        }),
       });
       if (res.ok) {
         setMetrics(m => ({ ...m, ...payload }));
@@ -861,57 +882,59 @@ export default function BodyMetricsClient({ user }: { user: any }) {
           const hRes = await fetch("/api/user/metrics/history?limit=30");
           if (hRes.ok) setHistory(await hRes.json());
         }
+      } else {
+        setSaveError("We couldn't save that reading. Check the values and try again.");
       }
-    } catch { } finally { setSaving(false); }
-  }, [manualDraft, tab]);
+    } catch {
+      setSaveError("We couldn't reach FitFuel. Check your connection and try again.");
+    } finally { setSaving(false); }
+  }, [bleStatus, manualDraft, tab]);
 
   const hasData = Object.values(metrics).some(v => v !== null);
   const firstName = user?.name?.split(" ")[0] ?? "Athlete";
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", paddingTop: 88, paddingBottom: 80, color: T.text }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-
-        {/* Back + Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <Link href="/dashboard" style={{ color: T.textMuted, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 500 }}>
-            <ChevronLeft size={15} /> Dashboard
-          </Link>
-        </div>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
+    <div className={s.screen}>
+      <div className={s.content}>
+        <header className={s.header}>
           <div>
-            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Phase 5 · Body Metrics</p>
-            <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 26, fontWeight: 600, textTransform: "none", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-              Your Body <span style={{ color: T.accent }}>Data</span>
+            <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: "clamp(28px, 3vw, 36px)", fontWeight: 600, textTransform: "none", letterSpacing: "-0.02em", lineHeight: 1.08 }}>
+              Body measurements
             </h1>
+            <p className={s.intro}>Follow your weight and body-composition trend. Consistent readings matter more than any single number.</p>
           </div>
           <BleButton status={bleStatus} onConnect={connectBLE} onFallbackConnect={connectBLEFallback} onManual={() => setShowManual(true)} />
+        </header>
+
+        <div className={s.estimateNotice}>
+          <Info size={17} style={{ flex: "none", marginTop: 2 }} />
+          <span>Only weight is measured directly. The other body-composition values are consumer-scale estimates derived from impedance and your profile. Use them for trends, not diagnosis or treatment decisions.</span>
         </div>
 
         {/* BLE error banner */}
         {bleError && (
-          <div style={{ background: "transparent", border: `1px solid ${T.danger}`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
+          <div style={{ background: "transparent", border: `1px solid ${T.danger}`, borderRadius: RADIUS_SM, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: T.danger }}>
             <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
               <p style={{ fontWeight: 700, marginBottom: 2 }}>Scale connection issue</p>
               <p style={{ color: T.textMuted }}>{bleError}</p>
             </div>
-            <button onClick={() => setBleError(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: T.textMuted, cursor: "pointer", flexShrink: 0 }}><X size={14} /></button>
+            <button type="button" aria-label="Dismiss connection error" onClick={() => setBleError(null)} style={{ marginLeft: "auto", minWidth: 44, background: "transparent", border: "none", color: T.textMuted, cursor: "pointer", flexShrink: 0 }}><X size={16} /></button>
           </div>
         )}
 
         {/* BLE connected banner */}
         {bleStatus === "connected" && !showManual && !showBioPrompt && (
-          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: RADIUS_SM, padding: "14px 18px", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.success }}>
               <Bluetooth size={15} />
               <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: 700 }}>
                   Scale connected,{" "}
-                  {liveWeight !== null && tareWeightRef.current === undefined
+                  {liveWeight !== null && calibrating
                     ? <span style={{ color: T.textMuted }}>calibrating baseline…</span>
                     : liveWeight !== null
-                    ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising {stableCountRef.current}/{STABLE_THRESHOLD}…)</span>
+                    ? <span style={{ color: T.accent }}>{liveWeight} kg (stabilising {stableProgress}/{STABLE_THRESHOLD}…)</span>
                     : "step on it barefoot"}
                 </p>
                 <p style={{ color: T.textMuted, fontSize: 12, marginTop: 2 }}>
@@ -924,21 +947,15 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 
         {/* Saved flash */}
         {savedFlash && (
-          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: T.success }}>
-            <Check size={16} /> Metrics saved successfully!
+          <div role="status" aria-live="polite" style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: RADIUS_SM, padding: "12px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: T.success }}>
+            <Check size={16} /> Measurements saved.
           </div>
         )}
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 28, background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 4, width: "fit-content" }}>
+        <div className={s.tabs} role="tablist" aria-label="Body measurements">
           {(["overview", "history"] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              background: tab === t ? T.accent : "transparent",
-              color:      tab === t ? T.onLime : T.textMuted,
-              border: "none", borderRadius: 0, padding: "7px 18px", fontSize: 13, fontWeight: 700,
-              cursor: "pointer", textTransform: "capitalize", letterSpacing: "0.03em",
-              transition: "all 0.15s",
-            }}>{t}</button>
+            <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`${s.tab} ${tab === t ? s.tabActive : ""}`}>{t === "overview" ? "Latest" : "History"}</button>
           ))}
         </div>
 
@@ -948,7 +965,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
             {loadingLatest ? (
               <div style={{ color: T.textMuted, fontSize: 13, padding: "40px 0", textAlign: "center" }}>Loading your data…</div>
             ) : !hasData ? (
-              <EmptyState onBle={connectBLE} onManual={() => setShowManual(true)} bleStatus={bleStatus} firstName={firstName} />
+              <EmptyState onBle={connectBLE} onManual={() => setShowManual(true)} firstName={firstName} />
             ) : (
               <MetricsGrid metrics={metrics} onInfoClick={k => setShowInfo(k)} />
             )}
@@ -971,7 +988,7 @@ export default function BodyMetricsClient({ user }: { user: any }) {
         <InfoDrawer paramKey={showInfo} onClose={() => setShowInfo(null)} metrics={metrics} />
       )}
       {showManual && (
-        <ManualModal draft={manualDraft} onChange={setManualDraft} onSave={handleSave} onClose={() => setShowManual(false)} saving={saving} bleConnected={bleStatus === "connected"} />
+        <ManualModal draft={manualDraft} onChange={setManualDraft} onSave={handleSave} onClose={() => { setShowManual(false); setSaveError(null); }} saving={saving} saveError={saveError} bleConnected={bleStatus === "connected"} />
       )}
     </div>
   );
@@ -980,34 +997,34 @@ export default function BodyMetricsClient({ user }: { user: any }) {
 // ─── BLE Button ───────────────────────────────────────────────────────────────
 function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status: BleStatus; onConnect: () => void; onFallbackConnect: () => void; onManual: () => void }) {
   const configs: Record<BleStatus, { label: string; icon: React.ReactNode; bg: string; color: string; onClick: () => void }> = {
-    idle:        { label: "Connect Scale",   icon: <Bluetooth size={14} />,    bg: T.accent,    color: T.onLime,      onClick: onConnect },
+    idle:        { label: "Connect scale",   icon: <Bluetooth size={16} />,    bg: T.accent,    color: T.onLime,      onClick: onConnect },
     scanning:    { label: "Scanning…",       icon: <Bluetooth size={14} />,    bg: T.accentDim, color: T.accent,    onClick: () => {} },
-    connected:   { label: "Scale Connected", icon: <Bluetooth size={14} />,    bg: T.wash,   color: T.success,   onClick: onManual },
-    failed:      { label: "Retry Connect",   icon: <BluetoothOff size={14} />, bg: "transparent",   color: T.danger,    onClick: onFallbackConnect },
-    unsupported: { label: "Manual Entry",    icon: <Plus size={14} />,          bg: T.card,      color: T.textMuted, onClick: onManual },
+    connected:   { label: "Scale connected", icon: <Bluetooth size={16} />,    bg: T.wash,   color: T.success,   onClick: onManual },
+    failed:      { label: "Try again",   icon: <BluetoothOff size={16} />, bg: "transparent",   color: T.danger,    onClick: onFallbackConnect },
+    unsupported: { label: "Enter manually",    icon: <Plus size={16} />,          bg: T.card,      color: T.textMuted, onClick: onManual },
   };
   const c = configs[status];
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
       {status === "unsupported" && <p style={{ fontSize: 12, color: T.textMuted, alignSelf: "center" }}>Chrome required for BLE</p>}
-      <button onClick={c.onClick} disabled={status === "scanning"} style={{
+      <button type="button" onClick={c.onClick} disabled={status === "scanning"} style={{
         display: "flex", alignItems: "center", gap: 8,
         background: c.bg, color: c.color,
         border: `1px solid ${status === "idle" ? "transparent" : T.border}`,
-        borderRadius: 0, padding: "10px 20px", fontSize: 13, fontWeight: 700,
+        borderRadius: RADIUS_SM, padding: "0 18px", minHeight: 46, fontSize: 14, fontWeight: 650,
         cursor: status === "scanning" ? "not-allowed" : "pointer",
-        letterSpacing: "0.04em", textTransform: "uppercase",
+        letterSpacing: 0, textTransform: "none",
       }}>
         {c.icon} {c.label}
       </button>
       {status !== "unsupported" && (
-        <button onClick={onManual} style={{
+        <button type="button" onClick={onManual} style={{
           display: "flex", alignItems: "center", gap: 8,
           background: "transparent", color: T.textMuted,
           border: `1px solid ${T.border}`,
-          borderRadius: 0, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+          borderRadius: RADIUS_SM, padding: "0 18px", minHeight: 46, fontSize: 14, fontWeight: 650, cursor: "pointer",
         }}>
-          <Plus size={14} /> Manual Entry
+          <Plus size={14} /> Manual entry
         </button>
       )}
     </div>
@@ -1015,35 +1032,35 @@ function BleButton({ status, onConnect, onFallbackConnect, onManual }: { status:
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
-function EmptyState({ onBle, onManual, bleStatus, firstName }: { onBle: () => void; onManual: () => void; bleStatus: BleStatus; firstName: string }) {
+function EmptyState({ onBle, onManual, firstName }: { onBle: () => void; onManual: () => void; firstName: string }) {
   return (
     <div>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "48px 40px", marginBottom: 24, textAlign: "center", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS, padding: "48px 40px", marginBottom: 24, textAlign: "center", position: "relative", overflow: "hidden" }}>
         {/* Was a lime to sky to pink rainbow across the top. Structure is a
             hairline, and the accent is not decorative. */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: T.accent }} />
-        <div style={{ width: 64, height: 64, borderRadius: 0, background: T.trough, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
+        <div style={{ width: 64, height: 64, borderRadius: RADIUS, background: T.trough, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: T.accent }}>
           <Scale size={28} />
         </div>
         <h2 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 19, fontWeight: 600, textTransform: "none", letterSpacing: "-0.015em", marginBottom: 10 }}>
           No measurements yet, {firstName}
         </h2>
         <p style={{ fontSize: 14, color: T.textMuted, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.7 }}>
-          Connect your MEDITIVE BLE scale via Bluetooth, or log your first reading manually. All 18 body composition parameters will be tracked here.
+          Connect a supported Bluetooth scale or log a reading manually. Weight is measured directly; body-composition values are estimates.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onBle} style={{ display: "flex", alignItems: "center", gap: 8, background: T.accent, color: T.onLime, border: "none", borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 800, cursor: "pointer", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-            <Bluetooth size={15} /> Connect Scale
+          <button type="button" onClick={onBle} style={{ display: "flex", alignItems: "center", gap: 8, background: T.accent, color: T.onLime, border: "none", borderRadius: RADIUS_SM, padding: "0 22px", minHeight: 46, fontSize: 14, fontWeight: 650, cursor: "pointer" }}>
+            <Bluetooth size={16} /> Connect scale
           </button>
-          <button onClick={onManual} style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-            <Plus size={15} /> Enter Manually
+          <button type="button" onClick={onManual} style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: RADIUS_SM, padding: "0 22px", minHeight: 46, fontSize: 14, fontWeight: 650, cursor: "pointer" }}>
+            <Plus size={16} /> Enter manually
           </button>
         </div>
       </div>
-      <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>18 parameters you'll track</p>
+      <p style={{ fontSize: 14, color: T.textMuted, fontWeight: 600, marginBottom: 14 }}>What the scale can estimate</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
         {PARAM_DEFS.map(def => (
-          <div key={def.key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, opacity: 0.55 }}>
+          <div key={def.key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS_SM, padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, opacity: 0.7 }}>
             <div style={{ color: def.color, flexShrink: 0 }}>{def.icon}</div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700 }}>{def.label}</p>
@@ -1064,9 +1081,10 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
         const value = metrics[def.key];
         const rangeInfo = getRangeInfo(def, value);
         return (
-          <div key={def.key} onClick={() => onInfoClick(def.key)} style={{
-            background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "20px 22px",
+          <button type="button" key={def.key} onClick={() => onInfoClick(def.key)} style={{
+            background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS_SM, padding: "20px 22px",
             cursor: "pointer", position: "relative", overflow: "hidden", transition: "border-color 0.15s",
+            color: T.text, textAlign: "left", fontFamily: "inherit",
           }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = T.borderHover)}
             onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
@@ -1076,15 +1094,15 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
               <div style={{ color: def.color, opacity: value !== null ? 1 : 0.4 }}>{def.icon}</div>
               <Info size={12} color={T.textMuted} />
             </div>
-            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{def.label}</p>
+            <p style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 7 }}>{def.label}</p>
             {value !== null ? (
               <>
-                <p style={{ fontSize: 24, fontWeight: 700, fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", color: T.text, lineHeight: 1, marginBottom: 6 }}>
+                <p style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums", color: T.text, lineHeight: 1, marginBottom: 8, letterSpacing: "-0.03em" }}>
                   {value.toFixed(def.decimals)}
                   <span style={{ fontSize: 13, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>{def.unit}</span>
                 </p>
                 {rangeInfo && (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: rangeInfo.color, background: T.trough, border: `1px solid ${T.border}`, borderRadius: 0, padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  <span style={{ fontSize: 12, fontWeight: 650, color: rangeInfo.color, background: T.trough, border: `1px solid ${T.border}`, borderRadius: RADIUS_SM, padding: "3px 8px" }}>
                     {rangeInfo.label}
                   </span>
                 )}
@@ -1092,7 +1110,7 @@ function MetricsGrid({ metrics, onInfoClick }: { metrics: Metrics; onInfoClick: 
             ) : (
               <p style={{ fontSize: 12, fontWeight: 500, color: T.textMuted }}>Not measured</p>
             )}
-          </div>
+          </button>
         );
       })}
     </div>
@@ -1132,7 +1150,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
 
   if (loading) {
     return (
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "60px 28px", textAlign: "center" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS, padding: "60px 28px", textAlign: "center" }}>
         <p style={{ color: T.textMuted, fontSize: 14 }}>Loading your history…</p>
       </div>
     );
@@ -1140,7 +1158,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
 
   if (history.length === 0) {
     return (
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "60px 40px", textAlign: "center" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS, padding: "60px 40px", textAlign: "center" }}>
         <Scale size={32} color={T.textMuted} style={{ margin: "0 auto 16px" }} />
         <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>No history yet</p>
         <p style={{ color: T.textMuted, fontSize: 14 }}>Save your first measurement to start tracking progress.</p>
@@ -1164,7 +1182,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* ── Chart ── */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 28px" }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS, padding: "24px 28px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <BarChart3 size={16} color={T.accent} />
@@ -1173,7 +1191,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {(Object.entries(metricLabels) as [ChartKey, string][]).map(([k, label]) => (
               <button key={k} onClick={() => setChartMetric(k)} style={{
-                fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 0, cursor: "pointer",
+                fontSize: 12, fontWeight: 650, padding: "5px 12px", borderRadius: RADIUS_SM, cursor: "pointer",
                 background: chartMetric === k ? chartColors[k] + "22" : "transparent",
                 color: chartMetric === k ? chartColors[k] : T.textMuted,
                 border: `1px solid ${chartMetric === k ? chartColors[k] : T.border}`,
@@ -1224,8 +1242,8 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
       </div>
 
       {/* ── All Readings (clickable, expandable) ── */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "24px 28px" }}>
-        <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>All Readings</h3>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS, padding: "24px 28px" }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>All readings</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[...history].reverse().map((row) => {
             const isOpen = expandedRow === row.id;
@@ -1250,16 +1268,18 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
               <div key={row.id} style={{
                 background: isOpen ? T.card : T.card,
                 border: `1px solid ${isOpen ? T.borderHover : T.border}`,
-                borderRadius: 0, overflow: "hidden",
+                borderRadius: RADIUS_SM, overflow: "hidden",
                 transition: "border-color 0.15s",
               }}>
                 {/* Summary row, always visible, click to expand */}
-                <div
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
                   onClick={() => setExpandedRow(isOpen ? null : row.id)}
-                  style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, cursor: "pointer" }}
+                  style={{ width: "100%", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, cursor: "pointer", background: "transparent", border: 0, color: T.text, fontFamily: "inherit", textAlign: "left" }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 0, background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: RADIUS_SM, background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Scale size={14} color={T.accent} />
                     </div>
                     <div>
@@ -1280,7 +1300,7 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                       <TrendingDown size={14} />
                     </div>
                   </div>
-                </div>
+                </button>
 
                 {/* Expanded detail panel */}
                 {isOpen && (
@@ -1310,108 +1330,65 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
   );
 }
 
-// ─── Rich Info Drawer with tips + personalised insight ────────────────────────
+function measurementContext(key: keyof Metrics): string {
+  if (key === "weight") {
+    return "Measured directly by the scale. Compare readings taken under similar conditions and look at the weekly trend rather than day-to-day movement.";
+  }
+  if (key === "bmi") {
+    return "Calculated from weight and height. BMI is a broad screening measure and does not distinguish fat from muscle.";
+  }
+  if (key === "bmr") {
+    return "Estimated from weight, height, age and sex. It is a planning input, not a direct measurement of your metabolism.";
+  }
+  if (key === "idealWeight") {
+    return "A formula-based reference, not a prescribed goal. Your history, muscle mass and clinician’s advice may make a different range more appropriate.";
+  }
+  return "Estimated from bioelectrical impedance and your profile. Hydration, food, exercise and measurement conditions can move this value, so use the trend rather than one reading.";
+}
+
+// ─── Measurement detail ───────────────────────────────────────────────────────
 function InfoDrawer({ paramKey, onClose, metrics }: { paramKey: keyof Metrics; onClose: () => void; metrics: Metrics }) {
   const def = PARAM_DEFS.find(d => d.key === paramKey)!;
   const value = metrics[paramKey];
   const rangeInfo = getRangeInfo(def, value);
-  const personalInsight = def.insightFn && value !== null ? def.insightFn(value, metrics) : null;
 
   return (
     <Dialog title={def.label} onClose={onClose} maxWidth={580}>
       <div style={{ padding: "24px 24px 32px" }}>
-
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-          <h3 style={{ fontSize: 17, fontWeight: 700 }}>{def.label}</h3>
+          <h2 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 24, fontWeight: 600 }}>{def.label}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
             style={{ minWidth: 44, minHeight: 44, background: "transparent",
-                     border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer" }}
+                     border: `1px solid ${T.border}`, borderRadius: RADIUS_SM, color: T.textMuted, cursor: "pointer" }}
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Value + badge */}
         {value !== null && (
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
-            <span style={{ fontSize: 32, fontWeight: 700, fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", color: def.color }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, margin: "18px 0" }}>
+            <span style={{ fontSize: 38, fontWeight: 700, fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums", color: def.color, letterSpacing: "-0.04em" }}>
               {value.toFixed(def.decimals)}
             </span>
             <span style={{ fontSize: 16, color: T.textMuted }}>{def.unit}</span>
             {rangeInfo && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: rangeInfo.color, background: T.wash, border: `1px solid ${rangeInfo.color}`, borderRadius: 0, padding: "3px 9px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <span style={{ fontSize: 12, fontWeight: 650, color: rangeInfo.color, background: T.wash, border: `1px solid ${rangeInfo.color}`, borderRadius: RADIUS_SM, padding: "3px 9px" }}>
                 {rangeInfo.label}
               </span>
             )}
           </div>
         )}
 
-        {/* Description */}
-        <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.75, marginBottom: 20 }}>{def.description}</p>
-
-        {/* Personalised insight */}
-        {personalInsight && (
-          <div style={{ background: T.wash, border: `1px solid ${def.color}`, borderRadius: 0, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 10 }}>
-            <Lightbulb size={15} color={def.color} style={{ flexShrink: 0, marginTop: 1 }} />
-            <p style={{ fontSize: 13, color: def.color, lineHeight: 1.6 }}>{personalInsight}</p>
-          </div>
-        )}
-
-        {/* Reference ranges */}
-        {def.ranges && (
-          <>
-            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Reference ranges</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-              {def.ranges.map(r => {
-                const isActive = rangeInfo?.label === r.label;
-                const barPct = value !== null && def.ranges
-                  ? Math.min(100, Math.max(0, ((value - r.min) / (r.max - r.min)) * 100))
-                  : 0;
-                return (
-                  <div key={r.label} style={{
-                    padding: "10px 14px", background: isActive ? T.wash : T.trough,
-                    border: `1px solid ${isActive ? r.color : T.border}`, borderRadius: 0,
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isActive ? 6 : 0 }}>
-                      <span style={{ fontSize: 13, color: r.color, fontWeight: 700 }}>{r.label}</span>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>
-                        {r.min === 0 ? `< ${r.max}` : r.max === 999 || r.max === 100 ? `> ${r.min}` : `${r.min} – ${r.max}`} {def.unit}
-                      </span>
-                    </div>
-                    {isActive && value !== null && (
-                      <div style={{ height: 3, background: T.trough, borderRadius: 0, overflow: "hidden" }}>
-                        <div style={{ height: 3, width: `${barPct}%`, background: r.color, borderRadius: 0 }} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {/* Tips */}
-        {def.tips && def.tips.length > 0 && (
-          <>
-            <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-              Tips to improve
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {def.tips.map((tip, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, padding: "10px 14px", background: T.card, border: `1px solid ${T.border}`, borderRadius: 0 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 0, background: T.wash, border: `1px solid ${def.color}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: def.color }}>
-                    {i + 1}
-                  </div>
-                  <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.6 }}>{tip}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        <p style={{ fontSize: 15, color: T.textSecond, lineHeight: 1.7, marginBottom: 18 }}>{measurementContext(paramKey)}</p>
+        <div style={{ display: "flex", gap: 10, padding: "14px 16px", background: T.card, border: `1px solid ${T.border}`, borderRadius: RADIUS_SM }}>
+          <Info size={16} color={T.textMuted} style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.6 }}>
+            Consumer-scale estimates are not medical measurements. If a number concerns you, discuss it with a qualified clinician rather than changing treatment from this screen.
+          </p>
+        </div>
       </div>
     </Dialog>
   );
@@ -1429,11 +1406,12 @@ function ManualForm({ draft, onChange, onSave, saving }: {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14, marginBottom: 24 }}>
         {PARAM_DEFS.map(def => (
           <div key={def.key}>
-            <label style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>
+            <label htmlFor={`metric-${def.key}`} style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
               <span style={{ color: def.color, marginRight: 5 }}>{def.icon}</span>
               {def.label} {def.unit && <span style={{ color: T.border }}>({def.unit})</span>}
             </label>
             <input
+              id={`metric-${def.key}`}
               type="number" step="0.1"
               value={draft[def.key] ?? ""}
               onChange={e => onChange({ ...draft, [def.key]: e.target.value })}
@@ -1442,33 +1420,34 @@ function ManualForm({ draft, onChange, onSave, saving }: {
                 width: "100%", boxSizing: "border-box",
                 background: draft[def.key] ? T.wash : T.card,
                 border: `1px solid ${draft[def.key] ? T.accentDim : T.border}`,
-                borderRadius: 0, padding: "10px 12px", fontSize: 14, fontWeight: 600,
+                borderRadius: RADIUS_SM, padding: "10px 12px", fontSize: 16, fontWeight: 600,
                 color: T.text, outline: "none",
               }}
             />
           </div>
         ))}
       </div>
-      <button onClick={onSave} disabled={saving} style={{
+      <button type="button" onClick={onSave} disabled={saving} style={{
         display: "flex", alignItems: "center", gap: 8,
         background: T.accent, color: T.onLime, border: "none",
-        borderRadius: 0, padding: "12px 28px", fontSize: 14, fontWeight: 800,
-        cursor: saving ? "not-allowed" : "pointer", letterSpacing: "0.05em", textTransform: "uppercase",
+        borderRadius: RADIUS_SM, padding: "12px 28px", fontSize: 14, fontWeight: 650,
+        cursor: saving ? "not-allowed" : "pointer", letterSpacing: 0, textTransform: "none",
         opacity: saving ? 0.6 : 1,
       }}>
-        <Check size={15} /> {saving ? "Saving…" : "Save Entry"}
+        <Check size={15} /> {saving ? "Saving…" : "Save reading"}
       </button>
     </>
   );
 }
 
 // ─── Manual Modal ─────────────────────────────────────────────────────────────
-function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }: {
+function ManualModal({ draft, onChange, onSave, onClose, saving, saveError, bleConnected }: {
   draft: Partial<Record<keyof Metrics, string>>;
   onChange: (d: Partial<Record<keyof Metrics, string>>) => void;
   onSave: () => void;
   onClose: () => void;
   saving: boolean;
+  saveError: string | null;
   bleConnected: boolean;
 }) {
   return (
@@ -1487,19 +1466,24 @@ function ManualModal({ draft, onChange, onSave, onClose, saving, bleConnected }:
             onClick={onClose}
             aria-label="Close"
             style={{ minWidth: 44, minHeight: 44, background: "transparent",
-                     border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer" }}
+                     border: `1px solid ${T.border}`, borderRadius: RADIUS_SM, color: T.textMuted, cursor: "pointer" }}
           >
             <X size={20} />
           </button>
         </div>
         {bleConnected && (
-          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: 0, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
-            <Bluetooth size={14} /> Metrics auto-populated from your scale. Review and hit Save.
+          <div style={{ background: T.wash, border: `1px solid ${T.accent}`, borderRadius: RADIUS_SM, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.success }}>
+            <Bluetooth size={14} /> Estimates are ready from the scale reading. Review them before saving.
           </div>
         )}
         <p style={{ fontSize: 13, color: T.textMuted, marginBottom: 24 }}>
           {bleConnected ? "Values calculated from weight + impedance. Edit any field before saving." : "Fill any or all fields, empty fields are skipped."}
         </p>
+        {saveError && (
+          <p role="alert" style={{ color: T.danger, fontSize: 14, marginBottom: 18 }}>
+            {saveError}
+          </p>
+        )}
         <ManualForm draft={draft} onChange={onChange} onSave={onSave} saving={saving} />
       </div>
     </Dialog>

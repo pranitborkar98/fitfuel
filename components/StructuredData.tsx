@@ -8,6 +8,7 @@
 //
 // Rendered as a plain <script> in the server tree, so it lands in the SSR
 // HTML with no client cost.
+import { safeJsonLd } from "@/lib/content-safety";
 
 const SITE = "https://fitfuel.in";
 
@@ -42,7 +43,7 @@ const KITCHEN = {
   name: "FitFuel Kitchen",
   parentOrganization: { "@id": `${SITE}/#organization` },
   url: SITE,
-  image: `${SITE}/opengraph-image`,
+  image: `${SITE}/images/hero-bowl-v2.png`,
   priceRange: "₹₹",
   servesCuisine: ["Indian", "Health food", "High protein"],
   hasCredential: {
@@ -56,20 +57,6 @@ const KITCHEN = {
     "Kharadi", "Baner", "Viman Nagar", "Koregaon Park", "Hinjewadi",
     "Wakad", "Kalyani Nagar", "Magarpatta", "Hadapsar", "Aundh",
   ].map((n) => ({ "@type": "City", name: `${n}, Pune` })),
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      opens: "04:00",
-      closes: "20:00",
-    },
-  ],
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    reviewCount: "312",
-    bestRating: "5",
-  },
 };
 
 const SERVICE = {
@@ -82,33 +69,11 @@ const SERVICE = {
   offers: {
     "@type": "Offer",
     name: "Trial day",
-    description: "Breakfast plus lunch, delivered tomorrow. No lock-in.",
-    price: "400",
+    description: "Breakfast plus lunch with delivery, packaging and GST included. No subscription.",
+    price: "420",
     priceCurrency: "INR",
     url: `${SITE}/plans?trial=true`,
     availability: "https://schema.org/InStock",
-  },
-  hasOfferCatalog: {
-    "@type": "OfferCatalog",
-    name: "Meal plans",
-    itemListElement: [
-      ["Weight Loss", "weight-loss-veg"],
-      ["Muscle Gain", "muscle-gain-veg"],
-      ["Balanced", "balanced-veg"],
-      ["Diabetic", "diabetic-veg"],
-      ["PCOS", "pcos-veg"],
-      ["Body Recomposition", "body-recomp-veg"],
-    ].map(([name, slug]) => ({
-      "@type": "Offer",
-      itemOffered: { "@type": "Service", name: `${name} meal plan`, url: `${SITE}/plans/${slug}` },
-      priceCurrency: "INR",
-      priceSpecification: {
-        "@type": "PriceSpecification",
-        minPrice: "112",
-        priceCurrency: "INR",
-        description: "Per meal, from",
-      },
-    })),
   },
 };
 
@@ -129,8 +94,7 @@ export default function StructuredData() {
   return (
     <script
       type="application/ld+json"
-      // Content is a build-time constant, not user input.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(graph) }}
     />
   );
 }

@@ -47,7 +47,7 @@ const CONTACT_DETAILS = [
     icon: Phone,
     label: "WhatsApp and phone",
     value: "+91 8850446348",
-    sub: "Fastest response, usually within minutes",
+    sub: "Our fastest support channel",
     href: `https://wa.me/${WA_NUMBER}`,
     cta: "Open WhatsApp",
   },
@@ -71,7 +71,7 @@ const CONTACT_DETAILS = [
     icon: Clock,
     label: "Delivery hours",
     value: "7:00 to 10:00 daily",
-    sub: "Fresh meals delivered every day",
+    sub: "Your selected plan controls its delivery days",
     href: null,
     cta: null,
   },
@@ -80,7 +80,7 @@ const CONTACT_DETAILS = [
 const FAQS = [
   {
     q: "How do I place an order?",
-    a: "WhatsApp us or use the Order Now button on the Plans page. We will confirm your diet, duration and delivery address and get you started.",
+    a: "Choose a ready plan, select the diet, duration and meals you want, then complete checkout. WhatsApp us if your address or requirement needs a manual check.",
   },
   {
     q: "Can I pause or cancel my plan?",
@@ -96,7 +96,7 @@ const FAQS = [
   },
   {
     q: "Can I customise my meals?",
-    a: "Preferences like no onion, no garlic or extra protein can be noted when you order. WhatsApp us to discuss.",
+    a: "Tell us the preference or allergy during onboarding or on WhatsApp. The kitchen reviews requests individually; a shared kitchen cannot guarantee an allergen-free meal.",
   },
 ];
 
@@ -135,9 +135,9 @@ export default function ContactPage() {
       <Masthead
         label="Get in touch"
         title="We are one message away"
-        deck="Questions about plans, delivery areas or your current order? WhatsApp us. We respond fast, usually within minutes."
+        deck="Questions about plans, delivery areas or your current order? WhatsApp is our fastest support channel."
         meta={[
-          { k: "Typical reply", v: "Minutes" },
+          { k: "Fastest channel", v: "WhatsApp" },
           { k: "Delivery hours", v: "07:00 to 10:00" },
         ]}
       />

@@ -1,62 +1,78 @@
 "use client";
 
-// app/partners/apply/ApplyClient.tsx
-// Phase 17C-1 — Self-onboarding form for non-CUSTOMER partner types.
-// Trainer / Influencer / Dietician / Doctor → cash payout (PAN + bank required).
-// Gym / Corporate / Residence → no tax/bank info required (DISCOUNT_ONLY or vouchers).
-
-import { useState } from "react";
 import Link from "next/link";
+import { FormEvent, ReactNode, useState } from "react";
+import styles from "./apply.module.css";
 
-const T = {
-  bg: "var(--fk-paper)",
-  card: "var(--fk-warm)",
-  border: "var(--fk-line)",
-  text: "#f5f5f4",
-  dim: "#888",
-  accent: "var(--fk-green-deep)",
-  accent2: "var(--fk-green)",
-  ok: "#22c55e",
-  warn: "var(--fk-terracotta)",
-  err: "#ef4444",
+const PARTNER_TYPES = ["GYM", "TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "CORPORATE", "RESIDENCE"] as const;
+type PartnerType = (typeof PARTNER_TYPES)[number];
+
+type FormState = {
+  name: string;
+  contactEmail: string;
+  contactPhone: string;
+  gymAddress: string;
+  gymManagerName: string;
+  bio: string;
+  specialty: string;
+  socialHandle: string;
+  followerCount: string;
+  qualification: string;
+  registrationNumber: string;
+  clinicName: string;
+  hospitalAffiliation: string;
+  allowedEmailDomain: string;
+  hrContactName: string;
+  treasurerContact: string;
+  societyAddress: string;
+  panNumber: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
+  bankIfsc: string;
 };
-const RUPEE = "\u20B9";
 
-type PartnerType = "GYM" | "TRAINER" | "INFLUENCER" | "DIETICIAN" | "DOCTOR" | "CORPORATE" | "RESIDENCE";
-
-const TYPE_LABEL: Record<PartnerType, string> = {
-  GYM: "Gym / Fitness Studio",
-  TRAINER: "Personal Trainer",
-  INFLUENCER: "Creator / Influencer",
-  DIETICIAN: "Dietician / Nutritionist",
+const LABELS: Record<PartnerType, string> = {
+  GYM: "Gym or fitness studio",
+  TRAINER: "Personal trainer",
+  INFLUENCER: "Creator",
+  DIETICIAN: "Dietitian or nutritionist",
   DOCTOR: "Doctor",
-  CORPORATE: "Corporate / Company",
-  RESIDENCE: "Residential Society",
+  CORPORATE: "Company",
+  RESIDENCE: "Residential society",
 };
 
-const CASH_TYPES: PartnerType[] = ["TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR"];
-
-const TYPE_BLURB: Record<PartnerType, string> = {
-  GYM: "Get meal vouchers for your trainers. Members get exclusive discounts.",
-  TRAINER: "Earn cash per signup. Your followers get a welcome discount.",
-  INFLUENCER: "Cash per conversion. Your audience gets a special offer.",
-  DIETICIAN: "Refer your clients to FitFuel and earn cash per signup.",
-  DOCTOR: "Recommend FitFuel meal plans clinically aligned to your patients' needs.",
-  CORPORATE: "Provide FitFuel as an employee wellness benefit.",
-  RESIDENCE: "Bring fresh meals to your apartment community.",
+const BLURBS: Record<PartnerType, string> = {
+  GYM: "Give members a welcome offer and see paid conversions from your code.",
+  TRAINER: "Earn a cash reward when a referred customer places their first paid order.",
+  INFLUENCER: "Share a trackable code and earn on each customer’s first paid order.",
+  DIETICIAN: "Offer clients an optional cooked-meal route without replacing your advice.",
+  DOCTOR: "Share a cooked-meal option for patients who ask for practical food support.",
+  CORPORATE: "Arrange an employee welcome offer with clear, attributable uptake.",
+  RESIDENCE: "Bring a tracked resident offer to your society or apartment community.",
 };
 
-export default function ApplyClient({ prefill }: { prefill: { name: string; email: string; phone: string } }) {
-  const [type, setType] = useState<PartnerType | null>(null);
-  const [step, setStep] = useState<"select" | "form" | "done">("select");
+const CASH_TYPES = new Set<PartnerType>(["TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "RESIDENCE"]);
+
+function isPartnerType(value: string | null): value is PartnerType {
+  return Boolean(value && PARTNER_TYPES.includes(value as PartnerType));
+}
+
+export default function ApplyClient({
+  prefill,
+  initialType,
+}: {
+  prefill: { name: string; email: string; phone: string };
+  initialType: string | null;
+}) {
+  const selectedInitially = isPartnerType(initialType) ? initialType : null;
+  const [type, setType] = useState<PartnerType | null>(selectedInitially);
+  const [step, setStep] = useState<"select" | "form" | "done">(selectedInitially ? "form" : "select");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [form, setForm] = useState<any>({
+  const [form, setForm] = useState<FormState>({
     name: prefill.name,
     contactEmail: prefill.email,
     contactPhone: prefill.phone,
-    // type-specific
     gymAddress: "",
     gymManagerName: "",
     bio: "",
@@ -71,294 +87,241 @@ export default function ApplyClient({ prefill }: { prefill: { name: string; emai
     hrContactName: "",
     treasurerContact: "",
     societyAddress: "",
-    // tax / payout (cash types only)
     panNumber: "",
     bankAccountName: "",
     bankAccountNumber: "",
     bankIfsc: "",
   });
 
-  function up(k: string, v: any) { setForm((f: any) => ({ ...f, [k]: v })); }
+  function update(field: keyof FormState, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
 
-  function pickType(t: PartnerType) {
-    setType(t);
-    // Auto-suggest the partner display name from the user's name unless they already typed something
-    if (!form.name && prefill.name) up("name", prefill.name);
+  function choose(nextType: PartnerType) {
+    setType(nextType);
+    setError(null);
     setStep("form");
   }
 
-  async function submit() {
-    if (!type) return;
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!type || busy) return;
     setError(null);
     setBusy(true);
+
     try {
-      const res = await fetch("/api/partners/apply", {
+      const response = await fetch("/api/partners/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, form }),
       });
-      const j = await res.json();
-      if (!res.ok) {
-        setError(j?.error || "Could not submit application.");
-      } else {
-        setStep("done");
+      const result: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = result && typeof result === "object" && "error" in result && typeof result.error === "string"
+          ? result.error
+          : "Could not submit your application. Please try again.";
+        setError(message);
+        return;
       }
-    } catch (e: any) {
-      setError(e?.message || "Network error.");
+      setStep("done");
+    } catch {
+      setError("Could not connect. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div style={{ background: T.bg, minHeight: "calc(100vh - 80px)", color: T.text, padding: "72px 16px 80px" }}>
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <main className={styles.page}>
+      <div className={styles.shell}>
+        <p className={styles.eyebrow}>Partner with FitFuel</p>
+        <h1>{step === "done" ? "Application received" : step === "form" && type ? LABELS[type] : "Choose how you work with us"}</h1>
+        <p className={styles.intro}>
+          {step === "done"
+            ? "Your application is now in the review queue."
+            : "Approved partners get a shareable code, a customer welcome offer, and a dashboard showing first paid conversions."}
+        </p>
 
-        {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700 }}>Partner with FitFuel</div>
-          <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 34, fontWeight: 800, margin: "8px 0 0", lineHeight: 1.1 }}>
-            {step === "select" && "Apply to become a partner"}
-            {step === "form" && `${TYPE_LABEL[type as PartnerType]}`}
-            {step === "done" && "Application received"}
-          </h1>
-          {step === "select" && <div style={{ color: T.dim, fontSize: 14, marginTop: 8 }}>Earn from every customer you bring in. Your audience gets an exclusive welcome discount.</div>}
-        </div>
+        {step === "select" && (
+          <div className={styles.typeGrid} aria-label="Partner type">
+            {PARTNER_TYPES.map((item) => (
+              <button className={styles.typeCard} key={item} onClick={() => choose(item)} type="button">
+                <span className={styles.typeTopline}>
+                  <strong>{LABELS[item]}</strong>
+                  <span>{CASH_TYPES.has(item) ? "Cash reward" : "Partner offer"}</span>
+                </span>
+                <span className={styles.typeBlurb}>{BLURBS[item]}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        {step === "select" && <SelectType onPick={pickType} />}
         {step === "form" && type && (
-          <FormSection
-            type={type}
-            form={form}
-            up={up}
-            onBack={() => setStep("select")}
-            onSubmit={submit}
-            busy={busy}
-            error={error}
-          />
+          <form className={styles.formCard} onSubmit={submit}>
+            <button className={styles.backButton} onClick={() => setStep("select")} type="button">
+              ← Change partner type
+            </button>
+
+            <Section title="Contact details">
+              <Field id="partner-name" label={type === "CORPORATE" ? "Company name" : type === "RESIDENCE" ? "Society name" : "Public name"} required>
+                <Input id="partner-name" value={form.name} onChange={(value) => update("name", value)} maxLength={160} required />
+              </Field>
+              <div className={styles.twoColumns}>
+                <Field id="partner-email" label="Email" required>
+                  <Input id="partner-email" type="email" value={form.contactEmail} onChange={(value) => update("contactEmail", value)} maxLength={254} required />
+                </Field>
+                <Field id="partner-phone" label="Phone">
+                  <Input id="partner-phone" type="tel" value={form.contactPhone} onChange={(value) => update("contactPhone", value)} maxLength={20} />
+                </Field>
+              </div>
+            </Section>
+
+            {type === "GYM" && (
+              <Section title="Gym details">
+                <Field id="gym-address" label="Address">
+                  <Input id="gym-address" value={form.gymAddress} onChange={(value) => update("gymAddress", value)} maxLength={500} placeholder="Locality, Pune" />
+                </Field>
+                <Field id="gym-manager" label="Manager or contact name">
+                  <Input id="gym-manager" value={form.gymManagerName} onChange={(value) => update("gymManagerName", value)} maxLength={120} />
+                </Field>
+              </Section>
+            )}
+
+            {(type === "TRAINER" || type === "INFLUENCER") && (
+              <Section title="About your work">
+                <Field id="specialty" label="Speciality">
+                  <Input id="specialty" value={form.specialty} onChange={(value) => update("specialty", value)} maxLength={160} placeholder="Strength training, running, nutrition…" />
+                </Field>
+                <Field id="partner-bio" label="Short introduction">
+                  <textarea id="partner-bio" rows={4} value={form.bio} onChange={(event) => update("bio", event.target.value)} maxLength={800} />
+                </Field>
+                <div className={styles.twoColumns}>
+                  <Field id="social-handle" label="Social handle">
+                    <Input id="social-handle" value={form.socialHandle} onChange={(value) => update("socialHandle", value)} maxLength={120} placeholder="@yourhandle" />
+                  </Field>
+                  <Field id="followers" label="Approximate followers">
+                    <Input id="followers" type="number" value={form.followerCount} onChange={(value) => update("followerCount", value)} min="0" max="1000000000" />
+                  </Field>
+                </div>
+              </Section>
+            )}
+
+            {(type === "DIETICIAN" || type === "DOCTOR") && (
+              <Section title="Professional details">
+                <div className={styles.twoColumns}>
+                  <Field id="qualification" label="Qualification">
+                    <Input id="qualification" value={form.qualification} onChange={(value) => update("qualification", value)} maxLength={200} />
+                  </Field>
+                  <Field id="registration" label="Registration number">
+                    <Input id="registration" value={form.registrationNumber} onChange={(value) => update("registrationNumber", value)} maxLength={120} />
+                  </Field>
+                </div>
+                <Field id="clinic" label={type === "DOCTOR" ? "Clinic or hospital" : "Practice or clinic"}>
+                  <Input id="clinic" value={form.clinicName} onChange={(value) => update("clinicName", value)} maxLength={200} />
+                </Field>
+                {type === "DOCTOR" && (
+                  <Field id="hospital" label="Hospital affiliation">
+                    <Input id="hospital" value={form.hospitalAffiliation} onChange={(value) => update("hospitalAffiliation", value)} maxLength={200} />
+                  </Field>
+                )}
+              </Section>
+            )}
+
+            {type === "CORPORATE" && (
+              <Section title="Company details">
+                <Field id="hr-contact" label="HR or wellness contact">
+                  <Input id="hr-contact" value={form.hrContactName} onChange={(value) => update("hrContactName", value)} maxLength={120} />
+                </Field>
+                <Field id="company-domain" label="Company email domain">
+                  <Input id="company-domain" value={form.allowedEmailDomain} onChange={(value) => update("allowedEmailDomain", value)} maxLength={254} placeholder="company.com" />
+                </Field>
+              </Section>
+            )}
+
+            {type === "RESIDENCE" && (
+              <Section title="Society details">
+                <Field id="society-address" label="Society address">
+                  <Input id="society-address" value={form.societyAddress} onChange={(value) => update("societyAddress", value)} maxLength={500} />
+                </Field>
+                <Field id="treasurer-contact" label="Committee contact">
+                  <Input id="treasurer-contact" value={form.treasurerContact} onChange={(value) => update("treasurerContact", value)} maxLength={200} />
+                </Field>
+              </Section>
+            )}
+
+            {CASH_TYPES.has(type) && (
+              <Section title="Payout details" description="Required for monthly bank payouts. These fields are encrypted before storage and are only shown to authorized payout staff.">
+                <div className={styles.twoColumns}>
+                  <Field id="pan-number" label="PAN" required>
+                    <Input id="pan-number" value={form.panNumber} onChange={(value) => update("panNumber", value.toUpperCase())} maxLength={10} autoComplete="off" placeholder="ABCDE1234F" required />
+                  </Field>
+                  <Field id="account-name" label="Bank account holder" required>
+                    <Input id="account-name" value={form.bankAccountName} onChange={(value) => update("bankAccountName", value)} maxLength={160} autoComplete="off" required />
+                  </Field>
+                  <Field id="account-number" label="Bank account number" required>
+                    <Input id="account-number" value={form.bankAccountNumber} onChange={(value) => update("bankAccountNumber", value.replace(/\D/g, ""))} maxLength={20} inputMode="numeric" autoComplete="off" required />
+                  </Field>
+                  <Field id="ifsc" label="IFSC" required>
+                    <Input id="ifsc" value={form.bankIfsc} onChange={(value) => update("bankIfsc", value.toUpperCase())} maxLength={11} autoComplete="off" placeholder="HDFC0001234" required />
+                  </Field>
+                </div>
+              </Section>
+            )}
+
+            <div className={styles.reviewNote}>FitFuel reviews each application before activating a code. We’ll email you when a decision is made.</div>
+            {error && <div className={styles.error} role="alert">{error}</div>}
+            <button className={styles.submitButton} disabled={busy} type="submit">
+              {busy ? "Submitting…" : "Submit application"}
+            </button>
+          </form>
         )}
-        {step === "done" && <DonePane />}
 
-        {step !== "done" && (
-          <div style={{ marginTop: 24, fontSize: 12, color: T.dim, textAlign: "center" }}>
-            Already a partner? <Link href="/dashboard/partners" style={{ color: T.accent }}>Go to your dashboard →</Link>
-          </div>
+        {step === "done" && (
+          <section className={styles.doneCard}>
+            <span className={styles.doneMark} aria-hidden="true">✓</span>
+            <h2>Thanks for applying</h2>
+            <p>We’ll email you after the application has been reviewed. If approved, your code and conversion dashboard will become available in your account.</p>
+            <Link className={styles.primaryLink} href="/dashboard">Return to dashboard</Link>
+          </section>
         )}
+
+        {step !== "done" && <p className={styles.dashboardLink}>Already approved? <Link href="/dashboard/partners">Open your partner dashboard</Link></p>}
       </div>
-    </div>
+    </main>
   );
 }
 
-function SelectType({ onPick }: { onPick: (t: PartnerType) => void }) {
-  const types: PartnerType[] = ["GYM", "TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "CORPORATE", "RESIDENCE"];
+function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      {types.map((t) => (
-        <button key={t} onClick={() => onPick(t)} style={{
-          textAlign: "left",
-          background: T.card, border: `1px solid ${T.border}`, borderRadius: 12,
-          padding: 18, cursor: "pointer", color: T.text,
-          transition: "border-color 0.15s",
-        }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = T.accent2)}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = T.border)}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>{TYPE_LABEL[t]}</div>
-            <div style={{ color: T.accent, fontSize: 12, fontWeight: 700 }}>{CASH_TYPES.includes(t) ? "Cash payout" : t === "GYM" ? "Meal vouchers" : "Custom"}</div>
-          </div>
-          <div style={{ color: T.dim, fontSize: 13, marginTop: 6 }}>{TYPE_BLURB[t]}</div>
-        </button>
-      ))}
-    </div>
+    <fieldset className={styles.section}>
+      <legend>{title}</legend>
+      {description && <p className={styles.sectionDescription}>{description}</p>}
+      {children}
+    </fieldset>
   );
 }
 
-function FormSection({
-  type, form, up, onBack, onSubmit, busy, error,
-}: {
-  type: PartnerType; form: any; up: (k: string, v: any) => void;
-  onBack: () => void; onSubmit: () => void; busy: boolean; error: string | null;
-}) {
-  const isCash = CASH_TYPES.includes(type);
-
+function Field({ id, label, required, children }: { id: string; label: string; required?: boolean; children: ReactNode }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24 }}>
-
-      <button onClick={onBack} style={{ background: "transparent", color: T.dim, border: "none", fontSize: 12, cursor: "pointer", marginBottom: 16, padding: 0 }}>
-        {'\u2190'} Change type
-      </button>
-
-      <SectionTitle>Basics</SectionTitle>
-      <Field label={type === "CORPORATE" ? "Company name" : type === "RESIDENCE" ? "Society name" : "Display name"}>
-        <Input value={form.name} onChange={(v) => up("name", v)} placeholder="Public-facing name on your landing page" />
-      </Field>
-      <Row>
-        <Field label="Email"><Input value={form.contactEmail} onChange={(v) => up("contactEmail", v)} type="email" /></Field>
-        <Field label="Phone"><Input value={form.contactPhone} onChange={(v) => up("contactPhone", v)} /></Field>
-      </Row>
-
-      {/* GYM */}
-      {type === "GYM" && (<>
-        <SectionTitle>Gym details</SectionTitle>
-        <Field label="Address"><Input value={form.gymAddress} onChange={(v) => up("gymAddress", v)} placeholder="Locality, Pune" /></Field>
-        <Field label="Manager / contact name"><Input value={form.gymManagerName} onChange={(v) => up("gymManagerName", v)} /></Field>
-      </>)}
-
-      {/* TRAINER / INFLUENCER */}
-      {(type === "TRAINER" || type === "INFLUENCER") && (<>
-        <SectionTitle>About you</SectionTitle>
-        <Field label="Specialty"><Input value={form.specialty} onChange={(v) => up("specialty", v)} placeholder={type === "TRAINER" ? "Strength training, fat loss, etc." : "Fitness, nutrition, lifestyle"} /></Field>
-        <Field label="Short bio"><Textarea value={form.bio} onChange={(v) => up("bio", v)} placeholder="2-3 lines for your landing page" /></Field>
-        <Row>
-          <Field label="Instagram / social handle"><Input value={form.socialHandle} onChange={(v) => up("socialHandle", v)} placeholder="@yourhandle" /></Field>
-          <Field label="Follower count (approx)"><Input value={form.followerCount} onChange={(v) => up("followerCount", v)} type="number" /></Field>
-        </Row>
-      </>)}
-
-      {/* DIETICIAN / DOCTOR */}
-      {(type === "DIETICIAN" || type === "DOCTOR") && (<>
-        <SectionTitle>Credentials</SectionTitle>
-        <Field label="Qualification"><Input value={form.qualification} onChange={(v) => up("qualification", v)} placeholder={type === "DOCTOR" ? "MBBS, MD" : "RD, MSc Nutrition"} /></Field>
-        <Field label="Registration number"><Input value={form.registrationNumber} onChange={(v) => up("registrationNumber", v)} placeholder="State medical council / IDA number" /></Field>
-        <Row>
-          <Field label={type === "DOCTOR" ? "Hospital / Clinic" : "Practice / Clinic"}><Input value={form.clinicName} onChange={(v) => up("clinicName", v)} /></Field>
-          {type === "DOCTOR" && <Field label="Hospital affiliation"><Input value={form.hospitalAffiliation} onChange={(v) => up("hospitalAffiliation", v)} /></Field>}
-        </Row>
-      </>)}
-
-      {/* CORPORATE */}
-      {type === "CORPORATE" && (<>
-        <SectionTitle>Company details</SectionTitle>
-        <Field label="HR / wellness contact"><Input value={form.hrContactName} onChange={(v) => up("hrContactName", v)} /></Field>
-        <Field label="Allowed email domain"><Input value={form.allowedEmailDomain} onChange={(v) => up("allowedEmailDomain", v)} placeholder="@yourcompany.com" /></Field>
-      </>)}
-
-      {/* RESIDENCE */}
-      {type === "RESIDENCE" && (<>
-        <SectionTitle>Society details</SectionTitle>
-        <Field label="Society address"><Input value={form.societyAddress} onChange={(v) => up("societyAddress", v)} /></Field>
-        <Field label="Treasurer / committee contact"><Input value={form.treasurerContact} onChange={(v) => up("treasurerContact", v)} placeholder="Name + phone" /></Field>
-      </>)}
-
-      {/* Tax / payout — cash types only */}
-      {isCash && (<>
-        <SectionTitle>Payout details</SectionTitle>
-        <div style={{ color: T.dim, fontSize: 12, marginTop: -8, marginBottom: 12 }}>
-          Required for cash payouts. We pay via UPI bank transfer every month.
-        </div>
-        <Field label="PAN number" required>
-          <Input value={form.panNumber} onChange={(v) => up("panNumber", v.toUpperCase())} placeholder="ABCDE1234F" maxLength={10} />
-        </Field>
-        <Field label="Bank account holder name" required>
-          <Input value={form.bankAccountName} onChange={(v) => up("bankAccountName", v)} />
-        </Field>
-        <Row>
-          <Field label="Bank account number" required>
-            <Input value={form.bankAccountNumber} onChange={(v) => up("bankAccountNumber", v.replace(/[^0-9]/g, ""))} />
-          </Field>
-          <Field label="IFSC code" required>
-            <Input value={form.bankIfsc} onChange={(v) => up("bankIfsc", v.toUpperCase())} maxLength={11} placeholder="HDFC0001234" />
-          </Field>
-        </Row>
-      </>)}
-
-      {/* Notice */}
-      <div style={{ background: "var(--fk-paper)", border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, marginTop: 18, fontSize: 12, color: T.dim, lineHeight: 1.6 }}>
-        Your application will be reviewed by FitFuel within 2{'\u20133'} business days. You{'\u2019'}ll receive an email once approved, then you can start sharing your code.
-      </div>
-
-      {error && (
-        <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, borderRadius: 10, padding: 12, marginTop: 12, color: T.err, fontSize: 13 }}>
-          {error}
-        </div>
-      )}
-
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
-        <button onClick={onSubmit} disabled={busy || !form.name || !form.contactEmail} style={{
-          background: T.accent, color: "#000", fontWeight: 800, fontSize: 14,
-          padding: "14px 28px", borderRadius: 8, border: "none",
-          cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1,
-          textTransform: "uppercase", letterSpacing: "0.06em",
-        }}>{busy ? "Submitting\u2026" : "Submit application"}</button>
-      </div>
-    </div>
-  );
-}
-
-function DonePane() {
-  return (
-    <div style={{ background: T.card, border: `1px solid ${T.accent}`, borderRadius: 16, padding: 32, textAlign: "center" }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>{'\u2713'}</div>
-      <h2 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 24, fontWeight: 800, margin: 0 }}>Thanks for applying</h2>
-      <div style={{ color: T.dim, fontSize: 14, marginTop: 10, lineHeight: 1.6 }}>
-        We{'\u2019'}ll review your application and email you within 2{'\u20133'} business days. Once approved, your partner dashboard becomes active and you can start sharing your code.
-      </div>
-      <div style={{ marginTop: 22 }}>
-        <Link href="/dashboard" style={{ color: T.accent, fontSize: 13, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          {'\u2190'} Back to dashboard
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-/* ── form primitives ── */
-function SectionTitle({ children }: { children: any }) {
-  return <div style={{ fontSize: 12, color: T.accent, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700, marginTop: 20, marginBottom: 10 }}>{children}</div>;
-}
-function Field({ label, required, children }: { label: string; required?: boolean; children: any }) {
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <label style={{ display: "block", fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
-        {label}{required && <span style={{ color: T.err, marginLeft: 4 }}>*</span>}
-      </label>
+    <div className={styles.field}>
+      <label htmlFor={id}>{label}{required && <span aria-hidden="true"> *</span>}</label>
       {children}
     </div>
   );
 }
-function Row({ children }: { children: any }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>{children}</div>;
-}
-function Input({ value, onChange, type = "text", placeholder, maxLength }: {
+
+function Input({ id, value, onChange, ...props }: {
+  id: string;
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
   maxLength?: number;
+  required?: boolean;
+  min?: string;
+  max?: string;
+  inputMode?: "numeric";
+  autoComplete?: string;
 }) {
-  return (
-    <input
-      type={type} value={value || ""} onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder} maxLength={maxLength}
-      style={{
-        width: "100%", background: "#000", color: T.text,
-        border: `1px solid ${T.border}`, borderRadius: 8,
-        padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
-        outline: "none",
-      }}
-      onFocus={(e) => (e.currentTarget.style.borderColor = T.accent2)}
-      onBlur={(e) => (e.currentTarget.style.borderColor = T.border)}
-    />
-  );
-}
-function Textarea({ value, onChange, placeholder }: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <textarea
-      value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-      rows={3}
-      style={{
-        width: "100%", background: "#000", color: T.text,
-        border: `1px solid ${T.border}`, borderRadius: 8,
-        padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
-        outline: "none", resize: "vertical",
-      }}
-      onFocus={(e) => (e.currentTarget.style.borderColor = T.accent2)}
-      onBlur={(e) => (e.currentTarget.style.borderColor = T.border)}
-    />
-  );
+  return <input id={id} value={value} onChange={(event) => onChange(event.target.value)} {...props} />;
 }

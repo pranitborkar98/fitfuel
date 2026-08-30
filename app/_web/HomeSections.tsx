@@ -179,7 +179,7 @@ function DayBand() {
                     <b className="fk-num" data-count="1430">
                       1,430
                     </b>
-                    <span>kcal logged for you</span>
+                    <span>kcal ready to confirm</span>
                   </span>
                 )}
               </span>
@@ -252,7 +252,8 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
 
 /* ── 2b. The wedge ──────────────────────────────────────────────────────────
    app/_hp/Wedge.tsx, on no route since it was written, and it holds the single
-   best line the old page had: every app trusts you to log it, we already know.
+   strongest distinction the old page had: the diary starts from food this
+   kitchen actually prepared, and the member confirms what they ate.
 
    It sits HERE, directly after the platform band, because that band says what
    we run and this one says why none of the cheaper things does it. Answering
@@ -270,7 +271,7 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
         <div className={s.bandHead}>
           <div>
             <h2 id="wedge-h" className={s.bandH2}>
-              Every app trusts you to log it. We already know.
+              Your meals start filled in. You confirm what you ate.
             </h2>
           </div>
           <p className={s.bandLede}>
@@ -905,8 +906,8 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
             When the scale disagrees, the target moves
           </h2>
           <p className={s.coachLede}>
-            Four weigh-ins, read against what you actually ate. No verdict, no
-            nagging — a sum you can check. An example month:
+            A weight trend read against your goal and current target. No
+            verdict, no nagging — a sum you can check. An example month:
           </p>
 
           <ol className={s.weekRow}>
@@ -938,11 +939,11 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
           <p className={s.coachSum}>
             <span className="fk-num">2,000 kcal</span>
             <i aria-hidden="true">−</i>
-            <span className="fk-num">160 kcal</span>
+            <span className="fk-num">300 kcal</span>
             <i aria-hidden="true">=</i>
-            <b className="fk-num">1,840 kcal</b>
+            <b className="fk-num">1,700 kcal</b>
             <span className={s.coachSumNote}>
-              Two 80-kcal steps after a three-week stall.
+              The engine&apos;s maximum single change after the trend leaves its goal range.
             </span>
           </p>
         </div>
@@ -1099,7 +1100,7 @@ function CtaBand({
     {
       n: "By 08:00",
       label: "Breakfast and lunch, at your door",
-      line: `Our own riders across ${areaCount} areas. It arrives already logged in your diary, macros counted.`,
+      line: `Our own riders across ${areaCount} areas. Your macros are ready to confirm in the diary.`,
     },
   ];
 
@@ -1118,7 +1119,7 @@ function CtaBand({
             No account needed to look, nothing to cancel afterwards.
           </p>
           <div className={s.closeActions}>
-            <Link href="/checkout" className={s.closeCta}>
+            <Link href="/plans?trial=true" className={s.closeCta}>
               Start the trial — {trialTotal}
             </Link>
             <Link href="/plans" className={s.closeGhost}>

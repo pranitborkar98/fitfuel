@@ -2,33 +2,39 @@
 
 // app/admin/content/FaqManager.tsx
 import { useState } from "react";
-import { UI, Label, Text, Area, Check, btn, contentApi } from "./ContentClient";
+import { UI, Label, Text, Area, Check, btn, contentApi, type FaqRecord } from "./ContentClient";
 
-type Faq = any;
+type FaqForm = {
+  category: string;
+  question: string;
+  answerHtml: string;
+  sortOrder: string;
+  isActive: boolean;
+};
 
-function blank() {
-  return { category: "", question: "", answerHtml: "", sortOrder: 0, isActive: true };
+function blank(): FaqForm {
+  return { category: "", question: "", answerHtml: "", sortOrder: "0", isActive: true };
 }
-function toForm(f: Faq) {
+function toForm(faq: FaqRecord): FaqForm {
   return {
-    category: f.category ?? "",
-    question: f.question ?? "",
-    answerHtml: f.answerHtml ?? "",
-    sortOrder: f.sortOrder ?? 0,
-    isActive: f.isActive !== false,
+    category: faq.category,
+    question: faq.question,
+    answerHtml: faq.answerHtml,
+    sortOrder: String(faq.sortOrder),
+    isActive: faq.isActive,
   };
 }
 
-export default function FaqManager({ initial }: { initial: Faq[] }) {
-  const [items, setItems] = useState<Faq[]>(initial);
+export default function FaqManager({ initial }: { initial: FaqRecord[] }) {
+  const [items, setItems] = useState<FaqRecord[]>(initial);
   const [editing, setEditing] = useState<null | "new" | string>(null);
-  const [form, setForm] = useState<any>(blank());
+  const [form, setForm] = useState<FaqForm>(blank());
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  const set = <K extends keyof FaqForm>(key: K, value: FaqForm[K]) => setForm((current) => ({ ...current, [key]: value }));
   function startNew() { setForm(blank()); setEditing("new"); setErr(null); }
-  function startEdit(f: Faq) { setForm(toForm(f)); setEditing(f.id); setErr(null); }
+  function startEdit(faq: FaqRecord) { setForm(toForm(faq)); setEditing(faq.id); setErr(null); }
   function close() { setEditing(null); setErr(null); }
 
   async function save() {
@@ -36,16 +42,18 @@ export default function FaqManager({ initial }: { initial: Faq[] }) {
     try {
       const action = editing === "new" ? "create" : "update";
       const id = editing === "new" ? null : (editing as string);
-      const { record } = await contentApi("faq", action, id, form);
+      const { record } = await contentApi<{ record: FaqRecord }>("faq", action, id, form);
       setItems((prev) => action === "create" ? [...prev, record] : prev.map((f) => (f.id === record.id ? record : f)));
       close();
-    } catch (e: any) { setErr(e?.message || "Save failed"); }
+    } catch (error: unknown) { setErr(error instanceof Error ? error.message : "Save failed"); }
     finally { setBusy(false); }
   }
-  async function remove(f: Faq) {
+  async function remove(faq: FaqRecord) {
     if (!confirm("Delete this FAQ?")) return;
-    try { await contentApi("faq", "delete", f.id, null); setItems((p) => p.filter((x) => x.id !== f.id)); }
-    catch (e: any) { alert(e?.message || "Delete failed"); }
+    try {
+      await contentApi<{ ok: true }>("faq", "delete", faq.id, null);
+      setItems((previous) => previous.filter((item) => item.id !== faq.id));
+    } catch (error: unknown) { alert(error instanceof Error ? error.message : "Delete failed"); }
   }
 
   if (editing) {

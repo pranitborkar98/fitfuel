@@ -4,12 +4,12 @@
 import { prisma } from "@/lib/prisma";
 import DispatchClient from "./DispatchClient";
 import { requireSurface } from "@/lib/admin-auth";
+import { todayIndiaDate } from "@/lib/date-only";
 
 export const dynamic = "force-dynamic";
 
 function todayWindow() {
-  const start = new Date();
-  start.setUTCHours(0, 0, 0, 0); // matches the driver route's date convention
+  const start = todayIndiaDate();
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
   return { start, end };
@@ -26,18 +26,21 @@ export default async function DispatchPage() {
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],
       select: {
         id: true,
+        deliveryDate: true,
         status: true,
         mealsIncluded: true,
         deliveredAt: true,
         assignedDriverId: true,
         trackingNotes: true,
         customerConfirmedAt: true,
+        customerIssueNote: true,
         deliveryWindow: true,
         order: {
           select: {
             orderNumber: true,
             totalRs: true,
             paymentMethod: true,
+            paymentStatus: true,
             user: { select: { name: true, phone: true } },
             address: {
               select: { line1: true, line2: true, area: true, city: true, pincode: true, landmark: true },

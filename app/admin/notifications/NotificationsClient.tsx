@@ -1,14 +1,25 @@
-// app/admin/notifications/NotificationsClient.tsx
 "use client";
-import { useEffect, useState } from "react";
 
-type Tpl = {
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import styles from "./notifications.module.css";
+
+const CHANNELS = ["WHATSAPP", "EMAIL", "BOTH"] as const;
+const CATEGORIES = [
+  "orderUpdates", "deliveryUpdates", "weeklyDigest", "morningPush",
+  "eveningRecap", "nudges", "marketing", "staff",
+] as const;
+const STATUSES = ["QUEUED", "SENT", "FAILED", "SKIPPED"] as const;
+
+type Channel = typeof CHANNELS[number];
+type Category = typeof CATEGORIES[number];
+type NotificationStatus = typeof STATUSES[number];
+type Template = {
   id: string;
   key: string;
   name: string;
   description: string | null;
-  channel: "WHATSAPP" | "EMAIL" | "BOTH";
-  category: string;
+  channel: Channel;
+  category: Category;
   whatsappTemplateName: string | null;
   whatsappLanguage: string | null;
   whatsappVariables: string | null;
@@ -18,808 +29,400 @@ type Tpl = {
   isStaff: boolean;
   updatedAt: string;
 };
-
-type Log = {
+type NotificationLog = {
   id: string;
   userId: string | null;
   userEmail: string | null;
   userPhone: string | null;
   templateKey: string;
-  channel: "WHATSAPP" | "EMAIL" | "BOTH";
-  status: "QUEUED" | "SENT" | "FAILED" | "SKIPPED";
+  channel: Channel;
+  status: NotificationStatus;
   provider: string | null;
   providerRef: string | null;
   error: string | null;
   createdAt: string;
 };
+type TemplateForm = {
+  id: string;
+  name: string;
+  description: string;
+  channel: Channel;
+  category: Category;
+  active: boolean;
+  whatsappTemplateName: string;
+  whatsappLanguage: string;
+  whatsappVariables: string;
+  emailSubject: string;
+  emailBody: string;
+};
+type SendResult = {
+  whatsapp?: "sent" | "skipped" | "failed";
+  email?: "sent" | "skipped" | "failed";
+  errors: string[];
+};
 
-const PANEL: React.CSSProperties = {
-  background: "#0e0e0e",
-  border: "1px solid #1f1f1f",
-  borderRadius: 0,
-  padding: 20,
-};
-const INPUT: React.CSSProperties = {
-  background: "#080808",
-  border: "1px solid #2a2a2a",
-  color: "#eee",
-  borderRadius: 0,
-  padding: "8px 10px",
-  fontSize: 13,
-  width: "100%",
-  fontFamily: "inherit",
-};
-const BTN: React.CSSProperties = {
-  background: "#84cc16",
-  color: "#000",
-  border: "none",
-  padding: "8px 14px",
-  borderRadius: 0,
-  fontWeight: 700,
-  cursor: "pointer",
-  fontSize: 13,
-};
-const BTN_GHOST: React.CSSProperties = {
-  background: "transparent",
-  color: "#bbb",
-  border: "1px solid #2a2a2a",
-  padding: "8px 14px",
-  borderRadius: 0,
-  cursor: "pointer",
-  fontSize: 13,
-};
-const LABEL: React.CSSProperties = {
-  display: "block",
-  fontSize: 11,
-  color: "#888",
-  textTransform: "uppercase",
-  letterSpacing: 0.6,
-  marginBottom: 6,
-  fontWeight: 600,
-};
+const dateTime = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Asia/Kolkata",
+});
+
+async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  const payload = (await response.json().catch(() => null)) as (T & { error?: string }) | null;
+  if (!response.ok || !payload) throw new Error(payload?.error ?? "The request failed.");
+  return payload;
+}
+
+function pretty(value: string) {
+  return value.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll("_", " ").toLowerCase().replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function variableNames(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function templateForm(template: Template): TemplateForm {
+  return {
+    id: template.id,
+    name: template.name,
+    description: template.description ?? "",
+    channel: template.channel,
+    category: template.category,
+    active: template.active,
+    whatsappTemplateName: template.whatsappTemplateName ?? "",
+    whatsappLanguage: template.whatsappLanguage ?? "en",
+    whatsappVariables: variableNames(template.whatsappVariables).join(", "),
+    emailSubject: template.emailSubject ?? "",
+    emailBody: template.emailBody ?? "",
+  };
+}
 
 export default function NotificationsClient() {
   const [tab, setTab] = useState<"templates" | "logs">("templates");
   return (
-    <div style={{ padding: 24, color: "#eee" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            margin: 0,
-            letterSpacing: -0.5,
-          }}
-        >
-          Notifications
-        </h1>
-        <p style={{ color: "#777", margin: "6px 0 0", fontSize: 13 }}>
-          Email + WhatsApp templates, send logs, and test sends.
-        </p>
-      </div>
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>Customer communication</p>
+        <h1>Notifications</h1>
+        <p>Edit the messages customers receive, test each delivery channel deliberately, and see provider failures without exposing notification payloads.</p>
+      </header>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        <button
-          onClick={() => setTab("templates")}
-          style={{
-            ...BTN_GHOST,
-            background: tab === "templates" ? "#84cc16" : "transparent",
-            color: tab === "templates" ? "#000" : "#bbb",
-            border:
-              tab === "templates"
-                ? "1px solid #84cc16"
-                : "1px solid #2a2a2a",
-            fontWeight: tab === "templates" ? 700 : 500,
-          }}
-        >
-          Templates
-        </button>
-        <button
-          onClick={() => setTab("logs")}
-          style={{
-            ...BTN_GHOST,
-            background: tab === "logs" ? "#84cc16" : "transparent",
-            color: tab === "logs" ? "#000" : "#bbb",
-            border:
-              tab === "logs" ? "1px solid #84cc16" : "1px solid #2a2a2a",
-            fontWeight: tab === "logs" ? 700 : 500,
-          }}
-        >
-          Send logs
-        </button>
+      <div className={styles.tabs} role="tablist" aria-label="Notification sections">
+        <button type="button" role="tab" aria-selected={tab === "templates"} onClick={() => setTab("templates")}>Message templates</button>
+        <button type="button" role="tab" aria-selected={tab === "logs"} onClick={() => setTab("logs")}>Delivery logs</button>
       </div>
 
       {tab === "templates" ? <TemplatesTab /> : <LogsTab />}
-    </div>
+    </main>
   );
 }
-
-/* ---------------- TEMPLATES TAB ---------------- */
 
 function TemplatesTab() {
-  const [items, setItems] = useState<Tpl[] | null>(null);
+  const [templates, setTemplates] = useState<Template[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    const r = await fetch("/api/admin/notifications?tab=templates");
-    const j = await r.json();
-    setItems(j.templates || []);
+  async function reload() {
+    try {
+      const data = await requestJson<{ templates: Template[] }>("/api/admin/notifications?tab=templates");
+      setTemplates(data.templates);
+      setError(null);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "Notification templates could not be loaded.");
+    }
   }
+
   useEffect(() => {
-    load();
+    let cancelled = false;
+    requestJson<{ templates: Template[] }>("/api/admin/notifications?tab=templates")
+      .then((data) => { if (!cancelled) setTemplates(data.templates); })
+      .catch((caught: unknown) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Notification templates could not be loaded."); })
+      .finally(() => { if (!cancelled) setTemplates((current) => current ?? []); });
+    return () => { cancelled = true; };
   }, []);
 
-  if (!items) return <div style={{ color: "#666" }}>Loading\u2026</div>;
-  if (items.length === 0) {
-    return (
-      <div style={PANEL}>
-        <div style={{ color: "#aaa" }}>
-          No templates yet. Run:{" "}
-          <code style={{ color: "#84cc16" }}>
-            npx tsx prisma/seed-notification-templates.ts
-          </code>
-        </div>
-      </div>
-    );
-  }
+  const summary = useMemo(() => ({
+    active: templates?.filter((template) => template.active).length ?? 0,
+    customer: templates?.filter((template) => !template.isStaff).length ?? 0,
+    staff: templates?.filter((template) => template.isStaff).length ?? 0,
+  }), [templates]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {items.map((t) => (
-        <TemplateRow
-          key={t.id}
-          tpl={t}
-          open={openId === t.id}
-          onToggleOpen={() => setOpenId(openId === t.id ? null : t.id)}
-          onChanged={load}
-        />
-      ))}
-    </div>
+    <section className={styles.panel} role="tabpanel">
+      <div className={styles.metrics}>
+        <Metric label="Active templates" value={summary.active} note="Eligible to send" />
+        <Metric label="Customer messages" value={summary.customer} note="Preference-aware" />
+        <Metric label="Staff alerts" value={summary.staff} note="Operational only" />
+      </div>
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {templates === null ? <Loading label="Loading notification templates…" /> : templates.length === 0 ? (
+        <div className={styles.empty}><strong>No templates configured</strong><span>The deployment needs its notification template data before messages can send.</span></div>
+      ) : (
+        <div className={styles.templateList}>
+          {templates.map((template) => {
+            const open = openId === template.id;
+            const detailId = `template-${template.id}`;
+            return (
+              <article className={open ? `${styles.template} ${styles.templateOpen}` : styles.template} key={template.id}>
+                <button className={styles.templateSummary} type="button" aria-expanded={open} aria-controls={detailId} onClick={() => setOpenId(open ? null : template.id)}>
+                  <span className={styles.channelIcon} aria-hidden="true">{template.channel === "WHATSAPP" ? "W" : template.channel === "EMAIL" ? "E" : "W+E"}</span>
+                  <span className={styles.templateName}><strong>{template.name}</strong><small>{template.description || template.key}</small></span>
+                  <span className={template.active ? styles.activeStatus : styles.inactiveStatus}>{template.active ? "Active" : "Inactive"}</span>
+                  <span className={styles.meta}>{pretty(template.channel)}</span>
+                  <span className={styles.meta}>{pretty(template.category)}</span>
+                  <span className={styles.expand} aria-hidden="true">{open ? "−" : "+"}</span>
+                </button>
+                {open ? <TemplateEditor template={template} onChanged={reload} id={detailId} /> : null}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 
-function TemplateRow({
-  tpl,
-  open,
-  onToggleOpen,
-  onChanged,
-}: {
-  tpl: Tpl;
-  open: boolean;
-  onToggleOpen: () => void;
-  onChanged: () => void;
-}) {
-  async function toggleActive() {
-    await fetch("/api/admin/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "toggleActive",
-        data: { id: tpl.id },
-      }),
-    });
-    onChanged();
-  }
-
-  return (
-    <div style={PANEL}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            <div
-              style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}
-            >
-              {tpl.name}
-            </div>
-            <code
-              style={{
-                fontSize: 11,
-                color: "#84cc16",
-                background: "#0a1505",
-                padding: "2px 6px",
-                borderRadius: 0,
-              }}
-            >
-              {tpl.key}
-            </code>
-            <Pill>{tpl.channel}</Pill>
-            <Pill muted>{tpl.category}</Pill>
-            {tpl.isStaff && <Pill muted>staff</Pill>}
-          </div>
-          {tpl.description && (
-            <div style={{ color: "#888", fontSize: 12, marginTop: 6 }}>
-              {tpl.description}
-            </div>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button
-            onClick={toggleActive}
-            style={{
-              ...BTN_GHOST,
-              borderColor: tpl.active ? "#84cc16" : "#2a2a2a",
-              color: tpl.active ? "#84cc16" : "#888",
-            }}
-          >
-            {tpl.active ? "Active" : "Inactive"}
-          </button>
-          <button onClick={onToggleOpen} style={BTN_GHOST}>
-            {open ? "Close" : "Edit"}
-          </button>
-        </div>
-      </div>
-
-      {open && <TemplateEditor tpl={tpl} onSaved={onChanged} />}
-    </div>
-  );
-}
-
-function TemplateEditor({
-  tpl,
-  onSaved,
-}: {
-  tpl: Tpl;
-  onSaved: () => void;
-}) {
-  const [form, setForm] = useState({
-    id: tpl.id,
-    name: tpl.name,
-    description: tpl.description || "",
-    channel: tpl.channel,
-    category: tpl.category,
-    whatsappTemplateName: tpl.whatsappTemplateName || "",
-    whatsappLanguage: tpl.whatsappLanguage || "en",
-    whatsappVariables: tpl.whatsappVariables || "",
-    emailSubject: tpl.emailSubject || "",
-    emailBody: tpl.emailBody || "",
-    active: tpl.active,
-  });
+function TemplateEditor({ template, onChanged, id }: { template: Template; onChanged: () => Promise<void>; id: string }) {
+  const [form, setForm] = useState(() => templateForm(template));
   const [saving, setSaving] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const usesWhatsApp = form.channel === "WHATSAPP" || form.channel === "BOTH";
+  const usesEmail = form.channel === "EMAIL" || form.channel === "BOTH";
 
-  function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
-    setForm((f) => ({ ...f, [k]: v }));
+  function update<K extends keyof TemplateForm>(key: K, value: TemplateForm[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
-  async function save() {
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
     setSaving(true);
+    setError(null);
+    setMessage(null);
+    const variables = form.whatsappVariables.split(/[\n,]/).map((value) => value.trim()).filter(Boolean);
     try {
-      const r = await fetch("/api/admin/notifications", {
+      await requestJson("/api/admin/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "updateTemplate", data: form }),
+        body: JSON.stringify({
+          action: "updateTemplate",
+          data: { ...form, whatsappVariables: JSON.stringify(variables) },
+        }),
       });
-      const j = await r.json();
-      if (j.ok) onSaved();
-      else alert(j.error || "save failed");
+      setMessage("Template saved.");
+      await onChanged();
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The template could not be saved.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div
-      style={{
-        marginTop: 16,
-        paddingTop: 16,
-        borderTop: "1px solid #1f1f1f",
-        display: "flex",
-        flexDirection: "column",
-        gap: 14,
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
-        <div>
-          <label style={LABEL}>Channel</label>
-          <select
-            style={INPUT}
-            value={form.channel}
-            onChange={(e) => update("channel", e.target.value as any)}
-          >
-            <option value="WHATSAPP">WhatsApp only</option>
-            <option value="EMAIL">Email only</option>
-            <option value="BOTH">Both</option>
-          </select>
-        </div>
-        <div>
-          <label style={LABEL}>Category (user-pref bucket)</label>
-          <select
-            style={INPUT}
-            value={form.category}
-            onChange={(e) => update("category", e.target.value)}
-          >
-            <option value="orderUpdates">Order updates</option>
-            <option value="deliveryUpdates">Delivery updates</option>
-            <option value="weeklyDigest">Weekly digest</option>
-            <option value="morningPush">Morning push</option>
-            <option value="nudges">Nudges</option>
-            <option value="marketing">Marketing</option>
-            <option value="staff">Staff (bypasses prefs)</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label style={LABEL}>Description</label>
-        <input
-          style={INPUT}
-          value={form.description}
-          onChange={(e) => update("description", e.target.value)}
-        />
-      </div>
-
-      {(form.channel === "WHATSAPP" || form.channel === "BOTH") && (
-        <div
-          style={{
-            border: "1px solid #1a1a1a",
-            borderRadius: 0,
-            padding: 14,
-            background: "#0a0a0a",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#84cc16",
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-              marginBottom: 12,
-            }}
-          >
-            WhatsApp (MSG91)
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr",
-              gap: 12,
-            }}
-          >
-            <div>
-              <label style={LABEL}>Template name (Meta-approved)</label>
-              <input
-                style={INPUT}
-                value={form.whatsappTemplateName}
-                onChange={(e) =>
-                  update("whatsappTemplateName", e.target.value)
-                }
-                placeholder="ff_order_confirmed"
-              />
+    <div className={styles.editor} id={id}>
+      <form onSubmit={save}>
+        <div className={styles.editorGrid}>
+          <section>
+            <SectionTitle title="Message identity" note={`System key: ${template.key}. The key cannot be renamed because product workflows depend on it.`} />
+            <div className={styles.formGrid}>
+              <Field label="Internal name"><input required maxLength={120} value={form.name} onChange={(event) => update("name", event.target.value)} /></Field>
+              <Field label="Channel"><select value={form.channel} onChange={(event) => update("channel", event.target.value as Channel)}>{CHANNELS.map((channel) => <option value={channel} key={channel}>{pretty(channel)}</option>)}</select></Field>
+              <Field label="Category"><select disabled={template.isStaff} value={form.category} onChange={(event) => update("category", event.target.value as Category)}>{CATEGORIES.filter((category) => template.isStaff ? category === "staff" : category !== "staff").map((category) => <option value={category} key={category}>{pretty(category)}</option>)}</select></Field>
+              <Check label="Active and eligible to send" checked={form.active} onChange={(value) => update("active", value)} />
+              <Field label="Internal description" wide><textarea rows={3} maxLength={500} value={form.description} onChange={(event) => update("description", event.target.value)} /></Field>
             </div>
-            <div>
-              <label style={LABEL}>Language</label>
-              <input
-                style={INPUT}
-                value={form.whatsappLanguage}
-                onChange={(e) =>
-                  update("whatsappLanguage", e.target.value)
-                }
-                placeholder="en"
-              />
-            </div>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={LABEL}>
-              Variables (ordered JSON array of var names)
-            </label>
-            <input
-              style={INPUT}
-              value={form.whatsappVariables}
-              onChange={(e) =>
-                update("whatsappVariables", e.target.value)
-              }
-              placeholder='["name","orderNumber","amount"]'
-            />
-            <div style={{ color: "#666", fontSize: 11, marginTop: 4 }}>
-              These map to body_1, body_2\u2026 in the Meta template.
-            </div>
-          </div>
+          </section>
+
+          {usesWhatsApp ? (
+            <section>
+              <SectionTitle title="WhatsApp" note="The template name and variable order must match the approved MSG91 / Meta template exactly." />
+              <div className={styles.formGrid}>
+                <Field label="Approved template name"><input required pattern="[a-z0-9_]+" value={form.whatsappTemplateName} onChange={(event) => update("whatsappTemplateName", event.target.value)} /></Field>
+                <Field label="Language"><input required pattern="[a-z]{2}(_[A-Z]{2})?" value={form.whatsappLanguage} onChange={(event) => update("whatsappLanguage", event.target.value)} placeholder="en or en_US" /></Field>
+                <Field label="Variables in body order" wide><textarea rows={3} value={form.whatsappVariables} onChange={(event) => update("whatsappVariables", event.target.value)} placeholder="name, orderNumber, deliveryDate" /><small>Comma or line separated. These map to WhatsApp body variables in order.</small></Field>
+              </div>
+            </section>
+          ) : null}
+
+          {usesEmail ? (
+            <section>
+              <SectionTitle title="Email" note="Variables use double braces, for example {{name}}. Test every meaningful change before leaving it active." />
+              <div className={styles.formGrid}>
+                <Field label="Subject" wide><input required maxLength={200} value={form.emailSubject} onChange={(event) => update("emailSubject", event.target.value)} /></Field>
+                <Field label="HTML body" wide><textarea className={styles.codeArea} rows={12} required value={form.emailBody} onChange={(event) => update("emailBody", event.target.value)} /></Field>
+              </div>
+            </section>
+          ) : null}
         </div>
-      )}
 
-      {(form.channel === "EMAIL" || form.channel === "BOTH") && (
-        <div
-          style={{
-            border: "1px solid #1a1a1a",
-            borderRadius: 0,
-            padding: 14,
-            background: "#0a0a0a",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#84cc16",
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-              marginBottom: 12,
-            }}
-          >
-            Email (Resend)
-          </div>
-          <div>
-            <label style={LABEL}>Subject</label>
-            <input
-              style={INPUT}
-              value={form.emailSubject}
-              onChange={(e) => update("emailSubject", e.target.value)}
-            />
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={LABEL}>Body (HTML \u2014 use {`{{var}}`})</label>
-            <textarea
-              style={{
-                ...INPUT,
-                minHeight: 220,
-                fontFamily:
-                  "ui-monospace, SFMono-Regular, Menlo, monospace",
-                fontSize: 12,
-                lineHeight: 1.5,
-              }}
-              value={form.emailBody}
-              onChange={(e) => update("emailBody", e.target.value)}
-            />
-          </div>
+        {message ? <p className={styles.success} role="status">{message}</p> : null}
+        {error ? <p className={styles.error} role="alert">{error}</p> : null}
+        <div className={styles.editorActions}>
+          <button type="button" onClick={() => setTestOpen((value) => !value)}>{testOpen ? "Close test send" : "Open test send"}</button>
+          <button className={styles.primaryButton} disabled={saving}>{saving ? "Saving…" : "Save template"}</button>
         </div>
-      )}
-
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} style={BTN} disabled={saving}>
-          {saving ? "Saving\u2026" : "Save"}
-        </button>
-        <button
-          onClick={() => setTestOpen((s) => !s)}
-          style={BTN_GHOST}
-        >
-          {testOpen ? "Close test" : "Test send"}
-        </button>
-      </div>
-
-      {testOpen && <TestSendBox templateKey={tpl.key} variables={form.whatsappVariables} />}
+      </form>
+      {testOpen ? <TestSend template={template} form={form} /> : null}
     </div>
   );
 }
 
-function TestSendBox({
-  templateKey,
-  variables,
-}: {
-  templateKey: string;
-  variables: string;
-}) {
-  // Try to derive sensible default var fields from the WA variables JSON
-  let varNames: string[] = [];
-  try {
-    if (variables) varNames = JSON.parse(variables);
-  } catch {}
+function TestSend({ template, form }: { template: Template; form: TemplateForm }) {
+  const names = form.whatsappVariables.split(/[\n,]/).map((value) => value.trim()).filter(Boolean);
   const [toEmail, setToEmail] = useState("");
   const [toPhone, setToPhone] = useState("");
-  const [vars, setVars] = useState<Record<string, string>>(
-    Object.fromEntries(varNames.map((n) => [n, ""]))
-  );
+  const [vars, setVars] = useState<Record<string, string>>(() => Object.fromEntries(names.map((name) => [name, name === "name" ? "Test customer" : `Test ${pretty(name)}`])));
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<SendResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const usesEmail = form.channel === "EMAIL" || form.channel === "BOTH";
+  const usesWhatsApp = form.channel === "WHATSAPP" || form.channel === "BOTH";
 
-  async function fire() {
+  async function send(event: React.FormEvent) {
+    event.preventDefault();
+    if (!window.confirm(`Send a real test using “${template.name}” to the entered destination${form.channel === "BOTH" ? "s" : ""}?`)) return;
     setBusy(true);
     setResult(null);
+    setError(null);
     try {
-      const r = await fetch("/api/admin/notifications", {
+      const data = await requestJson<{ result: SendResult }>("/api/admin/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "testSend",
-          data: { templateKey, toEmail, toPhone, vars },
-        }),
+        body: JSON.stringify({ action: "testSend", data: { templateKey: template.key, toEmail, toPhone, vars } }),
       });
-      const j = await r.json();
-      setResult(j);
+      setResult(data.result);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The test send failed.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div
-      style={{
-        marginTop: 4,
-        border: "1px dashed #2a2a2a",
-        borderRadius: 0,
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 11,
-          color: "#888",
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 12,
-          fontWeight: 600,
-        }}
-      >
-        Test send
+    <form className={styles.testBox} onSubmit={send}>
+      <SectionTitle title="Send a live test" note="This contacts the real provider and creates delivery logs. Use your own destination." />
+      <div className={styles.formGrid}>
+        {usesEmail ? <Field label="Test email"><input type="email" required={!usesWhatsApp} value={toEmail} onChange={(event) => setToEmail(event.target.value)} placeholder="you@example.com" /></Field> : null}
+        {usesWhatsApp ? <Field label="Test Indian mobile"><input type="tel" required={!usesEmail} value={toPhone} onChange={(event) => setToPhone(event.target.value)} placeholder="+91 98765 43210" /></Field> : null}
+        {names.map((name) => <Field label={pretty(name)} key={name}><input maxLength={500} value={vars[name] ?? ""} onChange={(event) => setVars((current) => ({ ...current, [name]: event.target.value }))} /></Field>)}
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 10,
-          marginBottom: 10,
-        }}
-      >
-        <div>
-          <label style={LABEL}>To email</label>
-          <input
-            style={INPUT}
-            value={toEmail}
-            onChange={(e) => setToEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
-        </div>
-        <div>
-          <label style={LABEL}>To phone (with country code)</label>
-          <input
-            style={INPUT}
-            value={toPhone}
-            onChange={(e) => setToPhone(e.target.value)}
-            placeholder="919876543210"
-          />
-        </div>
-      </div>
-      {varNames.length > 0 && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 10,
-            marginBottom: 10,
-          }}
-        >
-          {varNames.map((n) => (
-            <div key={n}>
-              <label style={LABEL}>{n}</label>
-              <input
-                style={INPUT}
-                value={vars[n] || ""}
-                onChange={(e) =>
-                  setVars((v) => ({ ...v, [n]: e.target.value }))
-                }
-              />
-            </div>
-          ))}
-        </div>
-      )}
-      <button onClick={fire} style={BTN} disabled={busy}>
-        {busy ? "Sending\u2026" : "Fire test"}
-      </button>
-      {result && (
-        <pre
-          style={{
-            marginTop: 12,
-            background: "#050505",
-            padding: 10,
-            borderRadius: 0,
-            fontSize: 11,
-            color: "#9ae600",
-            border: "1px solid #1a1a1a",
-            overflow: "auto",
-          }}
-        >
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
-    </div>
+      {result ? <p className={styles.success} role="status">WhatsApp: {result.whatsapp ?? "not requested"}. Email: {result.email ?? "not requested"}.</p> : null}
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <div className={styles.editorActions}><button className={styles.primaryButton} disabled={busy}>{busy ? "Sending…" : "Send live test"}</button></div>
+    </form>
   );
 }
 
-/* ---------------- LOGS TAB ---------------- */
-
 function LogsTab() {
-  const [logs, setLogs] = useState<Log[] | null>(null);
-  const [status, setStatus] = useState("");
-  const [channel, setChannel] = useState("");
-  const [q, setQ] = useState("");
+  const [logs, setLogs] = useState<NotificationLog[] | null>(null);
+  const [status, setStatus] = useState<NotificationStatus | "">("");
+  const [channel, setChannel] = useState<Channel | "">("");
+  const [query, setQuery] = useState("");
+  const [templateKey, setTemplateKey] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
+    setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ tab: "logs" });
     if (status) params.set("status", status);
     if (channel) params.set("channel", channel);
-    if (q) params.set("q", q);
-    const r = await fetch("/api/admin/notifications?" + params.toString());
-    const j = await r.json();
-    setLogs(j.logs || []);
+    if (query.trim()) params.set("q", query.trim());
+    if (templateKey.trim()) params.set("key", templateKey.trim());
+    try {
+      const data = await requestJson<{ logs: NotificationLog[] }>(`/api/admin/notifications?${params}`);
+      setLogs(data.logs);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "Delivery logs could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   }
+
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    requestJson<{ logs: NotificationLog[] }>("/api/admin/notifications?tab=logs")
+      .then((data) => { if (!cancelled) setLogs(data.logs); })
+      .catch((caught: unknown) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Delivery logs could not be loaded."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
+  const summary = useMemo(() => ({
+    sent: logs?.filter((log) => log.status === "SENT").length ?? 0,
+    failed: logs?.filter((log) => log.status === "FAILED").length ?? 0,
+    skipped: logs?.filter((log) => log.status === "SKIPPED").length ?? 0,
+  }), [logs]);
+
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginBottom: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <select
-          style={{ ...INPUT, width: 140 }}
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          <option value="SENT">Sent</option>
-          <option value="FAILED">Failed</option>
-          <option value="SKIPPED">Skipped</option>
-        </select>
-        <select
-          style={{ ...INPUT, width: 140 }}
-          value={channel}
-          onChange={(e) => setChannel(e.target.value)}
-        >
-          <option value="">All channels</option>
-          <option value="WHATSAPP">WhatsApp</option>
-          <option value="EMAIL">Email</option>
-        </select>
-        <input
-          style={{ ...INPUT, width: 240 }}
-          placeholder="Search email or phone"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <button onClick={load} style={BTN}>
-          Filter
-        </button>
+    <section className={styles.panel} role="tabpanel">
+      <div className={styles.metrics}>
+        <Metric label="Sent" value={summary.sent} note="In the loaded result" />
+        <Metric label="Failed" value={summary.failed} note="Needs provider review" warning={summary.failed > 0} />
+        <Metric label="Skipped" value={summary.skipped} note="Opt-out or missing channel" />
       </div>
 
-      {!logs ? (
-        <div style={{ color: "#666" }}>Loading\u2026</div>
-      ) : logs.length === 0 ? (
-        <div style={{ ...PANEL, color: "#777" }}>No logs yet.</div>
+      <form className={styles.logFilters} onSubmit={(event) => { event.preventDefault(); void load(); }}>
+        <Field label="Customer"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Email or phone" /></Field>
+        <Field label="Template key"><input value={templateKey} onChange={(event) => setTemplateKey(event.target.value)} placeholder="delivery_out_for_delivery" /></Field>
+        <Field label="Status"><select value={status} onChange={(event) => setStatus(event.target.value as NotificationStatus | "")}><option value="">All statuses</option>{STATUSES.map((item) => <option value={item} key={item}>{pretty(item)}</option>)}</select></Field>
+        <Field label="Channel"><select value={channel} onChange={(event) => setChannel(event.target.value as Channel | "")}><option value="">All channels</option>{CHANNELS.map((item) => <option value={item} key={item}>{pretty(item)}</option>)}</select></Field>
+        <button type="submit" className={styles.primaryButton} disabled={loading}>{loading ? "Loading…" : "Apply filters"}</button>
+      </form>
+
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {logs === null ? <Loading label="Loading delivery logs…" /> : logs.length === 0 ? (
+        <div className={styles.empty}><strong>No matching deliveries</strong><span>Try a broader filter or send a deliberate test.</span></div>
       ) : (
-        <div style={{ ...PANEL, padding: 0, overflow: "hidden" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: 12,
-            }}
-          >
-            <thead>
-              <tr style={{ background: "#0a0a0a", color: "#888" }}>
-                <Th>When</Th>
-                <Th>Template</Th>
-                <Th>Channel</Th>
-                <Th>Status</Th>
-                <Th>To</Th>
-                <Th>Error</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((l) => (
-                <tr
-                  key={l.id}
-                  style={{ borderTop: "1px solid #1a1a1a" }}
-                >
-                  <Td>{new Date(l.createdAt).toLocaleString()}</Td>
-                  <Td>
-                    <code style={{ color: "#84cc16", fontSize: 11 }}>
-                      {l.templateKey}
-                    </code>
-                  </Td>
-                  <Td>{l.channel}</Td>
-                  <Td>
-                    <span
-                      style={{
-                        color:
-                          l.status === "SENT"
-                            ? "#84cc16"
-                            : l.status === "FAILED"
-                            ? "#ef4444"
-                            : "#888",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {l.status}
-                    </span>
-                  </Td>
-                  <Td>{l.userEmail || l.userPhone || "\u2014"}</Td>
-                  <Td style={{ color: "#888" }}>{l.error || "\u2014"}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className={styles.logList}>
+          <div className={styles.logHead} aria-hidden="true"><span>Time</span><span>Template and recipient</span><span>Channel</span><span>Status</span><span>Provider</span></div>
+          {logs.map((log) => (
+            <article className={styles.log} key={log.id}>
+              <time dateTime={log.createdAt}>{dateTime.format(new Date(log.createdAt))}</time>
+              <div><strong>{log.templateKey}</strong><small>{log.userEmail || log.userPhone || "No recipient saved"}</small>{log.error ? <p>{log.error}</p> : null}</div>
+              <span className={styles.meta}>{pretty(log.channel)}</span>
+              <span className={statusClass(log.status)}>{pretty(log.status)}</span>
+              <div className={styles.provider}><strong>{log.provider || "—"}</strong><small>{log.providerRef || "No provider reference"}</small></div>
+            </article>
+          ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th
-      style={{
-        textAlign: "left",
-        padding: "10px 12px",
-        fontWeight: 600,
-        fontSize: 11,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-      }}
-    >
-      {children}
-    </th>
-  );
-}
-function Td({
-  children,
-  style,
-}: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <td
-      style={{
-        padding: "10px 12px",
-        color: "#ddd",
-        verticalAlign: "top",
-        ...style,
-      }}
-    >
-      {children}
-    </td>
-  );
+function statusClass(status: NotificationStatus) {
+  if (status === "SENT") return styles.sentStatus;
+  if (status === "FAILED") return styles.failedStatus;
+  if (status === "SKIPPED") return styles.skippedStatus;
+  return styles.queuedStatus;
 }
 
-function Pill({
-  children,
-  muted,
-}: {
-  children: React.ReactNode;
-  muted?: boolean;
-}) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        background: muted ? "#1a1a1a" : "#0a1505",
-        color: muted ? "#aaa" : "#84cc16",
-        border: muted ? "1px solid #2a2a2a" : "1px solid #1f3a08",
-        fontSize: 10,
-        padding: "2px 8px",
-        borderRadius: 0,
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-      }}
-    >
-      {children}
-    </span>
-  );
+function Metric({ label, value, note, warning = false }: { label: string; value: number; note: string; warning?: boolean }) {
+  return <article className={warning ? styles.metricWarning : undefined}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>;
+}
+
+function SectionTitle({ title, note }: { title: string; note: string }) {
+  return <div className={styles.sectionTitle}><h2>{title}</h2><p>{note}</p></div>;
+}
+
+function Field({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
+  return <label className={wide ? styles.wideField : undefined}><span>{label}</span>{children}</label>;
+}
+
+function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return <label className={styles.check}><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span>{label}</span></label>;
+}
+
+function Loading({ label }: { label: string }) {
+  return <div className={styles.loading} role="status"><span />{label}</div>;
 }

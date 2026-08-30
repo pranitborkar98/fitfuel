@@ -7,20 +7,32 @@
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/admin-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson, readQuery } from "@/lib/validation/core";
 
 export const dynamic = "force-dynamic";
 
-const ASSIGNABLE = ["CUSTOMER", "ADMIN", "KITCHEN", "DISPATCH", "OWNER"] as const;
+const ASSIGNABLE = ["CUSTOMER", "ADMIN", "KITCHEN", "DISPATCH"] as const;
 const STAFF = ["OWNER", "ADMIN", "KITCHEN", "DISPATCH"] as const;
+const staffQuerySchema = z.object({ q: z.string().trim().min(2).max(80).optional() }).strict();
+const staffRoleSchema = z.object({
+  userId: z.string().cuid(),
+  role: z.enum(ASSIGNABLE),
+}).strict();
 
 export async function GET(req: NextRequest) {
   const admin = await requireApiRole("staff");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
+  const parsed = readQuery(req, staffQuerySchema);
+  if (!parsed.ok) return parsed.response;
 
-  const q = req.nextUrl.searchParams.get("q")?.trim();
+  const q = parsed.data.q;
 
   if (q) {
-    const results = await (prisma as any).user.findMany({
+    const results = await prisma.user.findMany({
       where: {
         OR: [
           { email: { contains: q, mode: "insensitive" } },
@@ -34,8 +46,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ users: results });
   }
 
-  const staff = await (prisma as any).user.findMany({
-    where: { role: { in: STAFF } },
+  const staff = await prisma.user.findMany({
+    where: { role: { in: [...STAFF] } },
     orderBy: [{ role: "asc" }, { email: "asc" }],
     select: { id: true, name: true, email: true, image: true, role: true },
   });
@@ -45,26 +57,30 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const admin = await requireApiRole("staff");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = (await req.json().catch(() => ({}))) as { userId?: string; role?: string };
-  const userId = body.userId;
-  const role = body.role;
-
-  if (!userId || !role || !ASSIGNABLE.includes(role as (typeof ASSIGNABLE)[number])) {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
-  }
+  const parsed = await readJson(req, staffRoleSchema);
+  if (!parsed.ok) return parsed.response;
+  const { userId, role } = parsed.data;
 
   // Guard: the owner can't accidentally strip their own OWNER role and lock out.
-  if (userId === admin.id && role !== "OWNER") {
+  if (userId === admin.id) {
     return NextResponse.json(
       { error: "You can't change your own role away from OWNER." },
       { status: 400 }
     );
   }
 
-  const updated = await (prisma as any).user.update({
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } });
+  if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (target.role === "OWNER") {
+    return NextResponse.json({ error: "Owner access cannot be changed from the staff screen." }, { status: 409 });
+  }
+
+  const updated = await prisma.user.update({
     where: { id: userId },
-    data: { role: role as any },
+    data: { role },
     select: { id: true, name: true, email: true, image: true, role: true },
   });
 

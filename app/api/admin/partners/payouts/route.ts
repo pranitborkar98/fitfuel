@@ -1,161 +1,232 @@
-// app/api/admin/partners/payouts/route.ts
-// Phase 17C-1 — Payout admin actions.
-//
-// GET  ?format=csv&status=PENDING  → CSV download of payouts (filterable)
-// GET  ?format=csv&period=2026-06  → CSV of one period
-// POST { action: "markPaid", id, paymentRef }      → set status=PAID, paidAt=now, paymentRef
-// POST { action: "markProcessing", id }            → set status=PROCESSING
-// POST { action: "markFailed", id }                → set status=FAILED
-//
-// Per Decision #122: cash payouts via CSV export → manual UPI in business banking → mark paid here.
+// Manual partner payout export and reconciliation. OWNER/ADMIN only.
 
-import { NextRequest, NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/admin-auth";
+import { sendNotification } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
-import { fireNotification } from "@/lib/notify";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import {
+  decryptPartnerSensitiveFields,
+  SensitiveDataConfigurationError,
+} from "@/lib/sensitive-data";
+import { readJson, readQuery } from "@/lib/validation/core";
+import type { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
-const db = prisma as any;
+const PAYOUT_STATUSES = ["PENDING", "PROCESSING", "PAID", "FAILED"] as const;
+const querySchema = z
+  .object({
+    format: z.enum(["json", "csv"]).default("json"),
+    status: z.enum(PAYOUT_STATUSES).optional(),
+    period: z.string().regex(/^20\d{2}-(0[1-9]|1[0-2])$/, "Use a YYYY-MM period.").optional(),
+  })
+  .strict();
+const actionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("markPaid"),
+    id: z.string().cuid(),
+    paymentRef: z.string().trim().min(3, "Payment reference is required.").max(200),
+  }).strict(),
+  z.object({ action: z.literal("markProcessing"), id: z.string().cuid(), paymentRef: z.string().optional() }).strict(),
+  z.object({ action: z.literal("markFailed"), id: z.string().cuid(), paymentRef: z.string().optional() }).strict(),
+]);
 
-function csvEscape(v: any): string {
-  if (v === null || v === undefined) return "";
-  const s = String(v);
-  if (s.includes(",") || s.includes("\"") || s.includes("\n")) {
-    return `"${s.replace(/"/g, "\"\"")}"`;
+function csvEscape(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  let text = String(value).replace(/\r?\n/g, " ");
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  if (text.includes(",") || text.includes("\"") || text.includes("\n")) {
+    return `"${text.replace(/"/g, '""')}"`;
   }
-  return s;
+  return text;
 }
 
 export async function GET(req: NextRequest) {
-  const me = await requireApiRole("partners");
-  if (!me) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireApiRole("partners");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const url = new URL(req.url);
-  const format = (url.searchParams.get("format") || "json").toLowerCase();
-  const status = url.searchParams.get("status") || undefined; // PENDING / PROCESSING / PAID / FAILED
-  const period = url.searchParams.get("period") || undefined; // YYYY-MM
+  const parsed = readQuery(req, querySchema);
+  if (!parsed.ok) return parsed.response;
+  const query = parsed.data;
+  const where: Prisma.PartnerPayoutWhereInput = {
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.period ? { periodYearMonth: query.period } : {}),
+  };
 
-  const where: any = {};
-  if (status) where.status = status;
-  if (period) where.periodYearMonth = period;
-
-  const payouts = await db.partnerPayout.findMany({
+  const payouts = await prisma.partnerPayout.findMany({
     where,
     orderBy: [{ periodYearMonth: "desc" }, { createdAt: "desc" }],
+    take: 2_000,
     include: {
       partner: {
         select: {
-          id: true, code: true, name: true, type: true, rewardType: true,
-          contactEmail: true, contactPhone: true,
-          panNumber: true, bankAccountName: true, bankAccountNumber: true, bankIfsc: true,
+          id: true,
+          code: true,
+          name: true,
+          type: true,
+          rewardType: true,
+          contactEmail: true,
+          contactPhone: true,
+          panNumber: true,
+          bankAccountName: true,
+          bankAccountNumber: true,
+          bankIfsc: true,
         },
       },
     },
   });
 
-  if (format !== "csv") {
+  let readablePayouts;
+  try {
+    readablePayouts = payouts.map((payout) => ({
+      ...payout,
+      partner: decryptPartnerSensitiveFields(payout.partner),
+    }));
+  } catch (error: unknown) {
+    console.error("[admin/partners/payouts] could not decrypt payout data", error);
+    return NextResponse.json(
+      { error: error instanceof SensitiveDataConfigurationError ? "Payout data is not configured." : "Payout data could not be read." },
+      { status: 503 },
+    );
+  }
+
+  if (query.format === "json") {
     return NextResponse.json({
-      payouts: payouts.map((p: any) => ({
-        id: p.id,
-        partnerId: p.partnerId,
-        partnerName: p.partner?.name,
-        partnerCode: p.partner?.code,
-        partnerType: p.partner?.type,
-        rewardType: p.partner?.rewardType,
-        periodYearMonth: p.periodYearMonth,
-        amountRs: p.amountRs,
-        referralCount: p.referralCount,
-        status: p.status,
-        paidAt: p.paidAt,
-        paymentRef: p.paymentRef,
-        createdAt: p.createdAt,
-        contactEmail: p.partner?.contactEmail,
-        contactPhone: p.partner?.contactPhone,
-        bankAccountName: p.partner?.bankAccountName,
-        bankAccountNumber: p.partner?.bankAccountNumber,
-        bankIfsc: p.partner?.bankIfsc,
-        panNumber: p.partner?.panNumber,
+      payouts: readablePayouts.map((payout) => ({
+        id: payout.id,
+        partnerId: payout.partnerId,
+        partnerName: payout.partner.name,
+        partnerCode: payout.partner.code,
+        partnerType: payout.partner.type,
+        rewardType: payout.partner.rewardType,
+        periodYearMonth: payout.periodYearMonth,
+        amountRs: payout.amountRs,
+        referralCount: payout.referralCount,
+        status: payout.status,
+        paidAt: payout.paidAt,
+        paymentRef: payout.paymentRef,
+        createdAt: payout.createdAt,
+        contactEmail: payout.partner.contactEmail,
+        contactPhone: payout.partner.contactPhone,
+        bankAccountName: payout.partner.bankAccountName,
+        bankAccountNumber: payout.partner.bankAccountNumber,
+        bankIfsc: payout.partner.bankIfsc,
+        panNumber: payout.partner.panNumber,
       })),
     });
   }
 
-  // CSV
   const headers = [
     "PayoutId", "Period", "PartnerName", "PartnerCode", "PartnerType", "RewardType",
-    "AmountRs", "ReferralCount", "Status", "PaidAt", "PaymentRef",
-    "ContactEmail", "ContactPhone",
-    "BankHolderName", "BankAccountNumber", "BankIFSC", "PAN",
-    "CreatedAt",
+    "AmountRs", "ReferralCount", "Status", "PaidAt", "PaymentRef", "ContactEmail",
+    "ContactPhone", "BankHolderName", "BankAccountNumber", "BankIFSC", "PAN", "CreatedAt",
   ];
-  const rows = payouts.map((p: any) => [
-    p.id, p.periodYearMonth, p.partner?.name, p.partner?.code, p.partner?.type, p.partner?.rewardType,
-    p.amountRs, p.referralCount, p.status,
-    p.paidAt ? new Date(p.paidAt).toISOString() : "",
-    p.paymentRef || "",
-    p.partner?.contactEmail || "", p.partner?.contactPhone || "",
-    p.partner?.bankAccountName || "", p.partner?.bankAccountNumber || "", p.partner?.bankIfsc || "", p.partner?.panNumber || "",
-    p.createdAt ? new Date(p.createdAt).toISOString() : "",
+  const rows = readablePayouts.map((payout) => [
+    payout.id,
+    payout.periodYearMonth,
+    payout.partner.name,
+    payout.partner.code,
+    payout.partner.type,
+    payout.partner.rewardType,
+    payout.amountRs,
+    payout.referralCount,
+    payout.status,
+    payout.paidAt?.toISOString() || "",
+    payout.paymentRef || "",
+    payout.partner.contactEmail || "",
+    payout.partner.contactPhone || "",
+    payout.partner.bankAccountName || "",
+    payout.partner.bankAccountNumber || "",
+    payout.partner.bankIfsc || "",
+    payout.partner.panNumber || "",
+    payout.createdAt.toISOString(),
   ].map(csvEscape).join(","));
-
   const csv = [headers.join(","), ...rows].join("\n");
-  const filename = `fitfuel-payouts${period ? "-" + period : ""}${status ? "-" + status.toLowerCase() : ""}.csv`;
-
+  const filename = `fitfuel-payouts${query.period ? `-${query.period}` : ""}${query.status ? `-${query.status.toLowerCase()}` : ""}.csv`;
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
 
 export async function POST(req: NextRequest) {
-  const me = await requireApiRole("partners");
-  if (!me) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireApiRole("partners");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = await req.json().catch(() => ({}));
-  const action = String(body?.action || "");
-  const id = String(body?.id || "");
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const parsed = await readJson(req, actionSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
-  if (action === "markPaid") {
-    const paymentRef = body?.paymentRef ? String(body.paymentRef).slice(0, 200) : null;
-    const updated = await db.partnerPayout.update({
-      where: { id },
-      data: { status: "PAID", paidAt: new Date(), paymentRef },
-      include: { partner: { select: { ownerUserId: true, name: true } } },
+  try {
+    const payout = await prisma.partnerPayout.findUnique({
+      where: { id: body.id },
+      select: {
+        id: true,
+        status: true,
+        amountRs: true,
+        periodYearMonth: true,
+        partner: { select: { ownerUserId: true, name: true } },
+      },
     });
-
-    // Notify the partner-owner that their payout landed
-    if (updated.partner?.ownerUserId) {
-      fireNotification({
-        userId: updated.partner.ownerUserId,
-        templateKey: "partner_payout_paid",
-        vars: {
-          partnerName: updated.partner.name || "",
-          amountRs: String(updated.amountRs),
-          period: updated.periodYearMonth,
-          paymentRef: paymentRef || "(no reference)",
-        },
-      } as any);
+    if (!payout) return NextResponse.json({ error: "Payout not found." }, { status: 404 });
+    if (payout.status === "PAID") {
+      return NextResponse.json({ error: "A paid payout is final and cannot be changed." }, { status: 409 });
     }
-    return NextResponse.json({ ok: true, payout: updated });
-  }
 
-  if (action === "markProcessing") {
-    const updated = await db.partnerPayout.update({
-      where: { id },
-      data: { status: "PROCESSING" },
-    });
-    return NextResponse.json({ ok: true, payout: updated });
-  }
+    if (body.action === "markProcessing") {
+      if (payout.status !== "PENDING" && payout.status !== "FAILED") {
+        return NextResponse.json({ error: "Only pending or failed payouts can move to processing." }, { status: 409 });
+      }
+      const claimed = await prisma.partnerPayout.updateMany({
+        where: { id: body.id, status: { in: ["PENDING", "FAILED"] } },
+        data: { status: "PROCESSING", paidAt: null, paymentRef: null },
+      });
+      if (claimed.count !== 1) return NextResponse.json({ error: "Payout changed. Refresh and try again." }, { status: 409 });
+    } else if (body.action === "markFailed") {
+      if (payout.status !== "PROCESSING") {
+        return NextResponse.json({ error: "Only a processing payout can be marked failed." }, { status: 409 });
+      }
+      const claimed = await prisma.partnerPayout.updateMany({
+        where: { id: body.id, status: "PROCESSING" },
+        data: { status: "FAILED", paidAt: null, paymentRef: null },
+      });
+      if (claimed.count !== 1) return NextResponse.json({ error: "Payout changed. Refresh and try again." }, { status: 409 });
+    } else {
+      if (payout.status !== "PENDING" && payout.status !== "PROCESSING") {
+        return NextResponse.json({ error: "Only pending or processing payouts can be marked paid." }, { status: 409 });
+      }
+      const claimed = await prisma.partnerPayout.updateMany({
+        where: { id: body.id, status: { in: ["PENDING", "PROCESSING"] } },
+        data: { status: "PAID", paidAt: new Date(), paymentRef: body.paymentRef },
+      });
+      if (claimed.count !== 1) return NextResponse.json({ error: "Payout changed. Refresh and try again." }, { status: 409 });
 
-  if (action === "markFailed") {
-    const updated = await db.partnerPayout.update({
-      where: { id },
-      data: { status: "FAILED" },
-    });
-    return NextResponse.json({ ok: true, payout: updated });
-  }
+      if (payout.partner.ownerUserId) {
+        await sendNotification({
+          userId: payout.partner.ownerUserId,
+          templateKey: "partner_payout_paid",
+          vars: {
+            partnerName: payout.partner.name,
+            amountRs: String(payout.amountRs),
+            period: payout.periodYearMonth,
+            paymentRef: body.paymentRef,
+          },
+        }).catch((error: unknown) => console.error("[admin/partners/payouts] paid notification failed", error));
+      }
+    }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    const updated = await prisma.partnerPayout.findUniqueOrThrow({ where: { id: body.id } });
+    return NextResponse.json({ ok: true, payout: updated });
+  } catch (error: unknown) {
+    console.error("[admin/partners/payouts] update failed", error);
+    return NextResponse.json({ error: "Payout update failed." }, { status: 500 });
+  }
 }

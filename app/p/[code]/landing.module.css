@@ -1,0 +1,72 @@
+.page { min-height: 100vh; background: #070707; color: #f7f7f5; }
+.hero { width: min(1200px, calc(100% - 32px)); display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr); gap: clamp(30px, 6vw, 78px); align-items: center; margin: 0 auto; padding: clamp(56px, 8vw, 100px) 0 56px; }
+.heroCopy h1 { max-width: 12ch; margin: 9px 0 20px; font-size: clamp(2.7rem, 6.4vw, 5.7rem); line-height: 0.98; letter-spacing: -0.055em; }
+.eyebrow { margin: 0; color: #a3e635; font-size: 0.8rem; font-weight: 760; }
+.deck { max-width: 640px; margin: 0; color: #b5b5af; font-size: clamp(1rem, 1.8vw, 1.15rem); line-height: 1.65; }
+.offerLine { width: fit-content; display: flex; align-items: baseline; gap: 10px; border: 1px solid #4c6126; border-radius: 14px; margin-top: 26px; background: #171d10; padding: 11px 14px; }
+.offerLine span { color: #d9f99d; font-size: 1.25rem; font-weight: 820; }
+.offerLine p { margin: 0; color: #a8a29e; font-size: 0.81rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.primaryAction, .secondaryAction { min-height: 48px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid #84cc16; border-radius: 12px; padding: 10px 18px; font-size: 0.88rem; font-weight: 760; text-decoration: none; }
+.primaryAction { background: #84cc16; color: #101408; }
+.primaryAction:hover { background: #a3e635; }
+.secondaryAction { border-color: #494943; background: #131311; color: #e7e5e4; }
+.offerNote { display: flex; align-items: flex-start; gap: 8px; max-width: 570px; margin: 15px 0 0; color: #85857f; font-size: 0.73rem; line-height: 1.5; }
+.offerNote svg { flex: 0 0 auto; margin-top: 2px; color: #a3e635; }
+.foodVisual { position: relative; min-height: 590px; overflow: hidden; border: 1px solid #30302b; border-radius: 26px; background: #11110f; }
+.foodVisual > img { object-fit: cover; }
+.foodVisual::after { position: absolute; inset: 0; content: ""; background: linear-gradient(180deg, transparent 48%, rgba(7,7,7,0.74)); pointer-events: none; }
+.visualCard { position: absolute; right: 18px; bottom: 18px; left: 18px; z-index: 1; display: flex; align-items: center; gap: 11px; border: 1px solid rgba(255,255,255,0.19); border-radius: 14px; background: rgba(7,7,7,0.78); padding: 13px 14px; backdrop-filter: blur(12px); }
+.visualCard svg { flex: 0 0 auto; color: #a3e635; }
+.visualCard span { display: grid; gap: 3px; color: #b5b5af; font-size: 0.73rem; line-height: 1.4; }
+.visualCard strong { color: #f7f7f5; font-size: 0.84rem; }
+.proofBar { width: min(1200px, calc(100% - 32px)); display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid #30302b; border-radius: 16px; margin: 0 auto; background: #131311; }
+.proofBar div { min-height: 94px; display: grid; align-content: center; gap: 5px; padding: 15px 18px; }
+.proofBar div + div { border-left: 1px solid #30302b; }
+.proofBar strong { font-size: 0.88rem; }
+.proofBar span { color: #85857f; font-size: 0.75rem; line-height: 1.45; }
+.partnerSection, .stepsSection, .close { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: clamp(70px, 9vw, 110px) 0; }
+.partnerSection { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr); gap: clamp(30px, 7vw, 80px); align-items: center; }
+.partnerIntro h2, .sectionHead h2, .close h2 { max-width: 18ch; margin: 8px 0 14px; font-size: clamp(1.8rem, 4vw, 3.25rem); line-height: 1.08; letter-spacing: -0.04em; }
+.partnerIntro > p:last-child, .close > div > p:last-child { max-width: 660px; margin: 0; color: #9a9a94; font-size: 0.91rem; line-height: 1.65; }
+.partnerCard { display: flex; align-items: flex-start; gap: 16px; border: 1px solid #30302b; border-radius: 17px; background: #131311; padding: 18px; }
+.partnerPhoto, .partnerInitial { width: 64px; height: 64px; flex: 0 0 auto; border-radius: 16px; }
+.partnerPhoto { background-position: center; background-size: cover; }
+.partnerInitial { display: grid; place-items: center; background: #283518; color: #d9f99d; font-size: 1.5rem; font-weight: 820; }
+.partnerCard > div { min-width: 0; display: grid; gap: 4px; }
+.partnerCard strong { font-size: 0.96rem; }
+.partnerCard small { color: #a3e635; font-size: 0.73rem; }
+.partnerCard ul { display: grid; gap: 5px; margin: 10px 0 0; padding: 0; list-style: none; }
+.partnerCard li { color: #8f8f89; font-size: 0.73rem; line-height: 1.4; }
+.stepsSection { border-top: 1px solid #252522; }
+.sectionHead { display: grid; gap: 2px; }
+.stepsSection ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0 0; padding: 0; list-style: none; }
+.stepsSection li { min-height: 210px; box-sizing: border-box; display: grid; align-content: start; gap: 24px; border: 1px solid #30302b; border-radius: 17px; background: #131311; padding: 20px; }
+.stepsSection li > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: #253216; color: #d9f99d; }
+.stepsSection li > div { display: grid; gap: 8px; }
+.stepsSection li strong { font-size: 0.94rem; }
+.stepsSection li p { margin: 0; color: #8f8f89; font-size: 0.8rem; line-height: 1.55; }
+.close { display: flex; align-items: flex-end; justify-content: space-between; gap: 35px; border-top: 1px solid #252522; }
+.close .actions { flex: 0 0 auto; }
+.primaryAction:focus-visible, .secondaryAction:focus-visible { outline: 3px solid rgba(163,230,53,0.65); outline-offset: 3px; }
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; padding-top: 46px; }
+  .foodVisual { min-height: min(620px, 110vw); }
+  .partnerSection { grid-template-columns: 1fr; }
+  .stepsSection ol { grid-template-columns: 1fr; }
+  .stepsSection li { min-height: 0; }
+  .close { align-items: flex-start; flex-direction: column; }
+  .close .actions { flex: auto; }
+}
+@media (max-width: 560px) {
+  .hero { width: min(100% - 24px, 1200px); }
+  .heroCopy h1 { font-size: clamp(2.45rem, 13vw, 4rem); }
+  .actions { display: grid; }
+  .actions a { width: 100%; }
+  .proofBar { grid-template-columns: 1fr; }
+  .proofBar div { min-height: 80px; }
+  .proofBar div + div { border-top: 1px solid #30302b; border-left: 0; }
+  .foodVisual { border-radius: 19px; }
+  .offerLine { align-items: flex-start; flex-direction: column; gap: 3px; }
+}
+@media (prefers-reduced-motion: reduce) { .primaryAction, .secondaryAction { scroll-behavior: auto; } }

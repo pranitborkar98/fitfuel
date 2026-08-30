@@ -67,51 +67,48 @@ export const C = {
    Android, not taste, so it is baked into the helpers rather than trusted to
    each call site. */
 
-export const MIN_TYPE_PX = 12;
+export const MIN_TYPE_PX = 13;
 
 /** The one screen title. Newsreader 600 at 24px - app scale, not editorial:
  *  the marketing hero is 52px and must not appear on these screens. */
 export const screen = (extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: DISPLAY, fontWeight: 600, fontSize: 24, lineHeight: 1.15,
+  fontFamily: DISPLAY, fontWeight: 600, fontSize: "clamp(28px, 3vw, 36px)", lineHeight: 1.08,
   letterSpacing: "-0.02em", textTransform: "none", color: C.ink,
   margin: 0, ...extra,
 });
 
 /** A card or block heading. Newsreader 600 at 17px. */
 export const section = (extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: DISPLAY, fontWeight: 600, fontSize: 17, lineHeight: 1.25,
+  fontFamily: DISPLAY, fontWeight: 600, fontSize: 19, lineHeight: 1.25,
   letterSpacing: "-0.012em", textTransform: "none", color: C.ink,
   margin: 0, ...extra,
 });
 
 /** Body / row copy. */
 export const body = (size = 14, extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: SANS, fontSize: Math.max(size, MIN_TYPE_PX), lineHeight: 1.55,
+  fontFamily: SANS, fontSize: Math.max(size, 14), lineHeight: 1.6,
   color: C.mute, margin: 0, ...extra,
 });
 
-/** A small kicker. Uppercase SURVIVES here - AGENTS.md rejects uppercase
- *  display type, not an 11-12px label, and the homepage keeps its own at
- *  0.12em. What is gone is 0.18em, which at 12px is a shout rather than a
- *  label, and the mono face: mono is the voice of NUMBERS on this site, and
- *  a word is not one. */
+/** Supporting copy and compact metadata. It stays sentence case and uses the
+ * body face; app labels are instructions, not instrument-panel captions. */
 export const label = (size = 12, extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: SANS, fontWeight: 700, fontSize: Math.max(size, MIN_TYPE_PX),
-  letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim, ...extra,
+  fontFamily: SANS, fontWeight: 600, fontSize: Math.max(size, MIN_TYPE_PX),
+  lineHeight: 1.45, letterSpacing: 0, textTransform: "none", color: C.dim, ...extra,
 });
 
-/** Any number that sits in a column. Tabular so digits do not shift. */
+/** Any number that sits in a column. Tabular digits without a monospace face,
+ * so measurements align without making the whole product feel financial. */
 export const num = (size = 12, extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: MONO, fontWeight: 700, fontSize: Math.max(size, MIN_TYPE_PX),
+  fontFamily: SANS, fontWeight: 650, fontSize: Math.max(size, MIN_TYPE_PX),
   fontVariantNumeric: "tabular-nums", color: C.ink, ...extra,
 });
 
-/** The number being reported. MONO, matching num() directly above it and
- *  every figure on the marketing half - a column of these has to line up, and
- *  lining up is the one thing condensed 900 could not do. */
+/** The number being reported. Large, calm and proportional, with tabular
+ * digits for stability as live values change. */
 export const figure = (size = 44, extra: CSSProperties = {}): CSSProperties => ({
-  fontFamily: MONO, fontWeight: 700, fontSize: size, lineHeight: 1,
-  letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: C.ink,
+  fontFamily: SANS, fontWeight: 700, fontSize: size, lineHeight: 1,
+  letterSpacing: "-0.035em", fontVariantNumeric: "tabular-nums", color: C.ink,
   ...extra,
 });
 
@@ -168,7 +165,7 @@ export const ghostBtn = (on = false, extra: CSSProperties = {}): CSSProperties =
    Wider than the marketing measure (1180) because these screens are dense and
    two-column at desktop. */
 export const APP_MAX = 1280;
-export const SIDEBAR_W = 236;
+export const SIDEBAR_W = 252;
 export const TABBAR_H = 60;
 /** The width at which the sidebar replaces the bottom tab bar. */
 export const NAV_BREAK = 1024;

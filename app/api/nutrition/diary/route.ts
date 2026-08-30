@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { parseDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { readJson, readQuery } from "@/lib/validation/core";
 import { diaryQuerySchema, diaryPostSchema } from "@/lib/validation/schemas";
 
@@ -18,8 +19,8 @@ export async function GET(req: NextRequest) {
   const q = readQuery(req, diaryQuerySchema);
   if (!q.ok) return q.response;
 
-  const date = q.data.date ? new Date(q.data.date) : new Date();
-  date.setUTCHours(0, 0, 0, 0);
+  const date = q.data.date ? parseDateOnly(q.data.date) : todayIndiaDate();
+  if (!date) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
 
   const [entries, mealTypes] = await Promise.all([
     prisma.foodEntry.findMany({
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   const totals = entries.reduce(
-    (acc: any, e: any) => ({
+    (acc, e) => ({
       calories: acc.calories + e.calories,
       protein:  acc.protein  + e.protein,
       carbs:    acc.carbs    + e.carbs,
@@ -54,16 +55,28 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, diaryPostSchema);
   if (!parsed.ok) return parsed.response;
-  const { foodItemId, mealTypeId, date, quantity, notes } = parsed.data as any;
+  const { foodItemId, mealTypeId, date, quantity, notes } = parsed.data;
 
-  const food = await prisma.foodItem.findUnique({ where: { id: foodItemId } });
+  const [food, mealType] = await Promise.all([
+    prisma.foodItem.findFirst({
+      where: {
+        id: foodItemId,
+        OR: [{ userId: null }, { userId: session.user.id }],
+      },
+    }),
+    prisma.mealType.findUnique({ where: { id: mealTypeId }, select: { id: true } }),
+  ]);
   if (!food) return NextResponse.json({ error: "Food not found" }, { status: 404 });
+  if (!mealType) return NextResponse.json({ error: "Meal type not found" }, { status: 404 });
 
   const qty = Number(quantity);
   const f = qty / 100;
 
-  const entryDate = new Date(date);
-  entryDate.setUTCHours(0, 0, 0, 0);
+  const entryDate = parseDateOnly(date);
+  if (!entryDate) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  if (entryDate.getTime() > todayIndiaDate().getTime()) {
+    return NextResponse.json({ error: "Future diary entries are not allowed" }, { status: 400 });
+  }
 
   const entry = await prisma.foodEntry.create({
     data: {

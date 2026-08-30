@@ -32,13 +32,19 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, metricsPostSchema);
   if (!parsed.ok) return parsed.response;
-  const body = parsed.data as any;
+  const body = parsed.data;
 
   const {
     weight, bmi, bodyFatRate, fatFreeWeight, subcutaneousFat,
     visceralFat, bodyWater, skeletalMuscle, muscleMass, boneMass,
     protein, bmr, bodyAge, recordedAt,
   } = body;
+
+  const measuredAt = recordedAt ? new Date(recordedAt) : new Date();
+  const earliest = Date.UTC(2000, 0, 1);
+  if (!Number.isFinite(measuredAt.getTime()) || measuredAt.getTime() < earliest || measuredAt.getTime() > Date.now() + 5 * 60_000) {
+    return NextResponse.json({ error: "Measurement date is invalid." }, { status: 400 });
+  }
 
   const extraFields: Record<string, number> = {};
   if (fatFreeWeight   != null) extraFields.fatFreeWeight   = fatFreeWeight;
@@ -63,7 +69,7 @@ export async function POST(req: NextRequest) {
       proteinPct:  protein       ?? null,
       source:      body.source   ?? "manual",
       notes:       notesJson,
-      measuredAt:  recordedAt ? new Date(recordedAt) : new Date(),
+      measuredAt,
     },
   });
 

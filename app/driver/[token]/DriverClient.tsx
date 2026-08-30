@@ -1,176 +1,299 @@
 "use client";
 
-// app/driver/[token]/DriverClient.tsx
-// Phase 10 — mobile-first driver delivery list. Big tap targets (used at the doorstep).
-
+import { Check, CircleAlert, MapPin, Phone, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
+import styles from "./driver.module.css";
 
-const T = {
-  bg: "#080808",
-  card: "#101010",
-  border: "#222",
-  text: "#ffffff",
-  textSecond: "#bbbbbb",
-  textMuted: "#888888",
-  accent: "#84cc16",
-  red: "#ef4444",
-  amber: "#f59e0b",
-};
+type DeliveryStatus =
+  | "PREPARING"
+  | "PACKED"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "FAILED_DELIVERY";
 
 type Delivery = {
   id: string;
-  status: "PREPARING" | "PACKED" | "OUT_FOR_DELIVERY" | "DELIVERED" | "FAILED_DELIVERY";
+  status: DeliveryStatus;
   mealsIncluded: string[];
   deliveredAt: string | null;
   customerConfirmedAt: string | null;
   customerIssueNote: string | null;
   trackingNotes: string | null;
+  deliveryWindow: "MORNING" | "EVENING" | null;
   order: {
     orderNumber: string;
+    totalRs: number;
+    paymentMethod: "PAYU" | "CASH_ON_DELIVERY";
+    paymentStatus: "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED";
     user: { name: string | null; email: string | null; phone: string | null };
     address: {
-      line1: string; line2: string | null; area: string;
-      city: string; pincode: string; landmark: string | null;
+      line1: string;
+      line2: string | null;
+      area: string;
+      city: string;
+      pincode: string;
+      landmark: string | null;
     } | null;
   };
 };
 
-const STATUS_STYLE: Record<Delivery["status"], { label: string; color: string }> = {
-  PREPARING: { label: "Preparing", color: T.textMuted },
-  PACKED: { label: "Packed", color: T.textMuted },
-  OUT_FOR_DELIVERY: { label: "Out for delivery", color: T.amber },
-  DELIVERED: { label: "Delivered ✓", color: T.accent },
-  FAILED_DELIVERY: { label: "Not delivered", color: T.red },
+const STATUS: Record<DeliveryStatus, { label: string; tone: string }> = {
+  PREPARING: { label: "Kitchen is preparing", tone: styles.neutral },
+  PACKED: { label: "Packed", tone: styles.neutral },
+  OUT_FOR_DELIVERY: { label: "Ready for you", tone: styles.live },
+  DELIVERED: { label: "Delivered", tone: styles.done },
+  FAILED_DELIVERY: { label: "Not delivered", tone: styles.failed },
 };
+
+function parseError(value: unknown): string {
+  if (value && typeof value === "object" && "error" in value && typeof value.error === "string") {
+    return value.error;
+  }
+  return "That did not go through. Please try again.";
+}
 
 export default function DriverClient({ token, driverName }: { token: string; driverName: string }) {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [failingId, setFailingId] = useState<string | null>(null);
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    fetch(`/api/driver/${token}/deliveries`)
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d.deliveries)) setDeliveries(d.deliveries); })
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+    fetch(`/api/driver/${token}/deliveries`, { signal: controller.signal })
+      .then(async (response) => {
+        const data: unknown = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(parseError(data));
+        if (!data || typeof data !== "object" || !("deliveries" in data) || !Array.isArray(data.deliveries)) {
+          throw new Error("Today’s route could not be loaded.");
+        }
+        setDeliveries(data.deliveries as Delivery[]);
+        setLoadError(null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setLoadError(error instanceof Error ? error.message : "Today’s route could not be loaded.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [token]);
 
-  async function mark(deliveryId: string, result: "delivered" | "failed", noteText?: string) {
-    setBusyId(deliveryId);
+  async function mark(delivery: Delivery, result: "delivered" | "failed", noteText?: string) {
+    const isCod = delivery.order.paymentMethod === "CASH_ON_DELIVERY" && delivery.order.paymentStatus !== "SUCCESS";
+    if (
+      result === "delivered" &&
+      isCod &&
+      !window.confirm(
+        `Confirm the meals were handed over and ₹${delivery.order.totalRs.toLocaleString("en-IN")} was collected in cash.`,
+      )
+    ) return;
+
+    setBusyId(delivery.id);
+    setActionError(null);
     try {
-      const res = await fetch(`/api/driver/${token}/deliver`, {
+      const response = await fetch(`/api/driver/${token}/deliver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deliveryId, result, note: noteText }),
+        body: JSON.stringify({ deliveryId: delivery.id, result, note: noteText }),
       });
-      if (res.ok) {
-        const { delivery } = await res.json();
-        setDeliveries(prev =>
-          prev.map(d =>
-            d.id === deliveryId
-              ? { ...d, status: delivery.status, deliveredAt: delivery.deliveredAt, trackingNotes: noteText ?? d.trackingNotes }
-              : d
-          )
-        );
-        setFailingId(null);
-        setNote("");
+      const data: unknown = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(parseError(data));
+      if (!data || typeof data !== "object" || !("delivery" in data)) {
+        throw new Error("The stop changed but could not be refreshed.");
       }
+      const updated = data.delivery as Pick<Delivery, "status" | "deliveredAt" | "trackingNotes">;
+      setDeliveries((previous) =>
+        previous.map((item) =>
+          item.id === delivery.id
+            ? {
+                ...item,
+                status: updated.status,
+                deliveredAt: updated.deliveredAt,
+                trackingNotes: updated.trackingNotes,
+                order: {
+                  ...item.order,
+                  paymentStatus: isCod && result === "delivered" ? "SUCCESS" : item.order.paymentStatus,
+                },
+              }
+            : item,
+        ),
+      );
+      setFailingId(null);
+      setNote("");
+    } catch (error: unknown) {
+      setActionError(error instanceof Error ? error.message : "That did not go through. Please try again.");
     } finally {
       setBusyId(null);
     }
   }
 
-  const pending = deliveries.filter(d => d.status !== "DELIVERED" && d.status !== "FAILED_DELIVERY").length;
+  const pending = deliveries.filter((delivery) => delivery.status === "OUT_FOR_DELIVERY").length;
+  const finished = deliveries.filter(
+    (delivery) => delivery.status === "DELIVERED" || delivery.status === "FAILED_DELIVERY",
+  ).length;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "var(--font-archivo), sans-serif", padding: "20px 14px 60px", maxWidth: 560, margin: "0 auto" }}>
-      <div style={{ marginBottom: 18 }}>
-        <p style={{ fontSize: 12, color: T.accent, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>FitFuel · Driver</p>
-        <h1 style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>Hi {driverName}</h1>
-        <p style={{ fontSize: 13, color: T.textMuted, marginTop: 2 }}>
-          {loading ? "Loading today's stops…" : `${deliveries.length} stop${deliveries.length === 1 ? "" : "s"} today · ${pending} pending`}
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div className={styles.brand}><Truck size={18} aria-hidden="true" /> FitFuel delivery</div>
+        <h1>Hi {driverName}</h1>
+        <p>
+          {loading
+            ? "Loading today’s route…"
+            : `${deliveries.length} stop${deliveries.length === 1 ? "" : "s"} · ${pending} ready · ${finished} finished`}
         </p>
-      </div>
+      </header>
 
-      {!loading && deliveries.length === 0 && (
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 24, textAlign: "center", color: T.textMuted, fontSize: 14 }}>
-          No deliveries assigned to you today.
+      {loadError && (
+        <div className={styles.error} role="alert">
+          <CircleAlert size={18} aria-hidden="true" />
+          <span>{loadError}</span>
+        </div>
+      )}
+      {actionError && (
+        <div className={styles.error} role="alert" aria-live="polite">
+          <CircleAlert size={18} aria-hidden="true" />
+          <span>{actionError}</span>
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {deliveries.map(d => {
-          const st = STATUS_STYLE[d.status];
-          const a = d.order.address;
-          const done = d.status === "DELIVERED" || d.status === "FAILED_DELIVERY";
-          const customer = d.order.user.name ?? d.order.user.email ?? "Customer";
+      {loading && <div className={styles.empty}>Getting the latest stop status…</div>}
+      {!loading && !loadError && deliveries.length === 0 && (
+        <div className={styles.empty}>No stops are assigned to you today.</div>
+      )}
+
+      <div className={styles.list}>
+        {deliveries.map((delivery, index) => {
+          const status = STATUS[delivery.status];
+          const address = delivery.order.address;
+          const active = delivery.status === "OUT_FOR_DELIVERY";
+          const done = delivery.status === "DELIVERED" || delivery.status === "FAILED_DELIVERY";
+          const customer = delivery.order.user.name ?? delivery.order.user.email ?? "Customer";
+          const codDue =
+            delivery.order.paymentMethod === "CASH_ON_DELIVERY" && delivery.order.paymentStatus !== "SUCCESS";
+
           return (
-            <div key={d.id} style={{ background: T.card, border: `1px solid ${done ? T.border : "#2a3d10"}`, borderRadius: 0, padding: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: T.textMuted }}>{d.order.orderNumber}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: st.color }}>{st.label}</span>
+            <article key={delivery.id} className={`${styles.card} ${active ? styles.activeCard : ""}`}>
+              <div className={styles.cardTop}>
+                <span className={styles.stopNumber}>Stop {index + 1}</span>
+                <span className={`${styles.status} ${status.tone}`}>{status.label}</span>
+              </div>
+              <p className={styles.orderNumber}>{delivery.order.orderNumber}</p>
+              <h2>{customer}</h2>
+
+              {address && (
+                <div className={styles.address}>
+                  <MapPin size={18} aria-hidden="true" />
+                  <p>
+                    {address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.area}, {address.city} {address.pincode}
+                    {address.landmark ? <span>Near {address.landmark}</span> : null}
+                  </p>
+                </div>
+              )}
+
+              <div className={styles.meta}>
+                <span>{delivery.deliveryWindow === "EVENING" ? "Evening run" : "Morning run"}</span>
+                {delivery.mealsIncluded.length > 0 && <span>{delivery.mealsIncluded.join(", ")}</span>}
               </div>
 
-              <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{customer}</p>
-              {a && (
-                <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.45, marginBottom: 2 }}>
-                  {a.line1}{a.line2 ? `, ${a.line2}` : ""}, {a.area}, {a.city} {a.pincode}
-                  {a.landmark ? ` · near ${a.landmark}` : ""}
-                </p>
+              {codDue && (
+                <div className={styles.cod}>
+                  <span>Collect cash</span>
+                  <strong>₹{delivery.order.totalRs.toLocaleString("en-IN")}</strong>
+                </div>
               )}
 
-              {d.mealsIncluded?.length > 0 && (
-                <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 10 }}>{d.mealsIncluded.join(" · ")}</p>
+              {delivery.customerIssueNote && (
+                <div className={styles.customerIssue}>
+                  <CircleAlert size={18} aria-hidden="true" />
+                  <div><strong>Customer reported an issue</strong><p>{delivery.customerIssueNote}</p></div>
+                </div>
               )}
 
-              {d.order.user.phone && (
-                <a href={`tel:${d.order.user.phone}`} style={{ display: "inline-block", fontSize: 13, fontWeight: 600, color: T.accent, marginBottom: done ? 0 : 12, textDecoration: "none" }}>
-                  📞 Call {d.order.user.phone}
+              {delivery.order.user.phone && (
+                <a className={styles.call} href={`tel:${delivery.order.user.phone}`}>
+                  <Phone size={18} aria-hidden="true" /> Call customer
                 </a>
               )}
 
-              {!done && failingId !== d.id && (
-                <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-                  <button onClick={() => mark(d.id, "delivered")} disabled={busyId === d.id}
-                    style={{ flex: 1, background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "14px", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-                    {busyId === d.id ? "…" : "Delivered ✓"}
+              {active && failingId !== delivery.id && (
+                <div className={styles.actions}>
+                  <button
+                    type="button"
+                    className={styles.primary}
+                    onClick={() => mark(delivery, "delivered")}
+                    disabled={busyId === delivery.id}
+                  >
+                    <Check size={18} aria-hidden="true" />
+                    {busyId === delivery.id
+                      ? "Saving…"
+                      : codDue
+                        ? `Delivered · ₹${delivery.order.totalRs.toLocaleString("en-IN")} collected`
+                        : "Mark delivered"}
                   </button>
-                  <button onClick={() => { setFailingId(d.id); setNote(""); }} disabled={busyId === d.id}
-                    style={{ background: "transparent", color: T.textSecond, border: `1px solid ${T.border}`, borderRadius: 0, padding: "14px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-                    Couldn&apos;t deliver
+                  <button
+                    type="button"
+                    className={styles.secondary}
+                    onClick={() => { setFailingId(delivery.id); setNote(""); setActionError(null); }}
+                    disabled={busyId === delivery.id}
+                  >
+                    Couldn’t deliver
                   </button>
                 </div>
               )}
 
-              {!done && failingId === d.id && (
-                <div style={{ marginTop: 12 }}>
-                  <input value={note} onChange={e => setNote(e.target.value)} placeholder="What happened? (e.g. customer not home)"
-                    style={{ width: "100%", background: "#0a0a0a", border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px", fontSize: 13, color: T.text, marginBottom: 10, boxSizing: "border-box" }} />
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={() => mark(d.id, "failed", note || undefined)} disabled={busyId === d.id}
-                      style={{ flex: 1, background: T.red, color: "#fff", border: "none", borderRadius: 0, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                      {busyId === d.id ? "…" : "Confirm not delivered"}
+              {active && failingId === delivery.id && (
+                <div className={styles.failureForm}>
+                  <label htmlFor={`failure-${delivery.id}`}>Why could this not be delivered?</label>
+                  <textarea
+                    id={`failure-${delivery.id}`}
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    placeholder="For example: customer unavailable or address not found"
+                    maxLength={500}
+                    rows={3}
+                    autoFocus
+                  />
+                  <div className={styles.actions}>
+                    <button
+                      type="button"
+                      className={styles.danger}
+                      onClick={() => mark(delivery, "failed", note.trim())}
+                      disabled={busyId === delivery.id || note.trim().length < 3}
+                    >
+                      {busyId === delivery.id ? "Saving…" : "Confirm not delivered"}
                     </button>
-                    <button onClick={() => setFailingId(null)}
-                      style={{ background: "transparent", color: T.textMuted, border: `1px solid ${T.border}`, borderRadius: 0, padding: "13px 16px", fontSize: 14, cursor: "pointer" }}>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      onClick={() => { setFailingId(null); setNote(""); }}
+                      disabled={busyId === delivery.id}
+                    >
                       Cancel
                     </button>
                   </div>
                 </div>
               )}
 
-              {d.status === "DELIVERED" && d.customerConfirmedAt && (
-                <p style={{ fontSize: 12, color: T.accent, marginTop: 10 }}>Customer confirmed receipt ✓</p>
+              {!active && !done && <p className={styles.waiting}>Waiting for dispatch to release this stop.</p>}
+              {delivery.status === "DELIVERED" && (
+                <p className={styles.completion}>
+                  <Check size={17} aria-hidden="true" />
+                  {delivery.customerConfirmedAt ? "Delivered · customer confirmed" : "Delivered"}
+                </p>
               )}
-              {d.status === "FAILED_DELIVERY" && d.trackingNotes && (
-                <p style={{ fontSize: 12, color: T.textMuted, marginTop: 10 }}>Note: {d.trackingNotes}</p>
+              {delivery.status === "FAILED_DELIVERY" && (
+                <p className={styles.failureNote}><strong>Reason:</strong> {delivery.trackingNotes || "No reason recorded"}</p>
               )}
-            </div>
+            </article>
           );
         })}
       </div>
-    </div>
+    </main>
   );
 }

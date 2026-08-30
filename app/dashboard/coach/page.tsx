@@ -117,13 +117,13 @@ export default async function CoachPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
           <h1 style={screen()}>Coach</h1>
           <span style={label(12)}>
-            {review.source === "rules" ? "RULES ENGINE" : "MODEL"} ·{" "}
+            {review.source === "rules" ? "Rules engine" : "Model"} ·{" "}
             {new Date(review.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </span>
         </div>
         <p style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 900,
-                    fontSize: "clamp(1.6rem,4.2vw,2.4rem)", lineHeight: 0.98,
-                    letterSpacing: "-0.025em", textTransform: "uppercase",
+                    fontSize: "clamp(1.6rem,4.2vw,2.4rem)", lineHeight: 1.05,
+                    letterSpacing: "-0.025em", textTransform: "none",
                     color: C.ink, margin: 0, maxWidth: "22ch" }}>
           {review.headline}
         </p>
@@ -177,8 +177,8 @@ export default async function CoachPage() {
           <h2 style={section()}>{statusText}</h2>
           <span style={label(12)}>
             {r.actualRateKgPerWeek != null
-              ? `${r.actualRateKgPerWeek > 0 ? "+" : ""}${r.actualRateKgPerWeek.toFixed(2)} KG/WK MEASURED`
-              : "RATE NOT MEASURABLE YET"}
+              ? `${r.actualRateKgPerWeek > 0 ? "+" : ""}${r.actualRateKgPerWeek.toFixed(2)} kg/week measured`
+              : "Rate not measurable yet"}
           </span>
         </div>
 

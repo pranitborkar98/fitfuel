@@ -4,8 +4,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
 
 type Params = { params: Promise<{ id: string }> };
+
+const addExerciseSchema = z.object({
+  exerciseId: z.string().trim().min(1).max(60),
+  notes: z.string().trim().max(1000).nullable().optional(),
+}).strict();
+const removeExerciseSchema = z.object({ workoutExerciseId: z.string().trim().min(1).max(60) }).strict();
 
 export async function POST(req: NextRequest, { params }: Params) {
   const { id } = await params;
@@ -14,6 +23,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
 
     // Verify session ownership
     const workoutSession = await prisma.workoutSession.findFirst({
@@ -23,10 +34,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    const { exerciseId, notes } = await req.json();
-    if (!exerciseId) {
-      return NextResponse.json({ error: "exerciseId is required" }, { status: 400 });
-    }
+    const parsed = await readJson(req, addExerciseSchema);
+    if (!parsed.ok) return parsed.response;
+    const { exerciseId, notes } = parsed.data;
 
     // Verify exercise exists
     const exercise = await prisma.exercise.findUnique({ where: { id: exerciseId } });
@@ -38,6 +48,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     const count = await prisma.workoutExercise.count({
       where: { workoutSessionId: id },
     });
+    if (count >= 100) return NextResponse.json({ error: "Exercise limit reached" }, { status: 409 });
 
     const workoutExercise = await prisma.workoutExercise.create({
       data: {
@@ -77,8 +88,12 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
 
-    const { workoutExerciseId } = await req.json();
+    const parsed = await readJson(req, removeExerciseSchema);
+    if (!parsed.ok) return parsed.response;
+    const { workoutExerciseId } = parsed.data;
 
     // Verify ownership via session chain
     const workoutExercise = await prisma.workoutExercise.findFirst({

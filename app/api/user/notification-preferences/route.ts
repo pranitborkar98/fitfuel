@@ -10,23 +10,12 @@ import { notificationPrefsSchema } from "@/lib/validation/schemas";
 
 export const dynamic = "force-dynamic";
 
-const EDITABLE_FIELDS = [
-  "weeklyDigest",
-  "morningPush",
-  "eveningRecap",
-  "nudges",
-  "marketing",
-  "emailEnabled",
-  "whatsappEnabled",
-] as const;
-
 async function getOrCreatePrefs(userId: string) {
-  const db = prisma as any;
-  let prefs = await db.notificationPreference.findUnique({ where: { userId } });
-  if (!prefs) {
-    prefs = await db.notificationPreference.create({ data: { userId } });
-  }
-  return prefs;
+  return prisma.notificationPreference.upsert({
+    where: { userId },
+    create: { userId },
+    update: {},
+  });
 }
 
 export async function GET(req: NextRequest) {
@@ -49,15 +38,17 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, notificationPrefsSchema);
   if (!parsed.ok) return parsed.response;
-  const body = parsed.data as Record<string, boolean | undefined>;
-
-  const updateData: Record<string, boolean> = {};
-  for (const f of EDITABLE_FIELDS) {
-    if (typeof body[f] === "boolean") updateData[f] = body[f] as boolean;
-  }
-
-  const db = prisma as any;
-  const updated = await db.notificationPreference.upsert({
+  const body = parsed.data;
+  const updateData = {
+    ...(body.weeklyDigest !== undefined ? { weeklyDigest: body.weeklyDigest } : {}),
+    ...(body.morningPush !== undefined ? { morningPush: body.morningPush } : {}),
+    ...(body.eveningRecap !== undefined ? { eveningRecap: body.eveningRecap } : {}),
+    ...(body.nudges !== undefined ? { nudges: body.nudges } : {}),
+    ...(body.marketing !== undefined ? { marketing: body.marketing } : {}),
+    ...(body.emailEnabled !== undefined ? { emailEnabled: body.emailEnabled } : {}),
+    ...(body.whatsappEnabled !== undefined ? { whatsappEnabled: body.whatsappEnabled } : {}),
+  };
+  const updated = await prisma.notificationPreference.upsert({
     where: { userId: session.user.id },
     create: { userId: session.user.id, ...updateData },
     update: updateData,

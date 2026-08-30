@@ -6,14 +6,15 @@
 // session for.
 
 import { prisma } from "@/lib/prisma";
+import type { PartnerRewardType, PartnerStatus, PartnerType, PayoutStatus, ReferralStatus } from "@prisma/client";
 
 export type PartnerSummary = {
   id: string;
-  type: string;
-  status: string;
+  type: PartnerType;
+  status: PartnerStatus;
   name: string;
   code: string;
-  rewardType: string;
+  rewardType: PartnerRewardType;
   rewardValueRs: number;
   refereeDiscountRs: number;
   profilePhotoUrl: string | null;
@@ -25,9 +26,9 @@ export type Conversion = {
   refereeName: string;
   orderNumber: string | null;
   orderTotal: number;
-  rewardType: string;
+  rewardType: PartnerRewardType;
   rewardAmountRs: number;
-  status: string;
+  status: ReferralStatus;
   createdAt: string;
 };
 
@@ -36,7 +37,7 @@ export type Payout = {
   periodYearMonth: string;
   amountRs: number;
   referralCount: number;
-  status: string;
+  status: PayoutStatus;
   paidAt: string | null;
   paymentRef: string | null;
 };
@@ -45,7 +46,7 @@ export type PartnerConsole = {
   partner: PartnerSummary;
   stats: {
     totalConversions: number;
-    totalEarnedRs: number;
+    totalRewardValue: number;
     pendingPayoutRs: number;
     paidPayoutRs: number;
   };
@@ -85,37 +86,41 @@ export async function getPartnerConsole(userId: string): Promise<PartnerConsole 
     }),
   ]);
 
+  const earnedReferrals = referrals.filter(
+    (referral) => referral.status === "FIRST_ORDER" || referral.status === "REWARD_PAID",
+  );
+
   return {
     partner: {
       id: partner.id,
-      type: String(partner.type),
-      status: String(partner.status),
+      type: partner.type,
+      status: partner.status,
       name: partner.name,
       code: partner.code,
-      rewardType: String(partner.rewardType),
+      rewardType: partner.rewardType,
       rewardValueRs: partner.rewardValueRs,
       refereeDiscountRs: partner.refereeDiscountRs,
       profilePhotoUrl: partner.profilePhotoUrl,
       approvedAt: iso(partner.approvedAt),
     },
     stats: {
-      totalConversions: referrals.length,
-      totalEarnedRs: referrals.reduce((s, r) => s + (r.rewardAmountRs || 0), 0),
+      totalConversions: earnedReferrals.length,
+      totalRewardValue: earnedReferrals.reduce((sum, referral) => sum + referral.rewardAmountRs, 0),
       pendingPayoutRs: payouts
-        .filter((p) => p.status === "PENDING" || p.status === "PROCESSING")
-        .reduce((s, p) => s + (p.amountRs || 0), 0),
+        .filter((payout) => payout.status === "PENDING" || payout.status === "PROCESSING" || payout.status === "FAILED")
+        .reduce((sum, payout) => sum + payout.amountRs, 0),
       paidPayoutRs: payouts
-        .filter((p) => p.status === "PAID")
-        .reduce((s, p) => s + (p.amountRs || 0), 0),
+        .filter((payout) => payout.status === "PAID")
+        .reduce((sum, payout) => sum + payout.amountRs, 0),
     },
     referrals: referrals.map((r) => ({
       id: r.id,
       refereeName: r.refereeUser?.name || "A customer",
       orderNumber: r.refereeOrder?.orderNumber || null,
       orderTotal: r.refereeOrder?.totalRs || 0,
-      rewardType: String(r.rewardType),
+      rewardType: r.rewardType,
       rewardAmountRs: r.rewardAmountRs,
-      status: String(r.status),
+      status: r.status,
       createdAt: r.createdAt.toISOString(),
     })),
     payouts: payouts.map((p) => ({
@@ -123,7 +128,7 @@ export async function getPartnerConsole(userId: string): Promise<PartnerConsole 
       periodYearMonth: p.periodYearMonth,
       amountRs: p.amountRs,
       referralCount: p.referralCount,
-      status: String(p.status),
+      status: p.status,
       paidAt: iso(p.paidAt),
       paymentRef: p.paymentRef,
     })),

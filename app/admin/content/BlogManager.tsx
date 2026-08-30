@@ -2,14 +2,18 @@
 
 // app/admin/content/BlogManager.tsx
 import { useState } from "react";
-import { UI, Label, Text, Area, Select, Check, btn, contentApi } from "./ContentClient";
+import { UI, Label, Text, Area, Select, Check, btn, contentApi, type BlogRecord } from "./ContentClient";
 import ImageUpload from "@/components/ImageUpload";
 
 const CATEGORIES = ["Nutrition", "Training", "Recipes", "FitFuel News", "Guides"];
 
-type Post = any;
+type BlogForm = {
+  title: string; slug: string; excerpt: string; category: string; tags: string;
+  authorName: string; readMinutes: string; status: BlogRecord["status"];
+  isFeatured: boolean; coverImageUrl: string; contentHtml: string;
+};
 
-function blank() {
+function blank(): BlogForm {
   return {
     title: "",
     slug: "",
@@ -17,7 +21,7 @@ function blank() {
     category: "Guides",
     tags: "",
     authorName: "Team FitFuel",
-    readMinutes: 5,
+    readMinutes: "5",
     status: "PUBLISHED",
     isFeatured: false,
     coverImageUrl: "",
@@ -25,33 +29,33 @@ function blank() {
   };
 }
 
-function toForm(p: Post) {
+function toForm(post: BlogRecord): BlogForm {
   return {
-    title: p.title ?? "",
-    slug: p.slug ?? "",
-    excerpt: p.excerpt ?? "",
-    category: p.category ?? "Guides",
-    tags: Array.isArray(p.tags) ? p.tags.join(", ") : "",
-    authorName: p.authorName ?? "Team FitFuel",
-    readMinutes: p.readMinutes ?? 5,
-    status: p.status ?? "PUBLISHED",
-    isFeatured: !!p.isFeatured,
-    coverImageUrl: p.coverImageUrl ?? "",
-    contentHtml: p.contentHtml ?? "",
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    category: post.category,
+    tags: post.tags.join(", "),
+    authorName: post.authorName,
+    readMinutes: String(post.readMinutes),
+    status: post.status,
+    isFeatured: post.isFeatured,
+    coverImageUrl: post.coverImageUrl ?? "",
+    contentHtml: post.contentHtml,
   };
 }
 
-export default function BlogManager({ initial }: { initial: Post[] }) {
-  const [items, setItems] = useState<Post[]>(initial);
+export default function BlogManager({ initial }: { initial: BlogRecord[] }) {
+  const [items, setItems] = useState(initial);
   const [editing, setEditing] = useState<null | "new" | string>(null);
-  const [form, setForm] = useState<any>(blank());
+  const [form, setForm] = useState<BlogForm>(blank());
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   function startNew() { setForm(blank()); setEditing("new"); setErr(null); }
-  function startEdit(p: Post) { setForm(toForm(p)); setEditing(p.id); setErr(null); }
+  function startEdit(post: BlogRecord) { setForm(toForm(post)); setEditing(post.id); setErr(null); }
   function close() { setEditing(null); setErr(null); }
-  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  const set = <K extends keyof BlogForm>(key: K, value: BlogForm[K]) => setForm((current) => ({ ...current, [key]: value }));
 
   async function save() {
     setBusy(true); setErr(null);
@@ -59,19 +63,19 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
       const data = { ...form, tags: form.tags.split(",").map((t: string) => t.trim()).filter(Boolean) };
       const action = editing === "new" ? "create" : "update";
       const id = editing === "new" ? null : (editing as string);
-      const { record } = await contentApi("blog", action, id, data);
+      const { record } = await contentApi<{ record: BlogRecord }>("blog", action, id, data);
       setItems((prev) => action === "create" ? [record, ...prev] : prev.map((p) => (p.id === record.id ? record : p)));
       close();
-    } catch (e: any) { setErr(e?.message || "Save failed"); }
+    } catch (error: unknown) { setErr(error instanceof Error ? error.message : "Save failed"); }
     finally { setBusy(false); }
   }
 
-  async function remove(p: Post) {
-    if (!confirm(`Delete "${p.title}"? This can't be undone.`)) return;
+  async function remove(post: BlogRecord) {
+    if (!confirm(`Delete "${post.title}"? This can't be undone.`)) return;
     try {
-      await contentApi("blog", "delete", p.id, null);
-      setItems((prev) => prev.filter((x) => x.id !== p.id));
-    } catch (e: any) { alert(e?.message || "Delete failed"); }
+      await contentApi<{ ok: true }>("blog", "delete", post.id, null);
+      setItems((prev) => prev.filter((item) => item.id !== post.id));
+    } catch (error: unknown) { alert(error instanceof Error ? error.message : "Delete failed"); }
   }
 
   if (editing) {
@@ -100,7 +104,7 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
           <div><Label>Read minutes</Label><Text type="number" value={form.readMinutes} onChange={(e) => set("readMinutes", e.target.value)} /></div>
           <div>
             <Label>Status</Label>
-            <Select value={form.status} onChange={(e) => set("status", e.target.value)}>
+            <Select value={form.status} onChange={(e) => set("status", e.target.value as BlogForm["status"])}>
               <option value="PUBLISHED">Published</option>
               <option value="DRAFT">Draft</option>
             </Select>
@@ -121,7 +125,11 @@ export default function BlogManager({ initial }: { initial: Post[] }) {
           <Area rows={16} value={form.contentHtml} onChange={(e) => set("contentHtml", e.target.value)} placeholder="<p>Write in HTML: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;, &lt;a href&gt;…</p>" style={{ fontFamily: "ui-monospace, monospace", fontSize: 12.5 }} />
           <div style={{ border: `1px solid ${UI.border}`, borderRadius: 0, padding: "14px 16px", background: UI.soft, overflow: "auto", maxHeight: 380 }}>
             <div style={{ fontSize: 11, color: UI.muted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Live preview</div>
-            <div style={{ color: "#cfcfcf", fontSize: 14, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: form.contentHtml || "<p style='color:#666'>Nothing yet…</p>" }} />
+            <div style={{ color: "#cfcfcf", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              {form.contentHtml
+                ? form.contentHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+                : "Nothing yet…"}
+            </div>
           </div>
         </div>
 

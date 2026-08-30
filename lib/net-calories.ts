@@ -29,7 +29,8 @@ export async function getDailyCalorieBalance(
   // UserActivePlan.calorieTarget + proteinTarget are personalised overrides
   // (written by onboarding). Fall back to mealPlan averages if null.
   const activePlan = await prisma.userActivePlan.findFirst({
-    where: { userId, status: "active" },
+    where: { userId, status: "active", startDate: { lte: day }, endDate: { gte: day } },
+    orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
     select: {
       calorieTarget: true,
       proteinTarget: true,

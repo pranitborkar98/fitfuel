@@ -1,107 +1,86 @@
-// app/api/admin/supplements/clicks/route.ts
-// Phase 18-2 — Click analytics for the admin dashboard.
-//
-// GET ?days=7  → returns:
-//   {
-//     totalClicks, uniqueUsers, signedInClicks,
-//     topProducts: [{ supplementId, name, clicks }],
-//     topNetworks: [{ network, clicks }],
-//     dailyTrend:  [{ date: "2026-06-08", clicks: N }, ...]
-//   }
-
-import { NextRequest, NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-
-const db = prisma as any;
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { supplementClicksQuerySchema } from "@/lib/supplements-admin-validation";
+import { readQuery } from "@/lib/validation/core";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const me = await requireApiRole("supplements");
-  if (!me) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireApiRole("supplements");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const url = new URL(req.url);
-  const days = Math.max(1, Math.min(90, Number(url.searchParams.get("days") || 7)));
+  const parsed = readQuery(req, supplementClicksQuerySchema);
+  if (!parsed.ok) return parsed.response;
+  const days = parsed.data.days;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const where = { createdAt: { gte: since } };
 
-  const [
-    totalClicks,
-    signedInClicks,
-    uniqueUserSet,
-    topProductsRaw,
-    topNetworksRaw,
-    clicksForTrend,
-  ] = await Promise.all([
-    db.supplementClick.count({ where: { createdAt: { gte: since } } }),
-    db.supplementClick.count({ where: { createdAt: { gte: since }, userId: { not: null } } }),
-    db.supplementClick.findMany({
-      where: { createdAt: { gte: since }, userId: { not: null } },
-      distinct: ["userId"],
-      select: { userId: true },
-    }),
-    db.supplementClick.groupBy({
-      by: ["supplementId"],
-      where: { createdAt: { gte: since } },
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-      take: 15,
-    }),
-    db.supplementClick.groupBy({
-      by: ["network"],
-      where: { createdAt: { gte: since } },
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-    }),
-    db.supplementClick.findMany({
-      where: { createdAt: { gte: since } },
-      select: { createdAt: true },
-    }),
-  ]);
+  const [totalClicks, signedInClicks, uniqueUsers, topProductsRaw, topNetworksRaw, clicksForTrend] =
+    await Promise.all([
+      prisma.supplementClick.count({ where }),
+      prisma.supplementClick.count({ where: { ...where, userId: { not: null } } }),
+      prisma.supplementClick.findMany({
+        where: { ...where, userId: { not: null } },
+        distinct: ["userId"],
+        select: { userId: true },
+      }),
+      prisma.supplementClick.groupBy({
+        by: ["supplementId"],
+        where,
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 15,
+      }),
+      prisma.supplementClick.groupBy({
+        by: ["network"],
+        where,
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+      }),
+      prisma.supplementClick.findMany({ where, select: { createdAt: true } }),
+    ]);
 
-  // Look up names for top products
-  const topIds = topProductsRaw.map((r: any) => r.supplementId);
-  const topSupps = topIds.length
-    ? await db.supplement.findMany({
+  const topIds = topProductsRaw.map((row) => row.supplementId);
+  const topSupplements = topIds.length
+    ? await prisma.supplement.findMany({
         where: { id: { in: topIds } },
         select: { id: true, name: true, slug: true, emoji: true, accentColor: true },
       })
     : [];
-  const suppById: Record<string, any> = {};
-  topSupps.forEach((s: any) => (suppById[s.id] = s));
+  const supplementById = new Map(topSupplements.map((supplement) => [supplement.id, supplement]));
+  const topProducts = topProductsRaw.map((row) => {
+    const supplement = supplementById.get(row.supplementId);
+    return {
+      supplementId: row.supplementId,
+      name: supplement?.name ?? "Removed supplement",
+      slug: supplement?.slug ?? null,
+      emoji: supplement?.emoji ?? null,
+      accentColor: supplement?.accentColor ?? null,
+      clicks: row._count.id,
+    };
+  });
+  const topNetworks = topNetworksRaw.map((row) => ({ network: row.network, clicks: row._count.id }));
 
-  const topProducts = topProductsRaw.map((r: any) => ({
-    supplementId: r.supplementId,
-    name: suppById[r.supplementId]?.name || "(deleted)",
-    slug: suppById[r.supplementId]?.slug,
-    emoji: suppById[r.supplementId]?.emoji,
-    accentColor: suppById[r.supplementId]?.accentColor,
-    clicks: r._count.id,
-  }));
-
-  const topNetworks = topNetworksRaw.map((r: any) => ({
-    network: r.network,
-    clicks: r._count.id,
-  }));
-
-  // Daily trend
-  const dailyBuckets: Record<string, number> = {};
-  for (let i = 0; i < days; i++) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-    const key = d.toISOString().slice(0, 10);
-    dailyBuckets[key] = 0;
+  const dailyBuckets = new Map<string, number>();
+  for (let i = 0; i < days; i += 1) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    dailyBuckets.set(date, 0);
   }
-  for (const c of clicksForTrend) {
-    const key = new Date(c.createdAt).toISOString().slice(0, 10);
-    if (key in dailyBuckets) dailyBuckets[key]++;
+  for (const click of clicksForTrend) {
+    const date = click.createdAt.toISOString().slice(0, 10);
+    if (dailyBuckets.has(date)) dailyBuckets.set(date, (dailyBuckets.get(date) ?? 0) + 1);
   }
-  const dailyTrend = Object.entries(dailyBuckets)
-    .sort(([a], [b]) => a.localeCompare(b))
+  const dailyTrend = [...dailyBuckets.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
     .map(([date, clicks]) => ({ date, clicks }));
 
   return NextResponse.json({
     days,
     totalClicks,
     signedInClicks,
-    uniqueUsers: uniqueUserSet.length,
+    uniqueUsers: uniqueUsers.length,
     topProducts,
     topNetworks,
     dailyTrend,

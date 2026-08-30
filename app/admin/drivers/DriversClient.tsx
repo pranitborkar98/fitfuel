@@ -60,7 +60,11 @@ export default function DriversClient({ initialDrivers }: { initialDrivers: Driv
       body: JSON.stringify({ isActive: !isActive }),
     });
     if (res.ok) {
-      setDrivers(prev => prev.map(d => (d.id === id ? { ...d, isActive: !isActive } : d)));
+      const { driver } = await res.json();
+      setDrivers(prev => prev.map(d => (d.id === id ? { ...d, ...driver, _count: d._count } : d)));
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "Couldn't update driver access.");
     }
   }
 

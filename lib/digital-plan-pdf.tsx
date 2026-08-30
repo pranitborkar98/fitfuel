@@ -231,7 +231,7 @@ function CalorieBars({ p }: { p: PersonalStats }) {
   const maint = p.maintenanceCalories;
   const max = Math.max(maint ?? 0, p.calorieTarget, 1);
   const W = 200;
-  const bar = (val: number, color: string) => Math.max((val / max) * W, 4);
+  const bar = (value: number) => Math.max((value / max) * W, 4);
   return (
     <View style={s.vizCard}>
       <Text style={s.vizTitle}>Your energy target</Text>
@@ -239,7 +239,7 @@ function CalorieBars({ p }: { p: PersonalStats }) {
         <View style={{ marginBottom: 8 }}>
           <Text style={{ fontSize: 8, color: DIM, marginBottom: 3 }}>Maintenance (TDEE)</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View style={{ width: bar(maint, MUTE), height: 12, backgroundColor: "#3f3f46", borderRadius: 3, marginRight: 6 }} />
+            <View style={{ width: bar(maint), height: 12, backgroundColor: "#3f3f46", borderRadius: 3, marginRight: 6 }} />
             <Text style={{ fontSize: 9, color: SUBTLE, fontFamily: "Helvetica-Bold" }}>{maint}</Text>
           </View>
         </View>
@@ -247,7 +247,7 @@ function CalorieBars({ p }: { p: PersonalStats }) {
       <View>
         <Text style={{ fontSize: 8, color: DIM, marginBottom: 3 }}>Plan target</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View style={{ width: bar(p.calorieTarget, LIME), height: 12, backgroundColor: LIME, borderRadius: 3, marginRight: 6 }} />
+          <View style={{ width: bar(p.calorieTarget), height: 12, backgroundColor: LIME, borderRadius: 3, marginRight: 6 }} />
           <Text style={{ fontSize: 9, color: TEXT, fontFamily: "Helvetica-Bold" }}>{p.calorieTarget}</Text>
         </View>
       </View>
@@ -324,7 +324,7 @@ export function DigitalPlanDocument(
   const dayCount = data.days.length;
   const mealsPerDay = data.days[0]?.meals.length ?? 4;
   const diet = data.dietVariant.replace("_", "-");
-  const hello = person?.firstName ? `${person.firstName}, here's` : "Here's";
+  const hello = person?.firstName ? `${person.firstName}, here’s` : "Here’s";
 
   const byCat = new Map<string, typeof data.grocery>();
   for (const g of data.grocery) { const c = g.category ?? "Other"; (byCat.get(c) ?? byCat.set(c, []).get(c)!).push(g); }
@@ -391,7 +391,7 @@ export function DigitalPlanDocument(
             </View>
           ) : null}
 
-          <Prompt>Weigh in weekly and log each meal in your FitFuel dashboard — that's what powers your progress charts and keeps these numbers honest.</Prompt>
+          <Prompt>Weigh in weekly and log each meal in your FitFuel dashboard — that’s what powers your progress charts and keeps these numbers honest.</Prompt>
           <Footer plan={data.planName} />
         </Page>
       ) : null}

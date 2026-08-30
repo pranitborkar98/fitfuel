@@ -1,119 +1,124 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/payments/payu/success/route.ts
 // 16A: order_confirmed + staff_new_order notifications
 // 17A: processReferralReward after order CONFIRMED
-// 17C-2: commit credit spend after CONFIRMED (one-shot per order — protected
-//        by the existing CONFIRMED early-return guard above)
+// 17C-2: idempotently create purchased access and commercial accounting.
 
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { activateDigitalPlan } from "@/lib/activate-digital-plan";
-import { fireNotification, notifyStaffByRoles } from "@/lib/notify";
-import { processReferralReward, recordCreditChange } from "@/lib/partners";
-import { resolvePurchasedPlan } from "@/lib/resolve-purchased-plan";
-import { firstDeliveryDateFor } from "@/lib/order-cutoff";
+import { notifyStaffByRoles, sendNotification } from "@/lib/notify";
+import { getPayuConfig } from "@/lib/payu-config";
+import { ensurePurchasedEntitlement, parseOrderMeta, type OrderMeta } from "@/lib/order-entitlement";
+import { ensurePaidOrderAccounting } from "@/lib/order-accounting";
+import { payuAmountMatches, readPayuResponse, verifyPayuResponse } from "@/lib/payu-response";
 
-const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
-const BASE_URL  = process.env.NEXT_PUBLIC_BASE_URL!;
+function completedOrderUrl(baseUrl: string, order: { orderNumber: string }, meta: OrderMeta, txnid: string, amount: string) {
+  if (meta.isDigital) return `${baseUrl}/dashboard?digital=1&order=${order.orderNumber}`;
+  if (meta.kind === "DISH") return `${baseUrl}/order/confirmation?order=${order.orderNumber}`;
+  return `${baseUrl}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}&window=${meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING"}`;
+}
 
-const DUR_DAYS: Record<string, number> = {
-  TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14,
-  MONTHLY_EXCL_WEEKENDS: 30, ONE_MONTH: 30, TWO_MONTH: 60, THREE_MONTH: 90,
-};
-const DUR_MAP: Record<string, string> = {
-  trial: "TRIAL_DAY", weekly: "WEEKLY", biweekly: "BI_WEEKLY",
-  monthly_ex: "MONTHLY_EXCL_WEEKENDS", monthly: "ONE_MONTH",
-  two_month: "TWO_MONTH", three_month: "THREE_MONTH",
-};
-const MEAL_MAP: Record<string, string> = {
-  bl: "BREAKFAST_LUNCH", sd: "SNACK_DINNER", all: "ALL_FOUR",
-};
+function isPaidOrderState(order: { paymentStatus: string; status: string }) {
+  return order.paymentStatus === "SUCCESS" && ["CONFIRMED", "PROCESSING", "OUT_FOR_DELIVERY", "DELIVERED"].includes(order.status);
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
+    const payu = getPayuConfig();
+    if (!payu) {
+      console.error("[PayU success] Missing or invalid payment configuration");
+      return NextResponse.json({ error: "Payment callback is not configured." }, { status: 503 });
+    }
+    const response = readPayuResponse(await req.formData());
+    const { status, txnid, amount, firstname, email, mihpayid } = response;
 
-    const status      = formData.get("status")      as string;
-    const txnid       = formData.get("txnid")       as string;
-    const amount      = formData.get("amount")      as string;
-    const productinfo = formData.get("productinfo") as string;
-    const firstname   = formData.get("firstname")   as string;
-    const email       = formData.get("email")       as string;
-    const hash        = formData.get("hash")        as string;
-    const mihpayid    = formData.get("mihpayid")    as string;
-
-    const reverseHash  = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${process.env.PAYU_MERCHANT_KEY}`;
-    const expectedHash = crypto.createHash("sha512").update(reverseHash).digest("hex");
-
-    if (hash !== expectedHash) {
+    if (!verifyPayuResponse(response, payu)) {
       console.error("[PayU] Hash mismatch", { txnid });
-      return NextResponse.redirect(`${BASE_URL}/checkout?error=invalid_hash`, 303);
+      return NextResponse.redirect(`${payu.baseUrl}/checkout?error=invalid_hash`, 303);
     }
     if (status !== "success") {
-      return NextResponse.redirect(`${BASE_URL}/checkout?error=payment_failed&txnid=${txnid}`, 303);
+      return NextResponse.redirect(`${payu.baseUrl}/checkout?error=payment_failed&txnid=${txnid}`, 303);
     }
 
-    const order = await (prisma as any).order.findFirst({ where: { payuTxnId: txnid } });
-    if (!order) {
-      return NextResponse.redirect(`${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}`, 303);
+    const matchingOrders = await prisma.order.findMany({ where: { payuTxnId: txnid }, take: 2 });
+    if (matchingOrders.length !== 1) {
+      console.error(
+        matchingOrders.length > 1 ? "[PayU] Duplicate transaction id on orders" : "[PayU] Signed success for unknown order",
+        { txnid },
+      );
+      return NextResponse.redirect(`${payu.baseUrl}/checkout?error=order_not_found&txnid=${txnid}`, 303);
     }
+    const order = matchingOrders[0];
 
     // Belt-and-braces: the hash already covers `amount`, but also cross-check it
     // against what THIS order is supposed to cost before confirming anything.
-    const paidRs = parseFloat(amount);
-    if (!Number.isFinite(paidRs) || Math.abs(paidRs - order.totalRs) > 1) {
+    if (!payuAmountMatches(amount, Number(order.totalRs))) {
       console.error("[PayU] Amount mismatch", { txnid, posted: amount, expected: order.totalRs });
-      return NextResponse.redirect(`${BASE_URL}/checkout?error=amount_mismatch&txnid=${txnid}`, 303);
+      return NextResponse.redirect(`${payu.baseUrl}/checkout?error=amount_mismatch&txnid=${txnid}`, 303);
     }
 
-    const meta = (() => { try { return JSON.parse(order.notes ?? "{}"); } catch { return {}; } })();
+    const meta = parseOrderMeta(order.notes);
 
-    // IMPORTANT: this early-return is what makes credit-commit idempotent.
-    // If we re-enter (PayU retry, user double-click), we skip everything below.
-    if (order.status === "CONFIRMED") {
-      const done = meta.isDigital
-        ? `${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`
-        : `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}&window=${meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING"}`;
-      return NextResponse.redirect(done, 303);
+    // A later callback is a repair opportunity. Each operation below is
+    // idempotent, including after the kitchen or driver advances the order.
+    if (isPaidOrderState(order)) {
+      await ensurePurchasedEntitlement(order, meta);
+      await ensurePaidOrderAccounting(order);
+      return NextResponse.redirect(completedOrderUrl(payu.baseUrl, order, meta, txnid, amount), 303);
     }
 
-    await (prisma as any).order.update({
-      where: { id: order.id },
-      data:  { status: "CONFIRMED", paymentStatus: "SUCCESS", payuPaymentId: mihpayid },
-    });
-    await (prisma as any).payment.update({
-      where: { orderId: order.id },
-      data:  { status: "SUCCESS", payuPaymentId: mihpayid, paidAt: new Date() },
+    // Atomically claim this callback. The old read-then-update guard allowed
+    // two simultaneous PayU retries to both pass and duplicate credits,
+    // referrals, notifications and active plans.
+    const claimed = await prisma.$transaction(async (tx) => {
+      const orderClaim = await tx.order.updateMany({
+        where: {
+          id: order.id,
+          status: { in: ["PENDING_PAYMENT", "PAYMENT_FAILED"] },
+          paymentStatus: { in: ["PENDING", "FAILED"] },
+        },
+        data: { status: "CONFIRMED", paymentStatus: "SUCCESS", payuPaymentId: mihpayid },
+      });
+      if (orderClaim.count !== 1) return false;
+      const paymentClaim = await tx.payment.updateMany({
+        where: { orderId: order.id, status: { in: ["PENDING", "FAILED"] } },
+        data: { status: "SUCCESS", payuPaymentId: mihpayid, paidAt: new Date() },
+      });
+      if (paymentClaim.count !== 1) throw new Error("Pending payment row missing during PayU confirmation");
+      return true;
     });
 
-    // ════════════════════ CREDIT COMMIT (17C-2) ════════════════════
-    // Now safe to deduct credit — the order is CONFIRMED and the early-return
-    // guard above prevents this from firing twice for the same order.
-    if ((order.creditAppliedRs ?? 0) > 0) {
-      try {
-        await recordCreditChange(order.userId, -order.creditAppliedRs, "order_payment", { refOrderId: order.id });
-      } catch (e) {
-        console.error("[PayU] credit commit failed", { orderId: order.id, e });
+    if (!claimed) {
+      const latest = await prisma.order.findUnique({ where: { id: order.id }, select: { status: true, paymentStatus: true } });
+      if (latest && isPaidOrderState(latest)) {
+        await ensurePurchasedEntitlement(order, meta);
+        await ensurePaidOrderAccounting(order);
+        return NextResponse.redirect(completedOrderUrl(payu.baseUrl, order, meta, txnid, amount), 303);
       }
+      return NextResponse.redirect(`${payu.baseUrl}/checkout?error=order_state&txnid=${txnid}`, 303);
     }
+
+    // Fulfillment comes before non-critical rewards and notifications. If the
+    // process stops after payment confirmation, the next signed callback takes
+    // the confirmed-order path above and repairs the missing entitlement.
+    await ensurePurchasedEntitlement(order, meta);
+    await ensurePaidOrderAccounting(order);
 
     // ════════════════════ NOTIFICATIONS (16A) ════════════════════
     try {
-      const userForNotif = await (prisma as any).user.findUnique({
+      const userForNotif = await prisma.user.findUnique({
         where: { id: order.userId },
         select: { name: true, email: true, phone: true },
       });
       const planLookupSlug = meta.planSlug || "";
       const planForNotif = planLookupSlug
-        ? await (prisma as any).mealPlan.findUnique({
+        ? await prisma.mealPlan.findUnique({
             where: { slug: planLookupSlug },
             select: { displayName: true, slug: true },
           })
         : null;
       const planName = planForNotif?.displayName || planForNotif?.slug || (meta.isDigital ? "Digital Plan" : "Meal Plan");
 
-      fireNotification({
+      const customerResult = await sendNotification({
         userId: order.userId,
         toEmail: userForNotif?.email || email,
         toPhone: userForNotif?.phone || undefined,
@@ -121,7 +126,10 @@ export async function POST(req: NextRequest) {
         templateKey: "order_confirmed",
         vars: { orderNumber: order.orderNumber, planName, amount: String(order.totalRs) },
       });
-      notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_order", {
+      if (customerResult.errors.length) {
+        console.error("[PayU] customer confirmation notification incomplete", customerResult.errors);
+      }
+      await notifyStaffByRoles(["OWNER", "ADMIN"], "staff_new_order", {
         orderNumber: order.orderNumber,
         customerName: userForNotif?.name || firstname,
         planName,
@@ -131,43 +139,9 @@ export async function POST(req: NextRequest) {
       console.error("[PayU] notification dispatch failed", e);
     }
 
-    // ════════════════════ REFERRAL REWARD (17A) ════════════════════
-    try {
-      await processReferralReward(order.id);
-    } catch (e) {
-      console.error("[PayU] referral reward processing failed", e);
-    }
-
-    // ════════════════════ COUPON REDEMPTION (R-PRICE parity, idempotent) ════════════════════
-    try {
-      if (order.couponCode && (order.discountRs ?? 0) > 0) {
-        const already = await (prisma as any).couponRedemption.findFirst({
-          where: { orderId: order.id }, select: { id: true },
-        });
-        if (!already) {
-          const coupon = await (prisma as any).coupon.findUnique({
-            where: { code: order.couponCode }, select: { id: true },
-          });
-          if (coupon) {
-            await (prisma as any).couponRedemption.create({
-              data: { couponId: coupon.id, userId: order.userId, orderId: order.id, amountRs: order.discountRs },
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.error("[PayU] coupon redemption record failed", e);
-    }
-
     // ════════════════════ DIGITAL PATH ════════════════════
     if (meta.isDigital) {
-      const plan = await (prisma as any).mealPlan.findUnique({ where: { slug: meta.planSlug } });
-      if (plan) {
-        await activateDigitalPlan({ orderId: order.id, mealPlanId: plan.id, durEnum: meta.durEnum ?? "ONE_MONTH", bundle: meta.bundle ?? "STARTER", profile: meta.profile });
-      } else {
-        console.error("[PayU] Digital paid but plan not found", { txnid, planSlug: meta.planSlug });
-      }
-      return NextResponse.redirect(`${BASE_URL}/dashboard?digital=1&order=${order.orderNumber}`, 303);
+      return NextResponse.redirect(`${payu.baseUrl}/dashboard?digital=1&order=${order.orderNumber}`, 303);
     }
 
     // ════════════════════ À LA CARTE PATH ════════════════════
@@ -179,56 +153,23 @@ export async function POST(req: NextRequest) {
     // SUCCESS by this point; a dish order is complete at that.
     if (meta.kind === "DISH") {
       return NextResponse.redirect(
-        `${BASE_URL}/order/confirmation?order=${order.orderNumber}`,
+        `${payu.baseUrl}/order/confirmation?order=${order.orderNumber}`,
         303,
       );
     }
 
     // ════════════════════ PHYSICAL PATH ════════════════════
-    const durEnum  = DUR_MAP[meta.dur]  ?? "ONE_MONTH";
-    const mealEnum = MEAL_MAP[meta.meal] ?? "ALL_FOUR";
-    const window   = meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING";
-
-    // LOOP-3: activate the plan the customer ACTUALLY bought (was hardcoded weight-loss-veg).
-    const mealPlan = await resolvePurchasedPlan({ planSlug: meta.planSlug, diet: meta.diet });
-
-    if (mealPlan) {
-      // The plan starts on the first morning we can actually feed them, not at
-      // the instant PayU confirms. Before the 21:00 IST cutoff that is tomorrow;
-      // after it, the day after (lib/order-cutoff.ts).
-      //
-      // This column drives TWO things and both need the delivery date, not the
-      // payment timestamp: getActiveSubscribersForDate() decides who the kitchen
-      // cooks for, and menuDayNumber() counts calendar days from startDate to
-      // pick the menu. Stamping it with the payment time meant a Wednesday-night
-      // buyer whose first delivery is Friday was served menu day 3 and never ate
-      // days 1 and 2 of the plan they paid for.
-      const startDate = firstDeliveryDateFor();
-      const days = DUR_DAYS[durEnum] ?? 30;
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + days);
-
-      await (prisma as any).userActivePlan.create({
-        data: {
-          userId: order.userId, mealPlanId: mealPlan.id, orderId: order.id,
-          startDate, endDate, currentDay: 1, status: "active",
-          mealsPerDay: mealEnum, duration: durEnum,
-          deliveryWindow: window, skipDates: [],
-        },
-      });
-    } else {
-      console.error("[PayU] Paid but NO meal plan found", { txnid, order: order.orderNumber });
-    }
-
     return NextResponse.redirect(
-      `${BASE_URL}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}&window=${meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING"}`, 303
+      `${payu.baseUrl}/order/confirmation?txnid=${txnid}&amount=${amount}&order=${order.orderNumber}&window=${meta.deliveryWindow === "EVENING" ? "EVENING" : "MORNING"}`, 303
     );
   } catch (err) {
     console.error("[PayU success handler error]", err);
-    return NextResponse.redirect(`${BASE_URL}/checkout?error=server_error`, 303);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") || req.nextUrl.origin;
+    return NextResponse.redirect(`${baseUrl}/checkout?error=server_error`, 303);
   }
 }
 
-export async function GET() {
-  return NextResponse.redirect(`${BASE_URL}/plans`, 303);
+export async function GET(req: NextRequest) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") || req.nextUrl.origin;
+  return NextResponse.redirect(new URL("/plans", baseUrl), 303);
 }

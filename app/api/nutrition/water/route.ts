@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { formatDateOnly, parseDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson, readQuery } from "@/lib/validation/core";
 import { waterQuerySchema, waterPostSchema } from "@/lib/validation/schemas";
@@ -18,8 +19,8 @@ export async function GET(req: NextRequest) {
   const q = readQuery(req, waterQuerySchema);
   if (!q.ok) return q.response;
 
-  const date = q.data.date ? new Date(q.data.date) : new Date();
-  date.setUTCHours(0, 0, 0, 0);
+  const date = q.data.date ? parseDateOnly(q.data.date) : todayIndiaDate();
+  if (!date) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
 
   const log = await prisma.waterLog.findUnique({
     where: { userId_entryDate: { userId: session.user.id, entryDate: date } },
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     amountMl: log?.amountMl ?? 0,
-    date: date.toISOString().split("T")[0],
+    date: formatDateOnly(date),
   });
 }
 
@@ -43,8 +44,11 @@ export async function POST(req: NextRequest) {
   if (!parsed.ok) return parsed.response;
   const { date, amountMl, action } = parsed.data;
 
-  const entryDate = date ? new Date(date) : new Date();
-  entryDate.setUTCHours(0, 0, 0, 0);
+  const entryDate = date ? parseDateOnly(date) : todayIndiaDate();
+  if (!entryDate) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  if (entryDate.getTime() > todayIndiaDate().getTime()) {
+    return NextResponse.json({ error: "Future water entries are not allowed" }, { status: 400 });
+  }
 
   const existing = await prisma.waterLog.findUnique({
     where: { userId_entryDate: { userId: session.user.id, entryDate } },
@@ -54,6 +58,7 @@ export async function POST(req: NextRequest) {
   if (action === "set")           newAmount = Math.max(0, Number(amountMl));
   else if (action === "subtract") newAmount = Math.max(0, (existing?.amountMl ?? 0) - Number(amountMl));
   else                            newAmount = (existing?.amountMl ?? 0) + Number(amountMl);
+  newAmount = Math.min(20_000, Math.round(newAmount));
 
   const log = await prisma.waterLog.upsert({
     where:  { userId_entryDate: { userId: session.user.id, entryDate } },

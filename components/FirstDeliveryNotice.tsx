@@ -28,6 +28,7 @@ import {
   firstDeliveryDateFor,
   msUntilCutoff,
 } from "@/lib/order-cutoff";
+import { DELIVERY_WINDOWS, type DeliveryWindow } from "@/lib/delivery-windows";
 
 const T = {
   card: "#111111",
@@ -94,11 +95,12 @@ const getSnapshot = () => tick;
    render the plain rule rather than a countdown that cannot match. */
 const getServerSnapshot = () => 0;
 
-export default function FirstDeliveryNotice() {
+export default function FirstDeliveryNotice({ deliveryWindow }: { deliveryWindow: DeliveryWindow }) {
   const tickMs = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const now = tickMs === 0 ? null : new Date(tickMs);
 
   const cutoff = cutoffLabel();
+  const window = DELIVERY_WINDOWS[deliveryWindow];
 
   let line: React.ReactNode;
   let urgent = false;
@@ -108,7 +110,7 @@ export default function FirstDeliveryNotice() {
     line = (
       <>
         Order by <strong style={{ color: T.accent }}>{cutoff}</strong> and your first
-        delivery is the next morning by 8am.
+        delivery is the next service day {window.sentence}.
       </>
     );
   } else {
@@ -126,13 +128,12 @@ export default function FirstDeliveryNotice() {
             {countdown(left)}
           </strong>{" "}
           and your first delivery is{" "}
-          <strong style={{ color: T.text }}>tomorrow, {deliveryDateLabel(delivery)}</strong>, by
-          8am.
+          <strong style={{ color: T.text }}>tomorrow, {deliveryDateLabel(delivery)}</strong>, {window.sentence}.
         </>
       ) : (
         <>
           Tonight&rsquo;s {cutoff} cutoff has passed. Your first delivery is{" "}
-          <strong style={{ color: T.text }}>{deliveryDateLabel(delivery)}</strong>, by 8am.
+          <strong style={{ color: T.text }}>{deliveryDateLabel(delivery)}</strong>, {window.sentence}.
           You can still order now.
         </>
       );

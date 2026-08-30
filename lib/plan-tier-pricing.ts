@@ -51,7 +51,7 @@ export const DIETS: { key: DietKey; label: string; short: string; dot: string; l
   { key: 'EGG',     label: 'Eggetarian',     short: 'Egg',     dot: '#f59e0b', legacy: 'egg'    },
   { key: 'NON_VEG', label: 'Non-Vegetarian', short: 'Non-veg', dot: '#ef4444', legacy: 'nonveg' },
   { key: 'JAIN',    label: 'Jain',           short: 'Jain',    dot: '#4ade80', legacy: 'jain'   },
-  { key: 'VEGAN',   label: 'Vegan',          short: 'Vegan',   dot: '#10b981', legacy: 'veg'    },
+  { key: 'VEGAN',   label: 'Vegan',          short: 'Vegan',   dot: '#10b981', legacy: 'vegan'  },
 ]
 
 // ─── Tier metadata ───────────────────────────────────────────────────────────

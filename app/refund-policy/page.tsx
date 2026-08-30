@@ -24,7 +24,7 @@ export default function RefundPolicyPage() {
         title="Refund and cancellation policy"
         deck="Every meal is cooked to order, so almost everything here turns on one thing: the daily kitchen cut-off."
         meta={[
-          { k: "Last updated", v: "24 June 2026" },
+          { k: "Last updated", v: "30 August 2026" },
           { k: "Refund window", v: "5 to 7 days" },
         ]}
       />
@@ -36,20 +36,21 @@ export default function RefundPolicyPage() {
               This Refund and Cancellation Policy explains how cancellations, pauses and refunds work
               across FitFuel&rsquo;s meal subscriptions, trial days, digital meal plans and
               supplement recommendations. It forms part of our{" "}
-              <A href="/terms">Terms and Conditions</A>. FitFuel is operated by [Registered Entity
-              Name], Pune, Maharashtra, India.
+              <A href="/terms">Terms and Conditions</A>. FitFuel is a food service based in Pune,
+              Maharashtra, India.
             </p>
           </Clause>
 
           <Clause no="02" title="Cancelling or pausing a subscription">
             <p>
               Because every meal is freshly cooked to order, cancellations and pauses are tied to a
-              daily kitchen <strong>cut-off time</strong>, communicated in the app.
+              daily kitchen <strong>cut-off time</strong>. Use the upcoming-deliveries control on
+              the Today screen, or contact FitFuel using the support details published on this site.
             </p>
             <ul>
               <li>
-                You may pause, skip or cancel <strong>upcoming</strong> deliveries before the cut-off
-                for that day at no charge.
+                You may skip or restore an <strong>upcoming</strong> delivery before the cut-off for
+                that day. The app confirms when the change has been saved.
               </li>
               <li>
                 Changes made <strong>after</strong> the cut-off apply from the next available

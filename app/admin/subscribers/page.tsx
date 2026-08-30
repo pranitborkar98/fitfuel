@@ -9,9 +9,8 @@ export const dynamic = "force-dynamic";
 
 export default async function SubscribersPage() {
   await requireSurface("subscribers");
-  const db = prisma as any;
 
-  const subs = await db.userActivePlan.findMany({
+  const subscribers = await prisma.userActivePlan.findMany({
     orderBy: [{ status: "asc" }, { endDate: "desc" }],
     take: 500,
     select: {
@@ -24,5 +23,14 @@ export default async function SubscribersPage() {
     },
   });
 
-  return <SubscribersView subs={JSON.parse(JSON.stringify(subs))} />;
+  return (
+    <SubscribersView
+      subscribers={subscribers.map((subscriber) => ({
+        ...subscriber,
+        startDate: subscriber.startDate.toISOString(),
+        endDate: subscriber.endDate.toISOString(),
+        createdAt: subscriber.createdAt.toISOString(),
+      }))}
+    />
+  );
 }

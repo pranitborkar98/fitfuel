@@ -1,43 +1,47 @@
-// app/api/admin/supplements/route.ts
-// Phase 18-2 — Admin GET: list all supplements with link counts + click counts.
-//                Admin POST: create a new supplement.
+// Supplement catalogue list and creation. OWNER/ADMIN only.
 
-import { NextRequest, NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-
-const db = prisma as any;
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { supplementCreateSchema, supplementListQuerySchema } from "@/lib/supplements-admin-validation";
+import { readJson, readQuery } from "@/lib/validation/core";
+import type { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const me = await requireApiRole("supplements");
-  if (!me) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireApiRole("supplements");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const url = new URL(req.url);
-  const q = (url.searchParams.get("q") || "").trim().toLowerCase();
-  const categorySlug = url.searchParams.get("category") || "";
-  const includeInactive = url.searchParams.get("includeInactive") === "1";
-
-  const where: any = {};
-  if (!includeInactive) where.isActive = true;
-  if (categorySlug) where.category = { slug: categorySlug };
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { slug: { contains: q, mode: "insensitive" } },
-      { tagline: { contains: q, mode: "insensitive" } },
-    ];
-  }
+  const parsed = readQuery(req, supplementListQuerySchema);
+  if (!parsed.ok) return parsed.response;
+  const query = parsed.data;
+  const where: Prisma.SupplementWhereInput = {
+    ...(query.includeInactive === "1" ? {} : { isActive: true }),
+    ...(query.category ? { category: { slug: query.category } } : {}),
+    ...(query.q
+      ? {
+          OR: [
+            { name: { contains: query.q, mode: "insensitive" } },
+            { slug: { contains: query.q, mode: "insensitive" } },
+            { tagline: { contains: query.q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
 
   const [supplements, categories] = await Promise.all([
-    db.supplement.findMany({
+    prisma.supplement.findMany({
       where,
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      take: 500,
       include: {
         category: { select: { slug: true, name: true, emoji: true } },
         _count: { select: { links: true, clicks: true } },
       },
     }),
-    db.supplementCategory.findMany({
+    prisma.supplementCategory.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
       select: { slug: true, name: true, emoji: true },
@@ -45,63 +49,72 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({
-    supplements: supplements.map((s: any) => ({
-      id: s.id,
-      slug: s.slug,
-      name: s.name,
-      tagline: s.tagline,
-      emoji: s.emoji,
-      accentColor: s.accentColor,
-      categorySlug: s.category?.slug,
-      categoryName: s.category?.name,
-      categoryEmoji: s.category?.emoji,
-      recommendedFor: s.recommendedFor || [],
-      isActive: s.isActive,
-      isFeatured: s.isFeatured,
-      sortOrder: s.sortOrder,
-      linkCount: s._count?.links ?? 0,
-      clickCount: s._count?.clicks ?? 0,
-      priceRange: s.priceRange,
+    supplements: supplements.map((supplement) => ({
+      id: supplement.id,
+      slug: supplement.slug,
+      name: supplement.name,
+      tagline: supplement.tagline,
+      emoji: supplement.emoji,
+      accentColor: supplement.accentColor,
+      categorySlug: supplement.category.slug,
+      categoryName: supplement.category.name,
+      categoryEmoji: supplement.category.emoji,
+      recommendedFor: supplement.recommendedFor,
+      isActive: supplement.isActive,
+      isFeatured: supplement.isFeatured,
+      sortOrder: supplement.sortOrder,
+      linkCount: supplement._count.links,
+      clickCount: supplement._count.clicks,
+      priceRange: supplement.priceRange,
     })),
     categories,
   });
 }
 
 export async function POST(req: NextRequest) {
-  const me = await requireApiRole("supplements");
-  if (!me) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireApiRole("supplements");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = await req.json().catch(() => ({}));
-  const slug = String(body?.slug || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
-  const name = String(body?.name || "").trim();
-  const categorySlug = String(body?.categorySlug || "").trim();
+  const parsed = await readJson(req, supplementCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const input = parsed.data;
 
-  if (!slug || !name || !categorySlug) {
-    return NextResponse.json({ error: "slug, name, and categorySlug required" }, { status: 400 });
+  try {
+    const category = await prisma.supplementCategory.findUnique({
+      where: { slug: input.categorySlug },
+      select: { id: true, isActive: true },
+    });
+    if (!category?.isActive) return NextResponse.json({ error: "Choose an active supplement category." }, { status: 400 });
+    const existing = await prisma.supplement.findUnique({ where: { slug: input.slug }, select: { id: true } });
+    if (existing) return NextResponse.json({ error: "A supplement with that slug already exists." }, { status: 409 });
+
+    const created = await prisma.supplement.create({
+      data: {
+        slug: input.slug,
+        name: input.name,
+        categoryId: category.id,
+        tagline: input.tagline,
+        description: input.description,
+        benefits: input.benefits,
+        dosage: input.dosage,
+        priceRange: input.priceRange,
+        emoji: input.emoji,
+        accentColor: input.accentColor,
+        recommendedFor: input.recommendedFor,
+        isActive: false,
+        aka: [],
+        stacksWith: [],
+        avoidWith: [],
+        sideEffects: [],
+        keyStudyFindings: [],
+      },
+      select: { id: true, slug: true, name: true },
+    });
+    return NextResponse.json({ ok: true, supplement: created });
+  } catch (error: unknown) {
+    console.error("[admin/supplements] create failed", error);
+    return NextResponse.json({ error: "Supplement creation failed." }, { status: 500 });
   }
-
-  const category = await db.supplementCategory.findUnique({ where: { slug: categorySlug }, select: { id: true } });
-  if (!category) return NextResponse.json({ error: "Unknown category" }, { status: 400 });
-
-  const existing = await db.supplement.findUnique({ where: { slug } });
-  if (existing) return NextResponse.json({ error: "A supplement with that slug already exists" }, { status: 409 });
-
-  const data: any = {
-    slug, name,
-    categoryId: category.id,
-    tagline: body?.tagline || null,
-    description: body?.description || null,
-    benefits: Array.isArray(body?.benefits) ? body.benefits : [],
-    dosage: body?.dosage || null,
-    priceRange: body?.priceRange || null,
-    emoji: body?.emoji || null,
-    accentColor: body?.accentColor || null,
-    recommendedFor: Array.isArray(body?.recommendedFor)
-      ? body.recommendedFor.map((g: string) => g.toUpperCase())
-      : [],
-    isActive: true,
-  };
-
-  const created = await db.supplement.create({ data });
-  return NextResponse.json({ ok: true, supplement: { id: created.id, slug: created.slug, name: created.name } });
 }

@@ -79,8 +79,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Read after mount, never during render: the server has no localStorage and
   // a mismatch here is a hydration error on every page the provider wraps.
   useEffect(() => {
-    setState(read());
-    setHydrated(true);
+    queueMicrotask(() => {
+      setState(read());
+      setHydrated(true);
+    });
   }, []);
 
   const first = useRef(true);

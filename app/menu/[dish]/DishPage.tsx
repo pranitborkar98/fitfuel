@@ -58,7 +58,7 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
             though the link returns 200. */}
         <Breadcrumb
           className={s.crumb}
-          trail={[{ href: "/", label: "All dishes" }]}
+          trail={[{ href: "/menu", label: "All dishes" }]}
           current={dish.categoryLabel}
         />
 

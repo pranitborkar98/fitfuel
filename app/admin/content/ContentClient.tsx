@@ -20,21 +20,38 @@ export const UI = {
 };
 
 export type ContentType = "blog" | "faq" | "testimonial";
+export type BlogRecord = {
+  id: string; slug: string; title: string; excerpt: string; contentHtml: string;
+  coverImageUrl: string | null; category: string; tags: string[]; authorName: string;
+  readMinutes: number; status: "DRAFT" | "PUBLISHED"; isFeatured: boolean;
+};
+export type FaqRecord = {
+  id: string; category: string; question: string; answerHtml: string; sortOrder: number; isActive: boolean;
+};
+export type TestimonialRecord = {
+  id: string; name: string; location: string; planLabel: string; goal: string | null;
+  resultLabel: string; rating: number; quote: string; avatarUrl: string | null;
+  isFeatured: boolean; isActive: boolean; sortOrder: number;
+};
 
-export async function contentApi(
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export async function contentApi<T>(
   type: ContentType,
   action: "create" | "update" | "delete",
   id: string | null,
-  data: any
-) {
+  data: Record<string, unknown> | null,
+): Promise<T> {
   const res = await fetch("/api/admin/content", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type, action, id, data }),
   });
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(j?.error || "Save failed");
-  return j;
+  const body: unknown = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(isRecord(body) && typeof body.error === "string" ? body.error : "Save failed");
+  return body as T;
 }
 
 // ── shared input primitives ──
@@ -47,7 +64,8 @@ const inputStyle: React.CSSProperties = {
   background: UI.soft,
   color: UI.text,
   border: `1px solid ${UI.border}`,
-  borderRadius: 0,
+  minHeight: 44,
+  borderRadius: 9,
   padding: "9px 11px",
   fontSize: 13.5,
   fontFamily: "inherit",
@@ -66,7 +84,7 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 export function Check({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13.5, color: UI.text }}>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 16, height: 16, accentColor: UI.accent }} />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, accentColor: UI.accent }} />
       {label}
     </label>
   );
@@ -77,7 +95,8 @@ export function btn(primary = false): React.CSSProperties {
     background: primary ? UI.accent : "transparent",
     color: primary ? "#080808" : UI.text,
     border: `1px solid ${primary ? UI.accent : UI.border}`,
-    borderRadius: 0,
+    minHeight: 44,
+    borderRadius: 9,
     padding: "8px 15px",
     fontSize: 13,
     fontWeight: 700,
@@ -96,9 +115,9 @@ export default function ContentClient({
   faqs,
   testimonials,
 }: {
-  posts: any[];
-  faqs: any[];
-  testimonials: any[];
+  posts: BlogRecord[];
+  faqs: FaqRecord[];
+  testimonials: TestimonialRecord[];
 }) {
   const [tab, setTab] = useState<ContentType>("blog");
   const counts = { blog: posts.length, faq: faqs.length, testimonial: testimonials.length };
@@ -110,10 +129,12 @@ export default function ContentClient({
         Publish and edit your blog, FAQs and testimonials — changes go live immediately.
       </p>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 22, borderBottom: `1px solid ${UI.border}`, paddingBottom: 12 }}>
+      <div role="tablist" aria-label="Content type" style={{ display: "flex", gap: 8, marginBottom: 22, borderBottom: `1px solid ${UI.border}`, paddingBottom: 12 }}>
         {TABS.map((t) => (
           <button
             key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
             style={{
               ...btn(tab === t.key),

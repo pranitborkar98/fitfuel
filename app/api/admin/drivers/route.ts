@@ -6,12 +6,22 @@ import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/admin-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import { z } from "zod";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
+import { normalizeIndiaMobile } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
+const driverCreateSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  phone: z.string().trim().min(10).max(20),
+}).strict();
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const admin = await requireApiRole("dispatch");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
 
   const drivers = await prisma.driver.findMany({
     orderBy: [{ isActive: "desc" }, { name: "asc" }],
@@ -23,13 +33,14 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const admin = await requireApiRole("dispatch");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = (await req.json().catch(() => ({}))) as { name?: string; phone?: string };
-  const name = body.name?.trim();
-  const phone = body.phone?.trim();
-  if (!name || !phone) {
-    return NextResponse.json({ error: "name and phone are required" }, { status: 400 });
-  }
+  const parsed = await readJson(req, driverCreateSchema);
+  if (!parsed.ok) return parsed.response;
+  const { name } = parsed.data;
+  const phone = normalizeIndiaMobile(parsed.data.phone);
+  if (!phone) return NextResponse.json({ error: "Enter a valid 10-digit Indian mobile number." }, { status: 400 });
 
   // high-entropy, URL-safe token — the token IS the auth for the driver link
   const accessToken = randomBytes(16).toString("hex");

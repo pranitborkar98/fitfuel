@@ -18,10 +18,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const session = await auth();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
-  const me = await (prisma as any).user.findUnique({ where: { id: session.user.id }, select: { role: true } });
+  const me = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } });
   const isStaff = me?.role === "OWNER" || me?.role === "ADMIN";
 
-  const owns = await (prisma as any).userActivePlan.findFirst({
+  const owns = await prisma.userActivePlan.findFirst({
     where: { userId: session.user.id, isDigital: true, mealPlan: { slug }, status: { in: ["active", "completed"] } },
     select: { id: true, bundle: true },
   });
@@ -37,7 +37,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
 
   let workout = null;
   if (bundle === "PRO") {
-    const plan = await (prisma as any).mealPlan.findUnique({ where: { slug }, select: { subCategory: true, tier: true } });
+    const plan = await prisma.mealPlan.findUnique({ where: { slug }, select: { subCategory: true, tier: true } });
     if (plan) workout = await getWorkoutPlanData(String(plan.subCategory), String(plan.tier));
   }
 

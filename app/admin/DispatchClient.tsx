@@ -1,54 +1,69 @@
 "use client";
 
-// app/admin/DispatchClient.tsx
-// Phase 10 -- the daily dispatch board (the manager's command center).
-// Flow: today's deliveries -> assign each to a driver -> dispatch (OUT_FOR_DELIVERY)
-// -> watch status flip back live as drivers mark Delivered / Couldn't deliver.
-
-import { useMemo, useState } from "react";
-
-const T = {
-  bg: "#080808", card: "#101010", border: "#222", text: "#ffffff",
-  textSecond: "#bbbbbb", textMuted: "#888888", accent: "#84cc16",
-  red: "#ef4444", amber: "#f59e0b",
-};
+import { AlertTriangle, Check, Clock3, MapPin, Phone, RefreshCw, Truck, UserRoundCheck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { DELIVERY_WINDOWS } from "@/lib/delivery-windows";
+import styles from "./dispatch.module.css";
 
 type Status = "PREPARING" | "PACKED" | "OUT_FOR_DELIVERY" | "DELIVERED" | "FAILED_DELIVERY";
-
 type Window = "MORNING" | "EVENING" | null;
 
 type Delivery = {
   id: string;
+  deliveryDate: string | Date;
   status: Status;
   mealsIncluded: string[];
   deliveredAt: string | Date | null;
   assignedDriverId: string | null;
   trackingNotes: string | null;
   customerConfirmedAt: string | Date | null;
+  customerIssueNote: string | null;
   deliveryWindow: Window;
   order: {
     orderNumber: string;
     totalRs: number;
     paymentMethod: "PAYU" | "CASH_ON_DELIVERY";
+    paymentStatus: "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED";
     user: { name: string | null; phone: string | null };
     address: {
-      line1: string; line2: string | null; area: string;
-      city: string; pincode: string; landmark: string | null;
+      line1: string;
+      line2: string | null;
+      area: string;
+      city: string;
+      pincode: string;
+      landmark: string | null;
     } | null;
   };
 };
 
 type Driver = { id: string; name: string; phone: string };
-
-const STATUS_STYLE: Record<Status, { label: string; color: string }> = {
-  PREPARING: { label: "Preparing", color: T.textMuted },
-  PACKED: { label: "Packed", color: T.textSecond },
-  OUT_FOR_DELIVERY: { label: "Out for delivery", color: T.amber },
-  DELIVERED: { label: "Delivered \u2713", color: T.accent },
-  FAILED_DELIVERY: { label: "Not delivered", color: T.red },
+type PostResponse = {
+  error?: string;
+  delivery?: { id: string; assignedDriverId: string | null };
+  dispatchedIds?: string[];
+  notificationFailures?: number;
 };
 
-const isTerminal = (s: Status) => s === "DELIVERED" || s === "FAILED_DELIVERY";
+const STATUS: Record<Status, { label: string; className: string }> = {
+  PREPARING: { label: "Preparing", className: styles.neutral },
+  PACKED: { label: "Packed", className: styles.packed },
+  OUT_FOR_DELIVERY: { label: "Out for delivery", className: styles.out },
+  DELIVERED: { label: "Delivered", className: styles.done },
+  FAILED_DELIVERY: { label: "Not delivered", className: styles.failed },
+};
+
+const isTerminal = (status: Status) => status === "DELIVERED" || status === "FAILED_DELIVERY";
+
+async function postDelivery(payload: object): Promise<PostResponse> {
+  const response = await fetch("/api/admin/deliveries", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = (await response.json().catch(() => ({}))) as PostResponse;
+  if (!response.ok) throw new Error(data.error || "The delivery could not be updated.");
+  return data;
+}
 
 export default function DispatchClient({
   initialDeliveries,
@@ -59,72 +74,111 @@ export default function DispatchClient({
 }) {
   const [deliveries, setDeliveries] = useState<Delivery[]>(initialDeliveries);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [dispatchingAll, setDispatchingAll] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async (signal?: AbortSignal) => {
+    setRefreshing(true);
+    try {
+      const response = await fetch("/api/admin/deliveries", { cache: "no-store", signal });
+      const data = (await response.json().catch(() => ({}))) as { deliveries?: Delivery[]; error?: string };
+      if (!response.ok || !Array.isArray(data.deliveries)) {
+        throw new Error(data.error || "Could not refresh dispatch status.");
+      }
+      setDeliveries(data.deliveries);
+      setLastUpdated(new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }));
+      setError(null);
+    } catch (refreshError: unknown) {
+      if (refreshError instanceof DOMException && refreshError.name === "AbortError") return;
+      setError(refreshError instanceof Error ? refreshError.message : "Could not refresh dispatch status.");
+    } finally {
+      if (!signal?.aborted) setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, 20_000);
+    return () => window.clearInterval(interval);
+  }, [refresh]);
 
   const driverById = useMemo(
-    () => Object.fromEntries(drivers.map(d => [d.id, d])),
-    [drivers]
+    () => new Map(drivers.map((driver) => [driver.id, driver])),
+    [drivers],
   );
 
-  // -- per-driver COD expected (cash drivers will collect today) --
   const codByDriver = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const d of deliveries) {
-      if (d.order.paymentMethod !== "CASH_ON_DELIVERY") continue;
-      if (isTerminal(d.status) && d.status === "FAILED_DELIVERY") continue;
-      if (!d.assignedDriverId) continue;
-      map[d.assignedDriverId] = (map[d.assignedDriverId] ?? 0) + d.order.totalRs;
+    const amounts = new Map<string, number>();
+    for (const delivery of deliveries) {
+      if (
+        delivery.order.paymentMethod !== "CASH_ON_DELIVERY" ||
+        delivery.order.paymentStatus === "SUCCESS" ||
+        isTerminal(delivery.status) ||
+        !delivery.assignedDriverId
+      ) continue;
+      amounts.set(
+        delivery.assignedDriverId,
+        (amounts.get(delivery.assignedDriverId) ?? 0) + delivery.order.totalRs,
+      );
     }
-    return map;
+    return amounts;
   }, [deliveries]);
 
   const counts = useMemo(() => {
-    const c = { total: deliveries.length, unassigned: 0, pending: 0, out: 0, done: 0, failed: 0 };
-    for (const d of deliveries) {
-      if (!d.assignedDriverId && !isTerminal(d.status)) c.unassigned++;
-      if (d.status === "OUT_FOR_DELIVERY") c.out++;
-      else if (d.status === "DELIVERED") c.done++;
-      else if (d.status === "FAILED_DELIVERY") c.failed++;
-      else c.pending++;
+    const next = { total: deliveries.length, unassigned: 0, ready: 0, out: 0, done: 0, failed: 0, issues: 0 };
+    for (const delivery of deliveries) {
+      if (!delivery.assignedDriverId && !isTerminal(delivery.status)) next.unassigned += 1;
+      if (delivery.status === "OUT_FOR_DELIVERY") next.out += 1;
+      else if (delivery.status === "DELIVERED") next.done += 1;
+      else if (delivery.status === "FAILED_DELIVERY") next.failed += 1;
+      else next.ready += 1;
+      if (delivery.customerIssueNote) next.issues += 1;
     }
-    return c;
+    return next;
   }, [deliveries]);
 
   async function assign(deliveryId: string, driverId: string | null) {
     setBusyId(deliveryId);
+    setError(null);
     try {
-      const res = await fetch("/api/admin/deliveries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "assign", deliveryId, driverId }),
-      });
-      if (res.ok) {
-        setDeliveries(prev =>
-          prev.map(d => (d.id === deliveryId ? { ...d, assignedDriverId: driverId } : d))
-        );
-      } else {
-        alert("Couldn't assign -- try again.");
-      }
+      const data = await postDelivery({ action: "assign", deliveryId, driverId });
+      const assignedDriverId = data.delivery?.assignedDriverId ?? null;
+      setDeliveries((previous) =>
+        previous.map((delivery) =>
+          delivery.id === deliveryId ? { ...delivery, assignedDriverId } : delivery,
+        ),
+      );
+    } catch (assignError: unknown) {
+      setError(assignError instanceof Error ? assignError.message : "The driver could not be assigned.");
     } finally {
       setBusyId(null);
     }
   }
 
-  async function dispatch(deliveryId: string) {
+  async function dispatch(ids: string[]) {
+    if (!ids.length) return;
+    setError(null);
+    const data = await postDelivery({ action: "dispatch", deliveryIds: ids });
+    const dispatched = new Set(data.dispatchedIds ?? []);
+    setDeliveries((previous) =>
+      previous.map((delivery) =>
+        dispatched.has(delivery.id) ? { ...delivery, status: "OUT_FOR_DELIVERY" } : delivery,
+      ),
+    );
+    if (data.notificationFailures) {
+      setError(`${data.notificationFailures} driver alert${data.notificationFailures === 1 ? "" : "s"} failed. The route is still available from each driver link.`);
+    }
+  }
+
+  async function dispatchOne(deliveryId: string) {
     setBusyId(deliveryId);
     try {
-      const res = await fetch("/api/admin/deliveries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "dispatch", deliveryIds: [deliveryId] }),
-      });
-      if (res.ok) {
-        setDeliveries(prev =>
-          prev.map(d => (d.id === deliveryId ? { ...d, status: "OUT_FOR_DELIVERY" } : d))
-        );
-      } else {
-        const e = await res.json().catch(() => ({}));
-        alert(e.error ?? "Couldn't dispatch.");
-      }
+      await dispatch([deliveryId]);
+    } catch (dispatchError: unknown) {
+      setError(dispatchError instanceof Error ? dispatchError.message : "The stop could not be dispatched.");
     } finally {
       setBusyId(null);
     }
@@ -132,155 +186,177 @@ export default function DispatchClient({
 
   async function dispatchAllAssigned() {
     const ids = deliveries
-      .filter(d => d.assignedDriverId && (d.status === "PREPARING" || d.status === "PACKED"))
-      .map(d => d.id);
-    if (ids.length === 0) return;
-    const res = await fetch("/api/admin/deliveries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "dispatch", deliveryIds: ids }),
-    });
-    if (res.ok) {
-      setDeliveries(prev =>
-        prev.map(d => (ids.includes(d.id) ? { ...d, status: "OUT_FOR_DELIVERY" as Status } : d))
-      );
+      .filter(
+        (delivery) =>
+          delivery.assignedDriverId &&
+          (delivery.status === "PREPARING" || delivery.status === "PACKED"),
+      )
+      .map((delivery) => delivery.id);
+    if (!ids.length) return;
+    setDispatchingAll(true);
+    try {
+      await dispatch(ids);
+    } catch (dispatchError: unknown) {
+      setError(dispatchError instanceof Error ? dispatchError.message : "The assigned stops could not be dispatched.");
+    } finally {
+      setDispatchingAll(false);
     }
   }
 
-  // one delivery card (reused inside each run group)
-  function renderRow(d: Delivery) {
-    const st = STATUS_STYLE[d.status];
-    const a = d.order.address;
-    const customer = d.order.user.name ?? "Customer";
-    const cod = d.order.paymentMethod === "CASH_ON_DELIVERY";
-    const canDispatch = !!d.assignedDriverId && (d.status === "PREPARING" || d.status === "PACKED");
-    const terminal = isTerminal(d.status);
+  const morning = deliveries.filter((delivery) => delivery.deliveryWindow === "MORNING");
+  const evening = deliveries.filter((delivery) => delivery.deliveryWindow === "EVENING");
+  const unscheduled = deliveries.filter(
+    (delivery) => delivery.deliveryWindow !== "MORNING" && delivery.deliveryWindow !== "EVENING",
+  );
+  const dispatchable = deliveries.filter(
+    (delivery) =>
+      delivery.assignedDriverId &&
+      (delivery.status === "PREPARING" || delivery.status === "PACKED"),
+  ).length;
+
+  function renderDelivery(delivery: Delivery) {
+    const status = STATUS[delivery.status];
+    const address = delivery.order.address;
+    const customer = delivery.order.user.name ?? "Customer";
+    const codDue =
+      delivery.order.paymentMethod === "CASH_ON_DELIVERY" && delivery.order.paymentStatus !== "SUCCESS";
+    const canDispatch =
+      Boolean(delivery.assignedDriverId) &&
+      (delivery.status === "PREPARING" || delivery.status === "PACKED");
+
     return (
-      <div key={d.id} style={{ background: T.card, border: `1px solid ${terminal ? T.border : "#2a3d10"}`, borderRadius: 0, padding: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6, gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: T.textMuted }}>{d.order.orderNumber}</span>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            {cod && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: T.amber }}>
-                COD &#8377;{d.order.totalRs.toLocaleString("en-IN")}
-              </span>
-            )}
-            <span style={{ fontSize: 12, fontWeight: 700, color: st.color }}>{st.label}</span>
+      <article key={delivery.id} className={`${styles.card} ${delivery.customerIssueNote ? styles.issueCard : ""}`}>
+        <div className={styles.cardTop}>
+          <div>
+            <p className={styles.orderNumber}>{delivery.order.orderNumber}</p>
+            <h3>{customer}</h3>
+          </div>
+          <div className={styles.badges}>
+            {codDue && <span className={styles.cod}>Collect ₹{delivery.order.totalRs.toLocaleString("en-IN")}</span>}
+            <span className={`${styles.status} ${status.className}`}>{status.label}</span>
           </div>
         </div>
 
-        <p style={{ fontSize: 16, fontWeight: 700 }}>{customer}</p>
-        {a && (
-          <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.45 }}>
-            {a.line1}{a.line2 ? `, ${a.line2}` : ""}, {a.area}, {a.city} {a.pincode}
-            {a.landmark ? ` \u00B7 near ${a.landmark}` : ""}
-          </p>
+        {address && (
+          <div className={styles.address}>
+            <MapPin size={17} aria-hidden="true" />
+            <p>
+              {address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.area}, {address.city} {address.pincode}
+              {address.landmark ? <span>Near {address.landmark}</span> : null}
+            </p>
+          </div>
         )}
-        {d.mealsIncluded?.length > 0 && (
-          <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{d.mealsIncluded.join(" \u00B7 ")}</p>
-        )}
-        {d.order.user.phone && (
-          <p style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{d.order.user.phone}</p>
+        <div className={styles.meta}>
+          {delivery.mealsIncluded.length > 0 && <span>{delivery.mealsIncluded.join(", ")}</span>}
+          {delivery.order.user.phone && (
+            <a href={`tel:${delivery.order.user.phone}`}><Phone size={15} aria-hidden="true" /> {delivery.order.user.phone}</a>
+          )}
+        </div>
+
+        {delivery.customerIssueNote && (
+          <div className={styles.issue}>
+            <AlertTriangle size={18} aria-hidden="true" />
+            <div><strong>Customer issue</strong><p>{delivery.customerIssueNote}</p></div>
+          </div>
         )}
 
-        {!terminal && (
-          <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center", flexWrap: "wrap" }}>
-            <select
-              value={d.assignedDriverId ?? ""}
-              onChange={e => assign(d.id, e.target.value || null)}
-              disabled={busyId === d.id}
-              style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "10px 12px", fontSize: 13, minWidth: 160 }}
-            >
-              <option value="">-- Assign driver --</option>
-              {drivers.map(dr => (
-                <option key={dr.id} value={dr.id}>{dr.name}</option>
-              ))}
-            </select>
-
-            {canDispatch && (
-              <button
-                onClick={() => dispatch(d.id)}
-                disabled={busyId === d.id}
-                style={{ background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "10px 16px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
+        {!isTerminal(delivery.status) && (
+          <div className={styles.controls}>
+            <label>
+              <span className={styles.srOnly}>Driver for {customer}</span>
+              <select
+                value={delivery.assignedDriverId ?? ""}
+                onChange={(event) => assign(delivery.id, event.target.value || null)}
+                disabled={busyId === delivery.id}
               >
-                {busyId === d.id ? "..." : "Dispatch \u2192"}
+                <option value="">Assign a driver</option>
+                {drivers.map((driver) => <option key={driver.id} value={driver.id}>{driver.name}</option>)}
+              </select>
+            </label>
+            {canDispatch && (
+              <button type="button" onClick={() => dispatchOne(delivery.id)} disabled={busyId === delivery.id}>
+                <Truck size={17} aria-hidden="true" /> {busyId === delivery.id ? "Dispatching…" : "Dispatch stop"}
               </button>
             )}
-            {d.status === "OUT_FOR_DELIVERY" && (
-              <span style={{ fontSize: 12, color: T.textMuted }}>
-                With {d.assignedDriverId ? driverById[d.assignedDriverId]?.name ?? "driver" : "driver"} &middot; awaiting completion
+            {delivery.status === "OUT_FOR_DELIVERY" && (
+              <span className={styles.withDriver}>
+                With {delivery.assignedDriverId ? driverById.get(delivery.assignedDriverId)?.name ?? "driver" : "driver"}
               </span>
             )}
           </div>
         )}
 
-        {d.status === "DELIVERED" && d.customerConfirmedAt && (
-          <p style={{ fontSize: 12, color: T.accent, marginTop: 10 }}>Customer confirmed receipt &#10003;</p>
+        {delivery.status === "DELIVERED" && (
+          <p className={styles.outcome}><Check size={16} aria-hidden="true" /> {delivery.customerConfirmedAt ? "Delivered · customer confirmed" : "Driver marked delivered"}</p>
         )}
-        {d.status === "FAILED_DELIVERY" && d.trackingNotes && (
-          <p style={{ fontSize: 12, color: T.textMuted, marginTop: 10 }}>Note: {d.trackingNotes}</p>
+        {delivery.status === "FAILED_DELIVERY" && (
+          <p className={`${styles.outcome} ${styles.failureOutcome}`}><AlertTriangle size={16} aria-hidden="true" /> {delivery.trackingNotes || "No reason recorded"}</p>
         )}
-      </div>
+      </article>
     );
   }
 
-  const morning = deliveries.filter(d => d.deliveryWindow === "MORNING");
-  const evening = deliveries.filter(d => d.deliveryWindow === "EVENING");
-  const unscheduled = deliveries.filter(d => d.deliveryWindow !== "MORNING" && d.deliveryWindow !== "EVENING");
-
-  function Section({ title, time, rows }: { title: string; time?: string; rows: Delivery[] }) {
-    if (rows.length === 0) return null;
+  function renderSection(title: string, time: string | undefined, rows: Delivery[]) {
+    if (!rows.length) return null;
     return (
-      <div style={{ marginBottom: 22 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 800, color: T.accent }}>{title}</h2>
-          {time && <span style={{ fontSize: 12, color: T.textMuted }}>{time}</span>}
-          <span style={{ fontSize: 12, color: T.textMuted, marginLeft: "auto" }}>{rows.length} stop{rows.length === 1 ? "" : "s"}</span>
+      <section className={styles.run}>
+        <div className={styles.runHeader}>
+          <div><h2>{title}</h2>{time && <p>{time}</p>}</div>
+          <span>{rows.length} stop{rows.length === 1 ? "" : "s"}</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>{rows.map(renderRow)}</div>
-      </div>
+        <div className={styles.cards}>{rows.map(renderDelivery)}</div>
+      </section>
     );
   }
 
   return (
-    <div>
-      {/* -- Header + summary -- */}
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800 }}>Today&apos;s dispatch</h1>
-        <p style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>
-          {counts.total} stops &middot; {counts.unassigned} unassigned &middot; {counts.out} out &middot; {counts.done} delivered
-          {counts.failed > 0 ? ` \u00B7 ${counts.failed} failed` : ""}
-        </p>
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Daily operations</p>
+          <h1>Today’s dispatch</h1>
+          <p>{counts.total} stops across the morning and evening runs.</p>
+        </div>
+        <button type="button" className={styles.refresh} onClick={() => refresh()} disabled={refreshing}>
+          <RefreshCw size={17} aria-hidden="true" className={refreshing ? styles.spinning : ""} />
+          {refreshing ? "Refreshing…" : lastUpdated ? `Updated ${lastUpdated}` : "Refresh"}
+        </button>
+      </header>
+
+      {error && <div className={styles.error} role="alert" aria-live="polite"><AlertTriangle size={18} aria-hidden="true" /> {error}</div>}
+
+      <div className={styles.summary}>
+        <Summary icon={<Clock3 size={18} />} label="Preparing" value={counts.ready} />
+        <Summary icon={<Truck size={18} />} label="On the road" value={counts.out} />
+        <Summary icon={<Check size={18} />} label="Delivered" value={counts.done} />
+        <Summary icon={<UserRoundCheck size={18} />} label="Unassigned" value={counts.unassigned} />
+        {counts.issues > 0 && <Summary icon={<AlertTriangle size={18} />} label="Customer issues" value={counts.issues} alert />}
       </div>
 
-      {/* -- Driver COD strip -- */}
-      {drivers.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
-          {drivers.map(dr => (
-            <div key={dr.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 12 }}>
-              <span style={{ fontWeight: 700 }}>{dr.name}</span>
-              <span style={{ color: T.textMuted }}> &middot; COD &#8377;{(codByDriver[dr.id] ?? 0).toLocaleString("en-IN")}</span>
-            </div>
+      <div className={styles.toolbar}>
+        <div className={styles.driverCash}>
+          {drivers.map((driver) => (
+            <span key={driver.id}><strong>{driver.name}</strong> · cash due ₹{(codByDriver.get(driver.id) ?? 0).toLocaleString("en-IN")}</span>
           ))}
-          <button
-            onClick={dispatchAllAssigned}
-            style={{ marginLeft: "auto", background: T.accent, color: "#0a0a0a", border: "none", borderRadius: 0, padding: "8px 14px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}
-          >
-            Dispatch all assigned
-          </button>
         </div>
-      )}
+        <button type="button" onClick={dispatchAllAssigned} disabled={!dispatchable || dispatchingAll}>
+          <Truck size={17} aria-hidden="true" />
+          {dispatchingAll ? "Dispatching…" : `Dispatch ${dispatchable || "all"} assigned`}
+        </button>
+      </div>
 
-      {deliveries.length === 0 && (
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 28, textAlign: "center", color: T.textMuted }}>
-          No deliveries scheduled for today.
-        </div>
-      )}
+      {!deliveries.length && <div className={styles.empty}>No deliveries are scheduled for today.</div>}
+      {renderSection("Morning run", DELIVERY_WINDOWS.MORNING.time, morning)}
+      {renderSection("Evening run", DELIVERY_WINDOWS.EVENING.time, evening)}
+      {renderSection("Unscheduled", undefined, unscheduled)}
+    </div>
+  );
+}
 
-      {/* -- Delivery rows grouped by run -- */}
-      <Section title="Morning run" time="7-9 AM" rows={morning} />
-      <Section title="Evening run" time="6-8 PM" rows={evening} />
-      <Section title="Unscheduled" rows={unscheduled} />
+function Summary({ icon, label, value, alert }: { icon: React.ReactNode; label: string; value: number; alert?: boolean }) {
+  return (
+    <div className={`${styles.summaryCard} ${alert ? styles.summaryAlert : ""}`}>
+      <span>{icon}</span><div><strong>{value}</strong><p>{label}</p></div>
     </div>
   );
 }

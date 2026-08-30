@@ -27,6 +27,7 @@ import { useSession, signIn } from "next-auth/react";
 import { CheckCircle, MessageCircle, Truck, ChefHat, Clock, Banknote, LogIn } from "lucide-react";
 
 import { WHATSAPP_NUMBER } from "@/lib/site";
+import { DELIVERY_WINDOWS, normalizeDeliveryWindow } from "@/lib/delivery-windows";
 import { Idx, k } from "@/app/_ui/Kit";
 import { Note, Shell, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, body, display, label, num } from "@/app/_ui/theme";
@@ -46,6 +47,8 @@ function ConfirmationInner() {
   const amount = Number(params.get("amount") || 0);
   const isCOD = params.get("cod") === "1";
   const orderNo = params.get("order") || txnid;
+  const deliveryWindow = normalizeDeliveryWindow(params.get("window"));
+  const delivery = DELIVERY_WINDOWS[deliveryWindow];
 
   const waText = encodeURIComponent(
     `Hi FitFuel! My order is confirmed.\nOrder: ${orderNo}\nAmount: ${
@@ -56,7 +59,7 @@ function ConfirmationInner() {
   const steps = [
     { Icon: CheckCircle, title: "Order confirmed", sub: "We have received your order." },
     { Icon: ChefHat, title: "Fresh preparation", sub: "Your meals are cooked fresh daily in our kitchen." },
-    { Icon: Clock, title: "Delivery by 10:00", sub: "07:00 to 10:00, to your door, every day." },
+    { Icon: Clock, title: `${delivery.label} delivery`, sub: `${delivery.time}, to your door on delivery days.` },
     {
       Icon: Truck,
       title: isCOD ? "Pay cash at the door" : "Payment received",
@@ -87,13 +90,12 @@ function ConfirmationInner() {
             {isCOD ? (
               <>
                 Keep <strong style={{ color: INK }}>{fmt(amount)}</strong> ready at delivery, GST
-                included. Fresh meals arrive between{" "}
-                <strong style={{ color: INK }}>07:00 and 10:00</strong> daily.
+                included. Fresh meals arrive <strong style={{ color: INK }}>{delivery.sentence}</strong> on delivery days.
               </>
             ) : (
               <>
-                Your FitFuel order is confirmed. Fresh meals at your door between{" "}
-                <strong style={{ color: INK }}>07:00 and 10:00</strong> daily.
+                Your FitFuel order is confirmed. Fresh meals arrive at your door{" "}
+                <strong style={{ color: INK }}>{delivery.sentence}</strong> on delivery days.
               </>
             )}
           </p>

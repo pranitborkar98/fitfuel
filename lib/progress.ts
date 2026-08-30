@@ -118,7 +118,8 @@ export async function getProgressData(userId: string): Promise<ProgressData> {
   const [activePlan, profile, bodyMetrics, mealLogs, foodEntries, workouts] =
     await Promise.all([
       prisma.userActivePlan.findFirst({
-        where: { userId, status: "active" },
+        where: { userId, status: "active", startDate: { lte: today }, endDate: { gte: today } },
+        orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
         select: {
           startDate: true,
           skipDates: true,

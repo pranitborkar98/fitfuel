@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         title="Privacy policy"
         deck="FitFuel personalises nutrition, so some of what we hold is health data. This says exactly what, why, and what you can make us do about it."
         meta={[
-          { k: "Last updated", v: "5 June 2026" },
+          { k: "Last updated", v: "30 August 2026" },
           { k: "Governing act", v: "DPDP 2023" },
           { k: "Data sold", v: "None" },
         ]}
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         <Clauses>
           <Clause no="01" title="Introduction">
             <p>
-              FitFuel, operated by [Registered Entity Name] in Pune, Maharashtra, India, respects
+              FitFuel is a food service based in Pune, Maharashtra, India. We respect
               your privacy. This policy explains what information we collect, why we collect it, how
               we use and protect it, and the rights you have. It applies to our website, app and all
               related Services. Because FitFuel personalises nutrition and fitness, some of the
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
             <ul>
               <li>Calculate your nutrition targets and match you to the right meal plan.</li>
               <li>Prepare and deliver your meals and run your subscription.</li>
-              <li>Power your tracking, progress and, in future, coaching features.</li>
+              <li>Power your tracking, progress and coaching features.</li>
               <li>Process payments, prevent fraud and provide customer support.</li>
               <li>Communicate service updates, and, with your consent, send relevant offers.</li>
               <li>Improve and secure the Services and meet our legal obligations.</li>
@@ -160,18 +160,16 @@ export default function PrivacyPage() {
             <p>To exercise any of these rights, contact us using the details below.</p>
           </Clause>
 
-          <Clause no="10" title="Grievance officer">
+          <Clause no="10" title="Privacy and grievance contact">
             <p>
-              In line with applicable Indian law, you can contact our Grievance Officer for any
-              concern about your data.
+              You can contact the FitFuel privacy and grievance contact for any concern about your
+              data or the way a privacy request has been handled.
             </p>
             <Note style={{ margin: "18px 0 14px", maxWidth: 660 }}>
               <p>
-                <strong>Grievance Officer:</strong> [Grievance Officer Name]
+                <strong>Privacy and grievance contact:</strong> FitFuel
                 <br />
-                FitFuel &middot; [Registered Entity Name]
-                <br />
-                [Full Registered Address, Pune, Maharashtra, PIN]
+                Kharadi, Pune, Maharashtra, India
                 <br />
                 Email: <A href="mailto:contact@fitfuel.in">contact@fitfuel.in</A>
               </p>

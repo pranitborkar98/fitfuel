@@ -4,10 +4,11 @@ import { auth } from '@/lib/auth'
 
 import { prisma } from '@/lib/prisma'
 import { calculateTDEE, getCalorieTarget, getMacroTargets } from '@/lib/tdee'
-import { addDays } from 'date-fns'
 import { enforceRateLimit } from '@/lib/rate-limit'
 import { readJson } from '@/lib/validation/core'
 import { onboardingSchema } from '@/lib/validation/schemas'
+import type { ActivityLevel, DietType, DietVariant, FitnessGoal, Gender, Prisma } from '@prisma/client'
+import { hasCompletePlanSchedule } from '@/lib/plan-readiness'
 
 // ── Plan selection logic ──────────────────────────────────────
 function getPlanSlug(goal: string, diet: string, condition: string): string {
@@ -23,8 +24,8 @@ function getPlanSlug(goal: string, diet: string, condition: string): string {
   if (goal === 'muscle_gain')            return `muscle-gain-${d}`
   if (goal === 'lean_bulk')              return `muscle-gain-${d}`
   if (goal === 'performance')            return `strength-hypertrophy-${d}`
-  if (goal === 'maintenance')            return `balanced-${d}`
-  return `balanced-${d}`
+  if (goal === 'maintenance')            return `balanced-diet-${d}`
+  return `balanced-diet-${d}`
 }
 
 function dietToSlug(diet: string): string {
@@ -33,7 +34,7 @@ function dietToSlug(diet: string): string {
     eggetarian:     'egg',
     non_vegetarian: 'non-veg',
     jain:           'jain',
-    vegan:          'veg',
+    vegan:          'vegan',
   }
   return map[diet] ?? 'veg'
 }
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (!rl.ok) return rl.response
     const parsed = await readJson(req, onboardingSchema)
     if (!parsed.ok) return parsed.response
-    const body = parsed.data as any
+    const body = parsed.data
 
     const {
       weightKg,
@@ -66,54 +67,64 @@ export async function POST(req: NextRequest) {
       allergies = [],
     } = body
 
-    if (!weightKg || !heightCm || !age || !gender || !activityLevel || !goal || !dietaryPreference) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+    const genderEnum = mapGender(gender)
+    const activityEnum = mapActivity(activityLevel)
+    const tdee = calculateTDEE({ weightKg, heightCm, age, gender: genderEnum, activityLevel: activityEnum })
+    const calorieTarget = getCalorieTarget(tdee, goal, genderEnum)
+    const macros = getMacroTargets(calorieTarget, goal, weightKg)
 
-    const tdee = calculateTDEE({ weightKg, heightCm, age, gender, activityLevel })
-    const calorieTarget = getCalorieTarget(tdee, goal, gender.toUpperCase() as any)
-    const macros = getMacroTargets(calorieTarget, goal as any, weightKg)
-
-    const primaryCondition = healthConditions[0] ?? 'none'
+    const primaryCondition: string = healthConditions.length > 0 ? healthConditions[0] : 'none'
     const dietSlug = dietToSlug(dietaryPreference)
     const targetSlug = getPlanSlug(goal, dietSlug, primaryCondition)
 
-    const plan = await prisma.mealPlan.findUnique({
-      where: { slug: targetSlug },
-    })
-
-    if (!plan) {
-      return NextResponse.json(
-        { error: `Plan not found: ${targetSlug}. Please seed this plan first.` },
-        { status: 500 }
-      )
-    }
-
-    if (!plan.isActive) {
-      return NextResponse.json(
-        { error: `Plan ${targetSlug} exists but is not active yet. Set isActive = true to enable it.` },
-        { status: 503 }
-      )
-    }
-
-    const existingProfile = await prisma.userProfile.findUnique({
-      where: { userId },
-    })
-
-    if (existingProfile?.onboardingComplete) {
-      return NextResponse.json({ error: 'Already onboarded' }, { status: 400 })
-    }
-
-    const confirmedOrder = await prisma.order.findFirst({
-      where: {
-        userId,
-        status: 'CONFIRMED',
-        userActivePlans: { none: {} },
+    const dietVariant = mapDietVariant(dietaryPreference)
+    const candidates = await prisma.mealPlan.findMany({
+      where: { isActive: true, dietaryVariant: dietVariant },
+      orderBy: [{ sortOrder: 'asc' }, { displayName: 'asc' }],
+      select: {
+        id: true,
+        slug: true,
+        displayName: true,
+        avgCaloriesPerDay: true,
+        subCategory: true,
+        cycleLengthDays: true,
+        mealsPerDay: true,
+        _count: { select: { scheduleSlots: true } },
+        planPrices: {
+          where: { isDigital: false, isActive: true },
+          select: { id: true },
+          take: 1,
+        },
       },
+    })
+    const orderable = candidates.filter((candidate) =>
+      candidate.planPrices.length > 0 && hasCompletePlanSchedule({
+        scheduleCount: candidate._count.scheduleSlots,
+        cycleLengthDays: candidate.cycleLengthDays,
+        mealsPerDay: candidate.mealsPerDay,
+      })
+    )
+    const desiredCategory = goal === 'muscle_gain' || goal === 'lean_bulk'
+      ? 'muscle_gain'
+      : goal === 'maintenance'
+        ? 'balanced'
+        : goal === 'performance'
+          ? 'strength'
+          : primaryCondition !== 'none'
+            ? primaryCondition
+            : 'weight_loss'
+    const plan = orderable.find((candidate) => candidate.slug === targetSlug)
+      ?? orderable.find((candidate) => candidate.subCategory === desiredCategory)
+      ?? orderable[0]
+      ?? null
+
+    const existingActivePlan = await prisma.userActivePlan.findFirst({
+      where: { userId, status: 'active' },
       orderBy: { createdAt: 'desc' },
+      select: { id: true },
     })
 
-    const result = await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const profile = await tx.userProfile.upsert({
         where: { userId },
         create: {
@@ -121,8 +132,8 @@ export async function POST(req: NextRequest) {
           weightKg,
           heightCm,
           age,
-          gender: gender.toUpperCase(),
-          activityLevel: activityLevel.toUpperCase(),
+          gender: genderEnum,
+          activityLevel: activityEnum,
           fitnessGoal: mapGoalToEnum(goal),
           dietPreference: mapDietToEnum(dietaryPreference),
           healthConditions,
@@ -136,8 +147,8 @@ export async function POST(req: NextRequest) {
           weightKg,
           heightCm,
           age,
-          gender: gender.toUpperCase(),
-          activityLevel: activityLevel.toUpperCase(),
+          gender: genderEnum,
+          activityLevel: activityEnum,
           fitnessGoal: mapGoalToEnum(goal),
           dietPreference: mapDietToEnum(dietaryPreference),
           healthConditions,
@@ -149,29 +160,19 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      let activePlan = null
-      if (confirmedOrder) {
-        const startDate = new Date()
-        const endDate = addDays(startDate, 30)
+      // Onboarding personalises food already purchased. It must never create
+      // a subscription from a generic confirmed order or a guessed plan.
+      await tx.userActivePlan.updateMany({
+        where: { userId, status: 'active' },
+        data: {
+          calorieTarget,
+          proteinTarget: macros.proteinG,
+          carbTarget: macros.carbsG,
+          fatTarget: macros.fatG,
+        },
+      })
 
-        activePlan = await tx.userActivePlan.create({
-          data: {
-            userId,
-            mealPlanId: plan.id,
-            orderId: confirmedOrder.id,
-            startDate,
-            endDate,
-            currentDay: 1,
-            status: 'active',
-            calorieTarget,
-            proteinTarget: macros.proteinG,
-            carbTarget: macros.carbsG,
-            fatTarget: macros.fatG,
-          },
-        })
-      }
-
-      return { profile, activePlan, plan }
+      return profile
     })
 
     return NextResponse.json({
@@ -179,13 +180,14 @@ export async function POST(req: NextRequest) {
       tdee,
       calorieTarget,
       macros,
-      plan: {
-        slug: result.plan.slug,
-        displayName: result.plan.displayName,
-        avgCaloriesPerDay: result.plan.avgCaloriesPerDay,
-      },
-      activePlanId: result.activePlan?.id ?? null,
-      requiresOrder: !confirmedOrder,
+      plan: plan ? {
+        slug: plan.slug,
+        displayName: plan.displayName,
+        avgCaloriesPerDay: plan.avgCaloriesPerDay,
+      } : null,
+      activePlanId: existingActivePlan?.id ?? null,
+      requiresOrder: !existingActivePlan,
+      recommendationUnavailable: !plan,
     })
   } catch (err) {
     console.error('[onboarding] error:', err)
@@ -193,8 +195,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function mapGoalToEnum(goal: string) {
-  const map: Record<string, string> = {
+function mapGender(gender: 'male' | 'female' | 'other'): Gender {
+  return { male: 'MALE', female: 'FEMALE', other: 'OTHER' }[gender] as Gender
+}
+
+function mapActivity(activity: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active'): ActivityLevel {
+  return activity.toUpperCase() as ActivityLevel
+}
+
+function mapGoalToEnum(goal: string): FitnessGoal {
+  const map: Record<string, FitnessGoal> = {
     weight_loss: 'LOSE_WEIGHT',
     aggressive_weight_loss: 'LOSE_WEIGHT',
     muscle_gain: 'GAIN_MUSCLE',
@@ -203,16 +213,27 @@ function mapGoalToEnum(goal: string) {
     performance: 'IMPROVE_FITNESS',
     manage_condition: 'MANAGE_CONDITION',
   }
-  return (map[goal] ?? 'MAINTAIN') as any
+  return map[goal] ?? 'MAINTAIN'
 }
 
-function mapDietToEnum(diet: string) {
-  const map: Record<string, string> = {
+function mapDietToEnum(diet: string): DietType {
+  const map: Record<string, DietType> = {
     vegetarian: 'VEGETARIAN',
     eggetarian: 'EGGETARIAN',
     non_vegetarian: 'NON_VEGETARIAN',
-    jain: 'VEGETARIAN',
-    vegan: 'VEGETARIAN',
+    jain: 'JAIN',
+    vegan: 'VEGAN',
   }
-  return (map[diet] ?? 'VEGETARIAN') as any
+  return map[diet] ?? 'VEGETARIAN'
+}
+
+function mapDietVariant(diet: string): DietVariant {
+  const map: Record<string, DietVariant> = {
+    vegetarian: 'VEG',
+    eggetarian: 'EGG',
+    non_vegetarian: 'NON_VEG',
+    jain: 'JAIN',
+    vegan: 'VEGAN',
+  }
+  return map[diet] ?? 'VEG'
 }

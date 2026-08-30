@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { parseDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { readJson, readQuery } from "@/lib/validation/core";
 import { workoutSessionQuerySchema, workoutSessionPostSchema } from "@/lib/validation/schemas";
 
@@ -70,8 +71,11 @@ export async function POST(req: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const { name, date } = parsed.data;
 
-    const sessionDate = date ? new Date(date) : new Date();
-    sessionDate.setHours(0, 0, 0, 0);
+    const sessionDate = date ? parseDateOnly(date) : todayIndiaDate();
+    if (!sessionDate) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+    if (sessionDate.getTime() > todayIndiaDate().getTime()) {
+      return NextResponse.json({ error: "Future workout sessions are not allowed" }, { status: 400 });
+    }
 
     const workoutSession = await prisma.workoutSession.create({
       data: {

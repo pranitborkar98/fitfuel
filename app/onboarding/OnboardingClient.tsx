@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, Target, Zap, Heart, CheckCircle2,
-  ChevronRight, ChevronLeft, Flame, Dumbbell,
+  Target, Zap, Heart, CheckCircle2,
+  ChevronRight, ChevronLeft,
   Activity, Scale, Apple
 } from 'lucide-react'
 
@@ -133,7 +133,7 @@ export default function OnboardingClient({ userName }: Props) {
     tdee: 0, calorieTarget: 0, planName: '',
   })
 
-  const set = (field: keyof FormData, value: any) =>
+  const set = <K extends keyof FormData>(field: K, value: FormData[K]) =>
     setForm(prev => ({ ...prev, [field]: value }))
 
   const toggleArray = (field: 'healthConditions' | 'allergies', value: string) => {
@@ -194,14 +194,20 @@ export default function OnboardingClient({ userName }: Props) {
         }),
       })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
+      const raw: unknown = await res.json().catch(() => ({}))
+      const data = typeof raw === 'object' && raw !== null
+        ? raw as Record<string, unknown>
+        : {}
+      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Something went wrong')
+      const plan = typeof data.plan === 'object' && data.plan !== null
+        ? data.plan as Record<string, unknown>
+        : null
 
       setResult({
-        tdee: data.tdee,
-        calorieTarget: data.calorieTarget,
-        planName: data.plan.displayName,
-        requiresOrder: data.requiresOrder ?? false,
+        tdee: typeof data.tdee === 'number' ? data.tdee : 0,
+        calorieTarget: typeof data.calorieTarget === 'number' ? data.calorieTarget : 0,
+        planName: plan && typeof plan.displayName === 'string' ? plan.displayName : 'Best-fit plan',
+        requiresOrder: data.requiresOrder === true,
       })
 
       // requiresOrder = true  → profile saved, but no confirmed order found
@@ -209,11 +215,11 @@ export default function OnboardingClient({ userName }: Props) {
       // requiresOrder = false → confirmed order existed, plan is live now
       //                          send to dashboard
       setTimeout(
-        () => router.push(data.requiresOrder ? '/plans' : '/dashboard'),
+        () => router.push(data.requiresOrder === true ? '/plans' : '/dashboard'),
         2000
       )
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Your profile could not be saved.')
       setLoading(false)
     }
   }

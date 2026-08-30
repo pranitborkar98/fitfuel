@@ -23,7 +23,19 @@ type StaffUser = {
   role: string;
 };
 
-const ROLES = ["OWNER", "ADMIN", "DISPATCH", "KITCHEN", "CUSTOMER"];
+function isStaffUser(value: unknown): value is StaffUser {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.id === "string" && typeof candidate.role === "string";
+}
+
+function responseError(value: unknown, fallback: string) {
+  if (typeof value !== "object" || value === null) return fallback;
+  const error = (value as Record<string, unknown>).error;
+  return typeof error === "string" ? error : fallback;
+}
+
+const ROLES = ["ADMIN", "DISPATCH", "KITCHEN", "CUSTOMER"];
 const ROLE_NOTE: Record<string, string> = {
   OWNER: "Full access",
   ADMIN: "Full access",
@@ -49,17 +61,18 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed");
-      const u: StaffUser = data.user;
+      const data: unknown = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(responseError(data, "Role change failed"));
+      const user = typeof data === "object" && data !== null ? (data as Record<string, unknown>).user : null;
+      if (!isStaffUser(user)) throw new Error("The server returned an invalid staff record");
       // update both lists
       setStaff((prev) => {
-        const without = prev.filter((s) => s.id !== u.id);
-        return u.role === "CUSTOMER" ? without : [...without, u].sort((a, b) => a.role.localeCompare(b.role));
+        const without = prev.filter((staffUser) => staffUser.id !== user.id);
+        return user.role === "CUSTOMER" ? without : [...without, user].sort((a, b) => a.role.localeCompare(b.role));
       });
-      setResults((prev) => (prev ? prev.map((r) => (r.id === u.id ? u : r)) : prev));
-    } catch (e: any) {
-      setErr(e?.message || "Failed");
+      setResults((previous) => (previous ? previous.map((result) => (result.id === user.id ? user : result)) : previous));
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Failed");
     } finally {
       setBusy(null);
     }
@@ -71,8 +84,11 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
     setErr(null);
     try {
       const res = await fetch(`/api/admin/staff?q=${encodeURIComponent(q.trim())}`);
-      const data = await res.json();
-      setResults(data.users ?? []);
+      if (!res.ok) throw new Error("Search failed");
+      const data: unknown = await res.json().catch(() => null);
+      const users = typeof data === "object" && data !== null ? (data as Record<string, unknown>).users : null;
+      if (!Array.isArray(users) || !users.every(isStaffUser)) throw new Error("Search returned invalid data");
+      setResults(users);
     } catch {
       setErr("Search failed");
     } finally {
@@ -84,7 +100,9 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
         <div style={{ width: 34, height: 34, borderRadius: 0, background: "#1a1a1a", border: `1px solid ${T.border}`, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: T.muted, fontSize: 13 }}>
-          {u.image ? <img src={u.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (u.name ?? u.email ?? "?").slice(0, 1).toUpperCase()}
+          {u.image
+            ? <span aria-hidden="true" style={{ width: "100%", height: "100%", backgroundImage: `url(${JSON.stringify(u.image)})`, backgroundPosition: "center", backgroundSize: "cover" }} />
+            : (u.name ?? u.email ?? "?").slice(0, 1).toUpperCase()}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{u.name ?? "—"}</div>
@@ -93,15 +111,19 @@ export default function StaffClient({ initialStaff, meId }: { initialStaff: Staf
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 11, color: T.muted }}>{ROLE_NOTE[u.role]}</span>
-        <select
+        {u.role === "OWNER" ? (
+          <span style={{ minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 12px", border: `1px solid ${T.border}`, borderRadius: 8, color: T.accent, fontSize: 13, fontWeight: 700 }}>
+            Owner · protected
+          </span>
+        ) : <select
           value={u.role}
           disabled={busy === u.id || u.id === meId}
           onChange={(e) => setRole(u.id, e.target.value)}
           title={u.id === meId ? "You can't change your own role" : ""}
-          style={{ background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "7px 10px", fontSize: 13, fontWeight: 600, cursor: u.id === meId ? "not-allowed" : "pointer" }}
+          style={{ minHeight: 44, background: T.soft, color: T.text, border: `1px solid ${T.border}`, borderRadius: 8, padding: "7px 10px", fontSize: 16, fontWeight: 600, cursor: u.id === meId ? "not-allowed" : "pointer" }}
         >
           {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+        </select>}
       </div>
     </div>
   );

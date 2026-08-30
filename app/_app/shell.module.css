@@ -1,8 +1,8 @@
 /* app/_app/shell.module.css
  *
  * The one breakpoint, the two chromes, and the states a style attribute
- * cannot express. Radius is 0 and there is not a shadow, gradient or blur in
- * this file: structure is 1px hairlines, as everywhere else.
+ * cannot express. The shell is deliberately quiet: food and daily actions,
+ * not the navigation, should own the customer's attention.
  *
  * Under 1024px the app is a phone: a bottom tab bar, no sidebar.
  * At and above it, the sidebar appears and the tab bar goes. Exactly one of
@@ -26,7 +26,7 @@
     flex-direction: column;
     position: fixed;
     inset: 0 auto 0 0;
-    width: 236px;
+    width: 252px;
     background: var(--ff-panel);
     border-right: 1px solid var(--ff-rule);
     overflow-y: auto;
@@ -34,7 +34,7 @@
   }
 
   .main {
-    padding-left: 236px;
+    padding-left: 252px;
   }
 }
 
@@ -42,38 +42,33 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 60px;
-  padding: 0 18px;
+  min-height: 68px;
+  padding: 0 20px;
   border-bottom: 1px solid var(--ff-rule);
   text-decoration: none;
   flex: none;
 }
 
-.brandMark {
-  width: 22px;
-  height: 22px;
-  background: var(--ff-lime);
-  flex: none;
-}
-
 .groupLabel {
-  padding: 20px 18px 8px;
+  padding: 22px 20px 7px;
 }
 
 .navRow {
   display: flex;
   align-items: center;
   gap: 11px;
-  min-height: 44px;
-  padding: 0 18px;
+  min-height: 46px;
+  margin: 2px 10px;
+  padding: 0 12px;
   text-decoration: none;
-  border-left: 2px solid transparent;
-  transition: background-color 0.16s ease, border-color 0.16s ease, padding-left 0.16s ease;
+  border: 1px solid transparent;
+  border-radius: var(--fk-r);
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 
 .navRow:hover {
   background: var(--ff-panel-2);
-  padding-left: 22px;
+  border-color: var(--ff-rule);
 }
 
 .navRow:focus-visible {
@@ -81,10 +76,10 @@
   outline-offset: -2px;
 }
 
-/* Active is carried by the lime rule AND the ink label, never by hue alone. */
+/* Active is carried by the wash, border, icon and ink label, never hue alone. */
 .navRowOn {
-  border-left-color: var(--ff-lime);
-  background: var(--ff-panel-2);
+  border-color: color-mix(in srgb, var(--ff-lime) 38%, transparent);
+  background: color-mix(in srgb, var(--ff-lime) 10%, var(--ff-panel));
 }
 
 .navRowOn .navLabel {
@@ -93,7 +88,8 @@
 
 .navLabel {
   font-family: var(--font-archivo), sans-serif;
-  font-size: 14px;
+  font-size: 14.5px;
+  font-weight: 550;
   color: var(--ff-mute);
   white-space: nowrap;
   overflow: hidden;
@@ -103,7 +99,7 @@
 .sidebarFoot {
   margin-top: auto;
   border-top: 1px solid var(--ff-rule);
-  padding: 14px 18px 18px;
+  padding: 14px 20px 18px;
 }
 
 /* ── Main column ──────────────────────────────────────────────────────── */
@@ -131,9 +127,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 56px;
-  padding: 0 16px;
-  background: var(--ff-bg);
+  min-height: 60px;
+  padding: 0 18px;
+  background: color-mix(in srgb, var(--ff-bg) 94%, transparent);
   border-bottom: 1px solid var(--ff-rule);
   position: sticky;
   top: 0;
@@ -155,7 +151,8 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 1px;
-  background: var(--ff-rule);
+  gap: 0;
+  background: color-mix(in srgb, var(--ff-panel) 96%, transparent);
   border-top: 1px solid var(--ff-rule);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -174,7 +171,7 @@
   gap: 4px;
   min-height: 60px;
   padding: 0 2px;
-  background: var(--ff-bg);
+  background: transparent;
   border: 0;
   border-top: 2px solid transparent;
   color: var(--ff-dim);
@@ -194,11 +191,11 @@
 }
 
 .tabLabel {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--font-archivo), sans-serif;
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0;
+  text-transform: none;
   line-height: 1;
 }
 
@@ -223,6 +220,8 @@
   overscroll-behavior: contain;
   background: var(--ff-bg);
   border-top: 1px solid var(--ff-rule);
+  border-radius: var(--fk-r-lg) var(--fk-r-lg) 0 0;
+  box-shadow: var(--fk-shadow-3);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
   animation: sheetIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -287,5 +286,4 @@
   .navRow,
   .tab,
   .sheetRow { transition: none; }
-  .navRow:hover { padding-left: 18px; }
 }

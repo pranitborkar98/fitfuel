@@ -24,17 +24,17 @@ const STEPS = [
   {
     n: "01",
     t: "Tell us about you",
-    d: "Share your body, goal, dietary preference and any health condition. It takes two minutes and powers everything that follows.",
+    d: "Share your goal, dietary preference and optional body details. These set your starting targets; you can review them in the app.",
   },
   {
     n: "02",
     t: "We build your plan",
-    d: "We calculate your exact calorie and macro targets and match you to a 30-day rotating menu personalised to your goal.",
+    d: "Choose a plan whose full kitchen schedule and active price are ready. Your profile can adjust the serving target without inventing a different menu.",
   },
   {
     n: "03",
     t: "We cook fresh, daily",
-    d: "Prepared every morning in our Pune kitchen. No deep frying, fresh-sourced ingredients, cooked the same day it reaches you.",
+    d: "The production sheet rolls up the scheduled recipes and each member's serving factor into the quantities the Kharadi kitchen prepares.",
   },
   {
     n: "04",
@@ -44,19 +44,19 @@ const STEPS = [
   {
     n: "05",
     t: "Track every gram",
-    d: "Tap “I ate this” and your meal auto-logs its macros. Watch your calories, protein and progress update in real time.",
+    d: "Tap “I ate this” and the serving assigned to your plan is logged to your diary with its matching macros.",
   },
   {
     n: "06",
     t: "Adjust and evolve",
-    d: "Rate meals, request swaps, and let the system recalibrate your targets as your body changes. The plan grows with you.",
+    d: "Rate meals, log progress and review a weekly recommendation. Any target change is shown before you choose to apply it.",
   },
 ];
 
 const MOAT = [
-  { t: "Track every gram", d: "Per-gram macro logging, not guesswork." },
-  { t: "No dish repeats in 30 days", d: "A full rotating month of variety." },
-  { t: "Personalised to your body", d: "Targets built from your metrics, not a template." },
+  { t: "One serving record", d: "The kitchen quantity and diary entry use the same portion factor." },
+  { t: "Only ready plans sell", d: "A plan needs a complete schedule and active price before checkout opens." },
+  { t: "Progress can change the target", d: "Weekly data produces a reviewable recommendation, never a hidden adjustment." },
 ];
 
 export default function HowItWorksPage() {
@@ -65,11 +65,11 @@ export default function HowItWorksPage() {
       <Masthead
         label="How it works"
         title="Your goal to your door"
-        deck="FitFuel is not just a meal box. It is a system that learns your body, feeds it right, and tracks every step. Here is exactly how it runs, every single day."
+        deck="FitFuel connects the plan you buy, the portion the kitchen prepares and the meal you log. Here is where each hand-off happens."
         meta={[
           { k: "Steps", v: "6" },
-          { k: "Menu cycle", v: "30 days" },
-          { k: "Deliveries", v: "1 a day" },
+          { k: "Kitchen source", v: "Plan schedule" },
+          { k: "Diary source", v: "Same serving" },
         ]}
       />
 
@@ -107,7 +107,7 @@ export default function HowItWorksPage() {
           <Wrap>
             <Head
               label="What makes us different"
-              title="Three things a tiffin cannot do"
+              title="Three parts of the connected loop"
               size="clamp(1.9rem,4.6vw,3.4rem)"
               max="18ch"
             />
@@ -123,8 +123,8 @@ export default function HowItWorksPage() {
             <Note style={{ marginTop: "clamp(28px,4vw,44px)" }}>
               <Prose>
                 <p>
-                  Every calorie and macro figure on this site comes from our own weighed kitchen
-                  records, not from a database estimate. Read the{" "}
+                  Recipe macros and serving quantities are stored with the plan and reused by the
+                  kitchen and diary. They are planning data, not medical measurements. Read the{" "}
                   <A href="/terms#imagery">note on imagery and data</A> for exactly what is
                   photographed and what is measured.
                 </p>
@@ -135,7 +135,7 @@ export default function HowItWorksPage() {
       </Stack>
 
       <Band
-        title="Start eating right tomorrow"
+        title="Start with one delivery day"
         body="Not next Monday. See the plan, or try a single trial day with no lock-in."
         href="/plans"
         cta="See the plans"

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readQuery } from "@/lib/validation/core";
+import { metricsQuerySchema } from "@/lib/validation/schemas";
 
 // GET /api/user/metrics/history?limit=30
 // Returns an array of HistoryRow objects ordered oldest → newest (for the chart)
@@ -20,8 +23,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(req.url);
-  const limit = Math.min(parseInt(searchParams.get("limit") ?? "30", 10), 100);
+  const rl = await enforceRateLimit(req, "read", session.user.id);
+  if (!rl.ok) return rl.response;
+  const parsed = readQuery(req, metricsQuerySchema);
+  if (!parsed.ok) return parsed.response;
+
+  const limit = Math.min(parsed.data.limit, 100);
 
   const rows = await prisma.bodyMetric.findMany({
     where:   { userId: session.user.id },
@@ -47,7 +54,7 @@ export async function GET(req: NextRequest) {
     if (r.notes) {
       try {
         const parsed = JSON.parse(r.notes) as Record<string, number>;
-        if (typeof parsed.bmr === "number") bmr = parsed.bmr;
+        if (typeof parsed.bmr === "number" && Number.isFinite(parsed.bmr)) bmr = parsed.bmr;
       } catch { /* malformed notes — skip bmr */ }
     }
 

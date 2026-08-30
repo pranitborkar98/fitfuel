@@ -5,6 +5,8 @@
 // Used by morning preview (today) and evening recap (tomorrow).
 
 import { prisma } from "@/lib/prisma";
+import { servingScaleForTarget } from "@/lib/portion-personalization";
+import { isPlanServiceDate } from "@/lib/plan-service-dates";
 import {
   type DeliveryWindowValue,
   type MealSlotValue,
@@ -37,7 +39,7 @@ export async function getUserDayMeals(
   userId: string,
   date: Date
 ): Promise<UserDayMeals | null> {
-  const plan = await (prisma as any).userActivePlan.findFirst({
+  const plan = await prisma.userActivePlan.findFirst({
     where: {
       userId,
       status: "active",
@@ -45,38 +47,41 @@ export async function getUserDayMeals(
       startDate: { lte: date },
       endDate: { gte: date },
     },
+    orderBy: { createdAt: "desc" },
     select: {
       mealPlanId: true,
       mealsPerDay: true,
       deliveryWindow: true,
+      calorieTarget: true,
       startDate: true,
+      duration: true,
       skipDates: true,
-      mealPlan: { select: { cycleLengthDays: true } },
+      mealPlan: { select: { cycleLengthDays: true, avgCaloriesPerDay: true } },
     },
   });
   if (!plan) return null;
 
   // Skip days produce no meal lineup
   const dateStr = date.toISOString().slice(0, 10);
-  const isSkipped = (plan.skipDates || []).some(
-    (sd: Date) => new Date(sd).toISOString().slice(0, 10) === dateStr
+  const isSkipped = !isPlanServiceDate(plan.duration, date) || plan.skipDates.some(
+    (skipDate) => skipDate.toISOString().slice(0, 10) === dateStr
   );
   if (isSkipped) {
     return {
       userId,
       date: dateStr,
       dayNumber: 0,
-      window: (plan.deliveryWindow || "MORNING") as DeliveryWindowValue,
+      window: plan.deliveryWindow,
       meals: [],
       totalCalories: 0,
     };
   }
 
   const cycleLen = plan.mealPlan?.cycleLengthDays || 30;
-  const dayNumber = menuDayNumber(new Date(plan.startDate), date, cycleLen);
+  const dayNumber = menuDayNumber(new Date(plan.startDate), date, cycleLen, plan.duration);
   const slots = mealSlotsForMealsPerDay(plan.mealsPerDay);
 
-  const rows = await (prisma as any).planScheduleSlot.findMany({
+  const rows = await prisma.planScheduleSlot.findMany({
     where: {
       mealPlanId: plan.mealPlanId,
       dayNumber,
@@ -84,6 +89,7 @@ export async function getUserDayMeals(
     },
     select: {
       mealSlot: true,
+      servingMultiplier: true,
       recipe: {
         select: {
           name: true,
@@ -94,14 +100,21 @@ export async function getUserDayMeals(
     },
   });
 
+  const personalScale = servingScaleForTarget({
+    calorieTarget: plan.calorieTarget,
+    planCalories: plan.mealPlan?.avgCaloriesPerDay,
+  }).factor;
+
   const meals: UserMealLine[] = rows
-    .filter((r: any) => r.recipe)
-    .map((r: any) => ({
-      slot: r.mealSlot as MealSlotValue,
-      recipeName: r.recipe.name as string,
-      calories: Number(r.recipe.caloriesPerServing || 0),
-      servingGrams: Number(r.recipe.servingSizeGrams || 0),
-    }))
+    .map((row) => {
+      const scale = Number(row.servingMultiplier || 1) * personalScale;
+      return {
+        slot: row.mealSlot,
+        recipeName: row.recipe.name,
+        calories: Math.round(row.recipe.caloriesPerServing * scale),
+        servingGrams: Math.round(row.recipe.servingSizeGrams * scale),
+      };
+    })
     .sort((a: UserMealLine, b: UserMealLine) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot]);
 
   const totalCalories = meals.reduce((sum, m) => sum + m.calories, 0);
@@ -110,7 +123,7 @@ export async function getUserDayMeals(
     userId,
     date: dateStr,
     dayNumber,
-    window: (plan.deliveryWindow || "MORNING") as DeliveryWindowValue,
+    window: plan.deliveryWindow,
     meals,
     totalCalories,
   };

@@ -1,19 +1,28 @@
 // app/api/user/active-plan/route.ts
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { menuDayNumber, todayISTDate } from "@/lib/production";
+import { remainingServiceDays } from "@/lib/plan-service-dates";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const limit = await enforceRateLimit(req, "read", session.user.id);
+  if (!limit.ok) return limit.response;
+  const today = todayISTDate();
 
-  const activePlan = await (prisma as any).userActivePlan.findFirst({
+  const activePlan = await prisma.userActivePlan.findFirst({
     where: {
       userId: session.user.id,
       status: "active",
+      startDate: { lte: today },
+      endDate: { gte: today },
     },
+    orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
     include: {
       mealPlan: {
         select: {
@@ -22,8 +31,9 @@ export async function GET() {
           slug: true,
           tier: true,
           category: true,
-          dietVariant: true,
-          caloriesPerDay: true,
+          dietaryVariant: true,
+          avgCaloriesPerDay: true,
+          cycleLengthDays: true,
           description: true,
         },
       },
@@ -34,21 +44,15 @@ export async function GET() {
     return NextResponse.json({ activePlan: null });
   }
 
-  // Calculate current day (1-based, cycles through 30)
   const startDate = new Date(activePlan.startDate);
-  const today = new Date();
-  const diffMs = today.getTime() - startDate.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const currentDay = (diffDays % 30) + 1;
-
-  // Calculate end date (30 days from start)
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 30);
-  const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+  const endDate = new Date(activePlan.endDate);
+  const currentDay = menuDayNumber(startDate, today, activePlan.mealPlan.cycleLengthDays, activePlan.duration);
+  const daysRemaining = remainingServiceDays(today, endDate, activePlan.duration);
 
   return NextResponse.json({
     activePlan: {
       id: activePlan.id,
+      isDigital: activePlan.isDigital,
       currentDay,
       startDate: activePlan.startDate,
       endDate: endDate.toISOString(),

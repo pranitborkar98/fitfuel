@@ -11,7 +11,7 @@ export const T = {
 
 export const inputStyle: React.CSSProperties = {
   width: "100%", background: T.soft, color: T.text, border: `1px solid ${T.border}`,
-  borderRadius: 0, padding: "9px 11px", fontSize: 13.5, fontFamily: "inherit", boxSizing: "border-box",
+  minHeight: 44, borderRadius: 9, padding: "9px 11px", fontSize: 13.5, fontFamily: "inherit", boxSizing: "border-box",
 };
 
 export const Text = (p: React.InputHTMLAttributes<HTMLInputElement>) => <input {...p} style={{ ...inputStyle, ...(p.style || {}) }} />;
@@ -20,12 +20,12 @@ export const Select = (p: React.SelectHTMLAttributes<HTMLSelectElement>) => <sel
 export const Label = ({ children }: { children: React.ReactNode }) => <div style={{ fontSize: 12, color: T.muted, marginBottom: 5, fontWeight: 600 }}>{children}</div>;
 export const Check = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13.5, color: T.text }}>
-    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 16, height: 16, accentColor: T.accent }} />
+    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, accentColor: T.accent }} />
     {label}
   </label>
 );
 export const btn = (primary = false): React.CSSProperties => ({
   background: primary ? T.accent : "transparent", color: primary ? "#080808" : T.text,
-  border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 0, padding: "8px 15px",
+  minHeight: 44, border: `1px solid ${primary ? T.accent : T.border}`, borderRadius: 9, padding: "8px 15px",
   fontSize: 13, fontWeight: 700, cursor: "pointer",
 });

@@ -54,18 +54,45 @@ export async function getPersonalization(
   const planCalories = data.targetCalories ?? (macros.proteinG * 4 + macros.carbsG * 4 + macros.fatG * 9);
 
   let firstName: string | undefined;
-  let profile: any = null;
-  let metric: any = null;
+  let profile: {
+    heightCm: number | null;
+    weightKg: number | null;
+    targetWeightKg: number | null;
+    age: number | null;
+    calorieTarget: number | null;
+    tdee: number | null;
+  } | null = null;
+  let metric: {
+    weightKg: number | null;
+    bmi: number | null;
+    bodyFatPct: number | null;
+  } | null = null;
   if (opts.userId) {
-    const user = await (prisma as any).user.findUnique({
-      where: { id: opts.userId },
-      select: { name: true },
-    }).catch(() => null);
+    const [user, savedProfile, latestMetric] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: opts.userId },
+        select: { name: true },
+      }),
+      prisma.userProfile.findUnique({
+        where: { userId: opts.userId },
+        select: {
+          heightCm: true,
+          weightKg: true,
+          targetWeightKg: true,
+          age: true,
+          calorieTarget: true,
+          tdee: true,
+        },
+      }),
+      prisma.bodyMetric.findFirst({
+        where: { userId: opts.userId },
+        orderBy: { measuredAt: "desc" },
+        select: { weightKg: true, bmi: true, bodyFatPct: true },
+      }),
+    ]);
     firstName = user?.name ? String(user.name).split(/\s+/)[0] : undefined;
-    profile = await (prisma as any).userProfile.findUnique({ where: { userId: opts.userId } }).catch(() => null);
-    metric = await (prisma as any).bodyMetric.findFirst({
-      where: { userId: opts.userId }, orderBy: { measuredAt: "desc" },
-    }).catch(() => null);
+    profile = savedProfile;
+    metric = latestMetric;
   }
 
   const o = opts.overrides ?? {};

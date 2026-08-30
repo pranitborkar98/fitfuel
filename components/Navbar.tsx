@@ -48,7 +48,7 @@ const planCategories = [
 
 const planTools = [
   { label: "TDEE Calculator", href: "/tdee-calculator", icon: <Calculator size={14} color={ICON} />, note: "Know your daily calories, free" },
-  { label: "Find My Plan",    href: "/#finder",         icon: <Sparkles size={14} color={ICON} />,   note: "60-second plan match" },
+  { label: "Find My Plan",    href: "/plans",            icon: <Sparkles size={14} color={ICON} />,   note: "Set diet, days and meals" },
 ];
 
 const companyLinks = [
@@ -69,7 +69,7 @@ const companyLinks = [
 // single thing you can buy in one click, and until /menu existed the site had
 // no route at all for the customer who is just hungry tonight.
 const topLinks = [
-  { label: "Menu",         href: "/" },
+  { label: "Single Dishes", href: "/menu" },
   { label: "Supplements",  href: "/supplements" },
   { label: "How It Works", href: "/how-it-works" },
   { label: "Results",      href: "/results" },
@@ -132,7 +132,13 @@ export default function Navbar() {
   }, []);
 
   // Route change closes everything
-  useEffect(() => { setOpenMenu(null); setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setOpenMenu(null);
+      setMobileOpen(false);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
 
   // Esc closes menus
   useEffect(() => {
@@ -190,13 +196,14 @@ export default function Navbar() {
       }
     };
     document.addEventListener("keydown", onKeyDown);
+    const opener = hamburger.current;
 
     return () => {
       body.style.overflow = prevOverflow;
       body.style.paddingRight = prevPad;
       document.removeEventListener("keydown", onKeyDown);
       // Return focus to the control that opened the panel.
-      hamburger.current?.focus();
+      opener?.focus();
     };
   }, [mobileOpen]);
 
@@ -298,7 +305,7 @@ export default function Navbar() {
                     borderRadius: 0, padding: "12px 16px", textDecoration: "none",
                   }}>
                     <span style={{ fontSize: 13, color: "#d1d5db" }}>
-                      <b style={{ color: LIME }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch delivered tomorrow. No lock-in.
+                  <b style={{ color: LIME }}>Trial day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch in your chosen window. No subscription.
                     </span>
                     <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "6px 14px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start Trial</span>
                   </Link>
@@ -360,7 +367,7 @@ export default function Navbar() {
                     somewhere else. #737373 was also 4.0:1 and failed AA. */}
                 <div style={{ width: 28, height: 28, borderRadius: 0, overflow: "hidden", background: "var(--ff-panel)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {user?.image
-                    ? <img src={user.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ? <span aria-hidden="true" style={{ width: "100%", height: "100%", backgroundImage: `url(${JSON.stringify(user.image)})`, backgroundPosition: "center", backgroundSize: "cover" }} />
                     : <User size={14} color="var(--ff-dim)" />}
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ff-ink)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

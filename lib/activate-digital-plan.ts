@@ -1,60 +1,123 @@
-// lib/activate-digital-plan.ts — creates isDigital UserActivePlan (with bundle) + coupon redemption. Idempotent.
-// Phase 13D (capture): persists optional body stats (height/weight/goal/age) onto UserProfile,
-// keyed by the order's userId (@unique). Only provided fields are written — never clobbers
-// existing values with blanks. Seeds the dashboard AND feeds the PDF personalisation engine.
+import { planDateRange } from "@/lib/plan-service-dates";
 import { prisma } from "@/lib/prisma";
-import { PlanDuration } from "@prisma/client";
+import { todayISTDate } from "@/lib/production";
+import { DigitalBundle, PlanDuration, type Prisma } from "@prisma/client";
 
-const DUR_DAYS: Record<string, number> = { TRIAL_DAY: 1, WEEKLY: 7, BI_WEEKLY: 14, MONTHLY_EXCL_WEEKENDS: 26, ONE_MONTH: 30, TWO_MONTH: 60, THREE_MONTH: 90 };
+export interface CapturedProfile {
+  heightCm?: number;
+  weightKg?: number;
+  targetWeightKg?: number;
+  age?: number;
+}
 
-export interface CapturedProfile { heightCm?: number; weightKg?: number; targetWeightKg?: number; age?: number; }
-export interface ActivateDigitalArgs { orderId: string; mealPlanId: string; durEnum: string; bundle?: string; profile?: CapturedProfile; }
+export interface ActivateDigitalArgs {
+  orderId: string;
+  mealPlanId: string;
+  durEnum: string;
+  bundle?: string;
+  profile?: CapturedProfile;
+}
+
+function durationValue(value: string): PlanDuration | null {
+  switch (value) {
+    case "TRIAL_DAY": case "WEEKLY": case "BI_WEEKLY": case "MONTHLY_EXCL_WEEKENDS":
+    case "ONE_MONTH": case "TWO_MONTH": case "THREE_MONTH":
+      return value;
+    default:
+      return null;
+  }
+}
+
+function bundleValue(value: string): DigitalBundle | null {
+  if (value === "STARTER" || value === "PRO") return value;
+  return null;
+}
+
+function errorCode(error: unknown): string | null {
+  return typeof error === "object" && error !== null && "code" in error ? String(error.code) : null;
+}
 
 async function persistProfile(userId: string, profile?: CapturedProfile) {
   if (!profile) return;
-  const data: Record<string, number> = {};
+  const data: Pick<Prisma.UserProfileUncheckedCreateInput, "heightCm" | "weightKg" | "targetWeightKg" | "age"> = {};
   if (typeof profile.heightCm === "number") data.heightCm = profile.heightCm;
   if (typeof profile.weightKg === "number") data.weightKg = profile.weightKg;
   if (typeof profile.targetWeightKg === "number") data.targetWeightKg = profile.targetWeightKg;
   if (typeof profile.age === "number") data.age = profile.age;
-  if (!Object.keys(data).length) return;
+  if (Object.keys(data).length === 0) return;
   try {
-    // userId is @unique on UserProfile — safe to upsert on it.
-    await (prisma as any).userProfile.upsert({
+    await prisma.userProfile.upsert({
       where: { userId },
-      update: data,          // merge: only the captured fields change
+      update: data,
       create: { userId, ...data },
     });
-  } catch (e) {
-    // Never let a profile write fail the activation — the customer has paid.
-    console.error("[activateDigitalPlan] profile persist failed", { userId, e });
+  } catch (error: unknown) {
+    // Access is the paid-for outcome. Profile enrichment may be repaired later.
+    console.error("[activateDigitalPlan] profile persist failed", { userId, error });
   }
 }
 
-export async function activateDigitalPlan({ orderId, mealPlanId, durEnum, bundle = "STARTER", profile }: ActivateDigitalArgs) {
-  const existing = await (prisma as any).userActivePlan.findFirst({ where: { orderId, isDigital: true } });
-  if (existing) {
-    // Idempotent re-hit (PayU can fire twice): still make sure captured stats are saved.
-    await persistProfile(existing.userId, profile);
-    return existing;
+export async function activateDigitalPlan({
+  orderId,
+  mealPlanId,
+  durEnum,
+  bundle = "STARTER",
+  profile,
+}: ActivateDigitalArgs) {
+  const duration = durationValue(durEnum);
+  const digitalBundle = bundleValue(bundle);
+  if (!duration) throw new Error("Invalid digital plan duration");
+  if (!digitalBundle) throw new Error("Invalid digital plan bundle");
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const activePlan = await prisma.$transaction(async (tx) => {
+        const existing = await tx.userActivePlan.findFirst({ where: { orderId, isDigital: true } });
+        if (existing) return existing;
+
+        const [order, plan] = await Promise.all([
+          tx.order.findUnique({ where: { id: orderId }, select: { userId: true } }),
+          tx.mealPlan.findUnique({
+            where: { id: mealPlanId },
+            select: {
+              avgCaloriesPerDay: true,
+              avgProteinGrams: true,
+              avgCarbsGrams: true,
+              avgFatGrams: true,
+            },
+          }),
+        ]);
+        if (!order) throw new Error("Order not found");
+        if (!plan) throw new Error("Plan not found");
+
+        const { startDate, endDate } = planDateRange(todayISTDate(), duration);
+        return tx.userActivePlan.create({
+          data: {
+            userId: order.userId,
+            mealPlanId,
+            orderId,
+            startDate,
+            endDate,
+            currentDay: 1,
+            status: "active",
+            isDigital: true,
+            bundle: digitalBundle,
+            duration,
+            calorieTarget: plan.avgCaloriesPerDay,
+            proteinTarget: plan.avgProteinGrams,
+            carbTarget: plan.avgCarbsGrams,
+            fatTarget: plan.avgFatGrams,
+            skipDates: [],
+          },
+        });
+      }, { isolationLevel: "Serializable" });
+
+      await persistProfile(activePlan.userId, profile);
+      return activePlan;
+    } catch (error: unknown) {
+      if (errorCode(error) === "P2034" && attempt < 2) continue;
+      throw error;
+    }
   }
-  const order = await (prisma as any).order.findUnique({ where: { id: orderId } });
-  if (!order) throw new Error("Order not found");
-  const plan = await (prisma as any).mealPlan.findUnique({ where: { id: mealPlanId } });
-  if (!plan) throw new Error("Plan not found");
-
-  const days = DUR_DAYS[durEnum] ?? 30;
-  const startDate = new Date(); const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + days);
-
-  const activePlan = await (prisma as any).userActivePlan.create({
-    data: { userId: order.userId, mealPlanId, orderId, startDate, endDate, currentDay: 1, status: "active", isDigital: true, bundle, duration: durEnum as PlanDuration, calorieTarget: plan.avgCaloriesPerDay, proteinTarget: plan.avgProteinGrams, carbTarget: plan.avgCarbsGrams, fatTarget: plan.avgFatGrams, skipDates: [] },
-  });
-
-  await persistProfile(order.userId, profile);
-
-  if (order.couponCode && order.discountRs > 0) {
-    const coupon = await (prisma as any).coupon.findUnique({ where: { code: order.couponCode } });
-    if (coupon) await (prisma as any).couponRedemption.create({ data: { couponId: coupon.id, userId: order.userId, orderId, amountRs: order.discountRs } });
-  }
-  return activePlan;
+  throw new Error("Could not activate digital plan");
 }

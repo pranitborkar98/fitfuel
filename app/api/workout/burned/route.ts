@@ -5,7 +5,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { formatDateOnly, parseDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readQuery } from "@/lib/validation/core";
+import { workoutBurnedQuerySchema } from "@/lib/validation/schemas";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,10 +17,13 @@ export async function GET(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "read", session.user.id);
+    if (!rl.ok) return rl.response;
+    const query = readQuery(req, workoutBurnedQuerySchema);
+    if (!query.ok) return query.response;
 
-    const dateParam = req.nextUrl.searchParams.get("date");
-    const date = dateParam ? new Date(dateParam) : new Date();
-    date.setHours(0, 0, 0, 0);
+    const date = query.data.date ? parseDateOnly(query.data.date) : todayIndiaDate();
+    if (!date) return NextResponse.json({ error: "Invalid date" }, { status: 400 });
 
     const sessions = await prisma.workoutSession.findMany({
       where: {
@@ -32,7 +39,7 @@ export async function GET(req: NextRequest) {
       0
     );
 
-    return NextResponse.json({ date: date.toISOString().split("T")[0], caloriesBurned: totalBurned });
+    return NextResponse.json({ date: formatDateOnly(date), caloriesBurned: totalBurned });
   } catch (err) {
     console.error("[GET /api/workout/burned]", err);
     return NextResponse.json({ error: "Failed to fetch burned calories" }, { status: 500 });

@@ -12,6 +12,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 // Prescription shape stored in ExerciseScheduleDay.exercises (Json).
 interface PlannedExercise {
@@ -22,6 +23,33 @@ interface PlannedExercise {
   durationSecs: number | null;
   restSecs: number;
   notes: string | null;
+}
+
+function boundedInteger(value: unknown, min: number, max: number): number | null {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= min && number <= max ? number : null;
+}
+
+function plannedExercises(value: Prisma.JsonValue): PlannedExercise[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return [];
+    const item = entry as Record<string, unknown>;
+    const exerciseId = typeof item.exerciseId === "string" ? item.exerciseId.trim().slice(0, 120) : "";
+    const name = typeof item.name === "string" ? item.name.trim().slice(0, 160) : "";
+    const sets = boundedInteger(item.sets, 1, 20);
+    const restSecs = boundedInteger(item.restSecs, 0, 3_600);
+    if (!exerciseId || !name || sets === null || restSecs === null) return [];
+    return [{
+      exerciseId,
+      name,
+      sets,
+      reps: item.reps == null ? null : boundedInteger(item.reps, 1, 1_000),
+      durationSecs: item.durationSecs == null ? null : boundedInteger(item.durationSecs, 1, 14_400),
+      restSecs,
+      notes: typeof item.notes === "string" ? item.notes.trim().slice(0, 500) || null : null,
+    }];
+  });
 }
 
 export async function GET() {
@@ -44,7 +72,8 @@ export async function GET() {
 
   // 1. Active plan → which workout program category/tier
   const activePlan = await prisma.userActivePlan.findFirst({
-    where: { userId, status: "active" },
+    where: { userId, status: "active", startDate: { lte: day }, endDate: { gte: day } },
+    orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
     select: {
       mealPlan: { select: { subCategory: true, tier: true } },
     },
@@ -91,7 +120,7 @@ export async function GET() {
   }
 
   // 4. Hydrate exercise details from the library
-  const planned = (today.exercises as unknown as PlannedExercise[]) ?? [];
+  const planned = plannedExercises(today.exercises);
   const ids = planned.map((p) => p.exerciseId);
 
   const library = await prisma.exercise.findMany({

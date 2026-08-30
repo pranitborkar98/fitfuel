@@ -25,7 +25,7 @@
 //
 // framer-motion is gone. Reveals are the CSS scroll-driven ones from the kit.
 
-import { ChefHat, Heart, Shield, Star, Truck, Users } from "lucide-react";
+import { ChefHat, Scale, Shield, Star, Truck, Users } from "lucide-react";
 
 import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import { Head, Idx, Row, Spec, Tile, Tiles, k } from "@/app/_ui/Kit";
@@ -34,9 +34,9 @@ import { SECTION, body, figure, label, sub } from "@/app/_ui/theme";
 import s from "./about.module.css";
 
 const STATS = [
-  { value: "2019", label: "Founded" },
-  { value: "145+", label: "Customers" },
-  { value: "5.0", label: "Average rating" },
+  { value: "1", label: "Kharadi kitchen" },
+  { value: "2", label: "Delivery windows" },
+  { value: TRIAL_TOTAL_GLYPH, label: "Trial, all-in" },
   { value: "FSSAI", label: "Licensed kitchen" },
 ];
 
@@ -44,12 +44,12 @@ const VALUES = [
   {
     icon: ChefHat,
     title: "Chef-cooked daily",
-    desc: "Every meal is prepared fresh each morning in our FSSAI-certified kitchen in Kharadi. No frozen food, no reheating, ever.",
+    desc: "Meals are prepared for the day's delivery run in our FSSAI-licensed kitchen in Kharadi.",
   },
   {
-    icon: Heart,
-    title: "Nutritionist-designed",
-    desc: "Our meal plans are built around real nutrition science: the right macros for your specific goal, not just calorie counting.",
+    icon: Scale,
+    title: "Measured recipes",
+    desc: "The plan schedule, kitchen quantities and member diary use the same recipe and serving data.",
   },
   {
     icon: Shield,
@@ -59,7 +59,7 @@ const VALUES = [
   {
     icon: Truck,
     title: "Daily 07:00 to 10:00",
-    desc: "Fresh meals delivered to your door every morning between 7 and 10. Consistent, reliable, on your schedule.",
+    desc: "Choose the morning window from 7 to 10 or the evening window from 5 to 8 when that option is available at checkout.",
   },
   {
     icon: Star,
@@ -77,29 +77,19 @@ const TIMELINE = [
   {
     year: "2019",
     title: "FitFuel is born",
-    desc: "Pranit Borkar starts FitFuel out of a simple belief: nutritious food should be accessible, affordable, and actually delicious. Operations begin in Kharadi, Pune.",
-  },
-  {
-    year: "2021",
-    title: "Plans expand",
-    desc: "Growing demand leads to the full suite of meal plans: Muscle Gain, Weight Loss, Balanced Diet, Office Employee and Jain Diet, each with its own menu.",
-  },
-  {
-    year: "2024",
-    title: "FSSAI certified kitchen",
-    desc: "Official FSSAI certification secured. Kitchen operations formalised, delivery zones expanded across Kharadi and surrounding Pune areas.",
+    desc: "Pranit Borkar starts FitFuel with a simple belief: nutritious food should be accessible, affordable and worth eating. Operations begin in Kharadi, Pune.",
   },
   {
     year: "2026",
-    title: "Full platform revamp",
-    desc: "FitFuel moves beyond meal delivery, rebuilding from the ground up as a health platform with nutrition tracking, training and a matched supplement stack.",
+    title: "Kitchen and diary connect",
+    desc: "FitFuel connects the purchased plan to kitchen production and the member diary, so the serving cooked and the serving logged come from the same source.",
   },
 ];
 
 const KITCHEN = [
   { label: "Kitchen location", value: "Kharadi, Pune 412207" },
   { label: "FSSAI licence", value: "21523035002815" },
-  { label: "Delivery hours", value: "07:00 to 10:00 daily" },
+  { label: "Delivery windows", value: "07:00–10:00 and 17:00–20:00" },
   { label: "Operating since", value: "2019" },
 ];
 
@@ -109,7 +99,7 @@ export default function AboutClient() {
       <Masthead
         label="About"
         title="From a small kitchen to your doorstep"
-        deck="FitFuel was founded in Pune in 2019 on a belief that nutritious food should be accessible, affordable and worth eating. Here is how it has gone."
+        deck="FitFuel started in Pune with a belief that nutritious food should be accessible, affordable and worth eating. Today the kitchen, purchased plan and member diary work from one serving record."
       />
 
       {/* The readout: signature device 1, welded to the page by hairlines. */}
@@ -147,18 +137,18 @@ export default function AboutClient() {
                 <p>
                   FitFuel was founded by Pranit Borkar in 2019 with a passion for healthy living and
                   a belief that nutritious food should be both accessible and enjoyable. What started
-                  as a small kitchen operation in Kharadi has grown into a full meal delivery service
-                  trusted by hundreds of Pune residents.
+                  as a small kitchen operation in Kharadi has grown into a meal delivery service with
+                  its own connected planning and tracking system.
                 </p>
                 <p>
                   We have spent years honing recipes, building systems and listening to customers.
-                  Every meal plan, from Muscle Gain to Jain Diet, was built from real feedback, real
-                  nutrition science and real kitchen experience.
+                  The current catalogue is deliberately honest about which plan concepts have a
+                  complete kitchen schedule and price, and which ones are still being built.
                 </p>
                 <p>
-                  Now in 2026 we are going further. The same kitchen quality and the same daily
-                  delivery promise, on a platform that tracks your nutrition, supports your training
-                  and grows with your goals.
+                  The next step is not a bigger list of promises. It is a tighter loop: what you buy
+                  determines what the kitchen portions, and confirming a meal logs that same serving
+                  in your diary.
                 </p>
               </Prose>
 
@@ -185,8 +175,8 @@ export default function AboutClient() {
           <Wrap>
             <Head
               label="Timeline"
-              title="Seven years, four turns"
-              deck="Each of these changed what FitFuel could actually deliver, rather than what it said about itself."
+              title="Two points we can stand behind"
+              deck="The origin of the kitchen, and the connected operating model customers can use now."
               size="clamp(2rem,5vw,3.6rem)"
             />
             <div className={k.rows} style={{ marginTop: "clamp(28px,4vw,46px)" }}>

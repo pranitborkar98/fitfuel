@@ -7,6 +7,7 @@
 
 import { useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
+import Image from "next/image";
 
 const C = {
   border: "#222", soft: "#0c0c0c", text: "#ffffff", muted: "#888888",
@@ -32,7 +33,10 @@ export default function ImageUpload({
 
   async function handleFile(file?: File | null) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) { setErr("Please choose an image file."); return; }
+    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      setErr("Choose a JPG, PNG, WebP, or AVIF image.");
+      return;
+    }
     if (file.size > 8 * 1024 * 1024) { setErr("Image must be under 8 MB."); return; }
     setBusy(true); setErr(null);
     try {
@@ -42,8 +46,8 @@ export default function ImageUpload({
         handleUploadUrl: "/api/admin/upload",
       });
       onChange(blob.url);
-    } catch (e: any) {
-      setErr(e?.message || "Upload failed. Is the Blob store connected?");
+    } catch (error: unknown) {
+      setErr(error instanceof Error ? error.message : "Upload failed. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -55,7 +59,7 @@ export default function ImageUpload({
 
       {value ? (
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <img src={value} alt="" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.border}`, background: C.soft }} />
+          <Image src={value} alt="" width={72} height={72} unoptimized style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.border}`, background: C.soft }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <button type="button" onClick={() => inputRef.current?.click()} disabled={busy} style={btnStyle(false)}>{busy ? "Uploading…" : "Replace"}</button>
             <button type="button" onClick={() => onChange("")} style={{ ...btnStyle(false), color: C.danger, borderColor: "#3a1c1c" }}>Remove</button>
@@ -79,7 +83,7 @@ export default function ImageUpload({
         </div>
       )}
 
-      <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files?.[0])} />
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files?.[0])} />
 
       {err && <div style={{ color: C.danger, fontSize: 12, marginTop: 6 }}>{err}</div>}
 

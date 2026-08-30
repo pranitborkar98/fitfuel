@@ -21,19 +21,23 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, attributeRefSchema);
   if (!parsed.ok) return parsed.response;
-  const code = (parsed.data.code ?? "").trim().slice(0, 64);
+  const code = (parsed.data.code ?? "").trim().toUpperCase().slice(0, 64);
   if (!code) return NextResponse.json({ ok: true, attributed: false });
 
   const resolved = await resolveReferralCode(code);
   if (!resolved) return NextResponse.json({ ok: true, attributed: false, reason: "unknown_code" });
+  const resolvedCode = resolved.kind === "PARTNER" ? resolved.partner.code : code;
 
-  const self = await (prisma as any).user.findFirst({
-    where: { id: session.user.id, referralCode: code },
+  const self = await prisma.user.findFirst({
+    where: {
+      id: session.user.id,
+      OR: [{ referralCode: resolvedCode }, { ownedPartner: { code: resolvedCode } }],
+    },
     select: { id: true },
   });
   if (self) return NextResponse.json({ ok: true, attributed: false, reason: "self" });
 
-  const u = await (prisma as any).user.findUnique({
+  const u = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { referredByPartnerCode: true },
   });
@@ -41,9 +45,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, attributed: false, reason: "already_attributed" });
   }
 
-  await (prisma as any).user.update({
+  await prisma.user.update({
     where: { id: session.user.id },
-    data: { referredByPartnerCode: code },
+    data: { referredByPartnerCode: resolvedCode },
   });
 
   return NextResponse.json({ ok: true, attributed: true });

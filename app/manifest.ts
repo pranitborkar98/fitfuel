@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FitFuel, Personal Health Operating System",
+    name: "FitFuel Pune",
     short_name: "FitFuel",
-    description: "Verified meals, macros tracked, workouts logged, coaching built in. Pune.",
+    description: "Chef-cooked meals connected to your nutrition target, delivery and diary in Pune.",
     start_url: "/",
     display: "standalone",
     background_color: "#080808",

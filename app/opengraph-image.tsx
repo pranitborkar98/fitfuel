@@ -75,7 +75,7 @@ export default function OG() {
             train with you<span style={{ color: "#84cc16" }}>.</span>
           </div>
           <div style={{ fontSize: 28, color: "#9a9a94", marginTop: 26 }}>
-            Verified meals · macros tracked · coaching built in · Pune
+            Cooked meals · matching macros · connected diary · Pune
           </div>
         </div>
 
@@ -83,8 +83,8 @@ export default function OG() {
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
           <div style={{ width: "100%", height: 1, background: "#232320" }} />
           <div style={{ display: "flex", gap: 28, fontSize: 22, color: "#85857e" }}>
-            <span style={{ color: "#f7f7f5" }}>₹112 / meal</span>
-            <span>126 plans</span>
+            <span style={{ color: "#f7f7f5" }}>Cooked in Kharadi</span>
+            <span>Meals, diary and kitchen connected</span>
             <span>fitfuel.in</span>
           </div>
         </div>

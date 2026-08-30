@@ -28,13 +28,13 @@ import { prisma } from "@/lib/prisma";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { DISH_BY_ID, MAX_QTY, isOrderable, receipt, resolveLines } from "@/lib/menu-cart";
-
-const PAYU_KEY = process.env.PAYU_MERCHANT_KEY!;
-const PAYU_SALT = process.env.PAYU_MERCHANT_SALT!;
-const PAYU_URL = "https://secure.payu.in/_payment";
+import { resolveCheckoutCustomer } from "@/lib/checkout-customer";
+import { auth } from "@/lib/auth";
+import { getPayuConfig } from "@/lib/payu-config";
+import { captureCheckoutReferral } from "@/lib/checkout-referral";
 
 function genOrderNumber(): string {
-  return `FF${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 900 + 100)}`;
+  return `FF${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
 const dishOrderSchema = z.object({
@@ -57,25 +57,15 @@ const dishOrderSchema = z.object({
     .max(40),
 });
 
-async function upsertCustomer(email: string, phone: string, name: string) {
-  let user = await prisma.user.findFirst({ where: { email } });
-  if (!user && phone) user = await prisma.user.findFirst({ where: { phone } });
-  const phoneOwner = phone ? await prisma.user.findFirst({ where: { phone } }) : null;
-
-  if (user) {
-    const data: { name: string; phone?: string } = { name };
-    if (phone && (!phoneOwner || phoneOwner.id === user.id)) data.phone = phone;
-    return prisma.user.update({ where: { id: user.id }, data });
-  }
-  const data: { email: string; name: string; phone?: string } = { email, name };
-  if (phone && !phoneOwner) data.phone = phone;
-  return prisma.user.create({ data });
-}
-
 export async function POST(req: NextRequest) {
   try {
     const rl = await enforceRateLimit(req, "checkout");
     if (!rl.ok) return rl.response;
+    const payu = getPayuConfig();
+    if (!payu) {
+      console.error("[dish order init] Missing or invalid payment configuration");
+      return NextResponse.json({ error: "Online payment is temporarily unavailable." }, { status: 503 });
+    }
 
     const parsed = await readJson(req, dishOrderSchema);
     if (!parsed.ok) return parsed.response;
@@ -98,30 +88,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
     }
 
-    const user = await upsertCustomer(email, phone, firstname);
-    const addr = await prisma.address.create({
-      data: {
-        userId: user.id,
-        line1: address,
-        area: city ?? "Pune",
-        city: city ?? "Pune",
-        pincode,
-      },
+    const session = await auth();
+    const user = await resolveCheckoutCustomer({
+      email,
+      phone,
+      name: firstname,
+      authenticatedUserId: session?.user?.id,
     });
-
+    const referral = await captureCheckoutReferral({
+      userId: user.id,
+      candidateCode: req.cookies.get("ff_ref")?.value,
+    });
     const payuAmount = bill.totalRs.toFixed(2);
-    const txnid = `FD${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const txnid = `FD${Date.now()}${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
     const productinfo = `FitFuel ${resolved.length} dish${resolved.length === 1 ? "" : "es"}`;
 
     // Identical formula to the plan route. All udf fields empty.
-    const hashString = `${PAYU_KEY}|${txnid}|${payuAmount}|${productinfo}|${firstname}|${email}|||||||||||${PAYU_SALT}`;
+    const hashString = `${payu.key}|${txnid}|${payuAmount}|${productinfo}|${firstname}|${email}|||||||||||${payu.salt}`;
     const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
-    await prisma.order.create({
-      data: {
-        userId: user.id,
-        addressId: addr.id,
-        orderNumber: genOrderNumber(),
+    await prisma.$transaction(async (tx) => {
+      const addr = await tx.address.create({
+        data: { userId: user.id, line1: address, area: city ?? "Pune", city: city ?? "Pune", pincode },
+      });
+      await tx.order.create({
+        data: {
+          userId: user.id,
+          addressId: addr.id,
+          orderNumber: genOrderNumber(),
         status: "PENDING_PAYMENT",
         subtotalRs: bill.subtotalRs + bill.deliveryRs + bill.packagingRs,
         gstRs: bill.gstRs,
@@ -129,6 +123,7 @@ export async function POST(req: NextRequest) {
         paymentMethod: "PAYU",
         paymentStatus: "PENDING",
         payuTxnId: txnid,
+        referralAttribution: referral?.code ?? null,
         /* `kind: "DISH"` is what stops the success callback running the
            subscription path and creating a UserActivePlan for a salad. */
         notes: JSON.stringify({
@@ -155,12 +150,13 @@ export async function POST(req: NextRequest) {
         payment: {
           create: { method: "PAYU", status: "PENDING", amountRs: bill.totalRs, payuTxnId: txnid },
         },
-      },
+        },
+      });
     });
 
     return NextResponse.json({
-      payuUrl: PAYU_URL,
-      key: PAYU_KEY,
+      payuUrl: payu.paymentUrl,
+      key: payu.key,
       txnid,
       amount: payuAmount,
       productinfo,
@@ -168,8 +164,8 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       hash,
-      surl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/success`,
-      furl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/payu/failed`,
+      surl: `${payu.baseUrl}/api/payments/payu/success`,
+      furl: `${payu.baseUrl}/api/payments/payu/failed`,
       service_provider: "payu_paisa",
       receipt: bill,
     });

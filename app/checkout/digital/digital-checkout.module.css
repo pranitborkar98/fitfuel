@@ -1,0 +1,185 @@
+.page,
+.problemPage {
+  min-height: 100vh;
+  padding-top: 72px;
+  background: var(--fk-paper);
+  color: var(--fk-ink);
+}
+
+.wrap {
+  width: min(calc(100% - 40px), 1120px);
+  margin-inline: auto;
+  padding-block: clamp(34px, 6vw, 76px) 100px;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  color: var(--fk-ink-2);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.heading { margin-top: 28px; }
+.heading > p,
+.summaryTop > p,
+.problemPage > div > p { margin: 0; color: var(--fk-green-deep); font-size: 14px; font-weight: 750; }
+.heading h1,
+.problemPage h1 {
+  margin: 12px 0 0;
+  font-family: var(--fk-display);
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 550;
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+.heading > span { display: block; max-width: 58ch; margin-top: 16px; color: var(--fk-ink-2); font-size: 17px; line-height: 1.6; }
+
+.checkoutGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
+  align-items: start;
+  gap: clamp(24px, 5vw, 64px);
+  margin-top: 44px;
+}
+.formColumn { display: grid; gap: 16px; }
+.formCard,
+.personalise,
+.summary { border: 1px solid var(--fk-line-2); border-radius: var(--fk-r-lg); background: var(--fk-surface); }
+.formCard { padding: clamp(22px, 4vw, 32px); }
+.cardHead { display: grid; grid-template-columns: 38px 1fr; gap: 14px; margin-bottom: 28px; }
+.cardHead > span { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--fk-green); border-radius: 50%; color: var(--fk-green-deep); font-weight: 750; }
+.cardHead h2 { margin: 0; font-size: 20px; }
+.cardHead p { margin: 6px 0 0; color: var(--fk-ink-3); font-size: 14px; line-height: 1.5; }
+.twoFields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.field label,
+.coupon label { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; color: var(--fk-ink-2); font-size: 14px; font-weight: 650; }
+.field input,
+.coupon input {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+  color: var(--fk-ink);
+  padding: 0 14px;
+  font: 500 16px/1 var(--fk-sans);
+}
+.field input::placeholder,
+.coupon input::placeholder { color: var(--fk-ink-3); }
+.field input:focus,
+.coupon input:focus { border-color: var(--fk-green); outline: 3px solid color-mix(in srgb, var(--fk-green) 35%, transparent); outline-offset: 1px; }
+
+.personalise { overflow: hidden; }
+.personalise summary { display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 24px; cursor: pointer; list-style: none; }
+.personalise summary::-webkit-details-marker { display: none; }
+.personalise summary > span { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.personalise summary strong { font-size: 16px; }
+.personalise summary small { color: var(--fk-green-deep); font-size: 12px; font-weight: 700; }
+.personalise[open] summary svg { transform: rotate(180deg); }
+.personaliseBody { padding: 0 24px 24px; border-top: 1px solid var(--fk-line-2); }
+.personaliseBody > p { margin: 20px 0; color: var(--fk-ink-3); font-size: 14px; line-height: 1.6; }
+
+.summary { position: sticky; top: 92px; overflow: hidden; }
+.summaryTop { padding: 28px; }
+.summaryTop h2 { margin: 8px 0 0; font-size: 23px; line-height: 1.22; }
+.summaryTop > span { display: block; margin-top: 10px; color: var(--fk-ink-3); font-size: 14px; line-height: 1.55; }
+.receipt { padding: 20px 28px; border-block: 1px solid var(--fk-line-2); background: var(--fk-paper); }
+.receipt > div { display: flex; justify-content: space-between; gap: 20px; padding: 7px 0; color: var(--fk-ink-3); font-size: 14px; }
+.receipt strong { color: var(--fk-ink-2); }
+.receipt .saving,
+.receipt .saving strong { color: var(--fk-green-deep); }
+.receipt .total { align-items: baseline; margin-top: 10px; padding-top: 17px; border-top: 1px solid var(--fk-line-2); color: var(--fk-ink); font-size: 16px; font-weight: 750; }
+.receipt .total strong { color: var(--fk-ink); font-size: 28px; letter-spacing: -.04em; }
+
+.coupon { padding: 24px 28px 0; }
+.coupon > div { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.coupon button {
+  min-width: 88px;
+  min-height: 48px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-green-deep);
+  font: 750 14px/1 var(--fk-sans);
+  cursor: pointer;
+}
+.coupon button:disabled { cursor: wait; opacity: .65; }
+.coupon p { margin: 9px 0 0; font-size: 13px; line-height: 1.45; }
+.success { color: var(--fk-green-deep); }
+.error,
+.paymentError { color: var(--fk-danger); }
+
+.creditChoice { display: flex; align-items: flex-start; gap: 12px; margin: 22px 28px 0; padding: 16px; border: 1px solid var(--fk-line-strong); border-radius: var(--fk-r); cursor: pointer; }
+.creditChoice input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--fk-green); }
+.creditChoice span { display: block; }
+.creditChoice strong { display: block; font-size: 14px; }
+.creditChoice small { display: block; margin-top: 4px; color: var(--fk-ink-3); font-size: 12px; }
+
+.includes { display: grid; gap: 9px; margin: 24px 28px 0; padding: 20px 0 0; border-top: 1px solid var(--fk-line-2); list-style: none; }
+.includes li { display: flex; gap: 8px; color: var(--fk-ink-3); font-size: 12px; line-height: 1.45; }
+.includes svg { flex: 0 0 auto; color: var(--fk-green); }
+.paymentError { margin: 18px 28px 0; padding: 13px; border: 1px solid color-mix(in srgb, var(--fk-danger) 50%, transparent); font-size: 13px; line-height: 1.5; }
+.payButton {
+  display: flex;
+  width: calc(100% - 56px);
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 24px 28px 0;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font: 750 15px/1 var(--fk-sans);
+  cursor: pointer;
+}
+.payButton:disabled { cursor: wait; opacity: .72; }
+.finalNote { margin: 12px 28px 28px; color: var(--fk-ink-3); font-size: 11px; line-height: 1.5; text-align: center; }
+
+.problemPage { display: grid; place-items: center; padding: 104px 20px 40px; }
+.problemPage > div { width: min(100%, 620px); padding: clamp(28px, 6vw, 56px); border: 1px solid var(--fk-line-2); border-radius: var(--fk-r-lg); background: var(--fk-surface); }
+.problemPage > div > span { display: block; margin-top: 18px; color: var(--fk-ink-2); font-size: 16px; line-height: 1.6; }
+.problemPage a { display: inline-flex; min-height: 48px; align-items: center; margin-top: 26px; padding: 0 20px; border-radius: var(--fk-r); background: var(--fk-green); color: var(--fk-on-green); font-weight: 750; text-decoration: none; }
+
+.backLink:hover { color: var(--fk-ink); }
+.coupon button:hover { background: var(--fk-green-wash); }
+.payButton:hover,
+.problemPage a:hover { border-color: var(--fk-green-deep); background: var(--fk-green-deep); }
+.backLink:focus-visible,
+.personalise summary:focus-visible,
+.coupon button:focus-visible,
+.creditChoice:focus-within,
+.payButton:focus-visible,
+.problemPage a:focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .checkoutGrid { grid-template-columns: 1fr; }
+  .summary { position: static; grid-row: 1; }
+}
+
+@media (max-width: 620px) {
+  .page,
+  .problemPage { padding-top: 64px; }
+  .wrap { width: min(calc(100% - 32px), 1120px); }
+  .heading h1 { font-size: clamp(2.8rem, 15vw, 4.3rem); }
+  .twoFields { grid-template-columns: 1fr; gap: 0; }
+  .formCard { padding: 20px; }
+  .summaryTop,
+  .receipt { padding-inline: 20px; }
+  .coupon { padding-inline: 20px; }
+  .creditChoice,
+  .includes,
+  .paymentError { margin-inline: 20px; }
+  .payButton { width: calc(100% - 40px); margin-inline: 20px; }
+  .finalNote { margin-inline: 20px; }
+  .personalise summary { padding-inline: 20px; }
+  .personaliseBody { padding-inline: 20px; }
+}

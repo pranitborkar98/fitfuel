@@ -32,6 +32,7 @@ import { ArrowRight, MapPin } from "lucide-react";
 
 import { WHATSAPP_NUMBER } from "@/lib/site";
 import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
+import { DELIVERY_WINDOWS } from "@/lib/delivery-windows";
 import { Head, Idx, k } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Stack, Wrap } from "@/app/_ui/Page";
 import { SECTION, body, figure, label, sub } from "@/app/_ui/theme";
@@ -62,16 +63,16 @@ const SERVICEABLE_PINCODES = [...new Set(ZONES.map((z) => z.pincode))];
 
 const INFO = [
   {
-    title: "Free delivery",
-    desc: "No delivery charges on any plan. What you see on the pricing page is what you pay, plus 5% GST.",
+    title: "One clear total",
+    desc: "The plan page shows food, delivery, packaging and 5% GST before you continue to checkout.",
   },
   {
-    title: "07:00 to 10:00 window",
-    desc: "All meals dispatched fresh from Kharadi every morning, arriving hot and ready to eat.",
+    title: "Two delivery windows",
+    desc: `${DELIVERY_WINDOWS.MORNING.time} or ${DELIVERY_WINDOWS.EVENING.time}. Choose the run that fits your day.`,
   },
   {
-    title: "Eco-conscious packaging",
-    desc: "Meals packed in clean, food-safe containers. No plastic where we can avoid it.",
+    title: "Food-safe packaging",
+    desc: "Meals are sealed in clean containers, with the packaging charge included in the price shown.",
   },
 ];
 
@@ -91,7 +92,7 @@ function PincodeChecker() {
     <div className={s.checker}>
       <span style={label()}>Check your pincode</span>
       <p style={{ ...body(14), margin: "12px 0 18px" }}>
-        Enter your 6-digit Pune pincode to see whether we deliver to you.
+        Enter your 6-digit Pune pincode to see whether it overlaps a listed delivery zone.
       </p>
 
       <div className={s.checkRow}>
@@ -123,9 +124,9 @@ function PincodeChecker() {
       <div aria-live="polite">
         {status === "yes" && (
           <div className={s.result}>
-            <p className={s.resultTitle}>Yes, we deliver to {input}</p>
+            <p className={s.resultTitle}>{input} overlaps a listed delivery zone</p>
             <p className={s.resultBody}>
-              Fresh meals arrive at your door between 07:00 and 10:00 daily.{" "}
+              We confirm the exact address before payment. Choose {DELIVERY_WINDOWS.MORNING.time} or {DELIVERY_WINDOWS.EVENING.time} at checkout.{" "}
               <Link href="/plans" className={k.link}>
                 View plans
               </Link>
@@ -161,14 +162,14 @@ export default function LocationsPage() {
       <Masthead
         label="Delivery zones"
         title="Fresh meals across Pune"
-        deck="We deliver to 15 areas across East and Central Pune, every day, between 7 and 10 in the morning. Kharadi is our home base."
+        deck={`We deliver to 15 areas across East and Central Pune. Choose ${DELIVERY_WINDOWS.MORNING.time} or ${DELIVERY_WINDOWS.EVENING.time}; Kharadi is our home base.`}
       />
 
       <div className={k.readout} style={{ ["--cells" as string]: 3 }}>
         {[
           { v: "15", l: "Delivery zones" },
-          { v: "7", l: "Days a week" },
-          { v: "07-10", l: "Delivery window" },
+          { v: "1", l: "Kharadi kitchen" },
+          { v: "2", l: "Delivery windows" },
         ].map((x) => (
           <div key={x.l} className={k.cell}>
             <span style={label()}>{x.l}</span>
@@ -226,7 +227,7 @@ export default function LocationsPage() {
                   <div className={s.mapHead}>
                     <span style={label()}>Our kitchen, Kharadi</span>
                     <p style={{ ...body(13.5), marginTop: 8 }}>
-                      All deliveries are dispatched from here daily at 07:00.
+                      Daily deliveries are prepared and dispatched from this kitchen.
                     </p>
                   </div>
                   <iframe
@@ -261,7 +262,7 @@ export default function LocationsPage() {
           <Wrap>
             <Head
               label="What delivery includes"
-              title="Three things, all of them free"
+              title="Know what happens before you order"
               size="clamp(1.9rem,4.6vw,3.2rem)"
               max="18ch"
             />
@@ -279,7 +280,7 @@ export default function LocationsPage() {
 
       <Band
         title={`We deliver to you. Start for ${TRIAL_TOTAL_GLYPH}`}
-        body="Trial day, no commitment, no subscription. Fresh food at your door tomorrow morning."
+        body="Trial day, no commitment and no subscription. Pick breakfast and lunch, then choose your delivery window."
         href="/plans?trial=true"
         cta="Start trial day"
         secondary={{ href: "/", label: "See the menu" }}

@@ -1,0 +1,617 @@
+.page {
+  min-height: 100vh;
+  padding-top: 68px;
+  background: var(--fk-paper);
+}
+
+.wrap {
+  width: min(100% - 40px, 1180px);
+  margin-inline: auto;
+}
+
+.hero {
+  padding-block: clamp(64px, 9vw, 120px) clamp(52px, 7vw, 88px);
+  border-bottom: 1px solid var(--fk-line);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.7fr);
+  align-items: end;
+  gap: clamp(40px, 8vw, 112px);
+}
+
+.serviceLine,
+.heroCopy span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fk-green-deep);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.hero h1 {
+  max-width: 10ch;
+  margin-top: 22px;
+  font-size: clamp(3.25rem, 7vw, 6.2rem);
+  line-height: 0.96;
+}
+
+.heroCopy p {
+  color: var(--fk-ink-2);
+  font-size: clamp(17px, 1.7vw, 20px);
+  line-height: 1.65;
+}
+
+.heroCopy span {
+  margin-top: 22px;
+  color: var(--fk-ink-3);
+  font-size: 13px;
+}
+
+.builderSection,
+.planSection,
+.trialSection {
+  padding-block: var(--fk-section-y);
+}
+
+.builderIntro {
+  max-width: 720px;
+}
+
+.builderGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
+  align-items: start;
+  gap: 24px;
+  margin-top: 44px;
+}
+
+.controls {
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.optionGroup {
+  min-width: 0;
+  margin: 0;
+  padding: clamp(22px, 3.5vw, 34px);
+  border: 0;
+  border-bottom: 1px solid var(--fk-line-2);
+}
+
+.optionGroup:last-child {
+  border-bottom: 0;
+}
+
+.optionGroup legend {
+  padding: 0;
+  color: var(--fk-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.option {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
+  font: 600 14px/1 var(--fk-sans);
+  cursor: pointer;
+  transition: background var(--fk-dur) var(--fk-ease), border-color var(--fk-dur) var(--fk-ease), color var(--fk-dur) var(--fk-ease);
+}
+
+.option:hover {
+  border-color: var(--fk-ink-3);
+  color: var(--fk-ink);
+}
+
+.optionSelected,
+.optionSelected:hover {
+  border-color: var(--fk-green);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+}
+
+.dietMarker {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.24);
+}
+
+.priceCard {
+  position: sticky;
+  top: 92px;
+  padding: 28px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-warm);
+}
+
+.priceCard > span,
+.selectionCard > span {
+  color: var(--fk-ink-3);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.priceCard > strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--fk-ink);
+  font-size: clamp(2.8rem, 6vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.priceCard > p {
+  margin-top: 12px;
+  color: var(--fk-ink-3);
+  font-size: 13px;
+}
+
+.priceFacts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.priceFacts div {
+  padding: 13px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  background: var(--fk-paper);
+}
+
+.priceFacts span,
+.receipt dt {
+  display: block;
+  color: var(--fk-ink-3);
+  font-size: 11px;
+}
+
+.priceFacts strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--fk-ink);
+  font-family: var(--fk-mono);
+  font-size: 14px;
+}
+
+.receipt {
+  margin: 22px 0;
+  padding: 16px 0;
+  border-block: 1px solid var(--fk-line-2);
+}
+
+.receipt div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 5px;
+}
+
+.receipt dt {
+  font-size: 12px;
+}
+
+.receipt dd {
+  margin: 0;
+  color: var(--fk-ink-2);
+  font-family: var(--fk-mono);
+  font-size: 12px;
+}
+
+.priceCard > a {
+  width: 100%;
+}
+
+.noPrice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  color: var(--fk-ink-2);
+}
+
+.noPrice svg {
+  flex: 0 0 auto;
+  color: var(--fk-terracotta);
+}
+
+.noPrice p {
+  font-size: 14px;
+}
+
+.planSection {
+  border-block: 1px solid var(--fk-line);
+  background: var(--fk-warm);
+  scroll-margin-top: 24px;
+}
+
+.planHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.planHeader > div {
+  max-width: 760px;
+}
+
+.planHeader > div > p:last-child {
+  margin-top: 18px;
+  color: var(--fk-ink-2);
+  font-size: 16px;
+}
+
+.selectionSummary {
+  flex: 0 0 auto;
+  padding-bottom: 5px;
+  color: var(--fk-ink-3);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.planLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.36fr);
+  align-items: start;
+  gap: 24px;
+  margin-top: 42px;
+}
+
+.planGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.planCard {
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  transition: border-color var(--fk-dur) var(--fk-ease), background var(--fk-dur) var(--fk-ease);
+}
+
+.planCardSelected {
+  border-color: var(--fk-green);
+  background: var(--fk-green-wash);
+}
+
+.planChoice {
+  display: flex;
+  width: 100%;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 22px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--fk-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.available,
+.preparing {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  color: var(--fk-green-deep);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.preparing {
+  color: var(--fk-ink-3);
+}
+
+.category {
+  margin-top: auto;
+  color: var(--fk-ink-3);
+  font-size: 11px;
+}
+
+.planChoice > strong {
+  margin-top: 7px;
+  color: var(--fk-ink);
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.tagline {
+  margin-top: 7px;
+  color: var(--fk-ink-3);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.macros {
+  margin-top: 16px;
+  color: var(--fk-ink-2);
+  font-family: var(--fk-mono);
+  font-size: 11px;
+}
+
+.planCard > a {
+  display: inline-flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 22px;
+  border-top: 1px solid var(--fk-line);
+  color: var(--fk-ink-2);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.selectionCard {
+  position: sticky;
+  top: 92px;
+  padding: 28px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-paper);
+}
+
+.selectionCard h3 {
+  margin-top: 12px;
+  font-size: 30px;
+}
+
+.selectionCard > p {
+  margin-top: 12px;
+  color: var(--fk-ink-3);
+  font-size: 14px;
+}
+
+.selectedMacros {
+  display: grid;
+  gap: 9px;
+  margin-block: 24px;
+  padding-block: 18px;
+  border-block: 1px solid var(--fk-line);
+}
+
+.selectedMacros span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--fk-ink-3);
+  font-size: 12px;
+}
+
+.selectedMacros strong {
+  color: var(--fk-ink-2);
+  font-family: var(--fk-mono);
+}
+
+.selectionCard > a {
+  width: 100%;
+}
+
+.unavailableNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 12px;
+  color: var(--fk-ink-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.unavailableNote svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.showAll {
+  display: flex;
+  width: 100%;
+  min-height: 54px;
+  margin-top: 16px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-ink-2);
+  font: 650 14px/1 var(--fk-sans);
+  cursor: pointer;
+}
+
+.showAll svg {
+  transition: transform var(--fk-dur) var(--fk-ease);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.trialCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid var(--fk-line-2);
+  border-radius: 24px 4px 24px 4px;
+  background: var(--fk-surface);
+}
+
+.trialCard > div {
+  max-width: 720px;
+}
+
+.trialCard h2 {
+  font-size: clamp(2rem, 4.5vw, 4rem);
+}
+
+.trialCard > div > p:last-child {
+  margin-top: 16px;
+  color: var(--fk-ink-2);
+  font-size: 16px;
+}
+
+.trialCard > button {
+  flex: 0 0 auto;
+}
+
+.gstNote {
+  margin-top: 16px !important;
+  color: var(--fk-ink-3);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .heroGrid,
+  .builderGrid,
+  .planLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .priceCard,
+  .selectionCard {
+    position: static;
+  }
+
+  .priceCard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+  }
+
+  .priceCard > span,
+  .priceCard > strong,
+  .priceCard > p,
+  .priceCard > .receipt,
+  .priceCard > a,
+  .priceCard > .noPrice {
+    grid-column: 1;
+  }
+
+  .priceFacts {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: center;
+  }
+
+  .selectionCard {
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding-top: 68px;
+  }
+
+  .wrap {
+    width: min(100% - 32px, 1180px);
+  }
+
+  .hero {
+    padding-block: 54px;
+  }
+
+  .heroGrid {
+    gap: 28px;
+  }
+
+  .hero h1 {
+    max-width: 9ch;
+    font-size: clamp(3.1rem, 15vw, 4.7rem);
+  }
+
+  .builderIntro h2,
+  .planHeader h2 {
+    font-size: 36px;
+  }
+
+  .builderGrid {
+    margin-top: 30px;
+  }
+
+  .optionGroup {
+    padding: 22px 18px;
+  }
+
+  .option {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding-inline: 12px;
+  }
+
+  .priceCard {
+    display: block;
+    padding: 22px;
+  }
+
+  .priceFacts {
+    grid-row: auto;
+  }
+
+  .planHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .planGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .planChoice {
+    min-height: 210px;
+  }
+
+  .trialCard {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 28px;
+    padding: 26px 20px;
+    border-radius: 16px 4px 16px 4px;
+  }
+
+  .trialCard > button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option,
+  .planCard,
+  .showAll svg {
+    transition: none;
+  }
+}

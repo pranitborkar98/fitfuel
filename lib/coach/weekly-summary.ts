@@ -55,12 +55,12 @@ const VALID_GOALS: Goal[] = ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN", "IMPROVE_
 export async function buildWeeklySummary(userId: string): Promise<WeeklySummary> {
   const data = await getProgressData(userId);
 
-  const profile = await (prisma as any).userProfile.findUnique({
+  const profile = await prisma.userProfile.findUnique({
     where: { userId },
     select: { fitnessGoal: true },
   });
-  const rawGoal = profile?.fitnessGoal as string | null | undefined;
-  const goal: Goal | null = rawGoal && VALID_GOALS.includes(rawGoal as Goal) ? (rawGoal as Goal) : null;
+  const rawGoal = profile?.fitnessGoal ?? null;
+  const goal: Goal | null = rawGoal && VALID_GOALS.includes(rawGoal) ? rawGoal : null;
 
   const { rate, count } = weeklyRate(data.weight.series);
 

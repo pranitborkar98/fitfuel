@@ -23,8 +23,10 @@
 // calories, the neutral bar grey carries the rest, and every label is a word.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { C, COND, SANS, body, label, num, figure, section, PANEL, solidBtn, ghostBtn } from "@/app/_app/theme";
+import { C, SANS, body, label, num, figure, section, PANEL, solidBtn, ghostBtn } from "@/app/_app/theme";
+import { addDateOnlyDays, formatDateOnly, parseDateOnly } from "@/lib/date-only";
 import Dialog from "@/app/_app/Dialog";
+import s from "./nutrition.module.css";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -45,21 +47,21 @@ interface Props {
   mealTypes: MealType[];
   goal: Goal;
   initialWaterMl: number;
+  initialDate: string;
 }
 
 /* ── helpers ────────────────────────────────────────────────────────────── */
 
-const iso = (d: Date) => d.toISOString().split("T")[0];
+const iso = formatDateOnly;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const pct = (v: number, g: number) => clamp(g > 0 ? (v / g) * 100 : 0, 0, 100);
 const n0 = (v: number) => Math.round(v).toLocaleString("en-IN");
 
-function displayDate(d: Date) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return "Today";
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+function displayDate(d: Date, today: string) {
+  const date = iso(d);
+  if (date === today) return "Today";
+  if (date === addDateOnlyDays(today, -1)) return "Yesterday";
+  return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 }
 
 const GOAL_FIELDS: Array<{ key: keyof Goal; name: string; unit: string; step: number }> = [
@@ -85,7 +87,7 @@ function Spine({ children, right }: { children: string; right?: React.ReactNode 
 
 function Readout({ v, k, live = false }: { v: string; k: string; live?: boolean }) {
   return (
-    <div style={{ background: C.bg, padding: "14px 16px 16px" }}>
+    <div className={`${s.readout} ${live ? s.readoutPrimary : ""}`}>
       <span style={figure(30, { display: "block", color: live ? C.lime : C.ink })}>{v}</span>
       <span style={label(12, { display: "block", marginTop: 8, lineHeight: 1.45 })}>{k}</span>
     </div>
@@ -104,8 +106,8 @@ function Meter({ name, value, goal, unit, on }: {
           {n0(value)} / {n0(goal)}{unit}{over ? ", over" : ""}
         </span>
       </div>
-      <div style={{ height: 10, background: C.trough }}>
-        <div style={{ height: 10, width: `${pct(value, goal)}%`, background: on ? C.lime : C.fat }} />
+      <div className={s.meterTrack}>
+        <div className={s.meterFill} style={{ width: `${pct(value, goal)}%`, background: on ? C.lime : C.fat }} />
       </div>
     </div>
   );
@@ -124,7 +126,7 @@ function IconBtn({ onClick, disabled, children, name }: {
         minWidth: 44, minHeight: 44, background: "transparent",
         border: `1px solid ${C.rule2}`, color: disabled ? C.dim : C.ink,
         cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.4 : 1,
-        fontFamily: COND, fontWeight: 800, fontSize: 15, textTransform: "uppercase",
+        borderRadius: "var(--fk-r)", fontFamily: SANS, fontWeight: 700, fontSize: 16,
         transition: "border-color 180ms ease-out, color 180ms ease-out",
       }}
     >
@@ -136,14 +138,14 @@ function IconBtn({ onClick, disabled, children, name }: {
 const INPUT: React.CSSProperties = {
   minHeight: 44, padding: "0 12px", boxSizing: "border-box",
   background: C.bg, border: `1px solid ${C.rule2}`, color: C.ink,
-  fontFamily: SANS, fontSize: 14, outline: "none",
+  borderRadius: "var(--fk-r)", fontFamily: SANS, fontSize: 16, outline: "none",
 };
 
 /* ── main ───────────────────────────────────────────────────────────────── */
 
-export default function NutritionClient({ initialEntries, mealTypes, goal, initialWaterMl }: Props) {
+export default function NutritionClient({ initialEntries, mealTypes, goal, initialWaterMl, initialDate }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    const d = new Date(); d.setHours(0, 0, 0, 0); return d;
+    return parseDateOnly(initialDate) ?? new Date(`${initialDate}T00:00:00.000Z`);
   });
   const [entries, setEntries] = useState<FoodEntry[]>(initialEntries);
   const [waterMl, setWaterMl] = useState(initialWaterMl);
@@ -153,9 +155,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   // Which day the state above actually holds. The skeleton is derived from it
   // rather than set by the effect, so nothing calls setState synchronously in
   // an effect body and there is no cascading render.
-  const [loadedDate, setLoadedDate] = useState(() => {
-    const d = new Date(); d.setHours(0, 0, 0, 0); return iso(d);
-  });
+  const [loadedDate, setLoadedDate] = useState(initialDate);
 
   const [activeSlot, setActiveSlot] = useState<MealType | null>(null);
   const [searchQ, setSearchQ] = useState("");
@@ -171,6 +171,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   // mutation, is what announces those. It also gives the failure path a voice:
   // logFood used to swallow a rejected POST and simply not add a row.
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
 
   const [showGoals, setShowGoals] = useState(false);
   const [goalDraft, setGoalDraft] = useState<Goal>(goal);
@@ -181,12 +182,13 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [editQty, setEditQty] = useState("");
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isToday = iso(selectedDate) === iso(new Date());
+  const searchSequence = useRef(0);
+  const isToday = iso(selectedDate) === initialDate;
 
   function goDay(delta: number) {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + delta);
-    setSelectedDate(d);
+    const next = parseDateOnly(addDateOnlyDays(iso(selectedDate), delta));
+    if (next) setSelectedDate(next);
+    setError("");
   }
 
   const wantedDate = iso(selectedDate);
@@ -197,9 +199,12 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   useEffect(() => {
     let alive = true;
     fetch(`/api/workout/burned?date=${loadedDate}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Could not load workout burn");
+        return r.json();
+      })
       .then((d) => { if (alive) setBurnedKcal(d.caloriesBurned ?? 0); })
-      .catch(() => {});
+      .catch(() => { if (alive) setBurnedKcal(0); });
     return () => { alive = false; };
   }, [loadedDate]);
 
@@ -207,17 +212,29 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
     if (!loadingDiary) return;
     let alive = true;
     Promise.all([
-      fetch(`/api/nutrition/diary?date=${wantedDate}`).then((r) => r.json()),
-      fetch(`/api/nutrition/water?date=${wantedDate}`).then((r) => r.json()),
+      fetch(`/api/nutrition/diary?date=${wantedDate}`).then((r) => {
+        if (!r.ok) throw new Error("Could not load diary");
+        return r.json();
+      }),
+      fetch(`/api/nutrition/water?date=${wantedDate}`).then((r) => {
+        if (!r.ok) throw new Error("Could not load water");
+        return r.json();
+      }),
     ])
       .then(([diary, water]) => {
         if (!alive) return;
         setEntries(diary.entries ?? []);
         setWaterMl(water.amountMl ?? 0);
         setLoadedDate(wantedDate);
+        setError("");
       })
       .catch(() => {
-        if (alive) setLoadedDate(wantedDate);
+        if (!alive) return;
+        setEntries([]);
+        setWaterMl(0);
+        setBurnedKcal(0);
+        setLoadedDate(wantedDate);
+        setError("We couldn't load this day. Check your connection and try again.");
       });
     return () => { alive = false; };
   }, [wantedDate, loadingDiary]);
@@ -232,33 +249,52 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
   const doSearch = useCallback((q: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
+    const sequence = ++searchSequence.current;
     searchTimer.current = setTimeout(async () => {
       setSearching(true);
       try {
         const r = await fetch(`/api/nutrition/foods?q=${encodeURIComponent(q)}`);
-        setResults(await r.json());
+        if (!r.ok) throw new Error("Could not search foods");
+        const data = await r.json();
+        if (sequence !== searchSequence.current) return;
+        setResults(Array.isArray(data) ? data : []);
+        setError("");
+      } catch {
+        if (sequence !== searchSequence.current) return;
+        setResults([]);
+        setError("Food search is unavailable right now. Try again.");
       } finally {
-        setSearching(false);
+        if (sequence === searchSequence.current) setSearching(false);
       }
     }, 280);
   }, []);
 
   useEffect(() => { if (activeSlot) doSearch(searchQ); }, [searchQ, activeSlot, doSearch]);
 
+  useEffect(() => () => {
+    searchSequence.current += 1;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+  }, []);
+
   async function logFood() {
-    if (!picked || !activeSlot || !quantity) return;
+    const grams = Number(quantity);
+    if (!picked || !activeSlot || !Number.isFinite(grams) || grams <= 0 || grams > 5000) {
+      setError("Enter a quantity between 1 g and 5,000 g.");
+      return;
+    }
     // closeAdd() clears both of these, so the announcement text has to be built
     // before the dialog tears itself down.
     const what = `${picked.name}, ${quantity} g`;
     const where = activeSlot.name;
     setLogging(true);
+    setError("");
     try {
       const res = await fetch("/api/nutrition/diary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           foodItemId: picked.id, mealTypeId: activeSlot.id,
-          date: iso(selectedDate), quantity: Number(quantity),
+          date: wantedDate, quantity: grams,
         }),
       });
       if (!res.ok) throw new Error();
@@ -269,32 +305,52 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
     } catch {
       // Leave the dialog open so the entry is not lost, and say so out loud.
       setNotice("Could not add that. Check your connection and try again.");
+      setError("We couldn't add that food. Check your connection and try again.");
     } finally {
       setLogging(false);
     }
   }
 
   function closeAdd() {
+    searchSequence.current += 1;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
     setActiveSlot(null); setPicked(null); setSearchQ(""); setResults([]); setQuantity("100");
+    setSearching(false);
   }
 
   async function deleteEntry(id: string) {
     const gone = entries.find((e) => e.id === id);
-    await fetch(`/api/nutrition/diary/${id}`, { method: "DELETE" });
-    setEntries((p) => p.filter((e) => e.id !== id));
-    setNotice(gone ? `Removed ${gone.foodItem.name}.` : "Entry removed.");
+    setError("");
+    try {
+      const res = await fetch(`/api/nutrition/diary/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      setEntries((p) => p.filter((e) => e.id !== id));
+      setNotice(gone ? `Removed ${gone.foodItem.name}.` : "Entry removed.");
+    } catch {
+      setError("We couldn't remove that entry. It is still in your diary.");
+    }
   }
 
   async function updateEntry(id: string, qty: number) {
-    const res = await fetch(`/api/nutrition/diary/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity: qty }),
-    });
-    if (!res.ok) return;
-    const updated = await res.json();
-    setEntries((p) => p.map((e) => (e.id === id ? updated : e)));
-    setEditingId(null);
+    if (!Number.isFinite(qty) || qty <= 0 || qty > 5000) {
+      setError("Enter a quantity between 1 g and 5,000 g.");
+      return;
+    }
+    setError("");
+    try {
+      const res = await fetch(`/api/nutrition/diary/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: qty }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      const updated = await res.json();
+      setEntries((p) => p.map((e) => (e.id === id ? updated : e)));
+      setEditingId(null);
+      setNotice("Diary entry updated.");
+    } catch {
+      setError("We couldn't update that entry. Your previous quantity is unchanged.");
+    }
   }
 
   const GLASS = 250;
@@ -302,30 +358,45 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const filled = Math.floor(waterMl / GLASS);
 
   async function setWaterTo(targetMl: number) {
-    const delta = targetMl - waterMl;
-    if (delta === 0) return;
-    const res = await fetch("/api/nutrition/water", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: iso(selectedDate),
-        amountMl: Math.abs(delta),
-        action: delta > 0 ? "add" : "subtract",
-      }),
-    });
-    setWaterMl((await res.json()).amountMl ?? waterMl);
+    const nextAmount = clamp(Math.round(targetMl), 0, 20_000);
+    if (nextAmount === waterMl) return;
+    setError("");
+    try {
+      const res = await fetch("/api/nutrition/water", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: wantedDate,
+          amountMl: nextAmount,
+          action: "set",
+        }),
+      });
+      if (!res.ok) throw new Error("Water update failed");
+      const saved = await res.json();
+      setWaterMl(saved.amountMl ?? nextAmount);
+      setNotice(`Water updated to ${n0(saved.amountMl ?? nextAmount)} ml.`);
+    } catch {
+      setError("We couldn't update your water. The previous amount is unchanged.");
+    }
   }
 
   async function saveGoals() {
     setSavingGoals(true);
+    setError("");
     try {
-      await fetch("/api/nutrition/goals", {
+      const res = await fetch("/api/nutrition/goals", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(goalDraft),
       });
-      setCurrentGoal(goalDraft);
+      if (!res.ok) throw new Error("Goal update failed");
+      const saved = await res.json();
+      setCurrentGoal({ ...goalDraft, ...saved });
+      setGoalDraft((current) => ({ ...current, ...saved }));
       setShowGoals(false);
+      setNotice("Daily targets updated.");
+    } catch {
+      setError("We couldn't save your targets. Check the values and try again.");
     } finally {
       setSavingGoals(false);
     }
@@ -360,27 +431,29 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
       <p role="status" aria-live="polite" className="sr-only">{notice}</p>
 
       {/* date navigator */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+      <div className={s.dateBar}>
         <IconBtn onClick={() => goDay(-1)} name="Previous day">&lt;</IconBtn>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ ...section(), margin: 0 }}>{displayDate(selectedDate)}</p>
+        <div className={s.dateCopy}>
+          <p style={{ ...section(), margin: 0 }}>{displayDate(selectedDate, initialDate)}</p>
           <p style={num(12, { color: C.dim })}>
-            {selectedDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+            {selectedDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
           </p>
         </div>
         <IconBtn onClick={() => goDay(1)} disabled={isToday} name="Next day">&gt;</IconBtn>
         <button
           type="button"
           onClick={() => { setGoalDraft(currentGoal); setShowGoals(true); }}
-          style={{ ...ghostBtn(), marginLeft: "auto" }}
+          className={s.editTargets}
+          style={ghostBtn()}
         >
           Edit targets
         </button>
       </div>
 
+      {error && <p role="alert" className={s.error}>{error}</p>}
+
       {/* the day, measured */}
-      <div style={{ display: "grid", gap: 1, background: C.rule, border: `1px solid ${C.rule}`,
-                    gridTemplateColumns: "repeat(auto-fit,minmax(136px,1fr))", marginTop: 20 }}>
+      <div className={s.summaryGrid}>
         <Readout
           v={remaining >= 0 ? n0(remaining) : `+${n0(-remaining)}`}
           k={remaining >= 0 ? "Remaining kcal" : "Over by kcal"}
@@ -391,9 +464,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         <Readout v={n0(currentGoal.calories)} k="Target" />
       </div>
 
-      <div style={{ display: "grid", gap: 20, gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-                    marginTop: 26 }}>
-        <div style={{ ...PANEL, padding: 18 }}>
+      <div className={s.overviewGrid}>
+        <div className={s.overviewPanel} style={PANEL}>
           <p style={label(12, { display: "block", marginBottom: 14 })}>Against target</p>
           <Meter name="Calories" value={totals.calories} goal={currentGoal.calories} unit=" kcal" on />
           <Meter name="Protein" value={totals.protein} goal={currentGoal.protein} unit="g" on />
@@ -402,7 +474,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           <Meter name="Fibre" value={totals.fiber} goal={currentGoal.fiber} unit="g" on={false} />
         </div>
 
-        <div style={{ ...PANEL, padding: 18 }}>
+        <div className={s.overviewPanel} style={PANEL}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
                         gap: 12, marginBottom: 14 }}>
             <p style={label(12)}>Water</p>
@@ -410,7 +482,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               {n0(waterMl)} / {n0(currentGoal.waterMl)} ml
             </span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(10, glasses)},1fr)`, gap: 4 }}>
+          <div className={s.waterGrid} style={{ gridTemplateColumns: `repeat(${Math.min(10, glasses)},1fr)` }}>
             {Array.from({ length: glasses }, (_, i) => i).map((i) => {
               const on = i < filled;
               return (
@@ -420,8 +492,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   onClick={() => setWaterTo(on && i === filled - 1 ? i * GLASS : (i + 1) * GLASS)}
                   aria-pressed={on}
                   aria-label={`Set water to ${(i + 1) * GLASS} ml`}
+                  className={s.waterStep}
                   style={{
-                    height: 34, padding: 0, cursor: "pointer",
                     background: on ? C.lime : "transparent",
                     border: `1px solid ${on ? C.lime : C.rule}`,
                     transition: "background-color 180ms ease-out, border-color 180ms ease-out",
@@ -455,9 +527,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
           const isCollapsed = collapsed[mt.id];
 
           return (
-            <section key={mt.id} style={{ ...PANEL, marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-                            borderBottom: isCollapsed || !rows.length ? "none" : `1px solid ${C.rule}` }}>
+            <section key={mt.id} className={s.mealSection} style={PANEL}>
+              <div className={s.mealHeader}>
                 <button
                   type="button"
                   onClick={() => setCollapsed((c) => ({ ...c, [mt.id]: !c[mt.id] }))}
@@ -485,8 +556,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               </div>
 
               {!isCollapsed && rows.map((e) => (
-                <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-                                         padding: "12px 14px", borderBottom: `1px solid ${C.rule}` }}>
+                <div key={e.id} className={s.entryRow}>
                   <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                     <p style={body(14, { color: C.ink, margin: 0 })}>
                       {e.foodItem.name}
@@ -566,7 +636,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                         gap: 12, padding: "16px 18px", borderBottom: `1px solid ${C.rule}` }}>
             <div style={{ minWidth: 0 }}>
               <h2 style={section()}>Add to {activeSlot.name}</h2>
-              <p style={body(13, { marginTop: 4 })}>{displayDate(selectedDate)}</p>
+              <p style={body(13, { marginTop: 4 })}>{displayDate(selectedDate, initialDate)}</p>
             </div>
             <button type="button" onClick={closeAdd} style={ghostBtn()}>Close</button>
           </div>
@@ -650,10 +720,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               <button
                 type="button"
                 onClick={logFood}
-                disabled={logging || !quantity || Number(quantity) <= 0}
+                disabled={logging || !quantity || Number(quantity) <= 0 || Number(quantity) > 5000}
                 style={solidBtn({
                   width: "100%", marginTop: 14,
-                  opacity: logging || !quantity || Number(quantity) <= 0 ? 0.55 : 1,
+                  opacity: logging || !quantity || Number(quantity) <= 0 || Number(quantity) > 5000 ? 0.55 : 1,
                   cursor: logging ? "default" : "pointer",
                 })}
               >

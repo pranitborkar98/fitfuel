@@ -1,3 +1,5 @@
+/* @next/third-parties is intentionally not installed; keep the existing consent-compatible analytics loader. */
+/* eslint-disable @next/next/next-script-for-ga */
 import type { Metadata } from "next";
 import { Archivo, Barlow_Condensed, JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
@@ -89,9 +91,9 @@ const barlowCondensed = Barlow_Condensed({
 
 const TITLE = "FitFuel: Chef-Cooked Macro-Tracked Meal Plans Delivered in Pune";
 const DESCRIPTION =
-  "Chef-cooked meals weighed to your macros and delivered across Pune by 8am, " +
-  "plus a training and body-metrics app that logs them for you. 126 goal and " +
-  `condition plans. Trial day ${TRIAL_TOTAL_LABEL}.`;
+  "Chef-cooked meals in Pune with portions connected to your nutrition target, " +
+  "delivery in your chosen window and a diary ready to confirm. " +
+  `Trial day ${TRIAL_TOTAL_LABEL}, including delivery, packaging and GST.`;
 
 export const metadata: Metadata = {
   // Was "FitFuel - Verified Nutrition": no city, no product, no intent.

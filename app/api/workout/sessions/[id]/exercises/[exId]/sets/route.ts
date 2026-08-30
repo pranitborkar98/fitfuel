@@ -6,8 +6,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
 
 type Params = { params: Promise<{ id: string; exId: string }> };
+
+const optionalNumber = (max: number, integer = false) => {
+  const value = integer ? z.number().int().min(0).max(max) : z.number().finite().min(0).max(max);
+  return value.nullable().optional();
+};
+const setValuesSchema = z.object({
+  reps: optionalNumber(10_000, true),
+  weightKg: optionalNumber(2_000),
+  durationSecs: optionalNumber(86_400, true),
+  distanceM: optionalNumber(1_000_000),
+  notes: z.string().trim().max(1000).nullable().optional(),
+}).strict();
+const setPatchSchema = setValuesSchema.extend({
+  setId: z.string().trim().min(1).max(60),
+  completed: z.boolean().optional(),
+});
+const setDeleteSchema = z.object({ setId: z.string().trim().min(1).max(60) }).strict();
 
 // Helper — verify the workoutExercise belongs to this user's session
 async function verifyOwnership(sessionId: string, exId: string, userId: string) {
@@ -28,18 +48,23 @@ export async function POST(req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
 
     const workoutExercise = await verifyOwnership(id, exId, session.user.id);
     if (!workoutExercise) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const { reps, weightKg, durationSecs, distanceM, notes } = await req.json();
+    const parsed = await readJson(req, setValuesSchema);
+    if (!parsed.ok) return parsed.response;
+    const { reps, weightKg, durationSecs, distanceM, notes } = parsed.data;
 
     // Get next set number
     const setCount = await prisma.workoutSet.count({
       where: { workoutExerciseId: exId },
     });
+    if (setCount >= 100) return NextResponse.json({ error: "Set limit reached" }, { status: 409 });
 
     const set = await prisma.workoutSet.create({
       data: {
@@ -50,7 +75,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         durationSecs:      durationSecs ?? null,
         distanceM:         distanceM    ?? null,
         notes:             notes        ?? null,
-        completed:         true,         // logged = completed
+        completed:         false,
       },
     });
 
@@ -70,16 +95,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
 
     const workoutExercise = await verifyOwnership(id, exId, session.user.id);
     if (!workoutExercise) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const { setId, reps, weightKg, durationSecs, distanceM, completed, notes } = await req.json();
-    if (!setId) {
-      return NextResponse.json({ error: "setId is required" }, { status: 400 });
-    }
+    const parsed = await readJson(req, setPatchSchema);
+    if (!parsed.ok) return parsed.response;
+    const { setId, reps, weightKg, durationSecs, distanceM, completed, notes } = parsed.data;
+
+    const ownedSet = await prisma.workoutSet.findFirst({ where: { id: setId, workoutExerciseId: exId }, select: { id: true } });
+    if (!ownedSet) return NextResponse.json({ error: "Set not found" }, { status: 404 });
 
     const updated = await prisma.workoutSet.update({
       where: { id: setId },
@@ -109,16 +138,20 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
 
     const workoutExercise = await verifyOwnership(id, exId, session.user.id);
     if (!workoutExercise) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const { setId } = await req.json();
-    if (!setId) {
-      return NextResponse.json({ error: "setId is required" }, { status: 400 });
-    }
+    const parsed = await readJson(req, setDeleteSchema);
+    if (!parsed.ok) return parsed.response;
+    const { setId } = parsed.data;
+
+    const ownedSet = await prisma.workoutSet.findFirst({ where: { id: setId, workoutExerciseId: exId }, select: { id: true } });
+    if (!ownedSet) return NextResponse.json({ error: "Set not found" }, { status: 404 });
 
     await prisma.workoutSet.delete({ where: { id: setId } });
 

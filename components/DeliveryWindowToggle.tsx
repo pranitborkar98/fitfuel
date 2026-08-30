@@ -1,5 +1,7 @@
 "use client";
 
+import { DELIVERY_WINDOWS, type DeliveryWindow } from "@/lib/delivery-windows";
+
 // components/DeliveryWindowToggle.tsx
 // Phase 11 -- customer picks their delivery run at checkout. Controlled component:
 // pass value + onChange, then include `value` in your order/subscription POST so it
@@ -15,19 +17,14 @@ const T = {
   textMuted: "#888888", accent: "#84cc16",
 };
 
-type Window = "MORNING" | "EVENING";
-
-const OPTIONS: { value: Window; label: string; time: string }[] = [
-  { value: "MORNING", label: "Morning", time: "7-9 AM" },
-  { value: "EVENING", label: "Evening", time: "6-8 PM" },
-];
+const OPTIONS: DeliveryWindow[] = ["MORNING", "EVENING"];
 
 export default function DeliveryWindowToggle({
   value,
   onChange,
 }: {
-  value: Window;
-  onChange: (v: Window) => void;
+  value: DeliveryWindow;
+  onChange: (v: DeliveryWindow) => void;
 }) {
   return (
     <div>
@@ -35,13 +32,15 @@ export default function DeliveryWindowToggle({
         When should we deliver?
       </p>
       <div style={{ display: "flex", gap: 10 }}>
-        {OPTIONS.map(opt => {
-          const active = value === opt.value;
+        {OPTIONS.map(option => {
+          const opt = DELIVERY_WINDOWS[option];
+          const active = value === option;
           return (
             <button
-              key={opt.value}
+              key={option}
               type="button"
-              onClick={() => onChange(opt.value)}
+              onClick={() => onChange(option)}
+              aria-pressed={active}
               style={{
                 flex: 1,
                 background: active ? T.accent : T.card,
@@ -49,6 +48,7 @@ export default function DeliveryWindowToggle({
                 border: `1px solid ${active ? T.accent : T.border}`,
                 borderRadius: 12,
                 padding: "14px 12px",
+                minHeight: 52,
                 cursor: "pointer",
                 textAlign: "left",
               }}

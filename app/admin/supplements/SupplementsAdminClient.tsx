@@ -1,586 +1,683 @@
 "use client";
 
-// app/admin/supplements/SupplementsAdminClient.tsx
-// Phase 18-2 — Admin UI for supplements catalog.
-// Tabs: Catalog (default) | Analytics
-// Catalog view: list 46+ products, expand row to manage affiliate links.
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import styles from "./supplements-admin.module.css";
 
-import { useEffect, useState } from "react";
-
-const T = {
-  bg: "#0a0a0a", card: "#111", border: "#1f1f1f",
-  accent: "#84cc16", accent2: "#84cc16",
-  text: "#fff", dim: "#888", muted: "#666",
-  ok: "#22c55e", warn: "#f59e0b", err: "#ef4444",
-};
-const RUPEE = "\u20B9";
 const NETWORKS = [
   "NUTRABAY", "HEALTHKART", "MUSCLEBLAZE", "AMAZON_IN", "FLIPKART",
   "TATA_1MG", "WELLNESS_FOREVER", "OTHER",
-];
+] as const;
+const GOALS = ["MUSCLE_GAIN", "WEIGHT_LOSS", "BALANCED", "PERFORMANCE"] as const;
 const NETWORK_LABEL: Record<string, string> = {
   NUTRABAY: "Nutrabay", HEALTHKART: "HealthKart", MUSCLEBLAZE: "MuscleBlaze",
   AMAZON_IN: "Amazon", FLIPKART: "Flipkart", TATA_1MG: "Tata 1mg",
-  WELLNESS_FOREVER: "Wellness Forever", OTHER: "Other",
+  WELLNESS_FOREVER: "Wellness Forever", OTHER: "Other merchant",
 };
+const GOAL_LABEL: Record<string, string> = {
+  MUSCLE_GAIN: "Build muscle", WEIGHT_LOSS: "Lose weight", BALANCED: "General health", PERFORMANCE: "Performance",
+};
+const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
-type Supplement = {
-  id: string; slug: string; name: string; tagline: string | null;
-  emoji: string | null; accentColor: string | null;
-  categorySlug: string; categoryName: string; categoryEmoji: string | null;
-  recommendedFor: string[]; isActive: boolean; isFeatured: boolean;
-  sortOrder: number; linkCount: number; clickCount: number;
+type Network = typeof NETWORKS[number];
+type Goal = typeof GOALS[number];
+type Category = { slug: string; name: string; emoji: string | null };
+type SupplementSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  tagline: string | null;
+  emoji: string | null;
+  accentColor: string | null;
+  categorySlug: string;
+  categoryName: string;
+  categoryEmoji: string | null;
+  recommendedFor: Goal[];
+  isActive: boolean;
+  isFeatured: boolean;
+  sortOrder: number;
+  linkCount: number;
+  clickCount: number;
   priceRange: string | null;
 };
-type Category = { slug: string; name: string; emoji: string | null };
+type BuyingLink = {
+  id: string;
+  network: Network;
+  merchantLabel: string | null;
+  affiliateUrl: string;
+  priceRs: number | null;
+  mrpRs: number | null;
+  notes: string | null;
+  sortOrder: number;
+  isActive: boolean;
+};
+type SupplementDetail = {
+  id: string;
+  name: string;
+  slug: string;
+  category: { slug: string; name: string; isActive: boolean };
+  tagline: string | null;
+  description: string | null;
+  mechanism: string | null;
+  benefits: string[];
+  dosage: string | null;
+  timing: string | null;
+  warnings: string | null;
+  sideEffects: string[];
+  genderNotes: string | null;
+  ageNotes: string | null;
+  evidenceLevel: string | null;
+  studyCount: string | null;
+  keyStudyFindings: string[];
+  priceRange: string | null;
+  valueRating: string | null;
+  indiaAvailability: string | null;
+  indiaNote: string | null;
+  imageUrl: string | null;
+  brandName: string | null;
+  isFeatured: boolean;
+  popular: boolean;
+  veganFriendly: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  recommendedFor: Goal[];
+  links: BuyingLink[];
+};
+type EditorForm = {
+  name: string; categorySlug: string; brandName: string; tagline: string; description: string;
+  mechanism: string; benefits: string; dosage: string; timing: string; warnings: string;
+  sideEffects: string; genderNotes: string; ageNotes: string; evidenceLevel: string;
+  studyCount: string; keyStudyFindings: string; priceRange: string; valueRating: string;
+  indiaAvailability: string; indiaNote: string; imageUrl: string; isFeatured: boolean;
+  popular: boolean; veganFriendly: boolean; isActive: boolean; sortOrder: string;
+  recommendedFor: Goal[];
+};
+type AnalyticsData = {
+  days: number;
+  totalClicks: number;
+  signedInClicks: number;
+  uniqueUsers: number;
+  topProducts: Array<{ supplementId: string; name: string; slug: string | null; clicks: number }>;
+  topNetworks: Array<{ network: Network; clicks: number }>;
+  dailyTrend: Array<{ date: string; clicks: number }>;
+};
+
+async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  const payload = (await response.json().catch(() => null)) as (T & { error?: string }) | null;
+  if (!response.ok || !payload) throw new Error(payload?.error ?? "The request failed.");
+  return payload;
+}
+
+function nullable(value: string) {
+  return value.trim() || null;
+}
+
+function lines(value: string) {
+  return value.split("\n").map((line) => line.trim()).filter(Boolean);
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 100);
+}
+
+function toEditorForm(detail: SupplementDetail): EditorForm {
+  return {
+    name: detail.name,
+    categorySlug: detail.category.slug,
+    brandName: detail.brandName ?? "",
+    tagline: detail.tagline ?? "",
+    description: detail.description ?? "",
+    mechanism: detail.mechanism ?? "",
+    benefits: detail.benefits.join("\n"),
+    dosage: detail.dosage ?? "",
+    timing: detail.timing ?? "",
+    warnings: detail.warnings ?? "",
+    sideEffects: detail.sideEffects.join("\n"),
+    genderNotes: detail.genderNotes ?? "",
+    ageNotes: detail.ageNotes ?? "",
+    evidenceLevel: detail.evidenceLevel ?? "",
+    studyCount: detail.studyCount ?? "",
+    keyStudyFindings: detail.keyStudyFindings.join("\n"),
+    priceRange: detail.priceRange ?? "",
+    valueRating: detail.valueRating ?? "",
+    indiaAvailability: detail.indiaAvailability ?? "",
+    indiaNote: detail.indiaNote ?? "",
+    imageUrl: detail.imageUrl ?? "",
+    isFeatured: detail.isFeatured,
+    popular: detail.popular,
+    veganFriendly: detail.veganFriendly,
+    isActive: detail.isActive,
+    sortOrder: String(detail.sortOrder),
+    recommendedFor: detail.recommendedFor,
+  };
+}
 
 export default function SupplementsAdminClient() {
   const [tab, setTab] = useState<"catalog" | "analytics">("catalog");
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", color: T.text, padding: "24px 20px" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
-          <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 28, fontWeight: 800, margin: 0 }}>Supplements</h1>
-          <div style={{ fontSize: 12, color: T.dim }}>Affiliate catalog + click analytics</div>
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Evidence commerce</p>
+          <h1>Supplement marketplace</h1>
+          <p>Control what FitFuel recommends, the India-specific evidence customers see, and where each verified buying link sends them.</p>
         </div>
+      </header>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          <TabButton active={tab === "catalog"} onClick={() => setTab("catalog")}>Catalog</TabButton>
-          <TabButton active={tab === "analytics"} onClick={() => setTab("analytics")}>Analytics</TabButton>
-        </div>
-
-        {tab === "catalog" ? <CatalogTab /> : <AnalyticsTab />}
+      <div className={styles.tabs} role="tablist" aria-label="Supplement marketplace sections">
+        <button type="button" role="tab" aria-selected={tab === "catalog"} onClick={() => setTab("catalog")}>Catalogue</button>
+        <button type="button" role="tab" aria-selected={tab === "analytics"} onClick={() => setTab("analytics")}>Buying-link analytics</button>
       </div>
-    </div>
+
+      {tab === "catalog" ? <CatalogTab /> : <AnalyticsTab />}
+    </main>
   );
 }
-
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: any }) {
-  return (
-    <button onClick={onClick} style={{
-      background: active ? T.accent : "transparent",
-      color: active ? "#000" : "#bbb",
-      border: `1px solid ${active ? T.accent : "#2a2a2a"}`,
-      borderRadius: 0, padding: "8px 16px", fontWeight: active ? 700 : 500,
-      fontSize: 13, cursor: "pointer",
-    }}>{children}</button>
-  );
-}
-
-/* ────────────────── CATALOG TAB ────────────────── */
 
 function CatalogTab() {
-  const [items, setItems] = useState<Supplement[] | null>(null);
+  const [items, setItems] = useState<SupplementSummary[] | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [q, setQ] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [includeInactive, setIncludeInactive] = useState(false);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [includeInactive, setIncludeInactive] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    setItems(null);
+    setLoading(true);
     setError(null);
     const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (categoryFilter) params.set("category", categoryFilter);
+    if (query.trim()) params.set("q", query.trim());
+    if (category) params.set("category", category);
     if (includeInactive) params.set("includeInactive", "1");
     try {
-      const r = await fetch("/api/admin/supplements?" + params.toString());
-      if (!r.ok) {
-        const text = await r.text().catch(() => "");
-        setError(`API ${r.status}: ${text.slice(0, 200) || r.statusText}`);
-        setItems([]);
-        return;
-      }
-      const j = await r.json();
-      setItems(j.supplements || []);
-      setCategories(j.categories || []);
-    } catch (e: any) {
-      setError(`Network: ${e?.message || "failed to load"}`);
+      const data = await requestJson<{ supplements: SupplementSummary[]; categories: Category[] }>(`/api/admin/supplements?${params}`);
+      setItems(data.supplements);
+      setCategories(data.categories);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The supplement catalogue could not be loaded.");
       setItems([]);
+    } finally {
+      setLoading(false);
     }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [categoryFilter, includeInactive]);
+
+  useEffect(() => {
+    let cancelled = false;
+    requestJson<{ supplements: SupplementSummary[]; categories: Category[] }>("/api/admin/supplements?includeInactive=1")
+      .then((data) => {
+        if (cancelled) return;
+        setItems(data.supplements);
+        setCategories(data.categories);
+      })
+      .catch((caught: unknown) => {
+        if (cancelled) return;
+        setError(caught instanceof Error ? caught.message : "The supplement catalogue could not be loaded.");
+        setItems([]);
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const summary = useMemo(() => ({
+    live: items?.filter((item) => item.isActive).length ?? 0,
+    missingLinks: items?.filter((item) => item.isActive && item.linkCount === 0).length ?? 0,
+    clicks: items?.reduce((sum, item) => sum + item.clickCount, 0) ?? 0,
+  }), [items]);
 
   return (
-    <div>
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()}
-          placeholder="Search name or tagline…"
-          style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 13, minWidth: 240 }} />
-        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-          style={{ background: "#0a0a0a", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 13 }}>
-          <option value="">All categories</option>
-          {categories.map((c) => <option key={c.slug} value={c.slug}>{c.emoji ? c.emoji + " " : ""}{c.name}</option>)}
-        </select>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.dim, cursor: "pointer" }}>
-          <input type="checkbox" checked={includeInactive} onChange={(e) => setIncludeInactive(e.target.checked)} />
-          Include inactive
-        </label>
-        <button onClick={load} style={{ background: "transparent", color: T.text, border: `1px solid ${T.border}`, borderRadius: 0, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}>Search</button>
+    <section className={styles.catalogPanel} role="tabpanel">
+      <div className={styles.metrics}>
+        <Metric label="Live entries" value={summary.live} note="Visible to customers" />
+        <Metric label="Live without sellers" value={summary.missingLinks} note="No buying path yet" warning={summary.missingLinks > 0} />
+        <Metric label="Tracked clicks" value={summary.clicks} note="Across the loaded view" />
       </div>
 
-      {items === null ? (
-        <div style={{ color: T.muted, padding: 24 }}>Loading{'\u2026'}</div>
-      ) : error ? (
-        <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 0, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>
-          {error}
-        </div>
-      ) : items.length === 0 ? (
-        <div style={{ color: T.dim, padding: 24, textAlign: "center", background: T.card, border: `1px solid ${T.border}`, borderRadius: 0 }}>
-          No supplements match this filter.
-        </div>
+      <div className={styles.catalogTools}>
+        <form className={styles.filters} onSubmit={(event) => { event.preventDefault(); void load(); }}>
+          <label className={styles.searchField}>
+            <span>Search catalogue</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, slug or customer-facing copy" />
+          </label>
+          <label>
+            <span>Category</span>
+            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option value="">All categories</option>
+              {categories.map((item) => <option value={item.slug} key={item.slug}>{item.name}</option>)}
+            </select>
+          </label>
+          <label className={styles.checkLabel}>
+            <input type="checkbox" checked={includeInactive} onChange={(event) => setIncludeInactive(event.target.checked)} />
+            <span>Include drafts</span>
+          </label>
+          <button type="submit" disabled={loading}>{loading ? "Loading…" : "Apply filters"}</button>
+        </form>
+        <button className={styles.primaryButton} type="button" onClick={() => setCreating((value) => !value)}>
+          {creating ? "Close new entry" : "Add supplement"}
+        </button>
+      </div>
+
+      {creating ? (
+        <CreateSupplement
+          categories={categories}
+          onCreated={(id) => { setCreating(false); setOpenId(id); void load(); }}
+          onCancel={() => setCreating(false)}
+        />
+      ) : null}
+
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {items === null ? <Loading label="Loading supplement catalogue…" /> : items.length === 0 ? (
+        <div className={styles.empty}><strong>No matching supplements</strong><span>Change the filters or create the first entry.</span></div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {items.map((s) => (
+        <div className={styles.supplementList}>
+          {items.map((supplement) => (
             <SupplementRow
-              key={s.id}
-              s={s}
-              open={openId === s.id}
-              onToggle={() => setOpenId(openId === s.id ? null : s.id)}
-              onChanged={load}
+              supplement={supplement}
+              categories={categories}
+              open={openId === supplement.id}
+              onToggle={() => setOpenId(openId === supplement.id ? null : supplement.id)}
+              onChanged={() => { void load(); }}
+              key={supplement.id}
             />
           ))}
         </div>
       )}
-
-      <div style={{ marginTop: 16, fontSize: 12, color: T.dim }}>
-        {items && `${items.length} supplements · ${items.reduce((sum, s) => sum + s.linkCount, 0)} affiliate links · ${items.reduce((sum, s) => sum + s.clickCount, 0)} total clicks`}
-      </div>
-    </div>
+    </section>
   );
 }
 
-function SupplementRow({ s, open, onToggle, onChanged }: {
-  s: Supplement; open: boolean; onToggle: () => void; onChanged: () => void;
-}) {
-  return (
-    <div style={{ background: T.card, border: `1px solid ${open ? s.accentColor || T.accent : T.border}`, borderRadius: 0, padding: "14px 16px" }}>
-      <div onClick={onToggle} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-        <div style={{ fontSize: 24 }}>{s.emoji || "\uD83D\uDC8A"}</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>{s.name}</span>
-            <span style={{ fontSize: 10, background: "#1a1a1a", border: `1px solid ${T.border}`, color: T.dim, padding: "2px 8px", borderRadius: 0, textTransform: "uppercase", letterSpacing: 0.4, fontFamily: "ui-monospace, monospace" }}>{s.slug}</span>
-            {!s.isActive && <span style={{ fontSize: 10, background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: "2px 8px", borderRadius: 0, textTransform: "uppercase" }}>Inactive</span>}
-            {s.isFeatured && <span style={{ fontSize: 10, background: "#1a1505", border: `1px solid ${T.warn}`, color: T.warn, padding: "2px 8px", borderRadius: 0, textTransform: "uppercase" }}>Featured</span>}
-          </div>
-          <div style={{ fontSize: 12, color: T.dim }}>
-            {s.categoryEmoji ? s.categoryEmoji + " " : ""}{s.categoryName}
-            {s.tagline ? ` · ${s.tagline}` : ""}
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 16, fontSize: 12, color: T.dim, textAlign: "right" }}>
-          <div>
-            <div style={{ fontWeight: 700, color: s.linkCount > 0 ? T.accent : T.muted, fontSize: 16 }}>{s.linkCount}</div>
-            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 0.4 }}>Links</div>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, color: s.clickCount > 0 ? T.text : T.muted, fontSize: 16 }}>{s.clickCount}</div>
-            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 0.4 }}>Clicks</div>
-          </div>
-        </div>
-        <div style={{ color: T.muted, fontSize: 18 }}>{open ? "\u2212" : "+"}</div>
-      </div>
-
-      {open && (
-        <>
-          <SupplementSettings supplementId={s.id} accent={s.accentColor || T.accent} onChanged={onChanged} />
-          <LinkManager supplementId={s.id} accent={s.accentColor || T.accent} onChanged={onChanged} />
-        </>
-      )}
-    </div>
-  );
+function Metric({ label, value, note, warning = false }: { label: string; value: number; note: string; warning?: boolean }) {
+  return <article className={warning ? styles.metricWarning : undefined}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>;
 }
 
-/* ────────────────── SUPPLEMENT SETTINGS (Phase 18-3) ────────────────── */
-// Lets the admin set per-product imageUrl + brandName + featured flag.
-// Image URL is what makes the public card show a real product photo.
-
-function SupplementSettings({ supplementId, accent, onChanged }: { supplementId: string; accent: string; onChanged: () => void }) {
-  const [loaded, setLoaded] = useState(false);
+function CreateSupplement({ categories, onCreated, onCancel }: { categories: Category[]; onCreated: (id: string) => void; onCancel: () => void }) {
+  const [form, setForm] = useState({ name: "", slug: "", categorySlug: categories[0]?.slug ?? "", tagline: "" });
+  const [slugEdited, setSlugEdited] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [brandName, setBrandName] = useState("");
-  const [isFeatured, setIsFeatured] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    try {
-      const r = await fetch(`/api/admin/supplements/${supplementId}`);
-      const j = await r.json();
-      const s = j?.supplement || {};
-      setImageUrl(s.imageUrl || "");
-      setBrandName(s.brandName || "");
-      setIsFeatured(!!s.isFeatured);
-    } catch {
-      // ignore — leave defaults
-    } finally {
-      setLoaded(true);
-    }
-  }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
-
-  async function save() {
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
     setSaving(true);
+    setError(null);
     try {
-      const r = await fetch(`/api/admin/supplements/${supplementId}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: imageUrl.trim() || null, brandName: brandName.trim() || null, isFeatured }),
+      const data = await requestJson<{ supplement: { id: string } }>("/api/admin/supplements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: form.slug,
+          name: form.name,
+          categorySlug: form.categorySlug,
+          tagline: nullable(form.tagline),
+        }),
       });
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        alert(j.error || "Failed to save");
-        return;
-      }
-      onChanged();
+      onCreated(data.supplement.id);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The supplement could not be created.");
     } finally {
       setSaving(false);
     }
   }
 
-  if (!loaded) return <div style={{ paddingTop: 14, color: T.muted, fontSize: 12 }}>Loading settings{'\u2026'}</div>;
-
   return (
-    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Product settings</div>
-
-      <div style={{ display: "grid", gridTemplateColumns: imageUrl ? "84px 1fr" : "1fr", gap: 10, marginBottom: 8 }}>
-        {imageUrl ? (
-          <div style={{ width: 84, height: 84, background: "#000", border: `1px solid ${T.border}`, borderRadius: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-          </div>
-        ) : null}
-        <input
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="Product image URL (paste from Nutrabay or any CDN)"
-          style={inputStyle()}
-        />
+    <form className={styles.createForm} onSubmit={submit}>
+      <div className={styles.sectionTitle}><div><h2>Start a draft</h2><p>Drafts stay private until the evidence, safety and India context are complete.</p></div></div>
+      <div className={styles.formGrid}>
+        <Field label="Supplement name"><input required maxLength={160} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value, ...(!slugEdited ? { slug: slugify(event.target.value) } : {}) }))} /></Field>
+        <Field label="URL slug"><input required maxLength={100} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value={form.slug} onChange={(event) => { setSlugEdited(true); setForm((current) => ({ ...current, slug: event.target.value })); }} /></Field>
+        <Field label="Category"><select required value={form.categorySlug} onChange={(event) => setForm((current) => ({ ...current, categorySlug: event.target.value }))}>{categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></Field>
+        <Field label="Short promise"><input maxLength={300} value={form.tagline} onChange={(event) => setForm((current) => ({ ...current, tagline: event.target.value }))} placeholder="What a customer should understand in one line" /></Field>
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center" }}>
-        <input
-          value={brandName}
-          onChange={(e) => setBrandName(e.target.value)}
-          placeholder="Brand name (optional, e.g. Optimum Nutrition)"
-          style={inputStyle()}
-        />
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.dim, cursor: "pointer", whiteSpace: "nowrap" }}>
-          <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
-          Featured
-        </label>
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: accent, color: "#000", border: "none", borderRadius: 0, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>
-          {saving ? "Saving\u2026" : "Save settings"}
-        </button>
-      </div>
-    </div>
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <div className={styles.formActions}><button type="button" onClick={onCancel}>Cancel</button><button className={styles.primaryButton} disabled={saving}>{saving ? "Creating…" : "Create private draft"}</button></div>
+    </form>
   );
 }
 
-/* ────────────────── LINK MANAGER (per supplement) ────────────────── */
-
-type Link = {
-  id: string; network: string; merchantLabel: string | null;
-  affiliateUrl: string; priceRs: number | null; mrpRs: number | null;
-  notes: string | null; sortOrder: number; isActive: boolean;
-};
-
-function LinkManager({ supplementId, accent, onChanged }: { supplementId: string; accent: string; onChanged: () => void }) {
-  const [links, setLinks] = useState<Link[] | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [newLink, setNewLink] = useState<any>({ network: "NUTRABAY", affiliateUrl: "", priceRs: "", mrpRs: "", notes: "", merchantLabel: "" });
-  const [editing, setEditing] = useState<string | null>(null);
-
-  async function load() {
-    const r = await fetch(`/api/admin/supplements/${supplementId}`);
-    const j = await r.json();
-    setLinks(j.supplement?.links || []);
-  }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
-
-  async function addLink() {
-    if (!newLink.affiliateUrl) { alert("Affiliate URL required"); return; }
-    const r = await fetch(`/api/admin/supplements/${supplementId}/links`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...newLink,
-        priceRs: newLink.priceRs ? Number(newLink.priceRs) : null,
-        mrpRs: newLink.mrpRs ? Number(newLink.mrpRs) : null,
-      }),
-    });
-    const j = await r.json();
-    if (!r.ok) { alert(j.error || "Failed"); return; }
-    setNewLink({ network: "NUTRABAY", affiliateUrl: "", priceRs: "", mrpRs: "", notes: "", merchantLabel: "" });
-    setAdding(false);
-    await load();
-    onChanged();
-  }
-
-  async function patchLink(id: string, patch: any) {
-    const r = await fetch(`/api/admin/supplements/links/${id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    });
-    if (!r.ok) { const j = await r.json().catch(() => ({})); alert(j.error || "Failed"); return; }
-    setEditing(null);
-    await load();
-    onChanged();
-  }
-
-  async function deleteLink(id: string) {
-    if (!confirm("Remove this link? (Click history preserved)")) return;
-    await fetch(`/api/admin/supplements/links/${id}`, { method: "DELETE" });
-    await load();
-    onChanged();
-  }
-
+function SupplementRow({ supplement, categories, open, onToggle, onChanged }: {
+  supplement: SupplementSummary; categories: Category[]; open: boolean; onToggle: () => void; onChanged: () => void;
+}) {
+  const detailId = `supplement-${supplement.id}`;
   return (
-    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: 0.6 }}>Affiliate links</div>
-        {!adding && (
-          <button onClick={() => setAdding(true)} style={{ background: accent, color: "#000", border: "none", borderRadius: 0, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-            + Add link
-          </button>
-        )}
-      </div>
-
-      {adding && (
-        <div style={{ background: "#0a0a0a", border: `1px solid ${accent}`, borderRadius: 0, padding: 14, marginBottom: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 8, marginBottom: 8 }}>
-            <select value={newLink.network} onChange={(e) => setNewLink({ ...newLink, network: e.target.value })} style={inputStyle()}>
-              {NETWORKS.map((n) => <option key={n} value={n}>{NETWORK_LABEL[n]}</option>)}
-            </select>
-            <input value={newLink.affiliateUrl} onChange={(e) => setNewLink({ ...newLink, affiliateUrl: e.target.value })}
-              placeholder="https://www.nutrabay.com/product/…?ref=fitfuel" style={inputStyle()} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
-            <input type="number" value={newLink.priceRs} onChange={(e) => setNewLink({ ...newLink, priceRs: e.target.value })} placeholder="Price (₹)" style={inputStyle()} />
-            <input type="number" value={newLink.mrpRs} onChange={(e) => setNewLink({ ...newLink, mrpRs: e.target.value })} placeholder="MRP (₹) — for strikethrough" style={inputStyle()} />
-            <input value={newLink.notes} onChange={(e) => setNewLink({ ...newLink, notes: e.target.value })} placeholder="Notes (1kg, 30 servings)" style={inputStyle()} />
-          </div>
-          {newLink.network === "OTHER" && (
-            <input value={newLink.merchantLabel} onChange={(e) => setNewLink({ ...newLink, merchantLabel: e.target.value })} placeholder="Merchant label (e.g. iHerb)" style={{ ...inputStyle(), marginBottom: 8 }} />
-          )}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button onClick={() => setAdding(false)} style={{ background: "transparent", color: T.dim, border: `1px solid ${T.border}`, borderRadius: 0, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Cancel</button>
-            <button onClick={addLink} style={{ background: accent, color: "#000", border: "none", borderRadius: 0, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>Save link</button>
-          </div>
-        </div>
-      )}
-
-      {links === null ? (
-        <div style={{ color: T.muted, fontSize: 13 }}>Loading links{'\u2026'}</div>
-      ) : links.length === 0 ? (
-        <div style={{ color: T.muted, fontSize: 13, padding: 10, textAlign: "center" }}>No affiliate links yet. Add one above.</div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {links.map((l) => editing === l.id ? (
-            <LinkEditRow key={l.id} link={l} accent={accent} onSave={(patch) => patchLink(l.id, patch)} onCancel={() => setEditing(null)} />
-          ) : (
-            <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, background: l.isActive ? "#0a0a0a" : "#150505", border: `1px solid ${T.border}`, borderRadius: 0, padding: "10px 12px" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13 }}>{l.merchantLabel || NETWORK_LABEL[l.network] || l.network}</span>
-                  {!l.isActive && <span style={{ fontSize: 9, color: T.err, textTransform: "uppercase" }}>inactive</span>}
-                  {l.priceRs != null && (
-                    <span style={{ color: accent, fontWeight: 700, fontSize: 13 }}>
-                      {RUPEE}{l.priceRs.toLocaleString("en-IN")}
-                      {l.mrpRs && l.mrpRs > l.priceRs && (
-                        <span style={{ color: T.muted, textDecoration: "line-through", fontSize: 11, marginLeft: 6 }}>{RUPEE}{l.mrpRs.toLocaleString("en-IN")}</span>
-                      )}
-                    </span>
-                  )}
-                  {l.notes && <span style={{ fontSize: 11, color: T.muted }}>· {l.notes}</span>}
-                </div>
-                <a href={l.affiliateUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.dim, fontFamily: "ui-monospace, monospace", textDecoration: "none", wordBreak: "break-all" }}>
-                  {l.affiliateUrl.slice(0, 100)}{l.affiliateUrl.length > 100 ? "\u2026" : ""}
-                </a>
-              </div>
-              <button onClick={() => setEditing(l.id)} style={tinyBtn()}>Edit</button>
-              <button onClick={() => deleteLink(l.id)} style={{ ...tinyBtn(), color: T.err, borderColor: "#3a0a0a" }}>Remove</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <article className={open ? `${styles.supplementRow} ${styles.supplementRowOpen}` : styles.supplementRow}>
+      <button className={styles.supplementSummary} type="button" onClick={onToggle} aria-expanded={open} aria-controls={detailId}>
+        <span className={styles.initial} aria-hidden="true">{supplement.name.slice(0, 1).toUpperCase()}</span>
+        <span className={styles.supplementName}><strong>{supplement.name}</strong><small>{supplement.categoryName}{supplement.tagline ? ` · ${supplement.tagline}` : ""}</small></span>
+        <span className={supplement.isActive ? styles.liveStatus : styles.draftStatus}>{supplement.isActive ? "Live" : "Draft"}</span>
+        <span className={styles.rowStat}><strong>{supplement.linkCount}</strong><small>sellers</small></span>
+        <span className={styles.rowStat}><strong>{supplement.clickCount}</strong><small>clicks</small></span>
+        <span className={styles.expandIcon} aria-hidden="true">{open ? "−" : "+"}</span>
+      </button>
+      {open ? <SupplementEditor supplementId={supplement.id} categories={categories} onChanged={onChanged} id={detailId} /> : null}
+    </article>
   );
 }
 
-function LinkEditRow({ link, accent, onSave, onCancel }: { link: Link; accent: string; onSave: (patch: any) => void; onCancel: () => void }) {
-  const [f, setF] = useState({
-    network: link.network,
-    affiliateUrl: link.affiliateUrl,
-    priceRs: link.priceRs ?? "",
-    mrpRs: link.mrpRs ?? "",
-    notes: link.notes ?? "",
-    merchantLabel: link.merchantLabel ?? "",
-    isActive: link.isActive,
-  });
-
-  return (
-    <div style={{ background: "#0a0a0a", border: `1px solid ${accent}`, borderRadius: 0, padding: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 6, marginBottom: 6 }}>
-        <select value={f.network} onChange={(e) => setF({ ...f, network: e.target.value })} style={inputStyle()}>
-          {NETWORKS.map((n) => <option key={n} value={n}>{NETWORK_LABEL[n]}</option>)}
-        </select>
-        <input value={f.affiliateUrl} onChange={(e) => setF({ ...f, affiliateUrl: e.target.value })} style={inputStyle()} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 6 }}>
-        <input type="number" value={f.priceRs as any} onChange={(e) => setF({ ...f, priceRs: e.target.value as any })} placeholder="Price" style={inputStyle()} />
-        <input type="number" value={f.mrpRs as any} onChange={(e) => setF({ ...f, mrpRs: e.target.value as any })} placeholder="MRP" style={inputStyle()} />
-        <input value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} placeholder="Notes" style={inputStyle()} />
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.dim, cursor: "pointer" }}>
-          <input type="checkbox" checked={f.isActive} onChange={(e) => setF({ ...f, isActive: e.target.checked })} />
-          Active
-        </label>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={onCancel} style={tinyBtn()}>Cancel</button>
-          <button onClick={() => onSave({ ...f, priceRs: f.priceRs === "" ? null : Number(f.priceRs), mrpRs: f.mrpRs === "" ? null : Number(f.mrpRs) })}
-            style={{ ...tinyBtn(), background: accent, color: "#000", borderColor: accent }}>Save</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ────────────────── ANALYTICS TAB ────────────────── */
-
-function AnalyticsTab() {
-  const [days, setDays] = useState(7);
-  const [data, setData] = useState<any>(null);
+function SupplementEditor({ supplementId, categories, onChanged, id }: { supplementId: string; categories: Category[]; onChanged: () => void; id: string }) {
+  const [detail, setDetail] = useState<SupplementDetail | null>(null);
+  const [form, setForm] = useState<EditorForm | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    setData(null);
-    setError(null);
+  async function reload() {
+    setLoading(true);
     try {
-      const r = await fetch(`/api/admin/supplements/clicks?days=${days}`);
-      if (!r.ok) {
-        const text = await r.text().catch(() => "");
-        setError(`API ${r.status}: ${text.slice(0, 200) || r.statusText}`);
-        return;
-      }
-      const j = await r.json();
-      setData(j);
-    } catch (e: any) {
-      setError(`Network: ${e?.message || "failed to load"}`);
+      const data = await requestJson<{ supplement: SupplementDetail }>(`/api/admin/supplements/${supplementId}`);
+      setDetail(data.supplement);
+      setForm(toEditorForm(data.supplement));
+      setError(null);
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The supplement could not be loaded.");
+    } finally {
+      setLoading(false);
     }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [days]);
 
-  if (error) return <div style={{ background: "#1a0a0a", border: `1px solid ${T.err}`, color: T.err, padding: 16, borderRadius: 0, fontSize: 13, fontFamily: "ui-monospace, monospace", whiteSpace: "pre-wrap" }}>{error}</div>;
-  if (!data) return <div style={{ color: T.muted, padding: 24 }}>Loading{'\u2026'}</div>;
+  useEffect(() => {
+    let cancelled = false;
+    requestJson<{ supplement: SupplementDetail }>(`/api/admin/supplements/${supplementId}`)
+      .then((data) => {
+        if (cancelled) return;
+        setDetail(data.supplement);
+        setForm(toEditorForm(data.supplement));
+      })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : "The supplement could not be loaded.");
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [supplementId]);
 
-  const maxDaily = Math.max(1, ...data.dailyTrend.map((d: any) => d.clicks));
+  function update<K extends keyof EditorForm>(key: K, value: EditorForm[K]) {
+    setForm((current) => current ? { ...current, [key]: value } : current);
+  }
+
+  async function save() {
+    if (!form || !detail) return;
+    if (!detail.isActive && form.isActive && !window.confirm("Publish this supplement to the customer catalogue? The server will reject it if evidence or safety context is incomplete.")) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await requestJson(`/api/admin/supplements/${supplementId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          categorySlug: form.categorySlug,
+          brandName: nullable(form.brandName),
+          tagline: nullable(form.tagline),
+          description: nullable(form.description),
+          mechanism: nullable(form.mechanism),
+          benefits: lines(form.benefits),
+          dosage: nullable(form.dosage),
+          timing: nullable(form.timing),
+          warnings: nullable(form.warnings),
+          sideEffects: lines(form.sideEffects),
+          genderNotes: nullable(form.genderNotes),
+          ageNotes: nullable(form.ageNotes),
+          evidenceLevel: nullable(form.evidenceLevel),
+          studyCount: nullable(form.studyCount),
+          keyStudyFindings: lines(form.keyStudyFindings),
+          priceRange: nullable(form.priceRange),
+          valueRating: nullable(form.valueRating),
+          indiaAvailability: nullable(form.indiaAvailability),
+          indiaNote: nullable(form.indiaNote),
+          imageUrl: nullable(form.imageUrl),
+          isFeatured: form.isFeatured,
+          popular: form.popular,
+          veganFriendly: form.veganFriendly,
+          isActive: form.isActive,
+          sortOrder: Number(form.sortOrder),
+          recommendedFor: form.recommendedFor,
+        }),
+      });
+      setMessage(form.isActive ? "Customer-facing supplement saved." : "Private draft saved.");
+      await reload();
+      onChanged();
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The supplement could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading && !form) return <div className={styles.editor} id={id}><Loading label="Loading evidence and buying links…" /></div>;
+  if (!form || !detail) return <div className={styles.editor} id={id}>{error ? <p className={styles.error}>{error}</p> : null}</div>;
 
   return (
-    <div>
-      {/* Range selector */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {[7, 14, 30, 90].map((d) => (
-          <button key={d} onClick={() => setDays(d)} style={{
-            background: days === d ? T.accent : "transparent",
-            color: days === d ? "#000" : "#bbb",
-            border: `1px solid ${days === d ? T.accent : T.border}`,
-            borderRadius: 0, padding: "6px 14px", fontSize: 12, fontWeight: days === d ? 700 : 500, cursor: "pointer",
-          }}>Last {d} days</button>
+    <div className={styles.editor} id={id}>
+      <div className={styles.editorGrid}>
+        <section>
+          <SectionHeading title="Customer-facing entry" note="Plain language first; research context must support the recommendation." />
+          <div className={styles.formGrid}>
+            <Field label="Name"><input value={form.name} onChange={(event) => update("name", event.target.value)} /></Field>
+            <Field label="Category"><select value={form.categorySlug} onChange={(event) => update("categorySlug", event.target.value)}>{categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></Field>
+            <Field label="Brand, if relevant"><input value={form.brandName} onChange={(event) => update("brandName", event.target.value)} /></Field>
+            <Field label="Image URL"><input value={form.imageUrl} onChange={(event) => update("imageUrl", event.target.value)} placeholder="HTTPS or /images/…" /></Field>
+            <Field label="Tagline" wide><input value={form.tagline} onChange={(event) => update("tagline", event.target.value)} /></Field>
+            <Field label="Description" wide><textarea rows={4} value={form.description} onChange={(event) => update("description", event.target.value)} /></Field>
+            <Field label="How it works" wide><textarea rows={4} value={form.mechanism} onChange={(event) => update("mechanism", event.target.value)} /></Field>
+            <Field label="Benefits · one per line" wide><textarea rows={4} value={form.benefits} onChange={(event) => update("benefits", event.target.value)} /></Field>
+          </div>
+
+          <SectionHeading title="Evidence and safety" note="Do not publish a confidence label without study context and a clear warning." />
+          <div className={styles.formGrid}>
+            <Field label="Evidence level"><select value={form.evidenceLevel} onChange={(event) => update("evidenceLevel", event.target.value)}><option value="">Choose</option><option value="very_high">Very high</option><option value="high">High</option><option value="moderate">Moderate</option><option value="low">Low</option><option value="preliminary">Preliminary</option></select></Field>
+            <Field label="Study context"><input value={form.studyCount} onChange={(event) => update("studyCount", event.target.value)} placeholder="e.g. 25+ human trials" /></Field>
+            <Field label="Dosage"><input value={form.dosage} onChange={(event) => update("dosage", event.target.value)} /></Field>
+            <Field label="Timing"><input value={form.timing} onChange={(event) => update("timing", event.target.value)} /></Field>
+            <Field label="Evidence findings · one per line" wide><textarea rows={5} value={form.keyStudyFindings} onChange={(event) => update("keyStudyFindings", event.target.value)} /></Field>
+            <Field label="Safety warning" wide><textarea rows={4} value={form.warnings} onChange={(event) => update("warnings", event.target.value)} /></Field>
+            <Field label="Possible side effects · one per line" wide><textarea rows={3} value={form.sideEffects} onChange={(event) => update("sideEffects", event.target.value)} /></Field>
+            <Field label="Age-specific notes"><textarea rows={3} value={form.ageNotes} onChange={(event) => update("ageNotes", event.target.value)} /></Field>
+            <Field label="Gender-specific notes"><textarea rows={3} value={form.genderNotes} onChange={(event) => update("genderNotes", event.target.value)} /></Field>
+          </div>
+        </section>
+
+        <aside>
+          <SectionHeading title="India and merchandising" note="Separate guidance from the external seller relationship." />
+          <div className={styles.asideFields}>
+            <Field label="Typical India price"><input value={form.priceRange} onChange={(event) => update("priceRange", event.target.value)} placeholder="₹800–₹1,200 per month" /></Field>
+            <Field label="Availability"><select value={form.indiaAvailability} onChange={(event) => update("indiaAvailability", event.target.value)}><option value="">Choose</option><option value="widely_available">Widely available</option><option value="available">Available</option><option value="limited">Limited</option><option value="import_only">Import only</option></select></Field>
+            <Field label="India buying context"><textarea rows={4} value={form.indiaNote} onChange={(event) => update("indiaNote", event.target.value)} /></Field>
+            <Field label="Value rating"><select value={form.valueRating} onChange={(event) => update("valueRating", event.target.value)}><option value="">Choose</option><option value="exceptional">Exceptional</option><option value="good">Good</option><option value="moderate">Moderate</option><option value="expensive">Expensive</option></select></Field>
+            <Field label="Sort order"><input type="number" value={form.sortOrder} onChange={(event) => update("sortOrder", event.target.value)} /></Field>
+          </div>
+
+          <fieldset className={styles.goalPicker}>
+            <legend>Recommended goals</legend>
+            {GOALS.map((goal) => <Check key={goal} label={GOAL_LABEL[goal]} checked={form.recommendedFor.includes(goal)} onChange={(checked) => update("recommendedFor", checked ? [...form.recommendedFor, goal] : form.recommendedFor.filter((item) => item !== goal))} />)}
+          </fieldset>
+          <div className={styles.toggleList}>
+            <Check label="Vegan friendly" checked={form.veganFriendly} onChange={(value) => update("veganFriendly", value)} />
+            <Check label="Popular" checked={form.popular} onChange={(value) => update("popular", value)} />
+            <Check label="Featured placement" checked={form.isFeatured} onChange={(value) => update("isFeatured", value)} />
+            <Check label="Published to customers" checked={form.isActive} onChange={(value) => update("isActive", value)} />
+          </div>
+
+          {form.imageUrl ? (
+            <div className={styles.imagePreview}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={form.imageUrl} alt={`${form.name} product preview`} />
+            </div>
+          ) : null}
+        </aside>
+      </div>
+
+      {message ? <p className={styles.success} role="status">{message}</p> : null}
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <div className={styles.stickySave}><span>{form.isActive ? "Changes affect the live catalogue." : "This entry is private."}</span><button className={styles.primaryButton} type="button" disabled={saving} onClick={() => void save()}>{saving ? "Saving…" : "Save supplement"}</button></div>
+
+      <BuyingLinks supplementId={supplementId} active={detail.isActive} links={detail.links} onChanged={async () => { await reload(); onChanged(); }} />
+    </div>
+  );
+}
+
+function BuyingLinks({ supplementId, active, links: buyingLinks, onChanged }: { supplementId: string; active: boolean; links: BuyingLink[]; onChanged: () => Promise<void> }) {
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<BuyingLink | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove(link: BuyingLink) {
+    if (!window.confirm(`Remove ${link.merchantLabel || NETWORK_LABEL[link.network]}? Click history will be preserved.`)) return;
+    setError(null);
+    try {
+      await requestJson(`/api/admin/supplements/links/${link.id}`, { method: "DELETE" });
+      await onChanged();
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The buying link could not be removed.");
+    }
+  }
+
+  return (
+    <section className={styles.linksSection}>
+      <SectionHeading title="Verified buying links" note="Only active HTTPS destinations are sent to customers. Click tracking never exposes the raw URL." />
+      <div className={styles.linksHeader}>
+        <p>{buyingLinks.filter((link) => link.isActive).length} active seller{buyingLinks.filter((link) => link.isActive).length === 1 ? "" : "s"}</p>
+        <button type="button" className={styles.primaryButton} disabled={!active || adding} onClick={() => setAdding(true)}>Add seller</button>
+      </div>
+      {!active ? <p className={styles.notice}>Publish and save the supplement before adding a buying link.</p> : null}
+      {adding ? <BuyingLinkForm supplementId={supplementId} onSaved={async () => { setAdding(false); await onChanged(); }} onCancel={() => setAdding(false)} /> : null}
+      {editing ? <BuyingLinkForm supplementId={supplementId} existing={editing} onSaved={async () => { setEditing(null); await onChanged(); }} onCancel={() => setEditing(null)} /> : null}
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <div className={styles.linkList}>
+        {buyingLinks.length === 0 ? <div className={styles.emptyCompact}>No seller links yet.</div> : buyingLinks.map((link) => (
+          <article className={!link.isActive ? styles.linkInactive : undefined} key={link.id}>
+            <div><strong>{link.merchantLabel || NETWORK_LABEL[link.network]}</strong><small>{link.notes || "No pack details"}</small><a href={link.affiliateUrl} target="_blank" rel="noopener noreferrer">Open destination ↗</a></div>
+            <div className={styles.linkPrice}><strong>{link.priceRs ? money.format(link.priceRs) : "Price not set"}</strong>{link.mrpRs && link.priceRs && link.mrpRs > link.priceRs ? <small>MRP {money.format(link.mrpRs)}</small> : null}</div>
+            <span className={link.isActive ? styles.liveStatus : styles.draftStatus}>{link.isActive ? "Active" : "Inactive"}</span>
+            <div className={styles.linkActions}><button type="button" onClick={() => setEditing(link)}>Edit</button><button type="button" className={styles.dangerText} onClick={() => void remove(link)}>Remove</button></div>
+          </article>
         ))}
       </div>
-
-      {/* Stat row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8, marginBottom: 20 }}>
-        <Stat label="Total clicks" value={data.totalClicks} accent />
-        <Stat label="Signed-in clicks" value={data.signedInClicks} />
-        <Stat label="Unique users" value={data.uniqueUsers} />
-        <Stat label="Top network" value={data.topNetworks[0] ? NETWORK_LABEL[data.topNetworks[0].network] || data.topNetworks[0].network : "—"} />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
-
-        {/* Daily trend bar chart */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16 }}>
-          <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>Daily clicks</div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 140, paddingBottom: 24, position: "relative" }}>
-            {data.dailyTrend.map((d: any) => (
-              <div key={d.date} title={`${d.date}: ${d.clicks} clicks`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 8 }}>
-                <div style={{ width: "100%", maxWidth: 36, height: `${(d.clicks / maxDaily) * 100}%`, minHeight: d.clicks > 0 ? 2 : 0, background: T.accent, borderRadius: 0 }} />
-                <div style={{ fontSize: 9, color: T.muted, position: "absolute", bottom: 0 }}>{d.date.slice(8)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top networks */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16 }}>
-          <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>By network</div>
-          {data.topNetworks.length === 0 ? (
-            <div style={{ color: T.muted, fontSize: 13 }}>No clicks yet.</div>
-          ) : (
-            data.topNetworks.map((n: any) => (
-              <div key={n.network} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.border}`, fontSize: 13 }}>
-                <span>{NETWORK_LABEL[n.network] || n.network}</span>
-                <span style={{ fontWeight: 700, color: T.accent }}>{n.clicks}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Top products */}
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16, marginTop: 14 }}>
-        <div style={{ fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>Top products by clicks</div>
-        {data.topProducts.length === 0 ? (
-          <div style={{ color: T.muted, fontSize: 13 }}>No clicks yet. Add affiliate links to start tracking.</div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {data.topProducts.map((p: any, i: number) => (
-              <div key={p.supplementId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#0a0a0a", borderRadius: 0 }}>
-                <div style={{ width: 24, fontSize: 12, color: T.muted, fontWeight: 700 }}>#{i + 1}</div>
-                <div style={{ fontSize: 20 }}>{p.emoji || "\uD83D\uDC8A"}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</div>
-                  <div style={{ fontSize: 10, color: T.muted, fontFamily: "ui-monospace, monospace" }}>{p.slug}</div>
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: p.accentColor || T.accent }}>{p.clicks}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    </section>
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: any; accent?: boolean }) {
+function BuyingLinkForm({ supplementId, existing, onSaved, onCancel }: { supplementId: string; existing?: BuyingLink; onSaved: () => Promise<void>; onCancel: () => void }) {
+  const [form, setForm] = useState({
+    network: existing?.network ?? "NUTRABAY" as Network,
+    affiliateUrl: existing?.affiliateUrl ?? "",
+    merchantLabel: existing?.merchantLabel ?? "",
+    priceRs: existing?.priceRs ? String(existing.priceRs) : "",
+    mrpRs: existing?.mrpRs ? String(existing.mrpRs) : "",
+    notes: existing?.notes ?? "",
+    isActive: existing?.isActive ?? true,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    const payload = {
+      network: form.network,
+      affiliateUrl: form.affiliateUrl,
+      merchantLabel: nullable(form.merchantLabel),
+      priceRs: form.priceRs ? Number(form.priceRs) : null,
+      mrpRs: form.mrpRs ? Number(form.mrpRs) : null,
+      notes: nullable(form.notes),
+      ...(existing ? { isActive: form.isActive } : {}),
+    };
+    try {
+      await requestJson(existing ? `/api/admin/supplements/links/${existing.id}` : `/api/admin/supplements/${supplementId}/links`, {
+        method: existing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      await onSaved();
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "The buying link could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div style={{ background: T.card, border: `1px solid ${accent ? T.accent : T.border}`, borderRadius: 0, padding: 14 }}>
-      <div style={{ fontSize: 10, color: T.dim, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", fontSize: 26, fontWeight: 700, color: accent ? T.accent : T.text }}>{value}</div>
-    </div>
+    <form className={styles.linkForm} onSubmit={submit}>
+      <div className={styles.formGrid}>
+        <Field label="Seller"><select value={form.network} onChange={(event) => setForm((current) => ({ ...current, network: event.target.value as Network }))}>{NETWORKS.map((network) => <option value={network} key={network}>{NETWORK_LABEL[network]}</option>)}</select></Field>
+        <Field label="HTTPS affiliate URL" wide><input type="url" required value={form.affiliateUrl} onChange={(event) => setForm((current) => ({ ...current, affiliateUrl: event.target.value }))} placeholder="https://…" /></Field>
+        {form.network === "OTHER" ? <Field label="Merchant name"><input required value={form.merchantLabel} onChange={(event) => setForm((current) => ({ ...current, merchantLabel: event.target.value }))} /></Field> : null}
+        <Field label="Selling price"><input type="number" min="1" value={form.priceRs} onChange={(event) => setForm((current) => ({ ...current, priceRs: event.target.value }))} /></Field>
+        <Field label="MRP"><input type="number" min="1" value={form.mrpRs} onChange={(event) => setForm((current) => ({ ...current, mrpRs: event.target.value }))} /></Field>
+        <Field label="Pack or seller notes"><input value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="1 kg · 30 servings" /></Field>
+      </div>
+      {existing ? <Check label="Active buying link" checked={form.isActive} onChange={(value) => setForm((current) => ({ ...current, isActive: value }))} /> : null}
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <div className={styles.formActions}><button type="button" onClick={onCancel}>Cancel</button><button className={styles.primaryButton} disabled={saving}>{saving ? "Saving…" : existing ? "Save seller" : "Add seller"}</button></div>
+    </form>
   );
 }
 
-function inputStyle(): any {
-  return {
-    width: "100%", background: "#0a0a0a", color: T.text,
-    border: `1px solid ${T.border}`, borderRadius: 0,
-    padding: "8px 10px", fontSize: 12, fontFamily: "inherit", outline: "none",
-  };
+function AnalyticsTab() {
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    requestJson<AnalyticsData>(`/api/admin/supplements/clicks?days=${days}`)
+      .then((result) => { if (!cancelled) { setData(result); setError(null); } })
+      .catch((caught: unknown) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Analytics could not be loaded."); });
+    return () => { cancelled = true; };
+  }, [days]);
+
+  const maxDaily = Math.max(1, ...(data?.dailyTrend.map((day) => day.clicks) ?? [1]));
+  return (
+    <section className={styles.analytics} role="tabpanel">
+      <div className={styles.rangePicker} aria-label="Analytics period">
+        {[7, 14, 30, 90].map((range) => <button type="button" aria-pressed={days === range} onClick={() => { setData(null); setDays(range); }} key={range}>{range} days</button>)}
+      </div>
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {!data ? <Loading label="Loading buying-link analytics…" /> : (
+        <>
+          <div className={styles.metrics}>
+            <Metric label="Seller clicks" value={data.totalClicks} note={`Last ${data.days} days`} />
+            <Metric label="Signed-in clicks" value={data.signedInClicks} note="Known FitFuel customers" />
+            <Metric label="Unique signed-in users" value={data.uniqueUsers} note="Not raw IP estimates" />
+          </div>
+          <div className={styles.analyticsGrid}>
+            <section className={styles.chartPanel}>
+              <SectionHeading title="Daily interest" note="A directional click signal, not completed retailer sales." />
+              <div className={styles.barChart}>
+                {data.dailyTrend.map((day) => <div className={styles.barColumn} key={day.date} title={`${day.date}: ${day.clicks} clicks`}><span>{day.clicks || ""}</span><i style={{ height: `${Math.max(day.clicks ? 5 : 0, (day.clicks / maxDaily) * 100)}%` }} /><small>{day.date.slice(5)}</small></div>)}
+              </div>
+            </section>
+            <section className={styles.networkPanel}>
+              <SectionHeading title="Seller split" note="Which destination customers choose." />
+              {data.topNetworks.length === 0 ? <div className={styles.emptyCompact}>No clicks yet.</div> : data.topNetworks.map((network) => <div className={styles.rankRow} key={network.network}><span>{NETWORK_LABEL[network.network]}</span><strong>{network.clicks}</strong></div>)}
+            </section>
+          </div>
+          <section className={styles.productsPanel}>
+            <SectionHeading title="Most-clicked supplements" note="Use this with margin and retailer conversion data before changing recommendations." />
+            {data.topProducts.length === 0 ? <div className={styles.emptyCompact}>No tracked supplement clicks yet.</div> : data.topProducts.map((product, index) => <div className={styles.productRank} key={product.supplementId}><span>{index + 1}</span><div><strong>{product.name}</strong><small>{product.slug ?? "Removed entry"}</small></div><strong>{product.clicks}</strong></div>)}
+          </section>
+        </>
+      )}
+    </section>
+  );
 }
-function tinyBtn(): any {
-  return {
-    background: "transparent", color: T.text, border: `1px solid ${T.border}`,
-    borderRadius: 0, padding: "5px 12px", fontSize: 11, cursor: "pointer",
-  };
+
+function SectionHeading({ title, note }: { title: string; note: string }) {
+  return <div className={styles.sectionTitle}><div><h2>{title}</h2><p>{note}</p></div></div>;
+}
+
+function Field({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
+  return <label className={wide ? styles.wideField : undefined}><span>{label}</span>{children}</label>;
+}
+
+function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return <label className={styles.checkLabel}><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span>{label}</span></label>;
+}
+
+function Loading({ label }: { label: string }) {
+  return <div className={styles.loading} role="status"><span />{label}</div>;
 }

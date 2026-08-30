@@ -14,6 +14,8 @@
 // shift the menu — they only suppress that day's delivery.
 
 import { prisma } from "@/lib/prisma";
+import { servingScaleForTarget } from "@/lib/portion-personalization";
+import { isPlanServiceDate, serviceDayNumber } from "@/lib/plan-service-dates";
 
 export type DeliveryWindowValue = "MORNING" | "EVENING";
 export type MealSlotValue = "BREAKFAST" | "LUNCH" | "SNACK" | "DINNER";
@@ -50,18 +52,23 @@ export function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Today's India calendar date represented as UTC midnight for @db.Date fields. */
+export function todayISTDate(now = new Date()): Date {
+  const shifted = new Date(now.getTime() + 330 * 60_000);
+  return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+}
+
 function sameUTCDate(a: Date, b: Date): boolean {
   return ymd(a) === ymd(b);
 }
 
-function utcMidnight(d: Date): number {
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-}
-
-export function menuDayNumber(startDate: Date, target: Date, cycleLengthDays: number): number {
-  const days = Math.floor((utcMidnight(target) - utcMidnight(startDate)) / 86_400_000);
-  const cycle = cycleLengthDays && cycleLengthDays > 0 ? cycleLengthDays : 30;
-  return (((days % cycle) + cycle) % cycle) + 1;
+export function menuDayNumber(
+  startDate: Date,
+  target: Date,
+  cycleLengthDays: number,
+  duration?: string | null,
+): number {
+  return serviceDayNumber(startDate, target, cycleLengthDays, duration);
 }
 
 export type ActiveSubscriber = {
@@ -70,9 +77,11 @@ export type ActiveSubscriber = {
   mealPlanId: string;
   mealsPerDay: string | null;
   deliveryWindow: DeliveryWindowValue | null;
+  calorieTarget: number | null;
   skipDates: Date[];
   startDate: Date;
-  mealPlan: { id: string; name: string; slug: string; cycleLengthDays: number };
+  duration: string | null;
+  mealPlan: { id: string; name: string; slug: string; cycleLengthDays: number; avgCaloriesPerDay: number };
 };
 
 export type ActiveSubscribersResult = {
@@ -84,7 +93,7 @@ export type ActiveSubscribersResult = {
 // THE predicate. Shared by the cron and the dashboard so the subscriber set is
 // defined in exactly one place.
 export async function getActiveSubscribersForDate(date: Date): Promise<ActiveSubscribersResult> {
-  const subs = (await prisma.userActivePlan.findMany({
+  const subs = await prisma.userActivePlan.findMany({
     where: {
       status: "active",
       isDigital: false,
@@ -114,16 +123,21 @@ export async function getActiveSubscribersForDate(date: Date): Promise<ActiveSub
       mealPlanId: true,
       mealsPerDay: true,
       deliveryWindow: true,
+      calorieTarget: true,
       skipDates: true,
       startDate: true,
-      mealPlan: { select: { id: true, name: true, slug: true, cycleLengthDays: true } },
+      duration: true,
+      mealPlan: { select: { id: true, name: true, slug: true, cycleLengthDays: true, avgCaloriesPerDay: true } },
     },
-  })) as unknown as ActiveSubscriber[];
+  });
 
   const served: ActiveSubscriber[] = [];
   let skipped = 0;
   for (const s of subs) {
-    if (s.skipDates?.some((sd) => sameUTCDate(new Date(sd), date))) {
+    if (
+      !isPlanServiceDate(s.duration, date) ||
+      s.skipDates?.some((sd) => sameUTCDate(new Date(sd), date))
+    ) {
       skipped++;
       continue;
     }
@@ -199,12 +213,28 @@ export async function buildProductionReport(
   };
   if (served.length === 0) return report;
 
-  type Resolved = ActiveSubscriber & { dayNumber: number; window: DeliveryWindowValue };
-  const resolved: Resolved[] = served.map((s) => ({
-    ...s,
-    dayNumber: menuDayNumber(new Date(s.startDate), date, s.mealPlan.cycleLengthDays),
-    window: (s.deliveryWindow ?? "MORNING") as DeliveryWindowValue,
-  }));
+  type Resolved = ActiveSubscriber & {
+    dayNumber: number;
+    window: DeliveryWindowValue;
+    servingScale: number;
+  };
+  const resolved: Resolved[] = served.map((s) => {
+    const scale = servingScaleForTarget({
+      calorieTarget: s.calorieTarget,
+      planCalories: s.mealPlan.avgCaloriesPerDay,
+    });
+    if (scale.clamped) {
+      report.warnings.push(
+        `Serving scale capped for subscription ${s.id}: requested ${scale.requestedFactor.toFixed(2)}×, using ${scale.factor.toFixed(2)}×.`
+      );
+    }
+    return {
+      ...s,
+      dayNumber: menuDayNumber(new Date(s.startDate), date, s.mealPlan.cycleLengthDays, s.duration),
+      window: (s.deliveryWindow ?? "MORNING") as DeliveryWindowValue,
+      servingScale: scale.factor,
+    };
+  });
 
   const pairKey = (planId: string, day: number) => `${planId}|${day}`;
   const pairs = new Map<string, { mealPlanId: string; dayNumber: number }>();
@@ -250,7 +280,7 @@ export async function buildProductionReport(
         }
         continue;
       }
-      const portions = Number(sl.servingMultiplier ?? 1);
+      const portions = Number(sl.servingMultiplier ?? 1) * r.servingScale;
       const rid = sl.recipe.id;
       let line = lineMap.get(rid);
       if (!line) {
@@ -270,10 +300,10 @@ export async function buildProductionReport(
         };
         lineMap.set(rid, line);
       }
-      line.totalPortions += portions;
-      line.byWindow[r.window] += portions;
-      line.bySlot[slot] += portions;
-      report.totalPortions += portions;
+      line.totalPortions = Math.round((line.totalPortions + portions) * 100) / 100;
+      line.byWindow[r.window] = Math.round((line.byWindow[r.window] + portions) * 100) / 100;
+      line.bySlot[slot] = Math.round((line.bySlot[slot] + portions) * 100) / 100;
+      report.totalPortions = Math.round((report.totalPortions + portions) * 100) / 100;
     }
   }
 

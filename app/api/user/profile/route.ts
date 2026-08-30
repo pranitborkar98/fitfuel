@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { profilePatchSchema } from "@/lib/validation/schemas";
+import { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   const rl = await enforceRateLimit(req, "read", session.user.id);
   if (!rl.ok) return rl.response;
 
-  const user = await (prisma as any).user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
       name: true, email: true, phone: true, image: true, role: true,
@@ -35,40 +36,42 @@ export async function PATCH(req: NextRequest) {
   if (!rl.ok) return rl.response;
   const parsed = await readJson(req, profilePatchSchema);
   if (!parsed.ok) return parsed.response;
-  const { name, phone, dietPreference, fitnessGoal, gender } = parsed.data as any;
+  const { name, phone, dietPreference, fitnessGoal, gender } = parsed.data;
 
   try {
-    await (prisma as any).user.update({
-      where: { id: session.user.id },
-      data: {
-        name:  name  || null,
-        phone: phone || null,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          ...(name !== undefined ? { name: name || null } : {}),
+          ...(phone !== undefined ? { phone: phone || null } : {}),
+        },
+      });
+
+      await tx.userProfile.upsert({
+        where: { userId: session.user.id },
+        update: {
+          ...(dietPreference !== undefined ? { dietPreference: dietPreference || null } : {}),
+          ...(fitnessGoal !== undefined ? { fitnessGoal: fitnessGoal || null } : {}),
+          ...(gender !== undefined ? { gender: gender || null } : {}),
+        },
+        create: {
+          userId: session.user.id,
+          dietPreference: dietPreference || null,
+          fitnessGoal: fitnessGoal || null,
+          gender: gender || null,
+        },
+      });
     });
-  } catch (e: any) {
-    if (e?.code === "P2002" && e?.meta?.target?.includes("phone")) {
+  } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json(
         { error: "This phone number is already linked to another account." },
         { status: 409 }
       );
     }
-    throw e;
+    throw error;
   }
-
-  await (prisma as any).userProfile.upsert({
-    where:  { userId: session.user.id },
-    update: {
-      dietPreference: dietPreference || null,
-      fitnessGoal:    fitnessGoal    || null,
-      gender:         gender         || null,
-    },
-    create: {
-      userId:         session.user.id,
-      dietPreference: dietPreference || null,
-      fitnessGoal:    fitnessGoal    || null,
-      gender:         gender         || null,
-    },
-  });
 
   return NextResponse.json({ ok: true });
 }

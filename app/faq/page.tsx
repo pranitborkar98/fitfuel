@@ -18,6 +18,7 @@
 import type { Metadata } from "next";
 
 import { prisma } from "@/lib/prisma";
+import { richHtmlToText, safeJsonLd, sanitizeRichHtml } from "@/lib/content-safety";
 import { Idx } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Wrap, p } from "@/app/_ui/Page";
 import { SECTION } from "@/app/_ui/theme";
@@ -32,14 +33,6 @@ export const metadata: Metadata = {
   description:
     "Answers about FitFuel meal plans, delivery in Pune, tracking, dietary options, payments, allergens and more.",
 };
-
-/** Strip HTML to plain text for the JSON-LD answer field. */
-function stripHtml(html: string) {
-  return html
-    .replace(/<[^>]+>/g, "")
-    .replace(/&[a-z]+;/gi, " ")
-    .trim();
-}
 
 export default async function FAQPage() {
   const faqs = await prisma.faq.findMany({
@@ -64,13 +57,13 @@ export default async function FAQPage() {
     mainEntity: faqs.map((f) => ({
       "@type": "Question",
       name: f.question,
-      acceptedAnswer: { "@type": "Answer", text: stripHtml(f.answerHtml) },
+      acceptedAnswer: { "@type": "Answer", text: richHtmlToText(f.answerHtml) },
     })),
   };
 
   return (
     <Shell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <Masthead
         label="Questions, answered"
@@ -104,7 +97,10 @@ export default async function FAQPage() {
                           +
                         </span>
                       </summary>
-                      <div className={p.qaBody} dangerouslySetInnerHTML={{ __html: f.answerHtml }} />
+                      <div
+                        className={p.qaBody}
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(f.answerHtml) }}
+                      />
                     </details>
                   ))}
                 </div>

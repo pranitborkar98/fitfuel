@@ -17,7 +17,7 @@
 // app/dashboard/* before it was written. No capability is claimed that does not
 // have a model behind it and a route that renders it:
 //
-//   body composition -> BodyMetric (13 measures) + /dashboard/body-metrics
+//   body composition -> BodyMetric (18 displayed measures) + /dashboard/body-metrics
 //   the diary        -> FoodEntry/MealLog/WaterLog/NutritionGoal + /dashboard/nutrition
 //   training         -> WorkoutSession/WorkoutSet/Exercise + /dashboard/exercises
 //   the score        -> ConsistencySnapshot + /dashboard/progress
@@ -44,7 +44,7 @@ export default function Platform({ counts }: { counts: BandCounts }) {
   const rows: { href: string; stat: string; label: string; line: string }[] = [
     {
       href: "/dashboard/body-metrics",
-      stat: "13 measures",
+      stat: "18 measures",
       label: "Body composition, not a bathroom scale",
       line:
         "Body fat, visceral fat, skeletal muscle, bone mass, water, protein, BMR and metabolic age — every weigh-in kept and charted against the plan.",
@@ -75,7 +75,7 @@ export default function Platform({ counts }: { counts: BandCounts }) {
       stat: "Recalibrates",
       label: "The target moves when the evidence does",
       line:
-        "Four weigh-ins that disagree with your goal change your numbers, with the arithmetic shown rather than asserted.",
+        "Two or more weigh-ins establish a trend. When it leaves the goal range, a capped change is shown for you to approve.",
     },
     {
       href: "/dashboard/trainer",

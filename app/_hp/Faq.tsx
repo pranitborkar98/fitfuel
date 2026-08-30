@@ -10,6 +10,7 @@
 //
 // SERVER COMPONENT.
 
+import { sanitizeRichHtml } from "@/lib/content-safety";
 import { prisma } from "@/lib/prisma";
 import v from "./v2.module.css";
 import Idx from "./Idx";
@@ -20,12 +21,16 @@ const MAX = 8;
 
 async function getFaqs(): Promise<FaqRow[]> {
   try {
-    return await prisma.faq.findMany({
+    const rows = await prisma.faq.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { question: "asc" }],
       take: MAX,
       select: { id: true, question: true, answerHtml: true },
     });
+    return rows.map((row) => ({
+      ...row,
+      answerHtml: sanitizeRichHtml(row.answerHtml),
+    }));
   } catch {
     return [];
   }

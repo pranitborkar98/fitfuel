@@ -79,9 +79,9 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
 type Tab = { href: string; label: string; icon: string; match: string[] };
 
 const TABS: Tab[] = [
-  { href: "/", label: "Order tonight", icon: I.bowl, match: ["/", "/menu"] },
-  { href: "/?mode=plans", label: "Meal plans", icon: I.layers, match: ["/plans"] },
-  { href: "/?mode=supps", label: "Supplements", icon: I.spark, match: ["/supplements"] },
+  { href: "/menu", label: "Single dishes", icon: I.bowl, match: ["/menu"] },
+  { href: "/plans", label: "Meal plans", icon: I.layers, match: ["/plans"] },
+  { href: "/supplements", label: "Supplements", icon: I.spark, match: ["/supplements"] },
   { href: "/dashboard/coach", label: "Coach", icon: I.spark, match: ["/dashboard/coach"] },
   { href: "/dashboard", label: "Your account", icon: I.user, match: ["/dashboard"] },
 ];
@@ -172,8 +172,8 @@ export default function AppChrome({
         <div className={s.cutoff}>
           <p className={s.cutoffRow}>
             <span>
-              Cooked to order and delivered across <b>{area}</b> today.
-              {cutoff ? <> Plans ordered by <b>{cutoff}</b> start tomorrow.</> : null}
+              Single dishes and meal plans from our <b>{area}</b> kitchen.
+              {cutoff ? <> Plan cut-off: <b>{cutoff}</b>.</> : null}
             </span>
           </p>
         </div>

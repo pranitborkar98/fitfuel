@@ -2,10 +2,22 @@
 
 // app/admin/content/TestimonialManager.tsx
 import { useState } from "react";
-import { UI, Label, Text, Area, Select, Check, btn, contentApi } from "./ContentClient";
+import { UI, Label, Text, Area, Select, Check, btn, contentApi, type TestimonialRecord } from "./ContentClient";
 import ImageUpload from "@/components/ImageUpload";
 
-type Tst = any;
+type TestimonialForm = {
+  name: string;
+  location: string;
+  planLabel: string;
+  goal: string;
+  resultLabel: string;
+  rating: number;
+  quote: string;
+  avatarUrl: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  sortOrder: string;
+};
 
 const GOALS = [
   { v: "", l: "— none —" },
@@ -15,28 +27,28 @@ const GOALS = [
   { v: "office", l: "Office" },
 ];
 
-function blank() {
-  return { name: "", location: "", planLabel: "", goal: "", resultLabel: "", rating: 5, quote: "", avatarUrl: "", isFeatured: false, isActive: true, sortOrder: 0 };
+function blank(): TestimonialForm {
+  return { name: "", location: "", planLabel: "", goal: "", resultLabel: "", rating: 5, quote: "", avatarUrl: "", isFeatured: false, isActive: true, sortOrder: "0" };
 }
-function toForm(t: Tst) {
+function toForm(testimonial: TestimonialRecord): TestimonialForm {
   return {
-    name: t.name ?? "", location: t.location ?? "", planLabel: t.planLabel ?? "",
-    goal: t.goal ?? "", resultLabel: t.resultLabel ?? "", rating: t.rating ?? 5,
-    quote: t.quote ?? "", avatarUrl: t.avatarUrl ?? "", isFeatured: !!t.isFeatured,
-    isActive: t.isActive !== false, sortOrder: t.sortOrder ?? 0,
+    name: testimonial.name, location: testimonial.location, planLabel: testimonial.planLabel,
+    goal: testimonial.goal ?? "", resultLabel: testimonial.resultLabel, rating: testimonial.rating,
+    quote: testimonial.quote, avatarUrl: testimonial.avatarUrl ?? "", isFeatured: testimonial.isFeatured,
+    isActive: testimonial.isActive, sortOrder: String(testimonial.sortOrder),
   };
 }
 
-export default function TestimonialManager({ initial }: { initial: Tst[] }) {
-  const [items, setItems] = useState<Tst[]>(initial);
+export default function TestimonialManager({ initial }: { initial: TestimonialRecord[] }) {
+  const [items, setItems] = useState<TestimonialRecord[]>(initial);
   const [editing, setEditing] = useState<null | "new" | string>(null);
-  const [form, setForm] = useState<any>(blank());
+  const [form, setForm] = useState<TestimonialForm>(blank());
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  const set = <K extends keyof TestimonialForm>(key: K, value: TestimonialForm[K]) => setForm((current) => ({ ...current, [key]: value }));
   function startNew() { setForm(blank()); setEditing("new"); setErr(null); }
-  function startEdit(t: Tst) { setForm(toForm(t)); setEditing(t.id); setErr(null); }
+  function startEdit(testimonial: TestimonialRecord) { setForm(toForm(testimonial)); setEditing(testimonial.id); setErr(null); }
   function close() { setEditing(null); setErr(null); }
 
   async function save() {
@@ -44,16 +56,18 @@ export default function TestimonialManager({ initial }: { initial: Tst[] }) {
     try {
       const action = editing === "new" ? "create" : "update";
       const id = editing === "new" ? null : (editing as string);
-      const { record } = await contentApi("testimonial", action, id, form);
+      const { record } = await contentApi<{ record: TestimonialRecord }>("testimonial", action, id, form);
       setItems((prev) => action === "create" ? [...prev, record] : prev.map((t) => (t.id === record.id ? record : t)));
       close();
-    } catch (e: any) { setErr(e?.message || "Save failed"); }
+    } catch (error: unknown) { setErr(error instanceof Error ? error.message : "Save failed"); }
     finally { setBusy(false); }
   }
-  async function remove(t: Tst) {
-    if (!confirm(`Delete ${t.name}'s testimonial?`)) return;
-    try { await contentApi("testimonial", "delete", t.id, null); setItems((p) => p.filter((x) => x.id !== t.id)); }
-    catch (e: any) { alert(e?.message || "Delete failed"); }
+  async function remove(testimonial: TestimonialRecord) {
+    if (!confirm(`Delete ${testimonial.name}'s testimonial?`)) return;
+    try {
+      await contentApi<{ ok: true }>("testimonial", "delete", testimonial.id, null);
+      setItems((previous) => previous.filter((item) => item.id !== testimonial.id));
+    } catch (error: unknown) { alert(error instanceof Error ? error.message : "Delete failed"); }
   }
 
   if (editing) {

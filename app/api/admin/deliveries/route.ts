@@ -1,31 +1,43 @@
-// app/api/admin/deliveries/route.ts
-// Phase 10 + 15-RBAC -- admin view + control of today's deliveries.
-//   GET            -> today's deliveries (all drivers)
-//   POST assign    -> { action:"assign", deliveryId, driverId|null }
-//   POST dispatch  -> { action:"dispatch", deliveryIds:[...] }
-// Dispatch surface only (OWNER/ADMIN/DISPATCH). Returns customer PII, so a
-// KITCHEN role is rejected with 403.
+// Today's dispatch board API. OWNER/ADMIN/DISPATCH only.
 
-import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/admin-auth";
+import { todayIndiaDate } from "@/lib/date-only";
 import { notifyDriverWhatsApp } from "@/lib/notify-driver";
+import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
+const assignSchema = z
+  .object({
+    action: z.literal("assign"),
+    deliveryId: z.string().cuid(),
+    driverId: z.string().cuid().nullable(),
+  })
+  .strict();
+const dispatchSchema = z
+  .object({
+    action: z.literal("dispatch"),
+    deliveryIds: z.array(z.string().cuid()).min(1).max(200),
+  })
+  .strict();
+const actionSchema = z.discriminatedUnion("action", [assignSchema, dispatchSchema]);
+
 function todayWindow() {
-  const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
-  const start = new Date(
-    Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate())
-  );
+  const start = todayIndiaDate();
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
   return { start, end };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const admin = await requireApiRole("dispatch");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
 
   const { start, end } = todayWindow();
   const deliveries = await prisma.delivery.findMany({
@@ -33,18 +45,21 @@ export async function GET() {
     orderBy: [{ status: "asc" }, { createdAt: "asc" }],
     select: {
       id: true,
+      deliveryDate: true,
       status: true,
       mealsIncluded: true,
       deliveredAt: true,
       assignedDriverId: true,
       trackingNotes: true,
       customerConfirmedAt: true,
+      customerIssueNote: true,
       deliveryWindow: true,
       order: {
         select: {
           orderNumber: true,
           totalRs: true,
           paymentMethod: true,
+          paymentStatus: true,
           user: { select: { name: true, phone: true } },
           address: {
             select: {
@@ -66,25 +81,39 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const admin = await requireApiRole("dispatch");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = (await req.json().catch(() => ({}))) as {
-    action?: "assign" | "dispatch";
-    deliveryId?: string;
-    driverId?: string | null;
-    deliveryIds?: string[];
-  };
+  const parsed = await readJson(req, actionSchema);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
-  if (body.action === "assign") {
-    if (!body.deliveryId) {
-      return NextResponse.json({ error: "deliveryId required" }, { status: 400 });
-    }
-    if (body.driverId) {
+  try {
+    if (body.action === "assign") {
+      const delivery = await prisma.delivery.findUnique({
+        where: { id: body.deliveryId },
+        select: { id: true, status: true },
+      });
+      if (!delivery) return NextResponse.json({ error: "Delivery not found." }, { status: 404 });
+      if (delivery.status === "DELIVERED" || delivery.status === "FAILED_DELIVERY") {
+        return NextResponse.json({ error: "Completed deliveries cannot be reassigned." }, { status: 409 });
+      }
+
+      if (!body.driverId) {
+        const updated = await prisma.delivery.update({
+          where: { id: body.deliveryId },
+          data: { assignedDriverId: null, driverName: null, driverPhone: null },
+          select: { id: true, assignedDriverId: true },
+        });
+        return NextResponse.json({ delivery: updated });
+      }
+
       const driver = await prisma.driver.findUnique({
         where: { id: body.driverId },
         select: { id: true, name: true, phone: true, isActive: true },
       });
-      if (!driver || !driver.isActive) {
-        return NextResponse.json({ error: "Driver not found or inactive" }, { status: 400 });
+      if (!driver?.isActive) {
+        return NextResponse.json({ error: "Choose an active driver." }, { status: 400 });
       }
       const updated = await prisma.delivery.update({
         where: { id: body.deliveryId },
@@ -96,25 +125,12 @@ export async function POST(req: NextRequest) {
         select: { id: true, assignedDriverId: true },
       });
       return NextResponse.json({ delivery: updated });
-    } else {
-      const updated = await prisma.delivery.update({
-        where: { id: body.deliveryId },
-        data: { assignedDriverId: null, driverName: null, driverPhone: null },
-        select: { id: true, assignedDriverId: true },
-      });
-      return NextResponse.json({ delivery: updated });
-    }
-  }
-
-  if (body.action === "dispatch") {
-    const ids = body.deliveryIds ?? [];
-    if (ids.length === 0) {
-      return NextResponse.json({ error: "deliveryIds required" }, { status: 400 });
     }
 
+    const requestedIds = [...new Set(body.deliveryIds)];
     const toDispatch = await prisma.delivery.findMany({
       where: {
-        id: { in: ids },
+        id: { in: requestedIds },
         assignedDriverId: { not: null },
         status: { in: ["PREPARING", "PACKED"] },
       },
@@ -125,55 +141,62 @@ export async function POST(req: NextRequest) {
         driverPhone: true,
       },
     });
-
-    if (toDispatch.length === 0) {
+    if (!toDispatch.length) {
       return NextResponse.json(
-        { error: "Nothing to dispatch -- assign a driver first" },
-        { status: 400 }
+        { error: "Nothing is ready to dispatch. Assign an active driver first." },
+        { status: 409 },
       );
     }
 
+    const dispatchedIds = toDispatch.map((delivery) => delivery.id);
     await prisma.delivery.updateMany({
-      where: { id: { in: toDispatch.map((d) => d.id) } },
+      where: { id: { in: dispatchedIds }, status: { in: ["PREPARING", "PACKED"] } },
       data: { status: "OUT_FOR_DELIVERY" },
     });
 
-    const driverStops: Record<string, { name: string; phone: string; count: number }> = {};
-    for (const d of toDispatch) {
-      if (!d.assignedDriverId || !d.driverPhone) continue;
-      if (!driverStops[d.assignedDriverId]) {
-        driverStops[d.assignedDriverId] = {
-          name: d.driverName ?? "Driver",
-          phone: d.driverPhone,
-          count: 0,
-        };
+    const driverStops = new Map<string, { name: string; phone: string; count: number }>();
+    for (const delivery of toDispatch) {
+      if (!delivery.assignedDriverId || !delivery.driverPhone) continue;
+      const current = driverStops.get(delivery.assignedDriverId);
+      if (current) current.count += 1;
+      else {
+        driverStops.set(delivery.assignedDriverId, {
+          name: delivery.driverName ?? "Driver",
+          phone: delivery.driverPhone,
+          count: 1,
+        });
       }
-      driverStops[d.assignedDriverId].count += 1;
     }
 
-    const driverIds = Object.keys(driverStops);
+    const driverIds = [...driverStops.keys()];
     const drivers = await prisma.driver.findMany({
-      where: { id: { in: driverIds } },
+      where: { id: { in: driverIds }, isActive: true },
       select: { id: true, accessToken: true },
     });
-    const tokenMap: Record<string, string> = {};
-    for (const dr of drivers) tokenMap[dr.id] = dr.accessToken;
+    const tokenByDriver = new Map(drivers.map((driver) => [driver.id, driver.accessToken]));
+    const notifications = await Promise.allSettled(
+      driverIds.map(async (driverId) => {
+        const info = driverStops.get(driverId);
+        const token = tokenByDriver.get(driverId);
+        if (!info || !token) return;
+        await notifyDriverWhatsApp({
+          driverName: info.name,
+          driverPhone: info.phone,
+          driverToken: token,
+          stopCount: info.count,
+        });
+      }),
+    );
+    const notificationFailures = notifications.filter((result) => result.status === "rejected").length;
 
-    const notifyPromises = driverIds.map((dId) => {
-      const info = driverStops[dId];
-      const token = tokenMap[dId];
-      if (!token) return Promise.resolve();
-      return notifyDriverWhatsApp({
-        driverName: info.name,
-        driverPhone: info.phone,
-        driverToken: token,
-        stopCount: info.count,
-      });
+    return NextResponse.json({
+      dispatched: dispatchedIds.length,
+      dispatchedIds,
+      skipped: requestedIds.length - dispatchedIds.length,
+      notificationFailures,
     });
-    Promise.allSettled(notifyPromises).catch(() => {});
-
-    return NextResponse.json({ dispatched: toDispatch.length });
+  } catch (error: unknown) {
+    console.error("[admin/deliveries] operation failed", error);
+    return NextResponse.json({ error: "Delivery operation failed." }, { status: 500 });
   }
-
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }

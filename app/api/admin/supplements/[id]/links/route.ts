@@ -1,53 +1,53 @@
-// app/api/admin/supplements/[id]/links/route.ts
-// Phase 18-2 — Add a new affiliate link to a supplement.
-// POST { network, affiliateUrl, priceRs?, mrpRs?, notes?, merchantLabel?, sortOrder? }
-
-import { NextRequest, NextResponse } from "next/server";
 import { requireApiRole } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-
-const db = prisma as any;
-
-const NETWORKS = new Set([
-  "NUTRABAY", "HEALTHKART", "MUSCLEBLAZE", "AMAZON_IN", "FLIPKART",
-  "TATA_1MG", "WELLNESS_FOREVER", "OTHER",
-]);
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { linkCommercialError, supplementIdSchema, supplementLinkCreateSchema } from "@/lib/supplements-admin-validation";
+import { readJson } from "@/lib/validation/core";
+import { NextRequest, NextResponse } from "next/server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: Ctx) {
-  const me = await requireApiRole("supplements");
-  if (!me) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const { id } = await ctx.params;
+  const admin = await requireApiRole("supplements");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = await req.json().catch(() => ({}));
-  const network = String(body?.network || "").toUpperCase();
-  const affiliateUrl = String(body?.affiliateUrl || "").trim();
+  const idResult = supplementIdSchema.safeParse((await ctx.params).id);
+  if (!idResult.success) return NextResponse.json({ error: "Invalid supplement id." }, { status: 400 });
+  const parsed = await readJson(req, supplementLinkCreateSchema, { maxBytes: 32 * 1024 });
+  if (!parsed.ok) return parsed.response;
+  const input = parsed.data;
 
-  if (!NETWORKS.has(network)) {
-    return NextResponse.json({ error: "Invalid network" }, { status: 400 });
-  }
-  if (!affiliateUrl || !/^https?:\/\//i.test(affiliateUrl)) {
-    return NextResponse.json({ error: "affiliateUrl must be a valid http(s) URL" }, { status: 400 });
-  }
+  const commercialError = linkCommercialError(input);
+  if (commercialError) return NextResponse.json({ error: commercialError }, { status: 400 });
 
-  // Sanity check the supplement exists
-  const supp = await db.supplement.findUnique({ where: { id }, select: { id: true } });
-  if (!supp) return NextResponse.json({ error: "supplement not found" }, { status: 404 });
-
-  const link = await db.supplementLink.create({
-    data: {
-      supplementId: id,
-      network,
-      affiliateUrl,
-      merchantLabel: body?.merchantLabel || null,
-      priceRs: body?.priceRs != null ? Math.round(Number(body.priceRs)) : null,
-      mrpRs: body?.mrpRs != null ? Math.round(Number(body.mrpRs)) : null,
-      notes: body?.notes || null,
-      sortOrder: body?.sortOrder != null ? Number(body.sortOrder) : 0,
-      isActive: true,
-    },
+  const supplement = await prisma.supplement.findUnique({
+    where: { id: idResult.data },
+    select: { id: true, isActive: true },
   });
+  if (!supplement) return NextResponse.json({ error: "Supplement not found." }, { status: 404 });
+  if (!supplement.isActive) {
+    return NextResponse.json({ error: "Activate the supplement before adding a buying link." }, { status: 409 });
+  }
 
-  return NextResponse.json({ ok: true, link });
+  try {
+    const link = await prisma.supplementLink.create({
+      data: {
+        supplementId: supplement.id,
+        network: input.network,
+        affiliateUrl: input.affiliateUrl,
+        merchantLabel: input.merchantLabel || null,
+        priceRs: input.priceRs,
+        mrpRs: input.mrpRs,
+        notes: input.notes || null,
+        sortOrder: input.sortOrder,
+        isActive: true,
+      },
+    });
+    return NextResponse.json({ ok: true, link });
+  } catch (error: unknown) {
+    console.error("[admin/supplements/links] create failed", error);
+    return NextResponse.json({ error: "Buying link creation failed." }, { status: 500 });
+  }
 }

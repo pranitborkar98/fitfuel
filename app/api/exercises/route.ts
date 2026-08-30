@@ -10,19 +10,20 @@
 //   offset     — default 0 (for pagination)
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readQuery } from "@/lib/validation/core";
+import { exerciseQuerySchema } from "@/lib/validation/schemas";
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = req.nextUrl;
-
-    const q         = searchParams.get("q")?.trim() ?? "";
-    const category  = searchParams.get("category")?.trim() ?? "";
-    const level     = searchParams.get("level")?.trim() ?? "";
-    const equipment = searchParams.get("equipment")?.trim() ?? "";
-    const muscle    = searchParams.get("muscle")?.trim() ?? "";
-    const limit     = Math.min(parseInt(searchParams.get("limit") ?? "20"), 50);
-    const offset    = parseInt(searchParams.get("offset") ?? "0");
+    const session = await auth();
+    const rl = await enforceRateLimit(req, "read", session?.user?.id);
+    if (!rl.ok) return rl.response;
+    const parsed = readQuery(req, exerciseQuerySchema);
+    if (!parsed.ok) return parsed.response;
+    const { q, category, level, equipment, muscle, limit, offset } = parsed.data;
 
     const where: Record<string, unknown> = {};
 

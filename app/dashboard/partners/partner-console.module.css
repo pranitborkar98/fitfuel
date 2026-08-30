@@ -1,0 +1,67 @@
+.page { width: min(1120px, 100%); display: grid; gap: 24px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 30px) 64px; color: #f5f5f4; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.header h1 { margin: 4px 0 8px; font-size: clamp(1.9rem, 5vw, 3.25rem); line-height: 1.03; letter-spacing: -0.045em; }
+.header p { max-width: 760px; margin: 0; color: #a8a29e; font-size: 0.94rem; line-height: 1.6; }
+.eyebrow { margin: 0 !important; color: #a3e635 !important; font-size: 0.78rem !important; font-weight: 750; }
+.status { width: fit-content; min-height: 29px; box-sizing: border-box; display: inline-flex; align-items: center; border: 1px solid currentColor; border-radius: 999px; padding: 4px 9px; font-size: 0.71rem; font-weight: 730; white-space: nowrap; }
+.header > .status { min-height: 34px; padding: 5px 11px; }
+.statusGood { background: #18210d; color: #bef264; }
+.statusWaiting { background: #281d08; color: #fbbf24; }
+.statusBad { background: #281010; color: #fca5a5; }
+.statusQuiet { background: #232320; color: #b8b8b2; }
+.notice { display: grid; gap: 5px; border: 1px solid #66541f; border-radius: 13px; background: #211a08; padding: 14px 16px; }
+.notice strong { color: #fcd34d; font-size: 0.84rem; }
+.notice p { margin: 0; color: #c5bca4; font-size: 0.83rem; line-height: 1.55; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.metrics article { min-height: 112px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; border: 1px solid #30302b; border-radius: 14px; background: #131311; padding: 16px; }
+.metrics span { color: #a8a29e; font-size: 0.76rem; font-weight: 650; }
+.metrics strong { margin-top: 6px; color: #f7f7f5; font-size: clamp(1.35rem, 3vw, 1.8rem); letter-spacing: -0.03em; }
+.metrics small { margin-top: 4px; color: #78716c; font-size: 0.7rem; line-height: 1.4; }
+.shareCard, .dataSection { display: grid; gap: 17px; border: 1px solid #30302b; border-radius: 16px; background: #11110f; padding: clamp(16px, 3vw, 22px); }
+.shareCard { border-color: #455b22; background: radial-gradient(circle at 90% 10%, rgba(132, 204, 22, 0.08), transparent 24rem), #11120f; }
+.shareCardDisabled { border-color: #3b3b35; background: #11110f; }
+.sectionTitle h2 { margin: 5px 0 0; color: #f5f5f4; font-size: clamp(1.15rem, 3vw, 1.55rem); line-height: 1.25; letter-spacing: -0.025em; }
+.sectionTitle p:last-child { max-width: 760px; margin: 7px 0 0; color: #8f8f89; font-size: 0.8rem; line-height: 1.55; }
+.shareGrid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr); gap: 13px; }
+.linkPanel, .qrPanel { min-width: 0; display: grid; align-content: center; border: 1px solid #30302b; border-radius: 13px; background: #0a0a09; padding: 16px; }
+.linkPanel > span { color: #85857f; font-size: 0.73rem; font-weight: 650; }
+.linkPanel > strong { margin-top: 8px; overflow-wrap: anywhere; color: #d9f99d; font-size: 0.9rem; line-height: 1.5; }
+.linkPanel > small { margin-top: 6px; color: #78716c; font-size: 0.7rem; }
+.qrPanel { justify-items: center; gap: 10px; background: #f7f7f5; color: #181816; text-align: center; }
+.qrPanel img { width: min(184px, 100%); height: auto; border-radius: 7px; }
+.qrPanel > span { display: flex; align-items: center; justify-content: center; gap: 7px; max-width: 230px; font-size: 0.71rem; line-height: 1.4; }
+.qrUnavailable { min-height: 180px; display: grid; place-content: center; justify-items: center; gap: 10px; color: #777770; }
+.shareActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.shareActions button, .shareActions a, .openPage { min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #4c6126; border-radius: 10px; background: #202b12; padding: 8px 13px; color: #d9f99d; font: inherit; font-size: 0.78rem; font-weight: 720; text-decoration: none; cursor: pointer; }
+.shareActions button:first-child { border-color: #84cc16; background: #84cc16; color: #101408; }
+.shareActions > span { width: 100%; color: #fca5a5; font-size: 0.73rem; }
+.openPage { width: fit-content; justify-self: start; background: #171714; border-color: #3b3b35; color: #d6d3d1; }
+.conversionList, .payoutList { overflow: hidden; border: 1px solid #2d2d28; border-radius: 12px; }
+.conversionRow, .payoutRow { min-height: 68px; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(100px, auto); gap: 16px; align-items: center; background: #131311; padding: 11px 13px; }
+.conversionRow + .conversionRow, .payoutRow + .payoutRow { border-top: 1px solid #292924; }
+.conversionRow > div, .payoutRow > div { min-width: 0; display: grid; gap: 5px; }
+.conversionRow strong, .payoutRow strong { overflow: hidden; color: #e7e5e4; font-size: 0.84rem; text-overflow: ellipsis; white-space: nowrap; }
+.conversionRow small, .payoutRow small { overflow: hidden; color: #85857f; font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+.rewardValue { color: #d9f99d; font-size: 0.81rem; font-weight: 720; text-align: right; }
+.empty { min-height: 140px; display: grid; place-content: center; gap: 6px; border: 1px dashed #35352f; border-radius: 12px; padding: 20px; text-align: center; }
+.empty strong { color: #deded9; font-size: 0.92rem; }
+.empty span { color: #85857f; font-size: 0.79rem; line-height: 1.5; }
+.shareActions button:focus-visible, .shareActions a:focus-visible, .openPage:focus-visible { outline: 3px solid rgba(163, 230, 53, 0.62); outline-offset: 2px; }
+@media (max-width: 900px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shareGrid { grid-template-columns: 1fr; }
+  .qrPanel { min-height: 230px; }
+}
+@media (max-width: 600px) {
+  .page { padding-top: 20px; }
+  .header { align-items: flex-start; flex-direction: column; gap: 13px; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .metrics article { min-height: 101px; padding: 13px; }
+  .shareActions { display: grid; }
+  .shareActions button, .shareActions a { width: 100%; }
+  .conversionRow, .payoutRow { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .conversionRow > .status, .payoutRow > .status { justify-self: end; }
+  .rewardValue { grid-column: 1 / -1; text-align: left; }
+}
+@media (max-width: 390px) { .metrics { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .shareActions button, .shareActions a { scroll-behavior: auto; } }

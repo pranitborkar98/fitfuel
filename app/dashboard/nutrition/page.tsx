@@ -5,17 +5,14 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
+import { formatDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { prisma } from "@/lib/prisma";
-import { screen, label, APP_MAX } from "@/app/_app/theme";
+import { screen } from "@/app/_app/theme";
 import NutritionClient from "./NutritionClient";
+import s from "./nutrition.module.css";
 
 export const metadata: Metadata = { title: "Nutrition" };
 export const dynamic = "force-dynamic";
-
-const WRAP: React.CSSProperties = {
-  width: "100%", maxWidth: APP_MAX, margin: "0 auto",
-  padding: "0 clamp(16px,4vw,28px)",
-};
 
 const DEFAULT_GOAL = {
   calories: 2000, protein: 150, carbs: 250, fat: 67, fiber: 28, waterMl: 2500,
@@ -26,8 +23,7 @@ export default async function NutritionPage() {
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard/nutrition");
 
   const userId = session.user.id;
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const today = todayIndiaDate();
 
   const [mealTypes, goal, waterLog, entries] = await Promise.all([
     prisma.mealType.findMany({ orderBy: { sortOrder: "asc" } }),
@@ -41,10 +37,10 @@ export default async function NutritionPage() {
   ]);
 
   return (
-    <div style={{ ...WRAP, paddingTop: 26 }}>
-      <header style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+    <div className={s.page}>
+      <header className={s.header}>
         <h1 style={screen()}>Nutrition</h1>
-        <span style={label(12)}>Diary, water, and the food database</span>
+        <p className={s.intro}>Log meals and water, see what remains for the day, and adjust targets when your plan changes.</p>
       </header>
 
       <NutritionClient
@@ -52,6 +48,7 @@ export default async function NutritionPage() {
         mealTypes={JSON.parse(JSON.stringify(mealTypes))}
         goal={goal ? JSON.parse(JSON.stringify(goal)) : DEFAULT_GOAL}
         initialWaterMl={waterLog?.amountMl ?? 0}
+        initialDate={formatDateOnly(today)}
       />
     </div>
   );

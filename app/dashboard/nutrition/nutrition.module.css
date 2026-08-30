@@ -1,0 +1,195 @@
+.page {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px clamp(16px, 4vw, 28px) 88px;
+}
+
+.header {
+  display: grid;
+  gap: 8px;
+  max-width: 680px;
+}
+
+.intro {
+  color: var(--ff-mute);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ff-danger, #dc2626);
+  border-radius: var(--fk-r);
+  color: #ff8b8b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dateBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 12px;
+  border: 1px solid var(--ff-rule);
+  border-radius: var(--fk-r-lg);
+  background: var(--ff-panel);
+  flex-wrap: wrap;
+}
+
+.dateCopy {
+  min-width: 150px;
+}
+
+.editTargets {
+  margin-left: auto;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--ff-rule);
+  border-radius: var(--fk-r-lg);
+  background: var(--ff-rule);
+}
+
+.readout {
+  min-width: 0;
+  padding: 18px;
+  background: var(--ff-panel);
+}
+
+.readoutPrimary {
+  background: color-mix(in srgb, var(--ff-lime) 10%, var(--ff-panel));
+}
+
+.overviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.overviewPanel {
+  padding: 20px;
+}
+
+.meterTrack {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--fk-trough, #1c1c1a);
+}
+
+.meterFill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.waterGrid {
+  display: grid;
+  gap: 6px;
+}
+
+.waterStep {
+  min-height: 44px;
+  padding: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mealSection {
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.mealHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.entryRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  border-top: 1px solid var(--ff-rule);
+}
+
+.input {
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid var(--ff-rule-2);
+  border-radius: var(--fk-r);
+  outline: none;
+  background: var(--ff-bg);
+  color: var(--ff-ink);
+  font: 16px var(--font-archivo), sans-serif;
+}
+
+.input:focus-visible,
+.waterStep:focus-visible {
+  outline: 2px solid var(--ff-lime);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-top: 24px;
+  }
+
+  .dateBar {
+    gap: 8px;
+  }
+
+  .dateCopy {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .editTargets {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .mealHeader {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .readout {
+    padding: 16px 14px;
+  }
+
+  .entryRow > :last-child {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waterStep,
+  .meterFill {
+    transition: none !important;
+  }
+}

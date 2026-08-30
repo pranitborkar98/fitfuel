@@ -19,6 +19,7 @@
 //   const rl = await enforceRateLimit(req, "partnerApply", userId);
 
 import { NextRequest, NextResponse } from "next/server";
+import type { Ratelimit as UpstashRatelimit } from "@upstash/ratelimit";
 
 /* ────────────────────────── Presets ──────────────────────────
    tokens   = requests allowed per window
@@ -88,13 +89,11 @@ function redisEnv(): { url: string; token: string } | null {
   return url && token ? { url, token } : null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const upstashLimiters = new Map<RateLimitPreset, any>();
+const upstashLimiters = new Map<RateLimitPreset, UpstashRatelimit>();
 let upstashReady: boolean | null = null; // null = not yet probed
 let warnedNoRedis = false;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getUpstashLimiter(preset: RateLimitPreset): Promise<any | null> {
+async function getUpstashLimiter(preset: RateLimitPreset): Promise<UpstashRatelimit | null> {
   if (upstashReady === false) return null;
   const env = redisEnv();
   if (!env) {

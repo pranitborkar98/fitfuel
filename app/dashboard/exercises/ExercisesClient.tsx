@@ -5,6 +5,7 @@
 // Premium redesign: 5-6 col grid, refined dark UI, fixed encoding
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import {
   Search, X, ChevronLeft, ChevronRight,
   Play, Plus, Trash2, CheckCircle2, Circle, ChevronDown,
@@ -12,8 +13,10 @@ import {
   Zap, Target, Activity, SlidersHorizontal, TrendingUp,
 } from "lucide-react";
 
-import { C } from "@/app/_app/theme";
+import { C, screen } from "@/app/_app/theme";
+import { formatDateOnly, todayIndiaDate } from "@/lib/date-only";
 import Dialog from "@/app/_app/Dialog";
+import s from "./exercises.module.css";
 
 // Faces load once, via next/font in the root layout. The system does not
 // allow font injection from a component, and there is none here.
@@ -126,7 +129,7 @@ function formatDuration(mins: number | null) {
 }
 
 function todayStr() {
-  return new Date().toISOString().split("T")[0];
+  return formatDateOnly(todayIndiaDate());
 }
 
 // ─── Micro components ────────────────────────────────────────────────────────
@@ -141,7 +144,7 @@ function LevelBars({ level }: { level: string }) {
           style={{
             width: 4,
             height: 6 + b * 3,
-            borderRadius: 0,
+            borderRadius: 999,
             background: b <= cfg.bars ? cfg.color : T.textMuted,
           }}
         />
@@ -156,15 +159,14 @@ function CatChip({ category }: { category: string }) {
   return (
     <span
       style={{
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: "0.1em",
-        textTransform: "uppercase",
+        fontSize: 13,
+        fontWeight: 650,
+        letterSpacing: 0,
         color: c.accent,
         background: `${T.wash}`,
         border: `1px solid ${T.wash}`,
-        borderRadius: 0,
-        padding: "2px 7px",
+        borderRadius: 999,
+        padding: "3px 9px",
         fontFamily: "var(--font-archivo), sans-serif",
       }}
     >
@@ -191,30 +193,30 @@ function ExerciseCard({
   const imgSrc = exercise.images[0] ? `${IMG_BASE}${exercise.images[0]}` : null;
   const [imgErr, setImgErr] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const cat = CAT[exercise.category];
-  const lvl = LEVEL_CONFIG[exercise.level] ?? LEVEL_CONFIG.beginner;
-
   return (
-    <div
+    <article
+      className={s.card}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={onClick}
       style={{
         background: hovered ? T.cardHover : T.card,
         border: `1px solid ${hovered ? T.borderHover : T.border}`,
-        borderRadius: 0,
-        overflow: "hidden",
-        cursor: "pointer",
-        transition: "background-color 180ms ease-out, border-color 180ms ease-out",
-        position: "relative",
       }}
     >
+      <button
+        type="button"
+        className={s.cardAction}
+        onClick={onClick}
+        aria-label={`View ${exercise.name}`}
+      />
       {/* Image */}
       <div style={{ position: "relative", height: 130, background: T.bg, overflow: "hidden" }}>
         {imgSrc && !imgErr ? (
-          <img
+          <Image
             src={imgSrc}
             alt={exercise.name}
+            fill
+            sizes="(max-width: 520px) 45vw, (max-width: 1024px) 30vw, 210px"
             onError={() => setImgErr(true)}
             style={{
               width: "100%",
@@ -244,9 +246,9 @@ function ExerciseCard({
       </div>
 
       {/* Content */}
-      <div style={{ padding: "10px 12px 12px" }}>
+      <div style={{ padding: `12px ${inWorkout ? 58 : 12}px 14px 12px` }}>
         <p style={{
-          fontSize: 12,
+          fontSize: 15,
           fontWeight: 600,
           color: T.text,
           margin: 0,
@@ -261,13 +263,13 @@ function ExerciseCard({
           {exercise.name}
         </p>
         {exercise.primaryMuscles.length > 0 && (
-          <p style={{ fontSize: 12, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif", textTransform: "capitalize" }}>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif", textTransform: "capitalize" }}>
             {exercise.primaryMuscles.slice(0, 2).join(" · ")}
             {exercise.primaryMuscles.length > 2 && ` +${exercise.primaryMuscles.length - 2}`}
           </p>
         )}
         {exercise.equipment && (
-          <p style={{ fontSize: 12, color: T.textMuted, margin: "5px 0 0", fontFamily: "var(--font-archivo), sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: "5px 0 0", fontFamily: "var(--font-archivo), sans-serif" }}>
             {exercise.equipment}
           </p>
         )}
@@ -276,14 +278,17 @@ function ExerciseCard({
       {/* Add button */}
       {inWorkout && onAdd && (
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); onAdd(); }}
+          aria-label={added ? `${exercise.name} added to workout` : `Add ${exercise.name} to workout`}
+          disabled={added}
           style={{
             position: "absolute",
             bottom: 10,
             right: 10,
-            width: 26,
-            height: 26,
-            borderRadius: 0,
+            width: 44,
+            height: 44,
+            borderRadius: "var(--fk-r)",
             background: added ? T.accent : T.trough,
             border: "none",
             cursor: "pointer",
@@ -292,12 +297,13 @@ function ExerciseCard({
             justifyContent: "center",
             transition: "all 0.15s ease",
             color: added ? T.onLime : T.textSecond,
+            zIndex: 2,
           }}
         >
           {added ? <CheckCircle2 size={13} /> : <Plus size={13} />}
         </button>
       )}
-    </div>
+    </article>
   );
 }
 
@@ -316,15 +322,22 @@ function ExerciseModal({
 }) {
   const [detail, setDetail] = useState<Exercise>(exercise);
   const [loading, setLoading] = useState(!exercise.instructions);
+  const [error, setError] = useState("");
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
+    let alive = true;
     if (!exercise.instructions) {
       fetch(`/api/exercises/${exercise.id}`)
-        .then((r) => r.json())
-        .then((d) => { if (d.exercise) setDetail(d.exercise); })
-        .finally(() => setLoading(false));
+        .then((response) => {
+          if (!response.ok) throw new Error("Detail request failed");
+          return response.json();
+        })
+        .then((data) => { if (alive && data.exercise) setDetail(data.exercise); })
+        .catch(() => { if (alive) setError("We couldn't load the instructions for this exercise."); })
+        .finally(() => { if (alive) setLoading(false); });
     }
+    return () => { alive = false; };
   }, [exercise.id, exercise.instructions]);
 
   const cat = CAT[detail.category];
@@ -334,15 +347,17 @@ function ExerciseModal({
     <Dialog title={detail.name} onClose={onClose} maxWidth={520}>
       <div>
         {/* Hero */}
-        <div style={{ position: "relative", height: 220, background: T.bg, borderRadius: 0, overflow: "hidden" }}>
+        <div style={{ position: "relative", height: 220, background: T.bg, borderRadius: "var(--fk-r-lg) var(--fk-r-lg) 0 0", overflow: "hidden" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", height: "100%", gap: 2 }}>
             {[0, 1].map((i) => {
               const src = detail.images[i] ? `${IMG_BASE}${detail.images[i]}` : null;
               return src && !imgErrors[i] ? (
-                <img
+                <Image
                   key={i}
                   src={src}
                   alt=""
+                  width={360}
+                  height={360}
                   onError={() => setImgErrors((p) => ({ ...p, [i]: true }))}
                   style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
                 />
@@ -355,11 +370,13 @@ function ExerciseModal({
           </div>
           <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to top, ${T.card} 0%, transparent 60%)` }} />
           <button
+            type="button"
+            aria-label="Close exercise details"
             onClick={onClose}
             style={{
               position: "absolute", top: 14, right: 14,
-              width: 32, height: 32,
-              borderRadius: 0,
+              width: 44, height: 44,
+              borderRadius: "var(--fk-r)",
               background: T.bg,
               border: `1px solid ${T.borderHover}`,
               color: T.textSecond,
@@ -379,7 +396,7 @@ function ExerciseModal({
             </h2>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <CatChip category={detail.category} />
-              <span style={{ fontSize: 12, color: lvl.color, fontWeight: 600, fontFamily: "var(--font-archivo), sans-serif" }}>
+              <span style={{ fontSize: 13, color: lvl.color, fontWeight: 600, fontFamily: "var(--font-archivo), sans-serif" }}>
                 {lvl.label}
               </span>
             </div>
@@ -393,8 +410,8 @@ function ExerciseModal({
               detail.mechanic && `⚙ ${detail.mechanic}`,
             ].filter(Boolean).map((label) => (
               <span key={label as string} style={{
-                fontSize: 12, background: T.cardHover, color: T.textSecond,
-                border: `1px solid ${T.border}`, borderRadius: 0, padding: "4px 10px",
+                fontSize: 13, background: T.cardHover, color: T.textSecond,
+                border: `1px solid ${T.border}`, borderRadius: 999, padding: "5px 10px",
                 fontFamily: "var(--font-archivo), sans-serif", textTransform: "capitalize",
               }}>
                 {label}
@@ -403,17 +420,17 @@ function ExerciseModal({
           </div>
 
           {/* Muscles */}
-          <div style={{ background: T.cardHover, border: `1px solid ${T.border}`, borderRadius: 0, padding: "14px 16px", marginBottom: 18 }}>
-            <p style={{ fontSize: 12, color: T.textMuted, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
-              Primary Muscles
+          <div style={{ background: T.cardHover, border: `1px solid ${T.border}`, borderRadius: "var(--fk-r)", padding: "14px 16px", marginBottom: 18 }}>
+            <p style={{ fontSize: 13, color: T.textMuted, fontWeight: 650, margin: "0 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
+              Primary muscles
             </p>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {detail.primaryMuscles.map((m) => (
                 <span key={m} style={{
-                  fontSize: 12, background: `${T.wash}`,
+                  fontSize: 13, background: `${T.wash}`,
                   color: cat?.accent ?? T.accent,
                   border: `1px solid ${T.wash}`,
-                  borderRadius: 0, padding: "3px 10px", textTransform: "capitalize",
+                  borderRadius: 999, padding: "4px 10px", textTransform: "capitalize",
                   fontFamily: "var(--font-archivo), sans-serif", fontWeight: 500,
                 }}>
                   {m}
@@ -422,15 +439,15 @@ function ExerciseModal({
             </div>
             {detail.secondaryMuscles.length > 0 && (
               <>
-                <p style={{ fontSize: 12, color: T.textMuted, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "14px 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
-                  Secondary
+                <p style={{ fontSize: 13, color: T.textMuted, fontWeight: 650, margin: "14px 0 10px", fontFamily: "var(--font-archivo), sans-serif" }}>
+                  Secondary muscles
                 </p>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {detail.secondaryMuscles.map((m) => (
                     <span key={m} style={{
-                      fontSize: 12, background: T.cardHover,
+                      fontSize: 13, background: T.cardHover,
                       color: T.textMuted, border: `1px solid ${T.border}`,
-                      borderRadius: 0, padding: "3px 10px", textTransform: "capitalize",
+                      borderRadius: 999, padding: "4px 10px", textTransform: "capitalize",
                       fontFamily: "var(--font-archivo), sans-serif",
                     }}>
                       {m}
@@ -443,13 +460,15 @@ function ExerciseModal({
 
           {/* Instructions */}
           <div style={{ marginBottom: 20 }}>
-            <p style={{ fontSize: 12, color: T.textMuted, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 14px", fontFamily: "var(--font-archivo), sans-serif" }}>
+            <p style={{ fontSize: 13, color: T.textMuted, fontWeight: 650, margin: "0 0 14px", fontFamily: "var(--font-archivo), sans-serif" }}>
               Instructions
             </p>
-            {loading ? (
+            {error ? (
+              <p role="alert" className={s.error}>{error}</p>
+            ) : loading ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[1, 2, 3].map((i) => (
-                  <div key={i} style={{ height: 14, background: T.cardHover, borderRadius: 0, animation: "pulse 1.5s infinite" }} />
+                  <div key={i} style={{ height: 14, background: T.cardHover, borderRadius: 999, animation: "pulse 1.5s infinite" }} />
                 ))}
               </div>
             ) : (
@@ -457,17 +476,17 @@ function ExerciseModal({
                 {(detail.instructions ?? []).map((step, i) => (
                   <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                     <span style={{
-                      flexShrink: 0, width: 22, height: 22, borderRadius: 0,
+                      flexShrink: 0, width: 28, height: 28, borderRadius: 999,
                       background: `${T.wash}`,
                       border: `1px solid ${T.wash}`,
                       color: cat?.accent ?? T.accent,
-                      fontSize: 12, fontWeight: 700,
+                      fontSize: 13, fontWeight: 700,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontFamily: "var(--font-archivo), sans-serif",
                     }}>
                       {i + 1}
                     </span>
-                    <p style={{ fontSize: 13, color: T.textSecond, lineHeight: 1.6, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
+                    <p style={{ fontSize: 14, color: T.textSecond, lineHeight: 1.65, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
                       {step}
                     </p>
                   </li>
@@ -478,18 +497,20 @@ function ExerciseModal({
 
           {inWorkout && onAddToWorkout && (
             <button
+              type="button"
               onClick={() => { onAddToWorkout(); onClose(); }}
               style={{
                 width: "100%",
                 background: T.accent,
                 color: T.onLime,
                 border: "none",
-                borderRadius: 0,
-                padding: "14px",
-                fontSize: 13,
-                fontWeight: 700,
-                fontFamily: "var(--fk-display), Georgia, serif",
-                letterSpacing: "0.05em",
+                borderRadius: "var(--fk-r)",
+                minHeight: 46,
+                padding: "0 18px",
+                fontSize: 15,
+                fontWeight: 650,
+                fontFamily: "var(--font-archivo), sans-serif",
+                letterSpacing: 0,
                 cursor: "pointer",
                 transition: "background 0.15s",
               }}
@@ -529,6 +550,7 @@ function BrowseTab({
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
@@ -539,11 +561,13 @@ function BrowseTab({
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const LIMIT = 30;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestSequence = useRef(0);
 
   const fetchExercises = useCallback(async (params: {
     q: string; category: string; level: string; equip: string; muscle: string; offset: number;
-  }) => {
+  }, sequence: number) => {
     setLoading(true);
+    setError("");
     const sp = new URLSearchParams();
     if (params.q)        sp.set("q", params.q);
     if (params.category) sp.set("category", params.category);
@@ -552,25 +576,32 @@ function BrowseTab({
     if (params.muscle)   sp.set("muscle", params.muscle);
     sp.set("limit", String(LIMIT));
     sp.set("offset", String(params.offset));
-    const res = await fetch(`/api/exercises?${sp}`);
-    const data = await res.json();
-    setExercises(data.exercises ?? []);
-    setTotal(data.total ?? 0);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/exercises?${sp}`);
+      if (!res.ok) throw new Error("Exercise request failed");
+      const data = await res.json();
+      if (sequence !== requestSequence.current) return;
+      setExercises(data.exercises ?? []);
+      setTotal(data.total ?? 0);
+    } catch {
+      if (sequence !== requestSequence.current) return;
+      setError("We couldn't load the exercise library. Check your connection and try again.");
+    } finally {
+      if (sequence === requestSequence.current) setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    const sequence = ++requestSequence.current;
     debounceRef.current = setTimeout(() => {
-      setOffset(0);
-      fetchExercises({ q, category, level, equip, muscle, offset: 0 });
-    }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [q, category, level, equip, muscle]); // eslint-disable-line
-
-  useEffect(() => {
-    fetchExercises({ q, category, level, equip, muscle, offset });
-  }, [offset]); // eslint-disable-line
+      fetchExercises({ q, category, level, equip, muscle, offset }, sequence);
+    }, 250);
+    return () => {
+      requestSequence.current += 1;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [q, category, level, equip, muscle, offset, fetchExercises]);
 
   const totalPages = Math.ceil(total / LIMIT);
   const currentPage = Math.floor(offset / LIMIT) + 1;
@@ -578,6 +609,7 @@ function BrowseTab({
 
   return (
     <div>
+      {error && <p role="alert" className={s.error}>{error}</p>}
       {/* Search + filter row */}
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <div style={{ position: "relative", flex: 1 }}>
@@ -586,14 +618,16 @@ function BrowseTab({
             type="text"
             placeholder={`Search ${initialTotal.toLocaleString()} exercises…`}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            maxLength={80}
+            onChange={(e) => { setQ(e.target.value); setOffset(0); }}
             style={{
               width: "100%",
               background: T.cardHover,
               border: `1px solid ${T.border}`,
-              borderRadius: 0,
-              padding: "10px 36px 10px 38px",
-              fontSize: 13,
+              borderRadius: "var(--fk-r)",
+              minHeight: 46,
+              padding: "10px 44px 10px 38px",
+              fontSize: 16,
               color: T.text,
               fontFamily: "var(--font-archivo), sans-serif",
               outline: "none",
@@ -602,21 +636,26 @@ function BrowseTab({
           />
           {q && (
             <button
+              type="button"
+              aria-label="Clear exercise search"
               onClick={() => setQ("")}
-              style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted }}
+              style={{ position: "absolute", right: 1, top: "50%", transform: "translateY(-50%)", minWidth: 44, minHeight: 44, background: "none", border: "none", cursor: "pointer", color: T.textMuted }}
             >
               <X size={13} />
             </button>
           )}
         </div>
         <button
+          type="button"
+          aria-expanded={showFilters}
+          aria-label="Filter exercises"
           onClick={() => setShowFilters(!showFilters)}
           style={{
             display: "flex", alignItems: "center", gap: 6,
-            padding: "10px 14px",
+            minWidth: 46, minHeight: 46, padding: "0 14px",
             background: showFilters || hasFilters ? T.wash : T.cardHover,
             border: `1px solid ${showFilters || hasFilters ? T.accent : T.border}`,
-            borderRadius: 0,
+            borderRadius: "var(--fk-r)",
             color: showFilters || hasFilters ? T.accent : T.textSecond,
             cursor: "pointer",
             fontSize: 13,
@@ -630,7 +669,7 @@ function BrowseTab({
             <span style={{
               position: "absolute", top: -4, right: -4,
               width: 8, height: 8,
-              borderRadius: 0,
+              borderRadius: 999,
               background: T.accent,
             }} />
           )}
@@ -644,9 +683,9 @@ function BrowseTab({
           padding: 16,
           background: T.cardHover,
           border: `1px solid ${T.border}`,
-          borderRadius: 0,
+          borderRadius: "var(--fk-r-lg)",
         }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className={s.filterGrid}>
             {[
               { label: "Category", value: category, set: setCategory, options: categories },
               { label: "Level",    value: level,    set: setLevel,    options: levels },
@@ -654,19 +693,21 @@ function BrowseTab({
               { label: "Muscle",   value: muscle,   set: setMuscle,   options: muscles },
             ].map(({ label, value, set, options }) => (
               <div key={label}>
-                <p style={{ fontSize: 12, color: T.textMuted, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, margin: "0 0 6px", fontFamily: "var(--font-archivo), sans-serif" }}>
+                <label htmlFor={`exercise-filter-${label.toLowerCase()}`} style={{ display: "block", fontSize: 13, color: T.textMuted, fontWeight: 650, margin: "0 0 6px", fontFamily: "var(--font-archivo), sans-serif" }}>
                   {label}
-                </p>
+                </label>
                 <select
+                  id={`exercise-filter-${label.toLowerCase()}`}
                   value={value}
                   onChange={(e) => { set(e.target.value); setOffset(0); }}
                   style={{
                     width: "100%",
                     background: T.cardHover,
                     border: `1px solid ${T.border}`,
-                    borderRadius: 0,
+                    borderRadius: "var(--fk-r)",
+                    minHeight: 44,
                     padding: "8px 10px",
-                    fontSize: 12,
+                    fontSize: 16,
                     color: T.textSecond,
                     outline: "none",
                     appearance: "none",
@@ -684,8 +725,9 @@ function BrowseTab({
           </div>
           {hasFilters && (
             <button
+              type="button"
               onClick={() => { setCategory(""); setLevel(""); setEquip(""); setMuscle(""); setOffset(0); }}
-              style={{ marginTop: 12, width: "100%", background: "none", border: "none", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}
+              style={{ marginTop: 12, width: "100%", minHeight: 44, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}
             >
               Clear all filters
             </button>
@@ -695,11 +737,11 @@ function BrowseTab({
 
       {/* Meta row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <p style={{ fontSize: 12, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
+        <p style={{ fontSize: 13, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
           {loading ? "Searching…" : `${total.toLocaleString()} result${total !== 1 ? "s" : ""}`}
         </p>
         {totalPages > 1 && (
-          <p style={{ fontSize: 12, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
             {currentPage} / {totalPages}
           </p>
         )}
@@ -707,19 +749,19 @@ function BrowseTab({
 
       {/* Grid */}
       {loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+        <div className={s.exerciseGrid}>
           {Array.from({ length: 15 }).map((_, i) => (
-            <div key={i} style={{ height: 190, background: T.cardHover, borderRadius: 0, border: `1px solid ${T.border}` }} />
+            <div key={i} style={{ height: 210, background: T.cardHover, borderRadius: "var(--fk-r-lg)", border: `1px solid ${T.border}` }} />
           ))}
         </div>
       ) : exercises.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 0", color: T.textMuted }}>
           <Dumbbell size={36} style={{ margin: "0 auto 12px" }} />
           <p style={{ fontSize: 14, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>No exercises found</p>
-          <p style={{ fontSize: 12, margin: "4px 0 0", color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>Try adjusting your filters</p>
+          <p style={{ fontSize: 13, margin: "4px 0 0", color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>Try adjusting your filters</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+        <div className={s.exerciseGrid}>
           {exercises.map((ex) => (
             <ExerciseCard
               key={ex.id}
@@ -737,10 +779,12 @@ function BrowseTab({
       {totalPages > 1 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 28 }}>
           <button
+            type="button"
+            aria-label="Previous exercise page"
             onClick={() => setOffset(offset - LIMIT)}
             disabled={offset === 0}
             style={{
-              width: 36, height: 36, borderRadius: 0,
+              width: 44, height: 44, borderRadius: "var(--fk-r)",
               background: T.cardHover,
               border: `1px solid ${T.border}`,
               color: T.textSecond,
@@ -751,14 +795,16 @@ function BrowseTab({
           >
             <ChevronLeft size={15} />
           </button>
-          <span style={{ fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums" }}>
             {currentPage} / {totalPages}
           </span>
           <button
+            type="button"
+            aria-label="Next exercise page"
             onClick={() => setOffset(offset + LIMIT)}
             disabled={offset + LIMIT >= total}
             style={{
-              width: 36, height: 36, borderRadius: 0,
+              width: 44, height: 44, borderRadius: "var(--fk-r)",
               background: T.cardHover,
               border: `1px solid ${T.border}`,
               color: T.textSecond,
@@ -790,16 +836,37 @@ function SetRow({
   set, setNum, onUpdate, onDelete, isTimeBase,
 }: {
   set: WorkoutSet; setNum: number;
-  onUpdate: (data: Partial<WorkoutSet>) => void;
+  onUpdate: (data: Partial<WorkoutSet>) => Promise<boolean>;
   onDelete: () => void; isTimeBase: boolean;
 }) {
+  const [weight, setWeight] = useState(set.weightKg?.toString() ?? "");
+  const [reps, setReps] = useState(set.reps?.toString() ?? "");
+  const [duration, setDuration] = useState(set.durationSecs?.toString() ?? "");
+
+  async function commit(
+    field: "weightKg" | "reps" | "durationSecs",
+    raw: string,
+    previous: number | null,
+    reset: (value: string) => void,
+  ) {
+    const value = raw === "" ? null : Number(raw);
+    if (value !== null && (!Number.isFinite(value) || value < 0)) {
+      reset(previous?.toString() ?? "");
+      return;
+    }
+    if (value === previous) return;
+    const saved = await onUpdate({ [field]: value });
+    if (!saved) reset(previous?.toString() ?? "");
+  }
+
   const inputStyle = {
     width: 60,
     background: T.cardHover,
     border: `1px solid ${T.border}`,
-    borderRadius: 0,
+    borderRadius: "var(--fk-r)",
+    minHeight: 44,
     padding: "6px 8px",
-    fontSize: 12,
+    fontSize: 16,
     color: T.text,
     textAlign: "center" as const,
     outline: "none",
@@ -810,23 +877,35 @@ function SetRow({
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
       padding: "8px 6px",
-      borderRadius: 0,
+      borderRadius: "var(--fk-r)",
       background: set.completed ? T.wash : "transparent",
     }}>
-      <span style={{ width: 18, textAlign: "center", fontSize: 12, color: T.textMuted, fontFamily: "monospace" }}>{setNum}</span>
+      <span style={{ width: 18, textAlign: "center", fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums" }}>{setNum}</span>
       {isTimeBase ? (
-        <input type="number" placeholder="secs" value={set.durationSecs ?? ""} onChange={(e) => onUpdate({ durationSecs: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
+        <input
+          type="number" min={0} max={86400} inputMode="numeric" aria-label={`Seconds for set ${setNum}`}
+          placeholder="secs" value={duration} onChange={(e) => setDuration(e.target.value)}
+          onBlur={() => commit("durationSecs", duration, set.durationSecs, setDuration)} style={inputStyle}
+        />
       ) : (
         <>
-          <input type="number" placeholder="kg" value={set.weightKg ?? ""} onChange={(e) => onUpdate({ weightKg: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
-          <span style={{ color: T.textMuted, fontSize: 12, fontWeight: 700 }}>×</span>
-          <input type="number" placeholder="reps" value={set.reps ?? ""} onChange={(e) => onUpdate({ reps: e.target.value ? Number(e.target.value) : null })} style={inputStyle} />
+          <input
+            type="number" min={0} max={2000} step="0.5" inputMode="decimal" aria-label={`Weight in kilograms for set ${setNum}`}
+            placeholder="kg" value={weight} onChange={(e) => setWeight(e.target.value)}
+            onBlur={() => commit("weightKg", weight, set.weightKg, setWeight)} style={inputStyle}
+          />
+          <span style={{ color: T.textMuted, fontSize: 14, fontWeight: 700 }}>×</span>
+          <input
+            type="number" min={0} max={10000} inputMode="numeric" aria-label={`Repetitions for set ${setNum}`}
+            placeholder="reps" value={reps} onChange={(e) => setReps(e.target.value)}
+            onBlur={() => commit("reps", reps, set.reps, setReps)} style={inputStyle}
+          />
         </>
       )}
-      <button onClick={() => onUpdate({ completed: !set.completed })} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: set.completed ? T.accent : T.textMuted, transform: set.completed ? "scale(1.1)" : "none", transition: "all 0.15s" }}>
+      <button type="button" aria-label={set.completed ? `Mark set ${setNum} incomplete` : `Mark set ${setNum} complete`} onClick={() => onUpdate({ completed: !set.completed })} style={{ marginLeft: "auto", minWidth: 44, minHeight: 44, background: "none", border: "none", cursor: "pointer", color: set.completed ? T.accent : T.textMuted, transition: "color 0.15s" }}>
         {set.completed ? <CheckCircle2 size={15} /> : <Circle size={15} />}
       </button>
-      <button onClick={onDelete} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted }}>
+      <button type="button" aria-label={`Remove set ${setNum}`} onClick={onDelete} style={{ minWidth: 44, minHeight: 44, background: "none", border: "none", cursor: "pointer", color: T.textMuted }}>
         <Trash2 size={13} />
       </button>
     </div>
@@ -836,11 +915,12 @@ function SetRow({
 // ─── Workout Exercise Card ────────────────────────────────────────────────────
 
 function WorkoutExerciseCard({
-  we, sessionId, onSetsChange, onRemove,
+  we, sessionId, onSetsChange, onRemove, onError,
 }: {
   we: WorkoutExercise; sessionId: string;
   onSetsChange: (sets: WorkoutSet[]) => void;
   onRemove: () => void;
+  onError: (message: string) => void;
 }) {
   const [sets, setSets] = useState<WorkoutSet[]>(we.sets);
   const [collapsed, setCollapsed] = useState(false);
@@ -850,41 +930,69 @@ function WorkoutExerciseCard({
   const progress = sets.length > 0 ? completedSets / sets.length : 0;
 
   async function addSet() {
-    const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(isTimeBase ? { durationSecs: null } : { reps: null, weightKg: null }),
-    });
-    const data = await res.json();
-    if (data.set) { const n = [...sets, data.set]; setSets(n); onSetsChange(n); }
+    try {
+      const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(isTimeBase ? { durationSecs: null } : { reps: null, weightKg: null }),
+      });
+      if (!res.ok) throw new Error("Add set failed");
+      const data = await res.json();
+      if (!data.set) throw new Error("Missing set");
+      const n = [...sets, data.set]; setSets(n); onSetsChange(n);
+    } catch {
+      onError("We couldn't add that set. Try again.");
+    }
   }
 
   async function updateSet(setId: string, update: Partial<WorkoutSet>) {
-    const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ setId, ...update }),
-    });
-    const data = await res.json();
-    if (data.set) { const n = sets.map((s) => (s.id === setId ? data.set : s)); setSets(n); onSetsChange(n); }
+    try {
+      const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setId, ...update }),
+      });
+      if (!res.ok) throw new Error("Update set failed");
+      const data = await res.json();
+      if (!data.set) throw new Error("Missing set");
+      const n = sets.map((s) => (s.id === setId ? data.set : s)); setSets(n); onSetsChange(n);
+      return true;
+    } catch {
+      onError("We couldn't save that set. Your previous values are unchanged.");
+      return false;
+    }
   }
 
   async function deleteSet(setId: string) {
-    await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ setId }),
-    });
-    const n = sets.filter((s) => s.id !== setId); setSets(n); onSetsChange(n);
+    try {
+      const res = await fetch(`/api/workout/sessions/${sessionId}/exercises/${we.id}/sets`, {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setId }),
+      });
+      if (!res.ok) throw new Error("Delete set failed");
+      const n = sets.filter((s) => s.id !== setId); setSets(n); onSetsChange(n);
+    } catch {
+      onError("We couldn't remove that set. It is still in your workout.");
+    }
   }
 
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: "var(--fk-r-lg)", overflow: "hidden" }}>
       <div
         onClick={() => setCollapsed(!collapsed)}
-        style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, cursor: "pointer" }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setCollapsed(!collapsed);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={!collapsed}
+        style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, minHeight: 64, cursor: "pointer" }}
       >
         {imgSrc ? (
-          <img src={imgSrc} alt="" style={{ width: 40, height: 40, borderRadius: 0, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+          <Image src={imgSrc} alt="" width={40} height={40} style={{ width: 40, height: 40, borderRadius: "var(--fk-r)", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
         ) : (
-          <div style={{ width: 40, height: 40, borderRadius: 0, background: T.cardHover, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 40, height: 40, borderRadius: "var(--fk-r)", background: T.cardHover, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Dumbbell size={18} color={T.textMuted} />
           </div>
         )}
@@ -893,15 +1001,15 @@ function WorkoutExerciseCard({
             {we.exercise.name}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-            <div style={{ flex: 1, maxWidth: 80, height: 3, background: T.cardHover, borderRadius: 0, overflow: "hidden" }}>
-              <div style={{ width: `${progress * 100}%`, height: "100%", background: T.accent, borderRadius: 0, transition: "width 0.3s" }} />
+            <div style={{ flex: 1, maxWidth: 80, height: 5, background: T.trough, borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ width: `${progress * 100}%`, height: "100%", background: T.accent, borderRadius: 999, transition: "width 0.3s" }} />
             </div>
-            <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>
+            <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>
               {sets.length === 0 ? "No sets" : `${completedSets}/${sets.length}`}
             </p>
           </div>
         </div>
-        <button onClick={(e) => { e.stopPropagation(); onRemove(); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, marginRight: 4 }}>
+        <button type="button" aria-label={`Remove ${we.exercise.name} from workout`} onClick={(e) => { e.stopPropagation(); onRemove(); }} style={{ minWidth: 44, minHeight: 44, background: "none", border: "none", cursor: "pointer", color: T.textMuted, marginRight: 4 }}>
           <Trash2 size={13} />
         </button>
         <ChevronDown size={15} color={T.textMuted} style={{ transform: collapsed ? "none" : "rotate(180deg)", transition: "transform 0.2s" }} />
@@ -910,7 +1018,7 @@ function WorkoutExerciseCard({
       {!collapsed && (
         <div style={{ padding: "0 12px 12px", borderTop: `1px solid ${T.border}` }}>
           {sets.length > 0 && (
-            <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 2, paddingLeft: 26, fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: "var(--font-archivo), sans-serif" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 8, marginBottom: 2, paddingLeft: 26, fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>
               {isTimeBase ? <span style={{ width: 60, textAlign: "center" }}>Duration</span> : (
                 <>
                   <span style={{ width: 60, textAlign: "center" }}>Weight</span>
@@ -924,6 +1032,7 @@ function WorkoutExerciseCard({
             <SetRow key={set.id} set={set} setNum={i + 1} isTimeBase={isTimeBase} onUpdate={(u) => updateSet(set.id, u)} onDelete={() => deleteSet(set.id)} />
           ))}
           <button
+            type="button"
             onClick={addSet}
             style={{
               marginTop: 8, width: "100%",
@@ -931,11 +1040,11 @@ function WorkoutExerciseCard({
               padding: "8px",
               background: "none",
               border: `1px dashed ${T.border}`,
-              borderRadius: 0, fontSize: 12, color: T.textMuted,
+               borderRadius: "var(--fk-r)", minHeight: 44, fontSize: 14, color: T.textMuted,
               cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif",
             }}
           >
-            <Plus size={13} /> Add Set
+            <Plus size={13} /> Add set
           </button>
         </div>
       )}
@@ -955,17 +1064,16 @@ function WorkoutTab({
   const [finishing, setFinishing] = useState(false);
   const [sessionName, setSessionName] = useState("");
   const [elapsed, setElapsed] = useState(0);
+  const [error, setError] = useState("");
+  const [starting, setStarting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const activeSessionId = activeSession?.id;
   useEffect(() => {
-    if (activeSession) {
-      timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setElapsed(0);
-    }
+    if (!activeSessionId) return;
+    timerRef.current = setInterval(() => setElapsed((current) => current + 1), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [activeSession?.id]);
+  }, [activeSessionId]);
 
   function formatElapsed(secs: number) {
     const m = Math.floor(secs / 60);
@@ -974,64 +1082,93 @@ function WorkoutTab({
   }
 
   async function startSession() {
-    const res = await fetch("/api/workout/sessions", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: sessionName || null, date: todayStr() }),
-    });
-    const data = await res.json();
-    if (data.session) { setActiveSession({ ...data.session, exercises: [] }); setWorkoutExercises([]); setAddedIds(new Set()); }
+    setStarting(true); setError("");
+    try {
+      const res = await fetch("/api/workout/sessions", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: sessionName || undefined, date: todayStr() }),
+      });
+      if (!res.ok) throw new Error("Start failed");
+      const data = await res.json();
+      if (!data.session) throw new Error("Missing session");
+      setElapsed(0);
+      setActiveSession({ ...data.session, exercises: [] }); setWorkoutExercises([]); setAddedIds(new Set());
+    } catch {
+      setError("We couldn't start this workout. Try again.");
+    } finally {
+      setStarting(false);
+    }
   }
 
   async function addExercise(ex: Exercise) {
     if (!activeSession || addedIds.has(ex.id)) return;
-    const res = await fetch(`/api/workout/sessions/${activeSession.id}/exercises`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exerciseId: ex.id }),
-    });
-    const data = await res.json();
-    if (data.workoutExercise) {
+    setError("");
+    try {
+      const res = await fetch(`/api/workout/sessions/${activeSession.id}/exercises`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exerciseId: ex.id }),
+      });
+      if (!res.ok) throw new Error("Add exercise failed");
+      const data = await res.json();
+      if (!data.workoutExercise) throw new Error("Missing exercise");
       setWorkoutExercises((prev) => [...prev, data.workoutExercise]);
       setAddedIds((prev) => new Set([...prev, ex.id]));
+    } catch {
+      setError(`We couldn't add ${ex.name}. Try again.`);
     }
   }
 
   async function removeExercise(weId: string, exId: string) {
-    await fetch(`/api/workout/sessions/${activeSession!.id}/exercises`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workoutExerciseId: weId }),
-    });
-    setWorkoutExercises((prev) => prev.filter((w) => w.id !== weId));
-    setAddedIds((prev) => { const s = new Set(prev); s.delete(exId); return s; });
+    if (!activeSession) return;
+    setError("");
+    try {
+      const res = await fetch(`/api/workout/sessions/${activeSession.id}/exercises`, {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workoutExerciseId: weId }),
+      });
+      if (!res.ok) throw new Error("Remove exercise failed");
+      setWorkoutExercises((prev) => prev.filter((w) => w.id !== weId));
+      setAddedIds((prev) => { const next = new Set(prev); next.delete(exId); return next; });
+    } catch {
+      setError("We couldn't remove that exercise. It is still in your workout.");
+    }
   }
 
   async function finishSession() {
     if (!activeSession) return;
     setFinishing(true);
+    setError("");
     const durationMins = Math.round(elapsed / 60);
-    const totalSets = workoutExercises.reduce((s, we) => s + we.sets.length, 0);
-    const caloriesBurned = Math.round(durationMins * 5 + totalSets * 3);
-    await fetch(`/api/workout/sessions/${activeSession.id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completedAt: new Date().toISOString(), durationMins, caloriesBurned }),
-    });
-    setActiveSession(null); setWorkoutExercises([]); setAddedIds(new Set()); setSessionName(""); setFinishing(false);
+    try {
+      const res = await fetch(`/api/workout/sessions/${activeSession.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completedAt: new Date().toISOString(), durationMins }),
+      });
+      if (!res.ok) throw new Error("Finish failed");
+      setElapsed(0);
+      setActiveSession(null); setWorkoutExercises([]); setAddedIds(new Set()); setSessionName("");
+    } catch {
+      setError("We couldn't finish and save this workout. Your session is still open.");
+    } finally {
+      setFinishing(false);
+    }
   }
 
   const btnPrimary: React.CSSProperties = {
-    background: T.accent, color: T.onLime, border: "none", borderRadius: 0,
-    padding: "14px", fontSize: 13, fontWeight: 700,
-    fontFamily: "var(--fk-display), Georgia, serif", letterSpacing: "0.04em",
+    background: T.accent, color: T.onLime, border: "none", borderRadius: "var(--fk-r)",
+    minHeight: 46, padding: "0 18px", fontSize: 15, fontWeight: 650,
+    fontFamily: "var(--font-archivo), sans-serif", letterSpacing: 0,
     cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
   };
 
   if (!activeSession) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 16px", textAlign: "center" }}>
-        <div style={{ width: 72, height: 72, borderRadius: 0, background: T.wash, border: `1px solid ${T.wash}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+        <div style={{ width: 72, height: 72, borderRadius: "var(--fk-r-lg)", background: T.wash, border: `1px solid ${T.wash}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
           <Zap size={32} color={T.accent} />
         </div>
         <h3 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 22, fontWeight: 700, color: T.text, margin: "0 0 8px" }}>
-          Start a Workout
+          Start a workout
         </h3>
         <p style={{ fontSize: 13, color: T.textMuted, margin: "0 0 28px", maxWidth: 280, lineHeight: 1.6, fontFamily: "var(--font-archivo), sans-serif" }}>
           Log exercises, track sets and reps, and crush your goals.
@@ -1045,14 +1182,15 @@ function WorkoutTab({
             width: "100%", maxWidth: 320,
             background: T.cardHover,
             border: `1px solid ${T.border}`,
-            borderRadius: 0, padding: "12px 16px",
-            fontSize: 13, color: T.text,
+            borderRadius: "var(--fk-r)", padding: "12px 16px",
+            fontSize: 16, color: T.text,
             fontFamily: "var(--font-archivo), sans-serif",
             textAlign: "center", outline: "none", marginBottom: 14, boxSizing: "border-box",
           }}
         />
-        <button onClick={startSession} style={{ ...btnPrimary, maxWidth: 320 }}>
-          <Play size={15} style={{ fill: T.onLime }} /> Start Workout
+        {error && <p role="alert" className={s.error} style={{ width: "100%", maxWidth: 420 }}>{error}</p>}
+        <button type="button" onClick={startSession} disabled={starting} style={{ ...btnPrimary, maxWidth: 320, opacity: starting ? 0.6 : 1 }}>
+          <Play size={15} style={{ fill: T.onLime }} /> {starting ? "Starting…" : "Start workout"}
         </button>
       </div>
     );
@@ -1061,16 +1199,19 @@ function WorkoutTab({
   if (showBrowse) {
     return (
       <div>
+        {error && <p role="alert" className={s.error}>{error}</p>}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <button
+            type="button"
+            aria-label="Back to workout"
             onClick={() => setShowBrowse(false)}
-            style={{ width: 36, height: 36, borderRadius: 0, background: T.cardHover, border: `1px solid ${T.border}`, color: T.textSecond, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 44, height: 44, borderRadius: "var(--fk-r)", background: T.cardHover, border: `1px solid ${T.border}`, color: T.textSecond, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <ArrowLeft size={15} />
           </button>
           <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>Add Exercise</p>
-            <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>{addedIds.size} added</p>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 600, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>Add exercise</p>
+            <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>{addedIds.size} added</p>
           </div>
         </div>
         <BrowseTab
@@ -1086,28 +1227,29 @@ function WorkoutTab({
 
   return (
     <div>
+      {error && <p role="alert" className={s.error}>{error}</p>}
       {/* Session header */}
-      <div style={{ position: "relative", background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16, marginBottom: 14, overflow: "hidden" }}>
+      <div style={{ position: "relative", background: T.card, border: `1px solid ${T.border}`, borderRadius: "var(--fk-r-lg)", padding: 16, marginBottom: 14, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${T.wash} 0%, transparent 60%)`, pointerEvents: "none" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
             <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>{activeSession.name ?? "Workout"}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>In progress</p>
+            <p style={{ margin: "2px 0 0", fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>In progress</p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, background: T.wash, border: `1px solid ${T.wash}`, borderRadius: 0, padding: "6px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: T.wash, border: `1px solid ${T.wash}`, borderRadius: 999, padding: "6px 12px" }}>
             <Clock size={12} color={T.accent} />
-            <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: T.accent }}>{formatElapsed(elapsed)}</span>
+            <span style={{ fontFamily: "var(--font-archivo), sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 14, fontWeight: 700, color: T.accent }}>{formatElapsed(elapsed)}</span>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
           {[
             { val: workoutExercises.length, label: "Exercises" },
-            { val: totalCompletedSets, label: "Sets Done" },
-            { val: `~${Math.round(elapsed / 60 * 5 + totalCompletedSets * 3)}`, label: "kcal est." },
+            { val: totalCompletedSets, label: "Sets done" },
+            { val: Math.floor(elapsed / 60), label: "Minutes" },
           ].map(({ val, label }) => (
-            <div key={label} style={{ background: T.cardHover, borderRadius: 0, padding: "10px 0", textAlign: "center" }}>
+            <div key={label} style={{ background: T.cardHover, borderRadius: "var(--fk-r)", padding: "10px 0", textAlign: "center" }}>
               <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text, fontFamily: "var(--fk-display), Georgia, serif" }}>{val}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>{label}</p>
             </div>
           ))}
         </div>
@@ -1125,25 +1267,27 @@ function WorkoutTab({
             key={we.id} we={we} sessionId={activeSession.id}
             onSetsChange={(sets) => setWorkoutExercises((prev) => prev.map((w) => w.id === we.id ? { ...w, sets } : w))}
             onRemove={() => removeExercise(we.id, we.exerciseId)}
+            onError={setError}
           />
         ))}
       </div>
 
       <button
+        type="button"
         onClick={() => setShowBrowse(true)}
         style={{
           width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           padding: "12px", background: "none",
           border: `1px dashed ${T.border}`,
-          borderRadius: 0, fontSize: 13, color: T.textMuted,
+          borderRadius: "var(--fk-r)", minHeight: 46, fontSize: 14, color: T.textMuted,
           cursor: "pointer", fontFamily: "var(--font-archivo), sans-serif", marginBottom: 10,
         }}
       >
-        <Plus size={15} /> Add Exercise
+        <Plus size={15} /> Add exercise
       </button>
 
-      <button onClick={finishSession} disabled={finishing} style={{ ...btnPrimary, opacity: finishing ? 0.5 : 1 }}>
-        {finishing ? "Saving…" : "Finish Workout"}
+      <button type="button" onClick={finishSession} disabled={finishing} style={{ ...btnPrimary, opacity: finishing ? 0.5 : 1 }}>
+        {finishing ? "Saving…" : "Finish workout"}
       </button>
     </div>
   );
@@ -1155,25 +1299,37 @@ function HistoryTab() {
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/workout/sessions?limit=30").then((r) => r.json()).then((d) => setSessions(d.sessions ?? [])).finally(() => setLoading(false));
+    let alive = true;
+    fetch("/api/workout/sessions?limit=30")
+      .then((response) => {
+        if (!response.ok) throw new Error("History request failed");
+        return response.json();
+      })
+      .then((data) => { if (alive) setSessions(data.sessions ?? []); })
+      .catch(() => { if (alive) setError("We couldn't load your workout history. Try again later."); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
   }, []);
 
   if (loading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {[1, 2, 3].map((i) => <div key={i} style={{ height: 72, background: T.cardHover, borderRadius: 0, border: `1px solid ${T.border}` }} />)}
+        {[1, 2, 3].map((i) => <div key={i} style={{ height: 72, background: T.cardHover, borderRadius: "var(--fk-r-lg)", border: `1px solid ${T.border}` }} />)}
       </div>
     );
   }
+
+  if (error) return <p role="alert" className={s.error}>{error}</p>;
 
   if (sessions.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "80px 0", color: T.textMuted }}>
         <TrendingUp size={36} style={{ margin: "0 auto 12px" }} />
         <p style={{ margin: 0, fontSize: 14, fontFamily: "var(--font-archivo), sans-serif" }}>No workouts yet</p>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>Complete your first workout to see history</p>
+        <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>Complete your first workout to see history</p>
       </div>
     );
   }
@@ -1189,23 +1345,25 @@ function HistoryTab() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {Object.entries(grouped).map(([date, daySessions]) => (
         <div key={date}>
-          <p style={{ margin: "0 0 10px", fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 700, fontFamily: "var(--font-archivo), sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+          <p style={{ margin: "0 0 10px", fontSize: 13, color: T.textMuted, fontWeight: 650, fontFamily: "var(--font-archivo), sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
             <Calendar size={11} />
-            {new Date(date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+            {new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {daySessions.map((s) => (
-              <div key={s.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, overflow: "hidden" }}>
-                <div
+              <div key={s.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: "var(--fk-r-lg)", overflow: "hidden" }}>
+                <button
+                  type="button"
                   onClick={() => setExpanded(expanded === s.id ? null : s.id)}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", cursor: "pointer" }}
+                  aria-expanded={expanded === s.id}
+                  style={{ display: "flex", width: "100%", alignItems: "center", gap: 12, padding: "12px 14px", minHeight: 64, background: "transparent", border: 0, color: "inherit", textAlign: "left", cursor: "pointer" }}
                 >
-                  <div style={{ width: 38, height: 38, borderRadius: 0, background: T.wash, border: `1px solid ${T.wash}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "var(--fk-r)", background: T.wash, border: `1px solid ${T.wash}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Activity size={16} color={T.accent} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: T.text, fontFamily: "var(--font-archivo), sans-serif" }}>{s.name ?? "Workout"}</p>
-                    <p style={{ margin: "2px 0 0", fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>
+                    <p style={{ margin: "2px 0 0", fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>
                       {s.exercises.length} exercise{s.exercises.length !== 1 ? "s" : ""}
                       {s.durationMins ? ` · ${formatDuration(s.durationMins)}` : ""}
                     </p>
@@ -1216,11 +1374,11 @@ function HistoryTab() {
                         <Flame size={12} />
                         <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--fk-display), Georgia, serif" }}>{s.caloriesBurned}</span>
                       </div>
-                      <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>kcal</p>
+                      <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>estimated kcal</p>
                     </div>
                   ) : null}
                   <ChevronDown size={15} color={T.textMuted} style={{ transform: expanded === s.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                </div>
+                </button>
 
                 {expanded === s.id && s.exercises.length > 0 && (
                   <div style={{ borderTop: `1px solid ${T.border}`, padding: "8px 14px" }}>
@@ -1229,14 +1387,14 @@ function HistoryTab() {
                       return (
                         <div key={we.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${T.border}` }}>
                           {imgSrc ? (
-                            <img src={imgSrc} alt="" style={{ width: 30, height: 30, borderRadius: 0, objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+                            <Image src={imgSrc} alt="" width={30} height={30} style={{ width: 30, height: 30, borderRadius: "var(--fk-r)", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
                           ) : (
-                            <div style={{ width: 30, height: 30, borderRadius: 0, background: T.cardHover, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: "var(--fk-r)", background: T.cardHover, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                               <Dumbbell size={12} color={T.textMuted} />
                             </div>
                           )}
-                          <p style={{ flex: 1, margin: 0, fontSize: 12, color: T.textSecond, fontWeight: 500, fontFamily: "var(--font-archivo), sans-serif" }}>{we.exercise.name}</p>
-                          <p style={{ margin: 0, fontSize: 12, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
+                          <p style={{ flex: 1, margin: 0, fontSize: 13, color: T.textSecond, fontWeight: 500, fontFamily: "var(--font-archivo), sans-serif" }}>{we.exercise.name}</p>
+                          <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontFamily: "var(--font-archivo), sans-serif" }}>{we.sets.length} set{we.sets.length !== 1 ? "s" : ""}</p>
                         </div>
                       );
                     })}
@@ -1270,75 +1428,25 @@ export default function ExercisesClient({
     <>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.7} }
-        * { box-sizing: border-box; }
-        input::placeholder { color: ${T.textMuted}; }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        select option { background: ${T.card}; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${T.textMuted}; border-radius:0; }
       `}</style>
 
-      <div style={{
-        paddingTop: 88,
-        paddingBottom: 48,
-        maxWidth: 1120,
-        margin: "0 auto",
-        minHeight: "100vh",
-        background: T.bg,
-        paddingLeft: 18,
-        paddingRight: 18,
-      }}>
+      <div className={s.screen}>
         {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 0,
-              background: T.wash,
-              border: `1px solid ${T.wash}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Dumbbell size={18} color={T.accent} />
-            </div>
-            <div>
-              <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 22, fontWeight: 800, color: T.text, margin: 0, letterSpacing: "-0.02em" }}>
-                Exercise Library
-              </h1>
-              <p style={{ fontSize: 12, color: T.textMuted, margin: 0, fontFamily: "var(--font-archivo), sans-serif" }}>
-                {initialTotal.toLocaleString()} exercises · browse, log, track
-              </p>
-            </div>
-          </div>
-        </div>
+        <header className={s.header}>
+          <h1 style={screen()}>Exercises</h1>
+          <p className={s.intro}>Browse {initialTotal.toLocaleString("en-IN")} movements, build a session, and keep a useful set history.</p>
+        </header>
 
         {/* Tab bar */}
-        <div style={{
-          display: "flex",
-          background: T.cardHover,
-          border: `1px solid ${T.border}`,
-          borderRadius: 0,
-          padding: 4,
-          marginBottom: 22,
-          gap: 4,
-        }}>
+        <div className={s.tabs} role="tablist" aria-label="Exercise tools">
           {tabs.map((t) => (
             <button
+              type="button"
               key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              style={{
-                flex: 1,
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                padding: "10px 0",
-                borderRadius: 0,
-                border: "none",
-                background: tab === t.id ? T.accent : "transparent",
-                color: tab === t.id ? T.onLime : T.textMuted,
-                fontFamily: "var(--font-archivo), sans-serif",
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.18s ease",
-                      }}
+              className={`${s.tab} ${tab === t.id ? s.tabActive : ""}`}
             >
               {t.icon}
               <span>{t.label}</span>

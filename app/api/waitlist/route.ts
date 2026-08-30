@@ -18,8 +18,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.ok) return parsed.response
     const { email, tier } = parsed.data
 
-    const db = prisma as any
-    await db.waitlistSignup.upsert({
+    await prisma.waitlistSignup.upsert({
       where:  { email_tier: { email, tier } },
       create: { email, tier, source: 'plans_page' },
       update: { updatedAt: new Date() },

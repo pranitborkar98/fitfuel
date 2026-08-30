@@ -6,8 +6,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { readJson } from "@/lib/validation/core";
 
 type Params = { params: Promise<{ id: string }> };
+
+const nullableText = (max: number) => z.string().trim().max(max).nullable().optional();
+const sessionPatchSchema = z.object({
+  name: nullableText(120),
+  notes: nullableText(1000),
+  durationMins: z.number().int().min(0).max(1440).nullable().optional(),
+  caloriesBurned: z.number().int().min(0).max(20_000).nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+}).strict();
 
 // ── GET ───────────────────────────────────────────────────────
 export async function GET(_req: NextRequest, { params }: Params) {
@@ -59,6 +71,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
+    if (!id || id.length > 60) return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
     const existing = await prisma.workoutSession.findFirst({
       where: { id, userId: session.user.id },
@@ -67,7 +82,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    const { name, notes, durationMins, caloriesBurned, completedAt } = await req.json();
+    const parsed = await readJson(req, sessionPatchSchema);
+    if (!parsed.ok) return parsed.response;
+    const { name, notes, durationMins, caloriesBurned, completedAt } = parsed.data;
 
     const updated = await prisma.workoutSession.update({
       where: { id },
@@ -76,7 +93,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(notes          !== undefined && { notes }),
         ...(durationMins   !== undefined && { durationMins }),
         ...(caloriesBurned !== undefined && { caloriesBurned }),
-        ...(completedAt    !== undefined && { completedAt: new Date(completedAt) }),
+        ...(completedAt    !== undefined && { completedAt: completedAt === null ? null : new Date(completedAt) }),
       },
     });
 
@@ -95,6 +112,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rl = await enforceRateLimit(_req, "mutation", session.user.id);
+    if (!rl.ok) return rl.response;
+    if (!id || id.length > 60) return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
     const existing = await prisma.workoutSession.findFirst({
       where: { id, userId: session.user.id },

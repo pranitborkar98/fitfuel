@@ -6,14 +6,17 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import ExercisesClient from "./ExercisesClient";
 
-export const metadata = { title: "Exercise Library — FitFuel" };
+export const metadata = {
+  title: "Exercises",
+  description: "Browse exercises, build a workout and track completed sets.",
+};
 
 export default async function ExercisesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin?callbackUrl=/dashboard/exercises");
 
   // SSR: load first page of exercises + filter metadata in parallel
-  const [initialExercises, categories, levels, equipmentList, allMuscles] =
+  const [initialExercises, categories, levels, equipmentList, allMuscles, total] =
     await Promise.all([
       // First 20 exercises sorted by name
       prisma.exercise.findMany({
@@ -57,9 +60,9 @@ export default async function ExercisesPage() {
 
       // All exercises for muscle extraction
       prisma.exercise.findMany({ select: { primaryMuscles: true } }),
-    ]);
 
-  const total = await prisma.exercise.count();
+      prisma.exercise.count(),
+    ]);
 
   // Flatten + deduplicate muscles
   const muscleSet = new Set<string>();

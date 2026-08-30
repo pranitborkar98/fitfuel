@@ -21,6 +21,8 @@ import { prisma } from "@/lib/prisma";
 import { cutoffLabel } from "@/lib/order-cutoff";
 import PlansNarrowed, { type PlanRow } from "./PlansNarrowed";
 import { DIETS, DURATIONS, type DietKey, type DurationKey } from "@/lib/plan-tier-pricing";
+import { hasCompletePlanSchedule } from "@/lib/plan-readiness";
+import { publicPlanDescription } from "@/lib/plan-public-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -28,13 +30,13 @@ export const dynamic = "force-dynamic";
 const ORDERABLE = ["STANDARD", "LIFESTYLE_MEDICAL", "SPORTS"] as const;
 
 export async function generateMetadata() {
-  const n = await (prisma as any).mealPlan.count({ where: { category: { in: ORDERABLE } } });
+  const n = await prisma.mealPlan.count({ where: { category: { in: [...ORDERABLE] } } });
   return {
     title: "Meal Plans in Pune",
     description:
       `Set diet, length and meals a day, see the whole price with delivery, packaging and GST in it, ` +
-      `then pick from ${n} chef-cooked plans delivered daily in Pune. Weight loss, muscle gain, PCOS, ` +
-      `diabetic, Jain and sports nutrition, cooked to your macros.`,
+      `then explore ${n} plan concepts. Published kitchen menus are clearly marked before checkout, across ` +
+      `weight loss, muscle gain, Jain, sports and condition-support nutrition.`,
     // Canonical points at the bare path so the ?diet= and ?trial= variants
     // consolidate here instead of competing as separate URLs.
     alternates: { canonical: "/plans" },
@@ -56,59 +58,67 @@ export default async function PlansPage({
   const initialDiet = DIETS.some((d) => d.key === diet) ? (diet as DietKey) : "VEG";
   const initialDuration: DurationKey = trial === "true" ? "TRIAL_DAY" : "ONE_MONTH";
 
-  const db = prisma as any;
-
-  const rows = await db.mealPlan.findMany({
-    where: { category: { in: ORDERABLE } },
+  const rows = await prisma.mealPlan.findMany({
+    where: { category: { in: [...ORDERABLE] } },
     orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
     select: {
       id: true, slug: true, name: true, displayName: true, tagline: true,
       category: true, subCategory: true, dietaryVariant: true,
       avgCaloriesPerDay: true, avgProteinGrams: true, avgCarbsGrams: true, avgFatGrams: true,
-      cycleLengthDays: true,
+      cycleLengthDays: true, mealsPerDay: true,
+      _count: { select: { scheduleSlots: true } },
     },
   });
 
-  const plans: PlanRow[] = rows.map((p: any) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    displayName: p.displayName,
-    tagline: p.tagline ?? null,
-    category: p.category,
-    subCategory: p.subCategory ?? "",
-    diet: p.dietaryVariant,
-    kcal: p.avgCaloriesPerDay,
-    protein: p.avgProteinGrams,
-    carbs: p.avgCarbsGrams,
-    fat: p.avgFatGrams,
-    cycleDays: p.cycleLengthDays,
-  }));
-
-  const prices = await db.planPrice.findMany({
-    where: { mealPlanId: { in: rows.map((p: any) => p.id) }, isDigital: false, isActive: true },
+  const prices = await prisma.planPrice.findMany({
+    where: { mealPlanId: { in: rows.map((plan) => plan.id) }, isDigital: false, isActive: true },
     select: { mealPlanId: true, duration: true, mealsPerDay: true, priceRs: true },
   });
+  const pricedPlanIds = new Set(prices.flatMap((price) => price.mealPlanId ? [price.mealPlanId] : []));
+  const priceCombosByPlan = new Map<string, string[]>();
+  for (const price of prices) {
+    if (!price.mealPlanId) continue;
+    const combos = priceCombosByPlan.get(price.mealPlanId) ?? [];
+    combos.push(`${price.duration}|${price.mealsPerDay}`);
+    priceCombosByPlan.set(price.mealPlanId, combos);
+  }
+  const plans: PlanRow[] = rows.map((plan) => ({
+    id: plan.id,
+    slug: plan.slug,
+    name: plan.name,
+    displayName: plan.displayName,
+    tagline: publicPlanDescription(plan),
+    category: plan.category as PlanRow["category"],
+    subCategory: plan.subCategory ?? "",
+    diet: plan.dietaryVariant,
+    kcal: plan.avgCaloriesPerDay,
+    protein: plan.avgProteinGrams,
+    carbs: plan.avgCarbsGrams,
+    fat: plan.avgFatGrams,
+    cycleDays: plan.cycleLengthDays,
+    ready:
+      pricedPlanIds.has(plan.id) &&
+      hasCompletePlanSchedule({
+        scheduleCount: plan._count.scheduleSlots,
+        cycleLengthDays: plan.cycleLengthDays,
+        mealsPerDay: plan.mealsPerDay,
+      }),
+    pricedCombos: priceCombosByPlan.get(plan.id) ?? [],
+  }));
 
-  /* (diet, duration, meals) → the real GST-exclusive subtotal. The plan's own
-     dietaryVariant keys the row, because PlanPrice.diet folds JAIN and VEGAN
-     into VEGETARIAN and the chips have to stay five. First row wins: they are
-     seeded identical across the plans of a diet, and if that ever drifts the
-     page would rather quote one number consistently than a different one per
-     column. */
-  const dietOf = new Map<string, DietKey>(rows.map((p: any) => [p.id, p.dietaryVariant as DietKey]));
-  const priceByCombo: Record<string, number> = {};
+  // Exact plan + duration + meals → stored GST-exclusive subtotal. A goal can
+  // carry different pricing later without the catalogue quoting another plan.
+  const priceByPlanCombo: Record<string, number> = {};
   for (const row of prices) {
-    const d = dietOf.get(row.mealPlanId);
-    if (!d) continue;
-    const key = `${d}|${row.duration}|${row.mealsPerDay}`;
-    if (priceByCombo[key] === undefined) priceByCombo[key] = row.priceRs;
+    if (!row.mealPlanId) continue;
+    const key = `${row.mealPlanId}|${row.duration}|${row.mealsPerDay}`;
+    priceByPlanCombo[key] = row.priceRs;
   }
 
   return (
     <PlansNarrowed
       plans={plans}
-      priceByCombo={priceByCombo}
+      priceByPlanCombo={priceByPlanCombo}
       initialDiet={initialDiet}
       initialDuration={DURATIONS.some((d) => d.key === initialDuration) ? initialDuration : "ONE_MONTH"}
       cutoff={cutoffLabel()}

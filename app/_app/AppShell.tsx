@@ -27,7 +27,7 @@ import {
 import { signOut } from "next-auth/react";
 
 import s from "./shell.module.css";
-import { C, label, screen, body, MONO } from "./theme";
+import { C, label, screen, body, SANS } from "./theme";
 import { NAV, TAB_ITEMS, activeHref, type IconName, type NavItem } from "./nav";
 
 const ICONS: Record<IconName, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
@@ -146,8 +146,8 @@ export default function AppShell({
             onClick={() => signOut({ callbackUrl: "/" })}
             style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 44, width: "100%",
                      background: "transparent", border: 0, padding: 0, cursor: "pointer",
-                     color: C.dim, fontFamily: MONO, fontWeight: 700, fontSize: 12,
-                     letterSpacing: "0.14em", textTransform: "uppercase" }}
+                     color: C.dim, fontFamily: SANS, fontWeight: 600, fontSize: 14,
+                     letterSpacing: 0, textTransform: "none" }}
           >
             <LogOut size={16} strokeWidth={1.75} />
             Sign out
@@ -158,13 +158,7 @@ export default function AppShell({
       {/* ── Main column ──────────────────────────────────────────────── */}
       <div className={s.main}>
         <div className={s.topbar}>
-          <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
-            <span className={s.brandMark} aria-hidden="true" />
-            <span style={{ fontFamily: "var(--fk-display), Georgia, serif", fontWeight: 900, fontSize: 18,
-                           letterSpacing: "-0.01em", textTransform: "uppercase", color: C.ink }}>
-              FitFuel
-            </span>
-          </Link>
+          <Wordmark href="/dashboard" size={20} title="FitFuel dashboard" />
         </div>
 
         <main className={s.content} id="app-main">{children}</main>
@@ -215,7 +209,7 @@ export default function AppShell({
             aria-labelledby="more-h"
           >
             <div className={s.sheetHead}>
-              <h2 id="more-h" style={screen()}>Everything else</h2>
+              <h2 id="more-h" style={screen()}>More</h2>
               <button
                 type="button"
                 className={s.sheetClose}

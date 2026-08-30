@@ -1,30 +1,15 @@
 "use client";
 
-// app/p/[code]/LandingClient.tsx
-// Phase 17B (FIX) — branded landing for any partner type.
-// Type-specific hero + shared CTA → /plans?ref=CODE.
-// Sets ff_ref cookie CLIENT-SIDE on mount (first-touch — only if not already set).
-// Server Components in Next 16 cannot write cookies, so this is the cookie path.
-
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, Check, ChefHat, ClipboardCheck, MapPin, ScanLine } from "lucide-react";
 import { useEffect } from "react";
+import styles from "./landing.module.css";
 
 const COOKIE_NAME = "ff_ref";
 const COOKIE_DAYS = 30;
 
-function readCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)"));
-  return m ? decodeURIComponent(m[1]) : null;
-}
-
-function writeCookie(name: string, value: string, days: number) {
-  if (typeof document === "undefined") return;
-  const maxAge = days * 24 * 60 * 60;
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-}
-
-type View = {
+export type PartnerLandingView = {
   kind: "PARTNER" | "P2P";
   type: string;
   name: string;
@@ -44,164 +29,121 @@ type View = {
   refereeDiscountRs: number;
 };
 
-const T = {
-  bg: "#070707",
-  card: "#050504",
-  border: "#232320",
-  text: "#f7f7f5",
-  dim: "#85857e",
-  accent: "#84cc16",
-  accent2: "#84cc16",
+const TYPE_LABEL: Record<string, string> = {
+  GYM: "Gym partner",
+  TRAINER: "Trainer partner",
+  INFLUENCER: "Creator partner",
+  DIETICIAN: "Dietitian partner",
+  DOCTOR: "Clinical partner",
+  CORPORATE: "Workplace partner",
+  RESIDENCE: "Community partner",
+  CUSTOMER: "Customer invitation",
 };
 
-const RUPEE = "\u20B9";
+function readCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&")}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
-export default function LandingClient({ view }: { view: View }) {
-  // First-touch attribution: only write if not already set.
+function writeFirstTouch(code: string): void {
+  const maxAge = COOKIE_DAYS * 24 * 60 * 60;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(code)}; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
+}
+
+function headline(view: PartnerLandingView): string {
+  if (view.type === "CORPORATE") return `A better workday lunch, shared by ${view.name}.`;
+  if (view.type === "RESIDENCE") return `Fresh meals for the ${view.name} community.`;
+  if (view.type === "DIETICIAN" || view.type === "DOCTOR") return `${view.name} shared a practical cooked-meal option.`;
+  if (view.type === "GYM" || view.type === "TRAINER") return `${view.name} shared food that can keep up with your training.`;
+  return `${view.name} invited you to try FitFuel.`;
+}
+
+function introduction(view: PartnerLandingView): string {
+  if (view.bio) return view.bio;
+  if (view.type === "DIETICIAN" || view.type === "DOCTOR") return "Choose a kitchen-ready meal plan with clear portions and a diary that follows what was actually served.";
+  if (view.type === "GYM" || view.type === "TRAINER") return "Pick a cooked meal plan that matches your routine, then track the meals and portions from the same account.";
+  if (view.type === "CORPORATE") return "Choose a plan for your working week and have it delivered across FitFuel’s active Pune zones.";
+  if (view.type === "RESIDENCE") return "Choose a plan for your week and get fresh meals delivered within FitFuel’s active Pune zones.";
+  return "Choose a cooked meal plan, see the food before you order, and track what you actually eat.";
+}
+
+function partnerFacts(view: PartnerLandingView): string[] {
+  return [
+    view.qualification,
+    view.specialty,
+    view.clinicName,
+    view.hospitalAffiliation,
+    view.gymAddress,
+    view.societyAddress,
+    view.socialHandle,
+  ].filter((value): value is string => Boolean(value));
+}
+
+export default function LandingClient({ view }: { view: PartnerLandingView }) {
   useEffect(() => {
-    const existing = readCookie(COOKIE_NAME);
-    if (!existing && view?.code) {
-      writeCookie(COOKIE_NAME, view.code, COOKIE_DAYS);
-    }
-  }, [view?.code]);
+    if (!readCookie(COOKIE_NAME)) writeFirstTouch(view.code);
+  }, [view.code]);
 
-  const headline = headlineFor(view);
-  const sub = subFor(view);
-  const offer = view.refereeDiscountRs > 0
-    ? `${RUPEE}${view.refereeDiscountRs} off your first plan`
-    : `Special welcome via ${view.name}`;
-
+  const discount = view.refereeDiscountRs;
+  const facts = partnerFacts(view);
+  const offer = discount > 0 ? `₹${discount.toLocaleString("en-IN")} off` : "A verified welcome";
   return (
-    <div style={{ background: T.bg, minHeight: "calc(100vh - 80px)", color: T.text, padding: "72px 16px 80px" }}>
-      <div style={{ maxWidth: 880, margin: "0 auto" }}>
-
-        {/* Ribbon */}
-        <div style={{ display: "inline-block", fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 20, padding: "6px 12px", border: `1px solid ${T.accent2}`, borderRadius: 0, background: "rgba(132,204,22,0.08)" }}>
-          You're invited
-        </div>
-
-        {/* Hero (type-specific) */}
-        <Hero view={view} />
-
-        {/* Offer card */}
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 28, marginTop: 28 }}>
-          <div style={{ fontSize: 12, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Your welcome offer</div>
-          <div style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 32, fontWeight: 800, lineHeight: 1.1 }}>{offer}</div>
-          <div style={{ color: T.dim, fontSize: 14, marginTop: 8 }}>
-            Applied automatically at checkout. Valid on your first FitFuel meal plan or digital plan.
+    <main className={styles.page}>
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>{TYPE_LABEL[view.type] || "FitFuel partner"}</p>
+          <h1>{headline(view)}</h1>
+          <p className={styles.deck}>{introduction(view)}</p>
+          <div className={styles.offerLine}><span>{offer}</span><p>{discount > 0 ? "your first eligible plan" : `via ${view.name}`}</p></div>
+          <div className={styles.actions}>
+            <Link className={styles.primaryAction} href={`/plans?ref=${encodeURIComponent(view.code)}`}>Choose a meal plan <ArrowRight aria-hidden="true" size={18} /></Link>
+            <Link className={styles.secondaryAction} href={`/plans/digital?ref=${encodeURIComponent(view.code)}`}>See digital plans</Link>
           </div>
+          <p className={styles.offerNote}><Check aria-hidden="true" size={16} />Verified at checkout when eligible. If another offer is larger, checkout uses the better discount.</p>
+        </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 24 }}>
-            <Link href={`/plans?ref=${encodeURIComponent(view.code)}`}
-              style={{ background: T.accent, color: "#000", fontWeight: 800, fontSize: 14, padding: "14px 26px", borderRadius: 0, textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              See plans →
-            </Link>
-            <Link href={`/plans/digital?ref=${encodeURIComponent(view.code)}`}
-              style={{ background: "transparent", color: T.text, fontWeight: 700, fontSize: 14, padding: "13px 22px", borderRadius: 0, textDecoration: "none", border: `1px solid ${T.border}`, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Digital plans
-            </Link>
+        <div className={styles.foodVisual}>
+          <Image src="/images/hero-bowl-v2.png" alt="A colourful FitFuel grain bowl with paneer, vegetables and fresh greens" fill priority sizes="(max-width: 820px) 100vw, 48vw" />
+          <div className={styles.visualCard}><ChefHat aria-hidden="true" size={19} /><span><strong>Cooked in Pune</strong>Clear portions, delivered meals, matching diary.</span></div>
+        </div>
+      </section>
+
+      <section className={styles.proofBar} aria-label="FitFuel plan facts">
+        <div><strong>Real meals</strong><span>See dishes and portions before choosing.</span></div>
+        <div><strong>Verified offer</strong><span>Your referral code is checked on the server.</span></div>
+        <div><strong>Pune delivery</strong><span>Serviceability is confirmed at checkout.</span></div>
+      </section>
+
+      {view.kind === "PARTNER" && (
+        <section className={styles.partnerSection}>
+          <div className={styles.partnerIntro}>
+            <p className={styles.eyebrow}>Why you are seeing this</p>
+            <h2>{view.name} has an active FitFuel partner page.</h2>
+            <p>The invitation identifies the partner and carries their code into checkout. It does not give the partner access to your private nutrition diary or health profile.</p>
           </div>
-
-          <div style={{ marginTop: 18, fontSize: 12, color: T.dim }}>
-            Referral code: <strong style={{ color: T.text, fontFamily: 'ui-monospace, monospace' }}>{view.code}</strong>
+          <div className={styles.partnerCard}>
+            {view.profilePhotoUrl
+              ? <span aria-hidden="true" className={styles.partnerPhoto} style={{ backgroundImage: `url(${JSON.stringify(view.profilePhotoUrl)})` }} />
+              : <span className={styles.partnerInitial}>{view.name.charAt(0).toUpperCase()}</span>}
+            <div><strong>{view.name}</strong><small>{TYPE_LABEL[view.type] || "FitFuel partner"}</small>{facts.length > 0 && <ul>{facts.slice(0, 4).map((fact) => <li key={fact}>{fact}</li>)}</ul>}</div>
           </div>
-        </div>
-
-        {/* What you get strip */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 24 }}>
-          <Mini title="Real meals delivered" body="Chef-built, macro-tracked, Pune-wide morning delivery." />
-          <Mini title="Auto-logged macros" body="Every meal logs to your dashboard the moment it's delivered." />
-          <Mini title="Coach-grade tracking" body="Weight, workouts, body metrics, consistency, one place." />
-        </div>
-
-        <div style={{ marginTop: 32, fontSize: 12, color: T.dim, textAlign: "center" }}>
-          Not affiliated with {view.name}? <Link href="/plans" style={{ color: T.accent }}>Browse plans without the offer →</Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function headlineFor(v: View): string {
-  switch (v.type) {
-    case "GYM":        return `Train at ${v.name}? Eat like you mean it.`;
-    case "TRAINER":    return `${v.name} eats this. So should you.`;
-    case "INFLUENCER": return `${v.name} sent you. Welcome.`;
-    case "DIETICIAN":  return `${v.name}'s recommended meal plans.`;
-    case "DOCTOR":     return `As recommended by ${v.name}.`;
-    case "CORPORATE":  return `An exclusive benefit from ${v.name}.`;
-    case "RESIDENCE":  return `A welcome offer for ${v.name} residents.`;
-    case "CUSTOMER":
-    default:          return `${v.name} thinks you'll love this.`;
-  }
-}
-
-function subFor(v: View): string {
-  if (v.type === "GYM") return "FitFuel + your training program = the actual stack that works.";
-  if (v.type === "TRAINER" || v.type === "INFLUENCER") return v.bio || "Real food, real numbers, no nonsense.";
-  if (v.type === "DIETICIAN" || v.type === "DOCTOR") return v.qualification || "Clinically-aligned meal plans, delivered.";
-  if (v.type === "CORPORATE") return "Employee wellness, done right.";
-  if (v.type === "RESIDENCE") return "Fresh meals, delivered to your gate.";
-  return "A friend who's been eating better, and wants you to too.";
-}
-
-function Hero({ view }: { view: View }) {
-  const sub = subFor(view);
-
-  // Image partner types
-  const showPhoto = !!view.profilePhotoUrl && ["TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR"].includes(view.type);
-  const showLogo = !!view.companyLogoUrl && view.type === "CORPORATE";
-
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: showPhoto || showLogo ? "120px 1fr" : "1fr", gap: 20, alignItems: "center" }}>
-      {showPhoto && (
-        <img src={view.profilePhotoUrl as string} alt={view.name}
-          style={{ width: 120, height: 120, borderRadius: 0, objectFit: "cover", border: `1px solid ${T.border}` }} />
-      )}
-      {showLogo && (
-        <img src={view.companyLogoUrl as string} alt={view.name}
-          style={{ width: 120, height: 120, borderRadius: 0, objectFit: "contain", background: "#fff", padding: 12, border: `1px solid ${T.border}` }} />
+        </section>
       )}
 
-      <div>
-        <h1 style={{ fontFamily: "var(--fk-display), Georgia, serif", fontSize: 38, fontWeight: 800, lineHeight: 1.05, margin: 0 }}>
-          {headlineFor(view)}
-        </h1>
-        <div style={{ color: T.dim, fontSize: 15, marginTop: 12, lineHeight: 1.5 }}>{sub}</div>
+      <section className={styles.stepsSection}>
+        <div className={styles.sectionHead}><p className={styles.eyebrow}>From invitation to lunch</p><h2>A short route, with the price checked before payment.</h2></div>
+        <ol>
+          <li><span><ScanLine aria-hidden="true" /></span><div><strong>Explore the menu</strong><p>Compare actual plans, dishes, meal slots and current prices.</p></div></li>
+          <li><span><ClipboardCheck aria-hidden="true" /></span><div><strong>Choose what fits</strong><p>Select the diet, duration and meal schedule you want. FitFuel checks that the kitchen menu is ready.</p></div></li>
+          <li><span><MapPin aria-hidden="true" /></span><div><strong>Confirm delivery</strong><p>Enter your Pune address, see the final server-calculated total, then choose PayU or cash on delivery where available.</p></div></li>
+        </ol>
+      </section>
 
-        {/* Type-specific meta */}
-        <div style={{ marginTop: 14, fontSize: 12, color: T.dim, display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {view.specialty && <MetaChip>{view.specialty}</MetaChip>}
-          {view.qualification && <MetaChip>{view.qualification}</MetaChip>}
-          {view.clinicName && <MetaChip>{view.clinicName}</MetaChip>}
-          {view.hospitalAffiliation && <MetaChip>{view.hospitalAffiliation}</MetaChip>}
-          {view.gymAddress && <MetaChip>{capitalize(view.gymAddress)}</MetaChip>}
-          {view.societyAddress && <MetaChip>{capitalize(view.societyAddress)}</MetaChip>}
-          {view.socialHandle && <MetaChip>{view.socialHandle}</MetaChip>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MetaChip({ children }: { children: any }) {
-  return (
-    <span style={{ background: "#070707", border: `1px solid ${T.border}`, borderRadius: 0, padding: "4px 10px", fontSize: 12, color: T.dim, letterSpacing: "0.02em" }}>
-      {children}
-    </span>
-  );
-}
-
-function capitalize(s: string) {
-  if (!s) return s;
-  return s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-
-function Mini({ title, body }: { title: string; body: string }) {
-  return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: 16 }}>
-      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{title}</div>
-      <div style={{ fontSize: 12, color: T.dim, lineHeight: 1.5 }}>{body}</div>
-    </div>
+      <section className={styles.close}>
+        <div><p className={styles.eyebrow}>Invitation code {view.code}</p><h2>Start with the food. Keep the tracking if it helps.</h2><p>Browse the plans using this verified invitation, or continue without the offer.</p></div>
+        <div className={styles.actions}><Link className={styles.primaryAction} href={`/plans?ref=${encodeURIComponent(view.code)}`}>See meal plans <ArrowRight aria-hidden="true" size={18} /></Link><Link className={styles.secondaryAction} href="/plans">Browse without this offer</Link></div>
+      </section>
+    </main>
   );
 }

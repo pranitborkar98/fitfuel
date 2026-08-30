@@ -4,6 +4,8 @@
 // Env required: MSG91_AUTH_KEY, MSG91_WHATSAPP_INTEGRATED_NUMBER
 // Optional: MSG91_WHATSAPP_NAMESPACE (only needed for some Meta tenants)
 
+import { indiaMobileE164 } from "@/lib/phone";
+
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY || "";
 const MSG91_WHATSAPP_INTEGRATED_NUMBER =
   process.env.MSG91_WHATSAPP_INTEGRATED_NUMBER || "";
@@ -75,13 +77,37 @@ export async function sendWhatsAppTemplate(
     );
   }
 
-  const json: any = await res.json().catch(() => ({}));
-  return json?.request_id || json?.data?.id || "msg91-ok";
+  const payload: unknown = await res.json().catch(() => null);
+  const requestId = providerRequestId(payload);
+  const providerError = providerErrorMessage(payload);
+  if (providerError) throw new Error(`MSG91 WhatsApp rejected the message: ${providerError}`);
+  return requestId ?? "msg91-accepted";
 }
 
 function normalizePhone(p: string): string {
-  let s = String(p || "").replace(/\D/g, "");
-  if (s.length === 10) s = "91" + s; // India default
-  if (s.length < 11) return "";
-  return s;
+  return indiaMobileE164(p) ?? "";
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function providerRequestId(payload: unknown): string | null {
+  const root = record(payload);
+  if (!root) return null;
+  if (typeof root.request_id === "string" && root.request_id) return root.request_id;
+  const data = record(root.data);
+  return typeof data?.id === "string" && data.id ? data.id : null;
+}
+
+function providerErrorMessage(payload: unknown): string | null {
+  const root = record(payload);
+  if (!root) return null;
+  const explicitlyFailed = root.success === false || root.status === false || root.type === "error";
+  if (!explicitlyFailed) return null;
+  if (typeof root.message === "string") return root.message.slice(0, 250);
+  if (typeof root.error === "string") return root.error.slice(0, 250);
+  return "Provider returned an unsuccessful response.";
 }

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "About",
   description:
     "Why we built a kitchen and an app instead of one or the other. FitFuel cooks " +
-    "condition-specific meals in an FSSAI-licensed Kharadi kitchen and tracks the " +
+    "goal-aware meals in an FSSAI-licensed Kharadi kitchen and connects the " +
     "macros for you, so intake is measured rather than self-reported.",
   alternates: { canonical: "/about" },
   openGraph: {

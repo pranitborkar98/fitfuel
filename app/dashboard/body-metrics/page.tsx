@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import BodyMetricsClient from "./BodyMetricsClient";
 
 export const metadata = {
-  title: "Body Metrics — FitFuel",
-  description: "Track your 13 body composition parameters with MEDITIVE BLE scale.",
+  title: "Body measurements — FitFuel",
+  description: "Track weight and consumer-scale body-composition estimates over time.",
 };
 
 export default async function BodyMetricsPage() {

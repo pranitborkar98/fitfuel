@@ -28,7 +28,7 @@
 // The modal also gained the three things an overlay requires and
 // it had none of: body scroll lock, focus moved in, focus restored on close.
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useId, useRef } from "react";
 import Link from "next/link";
 import { CheckCircle2, X, Shield, Truck, Star } from "lucide-react";
 
@@ -112,6 +112,8 @@ function Thumb({ supp, size }: { supp: SupplementWithLinks; size: number }) {
 
 function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   const evidence = EVIDENCE_META[supp.evidenceLevel];
 
   useEffect(() => {
@@ -121,6 +123,25 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key !== "Tab") return;
+      const focusable = Array.from(
+        modalRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((node) => node.offsetParent !== null);
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => {
@@ -142,18 +163,18 @@ function SupplementModal({ supp, onClose }: { supp: SupplementWithLinks; onClose
       className={s.backdrop}
       role="dialog"
       aria-modal="true"
-      aria-label={supp.name}
+      aria-labelledby={titleId}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className={s.modal}>
+      <div className={s.modal} ref={modalRef}>
         <div className={s.modalHead}>
           <div style={{ display: "flex", gap: 16, alignItems: "flex-start", minWidth: 0 }}>
             <Thumb supp={supp} size={64} />
             <div style={{ minWidth: 0 }}>
               <span style={label()}>{CATEGORY_META[supp.category].label}</span>
-              <h2 style={{ ...sub("clamp(1.6rem,3.4vw,2.4rem)"), margin: "10px 0 8px" }}>
+              <h2 id={titleId} style={{ ...sub("clamp(1.6rem,3.4vw,2.4rem)"), margin: "10px 0 8px" }}>
                 {supp.name}
               </h2>
               <p style={body(14.5)}>{supp.tagline}</p>
@@ -331,7 +352,7 @@ export default function SupplementsLanding({
       <Masthead
         label="Supplements"
         title="Built for your goal, not for a shelf"
-        deck="Science-backed supplements with clinical dosages, India-specific pricing, and the evidence behind each one stated plainly."
+        deck="An evidence-labelled supplement directory with study context, common label amounts and India-specific price ranges. It is guidance, not a prescription or a FitFuel product sale."
         meta={[
           { k: "Catalogued", v: String(supplements.length) },
           { k: "Categories", v: String(CATEGORIES.length - 1) },
@@ -341,8 +362,8 @@ export default function SupplementsLanding({
 
       <div className={k.readout} style={{ ["--cells" as string]: 3 }}>
         {[
-          { Icon: Shield, l: "Sourcing", v: "Lab-tested" },
-          { Icon: Truck, l: "Delivery", v: "With your meals" },
+          { Icon: Shield, l: "Evidence", v: "Tier shown" },
+          { Icon: Truck, l: "Purchase", v: "External sellers" },
           { Icon: Star, l: "Pricing", v: "India context" },
         ].map(({ Icon, l, v }) => (
           <div key={l} className={k.cell}>
@@ -389,8 +410,8 @@ export default function SupplementsLanding({
       <section style={SECTION}>
         <Wrap>
           <Head
-            label="Personalised stack"
-            title="Start from a goal"
+            label="Goal shortlist"
+            title="Start with what you are working toward"
             deck={goalMeta.description}
             size="clamp(2rem,5vw,3.6rem)"
           />
@@ -422,7 +443,7 @@ export default function SupplementsLanding({
               }
               className={k.btn}
             >
-              <span>Get my personalised stack</span>
+              <span>See my account shortlist</span>
             </Link>
             <a href="#catalogue" className={k.ghost}>
               Browse all {supplements.length}
@@ -486,8 +507,8 @@ export default function SupplementsLanding({
                 d: "Every entry carries its evidence tier and study count. Where the research is thin, the page says so rather than leaving it out.",
               },
               {
-                t: "Clinical dosages",
-                d: "The dose listed is the one the studies used, not the one that fits a claim on a tub.",
+                t: "Study-linked amounts",
+                d: "We separate amounts used in cited research from product marketing. Your clinician still decides what is appropriate for you.",
               },
               {
                 t: "India pricing",

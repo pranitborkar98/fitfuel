@@ -1,0 +1,63 @@
+.page { display: grid; gap: 20px; color: #f5f5f4; }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.header h1 { margin: 3px 0 8px; font-size: clamp(1.8rem, 4vw, 2.55rem); line-height: 1.08; letter-spacing: -0.04em; }
+.header p { max-width: 720px; margin: 0; color: #a8a29e; font-size: 0.95rem; line-height: 1.6; }
+.eyebrow { color: #a3e635 !important; font-size: 0.78rem !important; font-weight: 760; }
+.newButton, .formActions button, .cardActions button { min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #44443e; border-radius: 10px; background: #1b1b18; padding: 9px 14px; color: #deded9; font: inherit; font-size: 0.82rem; font-weight: 720; cursor: pointer; }
+.newButton, .primaryButton { border-color: #84cc16 !important; background: #84cc16 !important; color: #111608 !important; }
+.newButton:hover, .primaryButton:hover:not(:disabled) { background: #a3e635 !important; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.metrics article { min-height: 108px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; border: 1px solid #2f2f2a; border-radius: 14px; background: #131311; padding: 16px 18px; }
+.metrics span { color: #a8a29e; font-size: 0.78rem; font-weight: 650; }
+.metrics strong { margin-top: 5px; color: #f7f7f5; font-size: clamp(1.4rem, 3vw, 1.85rem); letter-spacing: -0.03em; }
+.metrics small { margin-top: 4px; color: #78716c; font-size: 0.73rem; }
+.form { display: grid; gap: 18px; border: 1px solid #405724; border-radius: 15px; background: #11130f; padding: 20px; }
+.formHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.formHeader h2 { margin: 0; font-size: 1.08rem; }
+.formHeader p { margin: 5px 0 0; color: #8f8f89; font-size: 0.8rem; line-height: 1.5; }
+.codePreview { border: 1px solid #475a27; border-radius: 9px; background: #1a2112; padding: 8px 11px; color: #d9f99d; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.8rem; font-weight: 750; }
+.formGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.formGrid label { min-width: 0; display: grid; align-content: start; gap: 7px; color: #c8c8c2; font-size: 0.77rem; font-weight: 650; }
+.formGrid input, .formGrid select { width: 100%; min-height: 46px; box-sizing: border-box; border: 1px solid #5f5f59; border-radius: 9px; background: #080807; padding: 10px 11px; color: #f5f5f4; font: inherit; font-size: 0.88rem; }
+.formGrid input::placeholder { color: #73736d; }
+.formGrid input:disabled { color: #777770; background: #151512; }
+.wideField { grid-column: span 2; }
+.checkboxField { min-height: 46px; display: flex !important; grid-auto-flow: column; align-items: center; justify-content: start; align-self: end; gap: 10px !important; border: 1px solid #33332e; border-radius: 9px; background: #151512; padding: 0 12px; }
+.checkboxField input { width: 18px; min-height: 18px; accent-color: #84cc16; }
+.formNote { margin: 0; border: 1px solid #383832; border-radius: 9px; background: #151512; padding: 10px 12px; color: #9a9a94; font-size: 0.77rem; line-height: 1.55; }
+.formActions { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-top: 1px solid #30302b; padding-top: 15px; }
+.formActions > span { color: #85857f; font-size: 0.75rem; }
+.formActions > div, .cardActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(170px, 250px); gap: 12px; border: 1px solid #2f2f2a; border-radius: 14px; background: #10100f; padding: 14px; }
+.filters label { display: grid; gap: 7px; color: #c8c8c2; font-size: 0.77rem; font-weight: 650; }
+.filters input, .filters select { width: 100%; min-height: 46px; box-sizing: border-box; border: 1px solid #5f5f59; border-radius: 9px; background: #080807; padding: 10px 12px; color: #f5f5f4; font: inherit; font-size: 0.88rem; }
+.couponList { display: grid; gap: 11px; }
+.couponCard { display: grid; grid-template-columns: minmax(170px, 0.72fr) minmax(0, 1.55fr) auto; gap: 18px; align-items: center; border: 1px solid #30302b; border-radius: 14px; background: #131311; padding: 16px; }
+.identity { min-width: 0; display: grid; gap: 7px; }
+.identity > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.identity strong { overflow-wrap: anywhere; color: #f5f5f4; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 1rem; letter-spacing: 0.01em; }
+.identity small { color: #85857f; font-size: 0.72rem; }
+.status { width: fit-content; min-height: 26px; box-sizing: border-box; display: inline-flex; align-items: center; border: 1px solid currentColor; border-radius: 999px; padding: 3px 8px; font-size: 0.69rem; font-weight: 730; }
+.statusActive { background: #18210d; color: #bef264; }
+.statusPaused { background: #232320; color: #b8b8b2; }
+.statusExpired { background: #281010; color: #fca5a5; }
+.details { min-width: 0; display: grid; gap: 10px; }
+.discount { color: #e7e5e4; font-size: 0.9rem; font-weight: 720; }
+.discount span { color: #92928c; font-weight: 500; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.facts span { min-height: 28px; box-sizing: border-box; display: inline-flex; align-items: center; border: 1px solid #31312c; border-radius: 999px; background: #0f0f0e; padding: 4px 9px; color: #9f9f99; font-size: 0.7rem; }
+.cardActions { justify-content: flex-end; }
+.cardActions button { min-width: 74px; }
+.cardActions .dangerButton { border-color: #713737; background: #2b1414; color: #fecaca; }
+.cardActions .pauseButton { border-color: #665126; background: #261e0f; color: #fde68a; }
+.success, .error { margin: 0; border-radius: 9px; padding: 10px 12px; font-size: 0.8rem; line-height: 1.5; }
+.success { border: 1px solid #527629; background: #17210d; color: #bef264; }
+.error { border: 1px solid #7f3434; background: #2d1212; color: #fecaca; }
+.loading, .empty { min-height: 150px; display: grid; place-content: center; gap: 5px; border: 1px solid #30302b; border-radius: 14px; background: #131311; color: #969690; font-size: 0.84rem; text-align: center; }
+.empty strong { color: #e7e5e4; font-size: 0.96rem; }
+.empty span { color: #85857f; font-size: 0.8rem; }
+button:disabled { cursor: not-allowed !important; opacity: 0.56; }
+.newButton:focus-visible, .formGrid input:focus-visible, .formGrid select:focus-visible, .formActions button:focus-visible, .filters input:focus-visible, .filters select:focus-visible, .cardActions button:focus-visible { outline: 3px solid rgba(163, 230, 53, 0.6); outline-offset: 2px; }
+@media (max-width: 920px) { .formGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wideField { grid-column: span 2; } .couponCard { grid-template-columns: minmax(160px, 0.65fr) minmax(0, 1.35fr); } .cardActions { grid-column: 1 / -1; justify-content: flex-start; border-top: 1px solid #30302b; padding-top: 12px; } }
+@media (max-width: 640px) { .header { align-items: flex-start; flex-direction: column; } .newButton { width: 100%; } .metrics { grid-template-columns: 1fr 1fr; } .metrics article:last-child { grid-column: 1 / -1; } .form { padding: 16px 13px; } .formHeader { flex-direction: column; } .formGrid, .filters { grid-template-columns: 1fr; } .wideField { grid-column: auto; } .formActions { align-items: stretch; flex-direction: column; } .formActions > div { display: grid; } .formActions button { width: 100%; } .couponCard { grid-template-columns: 1fr; gap: 13px; } .cardActions { grid-column: auto; display: grid; } .cardActions button { width: 100%; } }
+@media (max-width: 420px) { .metrics { grid-template-columns: 1fr; } .metrics article:last-child { grid-column: auto; } }

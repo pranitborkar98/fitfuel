@@ -55,7 +55,8 @@ export async function getWeeklyConsistency(
 
   // Active plan drives the denominators (meals delivered, workouts scheduled)
   const activePlan = await prisma.userActivePlan.findFirst({
-    where: { userId, status: "active" },
+    where: { userId, status: "active", isDigital: false, startDate: { lte: today }, endDate: { gte: weekStart } },
+    orderBy: { createdAt: "desc" },
     select: {
       startDate: true,
       mealsPerDay: true,

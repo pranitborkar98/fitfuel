@@ -1,48 +1,156 @@
-// app/api/admin/partners/route.ts
-// Phase 17A \u2014 admin CRUD for the partner system. OWNER/ADMIN only.
+// Partner/referral channel management. OWNER/ADMIN only.
 
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/admin-auth";
 import { generateUniqueReferralCode } from "@/lib/partners";
+import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import {
+  decryptPartnerSensitiveFields,
+  redactPartnerSensitiveFields,
+  SensitiveDataConfigurationError,
+} from "@/lib/sensitive-data";
+import { readJson, readQuery } from "@/lib/validation/core";
+import type { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const db = prisma as any;
+const TYPES = ["CUSTOMER", "GYM", "TRAINER", "INFLUENCER", "DIETICIAN", "DOCTOR", "CORPORATE", "RESIDENCE"] as const;
+const REWARD_TYPES = ["CREDIT", "CASH", "MEAL_VOUCHER", "DISCOUNT_ONLY", "HYBRID"] as const;
+const STATUSES = ["PENDING", "ACTIVE", "PAUSED", "REJECTED", "TERMINATED"] as const;
+const idSchema = z.string().cuid();
+const optionalText = (max: number) => z.string().trim().max(max).optional();
+const optionalUrl = z.string().trim().max(2048).refine(
+  (value) => !value || value.startsWith("/") || /^https:\/\//i.test(value),
+  "Use an HTTPS URL or an app-relative path.",
+).optional();
+const optionalEmail = z.union([z.literal(""), z.string().trim().email().max(254)]).optional();
+const optionalPhone = z.string().trim().max(20).refine(
+  (value) => !value || /^[0-9+()\-\s]+$/.test(value),
+  "Phone number contains invalid characters.",
+).optional();
 
-const VALID_TYPES = [
-  "CUSTOMER",
-  "GYM",
-  "TRAINER",
-  "INFLUENCER",
-  "DIETICIAN",
-  "DOCTOR",
-  "CORPORATE",
-  "RESIDENCE",
-];
+const editableFieldsSchema = z.object({
+  name: z.string().trim().min(1).max(160).optional(),
+  contactEmail: optionalEmail,
+  contactPhone: optionalPhone,
+  customLandingSlug: z.string().trim().max(80).refine(
+    (value) => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value),
+    "Landing slug must use lowercase letters, numbers, and hyphens.",
+  ).optional(),
+  rewardType: z.enum(REWARD_TYPES).optional(),
+  rewardValueRs: z.coerce.number().int().min(0).max(1_000_000).optional(),
+  refereeDiscountRs: z.coerce.number().int().min(0).max(100_000).optional(),
+  gymAddress: optionalText(500),
+  gymManagerName: optionalText(120),
+  bio: optionalText(2_000),
+  specialty: optionalText(200),
+  profilePhotoUrl: optionalUrl,
+  socialHandle: optionalText(120),
+  followerCount: z.union([z.literal(""), z.null(), z.coerce.number().int().min(0).max(2_000_000_000)]).optional(),
+  qualification: optionalText(300),
+  registrationNumber: optionalText(160),
+  clinicName: optionalText(240),
+  credentialDocUrl: optionalUrl,
+  hospitalAffiliation: optionalText(300),
+  companyLogoUrl: optionalUrl,
+  allowedEmailDomain: z.string().trim().toLowerCase().max(254).refine(
+    (value) => !value || /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(value),
+    "Enter a valid company email domain.",
+  ).optional(),
+  hrContactName: optionalText(160),
+  treasurerContact: optionalText(200),
+  societyAddress: optionalText(500),
+  adminNotes: optionalText(4_000),
+  internalLabel: optionalText(160),
+});
 
-const VALID_REWARD_TYPES = [
-  "CREDIT",
-  "CASH",
-  "MEAL_VOUCHER",
-  "DISCOUNT_ONLY",
-  "HYBRID",
-];
+const createSchema = z.object({
+  action: z.literal("create"),
+  data: editableFieldsSchema.extend({
+    type: z.enum(TYPES),
+    status: z.enum(STATUSES).default("ACTIVE"),
+    name: z.string().trim().min(1, "Name is required.").max(160),
+    rewardType: z.enum(REWARD_TYPES),
+    code: z.string().trim().max(64).optional().default(""),
+    ownerUserEmail: optionalEmail,
+  }),
+}).strict();
+const updateSchema = z.object({
+  action: z.literal("update"),
+  data: editableFieldsSchema.extend({ id: idSchema }),
+}).strict();
+const statusSchema = z.object({
+  action: z.literal("setStatus"),
+  data: z.object({ id: idSchema, status: z.enum(STATUSES) }).strict(),
+}).strict();
+const actionSchema = z.discriminatedUnion("action", [createSchema, updateSchema, statusSchema]);
 
-const VALID_STATUSES = ["PENDING", "ACTIVE", "PAUSED", "REJECTED", "TERMINATED"];
+const querySchema = z.object({
+  tab: z.enum(["list", "detail"]).default("list"),
+  id: idSchema.optional(),
+  type: z.enum(TYPES).optional(),
+  status: z.enum(STATUSES).optional(),
+  q: z.string().trim().min(1).max(100).optional(),
+}).strict();
+
+function nullable(value: string | undefined): string | null | undefined {
+  return value === undefined ? undefined : value || null;
+}
+
+function rewardError(rewardType: typeof REWARD_TYPES[number], rewardValueRs: number): string | null {
+  if (rewardType === "DISCOUNT_ONLY") return null;
+  return rewardValueRs < 1 ? "This reward type needs a positive reward value." : null;
+}
+
+function editablePatch(input: z.infer<typeof editableFieldsSchema>) {
+  return {
+    ...(input.name !== undefined ? { name: input.name } : {}),
+    contactEmail: nullable(input.contactEmail),
+    contactPhone: nullable(input.contactPhone),
+    customLandingSlug: nullable(input.customLandingSlug),
+    ...(input.rewardType !== undefined ? { rewardType: input.rewardType } : {}),
+    ...(input.rewardValueRs !== undefined ? { rewardValueRs: input.rewardValueRs } : {}),
+    ...(input.refereeDiscountRs !== undefined ? { refereeDiscountRs: input.refereeDiscountRs } : {}),
+    gymAddress: nullable(input.gymAddress),
+    gymManagerName: nullable(input.gymManagerName),
+    bio: nullable(input.bio),
+    specialty: nullable(input.specialty),
+    profilePhotoUrl: nullable(input.profilePhotoUrl),
+    socialHandle: nullable(input.socialHandle),
+    ...(input.followerCount !== undefined
+      ? { followerCount: input.followerCount === "" ? null : input.followerCount }
+      : {}),
+    qualification: nullable(input.qualification),
+    registrationNumber: nullable(input.registrationNumber),
+    clinicName: nullable(input.clinicName),
+    credentialDocUrl: nullable(input.credentialDocUrl),
+    hospitalAffiliation: nullable(input.hospitalAffiliation),
+    companyLogoUrl: nullable(input.companyLogoUrl),
+    allowedEmailDomain: nullable(input.allowedEmailDomain),
+    hrContactName: nullable(input.hrContactName),
+    treasurerContact: nullable(input.treasurerContact),
+    societyAddress: nullable(input.societyAddress),
+    adminNotes: nullable(input.adminNotes),
+    internalLabel: nullable(input.internalLabel),
+  };
+}
 
 export async function GET(req: NextRequest) {
-  const gate = await requireApiRole("partners");
-  if (!gate) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const admin = await requireApiRole("partners");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "read", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const { searchParams } = new URL(req.url);
-  const tab = searchParams.get("tab") || "list";
+  const parsed = readQuery(req, querySchema);
+  if (!parsed.ok) return parsed.response;
+  const query = parsed.data;
 
-  if (tab === "detail") {
-    const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    const partner = await db.partner.findUnique({
-      where: { id },
+  if (query.tab === "detail") {
+    if (!query.id) return NextResponse.json({ error: "Partner id is required." }, { status: 400 });
+    const partner = await prisma.partner.findUnique({
+      where: { id: query.id },
       include: {
         ownerUser: { select: { id: true, name: true, email: true } },
         referrals: {
@@ -56,26 +164,33 @@ export async function GET(req: NextRequest) {
         payouts: { orderBy: { periodYearMonth: "desc" }, take: 24 },
       },
     });
-    if (!partner) return NextResponse.json({ error: "not found" }, { status: 404 });
-    return NextResponse.json({ partner });
+    if (!partner) return NextResponse.json({ error: "Partner not found." }, { status: 404 });
+    try {
+      return NextResponse.json({ partner: decryptPartnerSensitiveFields(partner) });
+    } catch (error: unknown) {
+      console.error("[admin/partners] could not decrypt payout data", error);
+      return NextResponse.json(
+        { error: error instanceof SensitiveDataConfigurationError ? "Payout data is not configured." : "Payout data could not be read." },
+        { status: 503 },
+      );
+    }
   }
 
-  // list with filters
-  const type = searchParams.get("type");
-  const status = searchParams.get("status");
-  const q = searchParams.get("q");
-  const where: any = {};
-  if (type && VALID_TYPES.includes(type)) where.type = type;
-  if (status && VALID_STATUSES.includes(status)) where.status = status;
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { code: { contains: q, mode: "insensitive" } },
-      { contactEmail: { contains: q, mode: "insensitive" } },
-      { contactPhone: { contains: q } },
-    ];
-  }
-  const partners = await db.partner.findMany({
+  const where: Prisma.PartnerWhereInput = {
+    ...(query.type ? { type: query.type } : {}),
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.q
+      ? {
+          OR: [
+            { name: { contains: query.q, mode: "insensitive" } },
+            { code: { contains: query.q, mode: "insensitive" } },
+            { contactEmail: { contains: query.q, mode: "insensitive" } },
+            { contactPhone: { contains: query.q } },
+          ],
+        }
+      : {}),
+  };
+  const partners = await prisma.partner.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: 200,
@@ -84,114 +199,113 @@ export async function GET(req: NextRequest) {
       ownerUser: { select: { id: true, name: true, email: true } },
     },
   });
-  return NextResponse.json({ partners });
+  return NextResponse.json({ partners: partners.map(redactPartnerSensitiveFields) });
 }
 
 export async function POST(req: NextRequest) {
-  const gate = await requireApiRole("partners");
-  if (!gate) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const admin = await requireApiRole("partners");
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const rl = await enforceRateLimit(req, "mutation", admin.id);
+  if (!rl.ok) return rl.response;
 
-  const body = await req.json().catch(() => ({}));
-  const { action, data } = body;
+  const parsed = await readJson(req, actionSchema, { maxBytes: 64 * 1024 });
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.data;
 
-  if (action === "create") {
-    if (!data?.name || !data?.type || !data?.rewardType) {
-      return NextResponse.json({ error: "name, type, rewardType required" }, { status: 400 });
-    }
-    if (!VALID_TYPES.includes(data.type)) return NextResponse.json({ error: "invalid type" }, { status: 400 });
-    if (!VALID_REWARD_TYPES.includes(data.rewardType)) return NextResponse.json({ error: "invalid rewardType" }, { status: 400 });
+  try {
+    if (body.action === "create") {
+      const input = body.data;
+      const rewardValueRs = input.rewardType === "DISCOUNT_ONLY" ? 0 : input.rewardValueRs ?? 0;
+      const invalidReward = rewardError(input.rewardType, rewardValueRs);
+      if (invalidReward) return NextResponse.json({ error: invalidReward }, { status: 400 });
 
-    const code = data.code?.trim() || (await generateUniqueReferralCode(data.name));
+      let code = input.code.toUpperCase().replace(/\s+/g, "");
+      if (code && !/^[A-Z0-9_-]{3,64}$/.test(code)) {
+        return NextResponse.json({ error: "Partner code must be 3–64 letters, numbers, underscores, or hyphens." }, { status: 400 });
+      }
+      if (!code) code = await generateUniqueReferralCode(input.name);
 
-    // Optionally link to existing user account
-    let ownerUserId: string | null = null;
-    if (data.ownerUserEmail) {
-      const owner = await db.user.findFirst({
-        where: { email: data.ownerUserEmail },
-        select: { id: true },
+      let ownerUserId: string | null = null;
+      if (input.ownerUserEmail) {
+        const owner = await prisma.user.findFirst({
+          where: { email: { equals: input.ownerUserEmail, mode: "insensitive" } },
+          select: { id: true },
+        });
+        if (!owner) return NextResponse.json({ error: "No user account matches that email." }, { status: 400 });
+        ownerUserId = owner.id;
+      }
+
+      const patch = editablePatch(input);
+      const partner = await prisma.partner.create({
+        data: {
+          ...patch,
+          name: input.name,
+          type: input.type,
+          status: input.status,
+          ownerUserId,
+          code,
+          rewardType: input.rewardType,
+          rewardValueRs,
+          refereeDiscountRs: input.refereeDiscountRs ?? 0,
+          createdById: admin.id,
+          approvedAt: input.status === "ACTIVE" ? new Date() : null,
+          approvedById: input.status === "ACTIVE" ? admin.id : null,
+        },
       });
-      if (!owner) return NextResponse.json({ error: `No user found with email ${data.ownerUserEmail}` }, { status: 400 });
-      ownerUserId = owner.id;
+      return NextResponse.json({ ok: true, partner });
     }
 
-    const partner = await db.partner.create({
+    if (body.action === "update") {
+      const current = await prisma.partner.findUnique({
+        where: { id: body.data.id },
+        select: { id: true, rewardType: true, rewardValueRs: true, status: true },
+      });
+      if (!current) return NextResponse.json({ error: "Partner not found." }, { status: 404 });
+      if (current.status === "TERMINATED") {
+        return NextResponse.json({ error: "A terminated partner is locked." }, { status: 409 });
+      }
+      const rewardType = body.data.rewardType ?? current.rewardType;
+      const rewardValueRs = rewardType === "DISCOUNT_ONLY" ? 0 : body.data.rewardValueRs ?? current.rewardValueRs;
+      const invalidReward = rewardError(rewardType, rewardValueRs);
+      if (invalidReward) return NextResponse.json({ error: invalidReward }, { status: 400 });
+
+      const patch = editablePatch(body.data);
+      patch.rewardType = rewardType;
+      patch.rewardValueRs = rewardValueRs;
+      const updated = await prisma.partner.update({ where: { id: body.data.id }, data: patch });
+      return NextResponse.json({ ok: true, partner: updated });
+    }
+
+    const current = await prisma.partner.findUnique({
+      where: { id: body.data.id },
+      select: { status: true },
+    });
+    if (!current) return NextResponse.json({ error: "Partner not found." }, { status: 404 });
+    if (current.status === body.data.status) {
+      return NextResponse.json({ ok: true, unchanged: true });
+    }
+    const transitions: Record<typeof STATUSES[number], readonly typeof STATUSES[number][]> = {
+      PENDING: ["ACTIVE", "REJECTED", "TERMINATED"],
+      ACTIVE: ["PAUSED", "TERMINATED"],
+      PAUSED: ["ACTIVE", "TERMINATED"],
+      REJECTED: ["TERMINATED"],
+      TERMINATED: [],
+    };
+    if (!transitions[current.status].includes(body.data.status)) {
+      return NextResponse.json({ error: `Cannot move a ${current.status.toLowerCase()} partner to ${body.data.status.toLowerCase()}.` }, { status: 409 });
+    }
+    const updated = await prisma.partner.update({
+      where: { id: body.data.id },
       data: {
-        type: data.type,
-        status: data.status || "ACTIVE",
-        name: data.name,
-        contactEmail: data.contactEmail || null,
-        contactPhone: data.contactPhone || null,
-        ownerUserId,
-        code,
-        customLandingSlug: data.customLandingSlug || null,
-        rewardType: data.rewardType,
-        rewardValueRs: Number(data.rewardValueRs || 0),
-        refereeDiscountRs: Number(data.refereeDiscountRs || 0),
-        gymAddress: data.gymAddress || null,
-        gymManagerName: data.gymManagerName || null,
-        bio: data.bio || null,
-        specialty: data.specialty || null,
-        profilePhotoUrl: data.profilePhotoUrl || null,
-        socialHandle: data.socialHandle || null,
-        followerCount: data.followerCount ? Number(data.followerCount) : null,
-        qualification: data.qualification || null,
-        registrationNumber: data.registrationNumber || null,
-        clinicName: data.clinicName || null,
-        credentialDocUrl: data.credentialDocUrl || null,
-        hospitalAffiliation: data.hospitalAffiliation || null,
-        companyLogoUrl: data.companyLogoUrl || null,
-        allowedEmailDomain: data.allowedEmailDomain || null,
-        hrContactName: data.hrContactName || null,
-        treasurerContact: data.treasurerContact || null,
-        societyAddress: data.societyAddress || null,
-        adminNotes: data.adminNotes || null,
-        internalLabel: data.internalLabel || null,
-        createdById: gate.id,
-        approvedAt: data.status === "ACTIVE" ? new Date() : null,
-        approvedById: data.status === "ACTIVE" ? gate.id : null,
+        status: body.data.status,
+        ...(body.data.status === "ACTIVE" ? { approvedAt: new Date(), approvedById: admin.id } : {}),
       },
     });
-    return NextResponse.json({ ok: true, partner });
-  }
-
-  if (action === "update") {
-    if (!data?.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    const patch: any = {};
-    const editable = [
-      "name", "contactEmail", "contactPhone", "customLandingSlug",
-      "rewardType", "rewardValueRs", "refereeDiscountRs",
-      "gymAddress", "gymManagerName",
-      "bio", "specialty", "profilePhotoUrl", "socialHandle", "followerCount",
-      "qualification", "registrationNumber", "clinicName", "credentialDocUrl", "hospitalAffiliation",
-      "companyLogoUrl", "allowedEmailDomain", "hrContactName",
-      "treasurerContact", "societyAddress",
-      "adminNotes", "internalLabel",
-    ];
-    for (const f of editable) {
-      if (data[f] !== undefined) {
-        patch[f] = data[f] === "" ? null : data[f];
-      }
-    }
-    if (data.rewardValueRs !== undefined) patch.rewardValueRs = Number(data.rewardValueRs || 0);
-    if (data.refereeDiscountRs !== undefined) patch.refereeDiscountRs = Number(data.refereeDiscountRs || 0);
-    if (data.followerCount !== undefined) patch.followerCount = data.followerCount ? Number(data.followerCount) : null;
-
-    const updated = await db.partner.update({ where: { id: data.id }, data: patch });
     return NextResponse.json({ ok: true, partner: updated });
+  } catch (error: unknown) {
+    const code = typeof error === "object" && error && "code" in error ? error.code : null;
+    if (code === "P2002") return NextResponse.json({ error: "Partner code, landing slug, or linked user is already in use." }, { status: 409 });
+    console.error("[admin/partners] save failed", error);
+    return NextResponse.json({ error: "Partner operation failed." }, { status: 500 });
   }
-
-  if (action === "setStatus") {
-    if (!data?.id || !VALID_STATUSES.includes(data?.status)) {
-      return NextResponse.json({ error: "id + valid status required" }, { status: 400 });
-    }
-    const patch: any = { status: data.status };
-    if (data.status === "ACTIVE") {
-      patch.approvedAt = new Date();
-      patch.approvedById = gate.id;
-    }
-    const updated = await db.partner.update({ where: { id: data.id }, data: patch });
-    return NextResponse.json({ ok: true, partner: updated });
-  }
-
-  return NextResponse.json({ error: "unknown action" }, { status: 400 });
 }

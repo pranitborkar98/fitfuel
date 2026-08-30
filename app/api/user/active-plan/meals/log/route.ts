@@ -5,6 +5,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
 import { mealLogSchema } from "@/lib/validation/schemas";
+import { menuDayNumber, mealSlotsForMealsPerDay, todayISTDate, ymd } from "@/lib/production";
+import { servingScaleForTarget } from "@/lib/portion-personalization";
+import { isPlanServiceDate } from "@/lib/plan-service-dates";
+import type { Prisma } from "@prisma/client";
 
 // LOOP-4 (Decision #165): logging a plan meal also writes a linked FoodEntry.
 
@@ -27,7 +31,52 @@ export async function POST(req: NextRequest) {
   const parsed = await readJson(req, mealLogSchema);
   if (!parsed.ok) return parsed.response;
   const { planScheduleSlotId, dayNumber, actualGrams } = parsed.data;
-  void dayNumber;
+
+  const logDate = todayISTDate();
+
+  const activePlan = await prisma.userActivePlan.findFirst({
+    where: {
+      userId,
+      status: "active",
+      isDigital: false,
+      startDate: { lte: logDate },
+      endDate: { gte: logDate },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      mealPlanId: true,
+      mealsPerDay: true,
+      startDate: true,
+      duration: true,
+      skipDates: true,
+      calorieTarget: true,
+      mealPlan: { select: { cycleLengthDays: true, avgCaloriesPerDay: true } },
+    },
+  });
+
+  if (!activePlan) {
+    return NextResponse.json({ error: "No active physical plan for today" }, { status: 404 });
+  }
+  if (!isPlanServiceDate(activePlan.duration, logDate)) {
+    return NextResponse.json({ error: "This plan does not deliver today" }, { status: 409 });
+  }
+  if (activePlan.skipDates.some((date) => ymd(date) === ymd(logDate))) {
+    return NextResponse.json({ error: "This delivery day was skipped" }, { status: 409 });
+  }
+
+  const expectedDay = menuDayNumber(
+    activePlan.startDate,
+    logDate,
+    activePlan.mealPlan.cycleLengthDays,
+    activePlan.duration,
+  );
+  if (dayNumber !== expectedDay) {
+    return NextResponse.json(
+      { error: "Your plan day changed. Refresh before confirming this meal." },
+      { status: 409 }
+    );
+  }
 
   const slot = await prisma.planScheduleSlot.findUnique({
     where: { id: planScheduleSlotId },
@@ -50,37 +99,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Slot not found" }, { status: 404 });
   }
 
-  const activePlan = await prisma.userActivePlan.findFirst({
-    where: { userId, status: "active" },
-    select: { id: true },
-  });
-
-  if (!activePlan) {
-    return NextResponse.json({ error: "No active plan" }, { status: 404 });
+  const allowedSlots = mealSlotsForMealsPerDay(activePlan.mealsPerDay);
+  if (
+    slot.mealPlanId !== activePlan.mealPlanId ||
+    slot.dayNumber !== expectedDay ||
+    !allowedSlots.includes(slot.mealSlot)
+  ) {
+    return NextResponse.json({ error: "That meal is not in today's plan" }, { status: 403 });
   }
 
-  const logDate = new Date();
-  logDate.setUTCHours(0, 0, 0, 0);
-
-  const existing = await prisma.mealLog.findFirst({
-    where: {
-      userId,
-      userActivePlanId: activePlan.id,
-      mealSlot: slot.mealSlot,
-      logDate,
-    },
-    select: { id: true },
-  });
-
-  if (existing) {
-    return NextResponse.json(
-      { success: true, mealLogId: existing.id, alreadyLogged: true },
-      { status: 409 }
-    );
-  }
-
+  const personalScale = servingScaleForTarget({
+    calorieTarget: activePlan.calorieTarget,
+    planCalories: activePlan.mealPlan.avgCaloriesPerDay,
+  }).factor;
   const plannedGrams = Math.round(
-    (slot.recipe.servingSizeGrams ?? 300) * Number(slot.servingMultiplier)
+    (slot.recipe.servingSizeGrams ?? 300) * Number(slot.servingMultiplier) * personalScale
   );
 
   const serving = slot.recipe.servingSizeGrams > 0 ? slot.recipe.servingSizeGrams : 1;
@@ -120,39 +153,66 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
   }
+  const foodItemId = foodItem.id;
 
-  const mealLog = await prisma.$transaction(async (tx: any) => {
-    const ml = await tx.mealLog.create({
-      data: {
-        userId,
-        userActivePlanId: activePlan.id,
-        recipeId: slot.recipeId,
-        mealSlot: slot.mealSlot,
-        logDate,
-        plannedGrams,
-        actualGrams: actualGrams ?? null,
-        confirmedAt: new Date(),
-      },
-    });
+  let result: { id: string; alreadyLogged: boolean } | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        const existing = await tx.mealLog.findFirst({
+          where: {
+            userId,
+            userActivePlanId: activePlan.id,
+            mealSlot: slot.mealSlot,
+            logDate,
+          },
+          select: { id: true },
+        });
+        if (existing) return { id: existing.id, alreadyLogged: true };
 
-    await tx.foodEntry.create({
-      data: {
-        userId,
-        foodItemId: foodItem!.id,
-        mealTypeId: mealType.id,
-        entryDate: logDate,
-        quantity: gramsEaten,
-        calories: eatenCalories,
-        protein: eatenProtein,
-        carbs: eatenCarbs,
-        fat: eatenFat,
-        mealLogId: ml.id,
-        notes: `From plan: ${slot.recipe.name}`,
-      },
-    });
+        const mealLog = await tx.mealLog.create({
+          data: {
+            userId,
+            userActivePlanId: activePlan.id,
+            recipeId: slot.recipeId,
+            mealSlot: slot.mealSlot,
+            logDate,
+            plannedGrams,
+            actualGrams: actualGrams ?? null,
+            confirmedAt: new Date(),
+          },
+        });
 
-    return ml;
-  });
+        await tx.foodEntry.create({
+          data: {
+            userId,
+            foodItemId,
+            mealTypeId: mealType.id,
+            entryDate: logDate,
+            quantity: gramsEaten,
+            calories: eatenCalories,
+            protein: eatenProtein,
+            carbs: eatenCarbs,
+            fat: eatenFat,
+            mealLogId: mealLog.id,
+            notes: `From plan: ${slot.recipe.name}`,
+          },
+        });
+        return { id: mealLog.id, alreadyLogged: false };
+      }, { isolationLevel: "Serializable" });
+      break;
+    } catch (error: unknown) {
+      const code = typeof error === "object" && error !== null && "code" in error
+        ? String(error.code)
+        : null;
+      if (code === "P2034" && attempt < 2) continue;
+      throw error;
+    }
+  }
+  if (!result) throw new Error("Meal log could not be saved");
 
-  return NextResponse.json({ success: true, mealLogId: mealLog.id });
+  return NextResponse.json(
+    { success: true, mealLogId: result.id, alreadyLogged: result.alreadyLogged },
+    { status: result.alreadyLogged ? 409 : 200 },
+  );
 }

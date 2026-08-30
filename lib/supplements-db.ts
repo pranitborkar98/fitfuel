@@ -8,8 +8,10 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import type {
+  EvidenceLevel,
   SupplementGoal,
   SupplementCategory,
+  ValueRating,
 } from "@/lib/supplements-data";
 import type { DbSupplement, SupplementBuyLink } from "@/lib/supplements-types";
 
@@ -17,10 +19,52 @@ import type { DbSupplement, SupplementBuyLink } from "@/lib/supplements-types";
 export { NETWORK_LABEL } from "@/lib/supplements-types";
 export type { SupplementBuyLink, DbSupplement } from "@/lib/supplements-types";
 
-const db = prisma as any;
+function goalsBackToLower(values: readonly string[]): SupplementGoal[] {
+  return values.flatMap((value) => {
+    if (value === "MUSCLE_GAIN") return ["muscle_gain"];
+    if (value === "WEIGHT_LOSS") return ["weight_loss"];
+    if (value === "BALANCED") return ["balanced"];
+    if (value === "PERFORMANCE") return ["performance"];
+    return [];
+  });
+}
 
-function goalsBackToLower(arr: string[] | null | undefined): SupplementGoal[] {
-  return (arr || []).map((g) => g.toLowerCase() as SupplementGoal);
+function supplementCategory(value: string): SupplementCategory {
+  switch (value) {
+    case "protein": case "performance": case "recovery": case "health":
+    case "vitamins": case "minerals": case "adaptogens": case "joints":
+    case "gut": case "weight": case "hormones": case "cognitive": case "sleep":
+      return value;
+    default:
+      return "protein";
+  }
+}
+
+function evidenceLevel(value: string | null): EvidenceLevel {
+  switch (value) {
+    case "very_high": case "high": case "moderate": case "low": case "preliminary":
+      return value;
+    default:
+      return "preliminary";
+  }
+}
+
+function valueRating(value: string | null): ValueRating {
+  switch (value) {
+    case "exceptional": case "good": case "moderate": case "expensive":
+      return value;
+    default:
+      return "moderate";
+  }
+}
+
+function indiaAvailability(value: string | null): "widely_available" | "available" | "limited" | "import_only" {
+  switch (value) {
+    case "widely_available": case "available": case "limited": case "import_only":
+      return value;
+    default:
+      return "limited";
+  }
 }
 
 /**
@@ -28,7 +72,7 @@ function goalsBackToLower(arr: string[] | null | undefined): SupplementGoal[] {
  * then supplement sortOrder.
  */
 export async function getAllSupplements(): Promise<DbSupplement[]> {
-  const rows = await db.supplement.findMany({
+  const rows = await prisma.supplement.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: {
@@ -50,14 +94,14 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
 
   // Sort by category.sortOrder, then by supplement.sortOrder. Prisma can't
   // do nested orderBy across relations so we re-sort here.
-  rows.sort((a: any, b: any) => {
+  rows.sort((a, b) => {
     const ac = a.category?.sortOrder ?? 99;
     const bc = b.category?.sortOrder ?? 99;
     if (ac !== bc) return ac - bc;
     return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
   });
 
-  return rows.map((r: any) => {
+  return rows.map((r) => {
     // The static copy in supplements-data.ts was de-dashed, but
     // the same fields also live in the DB, where the old text still carries
     // em dashes. Rows are edited through the admin UI, so normalising on read
@@ -66,7 +110,8 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
     // Same heuristic as the codebase sweep: a short trailing fragment is an
     // appositive (comma), a long one is an independent clause (full stop).
     const deDash = (v: unknown): string => {
-      if (typeof v !== "string" || !v.includes("—")) return (v as string) ?? "";
+      if (typeof v !== "string") return "";
+      if (!v.includes("—")) return v;
       return v.replace(/\s*—\s*/g, (_m, off: number, whole: string) => {
         const after = whole.slice(off).replace(/^\s*—\s*/, "");
         const seg = after.split(/[.,;:!?]/)[0] ?? "";
@@ -76,7 +121,7 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
     const deDashList = (v: unknown): string[] =>
       Array.isArray(v) ? v.map((x) => deDash(x)) : [];
 
-    const links: SupplementBuyLink[] = (r.links || []).map((l: any) => ({
+    const links: SupplementBuyLink[] = r.links.map((l) => ({
       id: l.id,
       network: l.network,
       merchantLabel: l.merchantLabel,
@@ -86,11 +131,11 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       clickUrl: `/api/supplements/click/${l.id}`,
     }));
 
-    return {
+    const result: DbSupplement & { imageUrl: string | null; brandName: string | null; isFeatured: boolean } = {
       id: r.slug,
       name: r.name,
       aka: r.aka || [],
-      category: (r.category?.slug || "protein") as SupplementCategory,
+      category: supplementCategory(r.category.slug),
       tagline: deDash(r.tagline),
       description: deDash(r.description),
       mechanism: deDash(r.mechanism),
@@ -108,7 +153,7 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       sideEffects: deDashList(r.sideEffects),
       genderNotes: r.genderNotes ? deDash(r.genderNotes) : undefined,
       ageNotes: r.ageNotes ? deDash(r.ageNotes) : undefined,
-      evidenceLevel: (r.evidenceLevel || "moderate") as any,
+      evidenceLevel: evidenceLevel(r.evidenceLevel),
       studyCount: r.studyCount || "",
       keyStudyFindings: deDashList(r.keyStudyFindings),
       goals: goalsBackToLower(r.recommendedFor),
@@ -123,18 +168,19 @@ export async function getAllSupplements(): Promise<DbSupplement[]> {
       // The column stays in the database for the admin UI, which is not bound
       // by the marketing rules. Nothing on a public surface reads it.
       priceRange: r.priceRange || "",
-      valueRating: (r.valueRating || "good") as any,
+      valueRating: valueRating(r.valueRating),
       popular: !!r.popular,
       veganFriendly: !!r.veganFriendly,
       certificationNote: deDash(r.certificationNote),
       emoji: r.emoji || "\uD83D\uDC8A",
       indiaNote: r.indiaNote ? deDash(r.indiaNote) : undefined,
-      indiaAvailability: (r.indiaAvailability || "available") as any,
+      indiaAvailability: indiaAvailability(r.indiaAvailability),
       // Phase 18-1 / 18-3 additions:
       links,
       imageUrl: r.imageUrl || null,
       brandName: r.brandName || null,
       isFeatured: !!r.isFeatured,
-    } as DbSupplement & { imageUrl: string | null; brandName: string | null; isFeatured: boolean };
+    };
+    return result;
   });
 }

@@ -48,7 +48,7 @@ async function handle(req: Request) {
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   tomorrow.setUTCHours(0, 0, 0, 0);
 
-  const plans = await (prisma as any).userActivePlan.findMany({
+  const plans = await prisma.userActivePlan.findMany({
     where: {
       status: "active",
       isDigital: false,
@@ -71,6 +71,7 @@ async function handle(req: Request) {
           mealsList: mealsListHtml(day.meals),
           totalCalories: String(day.totalCalories),
         },
+        trustedHtmlVars: ["mealsList"],
       });
       if (result.email === "sent" || result.whatsapp === "sent") sent++;
       else skipped++;
