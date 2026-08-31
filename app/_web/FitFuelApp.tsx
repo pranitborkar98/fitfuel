@@ -37,16 +37,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
-import { waLink } from "@/lib/site";
 import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
 import type { PriceRow } from "@/lib/plan-tier-pricing";
-import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
+import type { Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
+import HomeExperience from "./HomeExperience";
 import { GOALS } from "./home-data";
 import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
 import { MacroSplit, dishField } from "./DishVisuals";
@@ -68,8 +68,6 @@ const I = {
   user: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
   search: "m21 21-4.35-4.35M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z",
   message: "M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z",
-  chart: "M4 19V9M10 19V5M16 19v-7M22 19H2",
-  arrow: "M7 17 17 7M8 7h9v9",
 } as const;
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
@@ -810,17 +808,6 @@ export default function FitFuelApp({
     }
   };
 
-  const planDayOne = week.filter((dish) => dish.day === 1).slice(0, 4);
-  const planDayImages: Record<string, string> = {
-    BREAKFAST: "/images/ai/recipes/maharashtrian-moong-dal-chilla-with-green.webp",
-    LUNCH: "/images/ai/recipes/chettinad-cauliflower-steak-with-black-pepper.webp",
-    SNACK: "/images/ai/recipes/rajasthani-makhana-chaat-with-tamarind-chutney.webp",
-    DINNER: "/images/ai/recipes/north-indian-palak-paneer-with-jowar.webp",
-  };
-  const whatsappOrder = waLink(
-    "Hi FitFuel! I’d like help choosing and ordering a meal or meal plan.",
-  );
-
   return (
     <div className={`fk ${s.app}`}>
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
@@ -884,109 +871,21 @@ export default function FitFuelApp({
           </div>
         </div>
 
-        <section className={r.command} aria-labelledby="home-title">
-          <div className={r.commandTop}>
-            <div className={r.commandIntro}>
-              <p className={r.commandKicker}>
-                <span aria-hidden="true" /> Your FitFuel home · Kharadi
-              </p>
-              <h1 id="home-title" className={r.commandTitle}>What do you need today?</h1>
-              <p className={r.commandDeck}>
-                Order dinner, continue a plan, log your day or ask a coach—without
-                leaving the same app.
-              </p>
-              <div className={r.commandLinks}>
-                <button type="button" onClick={() => switchMode("dishes", true)}>
-                  Browse tonight&apos;s food
-                </button>
-                <Link href="/dashboard/nutrition">Open my diary</Link>
-              </div>
-            </div>
-
-            <nav className={r.quickTools} aria-label="FitFuel tools">
-              <Link href="/dashboard/trainer" className={`${r.quickTool} ${r.aiTool}`}>
-                <span className={r.toolIcon}><Icon d={I.spark} size={22} /></span>
-                <span className={r.toolCopy}>
-                  <b>Ask FitFuel AI</b>
-                  <span>{aiConfigured ? "Online · answers from your live plan" : "Ready when your AI key is connected"}</span>
-                </span>
-                <Icon d={I.arrow} size={18} />
-              </Link>
-              <a
-                href={whatsappOrder}
-                target="_blank"
-                rel="noreferrer"
-                className={`${r.quickTool} ${r.whatsappTool}`}
-              >
-                <span className={r.toolIcon}><Icon d={I.message} size={22} /></span>
-                <span className={r.toolCopy}>
-                  <b>Order on WhatsApp</b>
-                  <span>Talk to the kitchen team</span>
-                </span>
-                <Icon d={I.arrow} size={18} />
-              </a>
-              <Link href="/dashboard/coach" className={r.quickTool}>
-                <span className={r.toolIcon}><Icon d={I.chart} size={22} /></span>
-                <span className={r.toolCopy}>
-                  <b>Weekly coach</b>
-                  <span>Trend-based check-in and changes</span>
-                </span>
-                <Icon d={I.arrow} size={18} />
-              </Link>
-              <button type="button" className={r.quickTool} onClick={() => switchMode("plans", true)}>
-                <span className={r.toolIcon}><Icon d={I.layers} size={22} /></span>
-                <span className={r.toolCopy}>
-                  <b>Find my plan</b>
-                  <span>{goalCount} goals and conditions</span>
-                </span>
-                <Icon d={I.arrow} size={18} />
-              </button>
-            </nav>
-          </div>
-
-          <ul className={r.commandFacts} aria-label="What is inside FitFuel">
-            <li><b className="fk-num">{dishes.length}</b><span>meal catalogue</span></li>
-            <li><b className="fk-num">{bandCounts.plans}</b><span>plan profiles</span></li>
-            <li><b className="fk-num">{bandCounts.exercises.toLocaleString("en-IN")}</b><span>training movements</span></li>
-            <li><b className="fk-num">{bandCounts.supplements}</b><span>supplement guides</span></li>
-          </ul>
-
-          {planDayOne.length ? (
-            <div className={r.planToday}>
-              <div className={r.planTodayHead}>
-                <span>
-                  <small>Inside a real plan · day one</small>
-                  <h2>Weight Loss Vegetarian, from breakfast to dinner</h2>
-                  <p>A complete 30-day kitchen schedule, published in the app.</p>
-                </span>
-                <Link href="/plans/weight-loss-veg">See the 30-day schedule</Link>
-              </div>
-              <ul className={r.planMealRail}>
-                {planDayOne.map((dish, index) => (
-                  <li key={`${dish.day}-${dish.slot}`} className={r.planMeal}>
-                    <div className={r.planMealImage}>
-                      <Image
-                        src={planDayImages[dish.slot]}
-                        alt={dish.name}
-                        fill
-                        priority={index === 0}
-                        sizes="(max-width: 639px) 78vw, (max-width: 1023px) 42vw, 25vw"
-                      />
-                      <span className="fk-sr-only">
-                        Illustrative AI-generated image; not a photograph of the meal as delivered.
-                      </span>
-                    </div>
-                    <span className={r.planMealMeta}>
-                      <small>{SLOT_LABEL[dish.slot] ?? dish.slot}</small>
-                      <b>{dish.name}</b>
-                      <span>{dish.kcal ? `${dish.kcal} kcal` : "Kitchen portion"}{dish.protein ? ` · ${dish.protein}g protein` : ""}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </section>
+        <HomeExperience
+          week={week}
+          goal={goal}
+          target={target}
+          numbers={numbers}
+          aiConfigured={aiConfigured}
+          planProfiles={bandCounts.plans}
+          exercises={bandCounts.exercises}
+          supplements={bandCounts.supplements}
+          onGoalChange={setGoal}
+          onOpenNumbers={() => setNumbersOpen(true)}
+          onBrowseMeals={() => switchMode("dishes", true)}
+          onBrowsePlans={() => switchMode("plans", true)}
+          onBrowseSupplements={() => switchMode("supps", true)}
+        />
 
         {/* ── Rail + content ──────────────────────────────────────────────── */}
         <div className={`${s.filters} ${r.filters}`} ref={catalogRef} id="catalog">
