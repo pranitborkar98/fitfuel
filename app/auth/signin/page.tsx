@@ -25,6 +25,7 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Wordmark from "@/components/Wordmark";
+import CustomerTabBar from "@/app/_web/CustomerTabBar";
 
 import { waLink } from "@/lib/site";
 import { Shell, Wrap, A } from "@/app/_ui/Page";
@@ -40,7 +41,7 @@ function SignInInner() {
 
   return (
     <Shell>
-      <Wrap style={{ paddingTop: "clamp(110px,15vw,180px)", paddingBottom: "clamp(60px,9vw,120px)" }}>
+      <Wrap style={{ paddingTop: "clamp(110px,15vw,180px)", paddingBottom: "clamp(100px,12vw,150px)" }}>
         {/* Flush left, in a measured column. Not a centred card on a glow. */}
         <div style={{ maxWidth: 460 }}>
           {/* One logo, from components/Wordmark. */}
@@ -135,16 +136,19 @@ function SignInInner() {
 
 export default function SignInPage() {
   return (
-    <Suspense
-      fallback={
-        <Shell>
-          <Wrap style={{ paddingTop: 180 }}>
-            <span style={label()}>Loading</span>
-          </Wrap>
-        </Shell>
-      }
-    >
-      <SignInInner />
-    </Suspense>
+    <>
+      <Suspense
+        fallback={
+          <Shell>
+            <Wrap style={{ paddingTop: 180 }}>
+              <span style={label()}>Loading</span>
+            </Wrap>
+          </Shell>
+        }
+      >
+        <SignInInner />
+      </Suspense>
+      <CustomerTabBar />
+    </>
   );
 }

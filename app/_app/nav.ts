@@ -10,14 +10,12 @@
 
 export type NavItem = {
   href: string;
-  /** Sidebar and tab label. Kept to one word where the tab bar shows it. */
+  /** Sidebar and mobile tools-menu label. */
   label: string;
   /** What the screen is for, shown in the More sheet and as the sidebar title. */
   blurb: string;
   /** lucide-react icon name, resolved in AppShell. */
   icon: IconName;
-  /** In the bottom tab bar on phones. Max five. */
-  tab?: boolean;
   /** Only rendered when the viewer owns a partner account. */
   partnerOnly?: boolean;
 };
@@ -32,17 +30,18 @@ export type NavGroup = { key: string; label: string; items: NavItem[] };
 export const NAV: NavGroup[] = [
   {
     key: "today",
-    label: "Today",
+    label: "Your day",
     items: [
-      { href: "/dashboard", label: "Today", blurb: "Your day, your meals, your targets", icon: "Zap", tab: true },
-      { href: "/dashboard/coach", label: "Coach", blurb: "The weekly review and the recalibration", icon: "Sparkles", tab: true },
+      { href: "/dashboard", label: "Today", blurb: "Your day, your meals, your targets", icon: "Zap" },
+      { href: "/dashboard/trainer", label: "AI coach", blurb: "A conversation grounded in your plan and recent data", icon: "Sparkles" },
+      { href: "/dashboard/coach", label: "Weekly review", blurb: "Your deterministic review and recalibration", icon: "TrendingUp" },
     ],
   },
   {
     key: "intake",
     label: "Intake",
     items: [
-      { href: "/dashboard/nutrition", label: "Nutrition", blurb: "Diary, water, and the food database", icon: "Utensils", tab: true },
+      { href: "/dashboard/nutrition", label: "Nutrition", blurb: "Diary, water, and the food database", icon: "Utensils" },
       { href: "/dashboard/supplements", label: "Supplements", blurb: "Researched, not stocked", icon: "Pill" },
     ],
   },
@@ -50,7 +49,7 @@ export const NAV: NavGroup[] = [
     key: "output",
     label: "Output",
     items: [
-      { href: "/dashboard/exercises", label: "Training", blurb: "Sessions, sets, and the exercise library", icon: "Dumbbell", tab: true },
+      { href: "/dashboard/exercises", label: "Training", blurb: "Sessions, sets, and the exercise library", icon: "Dumbbell" },
       { href: "/dashboard/body-metrics", label: "Body", blurb: "Weigh-ins over Bluetooth, no typing", icon: "Activity" },
       { href: "/dashboard/progress", label: "Progress", blurb: "Consistency and the trend line", icon: "TrendingUp" },
     ],
@@ -69,9 +68,6 @@ export const NAV: NavGroup[] = [
 
 /** Flat list, in sidebar order. */
 export const ALL_ITEMS: NavItem[] = NAV.flatMap((g) => g.items);
-
-/** Four direct destinations plus More: five total phone tabs. */
-export const TAB_ITEMS: NavItem[] = ALL_ITEMS.filter((i) => i.tab);
 
 /**
  * Longest-prefix match, so /dashboard/nutrition does not also light up

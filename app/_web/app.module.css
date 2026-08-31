@@ -231,80 +231,6 @@
   color: var(--fk-ink-3);
 }
 
-/* ── Bottom tabs (mobile) ───────────────────────────────────────────────── */
-.tabs {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--fk-z-sticky);
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  isolation: isolate;
-  background: var(--fk-paper);
-  border-top: 1px solid var(--fk-line);
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -10px 28px color-mix(in srgb, var(--fk-paper) 72%, transparent);
-}
-@media (min-width: 1024px) {
-  .tabs {
-    display: none;
-  }
-}
-.tab {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-width: 0;
-  min-height: 64px;
-  padding: 7px 2px 6px;
-  overflow: hidden;
-  color: var(--fk-ink-3);
-  text-decoration: none;
-  font-size: var(--fk-t-xs);
-  font-weight: 600;
-  line-height: 1.15;
-  text-align: center;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.tab > * {
-  pointer-events: none;
-}
-.tabLabel {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tabOn {
-  background: var(--fk-green-wash);
-  color: var(--fk-green-deep);
-}
-.tabOn::before {
-  position: absolute;
-  top: 0;
-  left: 22%;
-  right: 22%;
-  height: 2px;
-  border-radius: 0 0 var(--fk-r-full) var(--fk-r-full);
-  background: var(--fk-green);
-  content: "";
-}
-.tab:active {
-  background: var(--fk-warm);
-}
-.tab:focus-visible {
-  z-index: 1;
-  outline: 3px solid var(--fk-green);
-  outline-offset: -3px;
-}
-
 /* ── Filters ────────────────────────────────────────────────────────────── */
 /* The filter chips live INSIDE the sticky header, not in the content column.
     They were sticky separately at a hand-tuned `top`, which meant the offset
@@ -609,13 +535,6 @@
 .app a.railOn:hover {
   color: var(--fk-paper);
 }
-.app a.tab {
-  color: var(--fk-ink-3);
-}
-.app a.tabOn,
-.app a.tabOn:hover {
-  color: var(--fk-green-deep);
-}
 .app a.brand,
 .app a.brand:hover {
   color: var(--fk-ink);
@@ -889,10 +808,8 @@
   color: var(--fk-green);
 }
 
-/* The rail and tab entries are <button> as often as <a> now, because switching
-   the catalog is not navigation. Buttons need the anchor styling reset. */
-.app button.railLink,
-.app button.tab {
+/* The rail entries can be buttons when they switch catalogue state. */
+.app button.railLink {
   width: 100%;
   border: 0;
   background: transparent;
@@ -902,18 +819,10 @@
 .app button.railLink {
   text-align: left;
 }
-.app button.tab {
-  text-align: center;
-}
 .app button.railLink.railOn {
   background: var(--fk-green);
   color: var(--fk-on-green);
 }
-.app button.tab.tabOn {
-  background: var(--fk-green-wash);
-  color: var(--fk-green-deep);
-}
-
 /* ── A plan's day-one menu ──────────────────────────────────────────────────
    Four meals, the actual food. Where a plan has no seeded schedule the same
    list renders a labelled placeholder — dimmed and italic so it can never be

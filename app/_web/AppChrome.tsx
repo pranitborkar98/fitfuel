@@ -41,6 +41,7 @@ import { useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
+import CustomerTabBar from "./CustomerTabBar";
 import s from "./app.module.css";
 
 const I = {
@@ -74,15 +75,20 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
   );
 }
 
-/* Mirrors NAV in FitFuelApp, with the three catalog modes expressed as links
-   because mode is homepage state and this bar renders elsewhere. */
+/* Desktop rail for product pages. The mobile bar comes from CustomerTabBar so
+   it cannot drift from the homepage or dashboard again. */
 type Tab = { href: string; label: string; icon: string; match: string[] };
 
 const TABS: Tab[] = [
-  { href: "/menu", label: "Single dishes", icon: I.bowl, match: ["/menu"] },
-  { href: "/plans", label: "Meal plans", icon: I.layers, match: ["/plans"] },
-  { href: "/supplements", label: "Supplements", icon: I.spark, match: ["/supplements"] },
-  { href: "/dashboard/coach", label: "Coach", icon: I.spark, match: ["/dashboard/coach"] },
+  { href: "/?mode=dishes#catalog", label: "Meals", icon: I.bowl, match: ["/menu"] },
+  { href: "/?mode=plans#catalog", label: "Meal plans", icon: I.layers, match: ["/plans"] },
+  { href: "/?mode=supps#catalog", label: "Supplements", icon: I.spark, match: ["/supplements"] },
+  {
+    href: "/dashboard/trainer",
+    label: "AI coach",
+    icon: I.spark,
+    match: ["/dashboard/trainer", "/dashboard/coach"],
+  },
   { href: "/dashboard", label: "Your account", icon: I.user, match: ["/dashboard"] },
 ];
 
@@ -210,22 +216,7 @@ export default function AppChrome({
         <div className={s.main}>{children}</div>
       </div>
 
-      <nav className={s.tabs} aria-label="Sections">
-        {TABS.map((t, i) => {
-          const on = i === active;
-          return (
-            <Link
-              key={t.label}
-              href={t.href}
-              className={`${s.tab} ${on ? s.tabOn : ""}`}
-              aria-current={on ? "page" : undefined}
-            >
-              <Icon d={t.icon} size={22} />
-              {t.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <CustomerTabBar />
 
       {areaOpen && areaPanel ? (
         <Sheet onClose={() => setAreaOpen(false)} labelledBy="chrome-area-title">

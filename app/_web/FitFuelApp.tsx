@@ -47,6 +47,7 @@ import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
 import HomeExperience from "./HomeExperience";
+import CustomerTabBar from "./CustomerTabBar";
 import { GOALS } from "./home-data";
 import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
 import { MacroSplit, dishField } from "./DishVisuals";
@@ -101,14 +102,12 @@ type NavItem =
       kind: "mode";
       mode: "dishes" | "plans" | "supps";
       label: string;
-      mobileLabel: string;
       icon: string;
     }
   | {
       kind: "link";
       href: string;
       label: string;
-      mobileLabel: string;
       icon: string;
     };
 
@@ -117,35 +116,30 @@ const NAV: NavItem[] = [
     kind: "mode",
     mode: "dishes",
     label: "Order tonight",
-    mobileLabel: "Meals",
     icon: I.bowl,
   },
   {
     kind: "mode",
     mode: "plans",
     label: "Meal plans",
-    mobileLabel: "Plans",
     icon: I.layers,
   },
   {
     kind: "mode",
     mode: "supps",
     label: "Supplements",
-    mobileLabel: "Supplements",
     icon: I.spark,
   },
   {
     kind: "link",
     href: "/dashboard/trainer",
     label: "AI coach",
-    mobileLabel: "Coach",
     icon: I.message,
   },
   {
     kind: "link",
     href: "/dashboard",
     label: "Your account",
-    mobileLabel: "Today",
     icon: I.user,
   },
 ];
@@ -866,6 +860,20 @@ export default function FitFuelApp({
     setMode(next);
     setQuery("");
     setExpandedFor(null);
+
+    /* Keep the visible top-level destination in the URL as well as React
+       state. A refresh after switching to Plans or Supplements must reopen
+       that same catalogue, especially when returning from Coach or Today. */
+    const params = new URLSearchParams(window.location.search);
+    if (next === "dishes") params.delete("mode");
+    else params.set("mode", next);
+    const search = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `/${search ? `?${search}` : ""}${moveToCatalog ? "#catalog" : window.location.hash}`,
+    );
+
     if (moveToCatalog) {
       /* On a phone the catalogue switch lives in the fixed bottom bar while
          its result lives below the storefront deck. Changing state without
@@ -1766,34 +1774,11 @@ export default function FitFuelApp({
         </p>
       </footer>
 
-      {/* ── Bottom tabs ─────────────────────────────────────────────────── */}
-      <nav className={s.tabs} aria-label="Sections">
-        {NAV.map((n) =>
-          n.kind === "mode" ? (
-            <button
-              key={n.label}
-              type="button"
-              className={`${s.tab} ${mode === n.mode ? s.tabOn : ""}`}
-              onClick={() => switchMode(n.mode, true)}
-              aria-label={`Open ${n.label}`}
-              aria-pressed={mode === n.mode}
-            >
-              <Icon d={n.icon} size={22} />
-              <span className={s.tabLabel}>{n.mobileLabel}</span>
-            </button>
-          ) : (
-            <Link
-              key={n.label}
-              href={n.href}
-              className={s.tab}
-              aria-label={`Open ${n.label}`}
-            >
-              <Icon d={n.icon} size={22} />
-              <span className={s.tabLabel}>{n.mobileLabel}</span>
-            </Link>
-          ),
-        )}
-      </nav>
+      {/* One customer navigation survives the transition into Coach and Today. */}
+      <CustomerTabBar
+        mode={mode}
+        onCatalogSelect={(next) => switchMode(next, true)}
+      />
 
       {/* ── Order bar ───────────────────────────────────────────────────── */}
       {/* Hidden while the basket drawer is open. The bar is z-index 101 and the

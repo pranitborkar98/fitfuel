@@ -10,8 +10,9 @@
 // pattern. An application keeps its navigation on screen, so every moat the
 // backend ships is one tap away from every other.
 //
-// Sidebar at >=1024px, bottom tab bar below it, exactly one visible at a time
-// (shell.module.css owns the switch). Five tabs plus More.
+// Sidebar at >=1024px; the shared customer tab bar below it. Dashboard tools
+// live in the sidebar and the mobile All tools sheet instead of replacing the
+// customer's five top-level destinations.
 //
 // The More sheet locks body scroll, moves focus in, traps it and restores it
 // on close.
@@ -22,13 +23,15 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Zap, Utensils, Dumbbell, Activity, Sparkles, TrendingUp, Pill, Gift,
-  Briefcase, Truck, Bell, User, MoreHorizontal, X, LogOut, ShoppingBag,
+  Briefcase, Truck, Bell, User, X, LogOut, ShoppingBag,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import s from "./shell.module.css";
-import { NAV, TAB_ITEMS, activeHref, type IconName, type NavItem } from "./nav";
+import { NAV, activeHref, type IconName, type NavItem } from "./nav";
+import CustomerTabBar from "@/app/_web/CustomerTabBar";
 
 const ICONS: Record<IconName, LucideIcon> = {
   Zap, Utensils, Dumbbell, Activity, Sparkles, TrendingUp, Pill, Gift,
@@ -100,9 +103,9 @@ export default function AppShell({
     };
   }, [moreOpen]);
 
-  /* Everything not already on the tab bar, plus the partner console when the
-     viewer owns one. This is what More is for: nothing is unreachable. */
-  const moreItems = NAV.flatMap((g) => g.items).filter((i) => !i.tab && visible(i));
+  /* The customer tab bar remains top-level. Every workspace capability lives
+     here instead of replacing that bar with a second navigation system. */
+  const moreItems = NAV.flatMap((g) => g.items).filter(visible);
 
   return (
     <div className={`fk ${s.shell}`}>
@@ -164,7 +167,17 @@ export default function AppShell({
           <span className={s.mobileBrand}><Wordmark href="/dashboard" size={20} title="FitFuel dashboard" /></span>
           <span className={s.workspaceStatus}><i aria-hidden="true" /> Your FitFuel workspace</span>
           <span className={s.topbarActions}>
-            <Link href="/"><ShoppingBag size={17} aria-hidden="true" /> Order food</Link>
+            <button
+              type="button"
+              className={s.toolsButton}
+              onClick={() => setMoreOpen(true)}
+              aria-label="Open all FitFuel tools"
+              aria-expanded={moreOpen}
+              aria-haspopup="dialog"
+            >
+              <LayoutGrid size={17} strokeWidth={1.75} aria-hidden="true" />
+              <span>All tools</span>
+            </button>
             <Link href="/dashboard/profile"><User size={17} aria-hidden="true" /> Profile</Link>
           </span>
         </div>
@@ -172,33 +185,8 @@ export default function AppShell({
         <div className={s.content} id="app-main" tabIndex={-1}>{children}</div>
       </div>
 
-      {/* ── Bottom tabs, phones ──────────────────────────────────────── */}
-      <nav className={s.tabbar} aria-label="Primary">
-        {TAB_ITEMS.map((item) => {
-          const on = active === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${s.tab} ${on ? s.tabOn : ""}`}
-              aria-current={on ? "page" : undefined}
-            >
-              <Icon name={item.icon} size={19} />
-              <span className={s.tabLabel}>{item.label}</span>
-            </Link>
-          );
-        })}
-        <button
-          type="button"
-          className={`${s.tab} ${moreOpen ? s.tabOn : ""}`}
-          onClick={() => setMoreOpen(true)}
-          aria-expanded={moreOpen}
-          aria-haspopup="dialog"
-        >
-          <MoreHorizontal size={19} strokeWidth={1.75} aria-hidden="true" />
-          <span className={s.tabLabel}>More</span>
-        </button>
-      </nav>
+      {/* The same five destinations remain visible from storefront to coach. */}
+      <CustomerTabBar />
 
       {/* ── More sheet ───────────────────────────────────────────────── */}
       {moreOpen && (
@@ -217,7 +205,7 @@ export default function AppShell({
             aria-labelledby="more-h"
           >
             <div className={s.sheetHead}>
-              <h2 id="more-h">More</h2>
+              <h2 id="more-h">All tools</h2>
               <button
                 type="button"
                 className={s.sheetClose}
@@ -229,7 +217,13 @@ export default function AppShell({
             </div>
 
             {moreItems.map((item) => (
-              <Link key={item.href} href={item.href} className={s.sheetRow} onClick={close}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${s.sheetRow} ${active === item.href ? s.sheetRowOn : ""}`}
+                onClick={close}
+                aria-current={active === item.href ? "page" : undefined}
+              >
                 <Icon name={item.icon} size={18} />
                 <span className={s.sheetRowBody}>
                   <b>{item.label}</b>

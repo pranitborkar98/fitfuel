@@ -53,8 +53,9 @@
   gap: 8px;
 }
 
-.topbarActions a {
-  min-height: 42px;
+.topbarActions a,
+.toolsButton {
+  min-height: var(--fk-tap);
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -67,66 +68,16 @@
   text-decoration: none;
 }
 
-.topbarActions a:first-child {
-  color: var(--fk-on-green);
-  background: var(--fk-green);
-  border-color: var(--fk-green);
+.toolsButton {
+  font-family: inherit;
+  cursor: pointer;
 }
 
-.topbarActions a:hover {
+.topbarActions a:hover,
+.toolsButton:hover {
   color: var(--fk-ink);
   background: var(--fk-warm);
   border-color: var(--fk-line-strong);
-}
-
-.topbarActions a:first-child:hover {
-  color: var(--fk-on-green);
-  background: var(--fk-green-deep);
-  border-color: var(--fk-green-deep);
-}
-
-.tabbar {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: var(--fk-z-header);
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  padding: 5px 8px env(safe-area-inset-bottom, 0px);
-  background: rgb(10 10 9 / 96%);
-  border-top: 1px solid var(--fk-line-2);
-  backdrop-filter: blur(18px);
-}
-
-.tab {
-  min-height: 58px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 0 3px;
-  color: var(--fk-ink-3);
-  background: transparent;
-  border: 0;
-  border-radius: var(--fk-r);
-  font: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: color var(--fk-dur-fast) var(--fk-ease), background var(--fk-dur-fast) var(--fk-ease);
-}
-
-.tab:hover,
-.tabOn {
-  color: var(--fk-green-deep);
-  background: var(--fk-green-wash);
-}
-
-.tabLabel {
-  font-size: 0.64rem;
-  font-weight: 650;
-  line-height: 1;
 }
 
 .scrim {
@@ -222,6 +173,11 @@
   background: var(--fk-warm);
 }
 
+.sheetRowOn {
+  color: var(--fk-green-deep);
+  background: var(--fk-green-wash);
+}
+
 .sheetRowBody {
   min-width: 0;
   display: grid;
@@ -243,8 +199,9 @@
 .sheetSignOut { color: var(--fk-danger); }
 
 @media (max-width: 520px) {
-  .topbarActions a {
-    width: 42px;
+  .topbarActions a,
+  .toolsButton {
+    width: var(--fk-tap);
     justify-content: center;
     padding: 0;
     font-size: 0;
@@ -411,11 +368,10 @@
     box-shadow: 0 0 0 4px rgb(132 204 22 / 12%);
   }
 
-  .tabbar { display: none; }
+  .toolsButton { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sheet { animation: none; }
-  .tab,
   .navRow { transition: none; }
 }
