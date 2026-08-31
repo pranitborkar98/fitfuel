@@ -229,8 +229,8 @@ main:has(.fk) {
   font-family: var(--fk-sans);
   font-size: var(--fk-t-sm);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--fk-ink-3);
   margin: 0 0 var(--fk-s-3);
 }

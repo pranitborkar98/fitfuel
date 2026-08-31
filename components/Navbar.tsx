@@ -1,578 +1,178 @@
 "use client";
 
-// components/Navbar.tsx
-// Flagship navigation. Every surface in the product is reachable from here.
-// Structure: Plans (mega menu) / Supplements / How It Works / Results / Company (menu) / auth / CTA.
-// All plan hrefs use real DB slugs. Category links use /plans?category= (wired in PlansCatalog).
-
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Wordmark from "@/components/Wordmark";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import {
-  Menu, X, User, LogOut, LayoutDashboard, ChevronDown,
-  Flame, HeartPulse, Dumbbell, Building2, FileText, Calculator, Sparkles,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { signOut, useSession } from "next-auth/react";
+import { Bot, ChevronRight, LogOut, Menu, ShoppingBag, UserRound, X } from "lucide-react";
 
 import CartButton from "@/app/_cart/CartButton";
+import Wordmark from "@/components/Wordmark";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
+import s from "./Navbar.module.css";
 
-const LIME = "#84cc16";
+const PRIMARY = [
+  { href: "/#catalog", label: "Meals" },
+  { href: "/plans", label: "Meal plans" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/results", label: "Results" },
+  { href: "/our-kitchen", label: "Our kitchen" },
+] as const;
 
-// Category icons were previously colour-coded teal / purple / sky / amber /
-// pink. That leaked a five-hue secondary palette into the global chrome, so
-// it rendered on every page including the homepage, against
-// "lime is the only chromatic value". Icons now carry meaning by shape.
-const ICON = "var(--ff-dim)";
+const MORE = [
+  { href: "/supplements", label: "Supplements" },
+  { href: "/tdee-calculator", label: "Calculate your target" },
+  { href: "/locations", label: "Delivery areas" },
+  { href: "/testimonials", label: "Customer stories" },
+  { href: "/faq", label: "Questions" },
+] as const;
 
-// ── Menu data ────────────────────────────────────────────────────────────────
-
-const popularPlans = [
-  { label: "Weight Loss",   href: "/plans/weight-loss-veg",   note: "Sustainable deficit" },
-  { label: "Muscle Gain",   href: "/plans/muscle-gain-veg",   note: "High protein surplus" },
-  { label: "Balanced",      href: "/plans/balanced-veg",      note: "Clean maintenance fuel" },
-  { label: "Diabetic",      href: "/plans/diabetic-veg",      note: "Low GI, steady glucose" },
-  { label: "PCOS",          href: "/plans/pcos-veg",          note: "Hormone-supportive" },
-  { label: "Body Recomp",   href: "/plans/body-recomp-veg",   note: "Lose fat, keep muscle" },
-];
-
-const planCategories = [
-  { label: "All Plans",            href: "/plans",                            icon: <Flame size={14} color={LIME} />,      note: "Browse the full catalog" },
-  { label: "Medical & Lifestyle",  href: "/plans?category=LIFESTYLE_MEDICAL", icon: <HeartPulse size={14} color={ICON} />, note: "Condition-specific nutrition" },
-  { label: "Sports Nutrition",     href: "/plans?category=SPORTS",            icon: <Dumbbell size={14} color={ICON} />,   note: "Fuel for your sport" },
-  { label: "Corporate",            href: "/plans?category=CORPORATE",         icon: <Building2 size={14} color={ICON} />,  note: "Office wellness programs" },
-  { label: "Digital Plans (PDF)",  href: "/plans/digital",                    icon: <FileText size={14} color={ICON} />,   note: "Personalised plan, anywhere" },
-];
-
-const planTools = [
-  { label: "TDEE Calculator", href: "/tdee-calculator", icon: <Calculator size={14} color={ICON} />, note: "Know your daily calories, free" },
-  { label: "Find My Plan",    href: "/plans",            icon: <Sparkles size={14} color={ICON} />,   note: "Set diet, days and meals" },
-];
-
-const companyLinks = [
-  { label: "About Us",        href: "/about" },
-  { label: "Our Kitchen",     href: "/our-kitchen" },
-  { label: "Our Ingredients", href: "/our-ingredients" },
-  { label: "Our Team",        href: "/our-team" },
-  { label: "Delivery Areas",  href: "/locations" },
-  { label: "Blog",            href: "/blog" },
-  { label: "Reviews",         href: "/testimonials" },
-  { label: "FAQ",             href: "/faq" },
-  { label: "Corporate",       href: "/corporate" },
-  { label: "Partner With Us", href: "/partners" },
-  { label: "Contact",         href: "/contact" },
-];
-
-// "Menu" leads, ahead of Supplements. It is the only link here that sells a
-// single thing you can buy in one click, and until /menu existed the site had
-// no route at all for the customer who is just hungry tonight.
-const topLinks = [
-  { label: "Single Dishes", href: "/menu" },
-  { label: "Supplements",  href: "/supplements" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "Results",      href: "/results" },
-];
-
-// ── Shared bits ──────────────────────────────────────────────────────────────
-
-const itemBase: React.CSSProperties = {
-  display: "flex", alignItems: "flex-start", gap: 10,
-  padding: "9px 12px", borderRadius: 0, textDecoration: "none", transition: "background 0.15s",
-};
-
-function MenuItem({ href, label, note, icon, onNavigate }: {
-  href: string; label: string; note?: string; icon?: React.ReactNode; onNavigate: () => void;
-}) {
-  return (
-    <Link href={href} onClick={onNavigate} className="ff-menu-item" style={itemBase}>
-      {icon ? <span style={{ marginTop: 2, flexShrink: 0 }}>{icon}</span> : null}
-      <span>
-        <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "var(--ff-mute)", lineHeight: 1.35 }}>{label}</span>
-        {note ? <span style={{ display: "block", fontSize: 12, color: "var(--ff-dim)", lineHeight: 1.4, marginTop: 1 }}>{note}</span> : null}
-      </span>
-    </Link>
-  );
+function active(pathname: string, href: string) {
+  const route = href.split("#")[0] || "/";
+  return route === "/" ? pathname === "/" : pathname.startsWith(route);
 }
-
-function ColHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ fontFamily: "var(--font-mono), monospace", fontSize: 12, fontWeight: 500, color: "var(--ff-dim)", textTransform: "uppercase", letterSpacing: "0.22em", padding: "0 12px", marginBottom: 10 }}>
-      {children}
-    </div>
-  );
-}
-
-// ── Main ─────────────────────────────────────────────────────────────────────
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled]     = useState(false);
-  const [scrollPct, setScrollPct]   = useState(0);
-  const [openMenu, setOpenMenu]     = useState<"plans" | "company" | "user" | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mobilePanel = useRef<HTMLDivElement>(null);
-  const hamburger   = useRef<HTMLButtonElement>(null);
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
+  const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const { data: session, status } = useSession();
-  const isLoggedIn = status === "authenticated" && !!session?.user;
-  const user = session?.user;
+  useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
-    const onScroll = () => {
-      const sy = window.scrollY;
-      setScrolled(sy > 24);
-      const docH = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollPct(docH > 0 ? (sy / docH) * 100 : 0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Route change closes everything
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setOpenMenu(null);
-      setMobileOpen(false);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [pathname]);
-
-  // Esc closes menus
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpenMenu(null); setMobileOpen(false); } };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  // Outside click closes desktop menus
-  useEffect(() => {
-    if (!openMenu) return;
-    const close = () => setOpenMenu(null);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [openMenu]);
-
-  // The mobile menu is a full-height overlay. Without these three things it
-  // behaved as a decoration rather than a dialog: the page scrolled behind
-  // it, and keyboard/screen-reader users tabbed straight through it into the
-  // page underneath because focus never moved in.
-  useEffect(() => {
-    if (!mobileOpen) return;
-
-    // 1. Lock body scroll, compensating for the scrollbar so the page
-    //    underneath does not visibly shift when it disappears.
-    const { body } = document;
-    const prevOverflow = body.style.overflow;
-    const prevPad = body.style.paddingRight;
-    const gap = window.innerWidth - document.documentElement.clientWidth;
+    if (!open) return;
+    const body = document.body;
+    const oldOverflow = body.style.overflow;
     body.style.overflow = "hidden";
-    if (gap > 0) body.style.paddingRight = `${gap}px`;
-
-    // 2. Move focus into the panel.
-    const panel = mobilePanel.current;
-    const focusables = () =>
+    const panel = panelRef.current;
+    const selectable = () =>
       Array.from(
         panel?.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
         ) ?? [],
-      ).filter((el) => el.offsetParent !== null);
-    focusables()[0]?.focus();
+      );
+    selectable()[0]?.focus();
 
-    // 3. Trap Tab inside the panel while it is open.
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      const items = focusables();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = selectable();
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
-      const active = document.activeElement;
-      if (e.shiftKey && (active === first || !panel?.contains(active))) {
-        e.preventDefault(); last.focus();
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault(); first.focus();
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
-    document.addEventListener("keydown", onKeyDown);
-    const opener = hamburger.current;
 
+    document.addEventListener("keydown", onKey);
     return () => {
-      body.style.overflow = prevOverflow;
-      body.style.paddingRight = prevPad;
-      document.removeEventListener("keydown", onKeyDown);
-      // Return focus to the control that opened the panel.
-      opener?.focus();
+      body.style.overflow = oldOverflow;
+      document.removeEventListener("keydown", onKey);
+      triggerRef.current?.focus();
     };
-  }, [mobileOpen]);
-
-  const hoverOpen = (m: "plans" | "company") => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setOpenMenu(m);
-  };
-  const hoverClose = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setOpenMenu(null), 140);
-  };
-  const closeAll = () => { setOpenMenu(null); setMobileOpen(false); };
-
-  const dropTriggerStyle = (active: boolean): React.CSSProperties => ({
-    display: "inline-flex", alignItems: "center", gap: 5,
-    padding: "8px 13px", fontSize: 14, fontWeight: 500, borderRadius: 0,
-    color: active ? "var(--ff-ink)" : "var(--ff-mute)", background: active ? "rgba(255,255,255,0.05)" : "transparent",
-    border: "none", cursor: "pointer", transition: "color 0.2s, background 0.2s", letterSpacing: "0.01em",
-  });
-
-  const panelStyle: React.CSSProperties = {
-    position: "absolute", top: "calc(100% + 10px)",
-    background: "var(--ff-panel)", border: "1px solid var(--ff-rule)", borderRadius: 0,
-    zIndex: 100, overflow: "hidden",
-  };
+  }, [open]);
 
   return (
-    <header style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-      transition: "background 0.35s, border-color 0.35s",
-      // Transparent at rest so the hero reads full-bleed under it, solid once
-      // scrolled. NOTE: this only works because every page behind it is dark —
-      // the logo and links are white, so on a light background the whole header
-      // disappears (the "Fit" in the wordmark vanishes and only "Fuel" shows).
-      // If a light page is ever added, give it a solid bar.
-      //
-      // The scrolled state was rgba(8,8,8,0.92) under blur(16px) saturate(180%),
-      // which is frosted glass — on the reject list, and the saturate boost was
-      // pushing the lime under the bar off its own token. It is the flat page
-      // colour now, fully opaque, separated by a hairline. Cheaper to composite
-      // too: a fixed backdrop-filter repaints the strip under it every frame.
-      background: scrolled ? "var(--ff-bg)" : "transparent",
-      borderBottom: `1px solid ${scrolled ? "var(--ff-rule)" : "transparent"}`,
-    }}>
-      {/* Scroll progress. A solid lime rule: the gradient that faded it into
-          lime-light was a gradient fill on the one accent the site has. */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "var(--ff-rule)" }}>
-        <div style={{ height: "100%", width: `${scrollPct}%`, background: LIME }} />
-      </div>
+    <header className={s.header}>
+      <div className={s.inner}>
+        <Wordmark className={s.wordmark} />
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
-
-        {/* Logo */}
-        {/* minHeight 44 is the touch target, not a layout change: the bar is
-            68px tall and this is centred in it, so nothing moves on screen. */}
-        {/* components/Wordmark. Was a 36px lime square + a bolt icon + bold
-            sans, one of four logos the site carried; the mark comes off here
-            because the approved homepage design has none and a bolt on half
-            the surfaces was the inconsistency. A new logo lands in that one
-            component, not here. */}
-        <Wordmark size={22} />
-
-        {/* Desktop nav */}
-        <nav className="ff-nav-desktop" style={{ display: "flex", alignItems: "center", gap: 2 }} onClick={e => e.stopPropagation()}>
-
-          {/* Plans mega menu */}
-          <div style={{ position: "relative" }} onMouseEnter={() => hoverOpen("plans")} onMouseLeave={hoverClose}>
-            <button
-              style={dropTriggerStyle(openMenu === "plans")}
-              aria-expanded={openMenu === "plans"} aria-haspopup="true"
-              onClick={() => setOpenMenu(m => m === "plans" ? null : "plans")}
+        <nav className={s.desktopNav} aria-label="Primary navigation">
+          {PRIMARY.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={active(pathname, item.href) ? s.navActive : s.navLink}
+              aria-current={active(pathname, item.href) ? "page" : undefined}
             >
-              Meal Plans <ChevronDown size={13} style={{ transition: "transform 0.2s", transform: openMenu === "plans" ? "rotate(180deg)" : "none" }} />
-            </button>
-            <AnimatePresence>
-              {openMenu === "plans" && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.16 }}
-                  style={{ ...panelStyle, left: "50%", transform: "translateX(-50%)", width: 640, padding: 18 }}
-                >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    <div>
-                      <ColHeader>Popular plans</ColHeader>
-                      {popularPlans.map(p => <MenuItem key={p.href} {...p} onNavigate={closeAll} />)}
-                    </div>
-                    <div>
-                      <ColHeader>Browse by category</ColHeader>
-                      {planCategories.map(c => <MenuItem key={c.href} {...c} onNavigate={closeAll} />)}
-                      <div style={{ height: 1, background: "var(--ff-rule)", margin: "10px 12px" }} />
-                      <ColHeader>Free tools</ColHeader>
-                      {planTools.map(t => <MenuItem key={t.href} {...t} onNavigate={closeAll} />)}
-                    </div>
-                  </div>
-                  {/* Trial strip */}
-                  <Link href="/plans?trial=true" onClick={closeAll} className="ff-menu-item" style={{
-                    marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between",
-                    background: "rgba(132,204,22,0.06)", border: "1px solid rgba(132,204,22,0.2)",
-                    borderRadius: 0, padding: "12px 16px", textDecoration: "none",
-                  }}>
-                    <span style={{ fontSize: 13, color: "#d1d5db" }}>
-                  <b style={{ color: LIME }}>Trial day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch in your chosen window. No subscription.
-                    </span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "6px 14px", borderRadius: 0, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start Trial</span>
-                  </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {topLinks.map(link => (
-            <Link key={link.href} href={link.href} className="ff-top-link" style={{
-              padding: "8px 13px", fontSize: 14, fontWeight: 500,
-              color: pathname === link.href ? "var(--ff-ink)" : "var(--ff-mute)",
-              textDecoration: "none", borderRadius: 0, transition: "color 0.2s, background 0.2s", letterSpacing: "0.01em",
-            }}>
-              {link.label}
+              {item.label}
             </Link>
           ))}
-
-          {/* Company menu */}
-          <div style={{ position: "relative" }} onMouseEnter={() => hoverOpen("company")} onMouseLeave={hoverClose}>
-            <button
-              style={dropTriggerStyle(openMenu === "company")}
-              aria-expanded={openMenu === "company"} aria-haspopup="true"
-              onClick={() => setOpenMenu(m => m === "company" ? null : "company")}
-            >
-              Company <ChevronDown size={13} style={{ transition: "transform 0.2s", transform: openMenu === "company" ? "rotate(180deg)" : "none" }} />
-            </button>
-            <AnimatePresence>
-              {openMenu === "company" && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.16 }}
-                  style={{ ...panelStyle, right: 0, width: 420, padding: 16 }}
-                >
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 8px" }}>
-                    {companyLinks.map(l => <MenuItem key={l.href} {...l} onNavigate={closeAll} />)}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
         </nav>
 
-        {/* Desktop CTAs */}
-        <div className="ff-nav-desktop" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Renders nothing until the à la carte basket has something in it. */}
-          <CartButton />
-          {isLoggedIn ? (
-            <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => setOpenMenu(m => m === "user" ? null : "user")}
-                aria-expanded={openMenu === "user"} aria-haspopup="true"
-                className="ff-outline-btn"
-                style={{ display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "1px solid var(--ff-rule-2)", borderRadius: 0, padding: "6px 12px 6px 6px", cursor: "pointer", transition: "border-color 0.2s" }}
-              >
-                {/* Square. This was the last border-radius:50% on the site's
-                    chrome, and a circular avatar beside a square wordmark and
-                    a square button reads as a component borrowed from
-                    somewhere else. #737373 was also 4.0:1 and failed AA. */}
-                <div style={{ width: 28, height: 28, borderRadius: 0, overflow: "hidden", background: "var(--ff-panel)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {user?.image
-                    ? <span aria-hidden="true" style={{ width: "100%", height: "100%", backgroundImage: `url(${JSON.stringify(user.image)})`, backgroundPosition: "center", backgroundSize: "cover" }} />
-                    : <User size={14} color="var(--ff-dim)" />}
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ff-ink)", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {user?.name?.split(" ")[0] ?? "Account"}
-                </span>
-              </button>
-              <AnimatePresence>
-                {openMenu === "user" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                    transition={{ duration: 0.15 }}
-                    /* The drop shadow is gone: hairlines do the structural
-                       work, and a 40px black bloom under a menu is the depth
-                       this system does not fake. */
-                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "var(--ff-panel)", border: "1px solid var(--ff-rule)", borderRadius: 0, padding: 8, minWidth: 190, zIndex: 100 }}
-                  >
-                    <MenuItem href="/dashboard"         label="Dashboard"    icon={<LayoutDashboard size={14} color="var(--ff-mute)" />} onNavigate={closeAll} />
-                    <MenuItem href="/dashboard/profile" label="Edit Profile" icon={<User size={14} color="var(--ff-mute)" />}            onNavigate={closeAll} />
-                    <div style={{ height: 1, background: "var(--ff-rule)", margin: "6px 0" }} />
-                    <button
-                      onClick={() => { closeAll(); signOut({ callbackUrl: "/" }); }}
-                      className="ff-signout"
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "transparent", border: "none", cursor: "pointer", padding: "9px 12px", borderRadius: 0, fontSize: 13, fontWeight: 500, color: "var(--ff-mute)", transition: "background 0.15s, color 0.15s", textAlign: "left" }}
-                    >
-                      <LogOut size={14} /> Sign Out
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <Link href="/auth/signin" className="ff-outline-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", textDecoration: "none", padding: "8px 18px", borderRadius: 0, border: "1px solid var(--ff-rule-2)", background: "transparent", transition: "color 0.2s, border-color 0.2s", letterSpacing: "0.01em" }}>
-              Sign In
-            </Link>
-          )}
-          <Link href="/plans" className="ff-cta-btn" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", padding: "9px 20px", borderRadius: 0, background: LIME, letterSpacing: "0.06em", textTransform: "uppercase", transition: "background 0.2s linear, color 0.2s linear" }}>
-            Order Now
+        <div className={s.actions}>
+          <Link href="/dashboard/trainer" className={s.coach}>
+            <Bot size={18} aria-hidden="true" />
+            <span>AI coach</span>
           </Link>
-        </div>
-
-        {/* Basket + hamburger, phone only. The basket sits OUTSIDE the
-            hamburger deliberately: an order in progress is not navigation, and
-            burying it one tap deep is how a full cart gets forgotten. */}
-        <div className="ff-nav-mobile" style={{ display: "none", alignItems: "center", gap: 8 }}>
+          <Link
+            href={session?.user ? "/dashboard" : "/auth/signin"}
+            className={s.account}
+            aria-label={session?.user ? "Open your FitFuel account" : "Sign in to FitFuel"}
+          >
+            <UserRound size={18} aria-hidden="true" />
+          </Link>
           <CartButton />
+          <Link href="/plans?trial=true" className={s.trial}>
+            Trial · {TRIAL_TOTAL_LABEL}
+          </Link>
+          <button
+            ref={triggerRef}
+            type="button"
+            className={s.menuButton}
+            onClick={() => setOpen(true)}
+            aria-expanded={open}
+            aria-haspopup="dialog"
+            aria-label="Open navigation"
+          >
+            <Menu size={21} aria-hidden="true" />
+          </button>
         </div>
-
-        {/* Hamburger */}
-        <button
-          ref={hamburger}
-          onClick={() => setMobileOpen(o => !o)}
-          className="ff-nav-mobile ff-outline-btn"
-          style={{ background: "none", border: "1px solid var(--ff-rule-2)", cursor: "pointer", padding: 10, minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center", color: "var(--ff-mute)", borderRadius: 0, display: "none", transition: "border-color 0.2s, color 0.2s" }}
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          aria-expanded={mobileOpen}
-          aria-controls="ff-mobile-menu"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div key={mobileOpen ? "close" : "open"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-            </motion.div>
-          </AnimatePresence>
-        </button>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            ref={mobilePanel}
-            id="ff-mobile-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Site menu"
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            style={{ overflow: "hidden", background: "var(--ff-bg)", borderBottom: "1px solid var(--ff-rule)", maxHeight: "calc(100dvh - 68px)", overflowY: "auto" }}
-          >
-            <div style={{ padding: "14px 24px 28px" }}>
-
-              {/* Trial strip: was desktop-only, so the cheapest offer on the
-                  site was invisible to the majority of traffic. */}
-              <Link href="/plans?trial=true" onClick={closeAll} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                background: "rgba(132,204,22,0.06)", border: "1px solid rgba(132,204,22,0.2)",
-                padding: "12px 14px", textDecoration: "none", marginBottom: 14, minHeight: 44,
-              }}>
-                <span style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.4 }}>
-                  <b style={{ color: LIME }}>Trial Day, {TRIAL_TOTAL_LABEL}.</b> Breakfast plus lunch, no lock-in.
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: "#000", background: LIME, padding: "7px 12px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Start</span>
-              </Link>
-
-              {/* `popularPlans` used to render on desktop hover only, so the
-                  six highest-intent links on the site did not exist in the
-                  mobile nav at all. Opened by default: two taps to reach a
-                  plan was one tap too many on the primary traffic source. */}
-              <MobileSection title="Meal Plans" defaultOpen>
-                {popularPlans.map(p => <MobileLink key={p.href} href={p.href} label={p.label} note={p.note} onNavigate={closeAll} />)}
-                <MobileDivider />
-                {planCategories.map(c => <MobileLink key={c.href} href={c.href} label={c.label} onNavigate={closeAll} />)}
-                {planTools.map(t => <MobileLink key={t.href} href={t.href} label={t.label} onNavigate={closeAll} />)}
-              </MobileSection>
-
-              <MobileSection title="Explore">
-                {topLinks.map(l => <MobileLink key={l.href} href={l.href} label={l.label} onNavigate={closeAll} />)}
-              </MobileSection>
-
-              <MobileSection title="Company">
-                {companyLinks.map(l => <MobileLink key={l.href} href={l.href} label={l.label} onNavigate={closeAll} />)}
-              </MobileSection>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 16, borderTop: "1px solid var(--ff-rule)", marginTop: 8 }}>
-                {isLoggedIn ? (
-                  <>
-                    <MobileButtonLink href="/dashboard" onNavigate={closeAll} icon={<LayoutDashboard size={14} />} label="Dashboard" />
-                    <MobileButtonLink href="/dashboard/profile" onNavigate={closeAll} icon={<User size={14} />} label="Edit Profile" />
-                    <button
-                      onClick={() => { closeAll(); signOut({ callbackUrl: "/" }); }}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, fontSize: 14, fontWeight: 600, color: "var(--ff-mute)", background: "transparent", border: "1px solid var(--ff-rule-2)", borderRadius: 0, cursor: "pointer" }}
-                    >
-                      <LogOut size={14} /> Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <MobileButtonLink href="/auth/signin" onNavigate={closeAll} label="Sign In" />
-                )}
-                <Link href="/plans" onClick={closeAll} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 11, fontSize: 13, fontWeight: 800, color: "#000", textDecoration: "none", borderRadius: 0, background: LIME, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                  Order Now
-                </Link>
+      {open ? (
+        <div className={s.mobileLayer}>
+          <button type="button" className={s.scrim} onClick={() => setOpen(false)} aria-label="Close navigation" />
+          <div ref={panelRef} className={s.mobilePanel} role="dialog" aria-modal="true" aria-labelledby="mobile-nav-title">
+            <div className={s.mobileHead}>
+              <div>
+                <span id="mobile-nav-title">FitFuel</span>
+                <small>Food, targets and coaching in one place</small>
               </div>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close navigation">
+                <X size={22} aria-hidden="true" />
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      <style>{`
-        .ff-menu-item:hover, .ff-top-link:hover { background: rgba(255,255,255,0.05); }
-        .ff-top-link:hover { color: var(--ff-ink) !important; }
-        .ff-outline-btn:hover { border-color: var(--ff-rule-2) !important; color: var(--ff-ink) !important; }
-        /* Inverts to ink instead of lifting on lime-light. The translate was
-           the only transform on the site's chrome, and lime-light is reserved
-           for a single live value, not a hover state. */
-        .ff-cta-btn:hover { background: var(--ff-ink) !important; }
-        /* Sign out is the one destructive action in the chrome, so it keeps a
-           warning colour. #fca5a5 on the tint clears AA; the tint itself is
-           the only non-lime value allowed anywhere, and it means "this ends
-           your session" rather than decorating anything. */
-        .ff-signout:hover { background: rgba(239,68,68,0.08); color: #fca5a5 !important; }
-        a:focus-visible, button:focus-visible { outline: 2px solid ${LIME}; outline-offset: 2px; border-radius: 0; }
-        @media (max-width: 1020px) {
-          .ff-nav-desktop { display: none !important; }
-          .ff-nav-mobile  { display: flex !important; }
-        }
-        @media (min-width: 1021px) {
-          .ff-nav-mobile { display: none !important; }
-        }
-      `}</style>
+            <Link href="/#catalog" className={s.mobileOrder}>
+              <span><ShoppingBag size={20} aria-hidden="true" />Order a meal</span>
+              <ChevronRight size={18} aria-hidden="true" />
+            </Link>
+
+            <nav className={s.mobileNav} aria-label="Mobile navigation">
+              <p>Explore FitFuel</p>
+              {PRIMARY.slice(1).map((item) => (
+                <Link key={item.href} href={item.href}>{item.label}<ChevronRight size={17} aria-hidden="true" /></Link>
+              ))}
+              {MORE.map((item) => (
+                <Link key={item.href} href={item.href}>{item.label}<ChevronRight size={17} aria-hidden="true" /></Link>
+              ))}
+            </nav>
+
+            <div className={s.mobileActions}>
+              <Link href="/dashboard/trainer"><Bot size={18} aria-hidden="true" /> Ask the AI coach</Link>
+              <Link href={session?.user ? "/dashboard" : "/auth/signin"}>
+                <UserRound size={18} aria-hidden="true" />{session?.user ? "Your FitFuel" : "Sign in"}
+              </Link>
+              {session?.user ? (
+                <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>
+                  <LogOut size={18} aria-hidden="true" /> Sign out
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </header>
-  );
-}
-
-// ── Mobile primitives ────────────────────────────────────────────────────────
-
-function MobileSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div style={{ borderBottom: "1px solid #161616" }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
-        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "none", cursor: "pointer", padding: "14px 4px", minHeight: 48, fontSize: 15, fontWeight: 600, color: "var(--ff-ink)" }}
-      >
-        {title}
-        <ChevronDown size={15} color="var(--ff-dim)" style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: "hidden" }}>
-            <div style={{ paddingBottom: 10 }}>{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function MobileDivider() {
-  return <div style={{ height: 1, background: "var(--ff-rule)", margin: "10px 14px" }} />;
-}
-
-function MobileLink({ href, label, note, onNavigate }: { href: string; label: string; note?: string; onNavigate: () => void }) {
-  return (
-    // 44px min-height: these were 38px, under the touch-target guideline.
-    <Link href={href} onClick={onNavigate} className="ff-menu-item" style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "10px 14px", minHeight: 44, fontSize: 14, color: "var(--ff-mute)", textDecoration: "none", borderRadius: 0 }}>
-      {label}
-      {note ? <span style={{ fontSize: 12, color: "var(--ff-dim)", marginTop: 2 }}>{note}</span> : null}
-    </Link>
-  );
-}
-
-function MobileButtonLink({ href, label, icon, onNavigate }: { href: string; label: string; icon?: React.ReactNode; onNavigate: () => void }) {
-  return (
-    <Link href={href} onClick={onNavigate} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 11, minHeight: 44, fontSize: 14, fontWeight: 600, color: "var(--ff-ink)", textDecoration: "none", borderRadius: 0, border: "1px solid var(--ff-rule-2)" }}>
-      {icon}{label}
-    </Link>
   );
 }

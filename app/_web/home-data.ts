@@ -41,8 +41,8 @@ export const DAY_STEPS: DayStep[] = [
     at: "06:30",
     label: "Cooked to the sheet",
     line: "Every portion goes on a scale against your macros, not an eyeballed ladle.",
-    img: "/images/ai/story/precision-kitchen.webp",
-    alt: "A kitchen team portioning fresh Indian meals on a digital scale",
+    img: "/images/brand/meals-weighed-in-kitchen.webp",
+    alt: "Illustration of an Indian meal being portioned on a kitchen scale",
   },
   {
     at: "07:30",
@@ -86,7 +86,7 @@ export const TRIO: Trio[] = [
     label: "For offices",
     blurb:
       "One hot lunch a day at the desk, personalised by goal and diet, trays labelled per person.",
-    img: "/images/corporate.jpg",
+    img: "/images/brand/weekday-lunch.webp",
   },
   {
     href: "/partners",

@@ -21,7 +21,7 @@ import {
   resolveStack, getSupplementById,
   type Supplement, type SupplementGoal, type SupplementCategory, type QuizAnswers,
 } from "@/lib/supplements-data";
-import { C, COND, SANS, section, body, label, num, PANEL } from "@/app/_app/theme";
+import { C, SANS, section, body, label, num, PANEL } from "@/app/_app/theme";
 import Dialog from "@/app/_app/Dialog";
 
 /** Reads the FitnessGoal enum UserProfile actually stores, and still accepts a
@@ -184,7 +184,7 @@ function Detail({ supp, onClose }: { supp: Supplement; onClose: () => void }) {
           style={{
             flex: "none", minWidth: 44, minHeight: 44, background: "transparent",
             border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
-            fontFamily: COND, fontWeight: 800, fontSize: 14, textTransform: "uppercase",
+            borderRadius: "var(--fk-r)", fontFamily: SANS, fontWeight: 700, fontSize: 14,
           }}
         >
           Close
@@ -291,7 +291,7 @@ function Quiz({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => void; o
             style={{
               minWidth: 44, minHeight: 44, background: "transparent",
               border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
-              fontFamily: COND, fontWeight: 800, fontSize: 14, textTransform: "uppercase",
+              borderRadius: "var(--fk-r)", fontFamily: SANS, fontWeight: 700, fontSize: 14,
             }}
           >
             Close
@@ -335,8 +335,7 @@ function Quiz({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => void; o
               style={{
                 minHeight: 44, padding: "0 16px", background: "transparent",
                 border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
-                fontFamily: COND, fontWeight: 800, fontSize: 14,
-                letterSpacing: "0.06em", textTransform: "uppercase",
+                borderRadius: "var(--fk-r)", fontFamily: SANS, fontWeight: 700, fontSize: 14,
               }}
             >
               Back
@@ -352,8 +351,7 @@ function Quiz({ onComplete, onClose }: { onComplete: (a: QuizAnswers) => void; o
               border: `1px solid ${chosen === undefined ? C.rule2 : C.lime}`,
               color: chosen === undefined ? C.dim : C.onLime,
               cursor: chosen === undefined ? "default" : "pointer",
-              fontFamily: COND, fontWeight: 900, fontSize: 15,
-              letterSpacing: "0.06em", textTransform: "uppercase",
+              borderRadius: "var(--fk-r)", fontFamily: SANS, fontWeight: 750, fontSize: 15,
             }}
           >
             {last ? "Build my stack" : "Continue"}
@@ -406,8 +404,7 @@ export default function SupplementsClient({ userGoal }: { userGoal: string | nul
             style={{
               flex: "none", minHeight: 44, padding: "0 16px", background: "transparent",
               border: `1px solid ${C.rule2}`, color: C.ink, cursor: "pointer",
-              fontFamily: COND, fontWeight: 800, fontSize: 14,
-              letterSpacing: "0.06em", textTransform: "uppercase",
+              borderRadius: "var(--fk-r)", fontFamily: SANS, fontWeight: 700, fontSize: 14,
             }}
           >
             {quizAnswers ? "Retake quiz" : "Take quiz"}

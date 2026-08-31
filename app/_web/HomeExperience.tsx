@@ -110,7 +110,7 @@ export default function HomeExperience({
   const proof = quotes[0];
 
   return (
-    <main className={x.home} id="main-content" aria-labelledby="home-title">
+    <div className={x.home} id="main-content" aria-labelledby="home-title">
       <section className={x.hero} aria-label="FitFuel daily food app">
         <div className={x.heroCopy}>
           <p className={x.eyebrow} suppressHydrationWarning>
@@ -312,6 +312,6 @@ export default function HomeExperience({
           </Link>
         </aside>
       ) : null}
-    </main>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, BadgeCheck, ChefHat, ChevronDown, Clock3, Info } from "lucide-react";
 import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { decomposePrice } from "@/lib/pricing-decomposition";
@@ -70,6 +71,13 @@ const categoryLabels: Record<PlanRow["category"], string> = {
   LIFESTYLE_MEDICAL: "Condition support",
   SPORTS: "Sports nutrition",
 };
+
+const PLAN_FOOD = [
+  "/images/ai/recipes/maharashtrian-moong-dal-chilla-with-green.webp",
+  "/images/ai/recipes/chettinad-cauliflower-steak-with-black-pepper.webp",
+  "/images/ai/recipes/rajasthani-makhana-chaat-with-tamarind-chutney.webp",
+  "/images/ai/recipes/north-indian-palak-paneer-with-jowar.webp",
+] as const;
 
 const money = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
@@ -292,7 +300,7 @@ export default function PlansNarrowed({
 
           <div className={styles.planLayout}>
             <div className={styles.planGrid} role="radiogroup" aria-label="Choose a meal plan">
-              {shownPlans.map((plan) => {
+              {shownPlans.map((plan, index) => {
                 const active = selectedPlan?.slug === plan.slug;
                 const canOrder = orderable(plan);
                 return (
@@ -304,14 +312,26 @@ export default function PlansNarrowed({
                       onClick={() => setSelectedSlug(plan.slug)}
                       className={styles.planChoice}
                     >
-                      <span className={canOrder ? styles.available : styles.preparing}>
-                        {canOrder ? <BadgeCheck size={15} /> : <Clock3 size={15} />}
-                        {canOrder ? "Kitchen-ready" : "Menu in preparation"}
+                      <span className={styles.planPhoto}>
+                        <Image
+                          src={PLAN_FOOD[index % PLAN_FOOD.length]}
+                          alt=""
+                          fill
+                          sizes="(max-width: 680px) 100vw, (max-width: 1180px) 50vw, 340px"
+                        />
+                        <span className={styles.photoShade} aria-hidden="true" />
+                        <small>Illustrative menu preview</small>
                       </span>
-                      <span className={styles.category}>{categoryLabels[plan.category]}</span>
-                      <strong>{conceptName(plan)}</strong>
-                      <span className={styles.tagline}>{plan.tagline}</span>
-                      <span className={styles.macros}>{plan.kcal.toLocaleString("en-IN")} kcal · {plan.protein}g protein</span>
+                      <span className={styles.planCopy}>
+                        <span className={canOrder ? styles.available : styles.preparing}>
+                          {canOrder ? <BadgeCheck size={15} /> : <Clock3 size={15} />}
+                          {canOrder ? "Kitchen-ready" : "Menu in preparation"}
+                        </span>
+                        <span className={styles.category}>{categoryLabels[plan.category]}</span>
+                        <strong>{conceptName(plan)}</strong>
+                        <span className={styles.tagline}>{plan.tagline}</span>
+                        <span className={styles.macros}>{plan.kcal.toLocaleString("en-IN")} kcal · {plan.protein}g protein</span>
+                      </span>
                     </button>
                     <Link href={`/plans/${plan.slug}`}>Read plan details <ArrowRight size={15} /></Link>
                   </article>

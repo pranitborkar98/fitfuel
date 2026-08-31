@@ -1080,8 +1080,8 @@ function CtaBand({
         </div>
         <span className={s.closeShot}>
           <Image
-            src="/images/hero-bowl.jpg"
-            alt="A FitFuel plate, cooked and weighed this morning in Kharadi"
+            src="/images/brand/weekly-meal-delivery.webp"
+            alt="Illustration of a weekly Indian meal delivery with four prepared meals"
             fill
             sizes="(min-width: 900px) 320px, 60vw"
             style={{ objectFit: "cover" }}

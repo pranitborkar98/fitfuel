@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Target, Zap, Heart, CheckCircle2,
   ChevronRight, ChevronLeft,
@@ -230,76 +229,76 @@ export default function OnboardingClient({ userName }: Props) {
   const s = {
     wrap: {
       minHeight: '100vh',
-      background: '#070707',
+      background: 'radial-gradient(circle at 50% -10%, rgba(132,204,22,0.10), transparent 28rem), var(--fk-paper)',
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px 16px',
+      padding: 'clamp(20px, 5vw, 56px) 16px',
       fontFamily: 'inherit',
     },
     card: {
       width: '100%',
-      maxWidth: 560,
-      background: '#101010',
-      border: '1px solid #232320',
-      borderRadius: 0,
+      maxWidth: 680,
+      background: 'var(--fk-surface)',
+      border: '1px solid var(--fk-line-2)',
+      borderRadius: 'var(--fk-r-lg)',
       overflow: 'hidden',
+      boxShadow: 'var(--fk-shadow-2)',
     },
     progressBar: {
       height: 3,
-      background: '#1a1a1a',
+      background: 'var(--fk-trough)',
     },
     progressFill: {
       height: '100%',
-      background: 'linear-gradient(90deg, #84cc16, #84cc16)',
+      background: 'var(--fk-green)',
       width: `${((step + 1) / 5) * 100}%`,
       transition: 'width 0.4s ease',
     },
     header: {
-      padding: '28px 32px 0',
+      padding: 'clamp(24px, 5vw, 38px) clamp(20px, 5vw, 42px) 0',
     },
     stepLabel: {
-      fontSize: 12,
-      fontWeight: 600,
-      letterSpacing: '0.12em',
-      color: '#84cc16',
-      textTransform: 'uppercase' as const,
+      fontSize: 13,
+      fontWeight: 700,
+      color: 'var(--fk-green)',
       marginBottom: 8,
     },
     title: {
-      fontSize: 26,
-      fontWeight: 700,
-      color: '#ffffff',
+      fontSize: 'clamp(28px, 6vw, 42px)',
+      fontWeight: 580,
+      color: 'var(--fk-ink)',
       fontFamily: "var(--fk-display), Georgia, serif",
-      lineHeight: 1.2,
+      letterSpacing: '-0.045em',
+      lineHeight: 1.05,
       margin: 0,
     },
     subtitle: {
       fontSize: 14,
-      color: '#666',
-      marginTop: 6,
+      color: 'var(--fk-ink-2)',
+      lineHeight: 1.55,
+      marginTop: 10,
     },
     body: {
-      padding: '24px 32px 32px',
+      padding: '28px clamp(20px, 5vw, 42px) clamp(24px, 5vw, 42px)',
     },
     label: {
-      fontSize: 12,
-      fontWeight: 600,
-      color: '#888',
-      letterSpacing: '0.08em',
-      textTransform: 'uppercase' as const,
+      fontSize: 13,
+      fontWeight: 650,
+      color: 'var(--fk-ink-2)',
       marginBottom: 8,
       display: 'block',
     },
     input: {
       width: '100%',
-      background: '#161616',
-      border: '1px solid #2a2a2a',
-      borderRadius: 0,
+      minHeight: 48,
+      background: 'var(--fk-paper)',
+      border: '1px solid var(--fk-line-strong)',
+      borderRadius: 'var(--fk-r)',
       padding: '12px 16px',
-      fontSize: 15,
-      color: '#fff',
+      fontSize: 16,
+      color: 'var(--fk-ink)',
       outline: 'none',
       boxSizing: 'border-box' as const,
       transition: 'border-color 0.2s',
@@ -315,21 +314,23 @@ export default function OnboardingClient({ userName }: Props) {
       gap: 10,
     },
     optBtn: (active: boolean) => ({
+      minHeight: 48,
       padding: '14px 12px',
-      background: active ? 'rgba(163,230,53,0.12)' : '#161616',
-      border: `1.5px solid ${active ? '#84cc16' : '#2a2a2a'}`,
-      borderRadius: 0,
+      background: active ? 'var(--fk-green-wash)' : 'var(--fk-paper)',
+      border: `1.5px solid ${active ? 'var(--fk-green)' : 'var(--fk-line-2)'}`,
+      borderRadius: 'var(--fk-r)',
       cursor: 'pointer',
       textAlign: 'center' as const,
       transition: 'all 0.15s',
-      color: active ? '#84cc16' : '#888',
+      color: active ? 'var(--fk-green)' : 'var(--fk-ink-2)',
     }),
     optBtnFull: (active: boolean) => ({
       width: '100%',
+      minHeight: 58,
       padding: '14px 16px',
-      background: active ? 'rgba(163,230,53,0.08)' : '#161616',
-      border: `1.5px solid ${active ? '#84cc16' : '#222'}`,
-      borderRadius: 0,
+      background: active ? 'var(--fk-green-wash)' : 'var(--fk-paper)',
+      border: `1.5px solid ${active ? 'var(--fk-green)' : 'var(--fk-line-2)'}`,
+      borderRadius: 'var(--fk-r)',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -340,13 +341,14 @@ export default function OnboardingClient({ userName }: Props) {
     }),
     nextBtn: (disabled: boolean) => ({
       width: '100%',
-      padding: '15px',
-      background: disabled ? '#1a1a1a' : 'linear-gradient(135deg, #84cc16, #84cc16)',
+      minHeight: 52,
+      padding: '0 18px',
+      background: disabled ? 'var(--fk-trough)' : 'var(--fk-green)',
       border: 'none',
-      borderRadius: 0,
+      borderRadius: 'var(--fk-r)',
       fontSize: 15,
       fontWeight: 700,
-      color: disabled ? '#85857e' : '#070707',
+      color: disabled ? 'var(--fk-ink-3)' : 'var(--fk-on-green)',
       cursor: disabled ? 'not-allowed' : 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -354,12 +356,13 @@ export default function OnboardingClient({ userName }: Props) {
       gap: 8,
       marginTop: 24,
       transition: 'all 0.2s',
-      fontFamily: "var(--fk-display), Georgia, serif",
+      fontFamily: 'var(--fk-sans)',
     }),
     backBtn: {
+      minHeight: 44,
       background: 'none',
       border: 'none',
-      color: '#555',
+      color: 'var(--fk-ink-2)',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -369,29 +372,28 @@ export default function OnboardingClient({ userName }: Props) {
       marginBottom: 4,
     },
     statBox: {
-      background: '#161616',
-      border: '1px solid #222',
-      borderRadius: 0,
+      background: 'var(--fk-paper)',
+      border: '1px solid var(--fk-line-2)',
+      borderRadius: 'var(--fk-r)',
       padding: '20px 24px',
       textAlign: 'center' as const,
     },
     statNum: {
       fontSize: 36,
-      fontWeight: 800,
-      color: '#84cc16',
-      fontFamily: "var(--fk-display), Georgia, serif",
+      fontWeight: 700,
+      color: 'var(--fk-green)',
+      fontFamily: 'var(--fk-sans)',
       lineHeight: 1,
     },
     statLabel: {
       fontSize: 12,
-      color: '#666',
+      color: 'var(--fk-ink-3)',
       marginTop: 4,
-      letterSpacing: '0.06em',
     },
     errorBox: {
       background: 'rgba(239,68,68,0.1)',
       border: '1px solid rgba(239,68,68,0.3)',
-      borderRadius: 0,
+      borderRadius: 'var(--fk-r)',
       padding: '12px 16px',
       color: '#f87171',
       fontSize: 13,
@@ -403,19 +405,19 @@ export default function OnboardingClient({ userName }: Props) {
     <>
       <div style={s.wrap}>
         {/* Step indicators */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24, alignItems: 'center' }} aria-label={`Step ${step + 1} of 5`}>
           {STEPS.map((st, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
-                width: 32, height: 32, borderRadius: 0,
-                background: i === step ? '#84cc16' : i < step ? 'rgba(163,230,53,0.2)' : '#161616',
-                border: `1.5px solid ${i <= step ? '#84cc16' : '#2a2a2a'}`,
+                width: 34, height: 34, borderRadius: 'var(--fk-r)',
+                background: i === step ? 'var(--fk-green)' : i < step ? 'var(--fk-green-wash)' : 'var(--fk-surface)',
+                border: `1.5px solid ${i <= step ? 'var(--fk-green)' : 'var(--fk-line-2)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.3s',
               }}>
-                <st.icon size={14} color={i === step ? '#070707' : i < step ? '#84cc16' : '#85857e'} />
+                <st.icon size={15} color={i === step ? 'var(--fk-on-green)' : i < step ? 'var(--fk-green)' : 'var(--fk-ink-3)'} />
               </div>
-              {i < 4 && <div style={{ width: 20, height: 1, background: i < step ? '#84cc16' : '#222' }} />}
+              {i < 4 && <div style={{ width: 20, height: 1, background: i < step ? 'var(--fk-green)' : 'var(--fk-line-2)' }} />}
             </div>
           ))}
         </div>
@@ -428,7 +430,7 @@ export default function OnboardingClient({ userName }: Props) {
 
           <div style={s.header}>
             {step > 0 && (
-              <button style={s.backBtn} onClick={() => setStep(s => s - 1)}>
+              <button type="button" style={s.backBtn} onClick={() => setStep(s => s - 1)}>
                 <ChevronLeft size={14} /> Back
               </button>
             )}
@@ -441,7 +443,7 @@ export default function OnboardingClient({ userName }: Props) {
               {step === 4 && 'Your personalised plan'}
             </h1>
             <p style={s.subtitle}>
-              {step === 0 && 'We use this to calculate your exact calorie needs.'}
+              {step === 0 && 'We use this to estimate your daily energy needs.'}
               {step === 1 && 'This determines your calorie target and plan assignment.'}
               {step === 2 && 'Activity level and diet preference shape your daily menu.'}
               {step === 3 && 'Medical conditions get their own specialised plan.'}
@@ -450,21 +452,15 @@ export default function OnboardingClient({ userName }: Props) {
           </div>
 
           <div style={s.body}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
+            <div key={step}>
                 {/* ── STEP 0: Body ── */}
                 {step === 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div style={s.grid2}>
                       <div>
-                        <label style={s.label}>Weight (kg)</label>
+                        <label htmlFor="onboarding-weight" style={s.label}>Weight (kg)</label>
                         <input
+                          id="onboarding-weight"
                           style={s.input}
                           type="number"
                           placeholder="72"
@@ -473,8 +469,9 @@ export default function OnboardingClient({ userName }: Props) {
                         />
                       </div>
                       <div>
-                        <label style={s.label}>Height (cm)</label>
+                        <label htmlFor="onboarding-height" style={s.label}>Height (cm)</label>
                         <input
+                          id="onboarding-height"
                           style={s.input}
                           type="number"
                           placeholder="170"
@@ -485,8 +482,9 @@ export default function OnboardingClient({ userName }: Props) {
                     </div>
                     <div style={s.grid2}>
                       <div>
-                        <label style={s.label}>Age</label>
+                        <label htmlFor="onboarding-age" style={s.label}>Age</label>
                         <input
+                          id="onboarding-age"
                           style={s.input}
                           type="number"
                           placeholder="28"
@@ -495,8 +493,9 @@ export default function OnboardingClient({ userName }: Props) {
                         />
                       </div>
                       <div>
-                        <label style={s.label}>Target Weight (kg), optional</label>
+                        <label htmlFor="onboarding-target" style={s.label}>Target weight (kg), optional</label>
                         <input
+                          id="onboarding-target"
                           style={s.input}
                           type="number"
                           placeholder="65"
@@ -511,13 +510,12 @@ export default function OnboardingClient({ userName }: Props) {
                         {(['male', 'female', 'other'] as const).map(g => (
                           <button
                             key={g}
+                            type="button"
+                            aria-pressed={form.gender === g}
                             style={s.optBtn(form.gender === g)}
                             onClick={() => set('gender', g)}
                           >
-                            <div style={{ fontSize: 20, marginBottom: 4 }}>
-                              {g === 'male' ? '♂️' : g === 'female' ? '♀️' : '⚧'}
-                            </div>
-                            <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'capitalize' }}>{g}</div>
+                            <div style={{ fontSize: 14, fontWeight: 650, textTransform: 'capitalize' }}>{g}</div>
                           </button>
                         ))}
                       </div>
@@ -531,14 +529,16 @@ export default function OnboardingClient({ userName }: Props) {
                     {GOALS.map(g => (
                       <button
                         key={g.value}
+                        type="button"
+                        aria-pressed={form.goal === g.value}
                         style={s.optBtnFull(form.goal === g.value)}
                         onClick={() => set('goal', g.value)}
                       >
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: form.goal === g.value ? '#84cc16' : '#ddd' }}>
+                          <div style={{ fontSize: 14, fontWeight: 650, color: form.goal === g.value ? 'var(--fk-green)' : 'var(--fk-ink)' }}>
                             {g.label}
                           </div>
-                          <div style={{ fontSize: 12, color: '#555', marginTop: 2 }}>{g.desc}</div>
+                          <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 2 }}>{g.desc}</div>
                         </div>
                       </button>
                     ))}
@@ -554,24 +554,26 @@ export default function OnboardingClient({ userName }: Props) {
                         {ACTIVITY_LEVELS.map(a => (
                           <button
                             key={a.value}
+                            type="button"
+                            aria-pressed={form.activityLevel === a.value}
                             style={s.optBtnFull(form.activityLevel === a.value)}
                             onClick={() => set('activityLevel', a.value)}
                           >
                             <div style={{
-                              width: 36, height: 36, borderRadius: 0,
-                              background: form.activityLevel === a.value ? 'rgba(163,230,53,0.2)' : '#1a1a1a',
+                              width: 36, height: 36, borderRadius: 'var(--fk-r)',
+                              background: form.activityLevel === a.value ? 'var(--fk-green-wash)' : 'var(--fk-trough)',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               flexShrink: 0,
                             }}>
                               <Activity size={16} color={form.activityLevel === a.value ? '#84cc16' : '#85857e'} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: form.activityLevel === a.value ? '#84cc16' : '#ddd' }}>
+                              <div style={{ fontSize: 14, fontWeight: 650, color: form.activityLevel === a.value ? 'var(--fk-green)' : 'var(--fk-ink)' }}>
                                 {a.label}
                               </div>
-                              <div style={{ fontSize: 12, color: '#555', marginTop: 1 }}>{a.desc}</div>
+                              <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 1 }}>{a.desc}</div>
                             </div>
-                            <div style={{ fontSize: 12, color: '#85857e', fontFamily: "var(--fk-display), Georgia, serif" }}>{a.multiplier}</div>
+                            <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', fontVariantNumeric: 'tabular-nums' }}>{a.multiplier}</div>
                           </button>
                         ))}
                       </div>
@@ -582,6 +584,8 @@ export default function OnboardingClient({ userName }: Props) {
                         {DIETS.map(d => (
                           <button
                             key={d.value}
+                            type="button"
+                            aria-pressed={form.dietaryPreference === d.value}
                             style={{
                               ...s.optBtn(form.dietaryPreference === d.value),
                               padding: '12px 16px',
@@ -611,6 +615,8 @@ export default function OnboardingClient({ userName }: Props) {
                         {CONDITIONS.map(c => (
                           <button
                             key={c.value}
+                            type="button"
+                            aria-pressed={form.healthConditions.includes(c.value)}
                             style={{
                               ...s.optBtn(form.healthConditions.includes(c.value)),
                               display: 'flex',
@@ -632,6 +638,8 @@ export default function OnboardingClient({ userName }: Props) {
                         {ALLERGIES.map(a => (
                           <button
                             key={a.value}
+                            type="button"
+                            aria-pressed={form.allergies.includes(a.value)}
                             style={{
                               ...s.optBtn(form.allergies.includes(a.value)),
                               padding: '10px 16px',
@@ -655,33 +663,33 @@ export default function OnboardingClient({ userName }: Props) {
                     <div style={s.grid2}>
                       <div style={s.statBox}>
                         <div style={s.statNum}>{tdee.toLocaleString()}</div>
-                        <div style={s.statLabel}>YOUR TDEE</div>
-                        <div style={{ fontSize: 12, color: '#85857e', marginTop: 4 }}>calories/day to maintain</div>
+                        <div style={s.statLabel}>Estimated maintenance</div>
+                        <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 4 }}>kcal a day</div>
                       </div>
                       <div style={{ ...s.statBox, border: '1.5px solid #84cc16', background: 'rgba(163,230,53,0.05)' }}>
                         <div style={s.statNum}>{calorieTarget.toLocaleString()}</div>
-                        <div style={{ ...s.statLabel, color: '#84cc16' }}>YOUR TARGET</div>
-                        <div style={{ fontSize: 12, color: '#85857e', marginTop: 4 }}>personalised to your goal</div>
+                        <div style={{ ...s.statLabel, color: 'var(--fk-green)' }}>Starting target</div>
+                        <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 4 }}>personalised to your goal</div>
                       </div>
                     </div>
 
                     {/* Macro preview */}
-                    <div style={{ background: '#161616', border: '1px solid #222', borderRadius: 0, padding: 20 }}>
-                      <div style={{ fontSize: 12, color: '#555', marginBottom: 12, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
-                        Daily Macro Targets
+                    <div style={{ background: 'var(--fk-paper)', border: '1px solid var(--fk-line-2)', borderRadius: 'var(--fk-r)', padding: 20 }}>
+                      <div style={{ fontSize: 13, color: 'var(--fk-ink-2)', fontWeight: 650, marginBottom: 12 }}>
+                        Daily macro targets
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>
                         {[
                           // was #60a5fa (blue), the last off-palette hue on a public surface
-                          { label: 'Protein', value: Math.round((calorieTarget * 0.30) / 4), unit: 'g', color: '#84cc16' },
-                          { label: 'Carbs',   value: Math.round((calorieTarget * 0.43) / 4), unit: 'g', color: '#f59e0b' },
-                          { label: 'Fat',     value: Math.round((calorieTarget * 0.27) / 9), unit: 'g', color: '#f87171' },
+                          { label: 'Protein', value: Math.round((calorieTarget * 0.30) / 4), unit: 'g', color: 'var(--fk-green)' },
+                          { label: 'Carbs',   value: Math.round((calorieTarget * 0.43) / 4), unit: 'g', color: 'var(--fk-ink)' },
+                          { label: 'Fat',     value: Math.round((calorieTarget * 0.27) / 9), unit: 'g', color: 'var(--fk-ink-2)' },
                         ].map(m => (
                           <div key={m.label} style={{ flex: 1, textAlign: 'center' as const }}>
                             <div style={{ fontSize: 22, fontWeight: 700, color: m.color, fontFamily: "var(--fk-display), Georgia, serif" }}>
                               {m.value}{m.unit}
                             </div>
-                            <div style={{ fontSize: 12, color: '#555', marginTop: 2 }}>{m.label}</div>
+                            <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 2 }}>{m.label}</div>
                           </div>
                         ))}
                       </div>
@@ -691,22 +699,22 @@ export default function OnboardingClient({ userName }: Props) {
                     <div style={{
                       background: 'rgba(163,230,53,0.06)',
                       border: '1px solid rgba(163,230,53,0.2)',
-                      borderRadius: 0,
+                      borderRadius: 'var(--fk-r)',
                       padding: '16px 20px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 12,
                     }}>
                       <div style={{
-                        width: 40, height: 40, borderRadius: 0,
+                        width: 40, height: 40, borderRadius: 'var(--fk-r)',
                         background: 'rgba(163,230,53,0.15)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <Apple size={20} color="#84cc16" />
                       </div>
                       <div>
-                        <div style={{ fontSize: 12, color: '#666', marginBottom: 3 }}>YOUR ASSIGNED PLAN</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: "var(--fk-display), Georgia, serif" }}>
+                        <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginBottom: 3 }}>Recommended starting plan</div>
+                        <div style={{ fontSize: 16, fontWeight: 650, color: 'var(--fk-ink)', fontFamily: "var(--fk-display), Georgia, serif" }}>
                           {/* Will be confirmed by server — show best guess */}
                           {form.goal === 'weight_loss' || form.goal === 'aggressive_weight_loss'
                             ? 'Weight Loss Plan'
@@ -715,8 +723,8 @@ export default function OnboardingClient({ userName }: Props) {
                             : 'Balanced Nutrition Plan'
                           }
                         </div>
-                        <div style={{ fontSize: 12, color: '#555', marginTop: 2 }}>
-                          30-day rotating menu · {calorieTarget.toLocaleString()} kcal/day
+                        <div style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 2 }}>
+                          30-day rotating menu · around {calorieTarget.toLocaleString()} kcal/day
                         </div>
                       </div>
                     </div>
@@ -725,6 +733,7 @@ export default function OnboardingClient({ userName }: Props) {
 
                     {/* Complete button */}
                     <button
+                      type="button"
                       style={s.nextBtn(loading)}
                       onClick={handleSubmit}
                       disabled={loading}
@@ -733,7 +742,7 @@ export default function OnboardingClient({ userName }: Props) {
                         <>
                           <span style={{
                             width: 16, height: 16, border: '2px solid #070707',
-                            borderTop: '2px solid transparent', borderRadius: 0,
+                            borderTop: '2px solid transparent', borderRadius: '50%',
                             display: 'inline-block', animation: 'spin 0.8s linear infinite',
                           }} />
                           Setting up your plan...
@@ -745,7 +754,7 @@ export default function OnboardingClient({ userName }: Props) {
                       )}
                     </button>
 
-                    <p style={{ fontSize: 12, color: '#85857e', textAlign: 'center' as const, margin: 0 }}>
+                    <p style={{ fontSize: 12, color: 'var(--fk-ink-3)', textAlign: 'center' as const, margin: 0 }}>
                       {result?.requiresOrder
                         ? 'Your targets are saved. Complete your order to activate meals.'
                         : 'You can update these details anytime from your profile.'
@@ -757,6 +766,7 @@ export default function OnboardingClient({ userName }: Props) {
                 {/* Next button (steps 0-3) */}
                 {step < 4 && (
                   <button
+                    type="button"
                     style={s.nextBtn(!canProceed())}
                     onClick={handleNext}
                     disabled={!canProceed()}
@@ -764,13 +774,12 @@ export default function OnboardingClient({ userName }: Props) {
                     Continue <ChevronRight size={18} />
                   </button>
                 )}
-              </motion.div>
-            </AnimatePresence>
+              </div>
           </div>
         </div>
 
         {/* Footer */}
-        <p style={{ fontSize: 12, color: '#333', marginTop: 20, textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: 'var(--fk-ink-3)', marginTop: 20, textAlign: 'center' }}>
           FitFuel · FSSAI 21523035002815 · Pune
         </p>
       </div>

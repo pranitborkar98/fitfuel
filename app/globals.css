@@ -16,19 +16,22 @@
      Everything below this block is LEGACY, still referenced by older
      interior pages; migrate them to --ff-* over time.
      ═══════════════════════════════════════════════════════════════ */
-  --ff-bg:         #070707;
-  --ff-panel:      #050504;  /* recessed band, darker not lighter */
-  --ff-panel-2:    #0c0c0a;  /* hover / raised row */
-  --ff-ink:        #f7f7f5;  /* 19.0:1 on --ff-bg */
-  --ff-mute:       #9a9a94;  /*  7.1:1 on --ff-bg  (AA, AAA for large) */
-  --ff-dim:        #85857e;  /*  5.4:1 on --ff-bg  (AA at small sizes) */
-  --ff-rule:       #232320;
-  --ff-rule-2:     #33332f;
-  --ff-lime:       #84cc16;
-  --ff-lime-light: #a3e635;
-  --ff-radius:     0px;      /* square corners are the house style */
-  --ff-cond:       var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
-  --ff-body:       var(--font-archivo), sans-serif;
+  /* Compatibility names now resolve to the live Kitchen tokens. Keeping the
+     aliases lets older routes migrate without retaining a second visual
+     system. New work still uses --fk-* directly. */
+  --ff-bg:         var(--fk-paper);
+  --ff-panel:      var(--fk-surface);
+  --ff-panel-2:    var(--fk-warm);
+  --ff-ink:        var(--fk-ink);
+  --ff-mute:       var(--fk-ink-2);
+  --ff-dim:        var(--fk-ink-3);
+  --ff-rule:       var(--fk-line);
+  --ff-rule-2:     var(--fk-line-2);
+  --ff-lime:       var(--fk-green);
+  --ff-lime-light: var(--fk-green-deep);
+  --ff-radius:     var(--fk-r);
+  --ff-cond:       var(--fk-display);
+  --ff-body:       var(--fk-sans);
 
   /* ── LEGACY ALIASES ──────────────────────────────────────────────────
      Older interior pages reference these names directly. They are now
@@ -83,27 +86,9 @@ main {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Square-corner reset (marketing surfaces only) ─────────────────────
-   The house style is radius 0. Roughly 28 public pages predate that rule
-   and hard-code radii inline (999px pills, 16px cards, 6px chips), which
-   inline styles would normally win against. This flattens them at the
-   source instead of hand-editing every file, and is scoped by ChromeGate
-   to marketing pages so the denser /dashboard and /admin UIs are untouched.
-   `.ff-round` is the escape hatch for things that must stay circular
-   (avatars, the one radio dot).
-   ──────────────────────────────────────────────────────────────────── */
-/* The radius ban belonged to the rejected system: "a hard ban on any corner
-   radius" is named in AGENTS.md as one of the rules that produced a screen
-   reading as a trading terminal. It stays for now ONLY because ~27 legacy
-   pages were laid out expecting it, and removing it globally would round
-   corners on surfaces nobody has re-checked.
-   The `.fk` exemption is what lets the new system opt out. Without it this
-   !important rule silently flattens every card and button on the storefront,
-   which is exactly the kind of invisible survival that kept the old look
-   alive through two full homepage rebuilds. */
-main[data-surface="marketing"] :not(.ff-round):not(.ff-round *):not(.fk):not(.fk *) {
-  border-radius: 0 !important;
-}
+/* The old global radius ban is intentionally gone. Component-level radius is
+   now part of the live 4/8/14px scale, so a legacy page can no longer flatten
+   a modern card or control through an !important selector. */
 .ff-round { border-radius: 50% !important; }
 
 /* Minimum readable type on marketing pages. Several interior pages set
@@ -131,33 +116,33 @@ main[data-surface="marketing"] {
 }
 
 /* ── Typography ──
-   Display is Barlow Condensed 800/900 UPPERCASE, flush left, tight leading.
-   These four classes are the shared display ramp; every public page heading
-   should end up here or on the .ff-display helper below. */
+   Shared display type is editorial and sentence case. The compatibility
+   classes remain because older routes use them, but their voice is no longer
+   a condensed terminal readout. */
 .heading-xl,
 .heading-lg,
 .heading-md,
 .heading-sm,
 .ff-display {
   font-family: var(--ff-cond);
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
+  text-transform: none;
+  letter-spacing: -0.025em;
   color: var(--ff-ink);
   margin: 0;
 }
 
-.heading-xl { font-size: clamp(2.6rem, 7.5vw, 6.4rem); font-weight: 900; line-height: 0.86; }
-.heading-lg { font-size: clamp(2.2rem, 6vw, 4.6rem);   font-weight: 900; line-height: 0.88; }
-.heading-md { font-size: clamp(1.7rem, 3.4vw, 2.6rem); font-weight: 800; line-height: 0.92; }
-.heading-sm { font-size: clamp(1.35rem, 2.2vw, 1.85rem); font-weight: 800; line-height: 1;  }
+.heading-xl { font-size: clamp(2.6rem, 7vw, 5.5rem); font-weight: 560; line-height: 0.98; }
+.heading-lg { font-size: clamp(2.2rem, 5.5vw, 4.4rem); font-weight: 560; line-height: 1; }
+.heading-md { font-size: clamp(1.7rem, 3.4vw, 2.7rem); font-weight: 580; line-height: 1.06; }
+.heading-sm { font-size: clamp(1.35rem, 2.2vw, 1.9rem); font-weight: 600; line-height: 1.12; }
 
 /* Small uppercase label. Replaces the Space Mono eyebrow across the site. */
 .ff-tag {
-  font-family: var(--ff-cond);
-  font-weight: 700;
-  font-size: 12.5px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
+  font-family: var(--ff-body);
+  font-weight: 650;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--ff-dim);
 }
 

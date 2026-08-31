@@ -149,10 +149,10 @@ function ConfirmationInner() {
                       style={{
                         display: "block",
                         fontFamily: "var(--fk-display), Georgia, serif",
-                        fontWeight: 800,
+                        fontWeight: 620,
                         fontSize: 17,
                         letterSpacing: "-0.01em",
-                        textTransform: "uppercase",
+                        textTransform: "none",
                         color: INK,
                       }}
                     >

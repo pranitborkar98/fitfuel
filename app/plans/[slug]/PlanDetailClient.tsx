@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { AlertTriangle, ArrowRight, Check, ChefHat, ClipboardCheck, Scale, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -82,6 +83,12 @@ const SLOT_LABEL: Record<Slot["mealSlot"], string> = {
 };
 
 const money = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
+
+const PLAN_HERO: Record<string, string> = {
+  STANDARD: "/images/ai/recipes/maharashtrian-moong-dal-chilla-with-green.webp",
+  LIFESTYLE_MEDICAL: "/images/ai/recipes/north-indian-palak-paneer-with-jowar.webp",
+  SPORTS: "/images/ai/recipes/chettinad-cauliflower-steak-with-black-pepper.webp",
+};
 
 function safeImageUrl(value: string | null | undefined) {
   if (!value) return null;
@@ -197,11 +204,23 @@ export default function PlanDetailClient({ plan, schedule, prices, isReady }: Pr
             </div>
           </div>
 
-          <aside className={styles.factCard} aria-label="Plan nutrition overview">
-            <div><strong>{Math.round(plan.avgCaloriesPerDay).toLocaleString("en-IN")}</strong><span>kcal each day</span></div>
-            <div><strong>{Math.round(plan.avgProteinGrams)}g</strong><span>protein each day</span></div>
-            <div><strong>{plan.mealsPerDay}</strong><span>meal slots available</span></div>
-            <div><strong>{plan.cycleLengthDays}</strong><span>days in the menu cycle</span></div>
+          <aside className={styles.heroVisual} aria-label="Plan nutrition overview">
+            <div className={styles.heroPhoto}>
+              <Image
+                src={PLAN_HERO[plan.category] ?? PLAN_HERO.STANDARD}
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 760px) 100vw, 42vw"
+              />
+              <span>Illustrative menu photography</span>
+            </div>
+            <div className={styles.factCard}>
+              <div><strong>{Math.round(plan.avgCaloriesPerDay).toLocaleString("en-IN")}</strong><span>kcal each day</span></div>
+              <div><strong>{Math.round(plan.avgProteinGrams)}g</strong><span>protein each day</span></div>
+              <div><strong>{plan.mealsPerDay}</strong><span>meal slots available</span></div>
+              <div><strong>{plan.cycleLengthDays}</strong><span>days in the menu cycle</span></div>
+            </div>
           </aside>
         </div>
       </section>

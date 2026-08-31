@@ -81,11 +81,43 @@
 }
 .secondaryButton { border-color: var(--fk-line-strong); background: transparent; color: var(--fk-ink-2); }
 
+.heroVisual {
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.heroPhoto {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--fk-line-2);
+  background: var(--fk-warm);
+}
+
+.heroPhoto img { object-fit: cover; }
+
+.heroPhoto::after {
+  content: "";
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 78%));
+}
+
+.heroPhoto > span {
+  position: absolute;
+  z-index: 1;
+  right: 14px;
+  bottom: 12px;
+  color: var(--fk-ink-2);
+  font-size: 11px;
+  font-weight: 650;
+}
+
 .factCard {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r-lg);
   overflow: hidden;
   background: var(--fk-surface);
 }

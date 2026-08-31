@@ -1305,12 +1305,12 @@ function HistoryTab({ history, loading }: { history: HistoryRow[]; loading: bool
                 {/* Expanded detail panel */}
                 {isOpen && (
                   <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 18px", background: T.bg }}>
-                    <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>All recorded metrics</p>
+                    <p style={{ fontSize: 13, color: T.textMuted, fontWeight: 650, marginBottom: 12 }}>All recorded metrics</p>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
                       {expandedStats.map(s => (
                         <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 0, padding: "12px 14px" }}>
-                          <p style={{ fontSize: 12, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
-                          <p style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-mono), ui-monospace, monospace", fontVariantNumeric: "tabular-nums", color: s.color, lineHeight: 1 }}>
+                          <p style={{ fontSize: 12, color: T.textMuted, fontWeight: 600, marginBottom: 4 }}>{s.label}</p>
+                          <p style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--fk-sans), sans-serif", fontVariantNumeric: "tabular-nums", color: s.color, lineHeight: 1 }}>
                             {s.value != null ? Number(s.value).toFixed(s.unit === "kcal" ? 0 : 1) : "Not measured"}
                             {s.value != null && (
                               <span style={{ fontSize: 12, fontWeight: 500, color: T.textMuted, marginLeft: 3 }}>{s.unit}</span>

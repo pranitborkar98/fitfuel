@@ -399,6 +399,9 @@ export default function DashboardClient({
   const energyProgress = target > 0
     ? Math.max(0, Math.min(100, ((eaten - burned) / target) * 100))
     : 0;
+  const nextMeal = meals.find((meal) => !loggedSlots.has(meal.slotId)) ?? meals[0];
+  const dayImage = cssImage(nextMeal?.recipe?.imageUrl)
+    ?? 'url("/images/brand/weekly-meal-delivery.webp")';
   const setsLabel = (e: WorkoutExerciseView) =>
     e.durationSecs != null
       ? `${e.sets} x ${e.durationSecs >= 60 ? `${Math.round(e.durationSecs / 60)} min` : `${e.durationSecs}s`}`
@@ -460,12 +463,29 @@ export default function DashboardClient({
             ) : null}
           </p>
         </div>
-        <dl className={s.supportingStats}>
-          <div className={s.supportingStat}><dt>Eaten</dt><dd>{n0(eaten)}</dd></div>
-          <div className={s.supportingStat}><dt>Burned</dt><dd>{n0(burned)}</dd></div>
-          <div className={s.supportingStat}><dt>Daily target</dt><dd>{n0(target)}</dd></div>
-          <div className={s.supportingStat}><dt>Meals logged</dt><dd>{loggedSlots.size}/{meals.length || 4}</dd></div>
-        </dl>
+        <div className={s.daySide}>
+          <div
+            className={s.dayPhoto}
+            role="img"
+            aria-label={nextMeal?.recipe?.imageUrl
+              ? `${nextMeal.recipe.name}, your next planned meal`
+              : "Illustration of prepared FitFuel-style Indian meals"}
+            style={{ backgroundImage: dayImage }}
+          >
+            <span className={s.dayPhotoScrim} aria-hidden="true" />
+            <span className={s.dayPhotoCopy}>
+              <small>{nextMeal ? "Next planned meal" : "Illustrative meal view"}</small>
+              <b>{nextMeal?.recipe?.name ?? "Your meals, packed for the day"}</b>
+              {nextMeal ? <span>{nextMeal.label}, {nextMeal.time}</span> : null}
+            </span>
+          </div>
+          <dl className={s.supportingStats}>
+            <div className={s.supportingStat}><dt>Eaten</dt><dd>{n0(eaten)}</dd></div>
+            <div className={s.supportingStat}><dt>Burned</dt><dd>{n0(burned)}</dd></div>
+            <div className={s.supportingStat}><dt>Daily target</dt><dd>{n0(target)}</dd></div>
+            <div className={s.supportingStat}><dt>Meals logged</dt><dd>{loggedSlots.size}/{meals.length || 4}</dd></div>
+          </dl>
+        </div>
       </section>
 
       {!activePlan.isDigital ? <DeliveryScheduleCard /> : null}

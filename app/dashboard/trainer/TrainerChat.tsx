@@ -15,8 +15,9 @@
 // is current even though the old message still quotes the old number.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, Sparkles } from "lucide-react";
 
-import { C, body, label, SANS, PANEL } from "@/app/_app/theme";
+import s from "./trainer.module.css";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -144,11 +145,17 @@ export default function TrainerChat({
   );
 
   return (
-    <div>
-      {/* aria-live so a screen reader hears the reply as it lands. `polite`,
-          not `assertive`: it should not interrupt the customer mid-sentence. */}
+    <section className={s.chatShell} aria-label="AI coach conversation">
+      <div className={s.chatTopbar}>
+        <div className={s.chatIdentity}>
+          <span className={s.chatAvatar} aria-hidden="true"><Sparkles size={19} /></span>
+          <span><b>FitFuel coach</b><span>Grounded in your logged data</span></span>
+        </div>
+        <span className={s.chatPrivacy}>Private to your account</span>
+      </div>
+
       <div
-        style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 200 }}
+        className={s.transcript}
         aria-live="polite"
         aria-busy={busy}
         onWheel={() => {
@@ -156,152 +163,93 @@ export default function TrainerChat({
           if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
         }}
       >
+        {turns.length === 0 ? (
+          <div className={s.emptyState}>
+            <span className={s.emptyMark} aria-hidden="true"><Sparkles size={25} /></span>
+            <h2>Your data is already in the room.</h2>
+            <p>
+              Ask a plain question. The coach can connect your plan, meals,
+              protein, workouts and recent progress before it answers.
+            </p>
+          </div>
+        ) : null}
         {turns.map((t, i) => (
           <div
             key={i}
-            style={{
-              alignSelf: t.role === "user" ? "flex-end" : "flex-start",
-              maxWidth: "min(64ch, 92%)",
-              ...(t.role === "user"
-                ? { background: C.wash, border: `1px solid ${C.rule2}` }
-                : PANEL),
-              padding: "12px 14px",
-            }}
+            className={`${s.turn} ${t.role === "user" ? s.turnUser : ""}`}
           >
-            <p
-              style={label(11, {
-                color: t.role === "user" ? C.mute : C.lime,
-                marginBottom: 6,
-              })}
-            >
-              {t.role === "user" ? "You" : "Coach"}
-            </p>
-            <p
-              style={body(14, {
-                color: C.ink,
-                margin: 0,
-                whiteSpace: "pre-wrap",
-                lineHeight: 1.55,
-              })}
-            >
-              {t.content}
-              {/* The caret only exists while the last bubble is still filling. */}
-              {busy && i === turns.length - 1 && t.role === "assistant" ? (
-                <span aria-hidden="true" style={{ color: C.lime }}>
-                  {t.content ? " ▍" : "Thinking…"}
-                </span>
-              ) : null}
-            </p>
+            <span className={s.turnAvatar} aria-hidden="true">{t.role === "user" ? "Y" : "F"}</span>
+            <div className={s.bubble}>
+              <p className={s.bubbleLabel}>{t.role === "user" ? "You" : "Coach"}</p>
+              <p className={s.bubbleCopy}>
+                {t.content}
+                {busy && i === turns.length - 1 && t.role === "assistant" ? (
+                  <span aria-hidden="true" className={s.typing}>
+                    {t.content ? " ▍" : "Thinking…"}
+                  </span>
+                ) : null}
+              </p>
+            </div>
           </div>
         ))}
         <div ref={endRef} />
       </div>
 
       {notice ? (
-        <p
-          role="status"
-          style={body(13, {
-            color: C.ink,
-            background: C.panel2,
-            border: `1px solid ${C.rule2}`,
-            padding: "10px 12px",
-            marginTop: 14,
-          })}
-        >
+        <p role="status" className={s.notice}>
           {notice}
         </p>
       ) : null}
 
       {turns.length === 0 ? (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
-          {SUGGESTIONS.map((s) => (
+        <div className={s.suggestions} aria-label="Suggested questions">
+          {SUGGESTIONS.map((suggestion) => (
             <button
-              key={s}
+              key={suggestion}
               type="button"
-              onClick={() => send(s)}
+              onClick={() => send(suggestion)}
               disabled={busy}
-              style={{
-                minHeight: 44,
-                padding: "0 14px",
-                background: "transparent",
-                border: `1px solid ${C.rule2}`,
-                color: C.ink,
-                fontFamily: SANS,
-                fontSize: 13,
-                cursor: busy ? "default" : "pointer",
-              }}
             >
-              {s}
+              {suggestion}
             </button>
           ))}
         </div>
       ) : null}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void send(draft);
-        }}
-        style={{ display: "flex", gap: 10, alignItems: "flex-end", marginTop: 18 }}
-      >
-        <label htmlFor="trainer-input" className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)" }}>
-          Ask the coach
-        </label>
-        <textarea
-          id="trainer-input"
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            /* Enter sends, shift+enter breaks the line — the convention every
-               chat surface uses, and the one thumbs already expect. */
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send(draft);
-            }
-          }}
-          rows={2}
-          maxLength={2000}
-          placeholder="Ask about your plan, your macros, tonight's meal…"
-          disabled={busy}
-          style={{
-            flex: 1,
-            minHeight: 44,
-            resize: "vertical",
-            padding: "11px 12px",
-            background: C.panel,
-            border: `1px solid ${C.rule2}`,
-            color: C.ink,
-            /* 16px: anything smaller triggers iOS auto-zoom on focus, which
-               yanks the whole page sideways mid-conversation. */
-            fontSize: 16,
-            fontFamily: SANS,
-            lineHeight: 1.45,
-          }}
-        />
-        <button
-          type="submit"
-          disabled={busy || !draft.trim()}
-          style={{
-            minHeight: 44,
-            padding: "0 20px",
-            background: busy || !draft.trim() ? C.trough : C.lime,
-            color: busy || !draft.trim() ? C.dim : C.onLime,
-            border: 0,
-            fontFamily: SANS,
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: busy || !draft.trim() ? "default" : "pointer",
+      <div className={s.composerWrap}>
+        <form
+          className={s.composer}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void send(draft);
           }}
         >
-          {busy ? "…" : "Send"}
-        </button>
-      </form>
-
-      <p style={body(12, { color: C.dim, marginTop: 10, maxWidth: "60ch" })}>
-        Not medical advice. For anything about a condition or medication, talk to
-        your doctor.
-      </p>
-    </div>
+          <label htmlFor="trainer-input" className="sr-only">Ask the coach</label>
+          <textarea
+            id="trainer-input"
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send(draft);
+              }
+            }}
+            rows={2}
+            maxLength={2000}
+            placeholder="Ask about your plan, macros or tonight’s meal…"
+            disabled={busy}
+          />
+          <button className={s.sendButton} type="submit" disabled={busy || !draft.trim()}>
+            <span>{busy ? "Thinking" : "Send"}</span>
+            <ArrowUp size={18} aria-hidden="true" />
+          </button>
+        </form>
+        <p className={s.disclosure}>
+          Not medical advice. Ask a doctor about conditions or medication.
+        </p>
+      </div>
+    </section>
   );
 }

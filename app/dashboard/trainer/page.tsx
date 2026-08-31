@@ -18,23 +18,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Sparkles } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { isTrainerConfigured } from "@/lib/ai-trainer/client";
 import { loadLatestThread } from "@/lib/ai-trainer/store";
 import { TRAINER_OFFLINE, TRAINER_OPENER } from "@/lib/ai-trainer/persona";
-import { C, screen, body, label, PANEL, APP_MAX, SANS } from "@/app/_app/theme";
 import TrainerChat from "./TrainerChat";
+import s from "./trainer.module.css";
 
 export const metadata: Metadata = { title: "Coach chat" };
 export const dynamic = "force-dynamic";
-
-const WRAP: React.CSSProperties = {
-  width: "100%",
-  maxWidth: APP_MAX,
-  margin: "0 auto",
-  padding: "0 clamp(16px,4vw,28px)",
-};
 
 export default async function TrainerPage() {
   const session = await auth();
@@ -48,26 +42,27 @@ export default async function TrainerPage() {
   const thread = configured ? await loadLatestThread(session.user.id) : null;
 
   return (
-    <div style={{ background: C.bg, minHeight: "100dvh", paddingBottom: 96 }}>
-      <div style={WRAP}>
-        <header style={{ paddingTop: 28, paddingBottom: 18 }}>
-          <p style={label(12, { color: C.lime, marginBottom: 8 })}>Your coach</p>
-          <h1 style={screen()}>Ask about your plan</h1>
-          <p style={body(14, { color: C.mute, marginTop: 10, maxWidth: "60ch" })}>
-            {TRAINER_OPENER}
-          </p>
-          <p style={body(13, { color: C.dim, marginTop: 12, maxWidth: "60ch" })}>
-            It reads your logged data and explains it. It does not change
-            anything — recalibration still happens on{" "}
-            <Link
-              href="/dashboard/coach"
-              style={{ color: C.lime, textDecoration: "underline" }}
-            >
-              the coach screen
-            </Link>
-            . It is not a doctor, and it will not answer questions about
-            medication.
-          </p>
+    <main className={s.page}>
+      <div className={s.wrap}>
+        <header className={s.hero}>
+          <div className={s.heroCopy}>
+            <p className={s.coachLabel}>Your personal data, connected</p>
+            <h1>Ask the coach that knows your week.</h1>
+            <p>{TRAINER_OPENER}</p>
+          </div>
+          <aside className={s.contextCard} aria-label="What the coach can use">
+            <span className={s.contextIcon} aria-hidden="true"><Sparkles size={24} /></span>
+            <div>
+              <h2>Already briefed</h2>
+              <p>No retyping your context every time you ask a question.</p>
+              <ul className={s.contextList}>
+                <li>Your current plan and targets</li>
+                <li>Meals, workouts and recent weigh-ins</li>
+                <li>Your last 30 days of progress</li>
+              </ul>
+              <Link href="/dashboard/coach">Open weekly recalibration</Link>
+            </div>
+          </aside>
         </header>
 
         {configured ? (
@@ -76,45 +71,14 @@ export default async function TrainerPage() {
             initialConversationId={thread?.conversationId ?? null}
           />
         ) : (
-          /* NOT an error state. The pipeline is built and wired; the key is a
-             business decision that has not been taken. Saying so plainly is
-             more useful than a spinner that never resolves. */
-          <div style={{ ...PANEL, padding: 20, borderRadius: 2 }}>
-            <p style={body(14, { color: C.ink, margin: 0, maxWidth: "60ch" })}>
-              {TRAINER_OFFLINE}
-            </p>
-            {/* Two keys named, cheapest first, because the blocker was budget
-                rather than engineering. Gemini's free tier needs no billing
-                enabled and no card — that is the whole reason it is here. */}
-            <p style={body(13, { color: C.dim, marginTop: 12, maxWidth: "60ch" })}>
-              Set either{" "}
-              <code style={{ fontFamily: SANS, color: C.mute }}>GEMINI_API_KEY</code>{" "}
-              (free tier, no card) or{" "}
-              <code style={{ fontFamily: SANS, color: C.mute }}>CLAUDE_API_KEY</code>{" "}
-              and this screen starts working with no further code change. If both
-              are set, Claude answers.
-            </p>
-            <Link
-              href="/dashboard/coach"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: 44,
-                marginTop: 16,
-                padding: "0 18px",
-                background: C.lime,
-                color: C.onLime,
-                fontFamily: SANS,
-                fontSize: 14,
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
-            >
-              See your weekly review instead
-            </Link>
+          <div className={s.offline}>
+            <h2>The live coach is taking a pause.</h2>
+            <p>{TRAINER_OFFLINE}</p>
+            <p>Your logs and plan are safe. The deterministic weekly review is still available.</p>
+            <Link href="/dashboard/coach">See your weekly review</Link>
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

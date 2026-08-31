@@ -41,25 +41,25 @@ export const MONO = "var(--font-mono), ui-monospace, monospace";
 /* ── Colour ────────────────────────────────────────────────────────────────
    Every value is a token reference. No hex literal belongs in a component. */
 export const C = {
-  bg: "var(--ff-bg)",
-  panel: "var(--ff-panel)",
-  panel2: "var(--ff-panel-2)",
-  ink: "var(--ff-ink)",
-  mute: "var(--ff-mute)",
-  dim: "var(--ff-dim)",
-  rule: "var(--ff-rule)",
-  rule2: "var(--ff-rule-2)",
-  lime: "var(--ff-lime)",
-  limeLight: "var(--ff-lime-light)",
+  bg: "var(--fk-paper)",
+  panel: "var(--fk-surface)",
+  panel2: "var(--fk-warm)",
+  ink: "var(--fk-ink)",
+  mute: "var(--fk-ink-2)",
+  dim: "var(--fk-ink-3)",
+  rule: "var(--fk-line)",
+  rule2: "var(--fk-line-2)",
+  lime: "var(--fk-green)",
+  limeLight: "var(--fk-green-deep)",
   /** On-lime text. Near-black rather than pure, so the lime does not vibrate. 9.6:1. */
   onLime: "#06140b",
   /** Bar troughs and the fat segment: the two steps between rule and dim. */
-  trough: "#1c1c1a",
-  fat: "#5f5f59",
-  wash: "rgba(132,204,22,0.1)",
+  trough: "var(--fk-warm-2)",
+  fat: "var(--fk-line-strong)",
+  wash: "var(--fk-green-wash)",
   /** The one semantic that is not lime. Always paired with a text label,
    *  never carrying meaning on its own. */
-  danger: "#dc2626",
+  danger: "var(--fk-danger)",
 } as const;
 
 /* ── Type, app scale ──────────────────────────────────────────────────────

@@ -17,7 +17,7 @@
 
 import { useState } from "react";
 import type { ProgressData, WeightPoint } from "@/lib/progress";
-import { C, COND, body, label, num, figure, PANEL } from "@/app/_app/theme";
+import { C, SANS, body, label, num, figure, PANEL } from "@/app/_app/theme";
 
 type MetricKey = "weight" | "bodyFat" | "muscle";
 
@@ -105,7 +105,7 @@ function TrendChart({
       {gridVals.map((g, i) => (
         <g key={i}>
           <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke={C.rule} strokeWidth="1" />
-          <text x={4} y={y(g) + 4} fontSize="12" fontFamily="var(--font-mono), ui-monospace, monospace" fill={C.dim}>
+          <text x={4} y={y(g) + 4} fontSize="12" fontFamily="var(--fk-sans), sans-serif" fill={C.dim}>
             {g.toFixed(0)}
           </text>
         </g>
@@ -116,7 +116,7 @@ function TrendChart({
           <line x1={padL} y1={y(target)} x2={W - padR} y2={y(target)}
                 stroke={C.lime} strokeWidth="1" strokeDasharray="4 6" />
           <text x={W - padR} y={y(target) - 6} fontSize="12" textAnchor="end"
-                fontFamily="var(--font-mono), ui-monospace, monospace" fill={C.lime}>
+                fontFamily="var(--fk-sans), sans-serif" fill={C.lime}>
             target {target}{m.unit}
           </text>
         </g>
@@ -148,7 +148,7 @@ function CalorieChart({ data }: { data: ProgressData["calories"] }) {
         {[0, max / 2, max].map((g, i) => (
           <g key={i}>
             <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke={C.rule} strokeWidth="1" />
-            <text x={4} y={y(g) + 4} fontSize="12" fontFamily="var(--font-mono), ui-monospace, monospace" fill={C.dim}>
+            <text x={4} y={y(g) + 4} fontSize="12" fontFamily="var(--fk-sans), sans-serif" fill={C.dim}>
               {Math.round(g)}
             </text>
           </g>
@@ -238,8 +238,8 @@ export default function ProgressClient({ data }: { data: ProgressData }) {
                     background: on ? C.wash : "transparent",
                     border: `1px solid ${on ? C.lime : C.rule2}`,
                     color: on ? C.lime : C.mute,
-                    fontFamily: COND, fontWeight: 800, fontSize: 14,
-                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    borderRadius: "var(--fk-r)",
+                    fontFamily: SANS, fontWeight: 700, fontSize: 14,
                     transition: "border-color 180ms ease-out, color 180ms ease-out",
                   }}
                 >

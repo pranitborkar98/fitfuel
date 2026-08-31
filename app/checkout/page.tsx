@@ -13,6 +13,7 @@ import FirstDeliveryNotice from "@/components/FirstDeliveryNotice";
 import { DELIVERY_WINDOWS } from "@/lib/delivery-windows";
 import { decomposePrice, durationKeyFromShort } from "@/lib/pricing-decomposition";
 import { WHATSAPP_NUMBER } from "@/lib/site";
+import styles from "./checkout.module.css";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 /* ON THE HOMEPAGE SYSTEM, 2026-08-21. Every value here was already a
@@ -497,7 +498,7 @@ function CheckoutInner() {
     /* `fk` opts this subtree out of the marketing radius ban in
        app/globals.css. Without it every rounded corner set above is flattened
        to 0 by an !important rule and the page keeps the rejected square look. */
-    <div className="fk" style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, paddingTop: 100, paddingBottom: 80 }}>
+    <div className={`fk ${styles.page}`} style={{ background: T.bg, minHeight: "100vh", color: T.textPrimary, paddingTop: 100, paddingBottom: 80 }}>
 
       {payuData && (
         <form id="payu-form" method="POST" action={payuData.payuUrl} style={{ display: "none" }}>
@@ -507,7 +508,7 @@ function CheckoutInner() {
         </form>
       )}
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
+      <div className={styles.wrap} style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
 
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
@@ -524,6 +525,11 @@ function CheckoutInner() {
             fontWeight: 600, textTransform: "none",
             color: T.textPrimary, lineHeight: 1.04, letterSpacing: "-0.025em",
           }}>Complete your order</h1>
+          <ol className={styles.progress} aria-label="Checkout progress">
+            <li className={styles.done}><span>1</span><b>Plan chosen</b></li>
+            <li className={styles.current} aria-current="step"><span>2</span><b>Delivery and payment</b></li>
+            <li><span>3</span><b>Confirmation</b></li>
+          </ol>
         </div>
 
         {/* Error banner */}
@@ -557,7 +563,7 @@ function CheckoutInner() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }} className="checkout-grid">
 
           {/* Left — form */}
-          <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "28px 24px" }}>
+          <div className={styles.formCard} style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: 8, padding: "28px 24px" }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, marginBottom: 24 }}>Your details</h2>
 
             <form onSubmit={handleSubmit}>
@@ -706,7 +712,7 @@ function CheckoutInner() {
           </div>
 
           {/* Right — order summary */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className={styles.summaryColumn} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             <div style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderTop: `2px solid ${T.accent}`, borderRadius: 8, padding: "24px 20px", position: "relative", overflow: "hidden" }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: T.textPrimary, marginBottom: 16 }}>Order summary</div>
@@ -836,6 +842,12 @@ function CheckoutInner() {
             >
               <MessageCircle size={15} /> Order via WhatsApp instead
             </a>
+
+            <ul className={styles.trustList} aria-label="Checkout assurances">
+              <li><ShieldCheck size={17} aria-hidden="true" /><span><b>Server-verified price</b><small>Your payment total is checked again before the order is created.</small></span></li>
+              <li><Banknote size={17} aria-hidden="true" /><span><b>No hidden charge</b><small>Delivery, packaging and GST are shown in the receipt above.</small></span></li>
+              <li><MapPin size={17} aria-hidden="true" /><span><b>Pune delivery support</b><small>WhatsApp us before paying if your address or window needs attention.</small></span></li>
+            </ul>
           </div>
         </div>
       </div>

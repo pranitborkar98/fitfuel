@@ -1,0 +1,67 @@
+.page { position: relative; }
+.wrap { width: min(calc(100% - 8px), 1100px); }
+.progress {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 660px;
+  margin: 24px 0 0;
+  padding: 0;
+}
+.progress li {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--fk-ink-3);
+}
+.progress li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 38px;
+  width: calc(100% - 46px);
+  height: 1px;
+  background: var(--fk-line-2);
+}
+.progress li span {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: 50%;
+  background: var(--fk-paper);
+  color: var(--fk-ink-3);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+.progress li b { overflow: hidden; font-size: 0.76rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.progress .done span { border-color: var(--fk-green); color: var(--fk-on-green); background: var(--fk-green); }
+.progress .done:not(:last-child)::after { background: var(--fk-green); }
+.progress .current { color: var(--fk-ink); }
+.progress .current span { border-color: var(--fk-green); color: var(--fk-green-deep); }
+.summaryColumn { position: sticky; top: 92px; }
+.trustList { list-style: none; margin: 2px 0 0; padding: 8px 0; border-top: 1px solid var(--fk-line-2); border-bottom: 1px solid var(--fk-line-2); }
+.trustList li { min-height: 62px; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; gap: 11px; padding: 9px 2px; color: var(--fk-green-deep); }
+.trustList li + li { border-top: 1px solid var(--fk-line); }
+.trustList span { display: grid; gap: 3px; }
+.trustList b { color: var(--fk-ink); font-size: 0.8rem; }
+.trustList small { color: var(--fk-ink-3); font-size: 0.7rem; line-height: 1.45; }
+.page :is(input, button, a):focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 2px; }
+@media (max-width: 720px) {
+  .page { padding-top: 88px !important; padding-bottom: 54px !important; }
+  .progress li { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .progress li:not(:last-child)::after { top: 15px; left: 31px; width: calc(100% - 34px); }
+  .progress li b { max-width: 12ch; white-space: normal; line-height: 1.25; }
+  .summaryColumn { position: static; order: -1; }
+  .formCard { padding: 22px 16px !important; }
+}
+@media (max-width: 420px) {
+  .wrap { width: 100%; padding-inline: 14px !important; }
+  .progress li b { font-size: 0.68rem; }
+}

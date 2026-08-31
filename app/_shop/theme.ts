@@ -114,9 +114,9 @@ export const MIN_TYPE_PX = 12;
 export const label = (size = 12, extra: React.CSSProperties = {}): React.CSSProperties => ({
   fontFamily: SANS,
   fontWeight: 600,
-  fontSize: Math.max(size, MIN_TYPE_PX),
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
+  fontSize: Math.max(size, 13),
+  letterSpacing: "0.01em",
+  textTransform: "none",
   color: C.dim,
   ...extra,
 });

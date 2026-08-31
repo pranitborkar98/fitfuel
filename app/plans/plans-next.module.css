@@ -303,18 +303,56 @@
 }
 
 .planChoice {
-  display: flex;
+  display: block;
   width: 100%;
-  min-height: 220px;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 22px;
+  min-height: 0;
+  padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font-family: var(--fk-sans);
   text-align: left;
   cursor: pointer;
+}
+
+.planPhoto {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 8.5;
+  overflow: hidden;
+  background: var(--fk-warm);
+  border-bottom: 1px solid var(--fk-line);
+}
+
+.planPhoto img {
+  object-fit: cover;
+  transition: transform var(--fk-dur-slow) var(--fk-ease);
+}
+
+.planCard:hover .planPhoto img { transform: scale(1.025); }
+
+.photoShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgb(0 0 0 / 72%));
+}
+
+.planPhoto small {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  color: var(--fk-ink-2);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.planCopy {
+  display: flex;
+  min-height: 210px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px 22px;
 }
 
 .available,
@@ -338,7 +376,7 @@
   font-size: 11px;
 }
 
-.planChoice > strong {
+.planCopy > strong {
   margin-top: 7px;
   color: var(--fk-ink);
   font-size: 20px;
@@ -591,9 +629,7 @@
     grid-template-columns: 1fr;
   }
 
-  .planChoice {
-    min-height: 210px;
-  }
+  .planCopy { min-height: 205px; padding: 18px; }
 
   .trialCard {
     align-items: flex-start;

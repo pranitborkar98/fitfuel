@@ -37,7 +37,7 @@ export default function CartButton() {
         .ff-cart-btn {
           position: relative; display: inline-flex; align-items: center; gap: 8px;
           background: transparent; border: 1px solid var(--fk-line-2);
-          border-radius: 0; padding: 8px 13px; cursor: pointer;
+          border-radius: var(--fk-r); padding: 8px 13px; cursor: pointer;
           /* 44px, matching the touch-target floor the navbar already holds
              for the logo and the hamburger. */
           color: var(--fk-ink); min-height: 44px;

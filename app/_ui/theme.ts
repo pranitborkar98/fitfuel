@@ -124,10 +124,10 @@ export const body = (size = 15.5): CSSProperties => ({
    0.22em, which at 12px is a shout rather than a label. */
 export const label = (color = DIM): CSSProperties => ({
   fontFamily: SANS,
-  fontWeight: 700,
-  fontSize: 11.5,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
+  fontWeight: 650,
+  fontSize: 13,
+  letterSpacing: "0.01em",
+  textTransform: "none",
   color,
   display: "block",
 });
