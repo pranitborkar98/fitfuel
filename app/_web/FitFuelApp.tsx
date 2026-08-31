@@ -859,6 +859,14 @@ export default function FitFuelApp({
               <Icon d={I.pin} size={16} />
               {area}
             </button>
+            <Link
+              href="/dashboard/trainer"
+              className={`${s.iconBtn} ${r.headerAi}`}
+              aria-label="Open FitFuel AI coach"
+            >
+              <Icon d={I.spark} size={18} />
+              <span>AI coach</span>
+            </Link>
             <button
               type="button"
               className={s.iconBtn}
@@ -876,14 +884,24 @@ export default function FitFuelApp({
           goal={goal}
           target={target}
           numbers={numbers}
+          area={area}
+          areaCount={areaCount}
+          cutoffLabel={cutoffLabel}
+          trialTotal={trialTotal}
           aiConfigured={aiConfigured}
           planProfiles={bandCounts.plans}
           exercises={bandCounts.exercises}
           supplements={bandCounts.supplements}
+          categoryCounts={catCount}
+          quotes={quotes}
           onGoalChange={setGoal}
           onOpenNumbers={() => setNumbersOpen(true)}
           onBrowseMeals={() => switchMode("dishes", true)}
           onBrowsePlans={() => switchMode("plans", true)}
+          onBrowsePlanCategory={(category) => {
+            setPlanCat(category);
+            switchMode("plans", true);
+          }}
           onBrowseSupplements={() => switchMode("supps", true)}
         />
 
@@ -1513,7 +1531,6 @@ export default function FitFuelApp({
         trial={trial}
         areaCount={areaCount}
         cutoffLabel={cutoffLabel}
-        quotes={quotes}
         week={week}
       />
 

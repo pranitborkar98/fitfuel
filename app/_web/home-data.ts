@@ -41,8 +41,8 @@ export const DAY_STEPS: DayStep[] = [
     at: "06:30",
     label: "Cooked to the sheet",
     line: "Every portion goes on a scale against your macros, not an eyeballed ladle.",
-    img: "/images/chef-hands.jpg",
-    alt: "A cook portioning a dish against the recipe sheet",
+    img: "/images/ai/story/precision-kitchen.webp",
+    alt: "A kitchen team portioning fresh Indian meals on a digital scale",
   },
   {
     at: "07:30",
@@ -53,8 +53,10 @@ export const DAY_STEPS: DayStep[] = [
   },
   {
     at: "08:00",
-    label: "Ready to confirm",
-    line: "Breakfast is pre-filled in your diary — confirm what you ate with one tap.",
+    label: "At your door",
+    line: "Our rider completes the morning run; breakfast is pre-filled and ready to confirm.",
+    img: "/images/ai/story/pune-delivery.webp",
+    alt: "A morning meal delivery being handed to a customer at a Pune apartment",
   },
 ];
 

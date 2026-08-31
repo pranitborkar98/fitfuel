@@ -49,7 +49,7 @@ import {
   WEDGE_COLS,
   wedgeRows,
 } from "./home-data";
-import type { BandCounts, Quote } from "./HomeBands";
+import type { BandCounts } from "./HomeBands";
 import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
 import DeliveryMap from "./DeliveryMap";
 import { useReveal } from "./useReveal";
@@ -94,8 +94,6 @@ export type HomeSectionsProps = {
   areaCount: number;
   /** The order cutoff sentence, from lib/order-cutoff. */
   cutoffLabel: string;
-  /** Featured Testimonial rows. Empty renders nothing at all — see ProofBand. */
-  quotes: Quote[];
   /** Seven seeded days of weight-loss-veg. Empty renders nothing — see WeekBand. */
   week: Dish[];
 };
@@ -107,7 +105,6 @@ export default function HomeSections({
   trial,
   areaCount,
   cutoffLabel,
-  quotes,
   week,
 }: HomeSectionsProps) {
   const revealRef = useReveal<HTMLDivElement>();
@@ -124,7 +121,6 @@ export default function HomeSections({
       <CoachBand trial={trial} />
       <AreasFaqBand areaCount={areaCount} cutoffLabel={cutoffLabel} />
       <SurfacesBand />
-      <ProofBand quotes={quotes} />
       <CtaBand
         trialTotal={trial.total}
         planCount={counts.plans}
@@ -137,7 +133,7 @@ export default function HomeSections({
 
 /* ── 1. The day ─────────────────────────────────────────────────────────────
    The single strongest thing we have and it was on no route: one kitchen, four
-   hours, our own drivers. Three of the four steps carry a real photograph. */
+   hours, our own drivers. Every step now carries a photograph. */
 function DayBand() {
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="day-h">
@@ -183,6 +179,11 @@ function DayBand() {
                     <span>kcal ready to confirm</span>
                   </span>
                 )}
+                {step.img?.startsWith("/images/ai/") ? (
+                  <span className="fk-sr-only">
+                    Illustrative AI-generated image; not a photograph of FitFuel staff or a customer.
+                  </span>
+                ) : null}
               </span>
               <span className={s.dayBody}>
                 <b className={`${s.dayAt} fk-num`}>{step.at}</b>
@@ -317,57 +318,6 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
             </tbody>
           </table>
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── 7b. Proof ──────────────────────────────────────────────────────────────
-   THE ONE THING THE IMPORTED REDESIGN DROPPED, put back.
-
-   app/page.tsx has been querying three featured Testimonial rows the whole
-   time; the design had no band to render them in, so they were fetched and
-   thrown away. This is app/_hp/Proof.tsx's shape at app density: the result,
-   the plan, and the AREA — which matters more than it looks, because "Kharadi"
-   tells a Kharadi reader this is a real local business, and that is the single
-   hardest thing for a national brand to fake.
-
-   RENDERS NOTHING WHEN THE TABLE IS EMPTY. This is one of the few sections
-   where disappearing is correct: an empty testimonials block is worse than no
-   testimonials block, and a placeholder quote would be a lie. */
-function ProofBand({ quotes }: { quotes: Quote[] }) {
-  if (!quotes.length) return null;
-
-  return (
-    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="proof-h">
-      <div className={s.bandWrap}>
-        <div className={s.bandHead}>
-          <div>
-            <h2 id="proof-h" className={s.bandH2}>
-              From people eating it
-            </h2>
-          </div>
-          <p className={s.bandLede}>
-            Every one of these is a row in the database with a result and a plan
-            attached, not a line a copywriter wrote for a stock photograph.
-          </p>
-        </div>
-
-        <ul className={s.quotes}>
-          {quotes.map((q) => (
-            <li key={q.id} data-reveal="up">
-              <blockquote className={s.quoteText}>{q.quote}</blockquote>
-              <p className={s.quoteWho}>
-                <b>{q.name}</b>
-                <span>{q.location}</span>
-              </p>
-              <p className={s.quoteMeta}>
-                <span className={s.quoteResult}>{q.resultLabel}</span>
-                <span>{q.planLabel}</span>
-              </p>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

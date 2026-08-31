@@ -20,6 +20,26 @@
   border-bottom: 1px solid var(--fk-line);
 }
 
+.headerAi {
+  border-color: color-mix(in srgb, var(--fk-green) 42%, var(--fk-line-2)) !important;
+  background: var(--fk-green-wash) !important;
+  color: var(--fk-green-deep) !important;
+}
+
+.headerAi:hover {
+  border-color: var(--fk-green) !important;
+  background: var(--fk-warm) !important;
+}
+
+@media (max-width: 639px) {
+  .headerAi {
+    width: var(--fk-tap);
+    padding: 0 !important;
+  }
+
+  .headerAi span { display: none; }
+}
+
 /* ── The home deck ──────────────────────────────────────────────────────
  * This is deliberately an application home, not a marketing hero. It answers
  * "what can I do now?" first, then proves the food with a real plan day. */

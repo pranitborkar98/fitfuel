@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
 
 import { GOALS } from "./home-data";
+import type { Quote } from "./HomeBands";
 import type { Numbers } from "./YourNumbers";
 import x from "./experience.module.css";
 
@@ -14,6 +16,9 @@ const ICON = {
   message: "M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z",
   arrow: "M7 17 17 7M8 7h9v9",
   scale: "M5 21h14M12 3v18M4 7h16M4 7l-2 6h6L4 7Zm16 0-2 6h6l-4-6Z",
+  clock: "M12 8v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
+  check: "m5 12 4 4L19 6",
+  route: "M5 19h10a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h10M17 17l2 2-2 2M7 1 5 3l2 2",
 } as const;
 
 function Icon({ path, size = 20 }: { path: string; size?: number }) {
@@ -42,38 +47,91 @@ const PLAN_IMAGES: Record<string, string> = {
   DINNER: "/images/ai/recipes/north-indian-palak-paneer-with-jowar.webp",
 };
 
+const PLAN_LENSES = [
+  {
+    key: "STANDARD",
+    label: "Goal plans",
+    title: "Lose, maintain or build",
+    copy: "Your calorie target sets the kitchen portion—not a generic menu label.",
+    image: "/images/ai/dishes/mediterranean-power-bowl.webp",
+  },
+  {
+    key: "LIFESTYLE_MEDICAL",
+    label: "Medical & lifestyle",
+    title: "Cooked for the condition",
+    copy: "Diabetes, PCOS, thyroid, fatty liver and more, reviewed as plans—not hashtags.",
+    image: "/images/ai/dishes/indian-detox-bowl.webp",
+  },
+  {
+    key: "SPORTS",
+    label: "Sports nutrition",
+    title: "Food that knows you trained",
+    copy: "Workout burn returns to the same day before the coach changes anything.",
+    image: "/images/ai/story/meal-training-loop.webp",
+  },
+] as const;
+
 type Target = { kcal: number; protein: number; personal: boolean };
+
+function puneGreeting() {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hourCycle: "h23",
+      timeZone: "Asia/Kolkata",
+    }).format(new Date()),
+  );
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function HomeExperience({
   week,
   goal,
   target,
   numbers,
+  area,
+  areaCount,
+  cutoffLabel,
+  trialTotal,
   aiConfigured,
   planProfiles,
   exercises,
   supplements,
+  categoryCounts,
+  quotes,
   onGoalChange,
   onOpenNumbers,
   onBrowseMeals,
   onBrowsePlans,
+  onBrowsePlanCategory,
   onBrowseSupplements,
 }: {
   week: Dish[];
   goal: string;
   target: Target;
   numbers: Numbers | null;
+  area: string;
+  areaCount: number;
+  cutoffLabel: string;
+  trialTotal: string;
   aiConfigured: boolean;
   planProfiles: number;
   exercises: number;
   supplements: number;
+  categoryCounts: Record<string, number>;
+  quotes: Quote[];
   onGoalChange: (goal: string) => void;
   onOpenNumbers: () => void;
   onBrowseMeals: () => void;
   onBrowsePlans: () => void;
+  onBrowsePlanCategory: (category: string) => void;
   onBrowseSupplements: () => void;
 }) {
   const meals = week.filter((dish) => dish.day === 1).slice(0, 4);
+  const [activeMealIndex, setActiveMealIndex] = useState(0);
+  const activeMeal = meals[activeMealIndex] ?? meals[0];
   const planKcal = meals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
   const planProtein = meals.reduce((sum, meal) => sum + (meal.protein ?? 0), 0);
   const serving = servingScaleForTarget({
@@ -85,226 +143,283 @@ export default function HomeExperience({
   const activeGoal = GOALS.find((item) => item.key === goal) ?? GOALS[1];
   const portionPercent = Math.round(serving.factor * 100);
   const remainingProtein = Math.max(0, target.protein - scaledProtein);
+  const proteinCoverage = target.protein
+    ? Math.min(100, Math.round((scaledProtein / target.protein) * 100))
+    : 0;
+  const calorieCoverage = target.kcal
+    ? Math.min(100, Math.round((scaledKcal / target.kcal) * 100))
+    : 0;
   const whatsapp = waLink(
-    `Hi FitFuel! I want help starting the ${activeGoal.label.toLowerCase()} plan shown on your homepage.`,
+    `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to ${area}.`,
   );
 
   const coachLine =
     remainingProtein > 0
-      ? `This four-meal day covers ${Math.round((scaledProtein / target.protein) * 100)}% of your protein target. The coach can close the remaining ${remainingProtein}g using tonight’s menu.`
-      : `This day reaches your protein target. The coach can now compare the result with your weight and training trend before suggesting a change.`;
-
-  const flow = [
-    {
-      step: "01",
-      title: "Your numbers",
-      value: `${target.kcal.toLocaleString("en-IN")} kcal · ${target.protein}g protein`,
-      note: target.personal
-        ? `${numbers?.weightKg}kg, ${numbers?.age} years and your activity level run through the same target engine used after sign-in.`
-        : "A useful preview until you add age, height, weight and activity—then every number becomes yours.",
-      action: (
-        <button type="button" onClick={onOpenNumbers}>
-          {target.personal ? "Change my numbers" : "Use my numbers"}
-        </button>
-      ),
-    },
-    {
-      step: "02",
-      title: "Kitchen scale",
-      value: `${portionPercent}% portions · ${scaledKcal.toLocaleString("en-IN")} kcal`,
-      note: `The production rule moves in measurable 5% steps and stays between 70% and 130%—never an eyeballed ladle.`,
-      action: <Link href="/our-kitchen">See the kitchen</Link>,
-    },
-    {
-      step: "03",
-      title: "Cook and deliver",
-      value: "04:00 produce · 08:00 ready",
-      note: "Recipes roll into the production sheet, named trays and the driver run from our Kharadi kitchen.",
-      action: <Link href="/how-it-works">Follow a delivery</Link>,
-    },
-    {
-      step: "04",
-      title: "Log and learn",
-      value: "Four meals · one-tap diary",
-      note: "Delivered meals arrive pre-filled. Training burn and body metrics join the same day instead of living in another app.",
-      action: <Link href="/dashboard/nutrition">Open my diary</Link>,
-    },
-    {
-      step: "05",
-      title: "Coach the trend",
-      value: "30 days of context · weekly guardrails",
-      note: "AI answers from your history; the weekly engine waits for a real trend and caps any calorie change at 300 a day.",
-      action: <Link href="/dashboard/coach">Open weekly coach</Link>,
-    },
-  ];
+      ? `This menu reaches ${proteinCoverage}% of your protein target. I can close the remaining ${remainingProtein}g from tonight’s catalogue.`
+      : "This menu reaches your protein target. I can compare it with your weight and training trend before suggesting a change.";
 
   return (
     <section className={x.experience} aria-labelledby="home-title">
-      <div className={x.intro}>
-        <div className={x.introCopy}>
-          <p className={x.eyebrow}>
-            <span aria-hidden="true" /> The connected food app
+      <div className={x.hero}>
+        <div className={x.heroCopy}>
+          <p className={x.eyebrow} suppressHydrationWarning>
+            <span aria-hidden="true" /> {puneGreeting()}, {area}
           </p>
           <h1 id="home-title" className={x.title}>
-            Your numbers go in. Your whole day comes out.
+            Your food, training and progress—finally one system.
           </h1>
           <p className={x.lede}>
-            FitFuel turns one target into four weighed meals, a kitchen sheet,
-            a delivery run, a pre-filled diary and a coach that can see what happened.
+            We calculate the target, weigh four meals in Kharadi, deliver them
+            across east Pune, fill your diary and coach the weekly trend.
           </p>
+
+          <div className={x.heroActions}>
+            <button type="button" onClick={onOpenNumbers}>
+              Build my day <Icon path={ICON.arrow} size={18} />
+            </button>
+            <Link href="/plans?trial=true">Try breakfast + lunch · {trialTotal}</Link>
+          </div>
+
+          <a className={x.whatsappLine} href={whatsapp} target="_blank" rel="noreferrer">
+            <Icon path={ICON.message} size={18} /> Prefer a person? Order on WhatsApp
+          </a>
+
+          <ul className={x.heroProof} aria-label="FitFuel delivery facts">
+            <li><b className="fk-num">{areaCount}</b><span>east Pune areas</span></li>
+            <li><b>Own kitchen</b><span>and own riders</span></li>
+            <li><b>FSSAI</b><span>licensed operation</span></li>
+          </ul>
         </div>
 
-        <div className={x.goalPanel}>
-          <div className={x.goalHead}>
-            <span>
-              <small>Try the engine</small>
-              <b>What are you working toward?</b>
-            </span>
-            <button type="button" className={x.profileButton} onClick={onOpenNumbers}>
-              {target.personal ? `${numbers?.weightKg}kg · personalised` : "Add my numbers"}
-            </button>
+        <div className={x.heroVisual}>
+          <Image
+            src="/images/ai/story/meal-training-loop.webp"
+            alt="A woman sitting down to a high-protein Indian meal after training, with her nutrition app beside it"
+            fill
+            priority
+            sizes="(max-width: 1023px) 100vw, 51vw"
+          />
+          <span className={x.heroScrim} aria-hidden="true" />
+          <span className="fk-sr-only">
+            Illustrative AI-generated lifestyle image; not a photograph of a customer or delivered meal.
+          </span>
+
+          <div className={x.deliveryPill}>
+            <span className={x.liveDot} aria-hidden="true" />
+            <span><small>Morning delivery</small><b>At your door by 08:00</b></span>
           </div>
-          <div className={x.goals} role="radiogroup" aria-label="Choose your goal">
-            {GOALS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                role="radio"
-                aria-checked={goal === item.key}
-                className={goal === item.key ? x.goalActive : undefined}
-                onClick={() => onGoalChange(item.key)}
-              >
-                {item.label}
+
+          <div className={x.heroDashboard}>
+            <span className={x.dashboardTop}>
+              <span><small>Today’s target</small><b>{activeGoal.label}</b></span>
+              <button type="button" onClick={onOpenNumbers}>
+                {target.personal ? "Edit" : "Personalise"}
               </button>
-            ))}
-          </div>
-          <div className={x.targetReadout} aria-live="polite" aria-atomic="true">
-            <span><small>Your target</small><b className="fk-num">{target.kcal.toLocaleString("en-IN")} kcal</b></span>
-            <span><small>Protein</small><b className="fk-num">{target.protein}g</b></span>
-            <span><small>Kitchen portion{serving.clamped ? " · safe cap" : ""}</small><b className="fk-num">{serving.factor.toFixed(2)}×</b></span>
+            </span>
+            <span className={x.dashboardNumbers}>
+              <span><b className="fk-num">{target.kcal.toLocaleString("en-IN")}</b><small>kcal</small></span>
+              <span><b className="fk-num">{target.protein}g</b><small>protein</small></span>
+              <span><b className="fk-num">4</b><small>meals</small></span>
+            </span>
+            <span className={x.dashboardFoot}>
+              <Icon path={ICON.clock} size={17} /> Order by {cutoffLabel} for the next morning run
+            </span>
           </div>
         </div>
       </div>
 
-      <div className={x.workbench}>
-        <article className={x.mealDay} aria-labelledby="meal-day-title">
-          <div className={x.mealDayHead}>
-            <span>
-              <small>Day one · Weight Loss Vegetarian</small>
-              <h2 id="meal-day-title">The same real menu, portioned for you</h2>
-            </span>
-            <span className={x.dayTotal}>
-              <b className="fk-num">{scaledKcal.toLocaleString("en-IN")}</b>
-              <small>kcal across four meals</small>
-            </span>
-          </div>
+      <div className={x.dailyApp}>
+        <div className={x.dailyTop}>
+          <span>
+            <small>Interactive product preview · published day one</small>
+            <h2>Your day, live before you order.</h2>
+          </span>
+          <span className={x.dayStatus}>
+            <i aria-hidden="true" /> Kitchen-ready plan
+          </span>
+        </div>
 
-          {meals.length ? (
-            <ul className={x.mealMosaic}>
-              {meals.map((meal, index) => (
-                <li key={`${meal.day}-${meal.slot}`} className={index === 0 ? x.mealLead : undefined}>
-                  <Image
-                    src={PLAN_IMAGES[meal.slot]}
-                    alt={meal.name}
-                    fill
-                    priority={index === 0}
-                    sizes={index === 0
-                      ? "(max-width: 700px) 100vw, (max-width: 1100px) 55vw, 34vw"
-                      : "(max-width: 700px) 50vw, (max-width: 1100px) 27vw, 17vw"}
-                  />
-                  <span className={x.mealShade} aria-hidden="true" />
-                  <span className={x.mealCaption}>
-                    <small>{SLOT_LABEL[meal.slot] ?? meal.slot}</small>
-                    <b>{meal.name}</b>
-                    <span className="fk-num">
-                      {Math.round((meal.kcal ?? 0) * serving.factor)} kcal · {Math.round((meal.protein ?? 0) * serving.factor)}g protein
-                    </span>
+        <div className={x.dailyGrid}>
+          <div className={x.mealStage}>
+            {activeMeal ? (
+              <div className={x.activeMeal} role="tabpanel" aria-live="polite">
+                <Image
+                  src={PLAN_IMAGES[activeMeal.slot]}
+                  alt={activeMeal.name}
+                  fill
+                  sizes="(max-width: 760px) 100vw, (max-width: 1180px) 60vw, 43vw"
+                />
+                <span className={x.mealScrim} aria-hidden="true" />
+                <span className={x.activeMealCopy}>
+                  <small>{SLOT_LABEL[activeMeal.slot] ?? activeMeal.slot}</small>
+                  <b>{activeMeal.name}</b>
+                  <span className="fk-num">
+                    {Math.round((activeMeal.kcal ?? 0) * serving.factor)} kcal · {Math.round((activeMeal.protein ?? 0) * serving.factor)}g protein
                   </span>
-                  <span className="fk-sr-only">
-                    Illustrative AI-generated image; not a photograph of the delivered meal.
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className={x.scheduleEmpty}>
-              The scheduled menu is temporarily unavailable. The catalogue below is still live.
-            </div>
-          )}
-
-          <div className={x.mealDayFoot}>
-            <span>
-              <Icon path={ICON.scale} />
-              <span><b>Kitchen-safe personalisation</b><small>5% portion steps · 70–130% limits</small></span>
-            </span>
-            <Link href="/plans/weight-loss-veg">See all 30 days <Icon path={ICON.arrow} size={17} /></Link>
-          </div>
-        </article>
-
-        <aside className={x.engine} aria-label="How FitFuel turns the target into a coached day">
-          <div className={x.engineHead}>
-            <span className={x.engineSignal}><i aria-hidden="true" /> Live product preview</span>
-            <h2>One loop, not six disconnected apps.</h2>
-          </div>
-
-          <ol className={x.flow}>
-            {flow.map((item) => (
-              <li key={item.step}>
-                <span className={`${x.flowStep} fk-num`}>{item.step}</span>
-                <span className={x.flowCopy}>
-                  <small>{item.title}</small>
-                  <b>{item.value}</b>
-                  <p>{item.note}</p>
-                  {item.action}
                 </span>
+                <span className="fk-sr-only">
+                  Illustrative AI-generated image; not a photograph of the delivered meal.
+                </span>
+              </div>
+            ) : (
+              <div className={x.scheduleEmpty}>
+                The scheduled menu is temporarily unavailable. The catalogue below is still live.
+              </div>
+            )}
+
+            {meals.length ? (
+              <div className={x.mealTabs} role="tablist" aria-label="Preview the four meals">
+                {meals.map((meal, index) => (
+                  <button
+                    key={`${meal.day}-${meal.slot}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeMealIndex === index}
+                    className={activeMealIndex === index ? x.mealTabActive : undefined}
+                    onClick={() => setActiveMealIndex(index)}
+                  >
+                    <span className={x.tabImage}>
+                      <Image src={PLAN_IMAGES[meal.slot]} alt="" fill sizes="72px" />
+                    </span>
+                    <span><small>{SLOT_LABEL[meal.slot] ?? meal.slot}</small><b>{meal.name}</b></span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <aside className={x.controlPanel} aria-label="Personalise the sample day">
+            <div className={x.controlHead}>
+              <span><small>Your goal</small><b>Watch the whole day recalculate</b></span>
+              <button type="button" className={x.profileButton} onClick={onOpenNumbers}>
+                {target.personal ? `${numbers?.weightKg}kg · yours` : "Use my numbers"}
+              </button>
+            </div>
+
+            <div className={x.goals} role="radiogroup" aria-label="Choose your goal">
+              {GOALS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={goal === item.key}
+                  className={goal === item.key ? x.goalActive : undefined}
+                  onClick={() => onGoalChange(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className={x.targetReadout} aria-live="polite" aria-atomic="true">
+              <span><small>Daily target</small><b className="fk-num">{target.kcal.toLocaleString("en-IN")} kcal</b></span>
+              <span><small>Four-meal menu</small><b className="fk-num">{scaledKcal.toLocaleString("en-IN")} kcal</b></span>
+              <span><small>Kitchen portion{serving.clamped ? " · safe cap" : ""}</small><b className="fk-num">{serving.factor.toFixed(2)}×</b></span>
+            </div>
+
+            <div className={x.coverage}>
+              <span>
+                <span><b>Calories</b><small className="fk-num">{calorieCoverage}%</small></span>
+                <progress max={100} value={calorieCoverage} aria-label={`${calorieCoverage}% of calorie target`} />
+              </span>
+              <span>
+                <span><b>Protein</b><small className="fk-num">{proteinCoverage}%</small></span>
+                <progress max={100} value={proteinCoverage} aria-label={`${proteinCoverage}% of protein target`} />
+              </span>
+            </div>
+
+            <div className={x.portionRule}>
+              <Icon path={ICON.scale} size={21} />
+              <span><b>{portionPercent}% portions on a real scale</b><small>Moves in 5% steps and stays inside the kitchen-safe 70–130% range.</small></span>
+            </div>
+
+            <div className={x.coachPreview}>
+              <span className={x.coachIcon}><Icon path={ICON.spark} size={21} /></span>
+              <span>
+                <small>{aiConfigured ? "FitFuel AI · online" : "FitFuel AI"}</small>
+                <p>{coachLine}</p>
+              </span>
+              <Link href="/dashboard/trainer" aria-label="Ask FitFuel AI about this day">
+                Ask AI <Icon path={ICON.arrow} size={17} />
+              </Link>
+            </div>
+
+            <div className={x.actions}>
+              <button type="button" onClick={onBrowseMeals}>Order from tonight’s menu</button>
+              <button type="button" className={x.secondaryAction} onClick={onBrowsePlans}>
+                Explore {planProfiles} plans
+              </button>
+            </div>
+          </aside>
+        </div>
+
+        <div className={x.systemRail} aria-label="What happens to this meal next">
+          <span><Icon path={ICON.scale} size={18} /><b>Weigh</b><small>{portionPercent}% portion</small></span>
+          <i aria-hidden="true" />
+          <span><Icon path={ICON.route} size={18} /><b>Deliver</b><small>one daily run</small></span>
+          <i aria-hidden="true" />
+          <span><Icon path={ICON.check} size={18} /><b>Pre-fill</b><small>tap to confirm</small></span>
+          <i aria-hidden="true" />
+          <span><Icon path={ICON.spark} size={18} /><b>Coach</b><small>weekly trend</small></span>
+        </div>
+      </div>
+
+      <div className={x.planDiscovery}>
+        <div className={x.sectionHead}>
+          <span><small>{planProfiles} plan profiles</small><h2>Start with the result, not a product list.</h2></span>
+          <button type="button" onClick={onBrowsePlans}>See every plan <Icon path={ICON.arrow} size={17} /></button>
+        </div>
+
+        <ul className={x.planLenses}>
+          {PLAN_LENSES.map((lens) => (
+            <li key={lens.key}>
+              <button type="button" onClick={() => onBrowsePlanCategory(lens.key)}>
+                <Image src={lens.image} alt="" fill sizes="(max-width: 720px) 100vw, 33vw" />
+                <span className={x.lensScrim} aria-hidden="true" />
+                <span className={x.lensCopy}>
+                  <small>{(categoryCounts[lens.key] ?? 0).toLocaleString("en-IN")} {lens.label.toLowerCase()}</small>
+                  <b>{lens.title}</b>
+                  <span>{lens.copy}</span>
+                  <em>Explore <Icon path={ICON.arrow} size={16} /></em>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p className="fk-sr-only">
+          Food and lifestyle images in this plan chooser are AI-generated illustrations.
+        </p>
+
+        <div className={x.trialBar}>
+          <span className={x.trialPrice}><small>First day</small><b className="fk-num">{trialTotal}</b></span>
+          <span className={x.trialCopy}><b>Breakfast and lunch. Everything included.</b><small>Food, packaging, delivery and GST. Nothing to cancel.</small></span>
+          <Link href="/plans?trial=true">Start the trial <Icon path={ICON.arrow} size={18} /></Link>
+        </div>
+      </div>
+
+      {quotes.length ? (
+        <div className={x.proof}>
+          <div className={x.sectionHead}>
+            <span><small>From people eating it</small><h2>Results attached to a plan and a Pune address.</h2></span>
+            <Link href="/testimonials">See all stories <Icon path={ICON.arrow} size={17} /></Link>
+          </div>
+          <ul className={x.quoteGrid}>
+            {quotes.slice(0, 3).map((quote) => (
+              <li key={quote.id}>
+                <b className={x.quoteResult}>{quote.resultLabel}</b>
+                <blockquote>“{quote.quote}”</blockquote>
+                <span><b>{quote.name}</b><small>{quote.location} · {quote.planLabel}</small></span>
               </li>
             ))}
-          </ol>
-
-          <div className={x.coachPreview}>
-            <span className={x.coachIcon}><Icon path={ICON.spark} size={22} /></span>
-            <span>
-              <small>{aiConfigured ? "FitFuel AI is online" : "FitFuel AI"}</small>
-              <p>{coachLine}</p>
-            </span>
-            <Link href="/dashboard/trainer" aria-label="Ask FitFuel AI about this day">
-              Ask AI <Icon path={ICON.arrow} size={17} />
-            </Link>
-          </div>
-
-          <div className={x.actions}>
-            <button type="button" onClick={onBrowseMeals}>Order from tonight&apos;s menu</button>
-            <button type="button" className={x.secondaryAction} onClick={onBrowsePlans}>
-              Explore {planProfiles} plans
-            </button>
-            <a href={whatsapp} target="_blank" rel="noreferrer">
-              <Icon path={ICON.message} size={18} /> Order on WhatsApp
-            </a>
-          </div>
-        </aside>
-      </div>
+          </ul>
+        </div>
+      ) : null}
 
       <ul className={x.ecosystem} aria-label="The wider FitFuel system">
-        <li>
-          <button type="button" onClick={onBrowsePlans}>
-            <b className="fk-num">{planProfiles}</b><span>plan profiles</span><small>Goals, sports and medical needs</small>
-          </button>
-        </li>
-        <li>
-          <Link href="/dashboard/exercises">
-            <b className="fk-num">{exercises.toLocaleString("en-IN")}</b><span>exercises</span><small>Workout burn returns to today&apos;s balance</small>
-          </Link>
-        </li>
-        <li>
-          <button type="button" onClick={onBrowseSupplements}>
-            <b className="fk-num">{supplements}</b><span>evidence guides</span><small>Mechanisms, timing and retailer comparison</small>
-          </button>
-        </li>
-        <li>
-          <Link href="/our-kitchen">
-            <b>Own kitchen</b><span>and own riders</span><small>The physical loop stays accountable</small>
-          </Link>
-        </li>
+        <li><button type="button" onClick={onBrowsePlans}><b className="fk-num">{planProfiles}</b><span>plan profiles</span><small>Goals, sports and medical needs</small></button></li>
+        <li><Link href="/dashboard/exercises"><b className="fk-num">{exercises.toLocaleString("en-IN")}</b><span>exercises</span><small>Workout burn returns to today’s balance</small></Link></li>
+        <li><button type="button" onClick={onBrowseSupplements}><b className="fk-num">{supplements}</b><span>evidence guides</span><small>Mechanisms, timing and retailer comparison</small></button></li>
+        <li><Link href="/our-kitchen"><b>Own kitchen</b><span>and own riders</span><small>The physical loop stays accountable</small></Link></li>
       </ul>
     </section>
   );
