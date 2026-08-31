@@ -53,7 +53,6 @@ import { MacroSplit, dishField } from "./DishVisuals";
 import s from "./app.module.css";
 import r from "./refresh.module.css";
 
-
 /* ── Icons ─────────────────────────────────────────────────────────────────
    Inline, 1.6 stroke, one family. SVG rather than an icon package so the
    shell has no runtime dependency and no version surprise, and never emoji. */
@@ -63,7 +62,8 @@ const I = {
   pin: "M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0ZM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
   bowl: "M3 11h18a9 9 0 0 1-18 0ZM7 11a5 5 0 0 1 10 0M12 3v3",
   layers: "m12 2 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 17l9 5 9-5",
-  spark: "M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18",
+  spark:
+    "M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18",
   book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z",
   user: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
   search: "m21 21-4.35-4.35M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z",
@@ -97,15 +97,57 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
    the subscription IS the main product and it belongs inside the shell.
    Diary/Coach/Training still exist and are reached from Your account. */
 type NavItem =
-  | { kind: "mode"; mode: "dishes" | "plans" | "supps"; label: string; icon: string }
-  | { kind: "link"; href: string; label: string; icon: string };
+  | {
+      kind: "mode";
+      mode: "dishes" | "plans" | "supps";
+      label: string;
+      mobileLabel: string;
+      icon: string;
+    }
+  | {
+      kind: "link";
+      href: string;
+      label: string;
+      mobileLabel: string;
+      icon: string;
+    };
 
 const NAV: NavItem[] = [
-  { kind: "mode", mode: "dishes", label: "Order tonight", icon: I.bowl },
-  { kind: "mode", mode: "plans", label: "Meal plans", icon: I.layers },
-  { kind: "mode", mode: "supps", label: "Supplements", icon: I.spark },
-  { kind: "link", href: "/dashboard/trainer", label: "AI coach", icon: I.message },
-  { kind: "link", href: "/dashboard", label: "Your account", icon: I.user },
+  {
+    kind: "mode",
+    mode: "dishes",
+    label: "Order tonight",
+    mobileLabel: "Meals",
+    icon: I.bowl,
+  },
+  {
+    kind: "mode",
+    mode: "plans",
+    label: "Meal plans",
+    mobileLabel: "Plans",
+    icon: I.layers,
+  },
+  {
+    kind: "mode",
+    mode: "supps",
+    label: "Supplements",
+    mobileLabel: "Supplements",
+    icon: I.spark,
+  },
+  {
+    kind: "link",
+    href: "/dashboard/trainer",
+    label: "AI coach",
+    mobileLabel: "Coach",
+    icon: I.message,
+  },
+  {
+    kind: "link",
+    href: "/dashboard",
+    label: "Your account",
+    mobileLabel: "Today",
+    icon: I.user,
+  },
 ];
 
 /* THE FOOTER EXISTS BECAUSE A REACHABILITY AUDIT FOUND 26 ORPHANS. The app
@@ -114,37 +156,49 @@ const NAV: NavItem[] = [
    page — was unreachable from `/`. Refund, privacy, terms and the medical
    disclaimer being unreachable is not a UX nicety, it is a compliance problem. */
 const FOOTER: { title: string; links: { href: string; label: string }[] }[] = [
-  { title: "Order", links: [
-    { href: "/", label: "Full menu" },
-    { href: "/plans", label: "All meal plans" },
-    { href: "/plans/digital", label: "Digital plans" },
-    { href: "/corporate", label: "For offices" },
-    { href: "/supplements", label: "Supplements" },
-  ]},
-  { title: "FitFuel", links: [
-    { href: "/why", label: "Why FitFuel" },
-    { href: "/how-it-works", label: "How a day works" },
-    { href: "/our-kitchen", label: "The kitchen" },
-    { href: "/our-team", label: "The team" },
-    { href: "/our-ingredients", label: "Our ingredients" },
-    { href: "/about", label: "About" },
-  ]},
-  { title: "Proof", links: [
-    { href: "/results", label: "Results" },
-    { href: "/testimonials", label: "Testimonials" },
-    { href: "/tdee-calculator", label: "TDEE calculator" },
-    { href: "/locations", label: "Where we deliver" },
-    { href: "/blog", label: "Blog" },
-    { href: "/faq", label: "Questions" },
-  ]},
-  { title: "Legal", links: [
-    { href: "/privacy", label: "Privacy" },
-    { href: "/terms", label: "Terms" },
-    { href: "/refund-policy", label: "Refunds" },
-    { href: "/allergen-policy", label: "Allergens" },
-    { href: "/medical-disclaimer", label: "Medical disclaimer" },
-    { href: "/contact", label: "Contact" },
-  ]},
+  {
+    title: "Order",
+    links: [
+      { href: "/", label: "Full menu" },
+      { href: "/plans", label: "All meal plans" },
+      { href: "/plans/digital", label: "Digital plans" },
+      { href: "/corporate", label: "For offices" },
+      { href: "/supplements", label: "Supplements" },
+    ],
+  },
+  {
+    title: "FitFuel",
+    links: [
+      { href: "/why", label: "Why FitFuel" },
+      { href: "/how-it-works", label: "How a day works" },
+      { href: "/our-kitchen", label: "The kitchen" },
+      { href: "/our-team", label: "The team" },
+      { href: "/our-ingredients", label: "Our ingredients" },
+      { href: "/about", label: "About" },
+    ],
+  },
+  {
+    title: "Proof",
+    links: [
+      { href: "/results", label: "Results" },
+      { href: "/testimonials", label: "Testimonials" },
+      { href: "/tdee-calculator", label: "TDEE calculator" },
+      { href: "/locations", label: "Where we deliver" },
+      { href: "/blog", label: "Blog" },
+      { href: "/faq", label: "Questions" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: "/privacy", label: "Privacy" },
+      { href: "/terms", label: "Terms" },
+      { href: "/refund-policy", label: "Refunds" },
+      { href: "/allergen-policy", label: "Allergens" },
+      { href: "/medical-disclaimer", label: "Medical disclaimer" },
+      { href: "/contact", label: "Contact" },
+    ],
+  },
 ];
 
 /* Everything the long-form page used to argue, still reachable. */
@@ -166,9 +220,16 @@ export type Course = { key: string; label: string; n: number; note: string };
 /** A plan row from the database, shaped so PlanSheet can consume it unchanged. */
 export type PlanMeal = { slot: string; name: string; kcal: number };
 export type AppSupp = {
-  slug: string; name: string; brand: string | null; tagline: string;
-  category: string; form: string | null; dosage: string | null;
-  timing: string | null; evidence: string | null; studies: string | null;
+  slug: string;
+  name: string;
+  brand: string | null;
+  tagline: string;
+  category: string;
+  form: string | null;
+  dosage: string | null;
+  timing: string | null;
+  evidence: string | null;
+  studies: string | null;
   benefits: string[];
 };
 
@@ -388,7 +449,11 @@ function AddControl({ dish }: { dish: ShopDish }) {
           aria-live element is how announcements get dropped. The inner span
           carries key={qty} so it remounts and replays the CSS animation, which
           is why this needs no timers, no state and no injected nodes. */}
-      <span className={s.stepQty} aria-live="polite" aria-label={`${qty} in order`}>
+      <span
+        className={s.stepQty}
+        aria-live="polite"
+        aria-label={`${qty} in order`}
+      >
         <span key={qty} className={s.qtyPop}>
           {qty}
         </span>
@@ -485,8 +550,11 @@ export default function FitFuelApp({
         if (onlyOrderable && !d.orderable) return false;
         if (
           normalizedQuery &&
-          !`${d.name} ${d.blurb} ${d.categoryLabel}`.toLowerCase().includes(normalizedQuery)
-        ) return false;
+          !`${d.name} ${d.blurb} ${d.categoryLabel}`
+            .toLowerCase()
+            .includes(normalizedQuery)
+        )
+          return false;
         return true;
       }),
     [dishes, course, onlyOrderable, normalizedQuery],
@@ -523,13 +591,15 @@ export default function FitFuelApp({
     () =>
       plans.filter((p) => {
         if (planCat !== "all" && p.cat !== planCat) return false;
-        if (planDiet !== "all" && !p.variants.some((v) => v.diet === planDiet)) return false;
+        if (planDiet !== "all" && !p.variants.some((v) => v.diet === planDiet))
+          return false;
         if (
           normalizedQuery &&
           !`${p.label} ${p.note} ${p.sub} ${p.variants.map((v) => v.label).join(" ")}`
             .toLowerCase()
             .includes(normalizedQuery)
-        ) return false;
+        )
+          return false;
         return true;
       }),
     [plans, planCat, planDiet, normalizedQuery],
@@ -544,21 +614,24 @@ export default function FitFuelApp({
 
   const suppCats = useMemo(() => {
     const m = new Map<string, number>();
-    for (const x of supplements) m.set(x.category, (m.get(x.category) ?? 0) + 1);
+    for (const x of supplements)
+      m.set(x.category, (m.get(x.category) ?? 0) + 1);
     return [...m.entries()].sort((a, b) => b[1] - a[1]);
   }, [supplements]);
 
   const suppResults = useMemo(
-    () => supplements.filter((x) => {
-      if (suppCat !== "all" && x.category !== suppCat) return false;
-      if (
-        normalizedQuery &&
-        !`${x.name} ${x.tagline} ${x.category} ${x.benefits.join(" ")}`
-          .toLowerCase()
-          .includes(normalizedQuery)
-      ) return false;
-      return true;
-    }),
+    () =>
+      supplements.filter((x) => {
+        if (suppCat !== "all" && x.category !== suppCat) return false;
+        if (
+          normalizedQuery &&
+          !`${x.name} ${x.tagline} ${x.category} ${x.benefits.join(" ")}`
+            .toLowerCase()
+            .includes(normalizedQuery)
+        )
+          return false;
+        return true;
+      }),
     [supplements, suppCat, normalizedQuery],
   );
 
@@ -583,7 +656,8 @@ export default function FitFuelApp({
   const filterKey = `${mode}|${course}|${planCat}|${planDiet}|${suppCat}|${onlyOrderable}|${normalizedQuery}`;
   const [expandedFor, setExpandedFor] = useState<string | null>(null);
   const expanded = expandedFor === filterKey;
-  const cap = <T,>(list: T[]): T[] => (expanded ? list : list.slice(0, PREVIEW));
+  const cap = <T,>(list: T[]): T[] =>
+    expanded ? list : list.slice(0, PREVIEW);
 
   /* The "show the rest" control, under whichever grid is live.
      A render HELPER, not a component: declaring a component inside render gives
@@ -593,7 +667,11 @@ export default function FitFuelApp({
   const showAllControl = (total: number, noun: string) =>
     expanded || total <= PREVIEW ? null : (
       <div className={s.showAllWrap}>
-        <button type="button" className={s.showAll} onClick={() => setExpandedFor(filterKey)}>
+        <button
+          type="button"
+          className={s.showAll}
+          onClick={() => setExpandedFor(filterKey)}
+        >
           Show all {total.toLocaleString("en-IN")} {noun}
         </button>
         <p className={s.showAllNote}>
@@ -703,10 +781,15 @@ export default function FitFuelApp({
           <p className={s.dishTop}>
             <span className={s.dishCourse}>{d.categoryLabel}</span>
             {badgesFor(d).map((b) => (
-              <span key={b} className={s.tag}>{b}</span>
+              <span key={b} className={s.tag}>
+                {b}
+              </span>
             ))}
           </p>
-          <Link href={`/menu/${d.id}`} className={`${s.dishName} ${r.productTitle}`}>
+          <Link
+            href={`/menu/${d.id}`}
+            className={`${s.dishName} ${r.productTitle}`}
+          >
             {d.name}
           </Link>
           <p className={`${s.dishBlurb} ${r.productDescription}`}>{d.blurb}</p>
@@ -726,7 +809,11 @@ export default function FitFuelApp({
             />
           ) : null}
           {d.orderable && (d.addOns?.length || d.variantNote) ? (
-            <button type="button" className={s.addOnHint} onClick={() => setSheet(d)}>
+            <button
+              type="button"
+              className={s.addOnHint}
+              onClick={() => setSheet(d)}
+            >
               {d.addOns?.length ? `+ ${d.addOns.length} add-ons` : null}
               {d.addOns?.length && d.variantNote ? " · " : null}
               {d.variantNote ? d.variantNote : null}
@@ -772,12 +859,22 @@ export default function FitFuelApp({
      charges none of them when the basket is enquiries only. */
   const basketTotal = receipt(cart.lines).totalRs;
 
-  const switchMode = (next: "dishes" | "plans" | "supps", moveToCatalog = false) => {
+  const switchMode = (
+    next: "dishes" | "plans" | "supps",
+    moveToCatalog = false,
+  ) => {
     setMode(next);
     setQuery("");
     setExpandedFor(null);
     if (moveToCatalog) {
-      requestAnimationFrame(() => catalogRef.current?.scrollIntoView({ block: "start" }));
+      /* On a phone the catalogue switch lives in the fixed bottom bar while
+         its result lives below the storefront deck. Changing state without
+         moving the viewport made Plans and Supplements look completely dead.
+         The next frame lets React commit the selected catalogue first, then
+         lands the customer on its controls and heading. */
+      requestAnimationFrame(() =>
+        catalogRef.current?.scrollIntoView({ block: "start" }),
+      );
     }
   };
 
@@ -874,7 +971,9 @@ export default function FitFuelApp({
               aria-label={`Your order, ${basketCount} item${basketCount === 1 ? "" : "s"}`}
             >
               <Icon d={I.bag} size={18} />
-              {basketCount > 0 ? <span className={s.badge}>{basketCount}</span> : null}
+              {basketCount > 0 ? (
+                <span className={s.badge}>{basketCount}</span>
+              ) : null}
             </button>
           </div>
         </div>
@@ -897,109 +996,134 @@ export default function FitFuelApp({
       />
 
       {/* ── Rail + content ──────────────────────────────────────────────── */}
-      <div className={`${s.filters} ${r.filters}`} ref={catalogRef} id="catalog">
-          {/* Catalog switch. A subscription and a single meal are different
+      <div
+        className={`${s.filters} ${r.filters}`}
+        ref={catalogRef}
+        id="catalog"
+      >
+        {/* Catalog switch. A subscription and a single meal are different
               purchases, so they get different chip sets rather than one mixed
               grid where a Rs 230 salad sits beside a Rs 17,849 month. */}
-          <div className={r.catalogControls}>
-            <div className={`${s.modeRow} ${r.modeRow}`} role="group" aria-label="What are you ordering">
-              <button
-                type="button"
-                className={`${s.mode} ${mode === "dishes" ? s.modeOn : ""}`}
-                onClick={() => switchMode("dishes")}
-                aria-pressed={mode === "dishes"}
-              >
-                Single meals <span className={s.fcount}>{dishes.length}</span>
-              </button>
-              <button
-                type="button"
-                className={`${s.mode} ${mode === "plans" ? s.modeOn : ""}`}
-                onClick={() => switchMode("plans")}
-                aria-pressed={mode === "plans"}
-              >
-                Meal plans <span className={s.fcount}>{planCount}</span>
-              </button>
-              <button
-                type="button"
-                className={`${s.mode} ${mode === "supps" ? s.modeOn : ""}`}
-                onClick={() => switchMode("supps")}
-                aria-pressed={mode === "supps"}
-              >
-                Supplements <span className={s.fcount}>{supplements.length}</span>
-              </button>
-            </div>
-
-            <label className={r.search}>
-              <span className="fk-sr-only">{searchPlaceholder}</span>
-              <Icon d={I.search} size={18} />
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={searchPlaceholder}
-                autoComplete="off"
-              />
-              {query ? (
-                <button type="button" onClick={() => setQuery("")} aria-label="Clear search">
-                  <Icon d={I.x} size={16} />
-                </button>
-              ) : null}
-            </label>
+        <div className={r.catalogControls}>
+          <div
+            className={`${s.modeRow} ${r.modeRow}`}
+            role="group"
+            aria-label="What are you ordering"
+          >
+            <button
+              type="button"
+              className={`${s.mode} ${mode === "dishes" ? s.modeOn : ""}`}
+              onClick={() => switchMode("dishes")}
+              aria-pressed={mode === "dishes"}
+            >
+              Single meals <span className={s.fcount}>{dishes.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`${s.mode} ${mode === "plans" ? s.modeOn : ""}`}
+              onClick={() => switchMode("plans")}
+              aria-pressed={mode === "plans"}
+            >
+              Meal plans <span className={s.fcount}>{planCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`${s.mode} ${mode === "supps" ? s.modeOn : ""}`}
+              onClick={() => switchMode("supps")}
+              aria-pressed={mode === "supps"}
+            >
+              Supplements <span className={s.fcount}>{supplements.length}</span>
+            </button>
           </div>
 
-          {mode === "supps" ? (
-            <div className={s.chipRow} role="group" aria-label="Filter supplements">
+          <label className={r.search}>
+            <span className="fk-sr-only">{searchPlaceholder}</span>
+            <Icon d={I.search} size={18} />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={searchPlaceholder}
+              autoComplete="off"
+            />
+            {query ? (
               <button
                 type="button"
-                className={`${s.fchip} ${suppCat === "all" ? s.fchipOn : ""}`}
-                onClick={() => setSuppCat("all")}
-                aria-pressed={suppCat === "all"}
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
               >
-                Everything <span className={s.fcount}>{supplements.length}</span>
+                <Icon d={I.x} size={16} />
               </button>
-              {suppCats.map(([c, n]) => (
+            ) : null}
+          </label>
+        </div>
+
+        {mode === "supps" ? (
+          <div
+            className={s.chipRow}
+            role="group"
+            aria-label="Filter supplements"
+          >
+            <button
+              type="button"
+              className={`${s.fchip} ${suppCat === "all" ? s.fchipOn : ""}`}
+              onClick={() => setSuppCat("all")}
+              aria-pressed={suppCat === "all"}
+            >
+              Everything <span className={s.fcount}>{supplements.length}</span>
+            </button>
+            {suppCats.map(([c, n]) => (
+              <button
+                key={c}
+                type="button"
+                className={`${s.fchip} ${suppCat === c ? s.fchipOn : ""}`}
+                onClick={() => setSuppCat(c)}
+                aria-pressed={suppCat === c}
+              >
+                {c} <span className={s.fcount}>{n}</span>
+              </button>
+            ))}
+          </div>
+        ) : mode === "plans" ? (
+          <>
+            <div
+              className={s.chipRow}
+              role="group"
+              aria-label="Filter plans by goal"
+            >
+              {PLAN_CATS.map((c) => (
                 <button
-                  key={c}
+                  key={c.key}
                   type="button"
-                  className={`${s.fchip} ${suppCat === c ? s.fchipOn : ""}`}
-                  onClick={() => setSuppCat(c)}
-                  aria-pressed={suppCat === c}
+                  className={`${s.fchip} ${planCat === c.key ? s.fchipOn : ""}`}
+                  onClick={() => setPlanCat(c.key)}
+                  aria-pressed={planCat === c.key}
                 >
-                  {c} <span className={s.fcount}>{n}</span>
+                  {c.key === "all" ? "All plans" : c.label}
+                  <span className={s.fcount}>{catCount[c.key] ?? 0}</span>
                 </button>
               ))}
             </div>
-          ) : mode === "plans" ? (
-            <>
-              <div className={s.chipRow} role="group" aria-label="Filter plans by goal">
-                {PLAN_CATS.map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    className={`${s.fchip} ${planCat === c.key ? s.fchipOn : ""}`}
-                    onClick={() => setPlanCat(c.key)}
-                    aria-pressed={planCat === c.key}
-                  >
-                    {c.key === "all" ? "All plans" : c.label}
-                    <span className={s.fcount}>{catCount[c.key] ?? 0}</span>
-                  </button>
-                ))}
-              </div>
-              <div className={s.chipRow} role="group" aria-label="Filter plans by diet" style={{ marginTop: 8 }}>
-                {DIETS.map((d) => (
-                  <button
-                    key={d.key}
-                    type="button"
-                    className={`${s.fchip} ${planDiet === d.key ? s.fchipOn : ""}`}
-                    onClick={() => setPlanDiet(d.key)}
-                    aria-pressed={planDiet === d.key}
-                  >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
+            <div
+              className={s.chipRow}
+              role="group"
+              aria-label="Filter plans by diet"
+              style={{ marginTop: 8 }}
+            >
+              {DIETS.map((d) => (
+                <button
+                  key={d.key}
+                  type="button"
+                  className={`${s.fchip} ${planDiet === d.key ? s.fchipOn : ""}`}
+                  onClick={() => setPlanDiet(d.key)}
+                  aria-pressed={planDiet === d.key}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
           <div className={s.chipRow} role="group" aria-label="Filter by course">
             <button
               type="button"
@@ -1029,10 +1153,10 @@ export default function FitFuelApp({
               Priced tonight
             </button>
           </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* ── THE DAY BAR ──────────────────────────────────────────────────
+      {/* ── THE DAY BAR ──────────────────────────────────────────────────
             A menu tells you what a dish is. This tells you what it does to the
             day you are trying to have, which is the only thing a nutrition
             company can offer that a delivery app cannot.
@@ -1045,97 +1169,108 @@ export default function FitFuelApp({
 
             It sits directly above the catalogue, where it can guide an order
             without occupying the viewport after the customer scrolls on. */}
-        <div className={`${s.dayBar} ${r.dayBar}`}>
-          <div className={s.dayBarInner}>
-            <div className={s.goalPick}>
-              <div className={s.goalSeg} role="group" aria-label="Your daily target">
-                {GOALS.map((g) => (
-                  <button
-                    key={g.key}
-                    type="button"
-                    className={`${s.goalBtn} ${goal === g.key ? s.goalOn : ""}`}
-                    onClick={() => setGoal(g.key)}
-                    aria-pressed={goal === g.key}
-                  >
-                    {g.label}
-                  </button>
-                ))}
-              </div>
-              {/* "Your day" was a label on a control that already says what it
-                  is. The room goes to the thing that changes the answer. */}
-              <button
-                type="button"
-                className={`${s.numbersBtn} ${target.personal ? s.numbersBtnOn : ""}`}
-                onClick={() => setNumbersOpen(true)}
-                aria-haspopup="dialog"
-                aria-expanded={numbersOpen}
-              >
-                {target.personal
-                  ? `${numbers!.weightKg}kg · ${numbers!.age}`
-                  : "Set your numbers"}
-              </button>
+      <div className={`${s.dayBar} ${r.dayBar}`}>
+        <div className={s.dayBarInner}>
+          <div className={s.goalPick}>
+            <div
+              className={s.goalSeg}
+              role="group"
+              aria-label="Your daily target"
+            >
+              {GOALS.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  className={`${s.goalBtn} ${goal === g.key ? s.goalOn : ""}`}
+                  onClick={() => setGoal(g.key)}
+                  aria-pressed={goal === g.key}
+                >
+                  {g.label}
+                </button>
+              ))}
             </div>
+            {/* "Your day" was a label on a control that already says what it
+                  is. The room goes to the thing that changes the answer. */}
+            <button
+              type="button"
+              className={`${s.numbersBtn} ${target.personal ? s.numbersBtnOn : ""}`}
+              onClick={() => setNumbersOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={numbersOpen}
+            >
+              {target.personal
+                ? `${numbers!.weightKg}kg · ${numbers!.age}`
+                : "Set your numbers"}
+            </button>
+          </div>
 
-            {/* The live region is the METER BLOCK, not the sentence under it.
+          {/* The live region is the METER BLOCK, not the sentence under it.
                 Below 640px that sentence is dropped for room and the figures
                 stay — announcing the change has to survive both layouts, and a
                 region that exists on one breakpoint and not the other is a
                 screen-reader bug nobody sees. */}
-            <div className={s.dayMeters} aria-live="polite">
-              <p className={s.dayFigs}>
-                <span className="fk-num">
-                  {day.kcal.toLocaleString("en-IN")} / {target.kcal.toLocaleString("en-IN")} kcal
-                </span>
-                <span className={`${s.dayProteinFig} fk-num`}>
-                  {day.protein} / {target.protein}g protein
-                </span>
-              </p>
-              <p className={s.dayTracks}>
-                <span className={s.dayTrack}>
-                  <span
-                    className={s.dayFillK}
-                    style={{ width: `${Math.min(100, Math.round((day.kcal / target.kcal) * 100))}%` }}
-                  />
-                </span>
-                <span className={s.dayTrack}>
-                  <span
-                    className={s.dayFillP}
-                    style={{
-                      width: `${Math.min(100, Math.round((day.protein / target.protein) * 100))}%`,
-                    }}
-                  />
-                </span>
-              </p>
-              <p className={s.dayNote}>
-                {day.count === 0
-                  ? target.personal
-                    ? "Your target, from your own numbers. Add dishes and the bars fill."
-                    : "Pick a target, then add dishes — the bars fill as you go."
-                  : day.gapProtein > 0
-                    ? `${day.gapProtein}g protein and ${day.gapKcal.toLocaleString("en-IN")} kcal left in the day.`
-                    : `Protein target met. ${day.gapKcal.toLocaleString("en-IN")} kcal still spare.`}
-              </p>
-            </div>
-
-            <div className={s.dayBasket}>
-              <span className={s.dayBasketFig}>
-                <b className="fk-num">{rs(basketTotal)}</b>
-                <span>
-                  {basketCount
-                    ? `${basketCount} item${basketCount === 1 ? "" : "s"} · incl. GST`
-                    : "delivery from ₹49"}
-                </span>
+          <div className={s.dayMeters} aria-live="polite">
+            <p className={s.dayFigs}>
+              <span className="fk-num">
+                {day.kcal.toLocaleString("en-IN")} /{" "}
+                {target.kcal.toLocaleString("en-IN")} kcal
               </span>
-              {basketCount > 0 ? (
-                <button type="button" className={s.dayView} onClick={() => cart.setOpen(true)}>
-                  View order
-                </button>
-              ) : (
-                <span className={s.dayEmpty}>Basket empty</span>
-              )}
-            </div>
+              <span className={`${s.dayProteinFig} fk-num`}>
+                {day.protein} / {target.protein}g protein
+              </span>
+            </p>
+            <p className={s.dayTracks}>
+              <span className={s.dayTrack}>
+                <span
+                  className={s.dayFillK}
+                  style={{
+                    width: `${Math.min(100, Math.round((day.kcal / target.kcal) * 100))}%`,
+                  }}
+                />
+              </span>
+              <span className={s.dayTrack}>
+                <span
+                  className={s.dayFillP}
+                  style={{
+                    width: `${Math.min(100, Math.round((day.protein / target.protein) * 100))}%`,
+                  }}
+                />
+              </span>
+            </p>
+            <p className={s.dayNote}>
+              {day.count === 0
+                ? target.personal
+                  ? "Your target, from your own numbers. Add dishes and the bars fill."
+                  : "Pick a target, then add dishes — the bars fill as you go."
+                : day.gapProtein > 0
+                  ? `${day.gapProtein}g protein and ${day.gapKcal.toLocaleString("en-IN")} kcal left in the day.`
+                  : `Protein target met. ${day.gapKcal.toLocaleString("en-IN")} kcal still spare.`}
+            </p>
+          </div>
+
+          <div className={s.dayBasket}>
+            <span className={s.dayBasketFig}>
+              <b className="fk-num">{rs(basketTotal)}</b>
+              <span>
+                {basketCount
+                  ? `${basketCount} item${basketCount === 1 ? "" : "s"} · incl. GST`
+                  : "delivery from ₹49"}
+              </span>
+            </span>
+            {basketCount > 0 ? (
+              <button
+                type="button"
+                className={s.dayView}
+                onClick={() => cart.setOpen(true)}
+              >
+                View order
+              </button>
+            ) : (
+              <span className={s.dayEmpty}>Basket empty</span>
+            )}
           </div>
         </div>
+      </div>
       <div className={s.body}>
         <nav className={`${s.rail} ${r.sideRail}`} aria-label="Sections">
           <ul className={s.railList}>
@@ -1146,7 +1281,7 @@ export default function FitFuelApp({
                     type="button"
                     className={`${s.railLink} ${mode === n.mode ? s.railOn : ""}`}
                     onClick={() => switchMode(n.mode)}
-                    aria-current={mode === n.mode ? "page" : undefined}
+                    aria-pressed={mode === n.mode}
                   >
                     <Icon d={n.icon} />
                     {n.label}
@@ -1196,7 +1331,11 @@ export default function FitFuelApp({
           <ul className={s.railList} style={{ marginTop: "var(--fk-s-5)" }}>
             {MORE.map((m) => (
               <li key={m.href}>
-                <Link href={m.href} className={s.railLink} style={{ fontSize: "var(--fk-t-sm)" }}>
+                <Link
+                  href={m.href}
+                  className={s.railLink}
+                  style={{ fontSize: "var(--fk-t-sm)" }}
+                >
                   {m.label}
                 </Link>
               </li>
@@ -1246,7 +1385,11 @@ export default function FitFuelApp({
                 six figures are the platform band's own four plus the dish and
                 plan counts printed on the result line under this. Nothing here
                 was load-bearing; it was the fold repeating itself. */}
-            <div className={`${s.resultBar} ${r.resultBar}`}>
+            <div
+              className={`${s.resultBar} ${r.resultBar}`}
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <h2>
                 {mode === "supps"
                   ? suppCat === "all"
@@ -1262,11 +1405,11 @@ export default function FitFuelApp({
                 {mode === "supps"
                   ? `${suppResults.length} of ${supplements.length} · researched, not stocked`
                   : mode === "plans"
-                  ? `${planResults.length} of ${planCount} plans · ${goalCount} goals and conditions`
-                  : `${results.length} dish${results.length === 1 ? "" : "es"}` +
-                    (orderableCount !== results.length
-                      ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
-                      : ` · from ${menuFrom}`)}
+                    ? `${planResults.length} of ${planCount} plans · ${goalCount} goals and conditions`
+                    : `${results.length} dish${results.length === 1 ? "" : "es"}` +
+                      (orderableCount !== results.length
+                        ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
+                        : ` · from ${menuFrom}`)}
               </p>
             </div>
 
@@ -1274,7 +1417,11 @@ export default function FitFuelApp({
               <div className={r.modeFeature}>
                 <div className={r.modeFeatureImage}>
                   <Image
-                    src={mode === "plans" ? "/images/hero-bowl-v2.png" : "/images/supplements.jpg"}
+                    src={
+                      mode === "plans"
+                        ? "/images/hero-bowl-v2.png"
+                        : "/images/supplements.jpg"
+                    }
                     alt={
                       mode === "plans"
                         ? "A balanced FitFuel meal with paneer, rice, greens, chickpeas and raita"
@@ -1286,7 +1433,11 @@ export default function FitFuelApp({
                   />
                 </div>
                 <div className={r.modeFeatureCopy}>
-                  <span>{mode === "plans" ? "Complete nutrition" : "Evidence before products"}</span>
+                  <span>
+                    {mode === "plans"
+                      ? "Complete nutrition"
+                      : "Evidence before products"}
+                  </span>
                   <h3>
                     {mode === "plans"
                       ? "A menu, a target and a feedback loop—not a PDF you forget."
@@ -1306,22 +1457,37 @@ export default function FitFuelApp({
                 <h3>Nothing matches that.</h3>
                 <p>
                   {mode === "plans" ? (
-                    <>There are {planCount} plans across goals, sports and {goalCount} conditions. </>
+                    <>
+                      There are {planCount} plans across goals, sports and{" "}
+                      {goalCount} conditions.{" "}
+                    </>
                   ) : mode === "supps" ? (
-                    <>There are {supplements.length} researched supplements across {suppCats.length} categories. </>
+                    <>
+                      There are {supplements.length} researched supplements
+                      across {suppCats.length} categories.{" "}
+                    </>
                   ) : (
-                    <>We cook {dishes.length} dishes across {courses.length} courses. </>
+                    <>
+                      We cook {dishes.length} dishes across {courses.length}{" "}
+                      courses.{" "}
+                    </>
                   )}
                   Clear the search or try a different filter.
                 </p>
                 <span className={s.emptyActions}>
-                  <button type="button" className={s.add} onClick={clearCurrentView}>
+                  <button
+                    type="button"
+                    className={s.add}
+                    onClick={clearCurrentView}
+                  >
                     Show everything here
                   </button>
                   <button
                     type="button"
                     className={[s.add, s.ghost].join(" ")}
-                    onClick={() => switchMode(mode === "dishes" ? "plans" : "dishes")}
+                    onClick={() =>
+                      switchMode(mode === "dishes" ? "plans" : "dishes")
+                    }
                   >
                     {mode === "dishes" ? (
                       <>Browse {planCount} plans</>
@@ -1333,69 +1499,111 @@ export default function FitFuelApp({
               </div>
             ) : mode === "supps" ? (
               <>
-              <ul className={`${s.grid} ${r.productGrid}`}>
-                {cap(suppResults).map((x) => (
-                  <li key={x.slug} className={`${s.card} ${r.productCard} ${r.textCard}`} data-card="">
-                    <div className={`${s.cardBody} ${r.productBody}`}>
-                      <p className={s.dishTop}>
-                        <span className={s.dishCourse}>{x.category}</span>
-                        {x.evidence ? <span className="fk-num">{x.evidence.replace(/_/g, " ")}</span> : null}
-                      </p>
-                      <Link href={`/supplements#${x.slug}`} className={`${s.dishName} ${r.productTitle}`}>{x.name}</Link>
-                      {x.tagline ? <p className={`${s.dishBlurb} ${r.productDescription}`}>{x.tagline}</p> : null}
-                      {x.benefits.length ? (
-                        <ul className={s.benefits}>
-                          {x.benefits.map((b) => <li key={b}>{b}</li>)}
-                        </ul>
-                      ) : null}
-                      <p className={s.macroLine}>
-                        {[x.form, x.dosage, x.timing].filter(Boolean).join(" · ") || "Dosage on the page"}
-                      </p>
-                      <div className={s.cardFoot}>
-                        <span className={s.askPrice}>{x.studies ? `${x.studies} studies` : "Researched"}</span>
-                        <Link href={`/supplements#${x.slug}`} className={`${s.add} ${s.ghost}`}>Read up</Link>
+                <ul className={`${s.grid} ${r.productGrid}`}>
+                  {cap(suppResults).map((x) => (
+                    <li
+                      key={x.slug}
+                      className={`${s.card} ${r.productCard} ${r.textCard}`}
+                      data-card=""
+                    >
+                      <div className={`${s.cardBody} ${r.productBody}`}>
+                        <p className={s.dishTop}>
+                          <span className={s.dishCourse}>{x.category}</span>
+                          {x.evidence ? (
+                            <span className="fk-num">
+                              {x.evidence.replace(/_/g, " ")}
+                            </span>
+                          ) : null}
+                        </p>
+                        <Link
+                          href={`/supplements#${x.slug}`}
+                          className={`${s.dishName} ${r.productTitle}`}
+                        >
+                          {x.name}
+                        </Link>
+                        {x.tagline ? (
+                          <p
+                            className={`${s.dishBlurb} ${r.productDescription}`}
+                          >
+                            {x.tagline}
+                          </p>
+                        ) : null}
+                        {x.benefits.length ? (
+                          <ul className={s.benefits}>
+                            {x.benefits.map((b) => (
+                              <li key={b}>{b}</li>
+                            ))}
+                          </ul>
+                        ) : null}
+                        <p className={s.macroLine}>
+                          {[x.form, x.dosage, x.timing]
+                            .filter(Boolean)
+                            .join(" · ") || "Dosage on the page"}
+                        </p>
+                        <div className={s.cardFoot}>
+                          <span className={s.askPrice}>
+                            {x.studies ? `${x.studies} studies` : "Researched"}
+                          </span>
+                          <Link
+                            href={`/supplements#${x.slug}`}
+                            className={`${s.add} ${s.ghost}`}
+                          >
+                            Read up
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {showAllControl(suppResults.length, "supplements")}
+                    </li>
+                  ))}
+                </ul>
+                {showAllControl(suppResults.length, "supplements")}
               </>
             ) : mode === "plans" ? (
               <>
-              <ul className={`${s.grid} ${r.productGrid}`}>
-                {cap(planResults).map((p) => (
-                  <li key={p.slug} className={`${s.card} ${r.productCard} ${r.textCard}`} data-card="">
-                    <div className={`${s.cardBody} ${r.productBody}`}>
-                      <p className={s.planCat}>
-                        {p.variants.length} diet{p.variants.length === 1 ? "" : "s"} · 4 meals a day
-                      </p>
-                      {/* THE PRODUCT PAGE. app/plans/[slug] is an 80KB page with
+                <ul className={`${s.grid} ${r.productGrid}`}>
+                  {cap(planResults).map((p) => (
+                    <li
+                      key={p.slug}
+                      className={`${s.card} ${r.productCard} ${r.textCard}`}
+                      data-card=""
+                    >
+                      <div className={`${s.cardBody} ${r.productBody}`}>
+                        <p className={s.planCat}>
+                          {p.variants.length} diet
+                          {p.variants.length === 1 ? "" : "s"} · 4 meals a day
+                        </p>
+                        {/* THE PRODUCT PAGE. app/plans/[slug] is an 80KB page with
                           the full 30-day schedule, live PlanPrice rows and
                           Product/Offer schema — it has existed all along and
                           the app never linked to it. The card title is the way
                           in; the buttons below stay for quick answers. */}
-                      <Link href={`/plans/${p.slug}`} className={`${s.dishName} ${r.productTitle}`}>
-                        {p.label}
-                      </Link>
-                      <p className={`${s.dishBlurb} ${r.productDescription}`}>{p.note}</p>
-                      {/* The daily kcal was a line of its own above the bar.
+                        <Link
+                          href={`/plans/${p.slug}`}
+                          className={`${s.dishName} ${r.productTitle}`}
+                        >
+                          {p.label}
+                        </Link>
+                        <p className={`${s.dishBlurb} ${r.productDescription}`}>
+                          {p.note}
+                        </p>
+                        {/* The daily kcal was a line of its own above the bar.
                           It is the ring's centre now, labelled "a day" so the
                           per-day basis survives the move. Falls back to the
                           plain line when a plan has no macro split to draw. */}
-                      {p.pcf ? (
-                        <MacroSplit
-                          p={p.pcf[0]}
-                          c={p.pcf[1]}
-                          f={p.pcf[2]}
-                          kcal={p.kcal ?? undefined}
-                          unit="a day"
-                        />
-                      ) : p.kcal ? (
-                        <p className={s.macroLine}>{p.kcal.toLocaleString("en-IN")} kcal a day</p>
-                      ) : null}
+                        {p.pcf ? (
+                          <MacroSplit
+                            p={p.pcf[0]}
+                            c={p.pcf[1]}
+                            f={p.pcf[2]}
+                            kcal={p.kcal ?? undefined}
+                            unit="a day"
+                          />
+                        ) : p.kcal ? (
+                          <p className={s.macroLine}>
+                            {p.kcal.toLocaleString("en-IN")} kcal a day
+                          </p>
+                        ) : null}
 
-                      {/* ── TWO ACTIONS, NO ACCORDIONS ────────────────────────
+                        {/* ── TWO ACTIONS, NO ACCORDIONS ────────────────────────
                           This card carried three controls — "N variations",
                           "View menu" and "Configure" — and the first two were
                           both wrong.
@@ -1419,19 +1627,26 @@ export default function FitFuelApp({
                           the buying decision is actually made, and the full
                           30-day schedule is on the plan's own page. So: one link
                           to the page, one button to the sheet. */}
-                      <div className={`${s.cardFoot} ${s.planFoot}`}>
-                        <Link href={`/plans/${p.slug}`} className={`${s.add} ${s.ghost}`}>
-                          See the plan
-                        </Link>
-                        <button type="button" className={s.add} onClick={() => setPlanSheet(p)}>
-                          Configure
-                        </button>
+                        <div className={`${s.cardFoot} ${s.planFoot}`}>
+                          <Link
+                            href={`/plans/${p.slug}`}
+                            className={`${s.add} ${s.ghost}`}
+                          >
+                            See the plan
+                          </Link>
+                          <button
+                            type="button"
+                            className={s.add}
+                            onClick={() => setPlanSheet(p)}
+                          >
+                            Configure
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {showAllControl(planResults.length, "plans")}
+                    </li>
+                  ))}
+                </ul>
+                {showAllControl(planResults.length, "plans")}
               </>
             ) : grouped ? (
               /* ── THE MENU, IN COURSES ──────────────────────────────────────
@@ -1472,7 +1687,9 @@ export default function FitFuelApp({
                           <span className={r.courseCopy}>
                             <span className={s.courseTitle}>
                               <b>{c.label}</b>
-                              <span className="fk-num">{list.length} dishes</span>
+                              <span className="fk-num">
+                                {list.length} dishes
+                              </span>
                             </span>
                             <span className={s.courseNote}>{c.note}</span>
                           </span>
@@ -1496,8 +1713,10 @@ export default function FitFuelApp({
               </ul>
             ) : (
               <>
-              <ul className={`${s.grid} ${r.productGrid}`}>{cap(results).map((d) => dishCard(d))}</ul>
-              {showAllControl(results.length, "dishes")}
+                <ul className={`${s.grid} ${r.productGrid}`}>
+                  {cap(results).map((d) => dishCard(d))}
+                </ul>
+                {showAllControl(results.length, "dishes")}
               </>
             )}
           </div>
@@ -1555,16 +1774,22 @@ export default function FitFuelApp({
               key={n.label}
               type="button"
               className={`${s.tab} ${mode === n.mode ? s.tabOn : ""}`}
-              onClick={() => switchMode(n.mode)}
-              aria-current={mode === n.mode ? "page" : undefined}
+              onClick={() => switchMode(n.mode, true)}
+              aria-label={`Open ${n.label}`}
+              aria-pressed={mode === n.mode}
             >
               <Icon d={n.icon} size={22} />
-              {n.label}
+              <span className={s.tabLabel}>{n.mobileLabel}</span>
             </button>
           ) : (
-            <Link key={n.label} href={n.href} className={s.tab}>
+            <Link
+              key={n.label}
+              href={n.href}
+              className={s.tab}
+              aria-label={`Open ${n.label}`}
+            >
               <Icon d={n.icon} size={22} />
-              {n.label}
+              <span className={s.tabLabel}>{n.mobileLabel}</span>
             </Link>
           ),
         )}
@@ -1582,9 +1807,15 @@ export default function FitFuelApp({
               <b>
                 {basketCount} item{basketCount === 1 ? "" : "s"} in your order
               </b>
-              <span>{rs(basketTotal)} including delivery, packaging and GST</span>
+              <span>
+                {rs(basketTotal)} including delivery, packaging and GST
+              </span>
             </span>
-            <button type="button" className={s.orderCta} onClick={() => cart.setOpen(true)}>
+            <button
+              type="button"
+              className={s.orderCta}
+              onClick={() => cart.setOpen(true)}
+            >
               View order
             </button>
             <button
@@ -1609,8 +1840,16 @@ export default function FitFuelApp({
         />
       ) : null}
 
-      {sheet ? <DishSheet dish={sheet} images={images} onClose={() => setSheet(null)} /> : null}
-      {planSheet ? <PlanSheet plan={planSheet} onClose={() => setPlanSheet(null)} /> : null}
+      {sheet ? (
+        <DishSheet
+          dish={sheet}
+          images={images}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
+      {planSheet ? (
+        <PlanSheet plan={planSheet} onClose={() => setPlanSheet(null)} />
+      ) : null}
 
       {/* areaPanel is a server component handed down as a node. Sheet already
           traps and restores focus and closes on Escape, so the map inherits all
