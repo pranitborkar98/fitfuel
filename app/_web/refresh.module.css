@@ -8,10 +8,10 @@
  */
 
 .header {
-  position: relative !important;
-  top: auto !important;
-  z-index: var(--fk-z-base) !important;
-  border-bottom: 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: var(--fk-z-header) !important;
+  border-bottom: 1px solid var(--fk-line) !important;
   background: var(--fk-paper);
 }
 
@@ -38,6 +38,10 @@
   }
 
   .headerAi span { display: none; }
+}
+
+@media (max-width: 420px) {
+  .placeLabel { display: none; }
 }
 
 /* ── The home deck ──────────────────────────────────────────────────────
@@ -306,7 +310,7 @@
 
 /* ── Catalogue controls ────────────────────────────────────────────────── */
 .filters {
-  scroll-margin-top: var(--fk-s-4);
+  scroll-margin-top: 80px;
   padding-top: var(--fk-s-5) !important;
   padding-bottom: var(--fk-s-5) !important;
   border-top: 1px solid var(--fk-line) !important;
@@ -403,12 +407,12 @@
 }
 
 .sideRail {
-  top: var(--fk-s-5) !important;
-  max-height: calc(100dvh - var(--fk-s-7)) !important;
+  top: 96px !important;
+  max-height: calc(100dvh - 120px) !important;
 }
 
 .planSummary {
-  top: var(--fk-s-5) !important;
+  top: 96px !important;
 }
 
 /* ── Browsing and product cards ────────────────────────────────────────── */
@@ -640,6 +644,10 @@
   .filters {
     padding-top: var(--fk-s-4) !important;
     padding-bottom: var(--fk-s-4) !important;
+  }
+
+  .modeRow {
+    display: none !important;
   }
 
   .modeRow > button {

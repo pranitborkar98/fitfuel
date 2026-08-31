@@ -857,7 +857,7 @@ export default function FitFuelApp({
               aria-label={`Delivering to ${area}. See where we deliver`}
             >
               <Icon d={I.pin} size={16} />
-              {area}
+              <span className={r.placeLabel}>{area}</span>
             </button>
             <Link
               href="/dashboard/trainer"
@@ -878,35 +878,26 @@ export default function FitFuelApp({
             </button>
           </div>
         </div>
+      </header>
 
-        <HomeExperience
-          week={week}
-          goal={goal}
-          target={target}
-          numbers={numbers}
-          area={area}
-          areaCount={areaCount}
-          cutoffLabel={cutoffLabel}
-          trialTotal={trialTotal}
-          aiConfigured={aiConfigured}
-          planProfiles={bandCounts.plans}
-          exercises={bandCounts.exercises}
-          supplements={bandCounts.supplements}
-          categoryCounts={catCount}
-          quotes={quotes}
-          onGoalChange={setGoal}
-          onOpenNumbers={() => setNumbersOpen(true)}
-          onBrowseMeals={() => switchMode("dishes", true)}
-          onBrowsePlans={() => switchMode("plans", true)}
-          onBrowsePlanCategory={(category) => {
-            setPlanCat(category);
-            switchMode("plans", true);
-          }}
-          onBrowseSupplements={() => switchMode("supps", true)}
-        />
+      <HomeExperience
+        week={week}
+        goal={goal}
+        target={target}
+        area={area}
+        areaCount={areaCount}
+        cutoffLabel={cutoffLabel}
+        trialTotal={trialTotal}
+        aiConfigured={aiConfigured}
+        planProfiles={bandCounts.plans}
+        quotes={quotes}
+        onOpenNumbers={() => setNumbersOpen(true)}
+        onBrowseMeals={() => switchMode("dishes", true)}
+        onBrowsePlans={() => switchMode("plans", true)}
+      />
 
-        {/* ── Rail + content ──────────────────────────────────────────────── */}
-        <div className={`${s.filters} ${r.filters}`} ref={catalogRef} id="catalog">
+      {/* ── Rail + content ──────────────────────────────────────────────── */}
+      <div className={`${s.filters} ${r.filters}`} ref={catalogRef} id="catalog">
           {/* Catalog switch. A subscription and a single meal are different
               purchases, so they get different chip sets rather than one mixed
               grid where a Rs 230 salad sits beside a Rs 17,849 month. */}
@@ -1145,8 +1136,6 @@ export default function FitFuelApp({
             </div>
           </div>
         </div>
-      </header>
-
       <div className={s.body}>
         <nav className={`${s.rail} ${r.sideRail}`} aria-label="Sections">
           <ul className={s.railList}>
