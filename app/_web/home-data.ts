@@ -98,73 +98,6 @@ export const TRIO: Trio[] = [
   },
 ];
 
-/* ── The four that do not ───────────────────────────────────────────────────
-   A stat, a name, a line and three claims each. Every row was checked against
-   prisma/schema.prisma and app/dashboard/* before it was written. */
-export type Minor = {
-  idx: string;
-  href: string;
-  stat: string;
-  label: string;
-  blurb: string;
-  rows: string[];
-};
-
-export const MINOR: Minor[] = [
-  {
-    idx: "01",
-    href: "/dashboard/coach",
-    stat: "Recalibrates weekly",
-    label: "Weekly coach",
-    blurb:
-      "Two or more weigh-ins establish a trend; when it leaves your goal range, the arithmetic is shown before you apply a change.",
-    rows: [
-      "Reads your goal, current target and weight trend",
-      "Changes in 10-kcal increments, capped at 300 a day",
-      "Every change is shown as a sum, not a verdict",
-    ],
-  },
-  {
-    idx: "02",
-    href: "/dashboard/trainer",
-    stat: "Reads your last 30 days",
-    label: "Ask the coach",
-    blurb:
-      "Why the scale stalled, whether your protein is short, what to eat tonight.",
-    rows: [
-      "Answers grounded in your own logged days",
-      "Suggests dishes from tonight's menu",
-      "Flags the week you under-ate protein",
-    ],
-  },
-  {
-    idx: "03",
-    href: "/plans/digital",
-    stat: "Recipes, no delivery",
-    label: "Digital plans",
-    blurb:
-      "The 30-day recipe book, macros and grocery list, without the delivery.",
-    rows: [
-      "30 days of recipes with weights",
-      "Grocery list, split by week",
-      "For cities we do not cook in yet",
-    ],
-  },
-  {
-    idx: "04",
-    href: "/supplements",
-    stat: "6 retailers compared",
-    label: "Supplements, priced",
-    blurb:
-      "Researched against your plan and compared across six retailers. We hold no stock.",
-    rows: [
-      "Matched to your goal and diet preference",
-      "Retailer prices shown side by side",
-      "Affiliate links are disclosed",
-    ],
-  },
-];
-
 /* ── The day target ─────────────────────────────────────────────────────────
    The three goals the TDEE calculator already hands a customer, as round
    targets. Nothing per-dish is invented from these: the arithmetic printed on
@@ -325,7 +258,7 @@ export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[]
       tiffin: "No, one shared menu",
       app: "Yes, but it does not cook the result",
       supp: "No",
-      us: "Weight, height, age, activity and goal set your target",
+      us: "Live weight from your scale, plus height, age, activity and goal",
     },
     {
       what: "Cooks your food",

@@ -37,18 +37,11 @@
 .eyebrow {
   display: flex;
   align-items: center;
-  gap: 10px;
   margin: 0 0 14px;
   color: var(--fk-green-deep);
   font-size: var(--fk-t-sm);
   font-weight: 700;
   line-height: 1.4;
-}
-
-.eyebrow > span {
-  width: 28px;
-  height: 2px;
-  background: var(--fk-green);
 }
 
 .title {

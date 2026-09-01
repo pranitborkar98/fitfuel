@@ -48,6 +48,7 @@ import HomeSections from "./HomeSections";
 import HomeExperience from "./HomeExperience";
 import CustomerTabBar from "./CustomerTabBar";
 import { GOALS } from "./home-data";
+import { useReveal } from "./useReveal";
 import YourNumbers, { targetFor, useNumbers } from "./YourNumbers";
 import { MacroSplit, dishField } from "./DishVisuals";
 import s from "./app.module.css";
@@ -476,6 +477,7 @@ export default function FitFuelApp({
   aiConfigured,
   week,
 }: AppProps) {
+  const revealRef = useReveal<HTMLDivElement>();
   const cart = useCart();
   const [query, setQuery] = useState("");
   const [course, setCourse] = useState("all");
@@ -708,7 +710,12 @@ export default function FitFuelApp({
       d.kcal <= day.gapKcal;
 
     return (
-      <li key={d.id} className={`${s.card} ${r.productCard}`} data-card="">
+      <li
+        key={d.id}
+        className={`${s.card} ${r.productCard}`}
+        data-card=""
+        data-reveal="up"
+      >
         {!images[d.slot] ? (
           /* The reserved space a photograph drops into. Drop a file into
              public/images/dishes/<slug> and it fills with no layout change.
@@ -747,7 +754,7 @@ export default function FitFuelApp({
               images={images}
               name={d.slot}
               alt={d.name}
-              sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 132px"
+              sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, calc(100vw - 40px)"
             />
             {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
           </button>
@@ -901,7 +908,7 @@ export default function FitFuelApp({
   };
 
   return (
-    <div className={`fk ${s.app}`}>
+    <div ref={revealRef} className={`fk ${s.app}`}>
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className={`${s.top} ${r.header}`}>
         <div className={`${s.topRow} ${r.topRow}`}>
@@ -1484,6 +1491,7 @@ export default function FitFuelApp({
                       key={x.slug}
                       className={`${s.card} ${r.productCard} ${r.textCard}`}
                       data-card=""
+                      data-reveal="up"
                     >
                       <div className={`${s.cardBody} ${r.productBody}`}>
                         <p className={s.dishTop}>
@@ -1544,6 +1552,7 @@ export default function FitFuelApp({
                       key={p.slug}
                       className={`${s.card} ${r.productCard} ${r.textCard}`}
                       data-card=""
+                      data-reveal="up"
                     >
                       <div className={`${s.cardBody} ${r.productBody}`}>
                         <p className={s.planCat}>

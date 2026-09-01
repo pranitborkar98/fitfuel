@@ -42,7 +42,6 @@ import {
   COACH_WEEKS,
   DAY_STEPS,
   FAQS,
-  MINOR,
   TRIO,
   SURFACES,
   WEDGE_COLS,
@@ -105,12 +104,13 @@ export default function HomeSections({
       <DayBand />
       <PlatformBand counts={counts} goalCount={goalCount} />
       <WedgeBand counts={counts} />
+      <DigitalPlansBand />
+      <ProductPreviewBand counts={counts} />
       <ServicesBand />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
       <DeliveryFaqBand cutoffLabel={cutoffLabel} />
-      <SurfacesBand />
       <CtaBand
         trialTotal={trial.total}
         planCount={counts.plans}
@@ -134,9 +134,9 @@ function DayBand() {
             </h2>
           </div>
           <p className={s.bandLede}>
-            Your body measurements and goal set the calorie target. Your
-            assigned kitchen weighs every meal to that target, labels it to you
-            and sends it with the local delivery team.
+            Your live weight, profile and goal set the calorie target. Your
+            assigned kitchen turns that target into portion grams, weighs every
+            meal, labels it to you and sends it with the local delivery team.
           </p>
         </div>
 
@@ -222,9 +222,10 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
           The food is the front door
         </h2>
         <p className={`${s.bandLede} ${s.bandLedeWide}`}>
-          Your plan links the meal, body measurements, exercise diary and
-          coach. When your weight trend moves away from the goal, the new
-          calculation is shown before you accept a target change.
+          Your plan links each weighed meal to live scale readings, your
+          exercise diary and the coach. When the measured weight trend moves
+          away from the goal, the new calculation is shown before you accept a
+          target change.
         </p>
         <ul className={s.statRow}>
           {cols.map((c) => (
@@ -267,9 +268,10 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
             </h2>
           </div>
           <p className={s.bandLede}>
-            FitFuel calculates calories and macros from your measurements,
-            activity and goal. Then we cook the food, weigh each portion, log
-            the meal and adjust the target from your progress.
+            A supported Bluetooth scale reads your weight live. FitFuel uses
+            the saved trend with your profile, activity and goal to calculate
+            and recalibrate the target. The kitchen then weighs each portion to
+            the accepted number.
           </p>
         </div>
 
@@ -336,73 +338,217 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
   );
 }
 
-/* ── 7c. Every surface, listed ────────────────────────────────────────
-   app/_hp/Inside.tsx — and also the content the redesign quietly dropped:
-   Platform.tsx carried eight of these as rows and was replaced by four stat
-   columns, so `/` went from naming eleven dashboard screens to naming none.
+/* ── 2c. The nationwide product ────────────────────────────────────────────
+   Digital plans are not a fallback for an uncovered postcode. They are a
+   product FitFuel can sell everywhere in India today, so they get a complete
+   sales block instead of one small card under local kitchen services. */
+function DigitalPlansBand() {
+  return (
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="digital-h">
+      <div className={s.bandWrap}>
+        <div className={s.digitalSplit}>
+          <div className={s.digitalCopy} data-reveal="left">
+            <span className={s.serviceSignal}>Available across India</span>
+            <h2 id="digital-h" className={s.bandH2}>
+              The full FitFuel plan, even when you cook at home.
+            </h2>
+            <p>
+              Choose a goal or condition and get 30 planned days, measured
+              recipes, per-meal macros and weekly grocery lists. Your purchase
+              stays in the FitFuel dashboard, ready to download whenever you
+              need it.
+            </p>
+            <ul className={s.digitalProofs}>
+              <li>30 days planned</li>
+              <li>Recipes measured in grams</li>
+              <li>Macros for every meal</li>
+              <li>Four weekly grocery lists</li>
+            </ul>
+            <div className={s.bandActions}>
+              <Link className={s.bandPrimary} href="/plans/digital#digital-options">
+                Explore digital plans
+              </Link>
+              <Link className={s.bandSecondary} href="/plans">
+                Compare delivered plans
+              </Link>
+            </div>
+          </div>
 
-   A DIRECTORY, not eleven feature blocks. Inside's own comment: giving each of
-   these a section is exactly how the last homepage reached 39,708px and 35
-   headings. Ten rows cost one screen; ten cards would have cost ten. */
-function SurfacesBand() {
+          <div className={s.digitalPack} data-reveal="scale" aria-label="Digital plan contents preview">
+            <div className={s.digitalPackHead}>
+              <span>
+                <small>Your digital plan</small>
+                <b>30-day personalised programme</b>
+              </span>
+              <span className={s.digitalReady}>Ready in your dashboard</span>
+            </div>
+            <div className={s.digitalDay}>
+              <span className={s.digitalDayNo}>Day 01</span>
+              <span className={s.digitalTarget}>Your calorie and macro target</span>
+            </div>
+            <ol className={s.digitalMeals}>
+              <li>
+                <span>Breakfast</span>
+                <b>Measured recipe</b>
+                <small>Ingredients in grams</small>
+              </li>
+              <li>
+                <span>Lunch</span>
+                <b>Per-meal macros</b>
+                <small>Calories, protein, carbs and fat</small>
+              </li>
+              <li>
+                <span>Dinner</span>
+                <b>Cooking method</b>
+                <small>Steps and practical substitutions</small>
+              </li>
+            </ol>
+            <div className={s.digitalPackFoot}>
+              <span><b>4 weeks</b> of grocery lists</span>
+              <span><b>PDF</b> kept on your account</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── 2d. Show the product ──────────────────────────────────────────────────
+   The old directory named nine dashboard routes but never showed a reader
+   what any of them looked like. Four compact, honest examples make the joined
+   up product visible without turning the homepage into nine more screens. */
+function ProductPreviewBand({ counts }: { counts: BandCounts }) {
+  const more = SURFACES.filter(
+    (surface) =>
+      ![
+        "/dashboard",
+        "/dashboard/exercises",
+        "/dashboard/body-metrics",
+        "/dashboard/supplements",
+      ].includes(surface.href),
+  );
+
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="inside-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
             <h2 id="inside-h" className={s.bandH2}>
-              What you get after you order
+              Food, body, training and guidance in one place.
             </h2>
           </div>
           <p className={s.bandLede}>
-            Ordering lunch is the smallest thing here. Every one of these is a
-            screen that already exists, with the figure that proves it beside it.
+            This is the product behind the delivery. Meals arrive pre-filled,
+            scale readings build the trend, training changes the day&apos;s net
+            calories and supplement research stays separate from selling stock.
           </p>
         </div>
 
-        <ul className={s.surfaces}>
-          {SURFACES.map((sv) => (
-            <li key={sv.href} data-reveal="left">
-              <Link href={sv.href}>
-                <b className={`${s.surfaceStat} fk-num`}>{sv.stat}</b>
-                <span className={s.surfaceBody}>
-                  <b>{sv.name}</b>
-                  <span>{sv.desc}</span>
-                </span>
-                <svg
-                  className={s.surfaceGo}
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </Link>
-            </li>
-          ))}
+        <ul className={s.productPreviewGrid}>
+          <li data-reveal="up">
+            <Link href="/dashboard" className={`${s.productPreviewCard} ${s.previewToday}`}>
+              <span className={s.productPreviewHead}>
+                <span>Today dashboard</span>
+                <small>Example member day</small>
+              </span>
+              <h3>Everything for today, already joined up.</h3>
+              <dl className={s.todayNumbers}>
+                <div><dt>Eaten</dt><dd className="fk-num">1,430 kcal</dd></div>
+                <div><dt>Exercise</dt><dd className="fk-num">280 kcal</dd></div>
+                <div><dt>Net left</dt><dd className="fk-num">850 kcal</dd></div>
+              </dl>
+              <span className={s.todayTrack} aria-hidden="true"><i /></span>
+              <span className={s.previewFoot}>Meals, delivery, water and progress on one screen</span>
+            </Link>
+          </li>
+
+          <li data-reveal="up">
+            <Link href="/dashboard/body-metrics" className={`${s.productPreviewCard} ${s.previewScale}`}>
+              <span className={s.productPreviewHead}>
+                <span>Body measurements</span>
+                <small className={s.liveReading}><i aria-hidden="true" /> Example live reading</small>
+              </span>
+              <span className={`${s.scaleNumber} fk-num`}>78.2 <small>kg</small></span>
+              <h3>Your actual weight enters the loop.</h3>
+              <p>
+                Weight is measured directly from a supported Bluetooth scale.
+                The saved trend drives weekly recalculation. Other composition
+                figures are clearly marked as estimates.
+              </p>
+            </Link>
+          </li>
+
+          <li data-reveal="up">
+            <Link href="/dashboard/exercises" className={`${s.productPreviewCard} ${s.previewTraining}`}>
+              <span className={s.productPreviewHead}>
+                <span>Training</span>
+                <small>{counts.exercises.toLocaleString("en-IN")} exercises</small>
+              </span>
+              <h3>Your session is already programmed.</h3>
+              <ul className={s.trainingRows}>
+                <li><span>Goblet squat</span><b>3 × 10</b></li>
+                <li><span>Dumbbell press</span><b>3 × 12</b></li>
+                <li><span>Plank</span><b>3 × 45 sec</b></li>
+              </ul>
+              <span className={s.previewFoot}>Sets, reps, load and rest feed into today</span>
+            </Link>
+          </li>
+
+          <li data-reveal="up">
+            <Link href="/dashboard/supplements" className={`${s.productPreviewCard} ${s.previewSupplements}`}>
+              <span className={s.productPreviewHead}>
+                <span>Supplements</span>
+                <small>{counts.supplements.toLocaleString("en-IN")} researched</small>
+              </span>
+              <h3>Evidence first. Retailer choice stays yours.</h3>
+              <ul className={s.supplementRows}>
+                <li><span>Creatine monohydrate</span><b>Evidence</b></li>
+                <li><span>Omega-3</span><b>Goal match</b></li>
+                <li><span>Retailer comparison</span><b>6 stores</b></li>
+              </ul>
+              <span className={s.previewFoot}>FitFuel holds no supplement stock</span>
+            </Link>
+          </li>
         </ul>
+
+        <nav className={s.moreSurfaces} aria-label="More FitFuel dashboard screens">
+          <span>Also inside</span>
+          <ul>
+            {more.map((surface) => (
+              <li key={surface.href}>
+                <Link href={surface.href}>
+                  {surface.name}
+                  <span className="fk-num">{surface.stat}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </section>
   );
 }
 
 /* ── 3. Beyond the menu ─────────────────────────────────────────────────────
-   Three destinations with a photograph, four without. The seven were the
-   "Everything else the kitchen runs" row; they are the same seven, laid out so
-   the three we can actually show a picture of get one. */
+   Three destinations with a photograph. Digital plans and the member product
+   now have full sections above, so the old four-card text directory is removed
+   rather than selling the same services twice. */
 function ServicesBand() {
   return (
-    <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="services-h">
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="services-h">
       <div className={s.bandWrap}>
-        <h2 id="services-h" className={s.bandH2}>
-          Everything else the kitchen runs
-        </h2>
+        <div className={s.bandHead}>
+          <div>
+            <h2 id="services-h" className={s.bandH2}>
+              More ways to use FitFuel.
+            </h2>
+          </div>
+          <p className={s.bandLede}>
+            Personal training, labelled office lunches and partner referrals
+            connect to the same meals, targets and member account.
+          </p>
+        </div>
 
         <div className={s.trioGrid}>
           {TRIO.map((t) => (
@@ -424,29 +570,6 @@ function ServicesBand() {
             </Link>
           ))}
         </div>
-
-        <ul className={s.minorGrid}>
-          {MINOR.map((m) => (
-            <li key={m.href} data-reveal="up">
-              <Link href={m.href} className={s.minorCard}>
-                <span aria-hidden="true" className={s.minorIdx}>
-                  {m.idx}
-                </span>
-                <span className={`${s.minorStat} fk-num`}>{m.stat}</span>
-                <b className={s.minorLabel}>{m.label}</b>
-                <span className={s.minorBlurb}>{m.blurb}</span>
-                <span className={s.minorRows}>
-                  {m.rows.map((r) => (
-                    <span key={r}>
-                      <i aria-hidden="true" />
-                      {r}
-                    </span>
-                  ))}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

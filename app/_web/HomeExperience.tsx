@@ -128,14 +128,15 @@ export default function HomeExperience({
       <section className={x.hero} aria-label="FitFuel daily food app">
         <div className={x.heroCopy}>
           <p className={x.eyebrow} suppressHydrationWarning>
-            <span aria-hidden="true" /> {timeGreeting()}
+            {timeGreeting()}
           </p>
           <h1 id="home-title" className={x.title}>
             Meals calculated for your body.
           </h1>
           <p className={x.lede}>
-            Your weight, height, age, activity and goal set the target. We weigh
-            each meal to that target, deliver it and pre-fill your food diary.
+            Your weight is read live from a supported Bluetooth scale. Together
+            with your height, age, activity and goal, it sets the calorie and
+            macro target we use to weigh every meal.
           </p>
 
           <div className={x.heroActions}>
@@ -162,8 +163,8 @@ export default function HomeExperience({
             <li>
               <Icon path={ICON.scale} size={18} />
               <span>
-                <b>Measure</b>
-                <small>Your body</small>
+                <b>Read live</b>
+                <small>Your weight</small>
               </span>
             </li>
             <li>

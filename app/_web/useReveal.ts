@@ -20,7 +20,8 @@
 // 2. An element scrolled PAST between frames (a fast flick, or a restored
 //    scroll position on reload) is shown immediately rather than left hidden.
 //    That is the `boundingClientRect.top > 0` test.
-// 3. A 4-second failsafe shows anything still invisible, whatever went wrong.
+// 3. A 4-second failsafe shows hidden items at or near the current viewport.
+//    Farther content stays observed so a phone still gets motion on scroll.
 // 4. Tilt attaches only on a fine pointer. A phone never runs any of it.
 //
 // The observed set is re-scanned after every render because the catalog above
@@ -69,6 +70,12 @@ export function useReveal<T extends HTMLElement>() {
         if (el.dataset.reveal) el.style.transform = "none";
         if (el.dataset.rail) el.style.width = el.dataset.rail;
         if (el.dataset.count) countUp(el);
+        if (!el.hasAttribute("data-tilt")) {
+          window.setTimeout(() => {
+            el.style.removeProperty("transform");
+            el.style.removeProperty("will-change");
+          }, 700);
+        }
       }, delay);
     };
 
@@ -85,12 +92,17 @@ export function useReveal<T extends HTMLElement>() {
       { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
     );
 
-    /* Last-resort net: nothing stays invisible past this point. */
+    /* Last-resort net for the current reading area. Offscreen nodes remain
+       observed, otherwise every mobile entrance would finish before the
+       customer could scroll from the hero to the catalogue. */
     const failsafe = window.setTimeout(() => {
       root
         .querySelectorAll<HTMLElement>("[data-reveal],[data-rail],[data-count]")
         .forEach((el) => {
-          if (el.style.opacity === "0" || el.style.width === "0%") show(el, 0);
+          const hidden = el.style.opacity === "0" || el.style.width === "0%";
+          if (hidden && el.getBoundingClientRect().top < window.innerHeight * 1.5) {
+            show(el, 0);
+          }
         });
     }, 4000);
 
