@@ -3993,6 +3993,12 @@
   font-variant-numeric: tabular-nums;
   color: var(--fk-ink-3);
 }
+.areaList b.areaValue {
+  max-width: 15ch;
+  font-family: var(--fk-sans);
+  line-height: 1.35;
+  text-align: right;
+}
 .areaNote {
   margin: 14px 0 0;
   font-size: 0.8125rem;

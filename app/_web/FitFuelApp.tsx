@@ -42,7 +42,6 @@ import type { PriceRow } from "@/lib/plan-tier-pricing";
 import type { Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
-import Sheet, { SheetClose } from "@/app/_shop/Sheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
@@ -276,16 +275,11 @@ export type AppProps = {
   courses: Course[];
   plans: AppPlan[];
   supplements: AppSupp[];
-  area: string;
   cutoffLabel: string;
   trialTotal: string;
   menuFrom: string;
   planCount: number;
   licence: string;
-  /** The delivery-area map, rendered on the server and handed down as a node so
-   *  the location chip can open it without this file importing a server
-   *  component. */
-  areaPanel?: React.ReactNode;
   /** Counts for the bands below the catalog. They come from the database in
    *  page.tsx so a figure here cannot disagree with the catalogue it
    *  describes. */
@@ -296,8 +290,6 @@ export type AppProps = {
   prices: PriceRow[];
   /** The trial day itemised by lib/pricing-decomposition, for the receipt. */
   trial: { rows: { k: string; v: string }[]; total: string };
-  /** Suburbs in app/_hp/areas-data.ts, kitchen included. */
-  areaCount: number;
   /** Which catalogue to open on, from `?mode=` — the rail on every dish page
    *  and on /menu links here with it. Defaults to dishes. */
   initialMode: "dishes" | "plans" | "supps";
@@ -470,18 +462,15 @@ export default function FitFuelApp({
   courses,
   plans,
   supplements,
-  area,
   cutoffLabel,
   trialTotal,
   menuFrom,
   planCount,
   licence,
-  areaPanel,
   bandCounts,
   goalCount,
   prices,
   trial,
-  areaCount,
   initialMode,
   quotes,
   aiConfigured,
@@ -533,7 +522,6 @@ export default function FitFuelApp({
      plan card. Both contents live in the Configure sheet now — see the comment
      on the plan card foot for why an inline panel was the wrong container. */
   const catalogRef = useRef<HTMLDivElement>(null);
-  const [areaOpen, setAreaOpen] = useState(false);
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -742,7 +730,6 @@ export default function FitFuelApp({
             <span className={s.wellGrain} aria-hidden="true" />
             <span className={s.wellGloss} aria-hidden="true" />
             <span className={s.wellFoot} aria-hidden="true" />
-            {fits ? <span className={s.fits}>Fits your day</span> : null}
             {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
           </button>
         ) : (
@@ -760,9 +747,8 @@ export default function FitFuelApp({
               images={images}
               name={d.slot}
               alt={d.name}
-              sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
+              sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 132px"
             />
-            {fits ? <span className={s.fits}>Fits your day</span> : null}
             {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
           </button>
         )}
@@ -774,7 +760,8 @@ export default function FitFuelApp({
               are — a measurement, not a sticker on the food. */}
           <p className={s.dishTop}>
             <span className={s.dishCourse}>{d.categoryLabel}</span>
-            {badgesFor(d).map((b) => (
+            {fits ? <span className={s.tag}>Fits your day</span> : null}
+            {badgesFor(d).slice(0, fits ? 1 : 2).map((b) => (
               <span key={b} className={s.tag}>
                 {b}
               </span>
@@ -933,37 +920,22 @@ export default function FitFuelApp({
                 ? `Order by ${cutoffLabel} · at your door by 8am`
                 : mode === "supps"
                   ? "Researched, not stocked"
-                  : `Cooking today · ${area}`}
+                  : "Cooking today"}
             </span>
           </span>
 
           <div className={s.topActions}>
-            {/* A DEAD CONTROL UNTIL NOW. This was a <button> with no onClick —
-                it looked like the location picker every food app has and did
-                nothing at all when tapped.
-
-                It opens the delivery-area map: app/_hp/Areas.tsx, which plots
-                every suburb from its published coordinates with 3, 6 and 9km
-                rings measured from the kitchen. That component was written for
-                the v2 homepage and has been imported by NOTHING since — the
-                whole argument for one kitchen in Kharadi serving a tight
-                cluster, sitting on no route. This is the question a cold
-                visitor asks first, so it belongs behind the control that names
-                the area. */}
-            <button
-              type="button"
+            {/* Delivery coverage changes as new kitchens open. The header links
+                to the operational locations page instead of naming one suburb
+                or freezing a delivery count into the global shell. */}
+            <Link
+              href="/locations"
               className={s.place}
-              onClick={() => setAreaOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={areaOpen}
-              /* The label is explicit because the visible word is dropped below
-                 640px — the pin alone is the control there, and the button must
-                 still announce which area it opens. */
-              aria-label={`Delivering to ${area}. See where we deliver`}
+              aria-label="Check delivery availability near you"
             >
               <Icon d={I.pin} size={16} />
-              <span className={r.placeLabel}>{area}</span>
-            </button>
+              <span className={r.placeLabel}>Check delivery</span>
+            </Link>
             <Link
               href="/dashboard/trainer"
               className={`${s.iconBtn} ${r.headerAi}`}
@@ -991,8 +963,6 @@ export default function FitFuelApp({
         week={week}
         goal={goal}
         target={target}
-        area={area}
-        areaCount={areaCount}
         cutoffLabel={cutoffLabel}
         trialTotal={trialTotal}
         aiConfigured={aiConfigured}
@@ -1249,7 +1219,7 @@ export default function FitFuelApp({
               {day.count === 0
                 ? target.personal
                   ? "Your target, from your own numbers. Add dishes and the bars fill."
-                  : "Pick a target, then add dishes — the bars fill as you go."
+                  : "Pick a target, then add dishes. The bars fill as you go."
                 : day.gapProtein > 0
                   ? `${day.gapProtein}g protein and ${day.gapKcal.toLocaleString("en-IN")} kcal left in the day.`
                   : `Protein target met. ${day.gapKcal.toLocaleString("en-IN")} kcal still spare.`}
@@ -1436,6 +1406,7 @@ export default function FitFuelApp({
                         : "A person preparing a measured supplement serving"
                     }
                     fill
+                    loading="eager"
                     sizes="(min-width: 1024px) 38vw, 100vw"
                     className={r.cardImage}
                   />
@@ -1448,7 +1419,7 @@ export default function FitFuelApp({
                   </span>
                   <h3>
                     {mode === "plans"
-                      ? "A menu, a target and a feedback loop—not a PDF you forget."
+                      ? "A menu, a target and a feedback loop you use every day."
                       : "Understand the evidence, dosage and timing before you buy anywhere."}
                   </h3>
                   <p>
@@ -1745,7 +1716,6 @@ export default function FitFuelApp({
         goalCount={goalCount}
         prices={prices}
         trial={trial}
-        areaCount={areaCount}
         cutoffLabel={cutoffLabel}
         week={week}
       />
@@ -1767,7 +1737,7 @@ export default function FitFuelApp({
           ))}
         </div>
         <p className={s.footerBase}>
-          <span>© {new Date().getFullYear()} FitFuel, Pune</span>
+          <span>© {new Date().getFullYear()} FitFuel</span>
           <span>
             FSSAI <span className="fk-num">{licence}</span>
           </span>
@@ -1834,25 +1804,6 @@ export default function FitFuelApp({
       ) : null}
       {planSheet ? (
         <PlanSheet plan={planSheet} onClose={() => setPlanSheet(null)} />
-      ) : null}
-
-      {/* areaPanel is a server component handed down as a node. Sheet already
-          traps and restores focus and closes on Escape, so the map inherits all
-          of that without knowing anything about it. */}
-      {areaOpen && areaPanel ? (
-        <Sheet onClose={() => setAreaOpen(false)} labelledBy="area-sheet-title">
-          {/* SheetClose is not optional furniture. Escape and the backdrop both
-              close this, but neither is visible, and a full-screen overlay whose
-              only exits are invisible is the same trap as the order bar that
-              could not be dismissed. */}
-          <div className={s.areaSheetTop}>
-            <h2 id="area-sheet-title" className={s.areaSheetH}>
-              Where we deliver
-            </h2>
-            <SheetClose onClose={() => setAreaOpen(false)} />
-          </div>
-          <div className={s.areaSheet}>{areaPanel}</div>
-        </Sheet>
       ) : null}
     </div>
   );

@@ -51,7 +51,7 @@ const PLAN_IMAGES: Record<string, string> = {
 
 type Target = { kcal: number; protein: number; personal: boolean };
 
-function puneGreeting() {
+function timeGreeting() {
   const hour = Number(
     new Intl.DateTimeFormat("en-GB", {
       hour: "2-digit",
@@ -68,8 +68,6 @@ export default function HomeExperience({
   week,
   goal,
   target,
-  area,
-  areaCount,
   cutoffLabel,
   trialTotal,
   aiConfigured,
@@ -82,8 +80,6 @@ export default function HomeExperience({
   week: Dish[];
   goal: string;
   target: Target;
-  area: string;
-  areaCount: number;
   cutoffLabel: string;
   trialTotal: string;
   aiConfigured: boolean;
@@ -106,7 +102,7 @@ export default function HomeExperience({
   const activeGoal = GOALS.find((item) => item.key === goal) ?? GOALS[1];
   const portionPercent = Math.round(serving.factor * 100);
   const whatsapp = waLink(
-    `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to ${area}.`,
+    `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to my address.`,
   );
   const proof = quotes[0];
 
@@ -132,14 +128,14 @@ export default function HomeExperience({
       <section className={x.hero} aria-label="FitFuel daily food app">
         <div className={x.heroCopy}>
           <p className={x.eyebrow} suppressHydrationWarning>
-            <span aria-hidden="true" /> {puneGreeting()}, {area}
+            <span aria-hidden="true" /> {timeGreeting()}
           </p>
           <h1 id="home-title" className={x.title}>
             Food that already knows your goal.
           </h1>
           <p className={x.lede}>
-            Four Indian meals, weighed in our Kharadi kitchen, delivered across
-            east Pune and already counted in your day.
+            Four Indian meals, weighed for your goal, delivered from your
+            nearest FitFuel kitchen and already counted in your day.
           </p>
 
           <div className={x.heroActions}>
@@ -322,13 +318,13 @@ export default function HomeExperience({
           </span>
           <Icon path={ICON.arrow} size={17} />
         </button>
-        <Link href="/our-kitchen">
+        <Link href="/locations">
           <span className={x.quickIcon}>
             <Icon path={ICON.route} size={20} />
           </span>
           <span>
-            <small>{areaCount} delivery areas</small>
-            <b>Own kitchen & riders</b>
+            <small>Check delivery near you</small>
+            <b>Nearest kitchen and timing</b>
           </span>
           <Icon path={ICON.arrow} size={17} />
         </Link>
@@ -339,7 +335,7 @@ export default function HomeExperience({
           <b>{proof.resultLabel}</b>
           <blockquote>“{proof.quote}”</blockquote>
           <span>
-            {proof.name} · {proof.location} · {proof.planLabel}
+            {proof.name} · {proof.planLabel}
           </span>
           <Link href="/testimonials">
             More stories <Icon path={ICON.arrow} size={16} />

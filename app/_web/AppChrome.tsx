@@ -122,7 +122,7 @@ function activeTab(pathname: string): number {
 /* `dishCount` is gone with the search field it sized the placeholder for
    ("Search 48 dishes"). Nothing else in this header counted anything. */
 export default function AppChrome({
-  area = "Kharadi",
+  area = "Check delivery",
   cutoff,
   areaPanel,
   children,
@@ -178,7 +178,8 @@ export default function AppChrome({
         <div className={s.cutoff}>
           <p className={s.cutoffRow}>
             <span>
-              Single dishes and meal plans from our <b>{area}</b> kitchen.
+              Single dishes and meal plans from the FitFuel kitchen serving your
+              address.
               {cutoff ? <> Plan cut-off: <b>{cutoff}</b>.</> : null}
             </span>
           </p>

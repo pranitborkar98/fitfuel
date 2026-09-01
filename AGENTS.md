@@ -40,8 +40,19 @@ What holds instead:
   photograph of a dish beats any diagram of that dish. Never represent a meal
   with a macro ring, a glyph or a typographic stand-in on a surface where
   someone is choosing what to eat.
-- Write for a customer in Pune ordering lunch, not for a reader of the spec.
-  Sentence case, ordinary words, numbers where a number is the point.
+- Write for a customer ordering lunch in a FitFuel service area, not for a
+  reader of the spec. Sentence case, ordinary words, numbers where a number is
+  the point.
+- Customer-facing copy must not use em dashes. Rewrite with a full stop, comma,
+  colon or a shorter sentence. Also avoid canned AI-style contrasts, inflated
+  slogans and vague claims. Prefer direct statements that name a real product,
+  action, number or outcome.
+- FitFuel is expanding through franchise kitchens. Brand and top-level product
+  pages must not frame the business as one Kharadi kitchen, east Pune only, one
+  city or a fixed number of delivery areas. Use address-based language such as
+  "your nearest FitFuel kitchen" and "check delivery availability". Name a
+  city, suburb, kitchen or delivery count only on operational location pages or
+  after the customer has selected an address, and source it from current data.
 - The app half and the marketing half may look different. Density that is
   correct in a food diary is hostile on a storefront.
 - Accessibility is not up for reinterpretation: AA contrast, 44px targets,

@@ -43,7 +43,7 @@ export default async function MenuPage({
       areaPanel={
         <div style={{ padding: 20 }}>
           <p style={{ color: "var(--fk-ink-2)", fontSize: 15, lineHeight: 1.65 }}>
-            FitFuel serves 15 areas across east and central Pune. Meal-plan deliveries use a {DELIVERY_WINDOWS.MORNING.time} or {DELIVERY_WINDOWS.EVENING.time} window.
+            Delivery availability depends on the address you choose. Meal-plan deliveries use a {DELIVERY_WINDOWS.MORNING.time} or {DELIVERY_WINDOWS.EVENING.time} window where available.
           </p>
           <Link href="/locations" className="fk-btn fk-btn-primary" style={{ marginTop: 18 }}>Check your pincode</Link>
         </div>

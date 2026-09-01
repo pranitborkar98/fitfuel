@@ -38,7 +38,6 @@ import {
 import { decomposePrice } from "@/lib/pricing-decomposition";
 
 import {
-  AREA_DROPS,
   CONDITIONS,
   COACH_WEEKS,
   DAY_STEPS,
@@ -51,7 +50,6 @@ import {
 } from "./home-data";
 import type { BandCounts } from "./HomeBands";
 import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
-import DeliveryMap from "./DeliveryMap";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
 import r from "./refresh.module.css";
@@ -90,8 +88,6 @@ export type HomeSectionsProps = {
   prices: PriceRow[];
   /** The trial day, itemised by lib/pricing-decomposition. */
   trial: { rows: { k: string; v: string }[]; total: string };
-  /** Suburbs in app/_hp/areas-data.ts, kitchen included. */
-  areaCount: number;
   /** The order cutoff sentence, from lib/order-cutoff. */
   cutoffLabel: string;
   /** Seven seeded days of weight-loss-veg. Empty renders nothing — see WeekBand. */
@@ -103,7 +99,6 @@ export default function HomeSections({
   goalCount,
   prices,
   trial,
-  areaCount,
   cutoffLabel,
   week,
 }: HomeSectionsProps) {
@@ -119,13 +114,12 @@ export default function HomeSections({
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
-      <AreasFaqBand areaCount={areaCount} cutoffLabel={cutoffLabel} />
+      <DeliveryFaqBand cutoffLabel={cutoffLabel} />
       <SurfacesBand />
       <CtaBand
         trialTotal={trial.total}
         planCount={counts.plans}
         cutoffLabel={cutoffLabel}
-        areaCount={areaCount}
       />
     </div>
   );
@@ -145,8 +139,8 @@ function DayBand() {
             </h2>
           </div>
           <p className={s.bandLede}>
-            One kitchen in Kharadi, our own drivers, and four hours between the
-            produce arriving and breakfast on your desk.
+            Your assigned FitFuel kitchen prepares the food, weighs each portion
+            and sends it with the local delivery team.
           </p>
         </div>
 
@@ -359,7 +353,7 @@ function WeekBand({ week, recipes }: { week: Dish[]; recipes: number }) {
           </div>
           <p className={s.bandLede}>
             Seven real days of the weight-loss plan, out of the database.{" "}
-            {distinct} different dishes across {days.length} days — every recipe
+            {distinct} different dishes across {days.length} days. Every recipe
             carries a rotation group, so a plan cannot serve you the same lunch
             twice in two months.
           </p>
@@ -402,8 +396,7 @@ function WeekBand({ week, recipes }: { week: Dish[]; recipes: number }) {
                             ) : null}
                           </>
                         ) : (
-                          /* An em dash, never a plausible dish name. */
-                          <span aria-label="not scheduled">—</span>
+                          <span aria-label="not scheduled">–</span>
                         )}
                       </td>
                     );
@@ -418,10 +411,10 @@ function WeekBand({ week, recipes }: { week: Dish[]; recipes: number }) {
         </div>
 
         <p className={s.weekNoteFoot}>
-          {recipes.toLocaleString("en-IN")} recipes are written this way so far —
-          each one a production sheet carrying its station, its numbered steps,
-          its temperatures and its allergens, which is also how a second kitchen
-          in a second city cooks food that tastes the same.{" "}
+          {recipes.toLocaleString("en-IN")} recipes are written this way so far.
+          Each one is a production sheet carrying its station, numbered steps,
+          temperatures and allergens. That is how every FitFuel kitchen can cook
+          the same dish consistently.{" "}
           <Link href="/plans">See the full thirty days</Link>.
         </p>
       </div>
@@ -650,9 +643,8 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
             </h2>
           </div>
           <p className={s.bandLede}>
-            Four choices make the plan. Nothing is hidden until checkout — the
-            per-meal rate, what the length saves you and the total all move as
-            you pick.
+            Four choices make the plan. The per-meal rate, what the length saves
+            you and the total all move as you pick.
           </p>
         </div>
 
@@ -740,7 +732,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
                   <span>
                     {sum.saved > 0 ? "Saved against the 1-week rate" : "No length saving at 1 week"}
                     <b className={`${s.planSave} fk-num`}>
-                      {sum.saved > 0 ? `− ${rs(sum.saved)}` : "—"}
+                      {sum.saved > 0 ? `− ${rs(sum.saved)}` : "₹0"}
                     </b>
                   </span>
                 </span>
@@ -857,8 +849,9 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
             When the scale disagrees, the target moves
           </h2>
           <p className={s.coachLede}>
-            A weight trend read against your goal and current target. No
-            verdict, no nagging — a sum you can check. An example month:
+            A weight trend read against your goal and current target. You see
+            the calculation before deciding whether to change anything. An
+            example month:
           </p>
 
           <ol className={s.weekRow}>
@@ -924,89 +917,95 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
   );
 }
 
-/* ── 7. Where, when, and the six questions ──────────────────────────────────
-   The drop schedule is the morning run, not the whole footprint — the map
-   behind the location chip plots all of it, and the link says so. */
-function AreasFaqBand({ areaCount, cutoffLabel }: { areaCount: number; cutoffLabel: string }) {
+/* ── 7. Delivery and the six questions ──────────────────────────────────────
+   Coverage belongs to the selected address, not to a city baked into the
+   homepage. The locations route owns the operational list as kitchens open. */
+function DeliveryFaqBand({ cutoffLabel }: { cutoffLabel: string }) {
   const [open, setOpen] = useState(0);
 
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="faq-h">
       <div className={s.bandWrap}>
-        {/* ── THE MAP, ON THE PAGE ────────────────────────────────────────
-            "Do we deliver to you" is the first question a cold visitor has and
-            the map that answers it was reachable only by tapping the location
-            chip — a full-screen sheet most people never open. It leads the band
-            now, and the drop times and questions sit under it. */}
         <div className={s.mapHead}>
           <h2 id="faq-h" className={`${s.bandH2} ${s.bandH2Narrow}`}>
-            Do we deliver to you?
+            Check delivery near you
           </h2>
           <p className={s.bandLede}>
-            Cooked from 04:00 in Kharadi, at your door by 08:00. {areaCount} areas,
-            one kitchen. We would rather serve east Pune properly than the whole
-            city badly.
+            Enter your address to see the FitFuel kitchen, menu and delivery
+            window available in your area. New kitchens appear as they open.
           </p>
         </div>
 
-        <div data-reveal="up">
-          <DeliveryMap />
-        </div>
-
-        <div className={s.splitWrap} style={{ marginTop: "var(--fk-s-6)" }}>
-        <div>
-          <h3 className={s.areaH3}>The morning run</h3>
-          <ul className={s.areaList}>
-            {AREA_DROPS.map((a) => (
-              <li key={a.a}>
+        <div className={s.splitWrap}>
+          <div data-reveal="up">
+            <h3 className={s.areaH3}>What your address decides</h3>
+            <ul className={s.areaList}>
+              <li>
                 <span>
                   <i aria-hidden="true" />
-                  {a.a}
+                  Kitchen
                 </span>
-                <b className="fk-num">{a.t}</b>
+                <b className={s.areaValue}>Nearest available</b>
               </li>
-            ))}
-          </ul>
-          <p className={s.areaNote}>
-            Breakfast drop times for the eight busiest. Lunch runs 12:15–13:30
-            across all of them — <Link href="/locations">every area and its
-            times</Link>.
-          </p>
-        </div>
+              <li>
+                <span>
+                  <i aria-hidden="true" />
+                  Menu
+                </span>
+                <b className={s.areaValue}>Available locally</b>
+              </li>
+              <li>
+                <span>
+                  <i aria-hidden="true" />
+                  Delivery
+                </span>
+                <b className={s.areaValue}>Shown before checkout</b>
+              </li>
+            </ul>
+            <p className={s.areaNote}>
+              Availability depends on the selected address.{" "}
+              <Link href="/locations">
+                Check current service areas and delivery windows
+              </Link>
+              .
+            </p>
+          </div>
 
-        <ul className={s.faqList}>
-          {FAQS.map((f, i) => {
-            const isOpen = open === i;
-            return (
-              <li key={f.q} data-reveal="left">
-                <button
-                  type="button"
-                  className={s.faqBtn}
-                  onClick={() => setOpen(isOpen ? -1 : i)}
-                  aria-expanded={isOpen}
-                  aria-controls={`faq-a-${i}`}
-                >
-                  <span className={`${s.faqN} fk-num`}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className={s.faqQ}>{f.q}</span>
-                  <span className={isOpen ? s.faqSignOn : s.faqSign} aria-hidden="true">
-                    {isOpen ? "−" : "+"}
-                  </span>
-                </button>
-                {isOpen ? (
-                  <p id={`faq-a-${i}`} className={s.faqA}>
-                    {f.a}
-                    {/* The cutoff is modelled in lib/order-cutoff and printed at
-                        the top of the page; repeating the real sentence here
-                        keeps the skip answer from drifting from it. */}
-                    {i === 0 ? <span className={s.faqCut}>{cutoffLabel}</span> : null}
-                  </p>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+          <ul className={s.faqList}>
+            {FAQS.map((f, i) => {
+              const isOpen = open === i;
+              return (
+                <li key={f.q} data-reveal="left">
+                  <button
+                    type="button"
+                    className={s.faqBtn}
+                    onClick={() => setOpen(isOpen ? -1 : i)}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-a-${i}`}
+                  >
+                    <span className={`${s.faqN} fk-num`}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className={s.faqQ}>{f.q}</span>
+                    <span
+                      className={isOpen ? s.faqSignOn : s.faqSign}
+                      aria-hidden="true"
+                    >
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  {isOpen ? (
+                    <p id={`faq-a-${i}`} className={s.faqA}>
+                      {f.a}
+                      {i === 0 ? (
+                        <span className={s.faqCut}>{cutoffLabel}</span>
+                      ) : null}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     </section>
@@ -1020,12 +1019,10 @@ function CtaBand({
   trialTotal,
   planCount,
   cutoffLabel,
-  areaCount,
 }: {
   trialTotal: string;
   planCount: number;
   cutoffLabel: string;
-  areaCount: number;
 }) {
   /* ── WHAT ACTUALLY HAPPENS, IN ORDER ──────────────────────────────────────
      The close was a headline, a paragraph, two buttons and a photograph — the
@@ -1046,12 +1043,12 @@ function CtaBand({
     {
       n: "04:00",
       label: "Produce lands and your tray is weighed",
-      line: "Cooked to your macros in Kharadi, on a scale, against the recipe sheet — not an eyeballed ladle.",
+      line: "Your nearest FitFuel kitchen cooks from the recipe sheet and weighs every portion.",
     },
     {
       n: "By 08:00",
       label: "Breakfast and lunch, at your door",
-      line: `Our own riders across ${areaCount} areas. Your macros are ready to confirm in the diary.`,
+      line: "Your delivery window is confirmed for your address. Your macros are ready in the diary.",
     },
   ];
 
@@ -1066,12 +1063,12 @@ function CtaBand({
           </h2>
           <p className={s.closeP}>
             Breakfast and lunch, weighed to your macros, delivered tomorrow
-            morning. {trialTotal} all in — delivery, packaging and GST included.
-            No account needed to look, nothing to cancel afterwards.
+            morning. {trialTotal} includes delivery, packaging and GST. No
+            account needed to look, nothing to cancel afterwards.
           </p>
           <div className={s.closeActions}>
             <Link href="/plans?trial=true" className={s.closeCta}>
-              Start the trial — {trialTotal}
+              Start the trial for {trialTotal}
             </Link>
             <Link href="/plans" className={s.closeGhost}>
               See the {planCount.toLocaleString("en-IN")} plans
@@ -1118,7 +1115,7 @@ function CtaBand({
         <li>
           <Link href="/allergen-policy">
             <b>Allergens declared</b>
-            <span>On the dish, from the production sheet — not remembered by a cook.</span>
+            <span>Listed on the dish from the production sheet.</span>
           </Link>
         </li>
       </ul>

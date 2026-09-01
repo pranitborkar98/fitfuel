@@ -10,8 +10,6 @@ import type { PriceRow } from "@/lib/plan-tier-pricing";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
 import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
-import Areas from "./_hp/Areas";
-import { AREAS_AT } from "./_hp/areas-data";
 import { getWeek } from "./_hp/menu-data";
 import { decodeRow } from "@/lib/decode-entities";
 import { isTrainerConfigured } from "@/lib/ai-trainer/client";
@@ -39,14 +37,14 @@ import type { BandCounts, Quote } from "./_web/HomeBands";
    ══════════════════════════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
-  title: "Healthy meals, meal plans and nutrition coaching in Pune",
+  title: "Healthy meals, meal plans and nutrition coaching | FitFuel",
   description:
-    "Order chef-cooked healthy meals in Pune or build a complete nutrition plan with delivery, food logging, training and coaching in one FitFuel app.",
+    "Order chef-cooked healthy meals or build a complete nutrition plan with delivery, food logging, training and coaching in one FitFuel app.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "FitFuel — healthy food built around you",
+    title: "FitFuel | Healthy food built around you",
     description:
-      "Chef-cooked meals, personalised plans, food logging, training and coaching from one Kharadi kitchen.",
+      "Chef-cooked meals, personalised plans, food logging, training and coaching from the FitFuel kitchen serving your area.",
     images: [{ url: "/images/hero-bowl-v2.png", alt: "A chef-cooked FitFuel meal" }],
   },
 };
@@ -55,6 +53,9 @@ export const viewport: Viewport = {
   themeColor: "#0a0a09",
   colorScheme: "dark",
 };
+
+const publicSentence = (value: string) => value.replace(/\s*—\s*/g, ". ");
+const publicLabel = (value: string) => value.replace(/\s*—\s*/g, " · ");
 
 /**
  * ALL 126 PLANS, from the database.
@@ -143,9 +144,9 @@ async function getPlans(): Promise<AppPlan[]> {
       const c = Number(r.avgCarbsGrams) || 0;
       const f = Number(r.avgFatGrams) || 0;
       return {
-        label: r.name,
+        label: publicLabel(r.name),
         slug: r.slug,
-        note: r.tagline,
+        note: publicSentence(r.tagline),
         cat: r.category as AppPlan["cat"],
         diet: String(r.dietaryVariant),
         sub: r.subCategory,
@@ -159,7 +160,7 @@ async function getPlans(): Promise<AppPlan[]> {
         variants: rowsForConcept.map((v) => ({
           diet: String(v.dietaryVariant),
           slug: v.slug,
-          label: v.displayName,
+          label: publicLabel(v.displayName),
           kcal: Number(v.avgCaloriesPerDay) || 0,
           protein: Number(v.avgProteinGrams) || 0,
           meals: (menus[v.slug] ?? []).length,
@@ -210,16 +211,16 @@ async function getSupplements(): Promise<AppSupp[]> {
     });
     return rows.map((r) => ({
       slug: r.slug,
-      name: r.name,
-      brand: r.brandName ?? null,
-      tagline: r.tagline ?? "",
-      category: r.category?.name ?? "Other",
-      form: r.form ?? null,
-      dosage: r.dosage ?? null,
-      timing: r.timing ?? null,
+      name: publicLabel(r.name),
+      brand: r.brandName ? publicLabel(r.brandName) : null,
+      tagline: publicSentence(r.tagline ?? ""),
+      category: publicLabel(r.category?.name ?? "Other"),
+      form: r.form ? publicSentence(r.form) : null,
+      dosage: r.dosage ? publicSentence(r.dosage) : null,
+      timing: r.timing ? publicSentence(r.timing) : null,
       evidence: r.evidenceLevel ?? null,
       studies: r.studyCount ?? null,
-      benefits: (r.benefits ?? []).slice(0, 3),
+      benefits: (r.benefits ?? []).slice(0, 3).map(publicSentence),
     }));
   } catch {
     return [];
@@ -267,7 +268,10 @@ async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
       /* Seeded copy carries &mdash; and &middot;, and React escapes text nodes
          — so a featured quote rendered as "actually delicious &mdash; I was
          expecting". Decoded on the way out. */
-      quotes: rows.map(decodeRow),
+      quotes: rows.map(decodeRow).map((row) => ({
+        ...row,
+        quote: publicSentence(row.quote),
+      })),
     };
   } catch {
     return { counts: fallback, quotes: [] };
@@ -340,7 +344,7 @@ function trialReceipt() {
   const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
   return {
     rows: [
-      { k: "Two meals — breakfast and lunch", v: rs(TRIAL.baseRs) },
+      { k: "Two meals: breakfast and lunch", v: rs(TRIAL.baseRs) },
       { k: "Delivery", v: rs(TRIAL.deliveryRs) },
       { k: "Packaging", v: rs(TRIAL.packagingRs) },
       { k: `GST ${TRIAL.gstPercent}%`, v: rs(TRIAL.gstRs) },
@@ -397,7 +401,6 @@ export default async function AppPage({
         courses={COURSES.map((c) => ({
           key: c.key, label: c.label, n: c.n, note: c.note,
         }))}
-        area="Kharadi"
         cutoffLabel={cutoffLabel()}
         trialTotal={TRIAL_TOTAL_GLYPH}
         menuFrom={`₹${MENU_FROM}`}
@@ -411,13 +414,6 @@ export default async function AppPage({
         goalCount={plans.length}
         prices={prices}
         trial={trialReceipt()}
-        /* +1 for the kitchen itself, which AREAS_AT excludes. */
-        areaCount={AREAS_AT.length + 1}
-        /* app/_hp/Areas.tsx was written for the v2 homepage and then imported by
-           nothing — the plotted delivery map, on no route at all. It is a server
-           component, so it is rendered here and passed down as a node for the
-           location chip to open. */
-        areaPanel={<Areas />}
         initialMode={modeFrom(mode)}
         bandCounts={bands.counts}
         /* Passed again. For four days these three featured Testimonial rows
