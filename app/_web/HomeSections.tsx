@@ -49,7 +49,6 @@ import {
   wedgeRows,
 } from "./home-data";
 import type { BandCounts } from "./HomeBands";
-import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
 import r from "./refresh.module.css";
@@ -90,8 +89,6 @@ export type HomeSectionsProps = {
   trial: { rows: { k: string; v: string }[]; total: string };
   /** The order cutoff sentence, from lib/order-cutoff. */
   cutoffLabel: string;
-  /** Seven seeded days of weight-loss-veg. Empty renders nothing — see WeekBand. */
-  week: Dish[];
 };
 
 export default function HomeSections({
@@ -100,7 +97,6 @@ export default function HomeSections({
   prices,
   trial,
   cutoffLabel,
-  week,
 }: HomeSectionsProps) {
   const revealRef = useReveal<HTMLDivElement>();
 
@@ -109,7 +105,6 @@ export default function HomeSections({
       <DayBand />
       <PlatformBand counts={counts} goalCount={goalCount} />
       <WedgeBand counts={counts} />
-      <WeekBand week={week} recipes={counts.recipes} />
       <ServicesBand />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
@@ -139,7 +134,8 @@ function DayBand() {
             </h2>
           </div>
           <p className={s.bandLede}>
-            Your assigned FitFuel kitchen prepares the food, weighs each portion
+            Your body measurements and goal set the calorie target. Your
+            assigned kitchen weighs every meal to that target, labels it to you
             and sends it with the local delivery team.
           </p>
         </div>
@@ -200,7 +196,7 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
     {
       n: counts.plans,
       label: "Meal plans",
-      note: "A 60-day cycle cooked to your macros, configured by duration, diet, meals and tier.",
+      note: "A 60-day cycle with portion sizes set from your calorie target, diet, meals and tier.",
     },
     {
       n: counts.conditionPlans,
@@ -226,9 +222,9 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
           The food is the front door
         </h2>
         <p className={`${s.bandLede} ${s.bandLedeWide}`}>
-          Behind the menu is the thing you actually keep using: plans cooked for
-          a diagnosis, training that feeds back into the day, and a coach that
-          moves your target when the scale disagrees with it.
+          Your plan links the meal, body measurements, exercise diary and
+          coach. When your weight trend moves away from the goal, the new
+          calculation is shown before you accept a target change.
         </p>
         <ul className={s.statRow}>
           {cols.map((c) => (
@@ -256,8 +252,8 @@ function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: nu
    "why not a tiffin service" after the reader has already scrolled past the
    price is answering it too late.
 
-   A table, not four cards, and every cell a sentence rather than a tick. Both
-   choices are Wedge's own and both are right — see the note in home-data.ts. */
+   The desktop keeps the full table. A phone gets one complete capability at a
+   time because horizontal panning hid the FitFuel answer off-screen. */
 function WedgeBand({ counts }: { counts: BandCounts }) {
   const rows = wedgeRows(counts.exercises, counts.conditionPlans);
 
@@ -267,20 +263,17 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
         <div className={s.bandHead}>
           <div>
             <h2 id="wedge-h" className={s.bandH2}>
-              Your meals start filled in. You confirm what you ate.
+              Your body sets the target. Our kitchen weighs the result.
             </h2>
           </div>
           <p className={s.bandLede}>
-            Four things you could buy instead, and what each of them actually
-            does. The same claim as a table, so you can check it rather than
-            believe it.
+            FitFuel calculates calories and macros from your measurements,
+            activity and goal. Then we cook the food, weigh each portion, log
+            the meal and adjust the target from your progress.
           </p>
         </div>
 
-        {/* Scrolls sideways on a phone rather than shrinking to five illegible
-            columns. The row header is sticky inside that scroll, so the thing
-            being compared never leaves the screen. */}
-        <div className={s.specWrap} data-reveal="up">
+        <div className={`${s.specWrap} ${s.specDesktop}`} data-reveal="up">
           <table className={s.spec}>
             <caption className="fk-sr-only">
               What a tiffin service, a fitness app, a supplement brand and
@@ -312,111 +305,32 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
             </tbody>
           </table>
         </div>
-      </div>
-    </section>
-  );
-}
 
-/* ── 2c. The rotation ────────────────────────────────────────────────
-   app/_web/Behind.tsx has argued "nothing repeats for sixty days" in prose
-   since it was written, and no surface has ever shown a single day of it. This
-   is seven real days of the one plan of 126 with a seeded schedule.
-
-   A <table>, and not as a fallback. This is about as tabular as data gets —
-   seven days down, four meals across — and a grid of divs cannot be walked by
-   assistive tech. app/_hp/Week.tsx makes the same call for the same reason.
-
-   RENDERS NOTHING WHEN THE QUERY COMES BACK EMPTY. A rotation band carrying
-   invented dish names would falsify the exact claim it exists to prove. */
-function WeekBand({ week, recipes }: { week: Dish[]; recipes: number }) {
-  if (!week.length) return null;
-
-  const days = [...new Set(week.map((d) => d.day))].sort((a, b) => a - b);
-  if (!days.length) return null;
-
-  const at = (day: number, slot: string) =>
-    week.find((d) => d.day === day && d.slot === slot);
-  /* Counted, not claimed: how many DIFFERENT dishes these seven days hold. If
-     the seed ever repeats one, this figure drops and says so. */
-  const distinct = new Set(week.map((d) => d.name)).size;
-  const dayKcal = (day: number) =>
-    week.filter((d) => d.day === day).reduce((n, d) => n + (d.kcal ?? 0), 0);
-
-  return (
-    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="week-h">
-      <div className={s.bandWrap}>
-        <div className={s.bandHead}>
-          <div>
-            <h2 id="week-h" className={s.bandH2}>
-              A week you can read before you buy it
-            </h2>
-          </div>
-          <p className={s.bandLede}>
-            Seven real days of the weight-loss plan, out of the database.{" "}
-            {distinct} different dishes across {days.length} days. Every recipe
-            carries a rotation group, so a plan cannot serve you the same lunch
-            twice in two months.
-          </p>
-        </div>
-
-        <div className={s.specWrap} data-reveal="up">
-          <table className={s.spec}>
-            <caption className="fk-sr-only">
-              Seven days of the weight-loss vegetarian plan, four meals a day,
-              with each day&apos;s total calories.
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Day</th>
-                {SLOT_ORDER.map((slot) => (
-                  <th key={slot} scope="col">
-                    {SLOT_LABEL[slot] ?? slot}
-                  </th>
-                ))}
-                <th scope="col" className={s.specUs}>
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {days.map((day) => (
-                <tr key={day}>
-                  <th scope="row">Day {day}</th>
-                  {SLOT_ORDER.map((slot) => {
-                    const dish = at(day, slot);
-                    return (
-                      <td key={slot}>
-                        {dish ? (
-                          <>
-                            <b className={s.weekDish}>{dish.name}</b>
-                            {dish.kcal ? (
-                              <span className={`${s.weekKcal} fk-num`}>
-                                {Math.round(dish.kcal)} kcal
-                              </span>
-                            ) : null}
-                          </>
-                        ) : (
-                          <span aria-label="not scheduled">–</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td className={`${s.specMine} fk-num`}>
-                    {dayKcal(day).toLocaleString("en-IN")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <p className={s.weekNoteFoot}>
-          {recipes.toLocaleString("en-IN")} recipes are written this way so far.
-          Each one is a production sheet carrying its station, numbered steps,
-          temperatures and allergens. That is how every FitFuel kitchen can cook
-          the same dish consistently.{" "}
-          <Link href="/plans">See the full thirty days</Link>.
-        </p>
+        <ul className={s.wedgeCards} aria-label="How FitFuel compares" data-reveal="up">
+          {rows.map((row) => (
+            <li key={row.what}>
+              <div className={s.wedgeCardHead}>
+                <h3>{row.what}</h3>
+                <span>FitFuel</span>
+              </div>
+              <p className={s.wedgeCardAnswer}>{row.us}</p>
+              <dl className={s.wedgeAlternatives}>
+                <div>
+                  <dt>Tiffin</dt>
+                  <dd>{row.tiffin}</dd>
+                </div>
+                <div>
+                  <dt>Fitness app</dt>
+                  <dd>{row.app}</dd>
+                </div>
+                <div>
+                  <dt>Supplement</dt>
+                  <dd>{row.supp}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

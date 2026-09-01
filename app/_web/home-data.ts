@@ -39,24 +39,24 @@ export const DAY_STEPS: DayStep[] = [
   },
   {
     at: "06:30",
-    label: "Cooked to the sheet",
-    line: "Every portion goes on a scale against your macros, not an eyeballed ladle.",
+    label: "Portioned for you",
+    line: "Your calorie target becomes a kitchen portion factor. Every meal is weighed in grams before sealing.",
     img: "/images/brand/meals-weighed-in-kitchen.webp",
     alt: "Illustration of an Indian meal being portioned on a kitchen scale",
   },
   {
     at: "07:30",
-    label: "Trays labelled, drivers load",
-    line: "Named trays, our riders. No aggregator takes 40 paise of your rupee.",
+    label: "Your tray, your numbers",
+    line: "Your name, meal slot and calculated macros stay with the tray through dispatch.",
     img: "/images/kitchen.jpg",
     alt: "The kitchen line packing labelled trays",
   },
   {
     at: "08:00",
     label: "At your door",
-    line: "Our rider completes the morning run; breakfast is pre-filled and ready to confirm.",
+    line: "Your meals arrive with their calories and macros already filled into your diary.",
     img: "/images/ai/story/pune-delivery.webp",
-    alt: "A morning meal delivery being handed to a customer at a Pune apartment",
+    alt: "A morning meal delivery being handed to a customer at their apartment",
   },
 ];
 
@@ -250,22 +250,6 @@ export const CONDITIONS: ConditionLink[] = [
   { label: "Shravan", slug: "shravan" },
 ];
 
-/* ── Breakfast drop times ───────────────────────────────────────────────────
-   Eight of the fifteen suburbs in app/_hp/areas-data.ts — the ones on the
-   morning run. The full footprint, plotted from published coordinates with the
-   3/6/9km rings, is the map behind the location chip and /locations, and this
-   table links there rather than implying eight is the whole footprint. */
-export const AREA_DROPS: { a: string; t: string }[] = [
-  { a: "Kharadi", t: "07:30" },
-  { a: "Viman Nagar", t: "07:45" },
-  { a: "Kalyani Nagar", t: "08:00" },
-  { a: "Koregaon Park", t: "08:15" },
-  { a: "Magarpatta City", t: "08:15" },
-  { a: "Mundhwa", t: "08:30" },
-  { a: "Wagholi", t: "08:30" },
-  { a: "Yerwada", t: "08:45" },
-];
-
 export const FAQS: { q: string; a: string }[] = [
   {
     q: "Can I skip a day?",
@@ -337,18 +321,25 @@ export const WEDGE_COLS = [
 export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[] {
   return [
     {
+      what: "Calculates for your body",
+      tiffin: "No, one shared menu",
+      app: "Yes, but it does not cook the result",
+      supp: "No",
+      us: "Weight, height, age, activity and goal set your target",
+    },
+    {
       what: "Cooks your food",
       tiffin: "Yes, to one shared menu",
       app: "No",
       supp: "No",
-      us: "Yes, to your macros",
+      us: "Yes, to your calculated target",
     },
     {
       what: "Weighs the portion",
       tiffin: "No, ladled by eye",
       app: "No, you estimate it",
       supp: "Only the scoop",
-      us: "On a scale, before sealing",
+      us: "In grams, against your portion factor",
     },
     {
       what: "Logs what you ate",
@@ -369,7 +360,7 @@ export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[]
       tiffin: "No",
       app: "If you own the scale and remember",
       supp: "No",
-      us: "18 measures, read off your scale",
+      us: "18 measurements, read directly from your scale",
     },
     {
       what: "Moves the target when you stall",

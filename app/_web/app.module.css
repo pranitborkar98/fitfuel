@@ -3201,6 +3201,37 @@
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
+@media (max-width: 639px) {
+  .dayGrid > li {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .dayShot {
+    aspect-ratio: 1;
+    min-height: 100%;
+  }
+  .dayBody {
+    padding: 15px 16px 17px;
+  }
+  .dayLabel {
+    margin-top: 4px;
+    font-size: 1.0625rem;
+  }
+  .dayLine {
+    margin-top: 4px;
+    font-size: var(--fk-t-xs);
+    line-height: 1.45;
+  }
+}
+@media (max-width: 359px) {
+  .dayGrid > li {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .dayBody {
+    padding-inline: 13px;
+  }
+}
 
 /* ── 2. The platform ────────────────────────────────────────────────────────
    The hairlines between columns are background gradients rather than borders,
@@ -5262,9 +5293,9 @@
    app/_hp/Proof.tsx — rebuilt at app density on --fk-* tokens.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Five columns will not fit 375px and must not try. It scrolls sideways, and
-   the row header is sticky INSIDE that scroll so the thing being compared never
-   leaves the screen while the reader pans across the answers. */
+/* The full table is a desktop comparison. On a phone each capability becomes
+   one complete card, keeping the FitFuel answer and all three alternatives in
+   the same viewport instead of asking the reader to pan sideways. */
 .specWrap {
   overflow-x: auto;
   scrollbar-width: thin;
@@ -5322,6 +5353,85 @@
   color: var(--fk-ink);
   background: rgba(132, 204, 22, 0.06);
   font-weight: 500;
+}
+.wedgeCards {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+@media (max-width: 1023px) {
+  .specDesktop {
+    display: none;
+  }
+  .wedgeCards {
+    display: grid;
+    gap: var(--fk-s-3);
+  }
+  .wedgeCards > li {
+    overflow: hidden;
+    border: 1px solid var(--fk-line);
+    border-radius: var(--fk-r-lg);
+    background: var(--fk-paper);
+  }
+  .wedgeCardHead {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--fk-s-3);
+    padding: 15px 16px 12px;
+    border-bottom: 1px solid var(--fk-line);
+    background: var(--fk-warm);
+  }
+  .wedgeCardHead h3 {
+    margin: 0;
+    font-size: var(--fk-t-base);
+    line-height: 1.35;
+    color: var(--fk-ink);
+  }
+  .wedgeCardHead span {
+    flex: none;
+    font-size: var(--fk-t-xs);
+    font-weight: 700;
+    color: var(--fk-green-deep);
+  }
+  .app .wedgeCardAnswer {
+    margin: 0;
+    padding: 13px 16px;
+    border-bottom: 1px solid rgba(132, 204, 22, 0.2);
+    background: rgba(132, 204, 22, 0.07);
+    font-size: var(--fk-t-sm);
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--fk-ink);
+  }
+  .wedgeAlternatives {
+    margin: 0;
+    padding: 5px 16px 8px;
+  }
+  .wedgeAlternatives > div {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: var(--fk-s-3);
+    padding-block: 9px;
+    border-bottom: 1px solid var(--fk-line);
+  }
+  .wedgeAlternatives > div:last-child {
+    border-bottom: 0;
+  }
+  .wedgeAlternatives dt,
+  .wedgeAlternatives dd {
+    margin: 0;
+    font-size: var(--fk-t-xs);
+    line-height: 1.45;
+  }
+  .wedgeAlternatives dt {
+    font-weight: 700;
+    color: var(--fk-ink-2);
+  }
+  .wedgeAlternatives dd {
+    color: var(--fk-ink-3);
+  }
 }
 
 /* ── Proof ───────────────────────────────────────────────────────────────── */
@@ -5402,32 +5512,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--fk-green);
-}
-
-/* ── The week, and the directory ───────────────────────────────────────────
-   Both reuse .specWrap / .spec from the wedge: three tables on this page now,
-   all with the same sideways scroll and sticky row header, which is one
-   behaviour for the reader to learn rather than three. */
-.weekDish {
-  display: block;
-  font-weight: 500;
-  color: var(--fk-ink);
-  line-height: 1.35;
-}
-.weekKcal {
-  display: block;
-  margin-top: 3px;
-  font-family: var(--fk-mono);
-  font-size: var(--fk-t-xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--fk-ink-3);
-}
-.app .weekNoteFoot {
-  margin: var(--fk-s-4) 0 0;
-  max-width: 76ch;
-  font-size: var(--fk-t-sm);
-  line-height: 1.55;
-  color: var(--fk-ink-3);
 }
 
 /* Directory rows, the shape Inside.tsx argues for: hairline separated, the

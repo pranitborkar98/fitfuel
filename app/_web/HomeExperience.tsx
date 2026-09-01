@@ -131,11 +131,11 @@ export default function HomeExperience({
             <span aria-hidden="true" /> {timeGreeting()}
           </p>
           <h1 id="home-title" className={x.title}>
-            Food that already knows your goal.
+            Meals calculated for your body.
           </h1>
           <p className={x.lede}>
-            Four Indian meals, weighed for your goal, delivered from your
-            nearest FitFuel kitchen and already counted in your day.
+            Your weight, height, age, activity and goal set the target. We weigh
+            each meal to that target, deliver it and pre-fill your food diary.
           </p>
 
           <div className={x.heroActions}>
@@ -162,29 +162,29 @@ export default function HomeExperience({
             <li>
               <Icon path={ICON.scale} size={18} />
               <span>
-                <b>Weigh</b>
-                <small>Your portion</small>
-              </span>
-            </li>
-            <li>
-              <Icon path={ICON.route} size={18} />
-              <span>
-                <b>Deliver</b>
-                <small>By 08:00</small>
-              </span>
-            </li>
-            <li>
-              <Icon path={ICON.check} size={18} />
-              <span>
-                <b>Pre-fill</b>
-                <small>Your diary</small>
+                <b>Measure</b>
+                <small>Your body</small>
               </span>
             </li>
             <li>
               <Icon path={ICON.spark} size={18} />
               <span>
-                <b>Coach</b>
-                <small>The trend</small>
+                <b>Calculate</b>
+                <small>Calories + macros</small>
+              </span>
+            </li>
+            <li>
+              <Icon path={ICON.check} size={18} />
+              <span>
+                <b>Weigh</b>
+                <small>Every meal</small>
+              </span>
+            </li>
+            <li>
+              <Icon path={ICON.route} size={18} />
+              <span>
+                <b>Adjust</b>
+                <small>From progress</small>
               </span>
             </li>
           </ol>
@@ -290,7 +290,11 @@ export default function HomeExperience({
             <Icon path={ICON.scale} size={20} />
           </span>
           <span>
-            <small>Your target</small>
+            <small>
+              {target.personal
+                ? "Calculated from your numbers"
+                : "Set your body numbers"}
+            </small>
             <b className="fk-num">
               {target.kcal.toLocaleString("en-IN")} kcal · {portionPercent}%
               portion

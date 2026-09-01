@@ -1703,10 +1703,9 @@ export default function FitFuelApp({
       </div>
 
       {/* ── EVERYTHING BELOW THE FOOD ──────────────────────────────────
-          Eight bands, in app/_web/HomeSections.tsx: the day from 04:00 to your
-          door, the platform behind the menu, the seven services, the plan
-          builder with its arithmetic in the open, the conditions, the coach and
-          the trial receipt, the drop times and the questions, then the close.
+          The bands in app/_web/HomeSections.tsx cover the kitchen day, the
+          platform behind the menu, the services, the plan builder, conditions,
+          the coach and trial receipt, delivery questions, then the close.
 
           They sit HERE, below the catalogue, because AGENTS.md is explicit that
           nothing pushes food down the page. Each is a section someone scrolls
@@ -1717,7 +1716,6 @@ export default function FitFuelApp({
         prices={prices}
         trial={trial}
         cutoffLabel={cutoffLabel}
-        week={week}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
