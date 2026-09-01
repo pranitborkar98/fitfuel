@@ -12,13 +12,25 @@
 .hero {
   display: grid;
   grid-template-columns: minmax(320px, 0.82fr) minmax(560px, 1.18fr);
-  align-items: center;
-  gap: clamp(28px, 4vw, 64px);
+  grid-template-areas:
+    "copy menu"
+    "support menu";
+  align-items: start;
+  column-gap: clamp(28px, 4vw, 64px);
+  row-gap: 0;
   padding: clamp(32px, 5vw, 64px) 0 clamp(30px, 4vw, 52px);
   border-bottom: 1px solid var(--fk-line-2);
 }
 
 .heroCopy {
+  grid-area: copy;
+  align-self: end;
+  min-width: 0;
+}
+
+.heroSupport {
+  grid-area: support;
+  align-self: start;
   min-width: 0;
 }
 
@@ -43,10 +55,10 @@
   max-width: 11ch;
   margin: 0;
   color: var(--fk-ink);
-  font-family: var(--fk-sans);
+  font-family: var(--fk-display);
   font-size: clamp(3rem, 4.8vw, 4.9rem);
-  font-weight: 780;
-  letter-spacing: -0.052em;
+  font-weight: 560;
+  letter-spacing: -0.038em;
   line-height: 0.98;
   text-wrap: balance;
 }
@@ -168,6 +180,8 @@
 }
 
 .menuPreview {
+  grid-area: menu;
+  align-self: center;
   min-width: 0;
   padding: 10px;
   border: 1px solid var(--fk-line-2);
@@ -1022,6 +1036,11 @@
 @media (max-width: 980px) {
   .hero {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "copy"
+      "menu"
+      "support";
+    gap: 24px;
   }
 
   .heroCopy {
@@ -1129,6 +1148,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
+    margin-top: 0;
   }
 
   .assistance a {
@@ -1140,7 +1160,7 @@
   }
 
   .operation {
-    margin-top: 20px;
+    margin-top: 14px;
   }
 
   .operation li {
@@ -1179,7 +1199,12 @@
   }
 
   .featureCopy b {
+    display: -webkit-box;
+    overflow: hidden;
     font-size: clamp(1.55rem, 7vw, 2.15rem);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
 
   .mealGrid {

@@ -4502,6 +4502,25 @@
   }
 }
 
+@media (max-width: 359px) {
+  .goalPick {
+    width: 100%;
+    min-width: 0;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .goalSeg,
+  .numbersBtn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .numbersBtn {
+    justify-content: center;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    EVERY HEADING ON THIS PAGE WAS RENDERING AT THE WRONG SIZE
 

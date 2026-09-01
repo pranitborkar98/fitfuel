@@ -110,15 +110,17 @@ async function getPlanMenus(): Promise<Record<string, { slot: string; name: stri
 }
 async function getPlans(): Promise<AppPlan[]> {
   try {
-    const menus = await getPlanMenus();
-    const rows = await prisma.mealPlan.findMany({
-      orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
-      select: {
-        name: true, displayName: true, slug: true, tagline: true, category: true,
-        subCategory: true, dietaryVariant: true, avgCaloriesPerDay: true,
-        avgProteinGrams: true, avgCarbsGrams: true, avgFatGrams: true,
-      },
-    });
+    const [menus, rows] = await Promise.all([
+      getPlanMenus(),
+      prisma.mealPlan.findMany({
+        orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
+        select: {
+          name: true, displayName: true, slug: true, tagline: true, category: true,
+          subCategory: true, dietaryVariant: true, avgCaloriesPerDay: true,
+          avgProteinGrams: true, avgCarbsGrams: true, avgFatGrams: true,
+        },
+      }),
+    ]);
     /* GROUP BY CONCEPT. The 126 rows are 59 plans x diet variants — "Weight
        Loss — Vegetarian / Eggetarian / Jain / Non Vegetarian / Vegan" is ONE
        plan with five variants, not five plans. Rendering the raw rows produced

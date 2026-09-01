@@ -6,6 +6,7 @@ export type CustomerNavItem =
       kind: "catalog";
       key: CustomerMode;
       label: string;
+      shortLabel?: string;
       accessibleLabel: string;
       href: string;
     }
@@ -13,6 +14,7 @@ export type CustomerNavItem =
       kind: "link";
       key: "coach" | "today";
       label: string;
+      shortLabel?: string;
       accessibleLabel: string;
       href: string;
     };
@@ -41,6 +43,7 @@ export const CUSTOMER_NAV: readonly CustomerNavItem[] = [
     kind: "catalog",
     key: "supps",
     label: "Supplements",
+    shortLabel: "Supps",
     accessibleLabel: "supplements",
     href: "/?mode=supps#catalog",
   },

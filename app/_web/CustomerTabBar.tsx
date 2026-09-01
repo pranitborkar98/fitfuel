@@ -58,7 +58,18 @@ export default function CustomerTabBar({
         const content = (
           <>
             <Icon name={item.key} />
-            <span className={s.label}>{item.label}</span>
+            {item.shortLabel ? (
+              <>
+                <span className={`${s.label} ${s.labelLong}`}>
+                  {item.label}
+                </span>
+                <span className={`${s.label} ${s.labelShort}`}>
+                  {item.shortLabel}
+                </span>
+              </>
+            ) : (
+              <span className={s.label}>{item.label}</span>
+            )}
           </>
         );
 

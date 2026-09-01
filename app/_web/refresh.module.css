@@ -720,7 +720,12 @@
   }
 
   .productCard .productTitle {
+    display: -webkit-box;
+    overflow: hidden;
     font-size: 1.05rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
   }
 
   .productDescription {
@@ -755,6 +760,13 @@
 
   .productCard:not(.textCard) .productMedia {
     width: 116px;
+  }
+}
+
+@media (max-width: 359px) {
+  .productCard .productTitle {
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 }
 

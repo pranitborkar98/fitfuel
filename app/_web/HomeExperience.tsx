@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 
 import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
@@ -95,6 +95,7 @@ export default function HomeExperience({
 }) {
   const meals = week.filter((dish) => dish.day === 1).slice(0, 4);
   const [activeMealIndex, setActiveMealIndex] = useState(0);
+  const mealTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const activeMeal = meals[activeMealIndex] ?? meals[0];
   const planKcal = meals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
   const serving = servingScaleForTarget({
@@ -108,6 +109,23 @@ export default function HomeExperience({
     `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to ${area}.`,
   );
   const proof = quotes[0];
+
+  const moveMealFocus = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let next = index;
+    if (event.key === "ArrowRight") next = (index + 1) % meals.length;
+    else if (event.key === "ArrowLeft")
+      next = (index - 1 + meals.length) % meals.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = meals.length - 1;
+    else return;
+
+    event.preventDefault();
+    setActiveMealIndex(next);
+    mealTabRefs.current[next]?.focus();
+  };
 
   return (
     <div className={x.home} id="main-content" aria-labelledby="home-title">
@@ -132,7 +150,9 @@ export default function HomeExperience({
               Try breakfast + lunch · {trialTotal}
             </Link>
           </div>
+        </div>
 
+        <div className={x.heroSupport}>
           <div className={x.assistance}>
             <Link href="/dashboard/trainer">
               <Icon path={ICON.spark} size={18} /> Ask the AI coach
@@ -189,12 +209,18 @@ export default function HomeExperience({
           </div>
 
           {activeMeal ? (
-            <div className={x.featureMeal} role="tabpanel" aria-live="polite">
+            <div
+              id="meal-preview-panel"
+              className={x.featureMeal}
+              role="tabpanel"
+              aria-labelledby={`meal-preview-tab-${activeMealIndex}`}
+              aria-live="polite"
+            >
               <Image
                 src={PLAN_IMAGES[activeMeal.slot]}
                 alt={activeMeal.name}
                 fill
-                priority
+                loading="eager"
                 sizes="(max-width: 900px) 100vw, 54vw"
               />
               <span className={x.scrim} aria-hidden="true" />
@@ -223,17 +249,25 @@ export default function HomeExperience({
               className={x.mealGrid}
               role="tablist"
               aria-label="Preview all four meals"
+              aria-orientation="horizontal"
             >
               {meals.map((meal, index) => (
                 <button
                   key={`${meal.day}-${meal.slot}`}
+                  id={`meal-preview-tab-${index}`}
                   type="button"
                   role="tab"
+                  aria-controls="meal-preview-panel"
                   aria-selected={activeMealIndex === index}
+                  tabIndex={activeMealIndex === index ? 0 : -1}
                   className={
                     activeMealIndex === index ? x.mealActive : undefined
                   }
                   onClick={() => setActiveMealIndex(index)}
+                  onKeyDown={(event) => moveMealFocus(event, index)}
+                  ref={(element) => {
+                    mealTabRefs.current[index] = element;
+                  }}
                 >
                   <span className={x.mealThumb}>
                     <Image
