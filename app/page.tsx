@@ -206,22 +206,42 @@ async function getSupplements(): Promise<AppSupp[]> {
       select: {
         slug: true, name: true, brandName: true, tagline: true, form: true,
         dosage: true, timing: true, evidenceLevel: true, studyCount: true,
-        benefits: true, category: { select: { name: true } },
+        benefits: true, imageUrl: true, category: { select: { name: true } },
+        links: {
+          where: { isActive: true },
+          orderBy: [{ sortOrder: "asc" }, { priceRs: "asc" }],
+          select: {
+            id: true, network: true, merchantLabel: true, priceRs: true,
+          },
+        },
       },
     });
-    return rows.map((r) => ({
-      slug: r.slug,
-      name: publicLabel(r.name),
-      brand: r.brandName ? publicLabel(r.brandName) : null,
-      tagline: publicSentence(r.tagline ?? ""),
-      category: publicLabel(r.category?.name ?? "Other"),
-      form: r.form ? publicSentence(r.form) : null,
-      dosage: r.dosage ? publicSentence(r.dosage) : null,
-      timing: r.timing ? publicSentence(r.timing) : null,
-      evidence: r.evidenceLevel ?? null,
-      studies: r.studyCount ?? null,
-      benefits: (r.benefits ?? []).slice(0, 3).map(publicSentence),
-    }));
+    return rows.map((r) => {
+      const firstLink = r.links[0] ?? null;
+      return {
+        slug: r.slug,
+        name: publicLabel(r.name),
+        brand: r.brandName ? publicLabel(r.brandName) : null,
+        tagline: publicSentence(r.tagline ?? ""),
+        category: publicLabel(r.category?.name ?? "Other"),
+        form: r.form ? publicSentence(r.form) : null,
+        dosage: r.dosage ? publicSentence(r.dosage) : null,
+        timing: r.timing ? publicSentence(r.timing) : null,
+        evidence: r.evidenceLevel ?? null,
+        studies: r.studyCount ?? null,
+        benefits: (r.benefits ?? []).slice(0, 3).map(publicSentence),
+        imageUrl: r.imageUrl ?? null,
+        linkCount: r.links.length,
+        buy: firstLink
+          ? {
+              url: `/api/supplements/click/${firstLink.id}`,
+              label: publicLabel(firstLink.merchantLabel ?? "Nutrabay"),
+              priceRs: firstLink.priceRs ?? null,
+              network: String(firstLink.network),
+            }
+          : null,
+      };
+    });
   } catch {
     return [];
   }
@@ -237,15 +257,39 @@ async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
   const fallback: BandCounts = {
     dishes: SHOP_DISHES.length, plans: 126, conditionPlans: 70,
     exercises: 952, supplements: 46, recipes: 30,
+    retailerLinks: 0, retailerNetworks: 0, activePartners: 0,
   };
   try {
-    const [plans, conditionPlans, exercises, supplements, recipes, rows] =
+    const [
+      plans,
+      conditionPlans,
+      exercises,
+      supplements,
+      recipes,
+      retailerLinks,
+      retailerNetworks,
+      activePartners,
+      rows,
+    ] =
       await Promise.all([
         prisma.mealPlan.count(),
         prisma.mealPlan.count({ where: { category: "LIFESTYLE_MEDICAL" } }),
         prisma.exercise.count(),
         prisma.supplement.count({ where: { isActive: true } }),
         prisma.recipe.count(),
+        prisma.supplementLink.count({
+          where: { isActive: true, supplement: { isActive: true } },
+        }),
+        prisma.supplementLink.groupBy({
+          by: ["network"],
+          where: { isActive: true, supplement: { isActive: true } },
+        }),
+        prisma.partner.count({
+          where: {
+            status: "ACTIVE",
+            type: { in: ["GYM", "TRAINER"] },
+          },
+        }),
         prisma.testimonial.findMany({
           where: { isActive: true, isFeatured: true },
           orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
@@ -264,6 +308,9 @@ async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
         exercises: exercises || fallback.exercises,
         supplements: supplements || fallback.supplements,
         recipes: recipes || fallback.recipes,
+        retailerLinks,
+        retailerNetworks: retailerNetworks.length,
+        activePartners,
       },
       /* Seeded copy carries &mdash; and &middot;, and React escapes text nodes
          — so a featured quote rendered as "actually delicious &mdash; I was

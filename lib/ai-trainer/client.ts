@@ -90,7 +90,7 @@ export async function streamTrainerReply(
         if (!provider) {
           /* Reachable if the key is unset between the route's check and here.
              Says the true thing rather than a generic failure. */
-          push({ e: "The coach is not switched on yet." });
+          push({ e: "The live coach is temporarily unavailable. Try again later." });
           return;
         }
 
@@ -115,7 +115,7 @@ export async function streamTrainerReply(
                ours, not the vendor's, so the customer reads the same sentence
                whichever model declined and never sees a vendor enum. */
             push({
-              e: "I can't take that one on. If it's about your health or your medication, that's a question for your doctor — I can pick up anything to do with your plan and your numbers.",
+              e: "I can't take that one on. If it is about your health or medication, that is a question for your doctor. I can help with your plan and your logged numbers.",
             });
           } else if (delta.stop === "max_tokens") {
             push({ e: "That answer ran long and got cut off. Ask me for the short version." });
@@ -128,7 +128,7 @@ export async function streamTrainerReply(
           e:
             status === 429
               ? "The coach is busy right now. Try again in a minute."
-              : "The coach could not be reached. Nothing you have logged is affected — try again shortly.",
+              : "The coach could not be reached. Nothing you have logged is affected. Try again shortly.",
         });
       } finally {
         /* Persist before closing, and never let a storage failure surface as a

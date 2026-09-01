@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:contracts": "tsx --test tests/product-contracts.test.ts tests/navigation-contracts.test.ts",
+    "seed:nutrabay": "tsx prisma/seed-nutrabay-links.ts",
     "security:encrypt-partner-data": "tsx prisma/encrypt-partner-payout-data.ts",
     "images:status": "node scripts/image-status.mjs",
     "images:plan": "node scripts/generate-images.mjs --dry-run",

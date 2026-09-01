@@ -10,6 +10,8 @@ import { cutoffInstantFor } from "@/lib/order-cutoff";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { buildCheckoutUrl, DURATIONS } from "@/lib/plan-tier-pricing";
 import { decomposePrice } from "@/lib/pricing-decomposition";
+import { TRAINER_OFFLINE, TRAINER_OPENER, TRAINER_SYSTEM } from "@/lib/ai-trainer/persona";
+import { NUTRABAY_PRODUCTS } from "@/lib/nutrabay-products";
 import { TRIAL, TRIAL_SUBTOTAL_RS, TRIAL_TOTAL_RS } from "@/lib/trial-price";
 import {
   decryptSensitiveData,
@@ -110,6 +112,29 @@ test("personal targets become measurable, bounded kitchen portions", () => {
     requestedFactor: 0.6,
     clamped: true,
   });
+});
+
+test("customer-facing coach copy never exposes infrastructure or em dashes", () => {
+  const customerCopy = [TRAINER_SYSTEM, TRAINER_OPENER, TRAINER_OFFLINE].join("\n");
+  assert.equal(customerCopy.includes("—"), false);
+  assert.equal(/api\s*key|gemini|anthropic/i.test(TRAINER_OFFLINE), false);
+});
+
+test("curated Nutrabay products use unique tracked retailer links", () => {
+  assert.ok(NUTRABAY_PRODUCTS.length > 0);
+  assert.equal(
+    new Set(NUTRABAY_PRODUCTS.map((product) => product.affiliateUrl)).size,
+    NUTRABAY_PRODUCTS.length,
+  );
+
+  for (const product of NUTRABAY_PRODUCTS) {
+    const url = new URL(product.affiliateUrl);
+    assert.equal(url.protocol, "https:");
+    assert.equal(url.hostname, "nutrabay.com");
+    assert.equal(url.searchParams.get("ref"), "pranit1944");
+    assert.ok(product.supplementSlug.length > 0);
+    assert.ok(product.priceRs > 0);
+  }
 });
 
 const summary: WeeklySummary = {

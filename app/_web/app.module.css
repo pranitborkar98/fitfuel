@@ -3569,6 +3569,140 @@
     transition: none;
   }
 }
+
+/* ── Real supplement products ─────────────────────────────────────────── */
+.retailGrid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fk-s-4);
+  margin: 0;
+  padding: 0;
+}
+.retailGrid > li {
+  min-width: 0;
+}
+.retailCard {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+.app a.retailImage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-bottom: 1px solid var(--fk-line);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(132, 204, 22, 0.1), transparent 48%),
+    #f7f7f4;
+}
+.app a.retailImage img {
+  padding: 18px;
+  transition: transform 320ms var(--fk-ease);
+}
+.app a.retailImage:hover img {
+  transform: scale(1.035);
+}
+.retailBody {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+.retailBody > span {
+  color: var(--fk-green-deep);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+}
+.retailBody h3 {
+  margin: 0;
+  color: var(--fk-ink);
+  font-size: var(--fk-t-md);
+  line-height: 1.25;
+}
+.app .retailBody > p {
+  display: -webkit-box;
+  min-height: 2.8em;
+  overflow: hidden;
+  margin: 0;
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.retailFoot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  padding-top: 14px;
+  border-top: 1px solid var(--fk-line);
+}
+.retailFoot > span {
+  display: grid;
+  gap: 2px;
+}
+.retailFoot b {
+  color: var(--fk-ink);
+  font-size: var(--fk-t-base);
+}
+.retailFoot small {
+  color: var(--fk-ink-3);
+  font-size: 0.6875rem;
+}
+.app .retailFoot > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--fk-tap);
+  padding: 0 12px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  color: var(--fk-ink);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  text-decoration: none;
+}
+.app .retailFoot > a:last-child {
+  border-color: var(--fk-green);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+}
+.app .retailFoot > a:hover {
+  border-color: var(--fk-green-deep);
+}
+.retailDisclosure {
+  margin: 16px 0 0;
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-xs);
+  line-height: 1.55;
+}
+@media (min-width: 640px) {
+  .retailGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .retailGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  .app a.retailImage:active img {
+    transform: scale(1.025);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app a.retailImage img {
+    transition: none;
+  }
+}
 .splitWrap {
   display: grid;
   gap: var(--fk-s-6);
@@ -3626,6 +3760,9 @@
 }
 .dayGrid > li {
   background: var(--fk-paper);
+  transition:
+    border-color 180ms ease,
+    transform 220ms var(--fk-ease);
 }
 .dayShot {
   position: relative;
@@ -3635,6 +3772,14 @@
   aspect-ratio: 5 / 4;
   background: var(--fk-warm);
   overflow: hidden;
+}
+.dayShot img {
+  transition: transform 360ms var(--fk-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .dayGrid > li:hover .dayShot img {
+    transform: scale(1.035);
+  }
 }
 .dayLogged {
   position: relative;
@@ -3701,33 +3846,42 @@
 }
 @media (max-width: 639px) {
   .dayGrid > li {
-    display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
-    align-items: stretch;
+    display: block;
   }
   .dayShot {
-    aspect-ratio: 1;
-    min-height: 100%;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
   }
   .dayBody {
-    padding: 15px 16px 17px;
+    padding: 17px 18px 20px;
   }
   .dayLabel {
-    margin-top: 4px;
-    font-size: 1.0625rem;
+    margin-top: 5px;
+    font-size: 1.2rem;
   }
   .dayLine {
-    margin-top: 4px;
-    font-size: var(--fk-t-xs);
-    line-height: 1.45;
+    margin-top: 6px;
+    font-size: var(--fk-t-sm);
+    line-height: 1.5;
   }
 }
 @media (max-width: 359px) {
-  .dayGrid > li {
-    grid-template-columns: 96px minmax(0, 1fr);
-  }
   .dayBody {
     padding-inline: 13px;
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  .dayGrid > li:active {
+    transform: scale(0.99);
+  }
+  .dayGrid > li:active .dayShot img {
+    transform: scale(1.025);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dayGrid > li,
+  .dayShot img {
+    transition: none;
   }
 }
 

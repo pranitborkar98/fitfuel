@@ -236,7 +236,7 @@ export const INTEGRATIONS: Integration[] = [
   {
     name: "Nutrabay",
     role: "Supplement fulfilment",
-    detail: "The 46 supplements we recommend are matched to your plan here and bought there. We do not hold stock, and the link is affiliate tracked.",
+    detail: "Evidence entries with a verified product match link to Nutrabay. We do not hold stock, and each retailer visit is affiliate tracked.",
     status: "LIVE",
     placeholder: false,
   },

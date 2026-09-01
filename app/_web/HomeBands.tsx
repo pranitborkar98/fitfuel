@@ -43,6 +43,9 @@ export type BandCounts = {
   exercises: number;
   supplements: number;
   recipes: number;
+  retailerLinks: number;
+  retailerNetworks: number;
+  activePartners: number;
 };
 
 /* The 29 named conditions the kitchen cooks for. This list is the one in

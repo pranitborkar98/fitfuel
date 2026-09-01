@@ -104,7 +104,7 @@ export const TRUST_GROUPS: MarkGroup[] = [
   {
     key: "licence",
     label: "Licensed",
-    note: "Cooked in our own kitchen in Kharadi, under our own licence. Not a rented shared kitchen, and not somebody else's number.",
+    note: "Cooked by the FitFuel kitchen assigned to your address. The licence below belongs to the current originating kitchen, and each new kitchen carries its own operating licence.",
     marks: [
       { name: "FSSAI", note: "Lic. 21523035002815", status: "LIVE", weight: 900, tracking: "0.04em" },
       { name: "GST registered", note: "5% on meal plans", status: "LIVE", weight: 800 },
@@ -117,7 +117,7 @@ export const TRUST_GROUPS: MarkGroup[] = [
     note: "The parts we did not build ourselves, named rather than hidden.",
     marks: [
       { name: "PayU", note: "Payment gateway", status: "LIVE", weight: 800 },
-      { name: "Nutrabay", note: "Supplement fulfilment", status: "LIVE", weight: 800 },
+      { name: "Nutrabay", note: "Retailer checkout", status: "LIVE", weight: 800 },
       { name: "MSG91", note: "WhatsApp delivery", status: "LIVE", weight: 800 },
     ],
   },

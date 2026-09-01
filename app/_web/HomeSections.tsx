@@ -42,7 +42,6 @@ import {
   COACH_WEEKS,
   DAY_STEPS,
   FAQS,
-  TRIO,
   SURFACES,
   WEDGE_COLS,
   wedgeRows,
@@ -88,6 +87,21 @@ export type HomeSectionsProps = {
   trial: { rows: { k: string; v: string }[]; total: string };
   /** The order cutoff sentence, from lib/order-cutoff. */
   cutoffLabel: string;
+  /** Real retailer products with evidence entries and tracked buy routes. */
+  retailProducts: RetailPreview[];
+};
+
+export type RetailPreview = {
+  slug: string;
+  name: string;
+  category: string;
+  imageUrl: string;
+  linkCount: number;
+  buy: {
+    url: string;
+    label: string;
+    priceRs: number | null;
+  };
 };
 
 export default function HomeSections({
@@ -96,17 +110,17 @@ export default function HomeSections({
   prices,
   trial,
   cutoffLabel,
+  retailProducts,
 }: HomeSectionsProps) {
   const revealRef = useReveal<HTMLDivElement>();
 
   return (
     <div ref={revealRef}>
       <DayBand />
-      <PlatformBand counts={counts} goalCount={goalCount} />
       <WedgeBand counts={counts} />
       <DigitalPlansBand />
       <ProductPreviewBand counts={counts} />
-      <ServicesBand />
+      <RetailBand products={retailProducts} counts={counts} />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
       <CoachBand trial={trial} />
@@ -183,61 +197,6 @@ function DayBand() {
             </li>
           ))}
         </ol>
-      </div>
-    </section>
-  );
-}
-
-/* ── 2. The platform ────────────────────────────────────────────────────────
-   Four figures, counted in page.tsx. The point of the band is that the menu is
-   the front door and not the product. */
-function PlatformBand({ counts, goalCount }: { counts: BandCounts; goalCount: number }) {
-  const cols = [
-    {
-      n: counts.plans,
-      label: "Meal plans",
-      note: "A 60-day cycle with portion sizes set from your calorie target, diet, meals and tier.",
-    },
-    {
-      n: counts.conditionPlans,
-      label: "Cooked for a diagnosis",
-      note: `PCOS, thyroid, diabetic, fatty liver and the rest, across ${goalCount} goals and conditions.`,
-    },
-    {
-      n: counts.exercises,
-      label: "Exercises",
-      note: "Programmed into your week, with the burn fed back into today's net calories.",
-    },
-    {
-      n: counts.supplements,
-      label: "Supplements",
-      note: "Researched against your plan and priced across six retailers. We hold no stock.",
-    },
-  ];
-
-  return (
-    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="platform2-h">
-      <div className={s.bandWrap}>
-        <h2 id="platform2-h" className={s.bandH2}>
-          The food is the front door
-        </h2>
-        <p className={`${s.bandLede} ${s.bandLedeWide}`}>
-          Your plan links each weighed meal to live scale readings, your
-          exercise diary and the coach. When the measured weight trend moves
-          away from the goal, the new calculation is shown before you accept a
-          target change.
-        </p>
-        <ul className={s.statRow}>
-          {cols.map((c) => (
-            <li key={c.label} data-reveal="up">
-              <b className={s.statN} data-count={c.n}>
-                {c.n.toLocaleString("en-IN")}
-              </b>
-              <b className={s.statLabel}>{c.label}</b>
-              <span className={s.statNote}>{c.note}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );
@@ -505,7 +464,10 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
               <ul className={s.supplementRows}>
                 <li><span>Creatine monohydrate</span><b>Evidence</b></li>
                 <li><span>Omega-3</span><b>Goal match</b></li>
-                <li><span>Retailer comparison</span><b>6 stores</b></li>
+                <li>
+                  <span>Tracked retailer products</span>
+                  <b>{counts.retailerLinks.toLocaleString("en-IN")}</b>
+                </li>
               </ul>
               <span className={s.previewFoot}>FitFuel holds no supplement stock</span>
             </Link>
@@ -530,46 +492,84 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
   );
 }
 
-/* ── 3. Beyond the menu ─────────────────────────────────────────────────────
-   Three destinations with a photograph. Digital plans and the member product
-   now have full sections above, so the old four-card text directory is removed
-   rather than selling the same services twice. */
-function ServicesBand() {
+function RetailBand({
+  products,
+  counts,
+}: {
+  products: RetailPreview[];
+  counts: BandCounts;
+}) {
+  if (!products.length) return null;
+
   return (
-    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="services-h">
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="retail-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
-            <h2 id="services-h" className={s.bandH2}>
-              More ways to use FitFuel.
+            <h2 id="retail-h" className={s.bandH2}>
+              Read the evidence. Then choose the product.
             </h2>
           </div>
           <p className={s.bandLede}>
-            Personal training, labelled office lunches and partner referrals
-            connect to the same meals, targets and member account.
+            FitFuel now connects its researched supplement entries to real
+            Nutrabay products through tracked affiliate links. We do not hold
+            stock, and commission never changes the evidence tier.
           </p>
         </div>
 
-        <div className={s.trioGrid}>
-          {TRIO.map((t) => (
-            <Link key={t.href} href={t.href} className={s.trioCard} data-tilt data-reveal="up">
-              <Image
-                src={t.img}
-                alt=""
-                fill
-                sizes="(min-width: 900px) 33vw, 100vw"
-                style={{ objectFit: "cover" }}
-                loading="lazy"
-              />
-              <span className={s.trioScrim} aria-hidden="true" />
-              <span className={s.trioBody}>
-                <span className={`${s.trioStat} fk-num`}>{t.stat}</span>
-                <b className={s.trioLabel}>{t.label}</b>
-                <span className={s.trioBlurb}>{t.blurb}</span>
-              </span>
-            </Link>
+        <ul className={s.retailGrid}>
+          {products.map((product) => (
+            <li key={product.slug} data-reveal="up">
+              <article className={s.retailCard}>
+                <Link
+                  href={`/supplements#${product.slug}`}
+                  className={s.retailImage}
+                  aria-label={`Read the evidence for ${product.name}`}
+                >
+                  <Image
+                    src={product.imageUrl}
+                    alt={`Nutrabay product listed for ${product.name}`}
+                    fill
+                    sizes="(min-width: 1100px) 25vw, (min-width: 640px) 48vw, 100vw"
+                    style={{ objectFit: "contain" }}
+                    loading="lazy"
+                  />
+                </Link>
+                <div className={s.retailBody}>
+                  <span>{product.category}</span>
+                  <h3>{product.name}</h3>
+                  <p>{product.buy.label}</p>
+                  <div className={s.retailFoot}>
+                    <span>
+                      <b>
+                        {product.buy.priceRs
+                          ? `₹${product.buy.priceRs.toLocaleString("en-IN")}`
+                          : "See retailer"}
+                      </b>
+                      <small>
+                        {product.linkCount} option{product.linkCount === 1 ? "" : "s"}
+                      </small>
+                    </span>
+                    <Link href={`/supplements#${product.slug}`}>Evidence</Link>
+                    <a
+                      href={product.buy.url}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                    >
+                      Buy
+                    </a>
+                  </div>
+                </div>
+              </article>
+            </li>
           ))}
-        </div>
+        </ul>
+        <p className={s.retailDisclosure}>
+          {counts.retailerLinks.toLocaleString("en-IN")} live product listings
+          across {counts.retailerNetworks.toLocaleString("en-IN")} retailer
+          network{counts.retailerNetworks === 1 ? "" : "s"}. Prices are checked
+          again on the retailer before purchase.
+        </p>
       </div>
     </section>
   );

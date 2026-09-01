@@ -356,9 +356,9 @@ export const CORP_CHANNELS = [
   },
   {
     key: "nutrabay", label: "NutraBay supply", slug: "nutrabay",
-    blurb: "We do not hold supplement stock. The 46 SKUs we recommend are matched to your plan and bought on NutraBay, affiliate tracked.",
+    blurb: "We do not hold supplement stock. Evidence entries with a verified product match link to Nutrabay through tracked retailer checkout.",
     lines: [
-      { what: "46 SKUs matched to plan", price: "Affiliate", detail: "Recommended against your macros, priced across six retailers." },
+      { what: "Verified product matches", price: "Affiliate", detail: "Recommended against your plan and linked to tracked Nutrabay listings." },
       { what: "Corporate supplement bundle", price: "12% off list", detail: "50+ seats. Whey, creatine, multivitamin, omega-3." },
       { what: "Reorder from the dashboard", price: "Free", detail: "One tap from the supplement tab, nothing re-entered." },
     ],
@@ -414,7 +414,7 @@ export const APP_ROWS = [
   { n: "154", label: "Food diary", note: "Your delivered meals log themselves; anything else you eat you add." },
   { n: "30d", label: "Body metrics", note: "Weight, waist, photos and the trend line the coach reads." },
   { n: "86%", label: "Consistency score", note: "One number for whether the plan is actually being eaten." },
-  { n: "46", label: "Supplements", note: "Recommended against your plan, priced across six retailers." },
+  { n: "46", label: "Evidence entries", note: "Reviewed against your plan, with verified products linked to tracked retailer checkout." },
 ];
 
 /* ── The footer the design draws ───────────────────────────────────────────── */

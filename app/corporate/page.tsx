@@ -16,7 +16,7 @@ export const metadata = {
   alternates: { canonical: "/corporate" },
   title: "Corporate Plans",
   description:
-    "Healthy, goal-based meals for your team. FitFuel corporate wellness and meal programs for companies in Pune.",
+    "Healthy, goal-based meals for your team. FitFuel corporate wellness and meal programmes are fulfilled by the kitchen serving your workplace.",
 };
 
 const OFFERINGS = [

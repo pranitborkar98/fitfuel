@@ -45,6 +45,7 @@ import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import type { BandCounts, Quote } from "./HomeBands";
 import HomeSections from "./HomeSections";
+import type { RetailPreview } from "./HomeSections";
 import HomeExperience from "./HomeExperience";
 import CustomerTabBar from "./CustomerTabBar";
 import { GOALS } from "./home-data";
@@ -225,6 +226,14 @@ export type AppSupp = {
   evidence: string | null;
   studies: string | null;
   benefits: string[];
+  imageUrl: string | null;
+  linkCount: number;
+  buy: {
+    url: string;
+    label: string;
+    priceRs: number | null;
+    network: string;
+  } | null;
 };
 
 /* THE SERVICES. The v2 homepage argued these as scrolling sections; a webapp
@@ -619,6 +628,31 @@ export default function FitFuelApp({
     [supplements, suppCat, normalizedQuery],
   );
 
+  const retailProducts = useMemo<RetailPreview[]>(() => {
+    const preferred = ["whey-protein", "creatine", "omega3", "magnesium"];
+    return preferred.flatMap((slug) => {
+      const item = supplements.find(
+        (candidate) =>
+          candidate.slug === slug && candidate.imageUrl && candidate.buy,
+      );
+      if (!item?.imageUrl || !item.buy) return [];
+      return [
+        {
+          slug: item.slug,
+          name: item.name,
+          category: item.category,
+          imageUrl: item.imageUrl,
+          linkCount: item.linkCount,
+          buy: {
+            url: item.buy.url,
+            label: item.buy.label,
+            priceRs: item.buy.priceRs,
+          },
+        },
+      ];
+    });
+  }, [supplements]);
+
   /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
      Measured: 48 dish cards ran 13,396px of a 19,058px page — sixteen phone
      screens of near-identical cards — and every argument for the business sat
@@ -680,10 +714,10 @@ export default function FitFuelApp({
      a filtered view falls back to one flat capped list. */
   const grouped = mode === "dishes" && course === "all" && !onlyOrderable;
 
-  /** Four per course puts 24 photographed meals in the first catalogue view.
-   *  It is still a useful preview, but no longer makes a 48-dish kitchen look
-   *  like it serves two things. */
-  const PER_COURSE = 4;
+  /** Two per course puts 12 photographed meals in the first catalogue view.
+   *  The complete 48-dish catalogue stays one tap away, while the product
+   *  story no longer starts sixteen phone screens below the first card. */
+  const PER_COURSE = 2;
 
   /**
    * ONE DISH CARD.
@@ -973,11 +1007,13 @@ export default function FitFuelApp({
         cutoffLabel={cutoffLabel}
         trialTotal={trialTotal}
         aiConfigured={aiConfigured}
-        planProfiles={bandCounts.plans}
+        exerciseCount={bandCounts.exercises}
+        retailerLinks={bandCounts.retailerLinks}
+        activePartners={bandCounts.activePartners}
         quotes={quotes}
-        onOpenNumbers={() => setNumbersOpen(true)}
         onBrowseMeals={() => switchMode("dishes", true)}
         onBrowsePlans={() => switchMode("plans", true)}
+        onBrowseSupplements={() => switchMode("supps", true)}
       />
 
       {/* ── Rail + content ──────────────────────────────────────────────── */}
@@ -1427,12 +1463,14 @@ export default function FitFuelApp({
                   <h3>
                     {mode === "plans"
                       ? "A menu, a target and a feedback loop you use every day."
-                      : "Understand the evidence, dosage and timing before you buy anywhere."}
+                      : "Understand the evidence, dosage and timing before you choose a product."}
                   </h3>
                   <p>
                     {mode === "plans"
                       ? "Choose your goal, diet and meal schedule. Your diary arrives pre-filled, your training counts, and the coach proposes changes only when the trend supports them."
-                      : "FitFuel does not stock supplements. The catalogue compares mechanisms, benefits, warnings, timing and study depth without turning the recommendation into a sales pitch."}
+                      : bandCounts.retailerLinks > 0
+                        ? `FitFuel does not hold supplement stock. Read the evidence first, then choose from ${bandCounts.retailerLinks.toLocaleString("en-IN")} tracked retailer listings. Affiliate commission never changes the evidence tier.`
+                        : "FitFuel does not hold supplement stock. The catalogue explains mechanisms, benefits, warnings, timing and study depth before any retailer choice."}
                   </p>
                 </div>
               </div>
@@ -1489,10 +1527,27 @@ export default function FitFuelApp({
                   {cap(suppResults).map((x) => (
                     <li
                       key={x.slug}
-                      className={`${s.card} ${r.productCard} ${r.textCard}`}
+                      className={`${s.card} ${r.productCard} ${x.imageUrl ? "" : r.textCard}`}
                       data-card=""
                       data-reveal="up"
                     >
+                      {x.imageUrl ? (
+                        <Link
+                          href={`/supplements#${x.slug}`}
+                          className={`${s.shot} ${r.productMedia}`}
+                          aria-label={`Read the evidence for ${x.name}`}
+                        >
+                          <Image
+                            src={x.imageUrl}
+                            alt={`Nutrabay product listed for ${x.name}`}
+                            fill
+                            loading="lazy"
+                            sizes="(min-width: 1180px) 30vw, (min-width: 640px) 46vw, calc(100vw - 40px)"
+                            className={r.cardImage}
+                          />
+                          <span className={s.kcalTag}>Available at Nutrabay</span>
+                        </Link>
+                      ) : null}
                       <div className={`${s.cardBody} ${r.productBody}`}>
                         <p className={s.dishTop}>
                           <span className={s.dishCourse}>{x.category}</span>
@@ -1528,15 +1583,36 @@ export default function FitFuelApp({
                             .join(" · ") || "Dosage on the page"}
                         </p>
                         <div className={s.cardFoot}>
-                          <span className={s.askPrice}>
-                            {x.studies ? `${x.studies} studies` : "Researched"}
+                          <span className={s.priceBlock}>
+                            <b className={s.askPrice}>
+                              {x.buy?.priceRs
+                                ? `₹${x.buy.priceRs.toLocaleString("en-IN")}`
+                                : x.studies
+                                  ? x.studies
+                                  : "Researched"}
+                            </b>
+                            {x.linkCount > 0 ? (
+                              <span className={s.perProtein}>
+                                {x.linkCount} tracked listing{x.linkCount === 1 ? "" : "s"}
+                              </span>
+                            ) : null}
                           </span>
                           <Link
                             href={`/supplements#${x.slug}`}
                             className={`${s.add} ${s.ghost}`}
                           >
-                            Read up
+                            Read evidence
                           </Link>
+                          {x.buy ? (
+                            <a
+                              href={x.buy.url}
+                              target="_blank"
+                              rel="noopener noreferrer sponsored"
+                              className={s.add}
+                            >
+                              Buy
+                            </a>
+                          ) : null}
                         </div>
                       </div>
                     </li>
@@ -1725,6 +1801,7 @@ export default function FitFuelApp({
         prices={prices}
         trial={trial}
         cutoffLabel={cutoffLabel}
+        retailProducts={retailProducts}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}

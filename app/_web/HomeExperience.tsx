@@ -71,11 +71,13 @@ export default function HomeExperience({
   cutoffLabel,
   trialTotal,
   aiConfigured,
-  planProfiles,
+  exerciseCount,
+  retailerLinks,
+  activePartners,
   quotes,
-  onOpenNumbers,
   onBrowseMeals,
   onBrowsePlans,
+  onBrowseSupplements,
 }: {
   week: Dish[];
   goal: string;
@@ -83,11 +85,13 @@ export default function HomeExperience({
   cutoffLabel: string;
   trialTotal: string;
   aiConfigured: boolean;
-  planProfiles: number;
+  exerciseCount: number;
+  retailerLinks: number;
+  activePartners: number;
   quotes: Quote[];
-  onOpenNumbers: () => void;
   onBrowseMeals: () => void;
   onBrowsePlans: () => void;
+  onBrowseSupplements: () => void;
 }) {
   const meals = week.filter((dish) => dish.day === 1).slice(0, 4);
   const [activeMealIndex, setActiveMealIndex] = useState(0);
@@ -100,7 +104,6 @@ export default function HomeExperience({
   });
   const scaledKcal = Math.round(planKcal * serving.factor);
   const activeGoal = GOALS.find((item) => item.key === goal) ?? GOALS[1];
-  const portionPercent = Math.round(serving.factor * 100);
   const whatsapp = waLink(
     `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to my address.`,
   );
@@ -285,55 +288,82 @@ export default function HomeExperience({
         </div>
       </section>
 
-      <nav className={x.quickRail} aria-label="Open the FitFuel app">
-        <button type="button" onClick={onOpenNumbers}>
-          <span className={x.quickIcon}>
-            <Icon path={ICON.scale} size={20} />
-          </span>
-          <span>
-            <small>
-              {target.personal
-                ? "Calculated from your numbers"
-                : "Set your body numbers"}
-            </small>
-            <b className="fk-num">
-              {target.kcal.toLocaleString("en-IN")} kcal · {portionPercent}%
-              portion
+      <section className={x.productMap} aria-labelledby="product-map-title">
+        <header className={x.productMapHead}>
+          <h2 id="product-map-title">One system, four ways to use it.</h2>
+          <p>
+            Start with delivered food, use a nationwide digital plan, run your
+            week in the member app or buy an evidence-matched supplement.
+          </p>
+        </header>
+
+        <nav className={x.quickRail} aria-label="Choose a FitFuel product">
+          <button type="button" onClick={onBrowsePlans}>
+            <span className={x.quickIcon}>
+              <Icon path={ICON.route} size={20} />
+            </span>
+            <span>
+              <small>Delivered nutrition</small>
+              <b>Meals weighed to your accepted target</b>
+            </span>
+            <Icon path={ICON.arrow} size={17} />
+          </button>
+          <Link href="/plans/digital#digital-options">
+            <span className={x.quickIcon}>
+              <Icon path={ICON.check} size={20} />
+            </span>
+            <span>
+              <small>Available across India</small>
+              <b>Digital plans, recipes and grocery lists</b>
+            </span>
+            <Icon path={ICON.arrow} size={17} />
+          </Link>
+          <Link href="/dashboard">
+            <span className={x.quickIcon}>
+              <Icon path={ICON.scale} size={20} />
+            </span>
+            <span>
+              <small>Member platform</small>
+              <b>
+                Live weight, diary, {exerciseCount.toLocaleString("en-IN")} exercises and {aiConfigured ? "live coach" : "weekly coach"}
+              </b>
+            </span>
+            <Icon path={ICON.arrow} size={17} />
+          </Link>
+          <button type="button" onClick={onBrowseSupplements}>
+            <span className={x.quickIcon}>
+              <Icon path={ICON.spark} size={20} />
+            </span>
+            <span>
+              <small>Evidence-led marketplace</small>
+              <b>
+                {retailerLinks > 0
+                  ? `${retailerLinks.toLocaleString("en-IN")} tracked product listings`
+                  : "Research before any retailer link"}
+              </b>
+            </span>
+            <Icon path={ICON.arrow} size={17} />
+          </button>
+        </nav>
+
+        <nav className={x.businessRail} aria-label="FitFuel for organisations">
+          <Link href="/corporate">
+            <span>For teams</span>
+            <b>Labelled office meals, personalised per employee</b>
+            <Icon path={ICON.arrow} size={17} />
+          </Link>
+          <Link href="/partners">
+            <span>For gyms and trainers</span>
+            <b>
+              Referral tracking and payouts
+              {activePartners > 0
+                ? `, with ${activePartners.toLocaleString("en-IN")} active now`
+                : ""}
             </b>
-          </span>
-          <Icon path={ICON.arrow} size={17} />
-        </button>
-        <Link href="/dashboard/trainer">
-          <span className={x.quickIcon}>
-            <Icon path={ICON.spark} size={20} />
-          </span>
-          <span>
-            <small>{aiConfigured ? "AI coach · online" : "AI coach"}</small>
-            <b>Ask what to eat next</b>
-          </span>
-          <Icon path={ICON.arrow} size={17} />
-        </Link>
-        <button type="button" onClick={onBrowsePlans}>
-          <span className={x.quickIcon}>
-            <Icon path={ICON.check} size={20} />
-          </span>
-          <span>
-            <small>{planProfiles} plan profiles</small>
-            <b>Goals, conditions & sports</b>
-          </span>
-          <Icon path={ICON.arrow} size={17} />
-        </button>
-        <Link href="/locations">
-          <span className={x.quickIcon}>
-            <Icon path={ICON.route} size={20} />
-          </span>
-          <span>
-            <small>Check delivery near you</small>
-            <b>Nearest kitchen and timing</b>
-          </span>
-          <Icon path={ICON.arrow} size={17} />
-        </Link>
-      </nav>
+            <Icon path={ICON.arrow} size={17} />
+          </Link>
+        </nav>
+      </section>
 
       {proof ? (
         <aside className={x.proofLine} aria-label="Customer result">

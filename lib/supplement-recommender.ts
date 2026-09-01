@@ -60,7 +60,7 @@ export async function getRecommendedSupplements(
         where: { isActive: true },
         orderBy: { sortOrder: "asc" },
         take: 1,
-        select: { affiliateUrl: true },
+        select: { id: true },
       },
     },
   });
@@ -73,7 +73,9 @@ export async function getRecommendedSupplements(
     emoji: row.emoji ?? null,
     tagline: row.tagline ?? null,
     accentColor: row.accentColor ?? null,
-    buyUrl: row.links[0]?.affiliateUrl ?? null,
+    buyUrl: row.links[0]?.id
+      ? `/api/supplements/click/${row.links[0].id}`
+      : null,
   }));
 
   return { goalLabel: label, items };

@@ -179,7 +179,7 @@ export default function ApplyClient({
             {type === "GYM" && (
               <Section title="Gym details">
                 <Field id="gym-address" label="Address">
-                  <Input id="gym-address" value={form.gymAddress} onChange={(value) => update("gymAddress", value)} maxLength={500} placeholder="Locality, Pune" />
+                  <Input id="gym-address" value={form.gymAddress} onChange={(value) => update("gymAddress", value)} maxLength={500} placeholder="City and locality" />
                 </Field>
                 <Field id="gym-manager" label="Manager or contact name">
                   <Input id="gym-manager" value={form.gymManagerName} onChange={(value) => update("gymManagerName", value)} maxLength={120} />
