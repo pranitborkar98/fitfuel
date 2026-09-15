@@ -89,15 +89,15 @@ const barlowCondensed = Barlow_Condensed({
   variable: "--font-barlow-condensed",
 });
 
-const TITLE = "FitFuel: Chef-Cooked Macro-Tracked Meal Plans Delivered in Pune";
+const TITLE = "FitFuel: Chef-Cooked Meals Built Around Your Nutrition Target";
 const DESCRIPTION =
-  "Chef-cooked meals in Pune with portions connected to your nutrition target, " +
-  "delivery in your chosen window and a diary ready to confirm. " +
+  "Chef-cooked meals with portions connected to your nutrition target, " +
+  "delivery from your nearest FitFuel kitchen and a diary ready to confirm. " +
   `Trial day ${TRIAL_TOTAL_LABEL}, including delivery, packaging and GST.`;
 
 export const metadata: Metadata = {
   // Was "FitFuel - Verified Nutrition": no city, no product, no intent.
-  title: { default: TITLE, template: "%s | FitFuel Pune" },
+  title: { default: TITLE, template: "%s | FitFuel" },
   description: DESCRIPTION,
   metadataBase: new URL("https://fitfuel.in"),
   alternates: { canonical: "/" },

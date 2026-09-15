@@ -12,6 +12,8 @@ import { buildCheckoutUrl, DURATIONS } from "@/lib/plan-tier-pricing";
 import { decomposePrice } from "@/lib/pricing-decomposition";
 import { TRAINER_OFFLINE, TRAINER_OPENER, TRAINER_SYSTEM } from "@/lib/ai-trainer/persona";
 import { NUTRABAY_PRODUCTS } from "@/lib/nutrabay-products";
+import { NUTRABAY_CATALOG, findNutrabaySnapshotProduct, safeNutrabayUrl } from "@/lib/nutrabay-catalog";
+import { readWithDeadline } from "@/lib/read-with-deadline";
 import { TRIAL, TRIAL_SUBTOTAL_RS, TRIAL_TOTAL_RS } from "@/lib/trial-price";
 import {
   decryptSensitiveData,
@@ -135,6 +137,39 @@ test("curated Nutrabay products use unique tracked retailer links", () => {
     assert.ok(product.supplementSlug.length > 0);
     assert.ok(product.priceRs > 0);
   }
+});
+
+test("the repaired marketplace contains unique purchasable products, not image URLs", () => {
+  assert.equal(NUTRABAY_CATALOG.length, 738);
+  assert.equal(new Set(NUTRABAY_CATALOG.map((product) => product.retailerProductId)).size, 738);
+  assert.equal(new Set(NUTRABAY_CATALOG.map((product) => product.slug)).size, 738);
+  for (const product of NUTRABAY_CATALOG) {
+    const destination = safeNutrabayUrl(product.affiliateUrl);
+    assert.ok(destination, product.name);
+    assert.equal(destination.searchParams.get("ref"), "pranit1944");
+    assert.equal(destination.searchParams.get("pId"), product.retailerProductId);
+    assert.ok(Number.isInteger(product.priceRs) && product.priceRs > 0);
+    assert.equal(new URL(product.imageUrl).protocol, "https:");
+    assert.equal(findNutrabaySnapshotProduct(`nby-${product.retailerProductId}`), product);
+  }
+});
+
+test("marketplace redirects reject external hosts and unknown snapshot keys", () => {
+  for (const url of [
+    "https://nutrabay.com.evil.example/product",
+    "https://evil.example/?next=nutrabay.com",
+    "http://nutrabay.com/product",
+    "https://user:password@nutrabay.com/product",
+    "javascript:alert(1)",
+  ]) assert.equal(safeNutrabayUrl(url), null);
+  assert.equal(findNutrabaySnapshotProduct("nby-unknown"), null);
+  assert.equal(findNutrabaySnapshotProduct("https://nutrabay.com/product"), null);
+});
+
+test("a stalled catalogue read yields to its fallback deadline", async () => {
+  assert.equal(await readWithDeadline(Promise.resolve(738), 1_000), 738);
+  await assert.rejects(readWithDeadline(new Promise<never>(() => {}), 1), /Read deadline exceeded/);
+  await assert.rejects(readWithDeadline(Promise.reject(new Error("database unavailable")), 1_000), /database unavailable/);
 });
 
 const summary: WeeklySummary = {

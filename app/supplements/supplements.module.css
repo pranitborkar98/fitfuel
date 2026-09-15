@@ -24,6 +24,12 @@
   background: var(--fk-line);
   border: 1px solid var(--fk-line);
 }
+
+.guideHeader { padding: clamp(24px, 4vw, 48px) var(--fk-gutter); }
+.guideHeader a { display: inline-flex; align-items: center; min-height: 44px; color: var(--fk-green); font-size: 14px; }
+.guideHeader h1 { max-width: 24ch; margin: 16px 0; font: 550 clamp(32px, 4.5vw, 54px)/1.05 var(--fk-display), Georgia, serif; color: var(--fk-ink); letter-spacing: -.025em; }
+.guideHeader p { max-width: 75ch; color: var(--fk-ink-2); line-height: 1.65; font-size: 16px; }
+.guideHeader .guideNote { color: var(--fk-ink-3); font-size: 14px; }
 @media (max-width: 980px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -31,14 +37,16 @@
 }
 @media (max-width: 620px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   /* Clears the sticky site header when the card is reached as an anchor
      target, so #creatine lands the card under the nav rather than behind it. */
-  scroll-margin-top: 96px;
+  scroll-margin-top: calc(var(--fk-head, 112px) + 20px);
   position: relative;
   background: var(--fk-paper);
   border: 0;
@@ -121,10 +129,10 @@
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--fk-line);
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: var(--fk-sans), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--fk-ink-3);
 }
 .flagOn {
@@ -271,7 +279,7 @@
 /* ── the stack preview ────────────────────────────────────────────────── */
 .stack {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 1px;
   background: var(--fk-line);
   border: 1px solid var(--fk-line);

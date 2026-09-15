@@ -1,24 +1,16 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   FITFUEL DESIGN TOKENS — "Kitchen Table"
+   FITFUEL CUSTOMER DESIGN TOKENS
    The single source of truth for the customer-facing product.
 
-   WHY THIS FILE EXISTS AND WHY THE PREFIX IS NEW.
-   The previous system (near-black #070707, acid lime #84cc16, uppercase
-   Barlow Condensed at 900, monospace readouts, radius banned) was rejected by
-   the owner on 2026-08-12: it does not look like food, and a normal person
-   cannot parse it. Its tokens live under `--ff-*` and are still imported by
-   ~27 legacy files, so they cannot be deleted today without breaking the
-   build. This ramp therefore takes a NEW namespace, `--fk-*`, so that the two
-   can coexist during migration and so that no file can accidentally inherit
-   the dead palette by typing a familiar name.
+   CURRENT DIRECTION: AGENTS.md records the owner's 2026-08-18 choice of black
+   and lime. Keep that palette. Sentence case, readable type, food imagery,
+   visible focus and comfortable touch targets are equally part of the design.
+   The rejected warm-paper experiment is history, not a migration target.
 
    Never add a `--ff-*` value here, and never map an `--fk-*` token onto one.
 
-   THE THESIS. FitFuel sells food to someone in Pune ordering lunch. The
-   surface should behave like good paper under a plate: warm, quiet, and
-   high-contrast, so the photograph of the dish is the brightest, most
-   saturated thing on the screen. Colour here hosts food; it never competes
-   with it.
+   FitFuel serves customers through their nearest kitchen. These tokens give
+   ordering, planning and supplement shopping a shared visual foundation.
 
    Every value below was checked against WCAG 2.1. Ratios are recorded inline
    and re-verified by scripts/check-contrast.mjs, which fails the build on a
@@ -27,12 +19,7 @@
 
 :root {
   /* ── Ground ──────────────────────────────────────────────────────────────
-     BLACK AND LIME, on the owner's direct instruction (2026-08-13): "everything
-     is black lime so keep that". AGENTS.md records the opposite verdict from
-     2026-08-12; he is overriding it, and a live instruction outranks a recorded
-     one. Practically it is also the only way the product reads as ONE app
-     today — 57 interior routes are black+lime, so a warm storefront made the
-     app inconsistent with everything it linked to.
+     BLACK AND LIME, confirmed in AGENTS.md on 2026-08-18.
 
      What does NOT come back is the part he actually called unparseable:
      uppercase-everything, 8.5px labels, mono captions, tracked-out display type.

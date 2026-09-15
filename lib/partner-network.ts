@@ -70,7 +70,7 @@ export const PROGRAMS: Program[] = [
     label: "Creators",
     reward: "CASH",
     rewardLine: "Cash commission",
-    who: "Fitness and food creators with a Pune audience.",
+    who: "Fitness and food creators whose audience wants goal-based meals or digital plans.",
     gets: "A landing page on your code, first-touch attribution and monthly payout records for paid conversions.",
   },
   {

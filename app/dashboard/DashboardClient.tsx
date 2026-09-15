@@ -31,10 +31,12 @@ import {
 } from "@/app/_app/theme";
 import type { ActivePlanView } from "./page";
 import s from "./dashboard.module.css";
+import QuickActions from "./QuickActions";
+import StarterSummary, { type StarterSummaryData } from "./StarterSummary";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
-type Meal = {
+export type Meal = {
   slotId: string; mealSlot: string; label: string; time: string; emoji: string;
   isLogged: boolean; isSkipped: boolean; dayNumber: number;
   recipe: {
@@ -51,20 +53,20 @@ type WorkoutExerciseView = {
   durationSecs: number | null; restSecs: number; notes: string | null;
 };
 
-type WorkoutToday = {
+export type WorkoutToday = {
   hasWorkout: boolean; isRestDay: boolean; scheduleName: string;
   focusArea: string; estimatedCalories: number; durationMins?: number;
   completedToday?: boolean; completedCaloriesBurned?: number | null;
   exercises?: WorkoutExerciseView[];
 };
 
-type Consistency = {
+export type Consistency = {
   score: number; label: string;
   meals: { logged: number; delivered: number };
   workouts: { completed: number; scheduled: number };
 };
 
-type Balance = {
+export type Balance = {
   caloriesIn: number; caloriesOut: number; net: number;
   target: number; remaining: number; status: string;
   mealsLogged: number; mealsTotal: number;
@@ -101,6 +103,14 @@ const ORDER_STATUS: Record<string, string> = {
 };
 
 const n0 = (v: number) => Math.round(v).toLocaleString("en-IN");
+
+export type DashboardPreviewData = { meals: Meal[]; balance: Balance; workout: WorkoutToday; consistency: Consistency };
+
+async function readDashboard<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(path, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000) });
+  if (!response.ok) throw new Error("Could not load this part of your dashboard.");
+  return response.json();
+}
 
 function cssImage(url: string | null | undefined): string | undefined {
   const raw = String(url || "").trim();
@@ -141,8 +151,8 @@ function Meter({ name, value, goal, unit, on }: {
   );
 }
 
-function MealDialog({ meal, cycleDays, logged, logging, onLog, onClose }: {
-  meal: Meal; cycleDays: number; logged: boolean; logging: boolean; onLog: () => void; onClose: () => void;
+function MealDialog({ meal, cycleDays, logged, logging, error, onLog, onClose }: {
+  meal: Meal; cycleDays: number; logged: boolean; logging: boolean; error: string; onLog: () => void; onClose: () => void;
 }) {
   const prep = (meal.recipe.prepTimeMins ?? 0) + (meal.recipe.cookTimeMins ?? 0);
   return (
@@ -180,17 +190,18 @@ function MealDialog({ meal, cycleDays, logged, logging, onLog, onClose }: {
           {meal.recipe.cuisineType ? `, ${meal.recipe.cuisineType.replace(/_/g, " ").toLowerCase()}` : ""}
         </p>
 
+        {error && <p role="alert" style={body(14, { color: C.danger })}>{error}</p>}
         <button
           type="button"
-          onClick={() => { onLog(); onClose(); }}
-          disabled={logged || logging}
+          onClick={onLog}
+          disabled={logged || logging || meal.isSkipped}
           style={solidBtn({
             width: "100%", marginTop: 18,
             opacity: logged || logging ? 0.55 : 1,
             cursor: logged ? "default" : "pointer",
           })}
         >
-          {logged ? "Already logged" : logging ? "Logging" : "I ate this"}
+          {meal.isSkipped ? "Meal skipped" : logged ? "Already logged" : logging ? "Logging" : "I ate this"}
         </button>
       </div>
     </Dialog>
@@ -203,14 +214,17 @@ function RatingDialog({ meal, onClose, onSubmit }: {
   const [selected, setSelected] = useState(0);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const LABELS = ["", "Did not like it", "It was okay", "Pretty good", "Really liked it", "Loved it"];
 
   async function submit() {
     if (!selected || saving) return;
     setSaving(true);
-    await onSubmit(selected, note);
-    onClose();
+    setError("");
+    try { await onSubmit(selected, note); onClose(); }
+    catch { setError("Your meal is logged, but the rating did not save. Try again or skip."); }
+    finally { setSaving(false); }
   }
 
   return (
@@ -234,6 +248,15 @@ function RatingDialog({ meal, onClose, onSubmit }: {
                 type="button"
                 role="radio"
                 aria-checked={star === selected}
+                tabIndex={star === (selected || 1) ? 0 : -1}
+                onKeyDown={(event) => {
+                  const direction = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+                  if (!direction) return;
+                  event.preventDefault();
+                  const next = ((star - 1 + direction + 5) % 5) + 1;
+                  setSelected(next);
+                  event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button')[next - 1]?.focus();
+                }}
                 aria-label={`${star} out of 5, ${LABELS[star].toLowerCase()}`}
                 onClick={() => setSelected(star)}
                 style={{
@@ -268,10 +291,11 @@ function RatingDialog({ meal, onClose, onSubmit }: {
           style={{
             width: "100%", boxSizing: "border-box", background: C.bg, color: C.ink,
             border: `1px solid ${C.rule2}`, padding: "10px 12px", fontSize: 14,
-            lineHeight: 1.55, resize: "vertical", fontFamily: "inherit", outline: "none",
+            lineHeight: 1.55, resize: "vertical", fontFamily: "inherit",
           }}
         />
 
+        {error && <p role="alert" style={body(14, { color: C.danger })}>{error}</p>}
         <button
           type="button"
           onClick={submit}
@@ -292,29 +316,35 @@ function RatingDialog({ meal, onClose, onSubmit }: {
 /* ── main ───────────────────────────────────────────────────────────────── */
 
 export default function DashboardClient({
-  orders, activePlan, hasActivationIssue,
+  orders, activePlan, hasActivationIssue, starterSummary, previewData,
 }: {
   orders: Order[];
   activePlan: ActivePlanView | null;
   hasActivationIssue?: boolean;
+  starterSummary?: StarterSummaryData;
+  previewData?: DashboardPreviewData;
 }) {
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [mealsLoading, setMealsLoading] = useState(!!activePlan);
+  const [meals, setMeals] = useState<Meal[]>(previewData?.meals ?? []);
+  const [mealsLoading, setMealsLoading] = useState(!!activePlan && !previewData);
   const [loggingSlot, setLoggingSlot] = useState<string | null>(null);
-  const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set());
+  const [loggedSlots, setLoggedSlots] = useState<Set<string>>(new Set(previewData?.meals.filter((meal) => meal.isLogged).map((meal) => meal.slotId)));
   const [openMeal, setOpenMeal] = useState<Meal | null>(null);
   const [ratingMeal, setRatingMeal] = useState<Meal | null>(null);
-  const [balance, setBalance] = useState<Balance | null>(null);
-  const [workout, setWorkout] = useState<WorkoutToday | null>(null);
+  const [balance, setBalance] = useState<Balance | null>(previewData?.balance ?? null);
+  const [workout, setWorkout] = useState<WorkoutToday | null>(previewData?.workout ?? null);
   const [completingWorkout, setCompletingWorkout] = useState(false);
-  const [consistency, setConsistency] = useState<Consistency | null>(null);
+  const [consistency, setConsistency] = useState<Consistency | null>(previewData?.consistency ?? null);
+  const [loadErrors, setLoadErrors] = useState<string[]>([]);
+  const [actionError, setActionError] = useState("");
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (!activePlan) return;
+    if (!activePlan || previewData) return;
     let alive = true;
+    const controller = new AbortController();
+    const failed = (name: string) => { if (alive) setLoadErrors((previous) => [...previous, name]); };
 
-    fetch("/api/user/active-plan/meals/today")
-      .then((r) => r.json())
+    readDashboard<{ meals: Meal[] }>("/api/user/active-plan/meals/today", controller.signal)
       .then((d) => {
         if (!alive || !d.meals) return;
         setMeals(d.meals);
@@ -322,29 +352,41 @@ export default function DashboardClient({
           d.meals.filter((m: Meal) => m.isLogged).map((m: Meal) => m.slotId),
         ));
       })
+      .catch(() => failed("Meals"))
       .finally(() => { if (alive) setMealsLoading(false); });
 
-    fetch("/api/user/active-plan/calorie-balance")
-      .then((r) => r.json()).then((d) => { if (alive && d.target) setBalance(d); }).catch(() => {});
-    fetch("/api/user/active-plan/workout-today")
-      .then((r) => r.json()).then((d) => { if (alive && d.hasWorkout) setWorkout(d); }).catch(() => {});
-    fetch("/api/user/active-plan/consistency")
-      .then((r) => r.json()).then((d) => { if (alive && typeof d.score === "number") setConsistency(d); }).catch(() => {});
+    readDashboard<Balance>("/api/user/active-plan/calorie-balance", controller.signal)
+      .then((d) => { if (alive && typeof d.target === "number") setBalance(d); }).catch(() => failed("Nutrition"));
+    readDashboard<WorkoutToday>("/api/user/active-plan/workout-today", controller.signal)
+      .then((d) => { if (alive) setWorkout(d); }).catch(() => failed("Training"));
+    readDashboard<Consistency>("/api/user/active-plan/consistency", controller.signal)
+      .then((d) => { if (alive && typeof d.score === "number") setConsistency(d); }).catch(() => failed("Weekly consistency"));
 
-    return () => { alive = false; };
-  }, [activePlan]);
+    return () => { alive = false; controller.abort(); };
+  }, [activePlan, previewData, retry]);
 
   function refreshBalance() {
-    fetch("/api/user/active-plan/calorie-balance")
-      .then((r) => r.json()).then((d) => { if (d.target) setBalance(d); }).catch(() => {});
+    if (previewData) return;
+    readDashboard<Balance>("/api/user/active-plan/calorie-balance")
+      .then((d) => { if (typeof d.target === "number") setBalance(d); })
+      .catch(() => { setBalance(null); setLoadErrors((previous) => [...new Set([...previous, "Nutrition"])]); });
   }
 
   async function logMeal(meal: Meal) {
-    if (loggedSlots.has(meal.slotId) || loggingSlot === meal.slotId) return;
+    if (meal.isSkipped || loggedSlots.has(meal.slotId) || loggingSlot) return;
+    setActionError("");
+    if (previewData) {
+      setLoggedSlots((previous) => new Set([...previous, meal.slotId]));
+      setBalance((previous) => previous ? { ...previous, caloriesIn: previous.caloriesIn + meal.recipe.caloriesPerServing, proteinIn: previous.proteinIn + meal.recipe.proteinGrams, mealsLogged: previous.mealsLogged + 1 } : previous);
+      setOpenMeal(null);
+      setRatingMeal(meal);
+      return;
+    }
     setLoggingSlot(meal.slotId);
     try {
       const res = await fetch("/api/user/active-plan/meals/log", {
         method: "POST",
+        signal: AbortSignal.timeout(15000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planScheduleSlotId: meal.slotId, dayNumber: meal.dayNumber }),
       });
@@ -353,16 +395,19 @@ export default function DashboardClient({
         refreshBalance();
         setOpenMeal(null);
         setRatingMeal(meal);
-      }
+      } else throw new Error("Meal not saved");
+    } catch {
+      setActionError("We could not confirm your meal was saved. Please try again. Retrying will not log it twice.");
     } finally {
       setLoggingSlot(null);
     }
   }
 
   async function rateMeal(meal: Meal, rating: number, note: string) {
-    try {
-      await fetch("/api/user/active-plan/meals/rate", {
+    if (previewData) return;
+      const response = await fetch("/api/user/active-plan/meals/rate", {
         method: "POST",
+        signal: AbortSignal.timeout(15000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mealSlot: meal.mealSlot,
@@ -370,20 +415,26 @@ export default function DashboardClient({
           note: note.trim() || undefined,
         }),
       });
-    } catch {
-      // Rating is not load bearing. A failure here must not block the log.
-    }
+      if (!response.ok) throw new Error("Rating not saved");
   }
 
   async function completeWorkout() {
     if (completingWorkout || workout?.completedToday || workout?.isRestDay) return;
+    setActionError("");
+    if (previewData) {
+      setWorkout((previous) => previous ? { ...previous, completedToday: true } : previous);
+      setBalance((previous) => previous ? { ...previous, caloriesOut: previous.caloriesOut + (workout?.estimatedCalories ?? 0) } : previous);
+      return;
+    }
     setCompletingWorkout(true);
     try {
-      const res = await fetch("/api/user/active-plan/workout/complete", { method: "POST" });
+      const res = await fetch("/api/user/active-plan/workout/complete", { method: "POST", signal: AbortSignal.timeout(15000) });
       if (res.ok || res.status === 409) {
         setWorkout((p) => (p ? { ...p, completedToday: true } : p));
         refreshBalance();
-      }
+      } else throw new Error("Workout not saved");
+    } catch {
+      setActionError("We could not confirm your workout was saved. Please try again. Retrying will not log it twice.");
     } finally {
       setCompletingWorkout(false);
     }
@@ -399,7 +450,7 @@ export default function DashboardClient({
   const energyProgress = target > 0
     ? Math.max(0, Math.min(100, ((eaten - burned) / target) * 100))
     : 0;
-  const nextMeal = meals.find((meal) => !loggedSlots.has(meal.slotId)) ?? meals[0];
+  const nextMeal = meals.find((meal) => !meal.isSkipped && !loggedSlots.has(meal.slotId));
   const dayImage = cssImage(nextMeal?.recipe?.imageUrl)
     ?? 'url("/images/brand/weekly-meal-delivery.webp")';
   const setsLabel = (e: WorkoutExerciseView) =>
@@ -412,25 +463,28 @@ export default function DashboardClient({
   if (!activePlan) {
     return (
       <>
-        <DeliveryConfirmCard />
+        {!previewData && <DeliveryConfirmCard />}
+        {starterSummary && <StarterSummary data={starterSummary} />}
+        <QuickActions />
         <div style={{ ...PANEL, borderColor: hasActivationIssue ? C.danger : C.rule, padding: 20, marginTop: 20 }}>
           <span style={label(12, { display: "block", marginBottom: 10, color: hasActivationIssue ? C.danger : C.dim })}>
             {hasActivationIssue ? "Order needs attention" : "No active plan"}
           </span>
           <h2 style={section()}>
-            {hasActivationIssue ? "Your paid plan was not attached correctly" : "You do not have a plan running"}
+            {hasActivationIssue ? "We need to check your plan" : "Add meals to your routine"}
           </h2>
           <p style={body(14, { margin: "10px 0 16px", maxWidth: "62ch" })}>
             {hasActivationIssue
               ? "Your order is safe, but the dashboard needs our team to reconnect it before meal service starts."
-              : "Start with breakfast and lunch for one delivery day. The ₹420 total includes delivery, packaging and GST."}
+              : "Track your food and training here. When you want meals delivered, check availability for your address or choose a digital plan to cook at home."}
           </p>
           <Link
             href={hasActivationIssue ? "/contact" : "/plans?trial=true"}
             style={solidBtn({ textDecoration: "none" })}
           >
-            {hasActivationIssue ? "Contact support" : "See the trial day"}
+            {hasActivationIssue ? "Contact support" : "Explore delivered meals"}
           </Link>
+          {!hasActivationIssue && <Link href="/plans/digital" style={ghostBtn(false, { marginLeft: 12 })}>Digital plans</Link>}
         </div>
         <RecentOrders orders={orders} />
       </>
@@ -441,14 +495,19 @@ export default function DashboardClient({
 
   return (
     <>
-      <DeliveryConfirmCard />
+      {!previewData && <DeliveryConfirmCard />}
+      {loadErrors.length > 0 && <div role="alert" className={s.notice}>
+        <p>{loadErrors.join(", ")} could not refresh. Any figures still shown may be out of date.</p>
+        <button type="button" style={ghostBtn()} onClick={() => { setLoadErrors([]); setMealsLoading(true); setRetry((value) => value + 1); }}>Retry loading</button>
+      </div>}
+      {actionError && <div role="alert" className={s.notice}>{actionError}</div>}
 
       <section className={s.daySummary} aria-label="Today's energy and plan">
         <div className={s.energy}>
-          <p className={s.eyebrow}>{remaining >= 0 ? "Still available today" : "Above today’s target"}</p>
+          <p className={s.eyebrow}>{!balance ? "Waiting for today’s nutrition" : remaining >= 0 ? "Still available today" : "Above today’s target"}</p>
           <div className={s.energyLine}>
             <span className={s.energyValue} style={{ color: remaining < 0 ? C.danger : undefined }}>
-              {remaining >= 0 ? n0(remaining) : `+${n0(-remaining)}`}
+              {!balance ? "…" : remaining >= 0 ? n0(remaining) : `+${n0(-remaining)}`}
             </span>
             <span className={s.energyUnit}>kcal</span>
           </div>
@@ -480,15 +539,16 @@ export default function DashboardClient({
             </span>
           </div>
           <dl className={s.supportingStats}>
-            <div className={s.supportingStat}><dt>Eaten</dt><dd>{n0(eaten)}</dd></div>
-            <div className={s.supportingStat}><dt>Burned</dt><dd>{n0(burned)}</dd></div>
+            <div className={s.supportingStat}><dt>Eaten</dt><dd>{balance ? n0(eaten) : "…"}</dd></div>
+            <div className={s.supportingStat}><dt>Burned, estimated</dt><dd>{balance ? n0(burned) : "…"}</dd></div>
             <div className={s.supportingStat}><dt>Daily target</dt><dd>{n0(target)}</dd></div>
-            <div className={s.supportingStat}><dt>Meals logged</dt><dd>{loggedSlots.size}/{meals.length || 4}</dd></div>
+            <div className={s.supportingStat}><dt>Meals logged</dt><dd>{mealsLoading || loadErrors.includes("Meals") ? "…" : `${loggedSlots.size}/${meals.filter((meal) => !meal.isSkipped).length}`}</dd></div>
           </dl>
         </div>
       </section>
 
-      {!activePlan.isDigital ? <DeliveryScheduleCard /> : null}
+      <QuickActions />
+      {!previewData && !activePlan.isDigital ? <DeliveryScheduleCard /> : null}
 
       <div className={s.workspace}>
 
@@ -497,7 +557,7 @@ export default function DashboardClient({
           <div className={s.cardHeader}>
             <h2 style={section()}>The day&apos;s meals</h2>
             <span className={s.cardMeta}>
-              {loggedSlots.size} of {meals.length || 4} logged
+              {mealsLoading ? "Loading" : `${loggedSlots.size} logged`}
             </span>
           </div>
 
@@ -509,7 +569,7 @@ export default function DashboardClient({
             </div>
           ) : meals.length === 0 ? (
             <p style={{ ...body(14), padding: 16, margin: 0, maxWidth: "62ch" }}>
-              Nothing is scheduled for today. Your plan may not have a schedule set up yet.
+              {loadErrors.includes("Meals") ? "Your meals could not load. Use Retry loading above to try again." : "Nothing is scheduled for today. Check your delivery days or contact us if you expected a meal."}
             </p>
           ) : (
             meals.map((meal) => {
@@ -546,13 +606,13 @@ export default function DashboardClient({
 
                   <div className={s.mealAction}>
                     <span className={s.mealCalories}>{n0(meal.recipe?.caloriesPerServing ?? 0)} kcal</span>
-                    {isLogged ? (
+                    {meal.isSkipped ? <span className={s.logged}>Skipped</span> : isLogged ? (
                       <span className={s.logged}>Logged</span>
                     ) : (
                       <button
                         type="button"
                         onClick={() => logMeal(meal)}
-                        disabled={isLogging}
+                        disabled={!!loggingSlot}
                         style={ghostBtn(false, { flex: "none", opacity: isLogging ? 0.55 : 1 })}
                       >
                         {isLogging ? "Logging" : "I ate this"}
@@ -657,7 +717,7 @@ export default function DashboardClient({
       </div>
 
       <Spine>From your coach</Spine>
-      <WeeklyReviewCard />
+      {previewData ? <div className={s.notice}><strong>Sample weekly review</strong><p>Your real review uses your logged meals, training and progress. This preview does not generate personal advice.</p><Link href="/dashboard/coach">Sign in to see your review →</Link></div> : <WeeklyReviewCard />}
 
       <RecentOrders orders={orders} />
 
@@ -667,6 +727,7 @@ export default function DashboardClient({
           cycleDays={activePlan?.mealPlan?.cycleLengthDays ?? 30}
           logged={loggedSlots.has(openMeal.slotId)}
           logging={loggingSlot === openMeal.slotId}
+          error={actionError}
           onLog={() => logMeal(openMeal)}
           onClose={() => setOpenMeal(null)}
         />

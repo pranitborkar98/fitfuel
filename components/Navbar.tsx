@@ -14,13 +14,18 @@ import s from "./Navbar.module.css";
 const PRIMARY = [
   { href: "/#catalog", label: "Meals" },
   { href: "/plans", label: "Meal plans" },
+  { href: "/products", label: "Supplements" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/results", label: "Results" },
-  { href: "/our-kitchen", label: "Our kitchen" },
 ] as const;
 
 const MORE = [
-  { href: "/supplements", label: "Supplements" },
+  { href: "/services", label: "All services" },
+  { href: "/dashboard-preview", label: "Dashboard preview" },
+  { href: "/partners", label: "Partner programmes" },
+  { href: "/corporate", label: "Corporate meals" },
+  { href: "/supplements", label: "Supplement guide" },
+  { href: "/our-kitchen", label: "Our kitchen" },
   { href: "/tdee-calculator", label: "Calculate your target" },
   { href: "/locations", label: "Delivery areas" },
   { href: "/testimonials", label: "Customer stories" },
@@ -35,11 +40,10 @@ function active(pathname: string, href: string) {
 export default function Navbar() {
   const pathname = usePathname() || "";
   const { data: session } = useSession();
-  const [open, setOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,6 +51,7 @@ export default function Navbar() {
     const oldOverflow = body.style.overflow;
     body.style.overflow = "hidden";
     const panel = panelRef.current;
+    const trigger = triggerRef.current;
     const selectable = () =>
       Array.from(
         panel?.querySelectorAll<HTMLElement>(
@@ -57,7 +62,7 @@ export default function Navbar() {
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpen(false);
+        setOpenPath(null);
         return;
       }
       if (event.key !== "Tab") return;
@@ -78,7 +83,7 @@ export default function Navbar() {
     return () => {
       body.style.overflow = oldOverflow;
       document.removeEventListener("keydown", onKey);
-      triggerRef.current?.focus();
+      trigger?.focus();
     };
   }, [open]);
 
@@ -120,7 +125,7 @@ export default function Navbar() {
             ref={triggerRef}
             type="button"
             className={s.menuButton}
-            onClick={() => setOpen(true)}
+            onClick={() => setOpenPath(pathname)}
             aria-expanded={open}
             aria-haspopup="dialog"
             aria-label="Open navigation"
@@ -132,14 +137,14 @@ export default function Navbar() {
 
       {open ? (
         <div className={s.mobileLayer}>
-          <button type="button" className={s.scrim} onClick={() => setOpen(false)} aria-label="Close navigation" />
+          <button type="button" className={s.scrim} onClick={() => setOpenPath(null)} aria-label="Close navigation" />
           <div ref={panelRef} className={s.mobilePanel} role="dialog" aria-modal="true" aria-labelledby="mobile-nav-title">
             <div className={s.mobileHead}>
               <div>
                 <span id="mobile-nav-title">FitFuel</span>
                 <small>Food, targets and coaching in one place</small>
               </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close navigation">
+              <button type="button" onClick={() => setOpenPath(null)} aria-label="Close navigation">
                 <X size={22} aria-hidden="true" />
               </button>
             </div>

@@ -12,7 +12,8 @@ const GROUPS = [
     links: [
       ["Single meals", "/#catalog"], ["Meal plans", "/plans"],
       ["Trial day", "/plans?trial=true"], ["Digital plans", "/plans/digital"],
-      ["Supplements", "/supplements"],
+      ["Marketplace", "/products"],
+      ["Supplement guide", "/supplements"],
     ],
   },
   {
@@ -26,6 +27,7 @@ const GROUPS = [
   {
     title: "Use the platform",
     links: [
+      ["All services", "/services"], ["Dashboard preview", "/dashboard-preview"],
       ["AI coach", "/dashboard/trainer"], ["Your dashboard", "/dashboard"],
       ["Calculate your target", "/tdee-calculator"], ["Corporate wellness", "/corporate"],
       ["Partner with us", "/partners"], ["Questions", "/faq"],
@@ -60,12 +62,12 @@ export default function Footer() {
             <p>Chef-cooked meals connected to your nutrition target, delivery and daily coaching.</p>
             <ul className={s.operation} aria-label="What FitFuel operates">
               <li><Scale size={18} aria-hidden="true" /><span><b>Weighed</b><small>for your portion</small></span></li>
-              <li><ChefHat size={18} aria-hidden="true" /><span><b>Cooked</b><small>in Kharadi</small></span></li>
+              <li><ChefHat size={18} aria-hidden="true" /><span><b>Cooked</b><small>at your nearest kitchen</small></span></li>
               <li><Truck size={18} aria-hidden="true" /><span><b>Delivered</b><small>by our riders</small></span></li>
             </ul>
             <div className={s.contact}>
               <a href={waLink()} target="_blank" rel="noreferrer"><MessageCircle size={18} aria-hidden="true" /> WhatsApp FitFuel</a>
-              <span><MapPin size={18} aria-hidden="true" /> Kharadi, Pune</span>
+              <Link href="/locations"><MapPin size={18} aria-hidden="true" /> Check delivery availability</Link>
             </div>
           </div>
 
@@ -88,7 +90,7 @@ export default function Footer() {
         <div className={s.base}>
           <div>
             <b>FSSAI 21523035002815</b>
-            <span>© {new Date().getFullYear()} FitFuel, Pune · GST included where applicable.</span>
+            <span>© {new Date().getFullYear()} FitFuel · GST included where applicable.</span>
           </div>
           <nav aria-label="Legal information">
             {LEGAL.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}

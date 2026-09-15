@@ -21,10 +21,11 @@ import SupplementsLanding from "./SupplementsLanding";
 import { getAllSupplements } from "@/lib/supplements-db";
 import { getRecommendedSupplements } from "@/lib/supplement-recommender";
 import { Wrap } from "@/app/_ui/Page";
+import AppChrome from "@/app/_web/AppChrome";
 
 export const metadata = {
   alternates: { canonical: "/supplements" },
-  title: "Supplements",
+  title: "Supplement ingredient guide",
   description: "An evidence-labelled supplement directory with goal-based shortlists, India price context and links to third-party sellers.",
 };
 
@@ -38,14 +39,14 @@ export default async function SupplementsPage() {
   ]);
 
   return (
-    <>
+    <AppChrome notice="Ingredient guidance is separate from shopping. Products are sold and supported by the retailer.">
       <SupplementsLanding
         isLoggedIn={!!session?.user}
         supplements={supplements}
         recommended={rec && rec.items.length > 0 ? rec : null}
       />
       <AffiliateDisclosure />
-    </>
+    </AppChrome>
   );
 }
 

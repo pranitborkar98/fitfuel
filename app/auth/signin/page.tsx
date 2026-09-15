@@ -125,6 +125,9 @@ function SignInInner() {
           </a>
 
           <p style={{ ...body(13), color: MUTE, marginTop: 26 }}>
+            Want to look around first? <A href="/dashboard-preview">Try the dashboard preview</A>. It uses sample data and does not need an account.
+          </p>
+          <p style={{ ...body(13), color: MUTE, marginTop: 16 }}>
             By signing in you agree to our <A href="/terms">Terms and Conditions</A> and{" "}
             <A href="/privacy">Privacy Policy</A>.
           </p>

@@ -45,6 +45,7 @@ export type BandCounts = {
   recipes: number;
   retailerLinks: number;
   retailerNetworks: number;
+  marketplaceProducts: number;
   activePartners: number;
 };
 

@@ -46,12 +46,15 @@ function Icon({ name, size = 17 }: { name: IconName; size?: number }) {
 export default function AppShell({
   children,
   isPartner = false,
+  preview = false,
 }: {
   children: React.ReactNode;
   isPartner?: boolean;
+  preview?: boolean;
 }) {
   const pathname = usePathname() || "";
-  const active = activeHref(pathname);
+  const active = preview ? "/dashboard" : activeHref(pathname);
+  const homeHref = preview ? "/dashboard-preview" : "/dashboard";
   const [moreOpen, setMoreOpen] = useState(false);
 
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -117,7 +120,7 @@ export default function AppShell({
             site. The link still goes to /dashboard, because a reader inside the
             app expects the wordmark to return them to their own home rather
             than to the marketing front door. */}
-        <Wordmark href="/dashboard" size={20} className={s.brand} title="FitFuel dashboard" />
+        <Wordmark href={homeHref} size={20} className={s.brand} title="FitFuel dashboard" />
 
         {NAV.map((group) => {
           const items = group.items.filter(visible);
@@ -130,7 +133,7 @@ export default function AppShell({
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={item.href === "/dashboard" ? homeHref : item.href}
                     className={`${s.navRow} ${on ? s.navRowOn : ""}`}
                     aria-current={on ? "page" : undefined}
                   >
@@ -145,27 +148,27 @@ export default function AppShell({
 
         <Link href="/" className={s.orderCard}>
           <span className={s.orderCardIcon}><ShoppingBag size={18} aria-hidden="true" /></span>
-          <span><b>Order food</b><small>Meals and plans from the same kitchen</small></span>
+          <span><b>Order food</b><small>Check delivery for your address</small></span>
           <ChevronArrow />
         </Link>
 
         <div className={s.sidebarFoot}>
-          <button
+          {preview ? <Link className={s.signOut} href="/auth/signin?callbackUrl=/dashboard">Sign in to your dashboard</Link> : <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
             className={s.signOut}
           >
             <LogOut size={16} strokeWidth={1.75} />
             Sign out
-          </button>
+          </button>}
         </div>
       </nav>
 
       {/* ── Main column ──────────────────────────────────────────────── */}
       <div className={s.main}>
         <div className={s.topbar}>
-          <span className={s.mobileBrand}><Wordmark href="/dashboard" size={20} title="FitFuel dashboard" /></span>
-          <span className={s.workspaceStatus}><i aria-hidden="true" /> Your FitFuel workspace</span>
+          <span className={s.mobileBrand}><Wordmark href={homeHref} size={20} title="FitFuel dashboard" /></span>
+          <span className={s.workspaceStatus}><i aria-hidden="true" /> {preview ? "Dashboard preview" : "Your FitFuel workspace"}</span>
           <span className={s.topbarActions}>
             <button
               type="button"
@@ -178,7 +181,7 @@ export default function AppShell({
               <LayoutGrid size={17} strokeWidth={1.75} aria-hidden="true" />
               <span>All tools</span>
             </button>
-            <Link href="/dashboard/profile"><User size={17} aria-hidden="true" /> Profile</Link>
+            <Link href={preview ? "/auth/signin?callbackUrl=/dashboard" : "/dashboard/profile"}><User size={17} aria-hidden="true" /> {preview ? "Sign in" : "Profile"}</Link>
           </span>
         </div>
 
@@ -219,7 +222,7 @@ export default function AppShell({
             {moreItems.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href === "/dashboard" ? homeHref : item.href}
                 className={`${s.sheetRow} ${active === item.href ? s.sheetRowOn : ""}`}
                 onClick={close}
                 aria-current={active === item.href ? "page" : undefined}
@@ -232,14 +235,14 @@ export default function AppShell({
               </Link>
             ))}
 
-            <button
+            {preview ? <Link className={s.sheetRow} href="/auth/signin?callbackUrl=/dashboard">Sign in to your dashboard</Link> : <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
               className={`${s.sheetRow} ${s.sheetSignOut}`}
             >
               <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
               <span className={s.sheetRowBody}><b>Sign out</b></span>
-            </button>
+            </button>}
           </div>
         </>
       )}

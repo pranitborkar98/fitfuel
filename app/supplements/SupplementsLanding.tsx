@@ -45,7 +45,7 @@ import {
 import { NETWORK_LABEL, type SupplementBuyLink } from "@/lib/supplements-types";
 import type { SupplementRecommendation } from "@/lib/supplement-recommender";
 import { Head, Idx, Tile, Tiles, k } from "@/app/_ui/Kit";
-import { Band, Masthead, Shell, Wrap } from "@/app/_ui/Page";
+import { Band, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, SECTION, body, figure, label, num, sub } from "@/app/_ui/theme";
 import s from "./supplements.module.css";
 
@@ -348,17 +348,13 @@ export default function SupplementsLanding({
   const goalMeta = GOAL_META[activeGoal];
 
   return (
-    <Shell>
-      <Masthead
-        label="Supplements"
-        title="Built for your goal, not for a shelf"
-        deck="An evidence-labelled supplement directory with study context, common label amounts and India-specific price ranges. It is guidance, not a prescription or a FitFuel product sale."
-        meta={[
-          { k: "Catalogued", v: String(supplements.length) },
-          { k: "Categories", v: String(CATEGORIES.length - 1) },
-          { k: "Paywalled", v: "None" },
-        ]}
-      />
+    <div className="fk">
+      <header className={s.guideHeader}>
+        <Link href="/products">← Back to supplement shopping</Link>
+        <h1>Supplement ingredient guide</h1>
+        <p>Read the evidence, study context and common label amounts for {supplements.length} ingredients. Guidance is about the ingredient, not certification of a brand or a prescription.</p>
+        <p className={s.guideNote}>For a medical condition, medication interaction or personal dose, speak to a qualified clinician.</p>
+      </header>
 
       <div className={k.readout} style={{ ["--cells" as string]: 3 }}>
         {[
@@ -533,6 +529,6 @@ export default function SupplementsLanding({
       />
 
       {selected && <SupplementModal supp={selected} onClose={() => setSelected(null)} />}
-    </Shell>
+    </div>
   );
 }

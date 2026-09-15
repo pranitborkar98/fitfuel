@@ -34,23 +34,23 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/dashboard", label: "Today", blurb: "Your day, your meals, your targets", icon: "Zap" },
       { href: "/dashboard/trainer", label: "AI coach", blurb: "A conversation grounded in your plan and recent data", icon: "Sparkles" },
-      { href: "/dashboard/coach", label: "Weekly review", blurb: "Your deterministic review and recalibration", icon: "TrendingUp" },
+      { href: "/dashboard/coach", label: "Weekly review", blurb: "Review your week and adjust your targets", icon: "TrendingUp" },
     ],
   },
   {
     key: "intake",
-    label: "Intake",
+    label: "Food & nutrition",
     items: [
-      { href: "/dashboard/nutrition", label: "Nutrition", blurb: "Diary, water, and the food database", icon: "Utensils" },
-      { href: "/dashboard/supplements", label: "Supplements", blurb: "Researched, not stocked", icon: "Pill" },
+      { href: "/dashboard/nutrition", label: "Food & water", blurb: "Log meals, water and personal targets", icon: "Utensils" },
+      { href: "/dashboard/supplements", label: "Supplement guide", blurb: "Ingredient evidence and safety information", icon: "Pill" },
     ],
   },
   {
     key: "output",
-    label: "Output",
+    label: "Movement & progress",
     items: [
       { href: "/dashboard/exercises", label: "Training", blurb: "Sessions, sets, and the exercise library", icon: "Dumbbell" },
-      { href: "/dashboard/body-metrics", label: "Body", blurb: "Weigh-ins over Bluetooth, no typing", icon: "Activity" },
+      { href: "/dashboard/body-metrics", label: "Body measurements", blurb: "Record weight manually or connect a compatible scale", icon: "Activity" },
       { href: "/dashboard/progress", label: "Progress", blurb: "Consistency and the trend line", icon: "TrendingUp" },
     ],
   },

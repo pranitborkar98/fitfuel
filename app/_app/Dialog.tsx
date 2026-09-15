@@ -25,6 +25,9 @@ export default function Dialog({
 }) {
   const panel = useRef<HTMLDivElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
+  const closeRef = useRef(onClose);
+
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     returnTo.current = document.activeElement as HTMLElement | null;
@@ -38,7 +41,7 @@ export default function Dialog({
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.stopPropagation();
-        onClose();
+        closeRef.current();
         return;
       }
       if (e.key !== "Tab" || !panel.current) return;
@@ -64,7 +67,7 @@ export default function Dialog({
       document.body.style.overflow = overflow;
       returnTo.current?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div

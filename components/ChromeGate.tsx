@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 // Before that it carried the marketing navbar and footer on top of an app
 // surface, which meant two navigations on screen at once and a footer full of
 // company links under a nutrition log.
-const BARE_PREFIXES = ["/driver", "/admin", "/dashboard"];
+const BARE_PREFIXES = ["/driver", "/admin", "/dashboard", "/dashboard-preview"];
 
 // Routes that draw their OWN header and footer, so the site chrome would be a
 // second one. "/" is the shop: design/FitFuel Shop.dc.html specifies a header
@@ -31,12 +31,12 @@ const BARE_PREFIXES = ["/driver", "/admin", "/dashboard"];
 /* "/menu" stays in this list even though /menu itself is now a 308 to `/`:
    this is a PREFIX list and the 48 /menu/<dish> product pages still draw their
    own AppChrome header. Removing it drops the header off all 48. */
-const SELF_CHROMED = ["/", "/menu"];
+const SELF_CHROMED = ["/", "/menu", "/products", "/supplements"];
 
 // Path prefixes that are the logged-in APPLICATION, not marketing pages.
 // These keep their own denser UI conventions, so the marketing-side
 // art-direction resets in globals.css must not reach them.
-const APP_PREFIXES = ["/driver", "/admin", "/dashboard"];
+const APP_PREFIXES = BARE_PREFIXES;
 
 export default function ChromeGate({
   navbar,
@@ -52,9 +52,9 @@ export default function ChromeGate({
      startsWith — so /menu and its 48 dish pages are covered without listing
      each one. */
   const bare =
-    BARE_PREFIXES.some((p) => pathname.startsWith(p)) ||
-    SELF_CHROMED.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
-  const marketing = !APP_PREFIXES.some((p) => pathname.startsWith(p));
+    BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
+    SELF_CHROMED.some((p) => pathname === p || (p !== "/" && pathname.startsWith(p + "/")));
+  const marketing = !APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   return (
     <>

@@ -5,6 +5,7 @@ import { ArrowRight, Check, Link2, QrCode, ReceiptText, WalletCards } from "luci
 import { ATTRIBUTION, INTEGRATIONS, PAYOUT_TERMS, PROGRAMS } from "@/lib/partner-network";
 
 import styles from "./partners.module.css";
+import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
 
 export const metadata: Metadata = {
   title: "Partner programme",
@@ -20,14 +21,14 @@ const REWARD_MODELS = new Set(PROGRAMS.map((program) => program.reward)).size;
 
 export default function PartnersPage() {
   return (
-    <main className={styles.page}>
+    <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroGrid}>
           <div>
             <p className={styles.kicker}>FitFuel partner programme</p>
-            <h1>Turn an introduction into a conversion you can see.</h1>
+            <h1>Bring FitFuel to your members and teams.</h1>
             <p className={styles.deck}>
-              Approved partners get a code, a landing page and a QR. First touch stays with the customer through checkout, and the paid conversion appears in the partner console with its reward and payout status.
+              Help your community find meals that fit their routine. Approved partners get a referral code, a shareable page and a dashboard to follow eligible orders and rewards.
             </p>
             <div className={styles.heroActions}>
               <Link className={styles.primaryAction} href="/partners/apply">Apply to partner <ArrowRight aria-hidden="true" size={18} /></Link>
@@ -37,9 +38,9 @@ export default function PartnersPage() {
 
           <aside className={styles.signalCard} aria-label="The partner tracking loop">
             <div><QrCode aria-hidden="true" /><span><strong>Share</strong>Your code, page or printable QR.</span></div>
-            <div><Link2 aria-hidden="true" /><span><strong>Attribute</strong>A verified first touch is attached to the account and order.</span></div>
-            <div><ReceiptText aria-hidden="true" /><span><strong>See the conversion</strong>The first paid order becomes a partner record.</span></div>
-            <div><WalletCards aria-hidden="true" /><span><strong>Reconcile</strong>Cash rewards roll into a monthly payout row.</span></div>
+            <div><Link2 aria-hidden="true" /><span><strong>Connect</strong>Your referral follows the customer through sign-in and checkout.</span></div>
+            <div><ReceiptText aria-hidden="true" /><span><strong>Track orders</strong>See eligible first paid orders in your partner dashboard.</span></div>
+            <div><WalletCards aria-hidden="true" /><span><strong>Follow rewards</strong>Check pending rewards and recorded payouts.</span></div>
           </aside>
         </div>
 
@@ -51,11 +52,13 @@ export default function PartnersPage() {
         </div>
       </section>
 
+      <div className={styles.proofSection}><PartnerNetwork /></div>
+
       <section className={styles.programmes}>
         <div className={styles.sectionHead}>
           <div>
             <p className={styles.kicker}>Choose the relationship</p>
-            <h2>One tracking system, different commercial models.</h2>
+            <h2>Choose a programme for your community.</h2>
           </div>
           <p>The exact reward value is stored on the approved partner account. The labels below describe the model, not a guaranteed quote before review.</p>
         </div>
@@ -87,14 +90,14 @@ export default function PartnersPage() {
       <section className={styles.attribution}>
         <div className={styles.attributionIntro}>
           <p className={styles.kicker}>How attribution works</p>
-          <h2>Records at the hand-offs that matter.</h2>
-          <p>We describe the mechanism as it runs today: browser first touch, verified account attribution, paid conversion and payout record.</p>
+          <h2>From your referral to your reward.</h2>
+          <p>Share your approved code, follow eligible first orders and see when a reward is recorded.</p>
         </div>
         <ol>
           {ATTRIBUTION.map((step) => (
             <li key={step.n}>
               <span>{Number(step.n)}</span>
-              <div><h3>{step.title}</h3><p>{step.body}</p><small>{step.backed}</small></div>
+              <div><h3>{step.title}</h3><p>{step.body}</p></div>
             </li>
           ))}
         </ol>
@@ -104,7 +107,7 @@ export default function PartnersPage() {
         <div className={styles.sectionHead}>
           <div>
             <p className={styles.kicker}>Connected services</p>
-            <h2>Only integrations with live product code are listed here.</h2>
+            <h2>The services behind your order.</h2>
           </div>
         </div>
         <div className={styles.integrationGrid}>
@@ -113,7 +116,7 @@ export default function PartnersPage() {
               <p>{integration.role}</p>
               <h3>{integration.name}</h3>
               <span>{integration.detail}</span>
-              <small><Check aria-hidden="true" size={14} /> Connected</small>
+              <small><Check aria-hidden="true" size={14} /> {integration.name === "Nutrabay" ? "Affiliate retailer" : "Service integration"}</small>
             </article>
           ))}
         </div>
@@ -142,6 +145,6 @@ export default function PartnersPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

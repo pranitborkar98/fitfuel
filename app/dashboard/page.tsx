@@ -11,6 +11,7 @@ import DashboardClient from "./DashboardClient";
 import { menuDayNumber, todayISTDate } from "@/lib/production";
 import { remainingServiceDays } from "@/lib/plan-service-dates";
 import s from "./dashboard.module.css";
+import type { StarterSummaryData } from "./StarterSummary";
 
 export const metadata: Metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
@@ -44,7 +45,7 @@ export default async function DashboardPage() {
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 10,
-      include: { items: true },
+      include: { items: true, userActivePlans: { select: { id: true } } },
     }),
     prisma.userActivePlan.findFirst({
       where: { userId, status: "active", startDate: { lte: today }, endDate: { gte: today } },
@@ -84,12 +85,26 @@ export default async function DashboardPage() {
     orders.some(
       (order) =>
         order.status === "CONFIRMED" &&
+        order.userActivePlans.length === 0 &&
         order.items.some((item) => item.kind === "PLAN") &&
         !(() => {
           try { return JSON.parse(order.notes ?? "{}").isDigital === true; }
           catch { return false; }
         })(),
     );
+
+  let starterSummary: StarterSummaryData | undefined;
+  if (!activePlan) {
+    const [food, water, goal, weight] = await Promise.all([
+      prisma.foodEntry.aggregate({ where: { userId, entryDate: today }, _sum: { calories: true, protein: true }, _count: true }),
+      prisma.waterLog.findUnique({ where: { userId_entryDate: { userId, entryDate: today } }, select: { amountMl: true } }),
+      prisma.nutritionGoal.findUnique({ where: { userId }, select: { calories: true } }),
+      prisma.bodyMetric.findFirst({ where: { userId, weightKg: { not: null } }, orderBy: { measuredAt: "desc" }, select: { weightKg: true, measuredAt: true } }),
+    ]);
+    starterSummary = { calories: food._sum.calories ?? 0, protein: food._sum.protein ?? 0, entries: food._count,
+      waterMl: water?.amountMl ?? 0, calorieTarget: goal?.calories ?? null,
+      weightKg: weight?.weightKg ?? null, measuredAt: weight?.measuredAt.toISOString() ?? null };
+  }
 
   return (
     <div className={s.page}>
@@ -111,6 +126,7 @@ export default async function DashboardPage() {
         orders={JSON.parse(JSON.stringify(orders))}
         activePlan={activePlan}
         hasActivationIssue={hasActivationIssue}
+        starterSummary={starterSummary}
       />
     </div>
   );

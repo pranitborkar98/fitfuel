@@ -37,7 +37,7 @@
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
@@ -82,14 +82,14 @@ type Tab = { href: string; label: string; icon: string; match: string[] };
 const TABS: Tab[] = [
   { href: "/?mode=dishes#catalog", label: "Meals", icon: I.bowl, match: ["/menu"] },
   { href: "/?mode=plans#catalog", label: "Meal plans", icon: I.layers, match: ["/plans"] },
-  { href: "/?mode=supps#catalog", label: "Supplements", icon: I.spark, match: ["/supplements"] },
+  { href: "/products", label: "Supplements", icon: I.spark, match: ["/products", "/supplements"] },
   {
     href: "/dashboard/trainer",
-    label: "AI coach",
+    label: "Coach",
     icon: I.spark,
     match: ["/dashboard/trainer", "/dashboard/coach"],
   },
-  { href: "/dashboard", label: "Your account", icon: I.user, match: ["/dashboard"] },
+  { href: "/dashboard", label: "Today", icon: I.user, match: ["/dashboard"] },
 ];
 
 /**
@@ -124,41 +124,63 @@ function activeTab(pathname: string): number {
 export default function AppChrome({
   area = "Check delivery",
   cutoff,
+  notice,
   areaPanel,
   children,
 }: {
   area?: string;
   cutoff?: string;
+  notice?: string;
   areaPanel?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const cart = useCart();
   const pathname = usePathname() || "";
   const [areaOpen, setAreaOpen] = useState(false);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    const shell = shellRef.current;
+    if (!header || !shell) return;
+    const measure = () => shell.style.setProperty("--fk-head", `${header.getBoundingClientRect().height}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
   const active = activeTab(pathname);
   /* badgeCount, not count: it includes price-on-request enquiries, so the
      header badge matches what the drawer actually holds. */
   const count = cart.badgeCount;
 
   return (
-    <div className={`fk ${s.app}`}>
-      <header className={s.top}>
+    <div ref={shellRef} className={`fk ${s.app}`}>
+      <header ref={headerRef} className={s.top}>
         <div className={s.topRow}>
           <Wordmark className={s.brand} />
 
 
 
           <div className={s.topActions}>
-            <button
-              type="button"
-              className={s.place}
-              onClick={() => setAreaOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={areaOpen}
-            >
-              <Icon d={I.pin} size={16} />
-              {area}
-            </button>
+            {areaPanel ? (
+              <button
+                type="button"
+                className={s.place}
+                onClick={() => setAreaOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={areaOpen}
+              >
+                <Icon d={I.pin} size={16} />
+                {area}
+              </button>
+            ) : (
+              <Link className={s.place} href="/locations">
+                <Icon d={I.pin} size={16} />
+                {area}
+              </Link>
+            )}
             <button
               type="button"
               className={s.iconBtn}
@@ -178,8 +200,7 @@ export default function AppChrome({
         <div className={s.cutoff}>
           <p className={s.cutoffRow}>
             <span>
-              Single dishes and meal plans from the FitFuel kitchen serving your
-              address.
+              {notice ?? "Single dishes and meal plans from the FitFuel kitchen serving your address."}
               {cutoff ? <> Plan cut-off: <b>{cutoff}</b>.</> : null}
             </span>
           </p>

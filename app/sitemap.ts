@@ -15,6 +15,8 @@ export const revalidate = 86400; // refresh daily
 // shipping it is worth indexing; if it is not, it should not be public.
 const STATIC_ROUTES: { path: string; priority: number; freq: "daily" | "weekly" | "monthly" | "yearly" }[] = [
   { path: "",                    priority: 1.0,  freq: "daily"   },
+  { path: "/services",           priority: 0.8,  freq: "monthly" },
+  { path: "/products",           priority: 0.8,  freq: "weekly" },
   // Money pages
   { path: "/plans",              priority: 0.9,  freq: "daily"   },
   // The à la carte storefront. High priority and daily: "healthy salad

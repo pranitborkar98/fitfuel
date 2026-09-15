@@ -9,6 +9,8 @@ import { waLink } from "@/lib/site";
 import { GOALS } from "./home-data";
 import type { Quote } from "./HomeBands";
 import x from "./experience.module.css";
+import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
+import productStyles from "@/app/_kitchen/product-network.module.css";
 
 const ICON = {
   spark:
@@ -70,28 +72,14 @@ export default function HomeExperience({
   target,
   cutoffLabel,
   trialTotal,
-  aiConfigured,
-  exerciseCount,
-  retailerLinks,
-  activePartners,
-  quotes,
   onBrowseMeals,
-  onBrowsePlans,
-  onBrowseSupplements,
 }: {
   week: Dish[];
   goal: string;
   target: Target;
   cutoffLabel: string;
   trialTotal: string;
-  aiConfigured: boolean;
-  exerciseCount: number;
-  retailerLinks: number;
-  activePartners: number;
-  quotes: Quote[];
   onBrowseMeals: () => void;
-  onBrowsePlans: () => void;
-  onBrowseSupplements: () => void;
 }) {
   const meals = week.filter((dish) => dish.day === 1).slice(0, 4);
   const [activeMealIndex, setActiveMealIndex] = useState(0);
@@ -107,7 +95,6 @@ export default function HomeExperience({
   const whatsapp = waLink(
     `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to my address.`,
   );
-  const proof = quotes[0];
 
   const moveMealFocus = (
     event: KeyboardEvent<HTMLButtonElement>,
@@ -137,9 +124,8 @@ export default function HomeExperience({
             Meals calculated for your body.
           </h1>
           <p className={x.lede}>
-            Your weight is read live from a supported Bluetooth scale. Together
-            with your height, age, activity and goal, it sets the calorie and
-            macro target we use to weigh every meal.
+            Choose a single meal or a plan. Set your nutrition target, and
+            FitFuel uses it to size your portions and track your day.
           </p>
 
           <div className={x.heroActions}>
@@ -166,8 +152,8 @@ export default function HomeExperience({
             <li>
               <Icon path={ICON.scale} size={18} />
               <span>
-                <b>Read live</b>
-                <small>Your weight</small>
+                <b>Set</b>
+                <small>Your target</small>
               </span>
             </li>
             <li>
@@ -197,10 +183,9 @@ export default function HomeExperience({
         <div className={x.menuPreview}>
           <div className={x.previewHead}>
             <span>
-              <small>Tomorrow’s four-meal day</small>
+              <small>Sample four-meal day</small>
               <b>
-                {activeGoal.label} plan · {scaledKcal.toLocaleString("en-IN")}{" "}
-                kcal
+                {meals.length ? `Portion preview · ${scaledKcal.toLocaleString("en-IN")} kcal` : "Menu preview"}
               </b>
             </span>
             <span className={x.deliveryStatus}>
@@ -287,13 +272,34 @@ export default function HomeExperience({
           ) : null}
         </div>
       </section>
+    </div>
+  );
+}
 
+export function HomeProductLinks({
+  aiConfigured,
+  exerciseCount,
+  marketplaceProducts,
+  activePartners,
+  quotes,
+  onBrowsePlans,
+}: {
+  aiConfigured: boolean;
+  exerciseCount: number;
+  marketplaceProducts: number;
+  activePartners: number;
+  quotes: Quote[];
+  onBrowsePlans: () => void;
+}) {
+  const proof = quotes[0];
+  return (
+    <div className={x.home}>
       <section className={x.productMap} aria-labelledby="product-map-title">
         <header className={x.productMapHead}>
-          <h2 id="product-map-title">One system, four ways to use it.</h2>
+          <h2 id="product-map-title">Plan the rest of your week.</h2>
           <p>
             Start with delivered food, use a nationwide digital plan, run your
-            week in the member app or buy an evidence-matched supplement.
+            week in the member app or browse supplements on Nutrabay.
           </p>
         </header>
 
@@ -318,32 +324,30 @@ export default function HomeExperience({
             </span>
             <Icon path={ICON.arrow} size={17} />
           </Link>
-          <Link href="/dashboard">
+          <Link href="/dashboard-preview">
             <span className={x.quickIcon}>
               <Icon path={ICON.scale} size={20} />
             </span>
             <span>
-              <small>Member platform</small>
+              <small>Explore the dashboard</small>
               <b>
-                Live weight, diary, {exerciseCount.toLocaleString("en-IN")} exercises and {aiConfigured ? "live coach" : "weekly coach"}
+                Food diary, weight, {exerciseCount.toLocaleString("en-IN")} exercises and {aiConfigured ? "AI coach" : "weekly review"}
               </b>
             </span>
             <Icon path={ICON.arrow} size={17} />
           </Link>
-          <button type="button" onClick={onBrowseSupplements}>
+          <Link href="/products">
             <span className={x.quickIcon}>
               <Icon path={ICON.spark} size={20} />
             </span>
             <span>
-              <small>Evidence-led marketplace</small>
+              <small>Supplements from Nutrabay</small>
               <b>
-                {retailerLinks > 0
-                  ? `${retailerLinks.toLocaleString("en-IN")} tracked product listings`
-                  : "Research before any retailer link"}
+                {marketplaceProducts.toLocaleString("en-IN")} products, with ingredient guidance where available
               </b>
             </span>
             <Icon path={ICON.arrow} size={17} />
-          </button>
+          </Link>
         </nav>
 
         <nav className={x.businessRail} aria-label="FitFuel for organisations">
@@ -364,6 +368,16 @@ export default function HomeExperience({
           </Link>
         </nav>
       </section>
+
+      <section className={productStyles.productFeature} aria-labelledby="daily-product-title">
+        <div><h2 id="daily-product-title">A dashboard for the days between orders.</h2><p>Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.</p><Link href="/dashboard-preview">Try the dashboard preview <Icon path={ICON.arrow} size={18} /></Link><br /><Link href="/services">Explore all FitFuel services <Icon path={ICON.arrow} size={18} /></Link></div>
+        <ol className={productStyles.featureSteps}>
+          <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
+          <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>
+          <li><b>Review before changing your target</b>Use your weekly review and coach to understand progress.</li>
+        </ol>
+      </section>
+      <PartnerNetwork />
 
       {proof ? (
         <aside className={x.proofLine} aria-label="Customer result">

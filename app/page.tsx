@@ -5,16 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { FSSAI_LICENCE } from "@/lib/trust-marks";
 import { MENU_FROM } from "@/lib/menu-alacarte";
 import { cutoffLabel } from "@/lib/order-cutoff";
-import { TRIAL, TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
-import type { PriceRow } from "@/lib/plan-tier-pricing";
+import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
+import { NUTRABAY_MARKETPLACE_COUNT } from "@/lib/nutrabay-catalog";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
-import type { AppPlan, AppSupp } from "./_web/FitFuelApp";
+import type { AppPlan, AppSupp, ProductCounts } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
 import { getWeek } from "./_hp/menu-data";
 import { decodeRow } from "@/lib/decode-entities";
 import { isTrainerConfigured } from "@/lib/ai-trainer/client";
 import FitFuelApp from "./_web/FitFuelApp";
-import type { BandCounts, Quote } from "./_web/HomeBands";
+import type { Quote } from "./_web/HomeBands";
 
 /* ══════════════════════════════════════════════════════════════════════════
    `/` IS THE APP.
@@ -247,42 +247,31 @@ async function getSupplements(): Promise<AppSupp[]> {
   }
 }
 
-/* The bands below the catalog. Every figure is counted here rather than typed,
-   so "70 of 126 plans are built for a condition" cannot drift from the plans
-   the page is actually listing. Fails soft to figures the catalogue can still
-   back if the database is unreachable — except the quotes, which fall to an
-   empty array so the proof band renders nothing rather than something
-   encouraging and invented. */
-async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
-  const fallback: BandCounts = {
-    dishes: SHOP_DISHES.length, plans: 126, conditionPlans: 70,
-    exercises: 952, supplements: 46, recipes: 30,
-    retailerLinks: 0, retailerNetworks: 0, activePartners: 0,
+/* Only the figures shown in the product preview are queried here. The old
+   homepage asked the database for ten separate "moat" counts before it could
+   render; those sections no longer belong in the ordering journey. */
+async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }> {
+  const fallback: ProductCounts = {
+    exercises: 952,
+    retailerLinks: 0,
+    marketplaceProducts: NUTRABAY_MARKETPLACE_COUNT,
+    activePartners: 0,
   };
   try {
     const [
-      plans,
-      conditionPlans,
       exercises,
-      supplements,
-      recipes,
       retailerLinks,
-      retailerNetworks,
+      marketplaceProducts,
       activePartners,
       rows,
     ] =
       await Promise.all([
-        prisma.mealPlan.count(),
-        prisma.mealPlan.count({ where: { category: "LIFESTYLE_MEDICAL" } }),
         prisma.exercise.count(),
-        prisma.supplement.count({ where: { isActive: true } }),
-        prisma.recipe.count(),
         prisma.supplementLink.count({
           where: { isActive: true, supplement: { isActive: true } },
         }),
-        prisma.supplementLink.groupBy({
-          by: ["network"],
-          where: { isActive: true, supplement: { isActive: true } },
+        prisma.affiliateProduct.count({
+          where: { retailer: "NUTRABAY", isActive: true },
         }),
         prisma.partner.count({
           where: {
@@ -302,14 +291,9 @@ async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
       ]);
     return {
       counts: {
-        dishes: SHOP_DISHES.length,
-        plans: plans || fallback.plans,
-        conditionPlans: conditionPlans || fallback.conditionPlans,
         exercises: exercises || fallback.exercises,
-        supplements: supplements || fallback.supplements,
-        recipes: recipes || fallback.recipes,
         retailerLinks,
-        retailerNetworks: retailerNetworks.length,
+        marketplaceProducts: marketplaceProducts || fallback.marketplaceProducts,
         activePartners,
       },
       /* Seeded copy carries &mdash; and &middot;, and React escapes text nodes
@@ -323,81 +307,6 @@ async function getBandData(): Promise<{ counts: BandCounts; quotes: Quote[] }> {
   } catch {
     return { counts: fallback, quotes: [] };
   }
-}
-
-/**
- * THE PLAN PRICE MATRIX, for the builder band on the homepage.
- *
- * 3,614 PlanPrice rows collapse to 65 distinct (diet × duration × meals)
- * combinations, because the matrix is a property of the SHAPE of a plan rather
- * than of any one plan — a 30-day vegetarian breakfast-and-lunch subscription
- * costs the same whether it is the PCOS sheet or the weight-loss one.
- *
- * WHY THE HOMEPAGE READS THE REAL ROWS RATHER THAN CARRYING ITS OWN NUMBERS.
- * lib/trial-price.ts exists because seven marketing surfaces once hardcoded a
- * price no customer ever paid. A calculator on the front door is the single
- * easiest place to reintroduce exactly that bug, so it gets the same rows
- * /plans and checkout price against.
- *
- * Fails soft to an empty matrix: the builder then says which combination is not
- * priced yet and links to the catalogue, rather than rendering ₹NaN.
- */
-async function getPrices(): Promise<PriceRow[]> {
-  try {
-    const rows = await prisma.planPrice.groupBy({
-      by: ["diet", "duration", "mealsPerDay", "priceRs"],
-      where: { isActive: true, isDigital: false },
-      _count: { _all: true },
-    });
-    /* One price per combination: the one the most plans are sold at. A handful
-       of rows carry the ₹299/₹699 digital figures against ONE_MONTH/ALL_FOUR,
-       and taking a min or a first would let those two rows price the whole
-       subscription. */
-    const best = new Map<string, { row: PriceRow; n: number }>();
-    for (const r of rows) {
-      const key = `${r.diet}|${r.duration}|${r.mealsPerDay}`;
-      const n = r._count._all;
-      const prev = best.get(key);
-      if (!prev || n > prev.n) {
-        best.set(key, {
-          n,
-          row: {
-            diet: String(r.diet),
-            duration: String(r.duration),
-            mealsPerDay: String(r.mealsPerDay),
-            priceRs: r.priceRs,
-          },
-        });
-      }
-    }
-    return [...best.values()].map((x) => x.row);
-  } catch {
-    return [];
-  }
-}
-
-/**
- * ONE TRIAL DAY, ITEMISED.
- *
- * Straight off lib/trial-price.ts, which is decomposePrice() run on the same
- * ₹400 subtotal checkout runs it on: ₹300 of food, ₹50 delivery, ₹50 packaging,
- * ₹20 of GST, ₹420 collected. Not one figure here is typed.
- *
- * The imported design shipped its own five-line receipt (₹190 + ₹230 + ₹49 +
- * ₹20 + ₹24) that totalled ₹513 under a heading reading ₹420. This is the same
- * panel with the real arithmetic in it.
- */
-function trialReceipt() {
-  const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
-  return {
-    rows: [
-      { k: "Two meals: breakfast and lunch", v: rs(TRIAL.baseRs) },
-      { k: "Delivery", v: rs(TRIAL.deliveryRs) },
-      { k: "Packaging", v: rs(TRIAL.packagingRs) },
-      { k: `GST ${TRIAL.gstPercent}%`, v: rs(TRIAL.gstRs) },
-    ],
-    total: TRIAL_TOTAL_GLYPH,
-  };
 }
 
 /**
@@ -428,11 +337,10 @@ export default async function AppPage({
   searchParams: Promise<{ mode?: string | string[] }>;
 }) {
   const { mode } = await searchParams;
-  const [plans, supplements, bands, prices, week] = await Promise.all([
+  const [plans, supplements, bands, week] = await Promise.all([
     getPlans(),
     getSupplements(),
     getBandData(),
-    getPrices(),
     getWeek(),
   ]);
 
@@ -459,8 +367,6 @@ export default async function AppPage({
            one per subCategory. Counted, never typed, so the figure on the
            conditions band cannot drift from the catalogue it describes. */
         goalCount={plans.length}
-        prices={prices}
-        trial={trialReceipt()}
         initialMode={modeFrom(mode)}
         bandCounts={bands.counts}
         /* Passed again. For four days these three featured Testimonial rows

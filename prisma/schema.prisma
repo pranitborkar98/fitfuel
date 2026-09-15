@@ -187,14 +187,15 @@ model User {
   updatedAt              DateTime                @updatedAt
   notificationPreference NotificationPreference?
 
-  profile          UserProfile?
-  addresses        Address[]
-  orders           Order[]
-  bodyMetrics      BodyMetric[]
-  activePlans      ActivePlan[]
-  accounts         Account[]
-  sessions         Session[]
-  supplementClicks SupplementClick[]
+  profile                UserProfile?
+  addresses              Address[]
+  orders                 Order[]
+  bodyMetrics            BodyMetric[]
+  activePlans            ActivePlan[]
+  accounts               Account[]
+  sessions               Session[]
+  supplementClicks       SupplementClick[]
+  affiliateProductClicks AffiliateProductClick[]
 
   // ── Phase 6 — Nutrition Tracker ──
   foodItems     FoodItem[]
@@ -1589,8 +1590,9 @@ model Supplement {
   isFeatured Boolean @default(false)
   isActive   Boolean @default(true)
 
-  links  SupplementLink[]
-  clicks SupplementClick[]
+  links             SupplementLink[]
+  clicks            SupplementClick[]
+  affiliateProducts AffiliateProduct[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1642,6 +1644,53 @@ model SupplementClick {
   @@index([linkId, createdAt])
   @@index([userId, createdAt])
   @@map("supplement_clicks")
+}
+
+model AffiliateProduct {
+  id                String           @id @default(cuid())
+  retailer          AffiliateNetwork @default(NUTRABAY)
+  retailerProductId String
+  variantId         String?
+  slug              String
+  name              String
+  category          String
+  priceRs           Int
+  imageUrl          String           @db.Text
+  sourceUrl         String           @db.Text
+  affiliateUrl      String           @db.Text
+  dataQuality       String           @default("DERIVED")
+  isActive          Boolean          @default(true)
+  lastCheckedAt     DateTime         @default(now())
+
+  evidenceSupplementId String?
+  evidenceSupplement   Supplement?             @relation(fields: [evidenceSupplementId], references: [id], onDelete: SetNull)
+  clicks               AffiliateProductClick[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([retailer, retailerProductId])
+  @@unique([retailer, slug])
+  @@index([retailer, category, isActive])
+  @@index([evidenceSupplementId, isActive])
+  @@map("affiliate_products")
+}
+
+model AffiliateProductClick {
+  id        String           @id @default(cuid())
+  productId String
+  product   AffiliateProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  retailer  AffiliateNetwork
+  referrer  String?          @db.Text
+  ipHash    String?
+  userAgent String?          @db.Text
+  createdAt DateTime         @default(now())
+
+  @@index([productId, createdAt])
+  @@index([userId, createdAt])
+  @@map("affiliate_product_clicks")
 }
 
 // ══════════════════════════════════════════════════════════════════════════

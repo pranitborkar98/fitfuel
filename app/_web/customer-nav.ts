@@ -12,7 +12,7 @@ export type CustomerNavItem =
     }
   | {
       kind: "link";
-      key: "coach" | "today";
+      key: "supps" | "coach" | "today";
       label: string;
       shortLabel?: string;
       accessibleLabel: string;
@@ -40,12 +40,12 @@ export const CUSTOMER_NAV: readonly CustomerNavItem[] = [
     href: "/?mode=plans#catalog",
   },
   {
-    kind: "catalog",
+    kind: "link",
     key: "supps",
     label: "Supplements",
     shortLabel: "Supps",
-    accessibleLabel: "supplements",
-    href: "/?mode=supps#catalog",
+    accessibleLabel: "supplement marketplace",
+    href: "/products",
   },
   {
     kind: "link",
@@ -71,7 +71,12 @@ export function activeCustomerNav(
   if (pathname === "/") return homeMode;
   if (pathname === "/menu" || pathname.startsWith("/menu/")) return "dishes";
   if (pathname === "/plans" || pathname.startsWith("/plans/")) return "plans";
-  if (pathname === "/supplements" || pathname.startsWith("/supplements/")) {
+  if (
+    pathname === "/products" ||
+    pathname.startsWith("/products/") ||
+    pathname === "/supplements" ||
+    pathname.startsWith("/supplements/")
+  ) {
     return "supps";
   }
   if (
@@ -82,7 +87,7 @@ export function activeCustomerNav(
   ) {
     return "coach";
   }
-  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
+  if (pathname === "/dashboard" || pathname === "/dashboard-preview" || pathname.startsWith("/dashboard/")) {
     return "today";
   }
   return null;

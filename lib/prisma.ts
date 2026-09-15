@@ -20,7 +20,7 @@ function databaseUrl(): string {
 }
 
 function createPrismaClient() {
-  const pool = new Pool({ connectionString: databaseUrl() });
+  const pool = new Pool({ connectionString: databaseUrl(), connectionTimeoutMillis: 10_000 });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 }

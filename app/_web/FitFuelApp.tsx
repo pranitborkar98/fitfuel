@@ -38,15 +38,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
 import { PLAN_CATS, type ShopDish, type ShopPlan } from "@/app/_shop/catalog";
-import type { PriceRow } from "@/lib/plan-tier-pricing";
 import type { Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
-import type { BandCounts, Quote } from "./HomeBands";
-import HomeSections from "./HomeSections";
-import type { RetailPreview } from "./HomeSections";
-import HomeExperience from "./HomeExperience";
+import type { Quote } from "./HomeBands";
+import HomeExperience, { HomeProductLinks } from "./HomeExperience";
 import CustomerTabBar from "./CustomerTabBar";
 import { GOALS } from "./home-data";
 import { useReveal } from "./useReveal";
@@ -126,8 +123,8 @@ const NAV: NavItem[] = [
     icon: I.layers,
   },
   {
-    kind: "mode",
-    mode: "supps",
+    kind: "link",
+    href: "/products",
     label: "Supplements",
     icon: I.spark,
   },
@@ -158,7 +155,8 @@ const FOOTER: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/plans", label: "All meal plans" },
       { href: "/plans/digital", label: "Digital plans" },
       { href: "/corporate", label: "For offices" },
-      { href: "/supplements", label: "Supplements" },
+      { href: "/products", label: "Marketplace" },
+      { href: "/supplements", label: "Supplement guide" },
     ],
   },
   {
@@ -198,6 +196,10 @@ const FOOTER: { title: string; links: { href: string; label: string }[] }[] = [
 
 /* Everything the long-form page used to argue, still reachable. */
 const MORE = [
+  { href: "/services", label: "All services" },
+  { href: "/dashboard-preview", label: "Dashboard preview" },
+  { href: "/partners", label: "Partner programmes" },
+  { href: "/corporate", label: "Corporate meals" },
   /* /why carries the plan finder, the receipt builder, the day timeline and the
      coach. Those were orphaned when `/` became the app — reachable from nowhere
      — so this link is not decoration, it is the only way back to them. */
@@ -205,8 +207,8 @@ const MORE = [
   { href: "/dashboard/coach", label: "Weekly coach" },
   { href: "/how-it-works", label: "How a day works" },
   { href: "/our-kitchen", label: "The kitchen" },
-  { href: "/corporate", label: "For offices" },
-  { href: "/supplements", label: "Supplements" },
+  { href: "/products", label: "Marketplace" },
+  { href: "/supplements", label: "Supplement guide" },
   { href: "/faq", label: "Questions" },
 ] as const;
 
@@ -290,16 +292,9 @@ export type AppProps = {
   menuFrom: string;
   planCount: number;
   licence: string;
-  /** Counts for the bands below the catalog. They come from the database in
-   *  page.tsx so a figure here cannot disagree with the catalogue it
-   *  describes. */
-  bandCounts: BandCounts;
+  bandCounts: ProductCounts;
   /** Distinct subCategory values across the plans — goals and conditions. */
   goalCount: number;
-  /** The seeded PlanPrice matrix, for the plan builder band. */
-  prices: PriceRow[];
-  /** The trial day itemised by lib/pricing-decomposition, for the receipt. */
-  trial: { rows: { k: string; v: string }[]; total: string };
   /** Which catalogue to open on, from `?mode=` — the rail on every dish page
    *  and on /menu links here with it. Defaults to dishes. */
   initialMode: "dishes" | "plans" | "supps";
@@ -312,6 +307,13 @@ export type AppProps = {
   /** Seven days of the one plan with a seeded schedule, for the rotation band.
    *  Empty when the query fails, and the band then renders nothing. */
   week: Dish[];
+};
+
+export type ProductCounts = {
+  exercises: number;
+  retailerLinks: number;
+  marketplaceProducts: number;
+  activePartners: number;
 };
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -479,8 +481,6 @@ export default function FitFuelApp({
   licence,
   bandCounts,
   goalCount,
-  prices,
-  trial,
   initialMode,
   quotes,
   aiConfigured,
@@ -627,31 +627,6 @@ export default function FitFuelApp({
       }),
     [supplements, suppCat, normalizedQuery],
   );
-
-  const retailProducts = useMemo<RetailPreview[]>(() => {
-    const preferred = ["whey-protein", "creatine", "omega3", "magnesium"];
-    return preferred.flatMap((slug) => {
-      const item = supplements.find(
-        (candidate) =>
-          candidate.slug === slug && candidate.imageUrl && candidate.buy,
-      );
-      if (!item?.imageUrl || !item.buy) return [];
-      return [
-        {
-          slug: item.slug,
-          name: item.name,
-          category: item.category,
-          imageUrl: item.imageUrl,
-          linkCount: item.linkCount,
-          buy: {
-            url: item.buy.url,
-            label: item.buy.label,
-            priceRs: item.buy.priceRs,
-          },
-        },
-      ];
-    });
-  }, [supplements]);
 
   /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
      Measured: 48 dish cards ran 13,396px of a 19,058px page — sixteen phone
@@ -1006,14 +981,7 @@ export default function FitFuelApp({
         target={target}
         cutoffLabel={cutoffLabel}
         trialTotal={trialTotal}
-        aiConfigured={aiConfigured}
-        exerciseCount={bandCounts.exercises}
-        retailerLinks={bandCounts.retailerLinks}
-        activePartners={bandCounts.activePartners}
-        quotes={quotes}
         onBrowseMeals={() => switchMode("dishes", true)}
-        onBrowsePlans={() => switchMode("plans", true)}
-        onBrowseSupplements={() => switchMode("supps", true)}
       />
 
       {/* ── Rail + content ──────────────────────────────────────────────── */}
@@ -1053,7 +1021,7 @@ export default function FitFuelApp({
               onClick={() => switchMode("supps")}
               aria-pressed={mode === "supps"}
             >
-              Supplements <span className={s.fcount}>{supplements.length}</span>
+              Supplement guide <span className={s.fcount}>{supplements.length}</span>
             </button>
           </div>
 
@@ -1414,7 +1382,7 @@ export default function FitFuelApp({
               <h2>
                 {mode === "supps"
                   ? suppCat === "all"
-                    ? "Supplements"
+                    ? "Supplement guide"
                     : suppCat
                   : mode === "plans"
                     ? PLAN_CATS.find((c) => c.key === planCat)?.label
@@ -1787,21 +1755,13 @@ export default function FitFuelApp({
         </div>
       </div>
 
-      {/* ── EVERYTHING BELOW THE FOOD ──────────────────────────────────
-          The bands in app/_web/HomeSections.tsx cover the kitchen day, the
-          platform behind the menu, the services, the plan builder, conditions,
-          the coach and trial receipt, delivery questions, then the close.
-
-          They sit HERE, below the catalogue, because AGENTS.md is explicit that
-          nothing pushes food down the page. Each is a section someone scrolls
-          TO, not one they scroll PAST. */}
-      <HomeSections
-        counts={bandCounts}
-        goalCount={goalCount}
-        prices={prices}
-        trial={trial}
-        cutoffLabel={cutoffLabel}
-        retailProducts={retailProducts}
+      <HomeProductLinks
+        aiConfigured={aiConfigured}
+        exerciseCount={bandCounts.exercises}
+        marketplaceProducts={bandCounts.marketplaceProducts}
+        activePartners={bandCounts.activePartners}
+        quotes={quotes}
+        onBrowsePlans={() => switchMode("plans", true)}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
