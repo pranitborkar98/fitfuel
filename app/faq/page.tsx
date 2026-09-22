@@ -23,6 +23,13 @@ import { Idx } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Wrap, p } from "@/app/_ui/Page";
 import { SECTION } from "@/app/_ui/theme";
 
+type FaqRow = {
+  id: string;
+  category: string;
+  question: string;
+  answerHtml: string;
+};
+
 // The FAQ is prose in the repo. Nothing about it is per-request, and it carries
 // FAQPage JSON-LD that crawlers should get from the edge, not from Postgres.
 export const revalidate = 3600;
@@ -31,18 +38,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
   title: "FAQ",
   description:
-    "Answers about FitFuel meal plans, delivery in Pune, tracking, dietary options, payments, allergens and more.",
+    "Answers about FitFuel meal plans, delivery availability, tracking, dietary options, payments, allergens and more.",
 };
 
 export default async function FAQPage() {
-  const faqs = await prisma.faq.findMany({
-    where: { isActive: true },
-    orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-  });
+  // A content database outage must not take down the build or the rest of the
+  // public site. The page already has an honest empty state, so use it until
+  // the next revalidation restores the managed FAQ content.
+  const faqs: FaqRow[] = await prisma.faq
+    .findMany({
+      where: { isActive: true },
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+    })
+    .catch((): FaqRow[] => []);
 
   // Preserve first-seen category order.
   const order: string[] = [];
-  const groups: Record<string, typeof faqs> = {};
+  const groups: Record<string, FaqRow[]> = {};
   for (const f of faqs) {
     if (!groups[f.category]) {
       groups[f.category] = [];

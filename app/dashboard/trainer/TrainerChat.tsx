@@ -22,6 +22,7 @@ import s from "./trainer.module.css";
 type Turn = { role: "user" | "assistant"; content: string };
 
 type Props = {
+  compact?: boolean;
   initialTurns?: Turn[];
   initialConversationId?: string | null;
 };
@@ -35,6 +36,7 @@ const SUGGESTIONS = [
 ];
 
 export default function TrainerChat({
+  compact = false,
   initialTurns = [],
   initialConversationId = null,
 }: Props) {
@@ -45,6 +47,8 @@ export default function TrainerChat({
   /* A ref, not state: it changes once, mid-stream, and rendering on it would
      re-run the reader loop's closure for no visible gain. */
   const convoId = useRef<string | null>(initialConversationId);
+  const pending = useRef<AbortController | null>(null);
+  useEffect(() => () => pending.current?.abort(), []);
 
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -72,12 +76,14 @@ export default function TrainerChat({
       setDraft("");
       /* The empty assistant turn is the streaming target — appended up front so
          the reply grows in place instead of appearing whole at the end. */
-      const history = turns;
+      const history = turns.slice(-20);
       setTurns([...history, { role: "user", content: message }, { role: "assistant", content: "" }]);
       setBusy(true);
 
       try {
+        pending.current = new AbortController();
         const res = await fetch("/api/trainer/chat", {
+          signal: AbortSignal.any([pending.current.signal, AbortSignal.timeout(60000)]),
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ message, history, conversationId: convoId.current }),
@@ -145,7 +151,7 @@ export default function TrainerChat({
   );
 
   return (
-    <section className={s.chatShell} aria-label="AI coach conversation">
+    <section className={`${s.chatShell} ${compact ? s.compact : ""}`} aria-label="AI coach conversation">
       <div className={s.chatTopbar}>
         <div className={s.chatIdentity}>
           <span className={s.chatAvatar} aria-hidden="true"><Sparkles size={19} /></span>
@@ -159,7 +165,7 @@ export default function TrainerChat({
         aria-live="polite"
         aria-busy={busy}
         onWheel={() => {
-          const el = document.scrollingElement;
+          const el = compact ? endRef.current?.parentElement : document.scrollingElement;
           if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
         }}
       >

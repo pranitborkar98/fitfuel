@@ -116,14 +116,14 @@ export default function HomeSections({
 
   return (
     <div ref={revealRef}>
-      <DayBand />
-      <WedgeBand counts={counts} />
-      <DigitalPlansBand />
       <ProductPreviewBand counts={counts} />
-      <RetailBand products={retailProducts} counts={counts} />
+      <CoachBand trial={trial} />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
-      <CoachBand trial={trial} />
+      <DigitalPlansBand />
+      <DayBand />
+      <WedgeBand counts={counts} />
+      <RetailBand products={retailProducts} counts={counts} />
       <DeliveryFaqBand cutoffLabel={cutoffLabel} />
       <CtaBand
         trialTotal={trial.total}
@@ -144,7 +144,7 @@ function DayBand() {
         <div className={s.bandHead}>
           <div>
             <h2 id="day-h" className={s.bandH2}>
-              Between 4am and your door
+              From your nutrition target to your door
             </h2>
           </div>
           <p className={s.bandLede}>
@@ -442,7 +442,7 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
             <Link href="/dashboard/exercises" className={`${s.productPreviewCard} ${s.previewTraining}`}>
               <span className={s.productPreviewHead}>
                 <span>Training</span>
-                <small>{counts.exercises.toLocaleString("en-IN")} exercises</small>
+                <small>Example session · {counts.exercises.toLocaleString("en-IN")} exercises</small>
               </span>
               <h3>Your session is already programmed.</h3>
               <ul className={s.trainingRows}>
@@ -481,7 +481,7 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
               <li key={surface.href}>
                 <Link href={surface.href}>
                   {surface.name}
-                  <span className="fk-num">{surface.stat}</span>
+                  <span>Open</span>
                 </Link>
               </li>
             ))}
@@ -499,24 +499,26 @@ function RetailBand({
   products: RetailPreview[];
   counts: BandCounts;
 }) {
-  if (!products.length) return null;
-
   return (
     <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="retail-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
             <h2 id="retail-h" className={s.bandH2}>
-              Read the evidence. Then choose the product.
+              Supplements from Nutrabay, with ingredient guidance.
             </h2>
           </div>
           <p className={s.bandLede}>
-            FitFuel now connects its researched supplement entries to real
-            Nutrabay products through tracked affiliate links. We do not hold
-            stock, and commission never changes the evidence tier.
+            Browse the Nutrabay catalogue and read ingredient guidance where
+            available. Nutrabay handles payment and fulfilment. FitFuel may earn
+            a commission from qualifying purchases.
           </p>
         </div>
 
+        <div className={s.bandActions}>
+          <Link href="/products" className={s.bandPrimary}>Browse {counts.marketplaceProducts.toLocaleString("en-IN")} Nutrabay products</Link>
+          <Link href="/supplements" className={s.bandSecondary}>Read the ingredient guide</Link>
+        </div>
         <ul className={s.retailGrid}>
           {products.map((product) => (
             <li key={product.slug} data-reveal="up">
@@ -565,10 +567,8 @@ function RetailBand({
           ))}
         </ul>
         <p className={s.retailDisclosure}>
-          {counts.retailerLinks.toLocaleString("en-IN")} live product listings
-          across {counts.retailerNetworks.toLocaleString("en-IN")} retailer
-          network{counts.retailerNetworks === 1 ? "" : "s"}. Prices are checked
-          again on the retailer before purchase.
+          Listed prices may change. Confirm price, stock and delivery on
+          Nutrabay before purchase. Ingredient guidance is not medical advice.
         </p>
       </div>
     </section>
@@ -595,7 +595,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
   const sum = useMemo(() => {
     /* The matrix is keyed on the legacy diet enum, not the app's key. */
     const dietRows = prices.filter((p) => p.diet === DIET_ENUM[diet]);
-    const rows = dietRows.length ? dietRows : prices;
+    const rows = dietRows;
 
     const price = getTierPrice(rows, tier, duration, meals);
     const weekly = getTierPrice(rows, tier, "WEEKLY", meals);
@@ -732,7 +732,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
                     onClick={() => setTier(t.key)}
                     aria-pressed={tier === t.key}
                   >
-                    <b>{t.label}</b>
+                    <b>{t.label}{!t.available ? " (estimate)" : ""}</b>
                     <span>{t.tagline}</span>
                   </button>
                 ))}
@@ -785,7 +785,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
                   </Link>
                 ) : (
                   <Link href={href} className={`${s.planCta} ${s.planCtaGhost}`}>
-                    Join the {tierMeta.label} waitlist
+                    Compare available plans
                   </Link>
                 )}
                 <span className={s.planFine}>
@@ -827,14 +827,14 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
       <div className={`${s.bandWrap} ${s.splitWrap}`}>
         <div>
           <h2 id="cond-h" className={`${s.bandH2} ${s.bandH2Narrow}`}>
-            Cooked for a diagnosis
+            Plans for your goals and dietary needs
           </h2>
           <p className={s.condLede}>
-            {counts.conditionPlans} of the {counts.plans} plans are built for a
-            condition, across {goalCount} goals. Bring the prescription; the
-            kitchen cooks to it and a dietitian reviews the plan every month.
+            Explore condition-focused menus alongside fitness and lifestyle
+            plans. If you have a diagnosed condition, confirm suitability with
+            your clinician before ordering. A meal plan does not replace treatment.
           </p>
-          <div className={s.condStats}>
+          {counts.plans > 0 ? <div className={s.condStats}>
             <span>
               <b data-count={counts.conditionPlans}>{counts.conditionPlans}</b>
               <span>plans for a condition</span>
@@ -844,10 +844,10 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
               <span>goals and conditions</span>
             </span>
             <span>
-              <b>1</b>
-              <span>monthly review</span>
+              <b>{counts.plans}</b>
+              <span>plans in the catalogue</span>
             </span>
-          </div>
+          </div> : null}
         </div>
         <div>
           <ul className={s.condChips}>
@@ -883,14 +883,19 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
       <div className={`${s.bandWrap} ${s.coachWrap}`}>
         <div className={s.coachCard}>
           <h2 id="coach-h" className={s.coachH}>
-            When the scale disagrees, the target moves
+            AI coach and weekly review, connected to your progress
           </h2>
           <p className={s.coachLede}>
-            A weight trend read against your goal and current target. You see
+            Ask the AI coach about your logged meals, workouts and progress.
+            The weekly review reads your weight trend against your goal and current target. You see
             the calculation before deciding whether to change anything. An
             example month:
           </p>
 
+          <div className={s.bandActions}>
+            <button type="button" className={s.bandPrimary} onClick={() => document.getElementById("fitfuel-coach-trigger")?.click()}>Open AI coach</button>
+            <Link href="/dashboard/coach" className={s.bandSecondary}>Open weekly review</Link>
+          </div>
           <ol className={s.weekRow}>
             {COACH_WEEKS.map((w, i) => {
               const lost = base - w.kg;
@@ -1099,8 +1104,8 @@ function CtaBand({
             Eat one day of it before you decide.
           </h2>
           <p className={s.closeP}>
-            Breakfast and lunch, weighed to your macros, delivered tomorrow
-            morning. {trialTotal} includes delivery, packaging and GST. No
+            Breakfast and lunch, portioned to your target, with delivery
+            availability confirmed for your address. {trialTotal} includes delivery, packaging and GST. No
             account needed to look, nothing to cancel afterwards.
           </p>
           <div className={s.closeActions}>
@@ -1108,7 +1113,7 @@ function CtaBand({
               Start the trial for {trialTotal}
             </Link>
             <Link href="/plans" className={s.closeGhost}>
-              See the {planCount.toLocaleString("en-IN")} plans
+              {planCount > 0 ? `See the ${planCount.toLocaleString("en-IN")} plans` : "Explore meal plans"}
             </Link>
           </div>
         </div>

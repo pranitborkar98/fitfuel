@@ -6,6 +6,26 @@ import { resolve } from "node:path";
 import { PRODUCT_SERVICES } from "../lib/product-services";
 import { PUBLIC_PARTNERS } from "../lib/public-partners";
 import { SAMPLE_DAY, SAMPLE_PLAN } from "../app/dashboard-preview/sample-data";
+import { HOME_CAPABILITIES } from "../app/_web/home-capabilities";
+
+test("homepage redesign retains the complete product, not just catalogue links", () => {
+  assert.equal(HOME_CAPABILITIES.length, 11);
+  const app = readFileSync(resolve("app/_web/FitFuelApp.tsx"), "utf8");
+  assert.match(app, /<HomeSections/);
+  const experience = readFileSync(resolve("app/_web/HomeExperience.tsx"), "utf8");
+  assert.match(experience, /<HomeLaunchpad/);
+  assert.match(experience, /<HomeToday/);
+  const sections = readFileSync(resolve("app/_web/HomeSections.tsx"), "utf8");
+  for (const { id } of HOME_CAPABILITIES.filter((item) => item.id !== "catalog")) {
+    assert.ok(sections.includes(`id="${id}"`), `Missing homepage capability: ${id}`);
+  }
+  const layout = readFileSync(resolve("app/layout.tsx"), "utf8");
+  assert.match(layout, /<CoachDock configured=/);
+  const history = readFileSync(resolve("app/api/trainer/thread/route.ts"), "utf8");
+  assert.match(history, /await auth\(\)/);
+  assert.match(history, /loadLatestThread\(session.user.id\)/);
+  assert.match(history, /private, no-store/);
+});
 
 import {
   CUSTOMER_NAV,

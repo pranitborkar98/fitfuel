@@ -3058,6 +3058,7 @@
   margin-bottom: 28px;
 }
 .bandH2 {
+  scroll-margin-top: 180px;
   font-family: var(--fk-display);
   font-size: clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem);
   font-weight: 600;
@@ -3150,6 +3151,7 @@
   margin-top: 24px;
 }
 .app a.bandPrimary,
+.app button.bandPrimary,
 .app a.bandSecondary {
   display: inline-flex;
   align-items: center;
@@ -3161,12 +3163,14 @@
   font-weight: 700;
   text-decoration: none;
 }
-.app a.bandPrimary {
+.app a.bandPrimary, .app button.bandPrimary {
+  cursor: pointer;
+  font-family: inherit;
   border: 1px solid var(--fk-green);
   background: var(--fk-green);
   color: var(--fk-on-green);
 }
-.app a.bandPrimary:hover {
+.app a.bandPrimary:hover, .app button.bandPrimary:hover {
   background: var(--fk-green-deep);
   border-color: var(--fk-green-deep);
   color: var(--fk-on-green);
@@ -4158,6 +4162,9 @@
   padding: 22px var(--fk-s-5);
 }
 .axisLabel {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-size: 13px !important;
   display: block;
   font-size: 0.6875rem;
   font-weight: 700;

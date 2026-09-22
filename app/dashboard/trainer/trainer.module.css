@@ -4,6 +4,15 @@
   color: var(--fk-ink);
 }
 
+.compact.chatShell { border: 0; border-radius: 0; }
+.compact .transcript { min-height: 180px; max-height: 32dvh; padding: 16px; overflow-y: auto; }
+.compact .emptyState { padding: 12px; }
+.compact .emptyState h2 { font-size: 22px; }
+.compact .chatTopbar { display: none; }
+.compact .suggestions { flex-direction: column; padding: 8px 16px; }
+.compact .suggestions button { min-height: 44px; }
+.compact .composerWrap { padding: 12px; }
+
 .wrap {
   width: 100%;
   max-width: 1180px;

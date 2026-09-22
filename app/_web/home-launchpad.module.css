@@ -1,0 +1,113 @@
+.launchpad {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0;
+  color: var(--fk-ink);
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.heading h2 {
+  margin: 0;
+  font: 600 24px/1.2 var(--fk-sans);
+}
+.heading p {
+  margin: 6px 0 0;
+  color: var(--fk-ink-2);
+  font-size: 14px;
+}
+.heading > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--fk-green);
+  font-size: 14px;
+}
+.tools {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.tools a,
+.tools button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  min-width: 0;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+  text-decoration: none;
+  color: var(--fk-ink);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.tools svg {
+  color: var(--fk-green);
+  flex-shrink: 0;
+}
+.tools b,
+.tools small {
+  display: block;
+}
+.tools b {
+  font-size: 15px;
+}
+.tools small {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--fk-ink-2);
+  line-height: 1.4;
+}
+.directory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 14px;
+}
+.explore { margin-top: 6px; }
+.explore summary { min-height: 44px; padding: 12px 0; font-size: 13px; color: var(--fk-ink-2); cursor: pointer; }
+.explore summary:focus-visible { outline: 2px solid var(--fk-green); outline-offset: 3px; }
+.directory a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-sm);
+  color: var(--fk-ink-2);
+  font-size: 13px;
+  text-decoration: none;
+}
+.launchpad a:hover,
+.launchpad button:hover {
+  border-color: var(--fk-green);
+  color: var(--fk-green);
+}
+.launchpad a:focus-visible,
+.launchpad button:focus-visible {
+  outline: 2px solid var(--fk-green);
+  outline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .tools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .tools small { display: none; }
+  .tools b { font-size: 13px; }
+  .tools a, .tools button { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 12px 6px; min-height: 80px; }
+  .heading {
+    align-items: center;
+    gap: 12px;
+  }
+  .heading h2 { font-size: 17px; }
+  .heading > a { font-size: 13px; }
+}

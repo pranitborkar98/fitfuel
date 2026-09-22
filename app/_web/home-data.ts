@@ -190,7 +190,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What if I dislike a dish?",
-    a: "Tell the kitchen once. It never comes back on your plan, and a swap of equal macros replaces it.",
+    a: "Rate the meal in your dashboard and contact the kitchen about alternatives. Confirm a swap and any macro differences before the order cutoff.",
   },
   {
     q: "Is the macro count real?",
@@ -198,11 +198,11 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do you deliver on Sundays?",
-    a: "Breakfast only. The kitchen prepares Sunday's produce on Saturday evening.",
+    a: "Check the delivery days and meal slots offered by the kitchen serving your address before ordering.",
   },
   {
     q: "Can my doctor set the plan?",
-    a: "Send us the prescription. Clinical plans are cooked to the diagnosis and reviewed every month.",
+    a: "Discuss your clinician's dietary instructions with the kitchen before ordering. Confirm that the menu and portions meet your needs. FitFuel meals are not a substitute for treatment.",
   },
   {
     q: "Is there a lock-in?",
@@ -293,7 +293,7 @@ export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[]
       tiffin: "No",
       app: "If you own the scale and remember",
       supp: "No",
-      us: "18 measurements, read directly from your scale",
+      us: "Measured weight from compatible scales; other body-composition values labelled as estimates",
     },
     {
       what: "Moves the target when you stall",

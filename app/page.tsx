@@ -5,7 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { FSSAI_LICENCE } from "@/lib/trust-marks";
 import { MENU_FROM } from "@/lib/menu-alacarte";
 import { cutoffLabel } from "@/lib/order-cutoff";
-import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
+import { TRIAL, TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
+import type { PriceRow } from "@/lib/plan-tier-pricing";
+import { readWithDeadline } from "@/lib/read-with-deadline";
 import { NUTRABAY_MARKETPLACE_COUNT } from "@/lib/nutrabay-catalog";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
 import type { AppPlan, AppSupp, ProductCounts } from "./_web/FitFuelApp";
@@ -247,11 +249,16 @@ async function getSupplements(): Promise<AppSupp[]> {
   }
 }
 
-/* Only the figures shown in the product preview are queried here. The old
-   homepage asked the database for ten separate "moat" counts before it could
-   render; those sections no longer belong in the ordering journey. */
+/* Product depth is part of the homepage. Counts and prices describe the
+   actual catalogue; a bounded read keeps an unavailable service from hanging it. */
 async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }> {
   const fallback: ProductCounts = {
+    dishes: SHOP_DISHES.length,
+    plans: 0,
+    conditionPlans: 0,
+    supplements: 0,
+    recipes: 0,
+    retailerNetworks: 0,
     exercises: 952,
     retailerLinks: 0,
     marketplaceProducts: NUTRABAY_MARKETPLACE_COUNT,
@@ -259,13 +266,23 @@ async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }
   };
   try {
     const [
+      plans,
+      conditionPlans,
+      supplements,
+      recipes,
+      retailerNetworks,
       exercises,
       retailerLinks,
       marketplaceProducts,
       activePartners,
       rows,
     ] =
-      await Promise.all([
+      await readWithDeadline(Promise.all([
+        prisma.mealPlan.count(),
+        prisma.mealPlan.count({ where: { category: "LIFESTYLE_MEDICAL" } }),
+        prisma.supplement.count({ where: { isActive: true } }),
+        prisma.recipe.count(),
+        prisma.supplementLink.groupBy({ by: ["network"], where: { isActive: true, supplement: { isActive: true } } }),
         prisma.exercise.count(),
         prisma.supplementLink.count({
           where: { isActive: true, supplement: { isActive: true } },
@@ -288,9 +305,15 @@ async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }
             resultLabel: true, quote: true,
           },
         }),
-      ]);
+      ]), 5000);
     return {
       counts: {
+        dishes: SHOP_DISHES.length,
+        plans,
+        conditionPlans,
+        supplements,
+        recipes,
+        retailerNetworks: retailerNetworks.length,
         exercises: exercises || fallback.exercises,
         retailerLinks,
         marketplaceProducts: marketplaceProducts || fallback.marketplaceProducts,
@@ -307,6 +330,40 @@ async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }
   } catch {
     return { counts: fallback, quotes: [] };
   }
+}
+
+async function getPrices(): Promise<PriceRow[]> {
+  try {
+    const rows = await readWithDeadline(prisma.planPrice.groupBy({
+      by: ["diet", "duration", "mealsPerDay", "priceRs"],
+      where: { isActive: true, isDigital: false },
+      _count: { _all: true },
+    }), 5000);
+    const best = new Map<string, { row: PriceRow; count: number }>();
+    for (const row of rows) {
+      const key = `${row.diet}|${row.duration}|${row.mealsPerDay}`;
+      if (!best.has(key) || row._count._all > best.get(key)!.count) {
+        best.set(key, { count: row._count._all, row: {
+          diet: String(row.diet), duration: String(row.duration),
+          mealsPerDay: String(row.mealsPerDay), priceRs: row.priceRs,
+        } });
+      }
+    }
+    return [...best.values()].map(({ row }) => row);
+  } catch { return []; }
+}
+
+function trialReceipt() {
+  const rs = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+  return {
+    rows: [
+      { k: "Two meals: breakfast and lunch", v: rs(TRIAL.baseRs) },
+      { k: "Delivery", v: rs(TRIAL.deliveryRs) },
+      { k: "Packaging", v: rs(TRIAL.packagingRs) },
+      { k: `GST ${TRIAL.gstPercent}%`, v: rs(TRIAL.gstRs) },
+    ],
+    total: TRIAL_TOTAL_GLYPH,
+  };
 }
 
 /**
@@ -337,11 +394,12 @@ export default async function AppPage({
   searchParams: Promise<{ mode?: string | string[] }>;
 }) {
   const { mode } = await searchParams;
-  const [plans, supplements, bands, week] = await Promise.all([
+  const [plans, supplements, bands, week, prices] = await Promise.all([
     getPlans(),
     getSupplements(),
     getBandData(),
     getWeek(),
+    getPrices(),
   ]);
 
   return (
@@ -367,6 +425,8 @@ export default async function AppPage({
            one per subCategory. Counted, never typed, so the figure on the
            conditions band cannot drift from the catalogue it describes. */
         goalCount={plans.length}
+        prices={prices}
+        trial={trialReceipt()}
         initialMode={modeFrom(mode)}
         bandCounts={bands.counts}
         /* Passed again. For four days these three featured Testimonial rows

@@ -6,6 +6,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChromeGate from "@/components/ChromeGate";
+import CoachDock from "@/components/CoachDock";
+import { isTrainerConfigured } from "@/lib/ai-trainer/client";
 import { CartProvider } from "@/app/_cart/CartProvider";
 import CartDrawer from "@/app/_cart/CartDrawer";
 import { SessionProvider } from "next-auth/react";
@@ -192,6 +194,7 @@ export default function RootLayout({
               <div id="main" tabIndex={-1}>{children}</div>
             </ChromeGate>
             <CartDrawer />
+            <CoachDock configured={isTrainerConfigured()} />
           </CartProvider>
         </SessionProvider>
         <Analytics />

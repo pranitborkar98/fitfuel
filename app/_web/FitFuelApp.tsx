@@ -42,7 +42,8 @@ import type { Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
-import type { Quote } from "./HomeBands";
+import type { BandCounts, Quote } from "./HomeBands";
+import HomeSections, { type HomeSectionsProps } from "./HomeSections";
 import HomeExperience, { HomeProductLinks } from "./HomeExperience";
 import CustomerTabBar from "./CustomerTabBar";
 import { GOALS } from "./home-data";
@@ -293,6 +294,8 @@ export type AppProps = {
   planCount: number;
   licence: string;
   bandCounts: ProductCounts;
+  prices: HomeSectionsProps["prices"];
+  trial: HomeSectionsProps["trial"];
   /** Distinct subCategory values across the plans — goals and conditions. */
   goalCount: number;
   /** Which catalogue to open on, from `?mode=` — the rail on every dish page
@@ -309,12 +312,7 @@ export type AppProps = {
   week: Dish[];
 };
 
-export type ProductCounts = {
-  exercises: number;
-  retailerLinks: number;
-  marketplaceProducts: number;
-  activePartners: number;
-};
+export type ProductCounts = BandCounts;
 
 const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -480,6 +478,8 @@ export default function FitFuelApp({
   planCount,
   licence,
   bandCounts,
+  prices,
+  trial,
   goalCount,
   initialMode,
   quotes,
@@ -1762,6 +1762,18 @@ export default function FitFuelApp({
         activePartners={bandCounts.activePartners}
         quotes={quotes}
         onBrowsePlans={() => switchMode("plans", true)}
+      />
+      <HomeSections
+        counts={bandCounts}
+        goalCount={goalCount}
+        prices={prices}
+        trial={trial}
+        cutoffLabel={cutoffLabel}
+        retailProducts={supplements.flatMap((item) =>
+          item.imageUrl && item.buy && ["whey-protein", "creatine", "omega3", "magnesium"].includes(item.slug)
+            ? [{ slug: item.slug, name: item.name, category: item.category, imageUrl: item.imageUrl, linkCount: item.linkCount, buy: item.buy }]
+            : [],
+        )}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}

@@ -20,6 +20,7 @@ import { auth } from "@/lib/auth";
 import SupplementsLanding from "./SupplementsLanding";
 import { getAllSupplements } from "@/lib/supplements-db";
 import { getRecommendedSupplements } from "@/lib/supplement-recommender";
+import { SUPPLEMENTS } from "@/lib/supplements-data";
 import { Wrap } from "@/app/_ui/Page";
 import AppChrome from "@/app/_web/AppChrome";
 
@@ -34,8 +35,13 @@ export const dynamic = "force-dynamic";
 export default async function SupplementsPage() {
   const session = await auth();
   const [supplements, rec] = await Promise.all([
-    getAllSupplements(),
-    session?.user?.id ? getRecommendedSupplements(session.user.id) : Promise.resolve(null),
+    // The ingredient guide is useful without a live retailer connection. Keep
+    // the evidence catalogue available during a transient database outage;
+    // buy links simply disappear until the database is reachable again.
+    getAllSupplements().catch(() => SUPPLEMENTS),
+    session?.user?.id
+      ? getRecommendedSupplements(session.user.id).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   return (

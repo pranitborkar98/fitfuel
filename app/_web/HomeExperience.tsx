@@ -11,6 +11,9 @@ import type { Quote } from "./HomeBands";
 import x from "./experience.module.css";
 import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
 import productStyles from "@/app/_kitchen/product-network.module.css";
+import HomeToday from "./HomeToday";
+import HomeLaunchpad from "./HomeLaunchpad";
+import hub from "./home-workspace.module.css";
 
 const ICON = {
   spark:
@@ -114,23 +117,22 @@ export default function HomeExperience({
   };
 
   return (
-    <div className={x.home} id="main-content" aria-labelledby="home-title">
-      <section className={x.hero} aria-label="FitFuel daily food app">
-        <div className={x.heroCopy}>
+    <div className={`${x.home} ${hub.workspace}`} id="main-content" aria-labelledby="home-title">
+      <section className={`${x.hero} ${hub.hero}`} aria-label="FitFuel daily food app">
+        <div className={`${x.heroCopy} ${hub.heading}`}>
           <p className={x.eyebrow} suppressHydrationWarning>
             {timeGreeting()}
           </p>
-          <h1 id="home-title" className={x.title}>
-            Meals calculated for your body.
+          <h1 id="home-title" className={`${x.title} ${hub.title}`}>
+            Your day, with FitFuel.
           </h1>
           <p className={x.lede}>
-            Choose a single meal or a plan. Set your nutrition target, and
-            FitFuel uses it to size your portions and track your day.
+            Order food, follow your plan and keep today up to date.
           </p>
 
           <div className={x.heroActions}>
             <button type="button" onClick={onBrowseMeals}>
-              Explore today’s food <Icon path={ICON.arrow} size={18} />
+              Order a meal <Icon path={ICON.arrow} size={18} />
             </button>
             <Link href="/plans?trial=true">
               Try breakfast + lunch · {trialTotal}
@@ -138,11 +140,11 @@ export default function HomeExperience({
           </div>
         </div>
 
-        <div className={x.heroSupport}>
+        <div className={`${x.heroSupport} ${hub.support}`}>
           <div className={x.assistance}>
-            <Link href="/dashboard/trainer">
+            <button type="button" onClick={() => document.getElementById("fitfuel-coach-trigger")?.click()}>
               <Icon path={ICON.spark} size={18} /> Ask the AI coach
-            </Link>
+            </button>
             <a href={whatsapp} target="_blank" rel="noreferrer">
               <Icon path={ICON.message} size={18} /> Order on WhatsApp
             </a>
@@ -180,7 +182,9 @@ export default function HomeExperience({
           </ol>
         </div>
 
-        <div className={x.menuPreview}>
+        <div className={hub.tools}><HomeLaunchpad /></div>
+        <div className={hub.daily}><HomeToday /></div>
+        <div className={`${x.menuPreview} ${hub.menu}`}>
           <div className={x.previewHead}>
             <span>
               <small>Sample four-meal day</small>

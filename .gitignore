@@ -54,3 +54,6 @@ seed-supplements.ts.bak
 # Python bytecode (vendored skill scripts)
 __pycache__/
 *.pyc
+
+# Local product screenshots and browser verification artifacts
+/.artifacts/

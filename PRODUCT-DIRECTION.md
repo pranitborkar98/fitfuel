@@ -156,3 +156,56 @@ notification delivery; and production migration/configuration verification.
 No customer record, live payment, payout or partner approval was created for
 these UI checks. Placeholder organisations must be replaced only with verified
 names and permission to publish them. Repository push is not a production deployment.
+
+## Homepage restoration, 2026-09-16
+
+The owner rejected the reduced homepage after commit 421c4b0. Removing the
+HomeSections mount removed product capabilities from the front door, even though
+their implementation files and destination pages survived. Passing build and
+layout checks did not establish feature completeness. The reduced-homepage
+direction above is superseded by this correction.
+
+- Keep the kitchen-to-diary explanation, connected nutrition, digital plans,
+  body measurements, training, supplement guidance and Nutrabay shopping,
+  interactive plan calculator, goals and conditions, coach and weekly review,
+  trial breakdown, delivery questions, corporate programmes and partner roster.
+- Keep meals purchasable from the homepage, daily account tools accessible near
+  the top, and a section index for the full product. A services page is not a
+  substitute for these homepage capabilities.
+- Keep a visible floating AI coach. The panel uses the existing authenticated
+  trainer API and account-scoped conversation history, not simulated answers.
+  Guests see the sign-in handoff. Unconfigured providers show an offline state.
+  The full coach and weekly review remain directly accessible.
+- Do not restore obsolete claims along with a component. Body composition is
+  estimated rather than directly read from all scales; condition menus do not
+  replace treatment; delivery times depend on the selected kitchen and address.
+- The feature inventory is `app/_web/home-capabilities.ts`. Contract tests check
+  that it is mounted. `scripts/verify-homepage-restoration.mjs` checks all 11
+  destinations in the rendered page, calculator changes, FAQ interaction,
+  coach focus and sign-in behaviour, private-history authentication, mobile and
+  landscape sizing. Signed-in coach UI tests intercept session/history/chat
+  responses and do not call a paid model or write a customer's account.
+
+These checks supplement, rather than replace, the live launch gates above.
+
+### Product home, not a rollback
+
+Restoration alone was explicitly rejected by the owner in the same review.
+The homepage must connect the backend to everyday actions, not merely remount
+the previous marketing composition. `HomeExperience` now composes a compact
+app heading, six daily tools, the food preview and `HomeToday` rather than a
+large sales headline. Detailed product sections remain accessible and intact.
+
+`HomeToday` reads the existing authenticated diary, water, active-plan and
+workout-today APIs. It shows logged totals, the current plan and today's
+scheduled session without inventing a nutrition target. Adding 250 ml uses
+the existing water diary endpoint and updates the displayed saved amount.
+A failed or uncertain save is announced and cannot be repeated until the
+customer refreshes the actual record. Partial read failures are visible and
+retryable. Account changes unmount private summary state. Guests see neither
+invented account totals nor an imitation of a signed-in dashboard.
+
+The six homepage tools map to Today, Food & water, Workouts, Measurements,
+Progress and the existing AI coach. Ordering remains in the same homepage
+catalogue. The feature index, richer product examples, pricing, condition
+menus, digital plans, Nutrabay, corporate and partner sections are retained.

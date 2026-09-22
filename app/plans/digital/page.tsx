@@ -35,11 +35,13 @@ const TIER_COPY = {
 export const metadata = {
   title: "Digital meal plans",
   description:
-    "FitFuel meal schedules, recipes, macros and grocery lists in a downloadable plan for people cooking outside our Pune delivery area.",
+    "FitFuel meal schedules, recipes, macros and grocery lists in a downloadable plan for people cooking outside a FitFuel delivery area.",
   alternates: { canonical: "/plans/digital" },
 };
 
-export const revalidate = 3600;
+// Offers and checkout availability come from live prices. Resolve them at
+// request time so a temporary database outage cannot break a production build.
+export const dynamic = "force-dynamic";
 
 function safeImageUrl(value: unknown) {
   if (typeof value !== "string") return null;
@@ -47,21 +49,23 @@ function safeImageUrl(value: unknown) {
 }
 
 export default async function DigitalPlansPage() {
-  const prices = await prisma.planPrice.findMany({
-    where: { isDigital: true, isActive: true, mealPlanId: { not: null } },
-    include: {
-      mealPlan: {
-        include: {
-          scheduleSlots: {
-            orderBy: [{ dayNumber: "asc" }, { mealSlot: "asc" }],
-            take: 8,
-            include: { recipe: { select: { name: true, imageUrl: true } } },
+  const prices = await prisma.planPrice
+    .findMany({
+      where: { isDigital: true, isActive: true, mealPlanId: { not: null } },
+      include: {
+        mealPlan: {
+          include: {
+            scheduleSlots: {
+              orderBy: [{ dayNumber: "asc" }, { mealSlot: "asc" }],
+              take: 8,
+              include: { recipe: { select: { name: true, imageUrl: true } } },
+            },
           },
         },
       },
-    },
-    orderBy: [{ priceRs: "asc" }],
-  });
+      orderBy: [{ priceRs: "asc" }],
+    })
+    .catch(() => []);
 
   const offers = await Promise.all(
     prices.map(async (price) => {
@@ -69,7 +73,10 @@ export default async function DigitalPlansPage() {
         if (!mealPlan || !DURATION_KEYS[price.duration]) return null;
         const bundle: keyof typeof TIER_COPY = price.bundle === "PRO" ? "PRO" : "STARTER";
         const workout = bundle === "PRO"
-          ? await getWorkoutPlanData(String(mealPlan.subCategory || ""), String(mealPlan.tier || ""))
+          ? await getWorkoutPlanData(
+              String(mealPlan.subCategory || ""),
+              String(mealPlan.tier || ""),
+            ).catch(() => null)
           : null;
         const breakdown = computePrice({
           items: [{ mrpRs: price.mrpRs ?? price.priceRs, saleRs: price.priceRs, qty: 1 }],
@@ -90,14 +97,14 @@ export default async function DigitalPlansPage() {
   const publishedOffers = offers.filter((offer): offer is NonNullable<typeof offer> => offer !== null);
 
   return (
-    <main className={styles.page}>
+    <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroGrid}>
           <div>
             <p className={styles.kicker}>Digital FitFuel</p>
             <h1>Cook the same planned food, wherever you live.</h1>
             <p className={styles.deck}>
-              Get the meal schedule, measured recipes, per-meal macros and one consolidated grocery list. It is built from the same plan data that powers our Pune kitchen and member diary.
+              Get the meal schedule, measured recipes, per-meal macros and one consolidated grocery list. It is built from the same plan data that powers your nearest FitFuel kitchen and member diary.
             </p>
             <a className={styles.primaryAction} href="#digital-options">
               See digital options <ArrowRight aria-hidden="true" size={18} />
@@ -211,6 +218,6 @@ export default async function DigitalPlansPage() {
           <li><span>3</span><div><strong>Download your PDF</strong><p>Your recipes, macros and grocery list are generated from the purchased plan.</p></div></li>
         </ol>
       </section>
-    </main>
+    </div>
   );
 }
