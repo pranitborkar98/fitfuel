@@ -209,3 +209,23 @@ The six homepage tools map to Today, Food & water, Workouts, Measurements,
 Progress and the existing AI coach. Ordering remains in the same homepage
 catalogue. The feature index, richer product examples, pricing, condition
 menus, digital plans, Nutrabay, corporate and partner sections are retained.
+
+## Dashboard visibility and FitFuel meals, 2026-09-23
+
+The app shell did not delete the dashboard backend, but it did make most of the
+product difficult to discover on phones by moving it behind All tools. The
+dashboard must visibly expose food and water, training, body measurements, AI
+coach, weekly review, progress, supplement guidance, referrals, notifications
+and profile/address management for members with and without a meal subscription.
+The persistent navigation remains the routing source of truth; the dashboard
+directory is the mobile discovery surface. Contract and browser tests verify
+that every non-partner dashboard route remains implemented and visible.
+
+The diary food picker must combine two different product datasets. FitFuel
+recipes are cooked meals and appear first with the FitFuel label, real serving
+size and recipe nutrition. FoodItem rows remain available for ingredients,
+outside food and customer-created entries. This is not subscription-gated.
+When a member explicitly logs a recipe, the server resolves it to the FoodItem
+record required by the existing diary model; merely viewing or searching does
+not write data. A subscribed member's one-tap plan confirmation continues to
+use the active-plan meal log so delivery, ratings and consistency stay linked.

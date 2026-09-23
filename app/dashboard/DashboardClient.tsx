@@ -4,14 +4,10 @@
 //
 // Today.
 //
-// The largest thing removed here is a second navigation. A "Features" grid of
-// six tiles linked to Body Metrics, Nutrition, Exercises, Progress, Supplements
-// and Notifications, which is the sidebar, drawn again, in a uniform icon plus
-// title plus paragraph grid that §11 rejects by name. app/_app/nav.ts opens by
-// saying it is "the only place the app's navigation is declared", and this was
-// the other place, already drifted: every tile wore a LIVE badge, one promised
-// "FitDays BLE scale sync coming soon", and none of them knew about Coach or
-// Referrals. The sidebar is on every screen. Today does not need to relist it.
+// The old feature grid duplicated navigation, but removing it made most of the
+// product effectively invisible on phones. QuickActions now provides a compact
+// mobile-first directory while app/_app/nav.ts remains the route source of
+// truth for the persistent shell.
 //
 // The header went with it. It carried a second sign out and a second greeting,
 // both of which the shell owns.
@@ -547,7 +543,6 @@ export default function DashboardClient({
         </div>
       </section>
 
-      <QuickActions />
       {!previewData && !activePlan.isDigital ? <DeliveryScheduleCard /> : null}
 
       <div className={s.workspace}>
@@ -715,6 +710,8 @@ export default function DashboardClient({
           )}
         </div>
       </div>
+
+      <QuickActions />
 
       <Spine>From your coach</Spine>
       {previewData ? <div className={s.notice}><strong>Sample weekly review</strong><p>Your real review uses your logged meals, training and progress. This preview does not generate personal advice.</p><Link href="/dashboard/coach">Sign in to see your review →</Link></div> : <WeeklyReviewCard />}

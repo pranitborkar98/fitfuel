@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson, readQuery } from "@/lib/validation/core";
 import { foodsQuerySchema, foodsPostSchema } from "@/lib/validation/schemas";
+import { findFitFuelMeals } from "@/lib/fitfuel-diary-food";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -21,25 +22,28 @@ export async function GET(req: NextRequest) {
     ? { OR: [{ userId: null }, { userId: session.user.id }] }
     : { userId: null };
 
-  if (!q) {
-    const foods = await prisma.foodItem.findMany({
-      where: userFilter,
+  const [fitFuelMeals, foods] = await Promise.all([
+    findFitFuelMeals(q),
+    prisma.foodItem.findMany({
+      where: {
+        ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
+        ...userFilter,
+      },
       orderBy: [{ isCustom: "asc" }, { name: "asc" }],
-      take: 30,
-    });
-    return NextResponse.json(foods);
-  }
+      take: q ? 20 : 18,
+    }),
+  ]);
 
-  const foods = await prisma.foodItem.findMany({
-    where: {
-      name: { contains: q, mode: "insensitive" },
-      ...userFilter,
-    },
-    orderBy: [{ isCustom: "asc" }, { name: "asc" }],
-    take: 20,
-  });
+  const fitFuelNames = new Set(fitFuelMeals.map((meal) => meal.name.toLowerCase()));
+  const databaseFoods = foods
+    .filter((food) => !(
+      food.category === "PLAN_RECIPE" && fitFuelNames.has(food.name.toLowerCase())
+    ))
+    .map((food) => ({ ...food, source: "database" as const, defaultQuantity: 100 }));
 
-  return NextResponse.json(foods);
+  // FitFuel's cooked meals are the product, so they lead the result set for
+  // subscribers and non-subscribers alike. Raw foods remain available below.
+  return NextResponse.json([...fitFuelMeals, ...databaseFoods]);
 }
 
 export async function POST(req: NextRequest) {

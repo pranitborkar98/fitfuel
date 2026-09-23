@@ -34,6 +34,7 @@ interface FoodItem {
   id: string; name: string; brand?: string | null; category?: string | null;
   per100Calories: number; per100Protein: number; per100Carbs: number;
   per100Fat: number; per100Fiber: number; isCustom: boolean;
+  source?: "fitfuel" | "database"; defaultQuantity?: number;
 }
 interface MealType { id: string; name: string; emoji?: string | null; sortOrder: number }
 interface FoodEntry {
@@ -643,7 +644,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
           <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.rule}` }}>
             <label htmlFor="food-search" style={label(12, { display: "block", marginBottom: 8 })}>
-              Search the database
+              Search FitFuel meals and foods
             </label>
             {/* A text box that repaints a list of choices below it is a
                 combobox, and was being announced as a plain input: the results
@@ -656,7 +657,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               aria-autocomplete="list"
               value={searchQ}
               onChange={(e) => setSearchQ(e.target.value)}
-              placeholder="Rice, dal, paneer, egg"
+              placeholder="FitFuel meal, rice, dal, paneer"
               autoComplete="off"
               style={{ ...INPUT, width: "100%" }}
             />
@@ -734,7 +735,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
           <div>
             {!searchQ && (
-              <p style={label(12, { display: "block", padding: "14px 18px 8px" })}>Popular foods</p>
+              <p style={label(12, { display: "block", padding: "14px 18px 8px" })}>FitFuel meals and popular foods</p>
             )}
             {searching && results.length === 0 && (
               <div style={{ padding: 18 }} aria-busy="true">
@@ -769,7 +770,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     type="button"
                     role="option"
                     aria-selected={on}
-                    onClick={() => { setPicked(f); setQuantity("100"); }}
+                    onClick={() => { setPicked(f); setQuantity(String(f.defaultQuantity ?? 100)); }}
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                       width: "100%", minHeight: 44, padding: "12px 18px", textAlign: "left",
@@ -781,7 +782,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   >
                     <span style={{ minWidth: 0 }}>
                       <span style={{ ...body(14, { color: C.ink }), display: "block" }}>
-                        {f.name}{f.isCustom ? ", custom" : ""}
+                        {f.name}
+                        {f.source === "fitfuel" ? ", FitFuel meal" : f.isCustom ? ", custom" : ""}
                       </span>
                       <span style={{ ...num(12, { color: C.dim }), display: "block", marginTop: 3 }}>
                         per 100g: {f.per100Protein} P, {f.per100Carbs} C, {f.per100Fat} F, {f.per100Fiber} fibre

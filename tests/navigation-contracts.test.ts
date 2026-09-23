@@ -7,6 +7,7 @@ import { PRODUCT_SERVICES } from "../lib/product-services";
 import { PUBLIC_PARTNERS } from "../lib/public-partners";
 import { SAMPLE_DAY, SAMPLE_PLAN } from "../app/dashboard-preview/sample-data";
 import { HOME_CAPABILITIES } from "../app/_web/home-capabilities";
+import { NAV } from "../app/_app/nav";
 
 test("homepage redesign retains the complete product, not just catalogue links", () => {
   assert.equal(HOME_CAPABILITIES.length, 11);
@@ -89,6 +90,45 @@ test("dashboard preview is internally consistent and uses isolated examples", ()
   for (const meal of SAMPLE_DAY.meals) assert.ok(meal.slotId.startsWith("sample-"));
   const previewRoute = readFileSync(resolve("app/dashboard-preview/page.tsx"), "utf8");
   assert.doesNotMatch(previewRoute, /prisma|auth\(|process\.env/);
+});
+
+test("the diary and dashboard expose FitFuel's product depth without a subscription", () => {
+  const foodSearch = readFileSync(resolve("app/api/nutrition/foods/route.ts"), "utf8");
+  assert.match(foodSearch, /findFitFuelMeals\(q\)/);
+  assert.match(foodSearch, /\[\.\.\.fitFuelMeals, \.\.\.databaseFoods\]/);
+
+  const diary = readFileSync(resolve("app/api/nutrition/diary/route.ts"), "utf8");
+  assert.match(diary, /resolveDiaryFood\(foodItemId, session\.user\.id\)/);
+  assert.match(diary, /foodItemId: food\.id/);
+
+  const nutrition = readFileSync(resolve("app/dashboard/nutrition/NutritionClient.tsx"), "utf8");
+  assert.match(nutrition, /Search FitFuel meals and foods/);
+  assert.match(nutrition, /defaultQuantity/);
+
+  const dashboard = readFileSync(resolve("app/dashboard/DashboardClient.tsx"), "utf8");
+  assert.equal(dashboard.match(/<QuickActions \/>/g)?.length, 2);
+  const tools = readFileSync(resolve("app/dashboard/QuickActions.tsx"), "utf8");
+  for (const label of [
+    "Log food & water",
+    "Start a workout",
+    "Record a weigh-in",
+    "Ask your coach",
+    "Weekly review",
+    "Progress",
+    "Supplement guide",
+    "Referrals",
+    "Notifications",
+    "Profile and addresses",
+  ]) {
+    assert.ok(tools.includes(label), `Dashboard tool is hidden: ${label}`);
+  }
+  for (const item of NAV.flatMap((group) => group.items)) {
+    const route = resolve("app", `.${item.href}`, "page.tsx");
+    assert.ok(existsSync(route), `Dashboard capability has no page: ${item.href}`);
+    if (item.href !== "/dashboard" && !item.partnerOnly) {
+      assert.ok(tools.includes(item.href), `Mobile dashboard hides capability: ${item.href}`);
+    }
+  }
 });
 
 test("marketplace filters survive a guide visit, reload and shared link", () => {

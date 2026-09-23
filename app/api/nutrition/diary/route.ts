@@ -7,6 +7,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { parseDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { readJson, readQuery } from "@/lib/validation/core";
 import { diaryQuerySchema, diaryPostSchema } from "@/lib/validation/schemas";
+import { resolveDiaryFood } from "@/lib/fitfuel-diary-food";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -58,12 +59,7 @@ export async function POST(req: NextRequest) {
   const { foodItemId, mealTypeId, date, quantity, notes } = parsed.data;
 
   const [food, mealType] = await Promise.all([
-    prisma.foodItem.findFirst({
-      where: {
-        id: foodItemId,
-        OR: [{ userId: null }, { userId: session.user.id }],
-      },
-    }),
+    resolveDiaryFood(foodItemId, session.user.id),
     prisma.mealType.findUnique({ where: { id: mealTypeId }, select: { id: true } }),
   ]);
   if (!food) return NextResponse.json({ error: "Food not found" }, { status: 404 });
@@ -81,7 +77,7 @@ export async function POST(req: NextRequest) {
   const entry = await prisma.foodEntry.create({
     data: {
       userId:     session.user.id,
-      foodItemId,
+      foodItemId: food.id,
       mealTypeId,
       entryDate,
       quantity:   qty,

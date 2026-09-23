@@ -81,6 +81,24 @@ try {
   console.log("PASS sample meal, workout, reset and dialog focus restoration");
   await page.setViewportSize({ width: 375, height: 812 });
   await layout("dashboard-mobile");
+  for (const tool of [
+    "Log food & water",
+    "Start a workout",
+    "Record a weigh-in",
+    "Ask your coach",
+    "Weekly review",
+    "Progress",
+    "Supplement guide",
+    "Referrals",
+    "Notifications",
+    "Profile and addresses",
+  ]) {
+    assert.ok(
+      await page.getByRole("link", { name: new RegExp(tool, "i") }).count(),
+      `dashboard-mobile: visible product tool ${tool}`,
+    );
+  }
+  console.log("PASS dashboard-mobile exposes the complete FitFuel toolset");
   await page
     .getByRole("button", { name: "Without a meal plan", exact: true })
     .click();
