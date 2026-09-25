@@ -31,8 +31,8 @@ function optionalNumeric(value: unknown): number | null {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params
-  const plan = await prisma.mealPlan.findUnique({
-    where: { slug },
+  const plan = await prisma.mealPlan.findFirst({
+    where: { slug, isActive: true },
     select: { name: true, description: true },
   })
   if (!plan) return {}
@@ -48,8 +48,8 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function PlanPage({ params }: Props) {
   const { slug } = await params
-  const plan = await prisma.mealPlan.findUnique({
-    where: { slug },
+  const plan = await prisma.mealPlan.findFirst({
+    where: { slug, isActive: true },
     select: {
       id: true,
       name: true,
@@ -188,10 +188,6 @@ export default async function PlanPage({ params }: Props) {
             '@type': 'Offer',
             price: String(cheapest),
             priceCurrency: 'INR',
-            // Deliberately NOT keyed off plan.isActive: that column is false
-            // on all 126 rows while the catalog sells every one of them, so
-            // trusting it would publish "out of stock" for the entire
-            // product line. See the note in app/sitemap.ts.
             availability: isReady
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',

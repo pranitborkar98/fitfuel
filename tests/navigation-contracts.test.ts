@@ -107,7 +107,9 @@ test("the diary keeps subscribed meals separate from optional outside-food searc
   assert.match(nutrition, /\/api\/user\/active-plan\/meals\/today/);
   assert.match(nutrition, /\/api\/user\/active-plan\/meals\/log/);
   assert.match(nutrition, /I ate this/);
-  assert.match(nutrition, /Add something else/);
+  assert.match(nutrition, /Log food outside my plan/);
+  assert.match(nutrition, /mealPlanAccess\.kind === "active"/);
+  assert.match(nutrition, /has ended/);
   assert.match(nutrition, /Search food outside your FitFuel plan/);
   assert.doesNotMatch(nutrition, /FitFuel meals and popular foods/);
 
@@ -142,6 +144,24 @@ test("the diary keeps subscribed meals separate from optional outside-food searc
       assert.ok(tools.includes(item.href), `Mobile dashboard hides capability: ${item.href}`);
     }
   }
+});
+
+test("published is one product contract across catalogue, detail and checkout", () => {
+  const catalogue = readFileSync(resolve("app/plans/page.tsx"), "utf8");
+  assert.match(catalogue, /category: \{ in: \[\.\.\.ORDERABLE\] \}, isActive: true/);
+
+  const detail = readFileSync(resolve("app/plans/[slug]/page.tsx"), "utf8");
+  assert.equal((detail.match(/where: \{ slug, isActive: true \}/g) ?? []).length, 2);
+
+  const checkout = readFileSync(resolve("lib/physical-checkout.ts"), "utf8");
+  assert.match(checkout, /if \(!plan\.isActive\)/);
+  assert.match(checkout, /not currently published/);
+
+  const schedule = readFileSync(resolve("app/api/plans/[slug]/schedule/route.ts"), "utf8");
+  assert.match(schedule, /where: \{ slug, isActive: true \}/);
+
+  const coupon = readFileSync(resolve("app/api/coupon/validate/route.ts"), "utf8");
+  assert.match(coupon, /where: \{ slug: planSlug, isActive: true \}/);
 });
 
 test("marketplace filters survive a guide visit, reload and shared link", () => {

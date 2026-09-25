@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
 const ORDERABLE = ["STANDARD", "LIFESTYLE_MEDICAL", "SPORTS"] as const;
 
 export async function generateMetadata() {
-  const n = await prisma.mealPlan.count({ where: { category: { in: [...ORDERABLE] } } });
+  const n = await prisma.mealPlan.count({ where: { category: { in: [...ORDERABLE] }, isActive: true } });
   return {
     title: "Meal Plans in Pune",
     description:
@@ -59,7 +59,7 @@ export default async function PlansPage({
   const initialDuration: DurationKey = trial === "true" ? "TRIAL_DAY" : "ONE_MONTH";
 
   const rows = await prisma.mealPlan.findMany({
-    where: { category: { in: [...ORDERABLE] } },
+    where: { category: { in: [...ORDERABLE] }, isActive: true },
     orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
     select: {
       id: true, slug: true, name: true, displayName: true, tagline: true,

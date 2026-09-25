@@ -23,10 +23,12 @@
 // calories, the neutral bar grey carries the rest, and every label is a word.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { C, SANS, body, label, num, figure, section, PANEL, solidBtn, ghostBtn } from "@/app/_app/theme";
 import { addDateOnlyDays, formatDateOnly, parseDateOnly } from "@/lib/date-only";
 import Dialog from "@/app/_app/Dialog";
 import s from "./nutrition.module.css";
+import type { MealPlanAccess } from "./types";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -57,6 +59,7 @@ interface Props {
   goal: Goal;
   initialWaterMl: number;
   initialDate: string;
+  mealPlanAccess: MealPlanAccess;
 }
 
 /* ── helpers ────────────────────────────────────────────────────────────── */
@@ -83,6 +86,13 @@ function displayDate(d: Date, today: string) {
   if (date === today) return "Today";
   if (date === addDateOnlyDays(today, -1)) return "Yesterday";
   return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+function displayPlanDate(value: string) {
+  const date = parseDateOnly(value);
+  return date
+    ? date.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+    : value;
 }
 
 const GOAL_FIELDS: Array<{ key: keyof Goal; name: string; unit: string; step: number }> = [
@@ -164,7 +174,7 @@ const INPUT: React.CSSProperties = {
 
 /* ── main ───────────────────────────────────────────────────────────────── */
 
-export default function NutritionClient({ initialEntries, mealTypes, goal, initialWaterMl, initialDate }: Props) {
+export default function NutritionClient({ initialEntries, mealTypes, goal, initialWaterMl, initialDate, mealPlanAccess }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return parseDateOnly(initialDate) ?? new Date(`${initialDate}T00:00:00.000Z`);
   });
@@ -187,9 +197,11 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [logging, setLogging] = useState(false);
 
   const [plannedMeals, setPlannedMeals] = useState<PlannedMeal[]>([]);
-  const [plannedMealsLoading, setPlannedMealsLoading] = useState(true);
+  const [plannedMealsLoading, setPlannedMealsLoading] = useState(mealPlanAccess.kind === "active");
   const [plannedMealsError, setPlannedMealsError] = useState("");
+  const [plannedMealsStatus, setPlannedMealsStatus] = useState<"ready" | "off-day" | "skipped" | "missing">("ready");
   const [loggingPlanSlot, setLoggingPlanSlot] = useState<string | null>(null);
+  const [showExtraFood, setShowExtraFood] = useState(false);
 
   // Everything on this screen mutates the diary and then repaints a number
   // somewhere else in the layout. A sighted user sees the total move; a screen
@@ -300,6 +312,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   }, [searchQ, activeSlot, doSearch]);
 
   useEffect(() => {
+    if (mealPlanAccess.kind !== "active") return;
     let alive = true;
     fetch("/api/user/active-plan/meals/today", { signal: AbortSignal.timeout(12000) })
       .then((response) => {
@@ -309,6 +322,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
       .then((data) => {
         if (!alive) return;
         setPlannedMeals(Array.isArray(data.meals) ? data.meals : []);
+        setPlannedMealsStatus(data.offDay ? "off-day" : data.skipped ? "skipped" : data.meals?.length ? "ready" : "missing");
         setPlannedMealsError("");
       })
       .catch(() => {
@@ -317,7 +331,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
       })
       .finally(() => { if (alive) setPlannedMealsLoading(false); });
     return () => { alive = false; };
-  }, []);
+  }, [mealPlanAccess.kind]);
 
   useEffect(() => () => {
     searchSequence.current += 1;
@@ -534,7 +548,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
       {error && <p role="alert" className={s.error}>{error}</p>}
 
-      {isToday && (plannedMealsLoading || plannedMeals.length > 0 || plannedMealsError) && (
+      {isToday && mealPlanAccess.kind === "active" && (
         <section className={s.plannedMeals} aria-labelledby="planned-meals-title">
           <div className={s.plannedMealsHeader}>
             <div>
@@ -556,6 +570,14 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
             </div>
           ) : plannedMealsError ? (
             <p className={s.plannedMealsMessage} role="alert">{plannedMealsError}</p>
+          ) : plannedMealsStatus === "off-day" ? (
+            <p className={s.plannedMealsMessage}>Today is not a delivery day for your {mealPlanAccess.planName} plan.</p>
+          ) : plannedMealsStatus === "skipped" ? (
+            <p className={s.plannedMealsMessage}>Today is marked as skipped. No planned meals need logging.</p>
+          ) : plannedMealsStatus === "missing" ? (
+            <p className={s.plannedMealsMessage} role="alert">
+              Your {mealPlanAccess.planName} subscription is active, but today&apos;s kitchen meals are missing. Please contact support before logging a substitute.
+            </p>
           ) : (
             <div>
               {plannedMeals.map((meal) => {
@@ -597,6 +619,31 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               })}
             </div>
           )}
+        </section>
+      )}
+
+      {isToday && mealPlanAccess.kind !== "active" && (
+        <section className={s.planStatus} aria-labelledby="plan-status-title">
+          <div>
+            <p className={s.planStatusEyebrow}>Delivered meal plan</p>
+            <h2 id="plan-status-title">
+              {mealPlanAccess.kind === "scheduled"
+                ? `${mealPlanAccess.planName} starts soon`
+                : mealPlanAccess.kind === "expired"
+                  ? `${mealPlanAccess.planName} has ended`
+                  : "No active FitFuel meal plan"}
+            </h2>
+            <p>
+              {mealPlanAccess.kind === "scheduled"
+                ? `Your scheduled meals will appear here from ${displayPlanDate(mealPlanAccess.startDate)}.`
+                : mealPlanAccess.kind === "expired"
+                  ? `Your last delivered plan ended on ${displayPlanDate(mealPlanAccess.endDate)}. Renew it to restore one-tap meal logging.`
+                  : "Scheduled FitFuel meals appear here after a delivered plan is purchased and activated."}
+            </p>
+          </div>
+          <Link href="/plans" className={s.planStatusAction}>
+            {mealPlanAccess.kind === "expired" ? "Renew plan" : "View meal plans"}
+          </Link>
         </section>
       )}
 
@@ -660,8 +707,19 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
       <Spine>Everything logged today</Spine>
       <p className={s.diaryGuidance}>
-        FitFuel plan meals are confirmed above. Use Add something else for food or drinks outside your plan.
+        {mealPlanAccess.kind === "active"
+          ? "FitFuel plan meals are confirmed above. The diary below also includes anything you logged outside your plan."
+          : "This diary shows food and drinks you recorded manually. It is separate from a delivered FitFuel meal plan."}
       </p>
+
+      <button
+        type="button"
+        className={s.extraFoodToggle}
+        aria-expanded={showExtraFood}
+        onClick={() => setShowExtraFood((open) => !open)}
+      >
+        {showExtraFood ? "Hide outside-plan food controls" : "Log food outside my plan"}
+      </button>
 
       {loadingDiary ? (
         <div style={PANEL} aria-busy="true" aria-label="Loading the diary">
@@ -697,13 +755,15 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                       : "nothing logged"}
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => { setActiveSlot(mt); setSearchQ(""); setResults([]); setPicked(null); setQuantity("100"); }}
-                  style={ghostBtn()}
-                >
-                  Add something else
-                </button>
+                {showExtraFood && (
+                  <button
+                    type="button"
+                    onClick={() => { setActiveSlot(mt); setSearchQ(""); setResults([]); setPicked(null); setQuantity("100"); }}
+                    style={ghostBtn()}
+                  >
+                    Add outside-plan food
+                  </button>
+                )}
               </div>
 
               {!isCollapsed && rows.map((e) => (

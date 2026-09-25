@@ -8,8 +8,8 @@ export async function GET(
   try {
     const { slug } = await params
 
-    const plan = await prisma.mealPlan.findUnique({
-      where: { slug },
+    const plan = await prisma.mealPlan.findFirst({
+      where: { slug, isActive: true },
       select: {
         id: true,
         name: true,

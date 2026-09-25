@@ -55,6 +55,7 @@ export async function resolvePhysicalCheckout(input: {
       dietaryVariant: true,
       cycleLengthDays: true,
       mealsPerDay: true,
+      isActive: true,
       _count: { select: { scheduleSlots: true } },
       planPrices: {
         where: { duration, mealsPerDay: meals, isDigital: false, isActive: true },
@@ -66,6 +67,9 @@ export async function resolvePhysicalCheckout(input: {
 
   if (!plan) {
     return { ok: false, status: 404, error: "That meal plan no longer exists." } satisfies Rejection;
+  }
+  if (!plan.isActive) {
+    return { ok: false, status: 409, error: "That meal plan is not currently published." } satisfies Rejection;
   }
   if (plan.dietaryVariant !== diet) {
     return {

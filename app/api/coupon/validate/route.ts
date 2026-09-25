@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   if (isDigital === false) {
     const mealsPerDay = meal ? MEAL_MAP[meal] : null;
     if (!mealsPerDay) return Response.json({ ok: false, reason: "Choose the meals again." }, { status: 400 });
-    const plan = await prisma.mealPlan.findUnique({ where: { slug: planSlug }, select: { id: true } });
+    const plan = await prisma.mealPlan.findFirst({ where: { slug: planSlug, isActive: true }, select: { id: true } });
     if (!plan) return Response.json({ ok: false, reason: "Plan not found." }, { status: 404 });
     const price = await prisma.planPrice.findFirst({
       where: { mealPlanId: plan.id, duration: durEnum, mealsPerDay, isDigital: false, isActive: true },
