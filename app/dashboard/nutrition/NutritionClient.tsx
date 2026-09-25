@@ -34,7 +34,6 @@ interface FoodItem {
   id: string; name: string; brand?: string | null; category?: string | null;
   per100Calories: number; per100Protein: number; per100Carbs: number;
   per100Fat: number; per100Fiber: number; isCustom: boolean;
-  source?: "fitfuel" | "database"; defaultQuantity?: number;
 }
 interface MealType { id: string; name: string; emoji?: string | null; sortOrder: number }
 interface FoodEntry {
@@ -43,6 +42,15 @@ interface FoodEntry {
   fat: number; fiber: number; foodItem: FoodItem; mealType: MealType;
 }
 interface Goal { calories: number; protein: number; carbs: number; fat: number; fiber: number; waterMl: number }
+interface PlannedMeal {
+  slotId: string; mealSlot: string; label: string; time: string;
+  isLogged: boolean; isSkipped: boolean; dayNumber: number;
+  recipe: {
+    name: string; caloriesPerServing: number; proteinGrams: number;
+    carbsGrams: number; fatGrams: number; servingSizeGrams: number;
+    imageUrl?: string | null;
+  };
+}
 interface Props {
   initialEntries: FoodEntry[];
   mealTypes: MealType[];
@@ -57,6 +65,18 @@ const iso = formatDateOnly;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const pct = (v: number, g: number) => clamp(g > 0 ? (v / g) * 100 : 0, 0, 100);
 const n0 = (v: number) => Math.round(v).toLocaleString("en-IN");
+
+function cssImage(url: string | null | undefined): string | undefined {
+  const raw = String(url || "").trim();
+  if (!raw || /["\\\r\n]/.test(raw)) return undefined;
+  if (raw.startsWith("/") && !raw.startsWith("//")) return `url("${raw}")`;
+  try {
+    const parsed = new URL(raw);
+    return ["http:", "https:"].includes(parsed.protocol) ? `url("${parsed.toString()}")` : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function displayDate(d: Date, today: string) {
   const date = iso(d);
@@ -166,6 +186,11 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [quantity, setQuantity] = useState("100");
   const [logging, setLogging] = useState(false);
 
+  const [plannedMeals, setPlannedMeals] = useState<PlannedMeal[]>([]);
+  const [plannedMealsLoading, setPlannedMealsLoading] = useState(true);
+  const [plannedMealsError, setPlannedMealsError] = useState("");
+  const [loggingPlanSlot, setLoggingPlanSlot] = useState<string | null>(null);
+
   // Everything on this screen mutates the diary and then repaints a number
   // somewhere else in the layout. A sighted user sees the total move; a screen
   // reader user got nothing at all. One polite region, written by every
@@ -270,7 +295,29 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
     }, 280);
   }, []);
 
-  useEffect(() => { if (activeSlot) doSearch(searchQ); }, [searchQ, activeSlot, doSearch]);
+  useEffect(() => {
+    if (activeSlot && searchQ.trim()) doSearch(searchQ);
+  }, [searchQ, activeSlot, doSearch]);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/user/active-plan/meals/today", { signal: AbortSignal.timeout(12000) })
+      .then((response) => {
+        if (!response.ok) throw new Error("Could not load today's plan meals");
+        return response.json();
+      })
+      .then((data) => {
+        if (!alive) return;
+        setPlannedMeals(Array.isArray(data.meals) ? data.meals : []);
+        setPlannedMealsError("");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setPlannedMealsError("Your FitFuel meals could not load. Refresh before logging a planned meal.");
+      })
+      .finally(() => { if (alive) setPlannedMealsLoading(false); });
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => () => {
     searchSequence.current += 1;
@@ -317,6 +364,40 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
     if (searchTimer.current) clearTimeout(searchTimer.current);
     setActiveSlot(null); setPicked(null); setSearchQ(""); setResults([]); setQuantity("100");
     setSearching(false);
+  }
+
+  async function logPlannedMeal(meal: PlannedMeal) {
+    if (meal.isLogged || meal.isSkipped || loggingPlanSlot) return;
+    setLoggingPlanSlot(meal.slotId);
+    setError("");
+    try {
+      const response = await fetch("/api/user/active-plan/meals/log", {
+        method: "POST",
+        signal: AbortSignal.timeout(15000),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planScheduleSlotId: meal.slotId, dayNumber: meal.dayNumber }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok && !(response.status === 409 && result.alreadyLogged)) {
+        throw new Error("Meal was not saved");
+      }
+
+      setPlannedMeals((current) => current.map((item) => (
+        item.slotId === meal.slotId ? { ...item, isLogged: true } : item
+      )));
+
+      const diaryResponse = await fetch(`/api/nutrition/diary?date=${initialDate}`);
+      if (diaryResponse.ok) {
+        const diary = await diaryResponse.json();
+        setEntries(Array.isArray(diary.entries) ? diary.entries : []);
+        setLoadedDate(initialDate);
+      }
+      setNotice(`${meal.recipe.name} is confirmed and added to today's diary.`);
+    } catch {
+      setError("We couldn't confirm that planned meal. Try again. Retrying will not log it twice.");
+    } finally {
+      setLoggingPlanSlot(null);
+    }
   }
 
   async function deleteEntry(id: string) {
@@ -453,6 +534,72 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
       {error && <p role="alert" className={s.error}>{error}</p>}
 
+      {isToday && (plannedMealsLoading || plannedMeals.length > 0 || plannedMealsError) && (
+        <section className={s.plannedMeals} aria-labelledby="planned-meals-title">
+          <div className={s.plannedMealsHeader}>
+            <div>
+              <h2 id="planned-meals-title" style={section()}>Your FitFuel meals today</h2>
+              <p style={body(14, { marginTop: 6 })}>
+                Confirm the exact portion from your active plan. The same serving and macros are added to your diary.
+              </p>
+            </div>
+            {!plannedMealsLoading && plannedMeals.length > 0 && (
+              <span style={num(12, { color: C.dim })}>
+                {plannedMeals.filter((meal) => meal.isLogged).length}/{plannedMeals.filter((meal) => !meal.isSkipped).length} logged
+              </span>
+            )}
+          </div>
+
+          {plannedMealsLoading ? (
+            <div className={s.plannedMealsSkeleton} aria-busy="true" aria-label="Loading your FitFuel meals">
+              {[72, 58, 66].map((width) => <span key={width} style={{ width: `${width}%` }} />)}
+            </div>
+          ) : plannedMealsError ? (
+            <p className={s.plannedMealsMessage} role="alert">{plannedMealsError}</p>
+          ) : (
+            <div>
+              {plannedMeals.map((meal) => {
+                const image = cssImage(meal.recipe.imageUrl);
+                const isLogging = loggingPlanSlot === meal.slotId;
+                return (
+                  <article key={meal.slotId} className={s.plannedMealRow}>
+                    <div
+                      className={s.plannedMealPhoto}
+                      role={image ? "img" : undefined}
+                      aria-label={image ? meal.recipe.name : undefined}
+                      style={{ backgroundImage: image }}
+                    />
+                    <div className={s.plannedMealCopy}>
+                      <p className={s.plannedMealTime}>{meal.label}, {meal.time}</p>
+                      <h3>{meal.recipe.name}</h3>
+                      <p>
+                        {n0(meal.recipe.servingSizeGrams)}g serving, {n0(meal.recipe.caloriesPerServing)} kcal, {n0(meal.recipe.proteinGrams)}g protein
+                      </p>
+                    </div>
+                    <div className={s.plannedMealAction}>
+                      {meal.isSkipped ? (
+                        <span>Skipped</span>
+                      ) : meal.isLogged ? (
+                        <span className={s.planLogged}>Logged</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => logPlannedMeal(meal)}
+                          disabled={!!loggingPlanSlot}
+                          style={ghostBtn(false, { opacity: isLogging ? 0.55 : 1 })}
+                        >
+                          {isLogging ? "Logging" : "I ate this"}
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* the day, measured */}
       <div className={s.summaryGrid}>
         <Readout
@@ -511,7 +658,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         </div>
       </div>
 
-      <Spine>The day&apos;s diary</Spine>
+      <Spine>Everything logged today</Spine>
+      <p className={s.diaryGuidance}>
+        FitFuel plan meals are confirmed above. Use Add something else for food or drinks outside your plan.
+      </p>
 
       {loadingDiary ? (
         <div style={PANEL} aria-busy="true" aria-label="Loading the diary">
@@ -549,10 +699,10 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setActiveSlot(mt); setSearchQ(""); setPicked(null); setQuantity("100"); }}
+                  onClick={() => { setActiveSlot(mt); setSearchQ(""); setResults([]); setPicked(null); setQuantity("100"); }}
                   style={ghostBtn()}
                 >
-                  Add food
+                  Add something else
                 </button>
               </div>
 
@@ -644,7 +794,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
           <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.rule}` }}>
             <label htmlFor="food-search" style={label(12, { display: "block", marginBottom: 8 })}>
-              Search FitFuel meals and foods
+              Search food outside your FitFuel plan
             </label>
             {/* A text box that repaints a list of choices below it is a
                 combobox, and was being announced as a plain input: the results
@@ -656,8 +806,17 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
               aria-controls="food-results"
               aria-autocomplete="list"
               value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              placeholder="FitFuel meal, rice, dal, paneer"
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQ(value);
+                if (!value.trim()) {
+                  searchSequence.current += 1;
+                  if (searchTimer.current) clearTimeout(searchTimer.current);
+                  setResults([]);
+                  setSearching(false);
+                }
+              }}
+              placeholder="Rice, dal, paneer, chai"
               autoComplete="off"
               style={{ ...INPUT, width: "100%" }}
             />
@@ -735,7 +894,9 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
 
           <div>
             {!searchQ && (
-              <p style={label(12, { display: "block", padding: "14px 18px 8px" })}>FitFuel meals and popular foods</p>
+              <p style={{ ...body(14), padding: 18, margin: 0 }}>
+                Start typing to add something you ate outside your scheduled FitFuel meals.
+              </p>
             )}
             {searching && results.length === 0 && (
               <div style={{ padding: 18 }} aria-busy="true">
@@ -770,7 +931,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                     type="button"
                     role="option"
                     aria-selected={on}
-                    onClick={() => { setPicked(f); setQuantity(String(f.defaultQuantity ?? 100)); }}
+                    onClick={() => { setPicked(f); setQuantity("100"); }}
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                       width: "100%", minHeight: 44, padding: "12px 18px", textAlign: "left",
@@ -782,8 +943,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                   >
                     <span style={{ minWidth: 0 }}>
                       <span style={{ ...body(14, { color: C.ink }), display: "block" }}>
-                        {f.name}
-                        {f.source === "fitfuel" ? ", FitFuel meal" : f.isCustom ? ", custom" : ""}
+                        {f.name}{f.isCustom ? ", custom" : ""}
                       </span>
                       <span style={{ ...num(12, { color: C.dim }), display: "block", marginTop: 3 }}>
                         per 100g: {f.per100Protein} P, {f.per100Carbs} C, {f.per100Fat} F, {f.per100Fiber} fibre

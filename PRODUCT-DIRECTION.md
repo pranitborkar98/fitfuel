@@ -221,11 +221,14 @@ The persistent navigation remains the routing source of truth; the dashboard
 directory is the mobile discovery surface. Contract and browser tests verify
 that every non-partner dashboard route remains implemented and visible.
 
-The diary food picker must combine two different product datasets. FitFuel
-recipes are cooked meals and appear first with the FitFuel label, real serving
-size and recipe nutrition. FoodItem rows remain available for ingredients,
-outside food and customer-created entries. This is not subscription-gated.
-When a member explicitly logs a recipe, the server resolves it to the FoodItem
-record required by the existing diary model; merely viewing or searching does
-not write data. A subscribed member's one-tap plan confirmation continues to
-use the active-plan meal log so delivery, ratings and consistency stay linked.
+The diary must not mix the complete FitFuel recipe catalogue into generic food
+search. A subscribed member sees the meals scheduled for their active plan and
+date first, with the assigned serving and a one-tap confirmation. That action
+uses the active-plan meal log, which also writes the linked FoodEntry so the
+diary, consistency score, ratings and calorie ledger stay aligned. The same
+scheduled-meal contract powers the dashboard and subscriber reminders.
+
+FoodItem search is secondary and explicitly labelled for food or drinks eaten
+outside the FitFuel plan. It stays available to members with and without a meal
+subscription, but it does not show a default wall of foods and it must not let a
+member choose an arbitrary FitFuel recipe in place of their assigned meal.

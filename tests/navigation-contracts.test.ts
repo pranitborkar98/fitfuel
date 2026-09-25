@@ -92,20 +92,33 @@ test("dashboard preview is internally consistent and uses isolated examples", ()
   assert.doesNotMatch(previewRoute, /prisma|auth\(|process\.env/);
 });
 
-test("the diary and dashboard expose FitFuel's product depth without a subscription", () => {
+test("the diary keeps subscribed meals separate from optional outside-food search", () => {
   const foodSearch = readFileSync(resolve("app/api/nutrition/foods/route.ts"), "utf8");
-  assert.match(foodSearch, /findFitFuelMeals\(q\)/);
-  assert.match(foodSearch, /\[\.\.\.fitFuelMeals, \.\.\.databaseFoods\]/);
+  assert.doesNotMatch(foodSearch, /findFitFuelMeals|prisma\.recipe/);
+  assert.match(foodSearch, /\{ category: null \}, \{ category: \{ not: "PLAN_RECIPE" \} \}/);
+  assert.match(foodSearch, /only for food eaten outside the plan/);
 
   const diary = readFileSync(resolve("app/api/nutrition/diary/route.ts"), "utf8");
-  assert.match(diary, /resolveDiaryFood\(foodItemId, session\.user\.id\)/);
-  assert.match(diary, /foodItemId: food\.id/);
+  assert.match(diary, /OR: \[\{ userId: null \}, \{ userId: session\.user\.id \}\]/);
+  assert.doesNotMatch(diary, /resolveDiaryFood/);
 
   const nutrition = readFileSync(resolve("app/dashboard/nutrition/NutritionClient.tsx"), "utf8");
-  assert.match(nutrition, /Search FitFuel meals and foods/);
-  assert.match(nutrition, /defaultQuantity/);
+  assert.match(nutrition, /Your FitFuel meals today/);
+  assert.match(nutrition, /\/api\/user\/active-plan\/meals\/today/);
+  assert.match(nutrition, /\/api\/user\/active-plan\/meals\/log/);
+  assert.match(nutrition, /I ate this/);
+  assert.match(nutrition, /Add something else/);
+  assert.match(nutrition, /Search food outside your FitFuel plan/);
+  assert.doesNotMatch(nutrition, /FitFuel meals and popular foods/);
+
+  const notifications = readFileSync(resolve("prisma/seed-notification-templates.ts"), "utf8");
+  for (const template of ["morning_meal_preview", "evening_recap", "re_engagement"]) {
+    assert.ok(notifications.includes(template), `Missing subscriber reminder: ${template}`);
+  }
 
   const dashboard = readFileSync(resolve("app/dashboard/DashboardClient.tsx"), "utf8");
+  assert.match(dashboard, /\/api\/user\/active-plan\/meals\/today/);
+  assert.match(dashboard, /\/api\/user\/active-plan\/meals\/log/);
   assert.equal(dashboard.match(/<QuickActions \/>/g)?.length, 2);
   const tools = readFileSync(resolve("app/dashboard/QuickActions.tsx"), "utf8");
   for (const label of [
