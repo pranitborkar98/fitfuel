@@ -835,19 +835,28 @@ export default function FitFuelApp({
           </Link>
           <p className={`${s.dishBlurb} ${r.productDescription}`}>{d.blurb}</p>
           {d.kcal ? (
-            <MacroSplit
-              p={d.protein}
-              c={d.carbs}
-              f={d.fat}
-              kcal={d.kcal}
-              /* THE LINE THE WHOLE DAY BAR EXISTS FOR. Grams are a fact about
-                 the dish; this is what the dish does to the day the visitor
-                 said they wanted, and it moves when they change the target. */
-              contrib={
-                `${Math.round((d.protein / target.protein) * 100)}% of your protein · ` +
-                `${Math.round((d.kcal / target.kcal) * 100)}% of your calories`
-              }
-            />
+            <>
+              <MacroSplit
+                p={d.protein}
+                c={d.carbs}
+                f={d.fat}
+                kcal={d.kcal}
+                /* THE LINE THE WHOLE DAY BAR EXISTS FOR. Grams are a fact about
+                   the dish; this is what the dish does to the day the visitor
+                   said they wanted, and it moves when they change the target. */
+                contrib={
+                  `${Math.round((d.protein / target.protein) * 100)}% of your protein · ` +
+                  `${Math.round((d.kcal / target.kcal) * 100)}% of your calories`
+                }
+              />
+              {/* The ring above prints recipe estimates, and this card is the
+                  one surface that showed them with no qualifier: /menu stamps
+                  "Estimated", the dish page says so in a sentence, the sheet
+                  says "kitchen estimate". Plan cards share MacroSplit but
+                  their numbers are weighed, so the line lives here on the dish
+                  card only, never inside MacroSplit. */}
+              <p className={s.macroLine}>Macros estimated from the recipe</p>
+            </>
           ) : null}
           {d.orderable && (d.addOns?.length || d.variantNote) ? (
             <button

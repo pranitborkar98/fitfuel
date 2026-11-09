@@ -10,10 +10,14 @@
 // PENDING_PAYMENT order and returns a signed PayU payload, and this is the form
 // that drives it.
 //
-// WHATSAPP DOES NOT DISAPPEAR, and that is not sentimentality. 32 of the 48
-// dishes carry a placeholder price, and the server REFUSES to charge for them
-// (400, "price-on-request"). A basket of those has nothing to pay, so it still
-// has to reach a person. Card for what is priced, WhatsApp for what is not.
+// WHATSAPP IS GONE, and that includes the enquiry path. The WhatsApp exit
+// was removed 2026-08-13: an order does not leave our own domain to be
+// finished inside another company's app. So this form pays by card for what is
+// priced, and what is not priced never reaches it: the drawer only opens this
+// form when at least one priced line exists, and the server refuses a basket
+// with nothing priced (400, "price-on-request"). A price-on-request dish stays
+// in the basket as an enquiry until the kitchen sets a price; there is no
+// message composed for it anywhere in this flow.
 //
 // THE PRICE IS NEVER SENT. Only dish ids, quantities and an add-on kind go up;
 // the server re-prices from lib/menu-alacarte. The total rendered beside the

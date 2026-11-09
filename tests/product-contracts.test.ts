@@ -33,6 +33,8 @@ import {
   clampCalorieTarget,
   resolveCalorieTarget,
 } from "@/lib/calorie-target";
+import { MENU_FROM, MENU_STATS } from "@/lib/menu-alacarte";
+import { DISHES, ENQUIRY_COUNT, isOrderable, ORDERABLE_COUNT, receipt, resolveLines } from "@/lib/menu-cart";
 import { goalsPatchSchema } from "@/lib/validation/schemas";
 
 test("the advertised trial total is the checkout total", () => {
@@ -310,4 +312,46 @@ test("calorie target treats zero and missing values as absent, and floors stored
   assert.equal(CALORIE_FLOOR_KCAL, 1200);
   assert.equal(clampCalorieTarget(0), CALORIE_FLOOR_KCAL);
   assert.equal(clampCalorieTarget(25_000), CALORIE_CEILING_KCAL);
+});
+
+test("a provisional dish is never orderable at its placeholder price", () => {
+  // 32 of 48 rows still carry the Rs 100 placeholder. None of them may enter
+  // a basket, a total, or a checkout, at any step of the customer path.
+  assert.equal(MENU_STATS.items, 48);
+  assert.equal(MENU_STATS.provisional, 32);
+  assert.equal(MENU_STATS.priced, 16);
+  assert.equal(ORDERABLE_COUNT, 16);
+  assert.equal(ENQUIRY_COUNT, 32);
+  for (const d of DISHES) {
+    assert.equal(isOrderable(d), !d.provisional && d.price != null, d.name);
+    if (d.provisional) assert.equal(d.price, 100, d.name);
+  }
+  // The "from Rs X" headline never reads off the placeholder: the cheapest
+  // kitchen-set price today is Rs 200, so the floor must be that, not 100.
+  assert.equal(MENU_FROM, 200);
+});
+
+test("a stored provisional line drops out of the basket instead of pricing", () => {
+  const provisional = DISHES.find((d) => d.provisional)!;
+  const priced = DISHES.find((d) => isOrderable(d))!;
+  // A stale localStorage entry, or a hand-built request, naming a provisional
+  // dish at any quantity resolves to nothing: it never reaches a total.
+  assert.deepEqual(resolveLines([{ id: provisional.id, qty: 2 }]), []);
+  assert.deepEqual(resolveLines([{ id: "no-such-dish", qty: 1 }]), []);
+  const kept = resolveLines([
+    { id: provisional.id, qty: 2 },
+    { id: priced.id, qty: 1 },
+  ]);
+  assert.equal(kept.length, 1);
+  assert.equal(kept[0].id, priced.id);
+  assert.equal(kept[0].unitRs, priced.price);
+  // An enquiry-only basket charges nothing: no food, no delivery, no
+  // packaging, no GST. The receipt of zero lines is zero throughout.
+  assert.deepEqual(receipt([]), {
+    subtotalRs: 0,
+    deliveryRs: 0,
+    packagingRs: 0,
+    gstRs: 0,
+    totalRs: 0,
+  });
 });
