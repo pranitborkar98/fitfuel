@@ -138,7 +138,7 @@ export const COACH_WEEKS: { w: string; kg: number; note: string }[] = [
    These chips used to link to `/plans?q=<label>`. A link sweep found that
    `app/plans/page.tsx` reads exactly two search params — `diet` and `trial` —
    and has never read `q`, so all 29 landed on the unfiltered list of every
-   plan. The reader tapped "PCOS" and got 126 plans with no explanation.
+   plan. The reader tapped "PCOS" and got every plan with no explanation.
 
    So they resolve to the plan itself. Every slug below was checked against the
    database (grouped by subCategory, VEG variant preferred) and every one of

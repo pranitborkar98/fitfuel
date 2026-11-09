@@ -152,7 +152,13 @@ export const COURSES: { key: MenuCategoryKey; label: string; note: string; n: nu
     items: c.items.map((i) => SHOP_DISH_BY_ID.get(dishId(i.name))!).filter(Boolean),
   }));
 
-/** Eight aisles: the six courses, then the two subscription doors. */
+/** Eight aisles: the six courses, then the two subscription doors.
+ *
+ *  STALE, DEAD-ONLY: the "Meal plans" n below is a hardcoded 126. It is
+ *  rendered only by the dead Shop.tsx storefront (AISLES has no live
+ *  consumer), so it is left untouched here for the dead-code cleanup
+ *  (piece 4) to delete with it. Live plan counts come from
+ *  lib/plan-counts.ts; do not copy this literal into a live surface. */
 export const AISLES: { label: string; n: number; href: string }[] = [
   ...COURSES.map((c) => ({ label: c.label, n: c.n, href: `/menu?course=${c.key}` })),
   { label: "Meal plans", n: 126, href: "/plans" },
@@ -228,8 +234,11 @@ export const MONTH_TOTAL_RS = planTotal("VEG", "ONE_MONTH", "ALL_FOUR", "STANDAR
 export const PER_MEAL_RS = Math.round(MONTH_SUBTOTAL_RS / MONTH_MEALS);
 
 /* ── Plans on the shop floor ───────────────────────────────────────────────
-   Six of the 126, the ones the storefront leads with. The macro lines are the
-   seeded day-one figures for each plan, not a marketing round number. */
+   Six of the seeded plans, the ones the storefront leads with. The macro lines are the
+   seeded day-one figures for each plan, not a marketing round number.
+   (SHOP_PLANS / PLAN_CATS below are rendered only by dead Shop.tsx; the
+   "126" literals in them are stale hardcoded totals — see the note on
+   AISLES. Live counts come from lib/plan-counts.ts.) */
 
 export type ShopPlan = {
   label: string;
@@ -252,7 +261,7 @@ export const SHOP_PLANS: ShopPlan[] = [
 ];
 
 export const PLAN_CATS: { key: string; label: string }[] = [
-  { key: "all", label: "All 126" },
+  { key: "all", label: "All 126" }, // STALE hardcoded total, dead-only (see AISLES note)
   { key: "STANDARD", label: "Goal plans" },
   { key: "LIFESTYLE_MEDICAL", label: "Medical & lifestyle" },
   { key: "SPORTS", label: "Sports nutrition" },
@@ -432,7 +441,7 @@ export const FOOTER_COLS: { title: string; links: { label: string; meta: string;
   {
     title: "Eat daily",
     links: [
-      { label: "Goal and condition plans", meta: "126", href: "/plans" },
+      { label: "Goal and condition plans", meta: "126", href: "/plans" }, // STALE hardcoded total, dead-only (see AISLES note)
       { label: "Trial day", meta: "₹420", href: "/plans?trial=true" },
       { label: "Digital plans, cook it yourself", meta: "PDF", href: "/plans/digital" },
       { label: "Supplements", meta: "46", href: "/supplements" },

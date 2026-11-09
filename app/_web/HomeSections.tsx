@@ -79,7 +79,7 @@ const MEALS_PER_DAY: Record<MealKey, number> = {
 
 export type HomeSectionsProps = {
   counts: BandCounts;
-  /** Distinct subCategory values across the 126 plans — goals and conditions. */
+  /** Distinct subCategory values across the seeded plans — goals and conditions. */
   goalCount: number;
   /** The seeded PlanPrice matrix, one row per (diet × duration × meals). */
   prices: PriceRow[];
@@ -584,7 +584,7 @@ function RetailBand({
    for the same meal combo, so it is a real comparison rather than a percentage
    somebody typed. Premium and Luxury have no MealPlan rows yet, so they price
    as estimates and their button says so instead of taking money. */
-/* planCount went with the "126 plans" eyebrow. The count is still on the page
+/* planCount went with the "plans" eyebrow. The count is still on the page
    — the platform band leads with it, and the close offers "See the N plans". */
 function PlanBand({ prices }: { prices: PriceRow[] }) {
   const [duration, setDuration] = useState<DurationKey>("ONE_MONTH");
