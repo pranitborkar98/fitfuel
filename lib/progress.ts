@@ -11,6 +11,7 @@
 //   5. Current-week consistency breakdown (reuses lib/consistency-score)
 
 import { prisma } from "@/lib/prisma";
+import { resolveCalorieTarget } from "@/lib/calorie-target";
 import { getWeeklyConsistency } from "@/lib/consistency-score";
 
 // ── window config ──────────────────────────────────────────────
@@ -115,7 +116,7 @@ export async function getProgressData(userId: string): Promise<ProgressData> {
   const weightWindowStart = addDays(today, -(WEIGHT_WINDOW_DAYS - 1));
 
   // ── parallel fetch ──
-  const [activePlan, profile, bodyMetrics, mealLogs, foodEntries, workouts] =
+  const [activePlan, profile, nutritionGoal, bodyMetrics, mealLogs, foodEntries, workouts] =
     await Promise.all([
       prisma.userActivePlan.findFirst({
         where: { userId, status: "active", startDate: { lte: today }, endDate: { gte: today } },
@@ -142,7 +143,11 @@ export async function getProgressData(userId: string): Promise<ProgressData> {
       }),
       prisma.userProfile.findUnique({
         where: { userId },
-        select: { targetWeightKg: true, weightKg: true, calorieTarget: true, tdee: true },
+        select: { targetWeightKg: true, weightKg: true, calorieTarget: true },
+      }),
+      prisma.nutritionGoal.findUnique({
+        where: { userId },
+        select: { calories: true },
       }),
       prisma.bodyMetric.findMany({
         where: { userId, measuredAt: { gte: weightWindowStart } },
@@ -184,12 +189,17 @@ export async function getProgressData(userId: string): Promise<ProgressData> {
   const mp = activePlan?.mealPlan ?? null;
 
   // ── targets ──
-  const calTarget =
-    activePlan?.calorieTarget ??
-    mp?.avgCaloriesPerDay ??
-    profile?.calorieTarget ??
-    profile?.tdee ??
-    2000;
+  // Calorie target from the one shared precedence (lib/calorie-target.ts).
+  // Note the old chain's profile-TDEE rung is gone: TDEE is an expenditure
+  // estimate, not a target, and the shared precedence does not include it,
+  // so a user with a stored TDEE but no target anywhere now resolves to the
+  // safe default instead of their TDEE.
+  const { calories: calTarget } = resolveCalorieTarget({
+    profileCalorieTarget: profile?.calorieTarget ?? null,
+    activePlanCalorieTarget: activePlan?.calorieTarget ?? null,
+    nutritionGoalCalories: nutritionGoal?.calories ?? null,
+    planAvgCaloriesPerDay: mp?.avgCaloriesPerDay ?? null,
+  });
   const proteinTarget = activePlan?.proteinTarget ?? mp?.avgProteinGrams ?? 0;
   const carbTarget = activePlan?.carbTarget ?? mp?.avgCarbsGrams ?? 0;
   const fatTarget = activePlan?.fatTarget ?? mp?.avgFatGrams ?? 0;
