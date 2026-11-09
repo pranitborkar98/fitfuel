@@ -22,6 +22,9 @@ const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: Props) {
   const cart = useCart();
   const [addOn, setAddOn] = useState<string>("");
+  /* A resolved image that fails to load at runtime renders the same labelled
+     well as a dish with no image at all, never a broken-image icon. */
+  const [imageFailed, setImageFailed] = useState(false);
   const qty = cart.qtyOf(dish.id);
 
   const chosen = dish.addOns?.find((a) => a.kind === addOn);
@@ -66,7 +69,7 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
           {/* The image slot, kept as a placeholder. Drop a file into
               public/images/dishes/<slug> and it fills with no layout change. */}
           <div className={s.shot}>
-            {imageSrc ? (
+            {imageSrc && !imageFailed ? (
               <Image
                 src={imageSrc}
                 alt={dish.name}
@@ -75,6 +78,7 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
                 style={{ objectFit: "cover" }}
                 loading="eager"
                 fetchPriority="high"
+                onError={() => setImageFailed(true)}
               />
             ) : (
               <span className={s.shotLabel}>{dish.categoryLabel}</span>

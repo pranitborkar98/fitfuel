@@ -56,7 +56,7 @@ export default function DishSheet({
   return (
     <Sheet onClose={onClose} labelledBy="dish-sheet-title">
       <div style={{ position: "relative", aspectRatio: "16/9", background: C.panel2, borderBottom: `1px solid ${C.rule}`, overflow: "hidden" }}>
-        <Slot images={images} name={dish.slot} alt={dish.name} dish={dish} sizes="480px" />
+        <Slot images={images} name={dish.slot} alt={dish.name} sizes="480px" />
         <span style={{ position: "absolute", top: 10, right: 10 }}>
           <SheetClose onClose={onClose} />
         </span>
@@ -153,8 +153,9 @@ export default function DishSheet({
 
         {!dish.orderable && (
           <p style={body(12, { margin: "12px 0 0", color: C.dim, fontFamily: MONO, letterSpacing: "0.02em" })}>
-            This dish is cooked and on the menu but not priced yet. Asking adds it to your WhatsApp message and the
-            kitchen replies with the figure.
+            This dish is cooked and on the menu but not priced yet, so it cannot be ordered
+            here. Asking keeps it in your basket, and it becomes orderable the moment the
+            kitchen sets a price.
           </p>
         )}
       </div>

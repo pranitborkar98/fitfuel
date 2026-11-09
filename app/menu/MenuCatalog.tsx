@@ -23,6 +23,10 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
   const [course, setCourse] = useState(validCourse);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [visibleCount, setVisibleCount] = useState(12);
+  /* A resolved image that fails to load at runtime renders the same labelled
+     well as a dish with no image at all, never a broken-image icon. The set
+     holds dish ids, so one bad file cannot blank the rest of the grid. */
+  const [failedImages, setFailedImages] = useState<ReadonlySet<string>>(new Set());
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -83,8 +87,14 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
                 return (
                   <article key={dish.id} className={styles.card}>
                     <Link href={`/menu/${dish.id}`} className={styles.photo} aria-label={`View ${dish.name}`}>
-                      {images[dish.id] ? (
-                        <Image src={images[dish.id]} alt={dish.name} fill sizes="(max-width: 680px) 100vw, (max-width: 1050px) 50vw, 33vw" />
+                      {images[dish.id] && !failedImages.has(dish.id) ? (
+                        <Image
+                          src={images[dish.id]}
+                          alt={dish.name}
+                          fill
+                          sizes="(max-width: 680px) 100vw, (max-width: 1050px) 50vw, 33vw"
+                          onError={() => setFailedImages((prev) => new Set(prev).add(dish.id))}
+                        />
                       ) : (
                         <span><small>Photo added with final kitchen listing</small>{dish.categoryLabel}</span>
                       )}
