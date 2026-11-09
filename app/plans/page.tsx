@@ -32,9 +32,12 @@ import { publicPlanDescription } from "@/lib/plan-public-copy";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
-  // Counted live (lib/plan-counts.ts). With zero active plans, or with the
-  // database unreachable, the description states no number at all rather
-  // than "explore 0 plan concepts".
+  // Counted live (lib/plan-counts.ts). ROWS, not concepts: /plans lists one
+  // card per active orderable row (one per diet variant), so this is the
+  // number of rows a customer can buy — a different number from the
+  // homepage's concepts count by design. With zero active plans, or with
+  // the database unreachable, the description states no number at all
+  // rather than "explore 0 plan concepts".
   const n = await countActiveOrderablePlans();
   return {
     title: "Meal Plans in Pune",
