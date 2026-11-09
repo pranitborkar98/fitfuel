@@ -315,6 +315,10 @@ export type FoodsPostInput = z.infer<typeof foodsPostSchema>;
 // below it is rejected, so a 0 or starvation-level target can no longer be
 // saved. The other fields keep their existing bounds (0..max via zNum);
 // no new macro rules are invented here.
+// The write-time minimum stays 1200 for everyone: this schema cannot know
+// the user's sex, so it cannot enforce the 1500 floor for MALE/OTHER. That
+// floor is applied at read time by the resolver instead (lib/calorie-target.ts
+// calorieFloorForSex), so a male goal saved at 1300 reads back as 1500.
 export const goalsPatchSchema = z.object({
   calories: z.coerce
     .number()

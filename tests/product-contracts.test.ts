@@ -29,6 +29,7 @@ import {
 import {
   CALORIE_CEILING_KCAL,
   CALORIE_FLOOR_KCAL,
+  CALORIE_FLOOR_MALE_KCAL,
   DEFAULT_CALORIE_TARGET_KCAL,
   clampCalorieTarget,
   resolveCalorieTarget,
@@ -217,6 +218,23 @@ test("coach waits for a trend and caps a single change", () => {
   assert.equal(Math.abs(recommendation.deltaKcal) % 10, 0);
 });
 
+test("recalibration never recommends below the sex-aware floor", () => {
+  // Same stalled-loss trend, target 1600: the uncapped recommendation is
+  // 1300. A male user floors at 1500; female or unknown sex at 1200, so
+  // the 1300 recommendation stands for them.
+  const male = computeRecalibration({ ...summary, calorieTarget: 1600, gender: "MALE" });
+  assert.equal(male.recommendedTarget, 1500);
+  assert.equal(male.deltaKcal, -100);
+  assert.equal(male.canApply, true);
+
+  const female = computeRecalibration({ ...summary, calorieTarget: 1600, gender: "FEMALE" });
+  assert.equal(female.recommendedTarget, 1300);
+  assert.equal(female.deltaKcal, -300);
+
+  const unknown = computeRecalibration({ ...summary, calorieTarget: 1600 });
+  assert.equal(unknown.recommendedTarget, 1300);
+});
+
 test("partner payout details are authenticated-encrypted and tamper evident", () => {
   const previous = process.env.PARTNER_DATA_ENCRYPTION_KEY;
   process.env.PARTNER_DATA_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
@@ -268,21 +286,23 @@ test("calorie target resolves in one documented precedence", () => {
     nutritionGoalCalories: 1700,
     planAvgCaloriesPerDay: 1600,
   };
-  assert.deepEqual(resolveCalorieTarget(all), { calories: 2100, source: "profile" });
+  // The stored NutritionGoal wins: it is the user's explicit latest choice,
+  // set deliberately in the goals dialog.
+  assert.deepEqual(resolveCalorieTarget(all), { calories: 1700, source: "nutrition_goal" });
   assert.deepEqual(
-    resolveCalorieTarget({ ...all, profileCalorieTarget: null }),
-    { calories: 1800, source: "active_plan" },
+    resolveCalorieTarget({ ...all, nutritionGoalCalories: null }),
+    { calories: 2100, source: "profile" },
   );
   assert.deepEqual(
-    resolveCalorieTarget({ ...all, profileCalorieTarget: null, activePlanCalorieTarget: null }),
-    { calories: 1700, source: "nutrition_goal" },
+    resolveCalorieTarget({ ...all, nutritionGoalCalories: null, profileCalorieTarget: null }),
+    { calories: 1800, source: "active_plan" },
   );
   assert.deepEqual(
     resolveCalorieTarget({
       ...all,
+      nutritionGoalCalories: null,
       profileCalorieTarget: null,
       activePlanCalorieTarget: null,
-      nutritionGoalCalories: null,
     }),
     { calories: 1600, source: "plan_average" },
   );
@@ -312,6 +332,35 @@ test("calorie target treats zero and missing values as absent, and floors stored
   assert.equal(CALORIE_FLOOR_KCAL, 1200);
   assert.equal(clampCalorieTarget(0), CALORIE_FLOOR_KCAL);
   assert.equal(clampCalorieTarget(25_000), CALORIE_CEILING_KCAL);
+});
+
+test("calorie target floor is sex-aware: 1500 for male/other, 1200 otherwise", () => {
+  assert.equal(CALORIE_FLOOR_MALE_KCAL, 1500);
+  // Male 1400 clamps up to 1500; female 1100 clamps up to 1200.
+  assert.deepEqual(resolveCalorieTarget({ profileCalorieTarget: 1400, sex: "MALE" }), {
+    calories: 1500,
+    source: "profile",
+  });
+  assert.deepEqual(resolveCalorieTarget({ profileCalorieTarget: 1400, sex: "OTHER" }), {
+    calories: 1500,
+    source: "profile",
+  });
+  assert.deepEqual(resolveCalorieTarget({ nutritionGoalCalories: 1100, sex: "FEMALE" }), {
+    calories: 1200,
+    source: "nutrition_goal",
+  });
+  // Unknown or absent sex keeps the old 1200 floor.
+  assert.deepEqual(resolveCalorieTarget({ nutritionGoalCalories: 1100 }), {
+    calories: 1200,
+    source: "nutrition_goal",
+  });
+  assert.deepEqual(resolveCalorieTarget({ nutritionGoalCalories: 1100, sex: null }), {
+    calories: 1200,
+    source: "nutrition_goal",
+  });
+  assert.equal(clampCalorieTarget(1400, "MALE"), 1500);
+  assert.equal(clampCalorieTarget(1400, "FEMALE"), 1400);
+  assert.equal(clampCalorieTarget(1400), 1400);
 });
 
 test("a provisional dish is never orderable at its placeholder price", () => {
