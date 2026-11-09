@@ -8,6 +8,7 @@ import { resolveCheckoutCustomer } from "@/lib/checkout-customer";
 import { checkoutCreditReservation } from "@/lib/checkout-credit";
 import { applyCoupon } from "@/lib/coupons";
 import { getPayuConfig } from "@/lib/payu-config";
+import { buildPayuInitHash } from "@/lib/payu-hash";
 import { prisma } from "@/lib/prisma";
 import { computePrice } from "@/lib/pricing";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -263,8 +264,7 @@ export async function POST(req: NextRequest) {
 
     const amount = created.chargeAmountRs.toFixed(2);
     const productinfo = `digital_${bundle.toLowerCase()}_${planSlug}`;
-    const hashInput = `${payu.key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${payu.salt}`;
-    const hash = crypto.createHash("sha512").update(hashInput).digest("hex");
+    const hash = buildPayuInitHash({ key: payu.key, txnid, amount, productinfo, firstname, email, salt: payu.salt });
     return NextResponse.json({
       payuUrl: payu.paymentUrl,
       key: payu.key,

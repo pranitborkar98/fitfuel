@@ -1,7 +1,7 @@
 import "server-only";
 
-import crypto from "node:crypto";
 import type { PayuConfig } from "@/lib/payu-config";
+import { verifyPayuResponseHash } from "@/lib/payu-hash";
 
 export type PayuResponse = {
   status: string;
@@ -52,36 +52,10 @@ export function readPayuResponse(form: FormData): PayuResponse {
 
 /** PayU signs both success and failure responses with the reverse request hash.
  * Keep this in one place so a callback cannot receive weaker verification just
- * because it landed on the failure URL. */
+ * because it landed on the failure URL. The hash itself lives in
+ * lib/payu-hash.ts so contract tests can exercise the exact same code. */
 export function verifyPayuResponse(response: PayuResponse, config: PayuConfig): boolean {
-  if (
-    !response.status || !response.txnid || !response.amount ||
-    !response.productinfo || !response.firstname || !response.email ||
-    !response.hash || response.key !== config.key
-  ) return false;
-
-  const fields = [
-    config.salt,
-    response.status,
-    "", "", "", "", "", "",
-    response.udf5,
-    response.udf4,
-    response.udf3,
-    response.udf2,
-    response.udf1,
-    response.email,
-    response.firstname,
-    response.productinfo,
-    response.amount,
-    response.txnid,
-    response.key,
-  ];
-  if (response.additionalCharges) fields.unshift(response.additionalCharges);
-  const expected = crypto.createHash("sha512").update(fields.join("|")).digest("hex");
-
-  const receivedBuffer = Buffer.from(response.hash, "utf8");
-  const expectedBuffer = Buffer.from(expected, "utf8");
-  return receivedBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+  return verifyPayuResponseHash({ ...response, salt: config.salt }, config);
 }
 
 export function payuAmountMatches(posted: string, expectedRs: number): boolean {

@@ -45,7 +45,7 @@ type Order = {
 
 type UpdatedOrder = Pick<Order, "id" | "paymentStatus" | "status">;
 type PaymentAction = Exclude<PaymentStatus, "PENDING">;
-type ApiResponse = { order: UpdatedOrder; reconciled?: boolean; error?: string };
+type ApiResponse = { order: UpdatedOrder; reconciled?: boolean; partial?: boolean; requestId?: string; error?: string };
 
 const money = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -85,6 +85,17 @@ async function updatePayment(id: string, paymentStatus: PaymentAction): Promise<
   });
   const payload = (await response.json().catch(() => null)) as ApiResponse | null;
   if (!response.ok || !payload?.order) throw new Error(payload?.error ?? "Order reconciliation failed.");
+  return payload;
+}
+
+async function refundViaPayu(id: string): Promise<ApiResponse> {
+  const response = await fetch("/api/admin/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "refundViaPayu", id }),
+  });
+  const payload = (await response.json().catch(() => null)) as ApiResponse | null;
+  if (!response.ok || !payload?.order) throw new Error(payload?.error ?? "PayU refund failed.");
   return payload;
 }
 
@@ -269,7 +280,7 @@ export default function OrdersView({ orders }: { orders: Order[] }) {
 }
 
 function PaymentControl({ order, onUpdated }: { order: Order; onUpdated: (updated: UpdatedOrder) => void }) {
-  const [busy, setBusy] = useState<PaymentAction | "RECONCILE" | null>(null);
+  const [busy, setBusy] = useState<PaymentAction | "RECONCILE" | "REFUND_PAYU" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -308,6 +319,30 @@ function PaymentControl({ order, onUpdated }: { order: Order; onUpdated: (update
     }
   }
 
+  async function submitRefundViaPayu() {
+    const confirmed = window.confirm(
+      "Refund the full order amount through PayU now? This moves money back to the customer and cannot be undone. Use Record refund only if the money was already returned in the PayU dashboard.",
+    );
+    if (!confirmed) return;
+
+    setBusy("REFUND_PAYU");
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await refundViaPayu(order.id);
+      onUpdated(result.order);
+      setMessage(
+        result.partial
+          ? "Partial refund recorded at PayU."
+          : `Refund accepted by PayU${result.requestId ? ` (request ${result.requestId}).` : "."}`,
+      );
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "PayU refund failed.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div className={styles.paymentControl}>
       <h2>Payment actions</h2>
@@ -328,10 +363,15 @@ function PaymentControl({ order, onUpdated }: { order: Order; onUpdated: (update
             {busy === action.value ? "Saving…" : action.label}
           </button>
         ))}
+        {order.paymentStatus === "SUCCESS" && order.paymentMethod === "PAYU" ? (
+          <button type="button" className={styles.dangerButton} disabled={busy !== null} onClick={submitRefundViaPayu}>
+            {busy === "REFUND_PAYU" ? "Refunding…" : "Refund via PayU"}
+          </button>
+        ) : null}
         {order.paymentStatus === "REFUNDED" ? <p className={styles.finalState}>Refunded is a final payment state.</p> : null}
       </div>
       <p className={styles.paymentHelp}>
-        Paid creates or repairs access and accounting. “Record refund” never moves money at PayU; use it only after the refund is complete.
+        Paid creates or repairs access and accounting. “Refund via PayU” moves the money at PayU. “Record refund” never moves money at PayU; use it only after the refund is complete.
       </p>
       {message ? <p className={styles.successMessage} role="status">{message}</p> : null}
       {error ? <p className={styles.errorMessage} role="alert">{error}</p> : null}
