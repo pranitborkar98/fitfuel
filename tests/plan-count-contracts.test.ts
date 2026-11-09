@@ -160,3 +160,58 @@ test("catalog.ts holds no hardcoded 126 at all", () => {
   assert.ok(!src.includes("113"), "catalog.ts still contains 113");
   assert.match(src, /\{ key: "all", label: "All plans" \}/);
 });
+
+// --- Piece 9c: the homepage states one number, the concepts count. ---
+// The catalogue renders one card per subCategory for EVERY concept,
+// including inactive ones (getPlans does not filter on isActive), and
+// planCount is counts.concepts. The bands below the catalogue used to
+// state the ROW totals instead — 126 "plans in the catalogue", 70
+// "condition plans", "See the 126 plans" — next to a 59-card catalogue,
+// and 70 condition plans beside 59 plans in the catalogue at all. The
+// band counts are distinct subCategory values now, so every plan number
+// on the homepage is the same live concepts count the cards show.
+
+test("homepage band counts are concept counts, not row totals", () => {
+  const page = read("app/page.tsx");
+  const bandData = page.slice(
+    page.indexOf("async function getBandData"),
+    page.indexOf("async function getPrices"),
+  );
+  // No row count anywhere in the band query.
+  assert.doesNotMatch(bandData, /prisma\.mealPlan\.count\(/);
+  assert.match(bandData, /prisma\.mealPlan\.groupBy\(\{\s*by:\s*\["subCategory"\]\s*\}\)/);
+  assert.match(
+    bandData,
+    /prisma\.mealPlan\.groupBy\(\{\s*by:\s*\["subCategory"\],\s*where:\s*\{\s*category:\s*"LIFESTYLE_MEDICAL"\s*\},?\s*\}\)/,
+  );
+  assert.match(bandData, /plans: planConcepts\.length,/);
+  assert.match(bandData, /conditionPlans: conditionConcepts\.length,/);
+});
+
+test("homepage bands and catalogue state the same concepts number", () => {
+  const sections = read("app/_web/HomeSections.tsx");
+  // Closing CTA and conditions band both read the band count, which is
+  // concepts now (see the test above), not the row total.
+  assert.match(sections, /planCount=\{counts\.plans\}/);
+  assert.match(sections, /<b>\{counts\.plans\}<\/b>/);
+  assert.match(sections, /plans in the catalogue/);
+  assert.match(sections, /<b data-count=\{counts\.conditionPlans\}>\{counts\.conditionPlans\}<\/b>/);
+  const counts = read("app/_web/home-data.ts");
+  assert.match(counts, /Plan CONCEPTS, not rows/);
+  const page = read("app/page.tsx");
+  assert.match(page, /goalCount=\{plans\.length\}/);
+});
+
+test("plan-counts header states concepts includes inactive rows", () => {
+  const counts = read("lib/plan-counts.ts");
+  assert.match(counts, /distinct subCategory values across ALL rows, including\n\/\/\s+inactive ones/);
+  assert.match(counts, /not the number of plans a customer can buy/);
+  assert.match(counts, /bands below\n\/\/\s+the homepage catalogue state this same concepts number/);
+});
+
+test("/plans metadata documents rows, not concepts", () => {
+  const plansPage = read("app/plans/page.tsx");
+  assert.match(plansPage, /ROWS, not concepts/);
+  const counts = read("lib/plan-counts.ts");
+  assert.match(counts, /active orderable ROWS,\n \*  not concepts/);
+});

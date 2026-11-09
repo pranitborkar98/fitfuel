@@ -127,6 +127,8 @@ export default function HomeSections({
       <DeliveryFaqBand cutoffLabel={cutoffLabel} />
       <CtaBand
         trialTotal={trial.total}
+        /* counts.plans is the concepts count (one card per concept in the
+           catalogue), not the row total — see BandCounts in home-data.ts. */
         planCount={counts.plans}
         cutoffLabel={cutoffLabel}
       />
@@ -842,6 +844,8 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
             plans. If you have a diagnosed condition, confirm suitability with
             your clinician before ordering. A meal plan does not replace treatment.
           </p>
+          {/* counts.plans and counts.conditionPlans are concept counts,
+              matching the catalogue cards — see BandCounts in home-data.ts. */}
           {counts.plans > 0 ? <div className={s.condStats}>
             <span>
               <b data-count={counts.conditionPlans}>{counts.conditionPlans}</b>

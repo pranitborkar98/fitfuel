@@ -36,10 +36,17 @@
 //   the set /plans lists and sells. CORPORATE and DIGITAL have their own
 //   routes and their own checkout, so they never land in a count the
 //   customer-facing catalogue states out loud.
-// - concepts: distinct subCategory values. The homepage groups rows into
-//   one card per concept (one per subCategory, diet variants inside), so
-//   the homepage's "N plans" is concepts, not total rows — the numerator
-//   on that page counts concepts too.
+// - concepts: distinct subCategory values across ALL rows, including
+//   inactive ones. The homepage catalogue lists every concept whether or
+//   not it is live yet (getPlans in app/page.tsx deliberately does not
+//   filter on isActive), so the homepage's "N plans" is concepts, not
+//   total rows — the numerator on that page counts concepts too. It is
+//   not 126, and it is not the number of plans a customer can buy: that
+//   is orderableActive, the count /plans metadata states. The bands below
+//   the homepage catalogue state this same concepts number (getBandData
+//   in app/page.tsx counts distinct subCategory values too), so no band
+//   on the homepage can print the row total next to a catalogue of
+//   concept cards.
 //
 // FALLBACK. Every function here fails SOFT and returns null when the
 // database cannot be reached (the same rule as lib/site-counts.ts), and
@@ -102,8 +109,11 @@ export async function countActiveOrderablePlans(): Promise<number | null> {
   }
 }
 
-/** The /plans metadata description. With live active plans it states the
- *  count; with zero active, or with the database unreachable, it states no
+/** The /plans metadata description. The count is active orderable ROWS,
+ *  not concepts: /plans lists one card per active row (one per diet
+ *  variant), so the number states rows — a different number from the
+ *  homepage's concepts count by design. With live active plans it states
+ *  the count; with zero active, or with the database unreachable, it states no
  *  number at all rather than "explore 0 plan concepts" — the page lists
  *  only active plans, so 0 would be the one thing the sentence asserts
  *  that is not a count of anything a customer can see. */

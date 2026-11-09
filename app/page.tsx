@@ -82,7 +82,9 @@ const publicLabel = (value: string) => value.replace(/\s*—\s*/g, " · ");
  * last decides whether weight-loss-veg is live. Filtering on isActive
  * here renders an empty catalog unless seed.ts ran last. Ordering still
  * goes through the configurator and the seeded PlanPrice matrix, which is
- * what actually gates a sale.
+ * what actually gates a sale. The bands below the catalogue state the
+ * same concepts number (getBandData counts distinct subCategory values
+ * too), never the row total.
  */
 /**
  * Day one of every plan that actually has a seeded menu.
@@ -279,8 +281,8 @@ async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }
   };
   try {
     const [
-      plans,
-      conditionPlans,
+      planConcepts,
+      conditionConcepts,
       supplements,
       recipes,
       retailerNetworks,
@@ -291,8 +293,20 @@ async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }
       rows,
     ] =
       await readWithDeadline(Promise.all([
-        prisma.mealPlan.count(),
-        prisma.mealPlan.count({ where: { category: "LIFESTYLE_MEDICAL" } }),
+        /* CONCEPTS, NOT ROWS. The bands below describe the catalogue, and
+           the catalogue renders one card per subCategory (getPlans, above),
+           so these two counts are distinct subCategory values — the same
+           number planCount states at the top of the page. Counting rows
+           here printed 126 ("plans in the catalogue") and 70 ("condition
+           plans") next to a 59-card catalogue, and 70 condition plans
+           beside 59 plans in the catalogue at all. The row totals still
+           exist, in lib/plan-counts.ts; they are not what a band that
+           describes the catalogue may state. */
+        prisma.mealPlan.groupBy({ by: ["subCategory"] }),
+        prisma.mealPlan.groupBy({
+          by: ["subCategory"],
+          where: { category: "LIFESTYLE_MEDICAL" },
+        }),
         prisma.supplement.count({ where: { isActive: true } }),
         prisma.recipe.count(),
         prisma.supplementLink.groupBy({ by: ["network"], where: { isActive: true, supplement: { isActive: true } } }),
@@ -322,8 +336,8 @@ async function getBandData(): Promise<{ counts: ProductCounts; quotes: Quote[] }
     return {
       counts: {
         dishes: SHOP_DISHES.length,
-        plans,
-        conditionPlans,
+        plans: planConcepts.length,
+        conditionPlans: conditionConcepts.length,
         supplements,
         recipes,
         retailerNetworks: retailerNetworks.length,
@@ -433,11 +447,17 @@ export default async function AppPage({
         menuFrom={`₹${MENU_FROM}`}
         plans={plans}
         supplements={supplements}
-        /* Concepts, not rows: one card per subCategory, so this is the same
-           number of cards the catalogue renders. It comes from
-           lib/plan-counts.ts, counted from the database; when the database
-           cannot be read it is null and the client renders no number rather
-           than a stale literal. */
+        /* CONCEPTS, NOT ROWS, AND NOT LIVE PLANS. The catalogue renders one
+           card per subCategory for EVERY concept in the database, including
+           inactive ones (getPlans above deliberately does not filter on
+           isActive), so this is the same number of cards the catalogue
+           renders — with both seed files applied, 59 concepts from 126
+           rows, never 126. It is also not the number of plans a customer
+           can buy: that is the active orderable row count /plans metadata
+           states (lib/plan-counts.ts). It comes from lib/plan-counts.ts,
+           counted from the database; when the database cannot be read it
+           is null and the client renders no number rather than a stale
+           literal. */
         planCount={counts?.concepts ?? null}
         licence={FSSAI_LICENCE}
         /* The seeded rows collapse to this many concepts — one per

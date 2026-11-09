@@ -27,7 +27,16 @@ export type Quote = {
 
 export type BandCounts = {
   dishes: number;
+  /* Plan CONCEPTS, not rows: distinct subCategory values, the same number
+     the homepage catalogue renders as cards (one card per concept). The
+     row total must never be stated here — the bands describe the
+     catalogue, and the catalogue shows concepts. Rows vs concepts vs
+     live/active is defined in lib/plan-counts.ts. */
   plans: number;
+  /* Distinct LIFESTYLE_MEDICAL subCategory values, for the same reason:
+     the wedge's "condition plans" and the conditions band's "plans for a
+     condition" describe the same catalogue, so they count the condition
+     concepts the catalogue renders, not the condition rows. */
   conditionPlans: number;
   exercises: number;
   supplements: number;
