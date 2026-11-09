@@ -169,7 +169,7 @@
 }
 .operation small {
   color: var(--fk-ink-3);
-  font-size: 0.6875rem;
+  font-size: var(--fk-t-xs);
   line-height: 1.2;
 }
 
@@ -232,6 +232,94 @@
   height: 7px;
   border-radius: var(--fk-r-full);
   background: var(--fk-green);
+}
+
+/* ── Week tabs ─────────────────────────────────────────────────────────────
+   The seven fetched days of the one plan with a menu. One row of 44px tabs,
+   scrollable on a phone rather than squeezed. */
+.weekTabs {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--fk-s-4);
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.weekTab,
+.weekTabActive {
+  flex: none;
+  min-height: var(--fk-tap);
+  padding: 0 16px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-full);
+  background: transparent;
+  color: var(--fk-ink-2);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.weekTabActive {
+  border-color: var(--fk-green);
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
+}
+
+/* ── Steam ─────────────────────────────────────────────────────────────────
+   Three rising wisps over the hot feature meal. Pure CSS: blurred light
+   strokes that rise, widen and fade. They sit above the photograph and below
+   the scrim, so the copy stays readable. Off entirely under
+   prefers-reduced-motion (see the media query at the end of this file). */
+.steam {
+  position: absolute;
+  z-index: 1;
+  top: 12%;
+  left: 50%;
+  display: flex;
+  gap: 26px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.steam i {
+  display: block;
+  width: 10px;
+  height: 64px;
+  border-radius: var(--fk-r-full);
+  background: rgba(247, 247, 245, 0.55);
+  filter: blur(7px);
+  opacity: 0;
+  animation: steam-rise 4.8s ease-out infinite;
+}
+
+.steam i:nth-child(2) {
+  height: 84px;
+  animation-delay: 1.6s;
+}
+
+.steam i:nth-child(3) {
+  height: 56px;
+  animation-delay: 3.2s;
+}
+
+@keyframes steam-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scaleX(1);
+  }
+  25% {
+    opacity: 0.7;
+  }
+  60% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-46px) scaleX(1.8);
+  }
 }
 
 .featureMeal {
@@ -353,14 +441,14 @@
 
 .mealGrid small {
   color: var(--fk-green-deep);
-  font-size: 0.6875rem;
+  font-size: var(--fk-t-xs);
   font-weight: 700;
 }
 
 .mealGrid b {
   overflow: hidden;
   color: var(--fk-ink);
-  font-size: 0.6875rem;
+  font-size: var(--fk-t-xs);
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -495,7 +583,7 @@
 }
 .targetStats dt {
   color: var(--fk-ink-3);
-  font-size: 0.6875rem;
+  font-size: var(--fk-t-xs);
   line-height: 1.25;
 }
 .targetStats dd {
@@ -696,7 +784,7 @@
 
 .planCopy small {
   color: var(--fk-green-deep);
-  font-size: 0.6875rem;
+  font-size: var(--fk-t-xs);
   font-weight: 700;
 }
 
@@ -955,7 +1043,7 @@
 
 .quickRail small {
   color: var(--fk-green-deep);
-  font-size: 0.6875rem;
+  font-size: var(--fk-t-xs);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -1005,55 +1093,69 @@
   line-height: 1.35;
 }
 
-.proofLine {
-  display: grid;
-  grid-template-columns: auto minmax(220px, 1fr) auto auto;
-  align-items: center;
-  gap: 16px;
-  min-height: 72px;
-  margin-top: 10px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--fk-line-2);
-  border-bottom: 1px solid var(--fk-line-2);
+/* ── Proof: all three fetched testimonials ───────────────────────────────
+   Was a single strip showing quotes[0] only, the quote truncated to one
+   line. Three cards now, one per fetched row; one column on a phone, three
+   across from 900px. */
+.proof {
+  margin-top: var(--fk-s-7);
 }
 
-.proofLine > b {
+.proofList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fk-s-4);
+}
+
+.proofCard {
+  display: grid;
+  gap: var(--fk-s-3);
+  align-content: start;
+  margin: 0;
+  padding: var(--fk-s-5);
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+
+.proofCard > b {
   color: var(--fk-green-deep);
   font-size: var(--fk-t-base);
-  white-space: nowrap;
 }
 
-.proofLine blockquote {
-  overflow: hidden;
+.proofCard p {
   margin: 0;
   color: var(--fk-ink);
   font-family: var(--fk-display);
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-lg);
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.proofLine > span {
+.proofCard > span {
   color: var(--fk-ink-3);
   font-size: var(--fk-t-xs);
-  white-space: nowrap;
 }
 
-.proofLine > a {
+.proofMore {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: var(--fk-tap);
+  margin-top: var(--fk-s-4);
   color: var(--fk-ink);
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-sm);
   font-weight: 700;
   text-decoration: none;
-  white-space: nowrap;
 }
 
-.proofLine > a:hover {
+.proofMore:hover {
   color: var(--fk-green-deep);
+}
+
+@media (min-width: 900px) {
+  .proofList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .home :is(button, a):focus-visible {
@@ -1172,14 +1274,6 @@
     align-items: start;
     gap: 10px;
   }
-
-  .proofLine {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
-  .proofLine > span {
-    display: none;
-  }
 }
 
 @media (max-width: 720px) {
@@ -1293,7 +1387,7 @@
   }
 
   .mealGrid b {
-    font-size: 0.6875rem;
+    font-size: var(--fk-t-xs);
   }
 
   .appTools {
@@ -1384,17 +1478,6 @@
     grid-column: 2;
     grid-row: 1 / span 2;
   }
-
-  .proofLine {
-    grid-template-columns: 1fr auto;
-    gap: 6px 12px;
-  }
-
-  .proofLine blockquote {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    white-space: normal;
-  }
 }
 
 @media (max-width: 420px) {
@@ -1407,7 +1490,7 @@
   }
 
   .operation b {
-    font-size: 0.6875rem;
+    font-size: var(--fk-t-xs);
   }
 
   .featureMeal,
@@ -1512,5 +1595,9 @@
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .steam {
+    display: none;
   }
 }

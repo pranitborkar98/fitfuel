@@ -178,7 +178,7 @@
   margin-bottom: auto;
   color: var(--fk-ink-3);
   font-family: var(--fk-sans);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -220,7 +220,7 @@
   border-top: 1px solid var(--fk-line);
   color: var(--fk-ink-3);
   font-family: var(--fk-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .cardFoot {
@@ -248,11 +248,11 @@
 
 .cardFoot a {
   display: inline-flex;
-  min-height: 32px;
+  min-height: var(--fk-tap);
   align-items: center;
   gap: 5px;
   color: var(--fk-ink-3);
-  font-size: 11px;
+  font-size: 12px;
   text-decoration: none;
 }
 

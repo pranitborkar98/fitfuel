@@ -214,7 +214,7 @@ export default function PlansNarrowed({
         <div className={styles.wrap}>
           <div className={styles.heroGrid}>
             <div>
-              <span className={styles.serviceLine}><ChefHat size={18} /> Meal plans cooked in Pune</span>
+              <span className={styles.serviceLine}><ChefHat size={18} /> Meal plans cooked in FitFuel kitchens</span>
               <h1>Choose what fits your day.</h1>
             </div>
             <div className={styles.heroCopy}>

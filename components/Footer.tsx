@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bot, ChefHat, MapPin, MessageCircle, Scale, Truck } from "lucide-react";
 
 import Wordmark from "@/components/Wordmark";
+import { FSSAI_LICENCE } from "@/lib/trust-marks";
 import { waLink } from "@/lib/site";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import s from "./Footer.module.css";
@@ -89,7 +90,7 @@ export default function Footer() {
 
         <div className={s.base}>
           <div>
-            <b>FSSAI 21523035002815</b>
+            <b>FSSAI {FSSAI_LICENCE}</b>
             <span>© {new Date().getFullYear()} FitFuel · GST included where applicable.</span>
           </div>
           <nav aria-label="Legal information">

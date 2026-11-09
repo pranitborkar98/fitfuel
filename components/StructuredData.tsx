@@ -45,7 +45,7 @@ const KITCHEN = {
   url: SITE,
   image: `${SITE}/images/hero-bowl-v2.png`,
   priceRange: "₹₹",
-  servesCuisine: ["Indian", "Health food", "High protein"],
+  servesCuisine: ["Indian", "Thai", "Mediterranean", "Mexican", "Asian", "Health food", "High protein"],
   hasCredential: {
     "@type": "EducationalOccupationalCredential",
     credentialCategory: "FSSAI Licence",

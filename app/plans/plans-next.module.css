@@ -184,7 +184,7 @@
 .receipt dt {
   display: block;
   color: var(--fk-ink-3);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .priceFacts strong {
@@ -343,7 +343,7 @@
   right: 12px;
   bottom: 10px;
   color: var(--fk-ink-2);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 
@@ -362,7 +362,7 @@
   align-items: center;
   gap: 6px;
   color: var(--fk-green-deep);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -373,7 +373,7 @@
 .category {
   margin-top: auto;
   color: var(--fk-ink-3);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .planCopy > strong {
@@ -394,7 +394,7 @@
   margin-top: 16px;
   color: var(--fk-ink-2);
   font-family: var(--fk-mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .planCard > a {

@@ -79,7 +79,7 @@ export const DAY_STEPS: DayStep[] = [
     alt: "The kitchen line packing labelled trays",
   },
   {
-    at: "08:00",
+    at: "7–10 AM",
     label: "At your door",
     line: "Your meals arrive with their calories and macros already filled into your diary.",
     img: "/images/ai/story/pune-delivery.webp",

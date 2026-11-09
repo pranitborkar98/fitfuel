@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 
 import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
@@ -84,11 +84,26 @@ export default function HomeExperience({
   trialTotal: string;
   onBrowseMeals: () => void;
 }) {
-  const meals = week.filter((dish) => dish.day === 1).slice(0, 4);
+  /* Seven days arrive from getWeek(); the preview used to show day 1 only and
+     drop the other six. Grouped by day so every fetched day is previewable. */
+  const days = useMemo(() => {
+    const byDay = new Map<number, Dish[]>();
+    for (const dish of week) {
+      const list = byDay.get(dish.day) ?? [];
+      list.push(dish);
+      byDay.set(dish.day, list);
+    }
+    return [...byDay.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([day, dishes]) => ({ day, meals: dishes.slice(0, 4) }));
+  }, [week]);
+  const [activeDay, setActiveDay] = useState(0);
   const [activeMealIndex, setActiveMealIndex] = useState(0);
+  const dayTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const mealTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const activeMeal = meals[activeMealIndex] ?? meals[0];
-  const planKcal = meals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
+  const dayMeals = days[activeDay]?.meals ?? [];
+  const activeMeal = dayMeals[activeMealIndex] ?? dayMeals[0];
+  const planKcal = dayMeals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
   const serving = servingScaleForTarget({
     calorieTarget: target.kcal,
     planCalories: planKcal,
@@ -104,16 +119,34 @@ export default function HomeExperience({
     index: number,
   ) => {
     let next = index;
-    if (event.key === "ArrowRight") next = (index + 1) % meals.length;
+    if (event.key === "ArrowRight") next = (index + 1) % dayMeals.length;
     else if (event.key === "ArrowLeft")
-      next = (index - 1 + meals.length) % meals.length;
+      next = (index - 1 + dayMeals.length) % dayMeals.length;
     else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = meals.length - 1;
+    else if (event.key === "End") next = dayMeals.length - 1;
     else return;
 
     event.preventDefault();
     setActiveMealIndex(next);
     mealTabRefs.current[next]?.focus();
+  };
+
+  const moveDayFocus = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let next = index;
+    if (event.key === "ArrowRight") next = (index + 1) % days.length;
+    else if (event.key === "ArrowLeft")
+      next = (index - 1 + days.length) % days.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = days.length - 1;
+    else return;
+
+    event.preventDefault();
+    setActiveDay(next);
+    setActiveMealIndex(0);
+    dayTabRefs.current[next]?.focus();
   };
 
   return (
@@ -187,9 +220,13 @@ export default function HomeExperience({
         <div className={`${x.menuPreview} ${hub.menu}`}>
           <div className={x.previewHead}>
             <span>
-              <small>Sample four-meal day</small>
+              <small>
+                {days.length > 1
+                  ? `Day ${days[activeDay]?.day ?? 1} · sample four-meal day`
+                  : "Sample four-meal day"}
+              </small>
               <b>
-                {meals.length ? `Portion preview · ${scaledKcal.toLocaleString("en-IN")} kcal` : "Menu preview"}
+                {dayMeals.length ? `Portion preview · ${scaledKcal.toLocaleString("en-IN")} kcal` : "Menu preview"}
               </b>
             </span>
             <span className={x.deliveryStatus}>
@@ -197,13 +234,43 @@ export default function HomeExperience({
             </span>
           </div>
 
+          {days.length > 1 ? (
+            <div
+              className={x.weekTabs}
+              role="tablist"
+              aria-label="Preview a day of the week"
+            >
+              {days.map((d, index) => (
+                <button
+                  key={d.day}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeDay === index}
+                  tabIndex={activeDay === index ? 0 : -1}
+                  className={activeDay === index ? x.weekTabActive : x.weekTab}
+                  onClick={() => {
+                    setActiveDay(index);
+                    setActiveMealIndex(0);
+                  }}
+                  onKeyDown={(event) => moveDayFocus(event, index)}
+                  ref={(element) => {
+                    dayTabRefs.current[index] = element;
+                  }}
+                >
+                  Day {d.day}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           {activeMeal ? (
             <div
               id="meal-preview-panel"
               className={x.featureMeal}
               role="tabpanel"
-              aria-labelledby={`meal-preview-tab-${activeMealIndex}`}
+              aria-labelledby={`meal-preview-tab-${activeDay}-${activeMealIndex}`}
               aria-live="polite"
+              data-tilt
             >
               <Image
                 src={PLAN_IMAGES[activeMeal.slot]}
@@ -212,6 +279,13 @@ export default function HomeExperience({
                 loading="eager"
                 sizes="(max-width: 900px) 100vw, 54vw"
               />
+              {/* Steam over the hot meal. Pure CSS, aria-hidden, and off entirely
+                  under prefers-reduced-motion — see experience.module.css. */}
+              <span className={x.steam} aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
               <span className={x.scrim} aria-hidden="true" />
               <span className={x.featureCopy}>
                 <small>{SLOT_LABEL[activeMeal.slot] ?? activeMeal.slot}</small>
@@ -233,17 +307,17 @@ export default function HomeExperience({
             </div>
           )}
 
-          {meals.length ? (
+          {dayMeals.length ? (
             <div
               className={x.mealGrid}
               role="tablist"
               aria-label="Preview all four meals"
               aria-orientation="horizontal"
             >
-              {meals.map((meal, index) => (
+              {dayMeals.map((meal, index) => (
                 <button
                   key={`${meal.day}-${meal.slot}`}
-                  id={`meal-preview-tab-${index}`}
+                  id={`meal-preview-tab-${activeDay}-${index}`}
                   type="button"
                   role="tab"
                   aria-controls="meal-preview-panel"
@@ -295,7 +369,6 @@ export function HomeProductLinks({
   quotes: Quote[];
   onBrowsePlans: () => void;
 }) {
-  const proof = quotes[0];
   return (
     <div className={x.home}>
       <section className={x.productMap} aria-labelledby="product-map-title">
@@ -383,17 +456,25 @@ export function HomeProductLinks({
       </section>
       <PartnerNetwork />
 
-      {proof ? (
-        <aside className={x.proofLine} aria-label="Customer result">
-          <b>{proof.resultLabel}</b>
-          <blockquote>“{proof.quote}”</blockquote>
-          <span>
-            {proof.name} · {proof.planLabel}
-          </span>
-          <Link href="/testimonials">
+      {/* All three fetched testimonials. Only the first ever rendered; the
+          other two were queried and dropped. One card each, same shape. */}
+      {quotes.length ? (
+        <section className={x.proof} aria-label="Customer results">
+          <div className={x.proofList}>
+            {quotes.map((quote) => (
+              <blockquote key={quote.id} className={x.proofCard} data-reveal="up">
+                <b>{quote.resultLabel}</b>
+                <p>“{quote.quote}”</p>
+                <span>
+                  {quote.name} · {quote.planLabel}
+                </span>
+              </blockquote>
+            ))}
+          </div>
+          <Link href="/testimonials" className={x.proofMore}>
             More stories <Icon path={ICON.arrow} size={16} />
           </Link>
-        </aside>
+        </section>
       ) : null}
     </div>
   );

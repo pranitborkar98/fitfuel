@@ -40,7 +40,7 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
     <div className={`${styles.page} fk`}>
       <section className={styles.hero}>
         <div className={styles.wrap}>
-          <p className={styles.kicker}>Single dishes from the Kharadi kitchen</p>
+          <p className={styles.kicker}>Single dishes from your nearest FitFuel kitchen</p>
           <h1>Pick what you actually want to eat.</h1>
           <p className={styles.deck}>
             Browse {dishes.length} salads, bowls, breakfasts, bars and juices. {pricedCount} have kitchen-approved prices and can go straight into your basket; the rest stay visible without a placeholder price.

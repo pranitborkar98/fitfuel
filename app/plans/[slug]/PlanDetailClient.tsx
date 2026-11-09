@@ -213,7 +213,7 @@ export default function PlanDetailClient({ plan, schedule, prices, isReady }: Pr
                 priority
                 sizes="(max-width: 760px) 100vw, 42vw"
               />
-              <span>Illustrative menu photography</span>
+              <span>Illustrative menu preview</span>
             </div>
             <div className={styles.factCard}>
               <div><strong>{Math.round(plan.avgCaloriesPerDay).toLocaleString("en-IN")}</strong><span>kcal each day</span></div>
@@ -244,7 +244,7 @@ export default function PlanDetailClient({ plan, schedule, prices, isReady }: Pr
           <div className={styles.loopGrid}>
             <article><Scale size={24} /><h3>Your target sets the portion</h3><p>The plan starts from your calorie target instead of treating every member as the same serving.</p></article>
             <article><ChefHat size={24} /><h3>The kitchen cooks that portion</h3><p>Recipe quantities and the production list use the plan’s serving factor.</p></article>
-            <article><ClipboardCheck size={24} /><h3>One tap records the same meal</h3><p>Confirm what you ate and the diary uses the same grams and macros—no manual reconstruction.</p></article>
+            <article><ClipboardCheck size={24} /><h3>One tap records the same meal</h3><p>Confirm what you ate and the diary uses the same grams and macros, with no manual reconstruction.</p></article>
           </div>
         </div>
       </section>
