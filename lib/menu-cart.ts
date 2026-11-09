@@ -27,11 +27,10 @@
 //      single-meal delivery fee, minimum order or cutoff decided to charge
 //      against anyway.
 //
-// So the basket settles on WhatsApp, itemised. That is not a downgrade: the
-// business already takes single-meal orders there (lib/trust-marks.ts), it is
-// the channel Indian food ordering actually runs on, and a composed message
-// with quantities, add-ons and a total is a real order — it just clears
-// through a person instead of PayU.
+// So the basket settles nowhere yet: it ends in the basket itself. Nothing is
+// sent anywhere, no WhatsApp message, no order, no enquiry. The priced lines
+// carry a full receipt (see below) so the totals are real when a checkout path
+// lands; the enquiry rows never touch a number.
 //
 // WHEN THE TWO BLOCKERS CLEAR, exactly one thing changes: the priced lines
 // settle through /api/orders/dishes, which already exists. The WhatsApp
@@ -117,8 +116,8 @@ export function resolveLines(stored: StoredLine[]): CartLine[] {
 }
 
 /** One person ordering lunch. A basket of 40 salads is a data-entry accident
- *  or someone testing the form, and either way the kitchen should hear about
- *  it on WhatsApp rather than have it silently accepted. */
+ *  or someone testing the form, and either way the cap keeps a mistake from
+ *  becoming a 40-salad receipt. */
 export const MAX_QTY = 20;
 
 export type CartTotals = { count: number; subtotalRs: number };

@@ -1,19 +1,20 @@
 // app/_hp/DishImage.tsx
 //
-// A dish's picture if one exists, and its macro fingerprint if it does not.
+// A dish's picture if one exists, and a labelled photo well if it does not.
 //
 // The point of this component is that adding photography requires NO code
 // change. Drop a correctly named file into public/images/ and that dish starts
-// showing a photograph on the next build; until then it shows the DishGlyph
-// generated from its own weighed macros. The page improves one file at a time
+// showing a photograph on the next build; until then the slot shows a labelled
+// well — the dish name plus "Photo added with final kitchen listing" — never
+// a diagram standing in for food. The page improves one file at a time
 // instead of waiting for a complete set.
 //
 // LOOKUP ORDER, and the order matters:
 //   1. public/images/dishes/<slug>.jpg   real photography  — always wins
 //   2. public/images/ai/dishes/<slug>.jpg  AI-generated, illustrative
-//   3. the generated glyph
+//   3. the labelled photo well
 //
-// Real beats AI beats generated, so replacing an illustrative image with a real
+// Real beats AI beats the well, so replacing an illustrative image with a real
 // photograph of that dish is a single file drop and needs no edit here. That is
 // also why the two live in separate directories: an AI asset can never be
 // mistaken for a photograph in a file listing, and the swap shows up in a diff.
@@ -27,7 +28,6 @@ import fs from "node:fs";
 import path from "node:path";
 import Image from "next/image";
 
-import DishGlyph from "./DishGlyph";
 import s from "./hp.module.css";
 
 /** The slug form the image files use: lowercase, first six words. */
@@ -61,27 +61,19 @@ export function findDishImage(slug: string): { src: string; ai: boolean } | null
   return null;
 }
 
-export default function DishImage({
-  name,
-  kcal,
-  protein,
-  carbs,
-  fat,
-  accent,
-}: {
-  name: string;
-  kcal: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-  accent?: string;
-}) {
+export default function DishImage({ name }: { name: string }) {
   const found = findDishImage(dishSlug(name));
 
   if (!found) {
+    // No photograph yet: the labelled photo well, in the same 4/3 slot the
+    // photograph occupies. The dish name is the label, this component
+    // receives no category, with the same line the menu catalogue uses.
     return (
-      <div className={s.glyph}>
-        <DishGlyph name={name} kcal={kcal} protein={protein} carbs={carbs} fat={fat} accent={accent} size={146} />
+      <div className={s.dishShot} style={{ margin: 0 }}>
+        <span>
+          <small>Photo added with final kitchen listing</small>
+          {name}
+        </span>
       </div>
     );
   }
