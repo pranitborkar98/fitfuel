@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
+import { getCalorieTarget } from "@/lib/calorie-target-server";
 import { formatDateOnly, todayIndiaDate } from "@/lib/date-only";
 import { prisma } from "@/lib/prisma";
 import { screen } from "@/app/_app/theme";
@@ -50,6 +51,12 @@ export default async function NutritionPage() {
   const current = subscriptions.find((plan) => (
     plan.status === "active" && plan.startDate <= today && plan.endDate >= today
   ));
+
+  // No stored goal row: the page shows the user's unified calorie target
+  // (the same resolver the dashboard ring and progress charts use) instead
+  // of the flat 2000 default. A stored row always wins here, because it is
+  // the value the goals dialog edits.
+  const resolvedGoal = goal ? null : await getCalorieTarget(userId);
   const scheduled = subscriptions.find((plan) => (
     plan.status === "active" && plan.startDate > today
   ));
@@ -89,7 +96,7 @@ export default async function NutritionPage() {
       <NutritionClient
         initialEntries={JSON.parse(JSON.stringify(entries))}
         mealTypes={JSON.parse(JSON.stringify(mealTypes))}
-        goal={goal ? JSON.parse(JSON.stringify(goal)) : DEFAULT_GOAL}
+        goal={goal ? JSON.parse(JSON.stringify(goal)) : { ...DEFAULT_GOAL, calories: resolvedGoal?.calories ?? DEFAULT_GOAL.calories }}
         initialWaterMl={waterLog?.amountMl ?? 0}
         initialDate={formatDateOnly(today)}
         mealPlanAccess={mealPlanAccess}

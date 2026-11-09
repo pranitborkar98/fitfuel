@@ -30,7 +30,12 @@ export async function POST(req: NextRequest) {
 
   const target = recal.recommendedTarget;
 
-  // update the active plan's personalised target (if any) + the profile target
+  // Update the active plan's personalised target (if any), the profile
+  // target, and the NutritionGoal row, in one transaction, so the dashboard
+  // ring, the profile, and the nutrition page all move to the new target
+  // together. Macros are NOT written here: computeRecalibration produces
+  // calories only (no protein/carb/fat targets), so there is no macro math
+  // to apply; the nutrition page keeps whatever macro goals it already had.
   await prisma.$transaction([
     prisma.userActivePlan.updateMany({
       where: { userId, status: "active" },
@@ -39,6 +44,11 @@ export async function POST(req: NextRequest) {
     prisma.userProfile.updateMany({
       where: { userId },
       data: { calorieTarget: target },
+    }),
+    prisma.nutritionGoal.upsert({
+      where: { userId },
+      update: { calories: target },
+      create: { userId, calories: target },
     }),
   ]);
 

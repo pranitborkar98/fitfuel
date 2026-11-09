@@ -26,6 +26,14 @@ import {
   remainingServiceDays,
   serviceDayNumber,
 } from "@/lib/plan-service-dates";
+import {
+  CALORIE_CEILING_KCAL,
+  CALORIE_FLOOR_KCAL,
+  DEFAULT_CALORIE_TARGET_KCAL,
+  clampCalorieTarget,
+  resolveCalorieTarget,
+} from "@/lib/calorie-target";
+import { goalsPatchSchema } from "@/lib/validation/schemas";
 
 test("the advertised trial total is the checkout total", () => {
   assert.equal(TRIAL_SUBTOTAL_RS, 400);
@@ -225,4 +233,81 @@ test("partner payout details are authenticated-encrypted and tamper evident", ()
     if (previous === undefined) delete process.env.PARTNER_DATA_ENCRYPTION_KEY;
     else process.env.PARTNER_DATA_ENCRYPTION_KEY = previous;
   }
+});
+
+test("nutrition goals reject a starvation-level calorie target", () => {
+  assert.equal(goalsPatchSchema.safeParse({ calories: 0 }).success, false);
+  assert.equal(goalsPatchSchema.safeParse({ calories: 1199 }).success, false);
+  assert.equal(goalsPatchSchema.safeParse({ calories: 1200 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ calories: 20_000 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ calories: 20_001 }).success, false);
+  const rejected = goalsPatchSchema.safeParse({ calories: 0 });
+  assert.equal(rejected.success, false);
+  if (!rejected.success) {
+    assert.match(rejected.error.issues[0].message, /1200/);
+  }
+});
+
+test("nutrition goals keep their existing macro bounds (no new macro rules)", () => {
+  assert.equal(goalsPatchSchema.safeParse({ protein: 0 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ protein: 2000 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ protein: 2001 }).success, false);
+  assert.equal(goalsPatchSchema.safeParse({ carbs: 5000 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ fat: 2000 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ fiber: 500 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ waterMl: 50_000 }).success, true);
+  assert.equal(goalsPatchSchema.safeParse({ waterMl: 50_001 }).success, false);
+});
+
+test("calorie target resolves in one documented precedence", () => {
+  const all = {
+    profileCalorieTarget: 2100,
+    activePlanCalorieTarget: 1800,
+    nutritionGoalCalories: 1700,
+    planAvgCaloriesPerDay: 1600,
+  };
+  assert.deepEqual(resolveCalorieTarget(all), { calories: 2100, source: "profile" });
+  assert.deepEqual(
+    resolveCalorieTarget({ ...all, profileCalorieTarget: null }),
+    { calories: 1800, source: "active_plan" },
+  );
+  assert.deepEqual(
+    resolveCalorieTarget({ ...all, profileCalorieTarget: null, activePlanCalorieTarget: null }),
+    { calories: 1700, source: "nutrition_goal" },
+  );
+  assert.deepEqual(
+    resolveCalorieTarget({
+      ...all,
+      profileCalorieTarget: null,
+      activePlanCalorieTarget: null,
+      nutritionGoalCalories: null,
+    }),
+    { calories: 1600, source: "plan_average" },
+  );
+  assert.deepEqual(resolveCalorieTarget({}), {
+    calories: DEFAULT_CALORIE_TARGET_KCAL,
+    source: "default",
+  });
+  assert.equal(DEFAULT_CALORIE_TARGET_KCAL, 2000);
+});
+
+test("calorie target treats zero and missing values as absent, and floors stored values", () => {
+  assert.deepEqual(
+    resolveCalorieTarget({
+      profileCalorieTarget: 0,
+      activePlanCalorieTarget: 0,
+      nutritionGoalCalories: null,
+      planAvgCaloriesPerDay: 1800,
+    }),
+    { calories: 1800, source: "plan_average" },
+  );
+  // A target stored below the floor before the guard existed still resolves
+  // to the floor, and the source is still reported honestly.
+  assert.deepEqual(resolveCalorieTarget({ profileCalorieTarget: 800 }), {
+    calories: 1200,
+    source: "profile",
+  });
+  assert.equal(CALORIE_FLOOR_KCAL, 1200);
+  assert.equal(clampCalorieTarget(0), CALORIE_FLOOR_KCAL);
+  assert.equal(clampCalorieTarget(25_000), CALORIE_CEILING_KCAL);
 });
