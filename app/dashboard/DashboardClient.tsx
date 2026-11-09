@@ -312,13 +312,16 @@ function RatingDialog({ meal, onClose, onSubmit }: {
 /* ── main ───────────────────────────────────────────────────────────────── */
 
 export default function DashboardClient({
-  orders, activePlan, hasActivationIssue, starterSummary, previewData,
+  orders, activePlan, hasActivationIssue, starterSummary, previewData, resolvedCalorieTarget,
 }: {
   orders: Order[];
   activePlan: ActivePlanView | null;
   hasActivationIssue?: boolean;
   starterSummary?: StarterSummaryData;
   previewData?: DashboardPreviewData;
+  /** Resolved daily target from the server (one shared resolver). Optional:
+   *  the preview renders without a server and falls back to 0. */
+  resolvedCalorieTarget?: number;
 }) {
   const [meals, setMeals] = useState<Meal[]>(previewData?.meals ?? []);
   const [mealsLoading, setMealsLoading] = useState(!!activePlan && !previewData);
@@ -436,10 +439,11 @@ export default function DashboardClient({
     }
   }
 
-  const target = balance?.target
-    ?? activePlan?.calorieTarget
-    ?? activePlan?.mealPlan?.avgCaloriesPerDay
-    ?? 0;
+  // The ring target is the live balance when present, else the resolved
+  // target the server computed once with the one shared resolver. No local
+  // fallback chain: the old active-plan / plan-average chain could disagree
+  // with the resolver (NutritionGoal now wins, and the floor is sex-aware).
+  const target = balance?.target ?? resolvedCalorieTarget ?? 0;
   const eaten = balance?.caloriesIn ?? 0;
   const burned = balance?.caloriesOut ?? 0;
   const remaining = target - (eaten - burned);

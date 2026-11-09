@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
+import { getCalorieTarget } from "@/lib/calorie-target-server";
 import { prisma } from "@/lib/prisma";
 import { screen } from "@/app/_app/theme";
 import DashboardClient from "./DashboardClient";
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
   const userId = session.user.id;
   const today = todayISTDate();
 
-  const [orders, rawActivePlan] = await Promise.all([
+  const [orders, rawActivePlan, resolvedTarget] = await Promise.all([
     prisma.order.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -59,6 +60,7 @@ export default async function DashboardPage() {
         },
       },
     }),
+    getCalorieTarget(userId, today),
   ]);
 
   let activePlan: ActivePlanView | null = null;
@@ -95,14 +97,16 @@ export default async function DashboardPage() {
 
   let starterSummary: StarterSummaryData | undefined;
   if (!activePlan) {
-    const [food, water, goal, weight] = await Promise.all([
+    // The starter summary shows the same resolved target as the ring: the
+    // one shared resolver, not the stored NutritionGoal row on its own
+    // (which is unclamped and loses to nothing here).
+    const [food, water, weight] = await Promise.all([
       prisma.foodEntry.aggregate({ where: { userId, entryDate: today }, _sum: { calories: true, protein: true }, _count: true }),
       prisma.waterLog.findUnique({ where: { userId_entryDate: { userId, entryDate: today } }, select: { amountMl: true } }),
-      prisma.nutritionGoal.findUnique({ where: { userId }, select: { calories: true } }),
       prisma.bodyMetric.findFirst({ where: { userId, weightKg: { not: null } }, orderBy: { measuredAt: "desc" }, select: { weightKg: true, measuredAt: true } }),
     ]);
     starterSummary = { calories: food._sum.calories ?? 0, protein: food._sum.protein ?? 0, entries: food._count,
-      waterMl: water?.amountMl ?? 0, calorieTarget: goal?.calories ?? null,
+      waterMl: water?.amountMl ?? 0, calorieTarget: resolvedTarget.calories,
       weightKg: weight?.weightKg ?? null, measuredAt: weight?.measuredAt.toISOString() ?? null };
   }
 
@@ -127,6 +131,7 @@ export default async function DashboardPage() {
         activePlan={activePlan}
         hasActivationIssue={hasActivationIssue}
         starterSummary={starterSummary}
+        resolvedCalorieTarget={resolvedTarget.calories}
       />
     </div>
   );

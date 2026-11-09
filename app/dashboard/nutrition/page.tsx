@@ -27,7 +27,7 @@ export default async function NutritionPage() {
   const userId = session.user.id;
   const today = todayIndiaDate();
 
-  const [mealTypes, goal, waterLog, entries, subscriptions] = await Promise.all([
+  const [mealTypes, goal, waterLog, entries, subscriptions, resolvedGoal] = await Promise.all([
     prisma.mealType.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.nutritionGoal.findUnique({ where: { userId } }),
     prisma.waterLog.findUnique({ where: { userId_entryDate: { userId, entryDate: today } } }),
@@ -46,17 +46,19 @@ export default async function NutritionPage() {
         mealPlan: { select: { displayName: true, name: true } },
       },
     }),
+    getCalorieTarget(userId),
   ]);
 
   const current = subscriptions.find((plan) => (
     plan.status === "active" && plan.startDate <= today && plan.endDate >= today
   ));
 
-  // No stored goal row: the page shows the user's unified calorie target
-  // (the same resolver the dashboard ring and progress charts use) instead
-  // of the flat 2000 default. A stored row always wins here, because it is
-  // the value the goals dialog edits.
-  const resolvedGoal = goal ? null : await getCalorieTarget(userId);
+  // The resolved target is always computed, even when a goal row exists:
+  // after the precedence flip a stored NutritionGoal row IS the winning
+  // rung, but the raw stored value is unclamped, so the displayed Target,
+  // Meter, and remaining use the resolved (clamped) value. The stored row
+  // itself is still passed through as the edit-dialog draft.
+  const resolvedGoalCalories = resolvedGoal.calories;
   const scheduled = subscriptions.find((plan) => (
     plan.status === "active" && plan.startDate > today
   ));
@@ -96,7 +98,8 @@ export default async function NutritionPage() {
       <NutritionClient
         initialEntries={JSON.parse(JSON.stringify(entries))}
         mealTypes={JSON.parse(JSON.stringify(mealTypes))}
-        goal={goal ? JSON.parse(JSON.stringify(goal)) : { ...DEFAULT_GOAL, calories: resolvedGoal?.calories ?? DEFAULT_GOAL.calories }}
+        goal={goal ? JSON.parse(JSON.stringify(goal)) : { ...DEFAULT_GOAL, calories: resolvedGoalCalories }}
+        resolvedCalories={resolvedGoalCalories}
         initialWaterMl={waterLog?.amountMl ?? 0}
         initialDate={formatDateOnly(today)}
         mealPlanAccess={mealPlanAccess}

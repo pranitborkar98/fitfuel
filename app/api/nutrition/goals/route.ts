@@ -65,5 +65,10 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(goal);
+  // The response carries the resolved calorie target alongside the stored
+  // row: after the precedence flip the stored row wins, but the displayed
+  // target is the resolved (clamped) value, so the client needs both. The
+  // stored row itself is returned unchanged and stays the edit-dialog draft.
+  const resolved = await getCalorieTarget(session.user.id);
+  return NextResponse.json({ ...goal, resolvedCalories: resolved.calories });
 }
