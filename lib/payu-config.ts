@@ -1,3 +1,5 @@
+// lib/payu-config.ts
+// Single config point for PayU. Operator setup: see docs/payu-setup.md.
 import "server-only";
 
 import { PAYU_PAYMENT_URLS, PAYU_REFUND_URLS, resolvePayuMode, type PayuMode } from "@/lib/payu-mode";
