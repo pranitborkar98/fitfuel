@@ -2,7 +2,7 @@
 //
 // THE À LA CARTE MENU. Single meals, ordered direct, no subscription.
 //
-// This is a SEPARATE product line from the 126 subscription meal plans. The
+// This is a SEPARATE product line from the subscription meal plans. The
 // plans are a 60-day cycle cooked to your macros; this is the single-dish menu
 // the same kitchen runs on the aggregators. Different menu, different intent,
 // same kitchen and the same licence.

@@ -1,8 +1,12 @@
 // ============================================================
 // FITFUEL — lib/meal-plans-data.ts
-// Phase 9B — Static Plan Metadata (COMPLETE — ALL 103 VARIANTS)
+// Phase 9B — Static Plan Metadata (103 VARIANTS, captured May 20, 2026)
 // Auto-generated from seed-meal-plans.ts on May 20, 2026
-// THIS IS THE SOURCE OF TRUTH — matches seed-meal-plans.ts exactly
+// WARNING: this snapshot does NOT match the seed file any more —
+// seed-meal-plans.ts holds 119 plans (STANDARD 27, LIFESTYLE_MEDICAL 70,
+// SPORTS 22), counted 2026-11-09. Nothing imports this file; it is kept
+// as a historical snapshot, not a source of truth. See lib/plan-counts.ts
+// for the live counts.
 // ============================================================
 
 export type PlanTier = 'STANDARD' | 'PREMIUM' | 'LUXURY'

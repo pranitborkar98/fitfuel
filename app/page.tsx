@@ -9,6 +9,7 @@ import { TRIAL, TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import type { PriceRow } from "@/lib/plan-tier-pricing";
 import { readWithDeadline } from "@/lib/read-with-deadline";
 import { NUTRABAY_MARKETPLACE_COUNT } from "@/lib/nutrabay-catalog";
+import { countPlans } from "@/lib/plan-counts";
 import { COURSES, SHOP_DISHES } from "./_shop/catalog";
 import type { AppPlan, AppSupp, ProductCounts } from "./_web/FitFuelApp";
 import { findDishImage } from "./_hp/DishImage";
@@ -60,23 +61,34 @@ const publicSentence = (value: string) => value.replace(/\s*—\s*/g, ". ");
 const publicLabel = (value: string) => value.replace(/\s*—\s*/g, " · ");
 
 /**
- * ALL 126 PLANS, from the database.
+ * ALL PLANS, from the database.
  *
  * The app previously rendered `SHOP_PLANS` — a hand-written array of six
- * showcase plans — while claiming "126" on the chip. The real set is 70
- * lifestyle & medical, 34 goal and 22 sports plans across 59 conditions, and
- * shipping six of them was the single biggest thing missing from the shop.
+ * showcase plans — while claiming "126" on the chip. The seeded set is
+ * 119 rows in prisma/seed-meal-plans.ts (70 LIFESTYLE_MEDICAL, 27
+ * STANDARD, 22 SPORTS, 58 subCategories), and prisma/seed.ts adds 7 more
+ * rows — the five balanced-diet-* slugs plus weight-loss-vegan and
+ * muscle-gain-vegan, and the 'balanced' subCategory — so a database
+ * seeded with both files holds 126 rows in 59 concepts, which is where
+ * the old "126 = 70+34+22" came from. Which of those two states the live
+ * database is in cannot be read from here; the count on the page comes
+ * from the database at request time (lib/plan-counts.ts), never from
+ * either seed file.
  *
- * NOT FILTERED ON isActive. Every one of the 126 rows currently has
- * `isActive: false` ("flip to true when ready to sell"), so filtering on it
- * renders an empty catalog. Ordering still goes through the configurator and
- * the seeded PlanPrice matrix, which is what actually gates a sale.
+ * NOT FILTERED ON isActive. Every seeded row has `isActive: false`
+ * ("flip to true when ready to sell") at seed level — seed-meal-plans.ts
+ * seeds all 119 inactive, and seed.ts activates only weight-loss-veg,
+ * and seed-meal-plans.ts upserts the whole row, so whichever seed ran
+ * last decides whether weight-loss-veg is live. Filtering on isActive
+ * here renders an empty catalog unless seed.ts ran last. Ordering still
+ * goes through the configurator and the seeded PlanPrice matrix, which is
+ * what actually gates a sale.
  */
 /**
  * Day one of every plan that actually has a seeded menu.
  *
- * TODAY THAT IS EXACTLY ONE PLAN OF 126 (weight-loss-veg, 120 slots = 30 days
- * x 4 meals, against 30 Recipe rows). The other 125 have no PlanScheduleSlot
+ * TODAY THAT IS EXACTLY ONE SEEDED PLAN (weight-loss-veg, 120 slots = 30 days
+ * x 4 meals, against 30 Recipe rows). The other seeded plans have no PlanScheduleSlot
  * rows at all, so their cards show a labelled placeholder rather than four
  * invented dish names — a plan that lists food it cannot cook is worse than a
  * plan that says the menu is coming. Seed more schedules and they light up
@@ -124,7 +136,8 @@ async function getPlans(): Promise<AppPlan[]> {
         },
       }),
     ]);
-    /* GROUP BY CONCEPT. The 126 rows are 59 plans x diet variants — "Weight
+    /* GROUP BY CONCEPT. The seeded rows are one concept per subCategory x
+       diet variants — "Weight
        Loss — Vegetarian / Eggetarian / Jain / Non Vegetarian / Vegan" is ONE
        plan with five variants, not five plans. Rendering the raw rows produced
        52 concepts as duplicate cards. `name` is already the clean concept name
@@ -370,7 +383,7 @@ function trialReceipt() {
  * ONE REAL WEEK OF A REAL PLAN.
  *
  * app/_hp/menu-data.ts's getWeek() — seven days of weight-loss-veg, which is
- * the ONE plan of 126 with a seeded PlanScheduleSlot set. Behind.tsx has
+ * the ONE seeded plan with a PlanScheduleSlot set. Behind.tsx has
  * argued "nothing repeats for sixty days" in prose since it was written and
  * nothing on the page has ever shown a single day of it.
  *
@@ -394,12 +407,13 @@ export default async function AppPage({
   searchParams: Promise<{ mode?: string | string[] }>;
 }) {
   const { mode } = await searchParams;
-  const [plans, supplements, bands, week, prices] = await Promise.all([
+  const [plans, supplements, bands, week, prices, counts] = await Promise.all([
     getPlans(),
     getSupplements(),
     getBandData(),
     getWeek(),
     getPrices(),
+    countPlans(),
   ]);
 
   return (
@@ -419,10 +433,15 @@ export default async function AppPage({
         menuFrom={`₹${MENU_FROM}`}
         plans={plans}
         supplements={supplements}
-        planCount={plans.length || 126}
+        /* Concepts, not rows: one card per subCategory, so this is the same
+           number of cards the catalogue renders. It comes from
+           lib/plan-counts.ts, counted from the database; when the database
+           cannot be read it is null and the client renders no number rather
+           than a stale literal. */
+        planCount={counts?.concepts ?? null}
         licence={FSSAI_LICENCE}
-        /* The 126 rows collapse to this many concepts — 59 goals and conditions,
-           one per subCategory. Counted, never typed, so the figure on the
+        /* The seeded rows collapse to this many concepts — one per
+           subCategory. Counted, never typed, so the figure on the
            conditions band cannot drift from the catalogue it describes. */
         goalCount={plans.length}
         prices={prices}

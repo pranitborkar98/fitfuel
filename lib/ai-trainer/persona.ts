@@ -16,7 +16,7 @@
 // block (the serialised TrainerContext), which changes about once a day.
 //
 // ── WHAT THIS COACH IS NOT ─────────────────────────────────────────────────
-// It is not a doctor, and 70 of the 126 plans are built for a condition — so
+// It is not a doctor, and 70 of the seeded plans are built for a condition — so
 // the boundary is load-bearing rather than boilerplate. A diabetic asking
 // whether to change their metformin is the single most predictable dangerous
 // turn this product will ever see, and the answer has to be the same every

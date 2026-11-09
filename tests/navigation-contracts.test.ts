@@ -148,7 +148,9 @@ test("the diary keeps subscribed meals separate from optional outside-food searc
 
 test("published is one product contract across catalogue, detail and checkout", () => {
   const catalogue = readFileSync(resolve("app/plans/page.tsx"), "utf8");
-  assert.match(catalogue, /category: \{ in: \[\.\.\.ORDERABLE\] \}, isActive: true/);
+  // ORDERABLE_PLAN_CATEGORIES lives in lib/plan-counts.ts, the one source
+  // of truth for plan counts; /plans imports it rather than redefining it.
+  assert.match(catalogue, /category: \{ in: \[\.\.\.ORDERABLE_PLAN_CATEGORIES\] \}, isActive: true/);
 
   const detail = readFileSync(resolve("app/plans/[slug]/page.tsx"), "utf8");
   assert.equal((detail.match(/where: \{ slug, isActive: true \}/g) ?? []).length, 2);

@@ -165,7 +165,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
           panel in a stretched grid row dragged three neighbouring cards down
           with it.
 
-          1 of 126 plan rows currently has a seeded day-one schedule, so the
+          Only one plan row currently has a seeded day-one schedule, so the
           empty branch is the one nearly everyone sees. It says what is true and
           points at the page that carries the full 30 days, rather than
           pretending the section is missing. */}

@@ -13,7 +13,7 @@
 // they can actually buy. A week is the unit a person plans against, so the
 // homepage shows a week and links to the full schedule on the plan page.
 //
-// WHY ONLY ONE PLAN: recipe seeding is 1 of 126 (FITFUEL-MASTER-TRACKER
+// WHY ONLY ONE PLAN: recipe seeding covers 1 of the seeded plans (FITFUEL-MASTER-TRACKER
 // -DEFINITIVE.md line 138, F4, still open). This is the only plan with a
 // complete seeded schedule, so it is labelled as one plan's week rather than
 // dressed up as the whole menu. When F4 lands, widening this is a change of

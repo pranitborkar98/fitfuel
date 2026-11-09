@@ -6,7 +6,7 @@
 //
 // app/_hp/Finder.tsx has carried this since the v2 homepage was built, on no
 // route anyone reaches. It is the one control on this whole product that turns
-// "126 plans" into "your number", and the reason it is worth importing is not
+// "all the plans" into "your number", and the reason it is worth importing is not
 // the form — it is what happens to every card once a profile exists.
 //
 // Before: the day bar offered three round targets, and Maintain was 2,000 kcal

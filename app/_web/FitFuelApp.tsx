@@ -291,7 +291,11 @@ export type AppProps = {
   cutoffLabel: string;
   trialTotal: string;
   menuFrom: string;
-  planCount: number;
+  /** Plan concepts on the catalogue (one card per subCategory), counted
+   *  from the database by lib/plan-counts.ts. Null when the database
+   *  could not be read: the client renders no number rather than a
+   *  stale literal. */
+  planCount: number | null;
   licence: string;
   bandCounts: ProductCounts;
   prices: HomeSectionsProps["prices"];
@@ -1013,7 +1017,8 @@ export default function FitFuelApp({
               onClick={() => switchMode("plans")}
               aria-pressed={mode === "plans"}
             >
-              Meal plans <span className={s.fcount}>{planCount}</span>
+              Meal plans{" "}
+              {planCount !== null && <span className={s.fcount}>{planCount}</span>}
             </button>
             <button
               type="button"
@@ -1394,7 +1399,9 @@ export default function FitFuelApp({
                 {mode === "supps"
                   ? `${suppResults.length} of ${supplements.length} · researched, not stocked`
                   : mode === "plans"
-                    ? `${planResults.length} of ${planCount} plans · ${goalCount} goals and conditions`
+                    ? planCount === null
+                      ? `${planResults.length} plans`
+                      : `${planResults.length} of ${planCount} plans · ${goalCount} goals and conditions`
                     : `${results.length} dish${results.length === 1 ? "" : "es"}` +
                       (orderableCount !== results.length
                         ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
@@ -1449,10 +1456,14 @@ export default function FitFuelApp({
                 <h3>Nothing matches that.</h3>
                 <p>
                   {mode === "plans" ? (
-                    <>
-                      There are {planCount} plans across goals, sports and{" "}
-                      {goalCount} conditions.{" "}
-                    </>
+                    planCount === null ? (
+                      <>No plans are listed right now. </>
+                    ) : (
+                      <>
+                        There are {planCount} plans across goals, sports and{" "}
+                        {goalCount} conditions.{" "}
+                      </>
+                    )
                   ) : mode === "supps" ? (
                     <>
                       There are {supplements.length} researched supplements
@@ -1482,7 +1493,7 @@ export default function FitFuelApp({
                     }
                   >
                     {mode === "dishes" ? (
-                      <>Browse {planCount} plans</>
+                      <>{planCount === null ? "Browse plans" : `Browse ${planCount} plans`}</>
                     ) : (
                       <>Browse {dishes.length} meals</>
                     )}
@@ -1646,8 +1657,8 @@ export default function FitFuelApp({
                           choose. A disclosure that previews a better control is
                           just a longer route to it.
 
-                          "View menu" opened an inline panel, and 1 of 126 plan
-                          rows has a seeded day-1 menu — so 58 of these 59 cards
+                          "View menu" opened an inline panel, and one plan
+                          row has a seeded day-1 menu — so almost every card
                           opened the identical apology. Worse, the grid stretches
                           a row to its tallest card, so expanding one card grew
                           all four in its row by 155px and shoved every Configure
