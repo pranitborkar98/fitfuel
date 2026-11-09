@@ -116,7 +116,6 @@ const LIVE_SURFACES_WITHOUT_ANY_126_OR_113 = [
   "app/_shop/PlanSheet.tsx",
   "lib/ai-trainer/persona.ts",
   "lib/menu-alacarte.ts",
-  "lib/meal-plans-data.ts",
   "prisma/schema.prisma",
 ];
 
