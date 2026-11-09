@@ -41,11 +41,11 @@
 .base { margin-top: 48px; padding-top: 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; border-top: 1px solid var(--fk-line-2); }
 .base > div { display: grid; gap: 5px; }
 .base b { color: var(--fk-ink-2); font-size: 0.75rem; }
-.base span { color: var(--fk-ink-3); font-size: 0.72rem; }
+.base span { color: var(--fk-ink-3); font-size: 0.75rem; }
 .base nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 18px; }
-.base a { min-height: 38px; display: inline-flex; align-items: center; color: var(--fk-ink-3); font-size: 0.72rem; text-decoration: none; }
+.base a { min-height: var(--fk-tap); display: inline-flex; align-items: center; color: var(--fk-ink-3); font-size: 0.75rem; text-decoration: none; }
 .base a:hover { color: var(--fk-ink); }
-.disclosure { max-width: 88ch; margin: 18px 0 0; color: var(--fk-ink-3); font-size: 0.7rem; line-height: 1.55; }
+.disclosure { max-width: 88ch; margin: 18px 0 0; color: var(--fk-ink-3); font-size: 0.75rem; line-height: 1.55; }
 .disclosure a { color: var(--fk-ink-2); }
 .footer :is(a, button):focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 3px; }
 @media (max-width: 1100px) {

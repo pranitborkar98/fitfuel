@@ -120,7 +120,7 @@ export default function HomeSections({
       <CoachBand trial={trial} />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
-      <DigitalPlansBand />
+      <DigitalPlansBand counts={counts} />
       <DayBand />
       <WedgeBand counts={counts} />
       <RetailBand products={retailProducts} counts={counts} />
@@ -301,7 +301,7 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
    Digital plans are not a fallback for an uncovered postcode. They are a
    product FitFuel can sell everywhere in India today, so they get a complete
    sales block instead of one small card under local kitchen services. */
-function DigitalPlansBand() {
+function DigitalPlansBand({ counts }: { counts: BandCounts }) {
   return (
     <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="digital-h">
       <div className={s.bandWrap}>
@@ -319,7 +319,11 @@ function DigitalPlansBand() {
             </p>
             <ul className={s.digitalProofs}>
               <li>30 days planned</li>
-              <li>Recipes measured in grams</li>
+              <li>
+                {counts.recipes > 0
+                  ? `${counts.recipes.toLocaleString("en-IN")} recipes, measured in grams`
+                  : "Recipes measured in grams"}
+              </li>
               <li>Macros for every meal</li>
               <li>Four weekly grocery lists</li>
             </ul>
@@ -333,7 +337,7 @@ function DigitalPlansBand() {
             </div>
           </div>
 
-          <div className={s.digitalPack} data-reveal="scale" aria-label="Digital plan contents preview">
+          <div className={s.digitalPack} data-reveal="scale" data-tilt aria-label="Digital plan contents preview">
             <div className={s.digitalPackHead}>
               <span>
                 <small>Your digital plan</small>
@@ -467,6 +471,10 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
                 <li>
                   <span>Tracked retailer products</span>
                   <b>{counts.retailerLinks.toLocaleString("en-IN")}</b>
+                </li>
+                <li>
+                  <span>Retailer networks</span>
+                  <b>{counts.retailerNetworks.toLocaleString("en-IN")}</b>
                 </li>
               </ul>
               <span className={s.previewFoot}>FitFuel holds no supplement stock</span>
@@ -1074,7 +1082,7 @@ function CtaBand({
 
      Every line below is a fact stated somewhere else on this page or modelled
      in a real module: the cutoff is lib/order-cutoff, the drop window is the
-     day band's own 04:00→08:00, the area count is areas-data, and the trial
+     day band's own morning window, and the trial
      total is lib/trial-price. Nothing here is a new promise. */
   const steps: { n: string; label: string; line: string }[] = [
     {
@@ -1088,7 +1096,7 @@ function CtaBand({
       line: "Your nearest FitFuel kitchen cooks from the recipe sheet and weighs every portion.",
     },
     {
-      n: "By 08:00",
+      n: "Morning",
       label: "Breakfast and lunch, at your door",
       line: "Your delivery window is confirmed for your address. Your macros are ready in the diary.",
     },
@@ -1117,7 +1125,7 @@ function CtaBand({
             </Link>
           </div>
         </div>
-        <span className={s.closeShot}>
+        <span className={s.closeShot} data-tilt>
           <Image
             src="/images/brand/weekly-meal-delivery.webp"
             alt="Illustration of a weekly Indian meal delivery with four prepared meals"

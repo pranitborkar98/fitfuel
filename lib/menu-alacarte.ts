@@ -122,7 +122,7 @@ export const MENU: MenuCategory[] = [
   {
     key: "breakfast",
     label: "Breakfast",
-    note: "The meal most people skip or ruin. Cooked and at your door by 08:00.",
+    note: "The meal most people skip or ruin. Cooked and at your door in the morning.",
     items: [
       { name: "Avocado Toast with Egg or Tomato", blurb: "Multigrain toast, lemon-mashed avocado, poached egg or tomato, chilli flakes.", price: 100, provisional: true },
       { name: "Almond Banana Overnight Oats", blurb: "Rolled oats soaked in almond milk with banana and chia, almonds and cinnamon. Vegan.", price: 100, provisional: true },

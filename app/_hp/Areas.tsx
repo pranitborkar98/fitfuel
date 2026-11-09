@@ -56,7 +56,7 @@ export default function Areas() {
             </h2>
           </div>
           <p className={v.rise} style={{ ...body(16.5), maxWidth: "48ch" }}>
-            Cooked from 04:00 in {KITCHEN}, at your door by 08:00. {AREAS_AT.length + 1} areas,
+            Cooked from 04:00 in {KITCHEN}, at your door in the morning. {AREAS_AT.length + 1} areas,
             one kitchen. We would rather serve east Pune properly than the whole city badly.
           </p>
         </div>

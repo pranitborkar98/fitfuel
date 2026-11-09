@@ -33,7 +33,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
@@ -470,6 +470,26 @@ function AddControl({ dish }: { dish: ShopDish }) {
   );
 }
 
+/** Match a media query. useSyncExternalStore, not useState + an effect: the
+ *  server has no matchMedia, so the server snapshot is false (the phone
+ *  layout) and the client swaps in the measured value after hydration. */
+function useMediaQuery(query: string): boolean {
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (typeof window.matchMedia !== "function") return () => {};
+      const mq = window.matchMedia(query);
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    [query],
+  );
+  const getSnapshot = useCallback(() => {
+    if (typeof window.matchMedia !== "function") return false;
+    return window.matchMedia(query).matches;
+  }, [query]);
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
+}
+
 export default function FitFuelApp({
   dishes,
   images,
@@ -632,6 +652,14 @@ export default function FitFuelApp({
     [supplements, suppCat, normalizedQuery],
   );
 
+  /* ── THE DISH RANGE IS RESPONSIVE, NOT ONE CAP FOR EVERY SCREEN ────────
+     A phone shows two dishes per course, a tablet four, and a desktop the
+     full course. The old PER_COURSE = 2 ran at every width, so a desktop —
+     with a three-column grid and room to spare — showed only 2 dishes per
+     course and hid the range behind a tap. */
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isTablet = useMediaQuery("(min-width: 640px)");
+
   /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
      Measured: 48 dish cards ran 13,396px of a 19,058px page — sixteen phone
      screens of near-identical cards — and every argument for the business sat
@@ -655,6 +683,13 @@ export default function FitFuelApp({
   const expanded = expandedFor === filterKey;
   const cap = <T,>(list: T[]): T[] =>
     expanded ? list : list.slice(0, PREVIEW);
+
+  /* The flat dish list follows the same rule as the grouped one: a desktop
+     shows the full filtered range, a phone or tablet keeps the 12-card cap
+     and the "Show all" control. Plans and supplements keep PREVIEW at every
+     width — their caps are about two different purchases, not screen room. */
+  const dishCap = (list: ShopDish[]): ShopDish[] =>
+    expanded || isDesktop ? list : list.slice(0, PREVIEW);
 
   /* The "show the rest" control, under whichever grid is live.
      A render HELPER, not a component: declaring a component inside render gives
@@ -693,10 +728,15 @@ export default function FitFuelApp({
      a filtered view falls back to one flat capped list. */
   const grouped = mode === "dishes" && course === "all" && !onlyOrderable;
 
-  /** Two per course puts 12 photographed meals in the first catalogue view.
-   *  The complete 48-dish catalogue stays one tap away, while the product
-   *  story no longer starts sixteen phone screens below the first card. */
-  const PER_COURSE = 2;
+  /** Dishes per course in the grouped view: two on a phone, four on a tablet,
+   *  the full course on a desktop. The phone cap keeps the first view to 12
+   *  photographed meals instead of sixteen phone screens of cards; a desktop
+   *  grid has the room, so it shows the whole range with no extra tap. */
+  const PER_COURSE = isDesktop
+    ? Number.POSITIVE_INFINITY
+    : isTablet
+      ? 4
+      : 2;
 
   /**
    * ONE DISH CARD.
@@ -937,7 +977,7 @@ export default function FitFuelApp({
             <span className={s.live}>
               <i aria-hidden="true" />
               {mode === "plans"
-                ? `Order by ${cutoffLabel} · at your door by 8am`
+                ? `Order by ${cutoffLabel} · at your door in the morning`
                 : mode === "supps"
                   ? "Researched, not stocked"
                   : "Cooking today"}
@@ -1302,8 +1342,11 @@ export default function FitFuelApp({
               have deleted the trial from every phone. */}
           <div className={s.railOffer}>
             <span className={s.railOfferShot}>
+              {/* hero-bowl-v2, not hero-bowl.jpg: the old file is the wrong
+                  picture (a western bowl on light barnwood) and v2 is the
+                  image the site already uses for sharing and plans. */}
               <Image
-                src="/images/hero-bowl.jpg"
+                src="/images/hero-bowl-v2.png"
                 alt=""
                 fill
                 sizes="220px"
@@ -1337,7 +1380,7 @@ export default function FitFuelApp({
           </ul>
 
           <p className={s.railNote}>
-            Our own kitchen, our own drivers.
+            Cooked in FitFuel kitchens, delivered by our own drivers.
             <br />
             FSSAI <span className="fk-num">{licence}</span>
           </p>
@@ -1411,7 +1454,7 @@ export default function FitFuelApp({
 
             {mode !== "dishes" ? (
               <div className={r.modeFeature}>
-                <div className={r.modeFeatureImage}>
+                <div className={r.modeFeatureImage} data-tilt>
                   <Image
                     src={
                       mode === "plans"
@@ -1757,9 +1800,9 @@ export default function FitFuelApp({
             ) : (
               <>
                 <ul className={`${s.grid} ${r.productGrid}`}>
-                  {cap(results).map((d) => dishCard(d))}
+                  {dishCap(results).map((d) => dishCard(d))}
                 </ul>
-                {showAllControl(results.length, "dishes")}
+                {isDesktop ? null : showAllControl(results.length, "dishes")}
               </>
             )}
           </div>
