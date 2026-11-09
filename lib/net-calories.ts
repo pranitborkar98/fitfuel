@@ -27,8 +27,8 @@ export async function getDailyCalorieBalance(
   day.setUTCHours(0, 0, 0, 0);
 
   // 1. Get the daily calorie target — one shared precedence for every
-  // surface (see lib/calorie-target.ts): profile override, active-plan
-  // target, stored NutritionGoal, plan average, then the safe default.
+  // surface (see lib/calorie-target.ts): stored NutritionGoal, profile
+  // override, active-plan target, plan average, then the safe default.
   // The active-plan lookup keeps its existing date window and ordering.
   const [activePlan, profile, goal] = await Promise.all([
     prisma.userActivePlan.findFirst({
@@ -47,7 +47,7 @@ export async function getDailyCalorieBalance(
     }),
     prisma.userProfile.findUnique({
       where: { userId },
-      select: { calorieTarget: true },
+      select: { calorieTarget: true, gender: true },
     }),
     prisma.nutritionGoal.findUnique({
       where: { userId },
@@ -60,6 +60,7 @@ export async function getDailyCalorieBalance(
     activePlanCalorieTarget: activePlan?.calorieTarget ?? null,
     nutritionGoalCalories: goal?.calories ?? null,
     planAvgCaloriesPerDay: activePlan?.mealPlan?.avgCaloriesPerDay ?? null,
+    sex: profile?.gender ?? null,
   });
 
   const proteinTarget =
