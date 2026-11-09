@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { C, SANS, body, label, num, figure, section, PANEL, solidBtn, ghostBtn } from "@/app/_app/theme";
 import { addDateOnlyDays, formatDateOnly, parseDateOnly } from "@/lib/date-only";
+import { CALORIE_FLOOR_KCAL } from "@/lib/calorie-target";
 import Dialog from "@/app/_app/Dialog";
 import s from "./nutrition.module.css";
 import type { MealPlanAccess } from "./types";
@@ -95,13 +96,13 @@ function displayPlanDate(value: string) {
     : value;
 }
 
-const GOAL_FIELDS: Array<{ key: keyof Goal; name: string; unit: string; step: number }> = [
-  { key: "calories", name: "Calories", unit: "kcal", step: 10 },
-  { key: "protein", name: "Protein", unit: "g", step: 5 },
-  { key: "carbs", name: "Carbs", unit: "g", step: 5 },
-  { key: "fat", name: "Fat", unit: "g", step: 2 },
-  { key: "fiber", name: "Fibre", unit: "g", step: 1 },
-  { key: "waterMl", name: "Water", unit: "ml", step: 250 },
+const GOAL_FIELDS: Array<{ key: keyof Goal; name: string; unit: string; step: number; min: number }> = [
+  { key: "calories", name: "Calories", unit: "kcal", step: 10, min: CALORIE_FLOOR_KCAL },
+  { key: "protein", name: "Protein", unit: "g", step: 5, min: 0 },
+  { key: "carbs", name: "Carbs", unit: "g", step: 5, min: 0 },
+  { key: "fat", name: "Fat", unit: "g", step: 2, min: 0 },
+  { key: "fiber", name: "Fibre", unit: "g", step: 1, min: 0 },
+  { key: "waterMl", name: "Water", unit: "ml", step: 250, min: 0 },
 ];
 
 /* ── small pieces ───────────────────────────────────────────────────────── */
@@ -214,6 +215,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   const [showGoals, setShowGoals] = useState(false);
   const [goalDraft, setGoalDraft] = useState<Goal>(goal);
   const [savingGoals, setSavingGoals] = useState(false);
+  const [goalsError, setGoalsError] = useState("");
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -477,22 +479,45 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
   }
 
   async function saveGoals() {
+    // Client-side floor: a calorie target below the shared 1200 kcal
+    // minimum is never submitted. The server schema enforces the same floor,
+    // so a bypassed or stale client still gets a 400 back.
+    if (!(goalDraft.calories >= CALORIE_FLOOR_KCAL)) {
+      setGoalsError(`Daily calorie target must be at least ${CALORIE_FLOOR_KCAL} kcal.`);
+      return;
+    }
     setSavingGoals(true);
-    setError("");
+    setGoalsError("");
     try {
       const res = await fetch("/api/nutrition/goals", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(goalDraft),
       });
-      if (!res.ok) throw new Error("Goal update failed");
+      if (!res.ok) {
+        // Surface the server's message (e.g. the schema's floor rejection)
+        // instead of a generic failure.
+        const body: unknown = await res.json().catch(() => null);
+        const issues = (body as { issues?: Array<{ message?: string }> } | null)?.issues;
+        const serverMessage =
+          issues?.[0]?.message ??
+          (body as { error?: string } | null)?.error ??
+          null;
+        throw new Error(
+          typeof serverMessage === "string" && serverMessage
+            ? serverMessage
+            : "Goal update failed",
+        );
+      }
       const saved = await res.json();
       setCurrentGoal({ ...goalDraft, ...saved });
       setGoalDraft((current) => ({ ...current, ...saved }));
       setShowGoals(false);
       setNotice("Daily targets updated.");
-    } catch {
-      setError("We couldn't save your targets. Check the values and try again.");
+    } catch (e) {
+      setGoalsError(
+        e instanceof Error ? e.message : "We couldn't save your targets. Check the values and try again.",
+      );
     } finally {
       setSavingGoals(false);
     }
@@ -538,7 +563,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         <IconBtn onClick={() => goDay(1)} disabled={isToday} name="Next day">&gt;</IconBtn>
         <button
           type="button"
-          onClick={() => { setGoalDraft(currentGoal); setShowGoals(true); }}
+          onClick={() => { setGoalDraft(currentGoal); setGoalsError(""); setShowGoals(true); }}
           className={s.editTargets}
           style={ghostBtn()}
         >
@@ -1037,7 +1062,7 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 <input
                   id={`goal-${f.key}`}
                   type="number"
-                  min={0}
+                  min={f.min}
                   step={f.step}
                   value={goalDraft[f.key]}
                   onChange={(e) => setGoalDraft((g) => ({ ...g, [f.key]: Number(e.target.value) }))}
@@ -1045,6 +1070,8 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
                 />
               </div>
             ))}
+
+            {goalsError && <p role="alert" className={s.error}>{goalsError}</p>}
 
             <button
               type="button"
