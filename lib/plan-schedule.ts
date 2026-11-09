@@ -26,12 +26,40 @@
 // (day - 1) % (recipes in that slot), so each slot cycles through its own
 // recipes independently and a plan repeats a recipe only when its slot runs
 // out of fresh ones. Every slot carries servingMultiplier 1.0, as the old
-// code wrote it. The seeded schedule is 30 days long,
-// so both callers pass days 30. That 30 is NOT the plan row's
-// cycleLengthDays (60): the hardcoded path built 30 days, and this refactor
-// changes nothing about the output. Whether the schedule should cover the
-// full 60-day cycle is an open question for chintu, not a detail to settle
-// inside a refactor; see the piece 7 manifest.
+// code wrote it. The seeded schedule covers the full 60-day cycle, so both
+// callers pass days 60. That 60 is the plan row's cycleLengthDays: the
+// readiness gate (lib/plan-readiness.ts) needs scheduleCount >=
+// cycleLengthDays * mealsPerDay, so a 60-day plan with 4 meals a day needs
+// 60 * 4 = 240 slots. The old hardcoded path built 30 days (120 slots)
+// and the plan failed the gate despite being active and priced; piece 9f
+// fixes that.
+//
+// ROTATIONGROUP, NOT USED. The Recipe row carries rotationGroup (schema:
+// "1-60, ensures no repeat in 60-day cycle"), but the seeded values are
+// per-slot sequence numbers 1-10, not a 60-day no-repeat design: a true
+// no-repeat 60-day rotation would need 60 distinct recipes per slot, and
+// the seeded menu has 8 breakfast, 10 lunch, 5 snack and 7 dinner
+// recipes. The modulo rotation above is the honest mechanism for the menu
+// that exists; the field stays stored, unused by the builder, until a menu
+// is seeded with rotation groups that actually span a cycle.
+//
+// MENU-DATA CONTRACT, FOR FUTURE PLANS. A plan's schedule is built from
+// three pieces, and only these:
+// - MealPlan row: slug (lookup key), cycleLengthDays (schedule length in
+//   days), mealsPerDay (slots per day), isActive (the seed flips it on
+//   once the schedule exists). The gate needs cycleLengthDays *
+//   mealsPerDay slots, so the days passed to the builder must equal
+//   cycleLengthDays or the plan fails it.
+// - PlanScheduleSlot rows: dayNumber 1..cycleLengthDays, mealSlot one of
+//   BREAKFAST, LUNCH, SNACK, DINNER, recipeId, servingMultiplier (1.0),
+//   unique on (mealPlanId, dayNumber, mealSlot).
+// - Recipe selector: the caller loads the menu with a findMany over
+//   planCategories and dietaryTags and passes the rows in; the query is
+//   the plan-specific part and stays in the plan file.
+// Builder input/output: ScheduleRecipe { id, mealType } in,
+// BuildScheduleInput { days, recipes } in, ScheduleSlotDraft[]
+// { dayNumber, mealSlot, recipeId, servingMultiplier } out. The builder
+// never reads the database and never names a plan, a category or a tag.
 //
 // ORDER. Recipes keep the order the caller passes them in, within each
 // slot. The old code grouped a findMany result with filter(), which also
@@ -64,7 +92,8 @@ export interface ScheduleSlotDraft {
 }
 
 export interface BuildScheduleInput {
-  /** Length of the rotation in days. The first caller passes 30. */
+  /** Length of the rotation in days. Must equal the plan row's
+   *  cycleLengthDays, or the plan fails the readiness gate. */
   days: number;
   /** The plan's menu: every recipe that may appear in the rotation. */
   recipes: ScheduleRecipe[];
@@ -106,7 +135,8 @@ export function buildScheduleSlots(input: BuildScheduleInput): ScheduleSlotDraft
 export interface RebuildPlanScheduleInput {
   /** Slug of the MealPlan whose schedule is rebuilt. */
   planSlug: string;
-  /** Length of the rotation in days. The first caller passes 30. */
+  /** Length of the rotation in days. Must equal the plan row's
+   *  cycleLengthDays, or the plan fails the readiness gate. */
   days: number;
   /** The plan's menu, loaded by the caller. */
   recipes: ScheduleRecipe[];
