@@ -17,7 +17,7 @@ import { getWeek } from "./_hp/menu-data";
 import { decodeRow } from "@/lib/decode-entities";
 import { isTrainerConfigured } from "@/lib/ai-trainer/client";
 import FitFuelApp from "./_web/FitFuelApp";
-import type { Quote } from "./_web/HomeBands";
+import type { Quote } from "./_web/home-data";
 
 /* ══════════════════════════════════════════════════════════════════════════
    `/` IS THE APP.

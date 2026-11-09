@@ -20,7 +20,7 @@
 
 import { MENU, type MenuCategoryKey } from "@/lib/menu-alacarte";
 import { DISHES, dishId, isOrderable, type Dish } from "@/lib/menu-cart";
-import { decomposePrice, DELIVERY_COUNT, type PlanDurationKey } from "@/lib/pricing-decomposition";
+import { DELIVERY_COUNT, type PlanDurationKey } from "@/lib/pricing-decomposition";
 import { DIETS, DURATIONS, MEALS, TIERS, type DietKey, type MealKey, type Tier } from "@/lib/plan-tier-pricing";
 
 export { DIETS, DURATIONS, MEALS, TIERS, DELIVERY_COUNT };
@@ -140,7 +140,6 @@ function shopDish(d: Dish): ShopDish {
 
 export const SHOP_DISHES: ShopDish[] = DISHES.map(shopDish);
 export const SHOP_DISH_BY_ID: ReadonlyMap<string, ShopDish> = new Map(SHOP_DISHES.map((d) => [d.id, d]));
-export const PRICED_DISHES = SHOP_DISHES.filter((d) => d.orderable);
 
 /** The six courses plus their counts, as the "shop by course" grid reads them. */
 export const COURSES: { key: MenuCategoryKey; label: string; note: string; n: number; items: ShopDish[] }[] =
@@ -151,19 +150,6 @@ export const COURSES: { key: MenuCategoryKey; label: string; note: string; n: nu
     n: c.items.length,
     items: c.items.map((i) => SHOP_DISH_BY_ID.get(dishId(i.name))!).filter(Boolean),
   }));
-
-/** Eight aisles: the six courses, then the two subscription doors.
- *
- *  STALE, DEAD-ONLY: the "Meal plans" n below is a hardcoded 126. It is
- *  rendered only by the dead Shop.tsx storefront (AISLES has no live
- *  consumer), so it is left untouched here for the dead-code cleanup
- *  (piece 4) to delete with it. Live plan counts come from
- *  lib/plan-counts.ts; do not copy this literal into a live surface. */
-export const AISLES: { label: string; n: number; href: string }[] = [
-  ...COURSES.map((c) => ({ label: c.label, n: c.n, href: `/menu?course=${c.key}` })),
-  { label: "Meal plans", n: 126, href: "/plans" },
-  { label: "Supplements", n: 46, href: "/supplements" },
-];
 
 /* ── Plan money ────────────────────────────────────────────────────────────
    prisma/seed-plan-prices.ts PRICE_MATRIX, GST-exclusive subtotals in rupees.
@@ -217,28 +203,11 @@ export function planSubtotal(diet: DietKey, duration: PlanDurationKey, meal: Mea
   return Math.round(std * TIER_MULT[tier]);
 }
 
-/** What the customer is actually charged for one configuration. */
-export function planTotal(diet: DietKey, duration: PlanDurationKey, meal: MealKey, tier: Tier): number | null {
-  const sub = planSubtotal(diet, duration, meal, tier);
-  return sub == null ? null : decomposePrice({ subtotalRs: sub, duration }).totalRs;
-}
-
-/* The reference line the shop quotes everywhere: veg, one month, all four.
-   The prototype printed "₹142 a meal" and "₹17,849 a month" as literals. They
-   are the same configuration read two ways — per-meal off the food subtotal,
-   per-month off what is actually collected — so both are derived here and
-   neither can drift from the price matrix. */
-export const MONTH_MEALS = DELIVERY_COUNT.ONE_MONTH * 4;
-export const MONTH_SUBTOTAL_RS = planSubtotal("VEG", "ONE_MONTH", "ALL_FOUR", "STANDARD") ?? 16999;
-export const MONTH_TOTAL_RS = planTotal("VEG", "ONE_MONTH", "ALL_FOUR", "STANDARD") ?? 17849;
-export const PER_MEAL_RS = Math.round(MONTH_SUBTOTAL_RS / MONTH_MEALS);
-
-/* ── Plans on the shop floor ───────────────────────────────────────────────
-   Six of the seeded plans, the ones the storefront leads with. The macro lines are the
-   seeded day-one figures for each plan, not a marketing round number.
-   (SHOP_PLANS / PLAN_CATS below are rendered only by dead Shop.tsx; the
-   "126" literals in them are stale hardcoded totals — see the note on
-   AISLES. Live counts come from lib/plan-counts.ts.) */
+/* ── Plan rows, as the sheet reads them ────────────────────────────────────
+   ShopPlan is the shape PlanSheet consumes: a database-backed plan row
+   shaped to it, with the seeded day-one macro line. (The hand-written
+   six-row SHOP_PLANS array that used to sit here was deleted with the dead
+   Shop storefront; only the type survives.) */
 
 export type ShopPlan = {
   label: string;
@@ -251,222 +220,9 @@ export type ShopPlan = {
   pcf?: [number, number, number];
 };
 
-export const SHOP_PLANS: ShopPlan[] = [
-  { label: "Weight Loss", slug: "weight-loss", note: "Sustainable deficit", cat: "STANDARD", macros: "Day one: 1,430 kcal · 81g protein", macroLine: "1,430 kcal · 81P · 148C · 47F", kcal: 1430, pcf: [81, 148, 47] },
-  { label: "Muscle Gain", slug: "muscle-gain", note: "High protein surplus", cat: "STANDARD", macros: "Surplus set from your TDEE", macroLine: "2,640 kcal · 158P · 296C · 78F", kcal: 2640, pcf: [158, 296, 78] },
-  { label: "Balanced", slug: "balanced", note: "Clean maintenance fuel", cat: "STANDARD", macros: "Maintenance, no adjustment", macroLine: "2,050 kcal · 104P · 232C · 68F", kcal: 2050, pcf: [104, 232, 68] },
-  { label: "Diabetic", slug: "diabetic", note: "Low GI, steady glucose", cat: "LIFESTYLE_MEDICAL", macros: "Low glycaemic load, 38 conditions covered", macroLine: "1,720 kcal · 96P · 168C · 62F" },
-  { label: "PCOS", slug: "pcos", note: "Hormone-supportive", cat: "LIFESTYLE_MEDICAL", macros: "Insulin-aware carb split", macroLine: "1,640 kcal · 102P · 142C · 66F" },
-  { label: "Body Recomp", slug: "body-recomp", note: "Lose fat, keep muscle", cat: "SPORTS", macros: "High protein, held deficit", macroLine: "1,880 kcal · 146P · 158C · 58F" },
-];
-
 export const PLAN_CATS: { key: string; label: string }[] = [
-  { key: "all", label: "All 126" }, // STALE hardcoded total, dead-only (see AISLES note)
+  { key: "all", label: "All plans" },
   { key: "STANDARD", label: "Goal plans" },
   { key: "LIFESTYLE_MEDICAL", label: "Medical & lifestyle" },
   { key: "SPORTS", label: "Sports nutrition" },
 ];
-
-/* ── Digital plans (app/plans/digital) ─────────────────────────────────────── */
-
-export const DIGITAL: { key: string; tag: string; label: string; popular: boolean; bullets: string[] }[] = [
-  {
-    key: "STARTER", tag: "Starter", label: "Digital Starter", popular: false,
-    bullets: [
-      "Full 30-day recipe book (PDF)",
-      "Per-meal macros + daily totals",
-      "Consolidated grocery list",
-      "Meal logging on your dashboard",
-    ],
-  },
-  {
-    key: "PRO", tag: "Pro", label: "Digital Pro", popular: true,
-    bullets: [
-      "Everything in Starter",
-      "30-day training plan (PDF): sets, reps, rest and the weekly split",
-      "Workout calorie targets per day",
-      "Progress and body-metrics tracking",
-      "Free plan updates",
-    ],
-  },
-];
-
-/* ── Corporate ─────────────────────────────────────────────────────────────
-   Four seat bands, three meal counts, three separately-priced plans and the
-   three bulk channels that are not a headcount. */
-
-export const CORP_TIERS = [
-  { seats: 25, label: "25–49", perMeal: 128, off: "10% off" },
-  { seats: 50, label: "50–99", perMeal: 118, off: "17% off" },
-  { seats: 100, label: "100–249", perMeal: 110, off: "23% off" },
-  { seats: 250, label: "250+", perMeal: 102, off: "28% off" },
-] as const;
-
-export const CORP_MEALS = [
-  { n: 1, label: "Lunch", note: "1 a day" },
-  { n: 2, label: "Lunch + snack", note: "2 a day" },
-  { n: 4, label: "All four", note: "4 a day" },
-] as const;
-
-/** Working days a corporate rate is quoted against. */
-export const CORP_WORKING_DAYS = 22;
-
-/** The cheapest published seat rate, for the "from ₹102 a meal" line. */
-export const CORP_FROM_RS = CORP_TIERS[CORP_TIERS.length - 1]!.perMeal;
-
-export const CORP_PLANS = [
-  {
-    tag: "Most bought", label: "Desk Lunch", slug: "desk-lunch", price: "₹110", unit: "per meal, 100 seats",
-    note: "One hot lunch a day at the desk, personalised by goal and diet, 22 working days a month.",
-    bullets: [
-      "Employee picks goal, diet and spice level in the app",
-      "Single drop at reception, trays labelled per person",
-      "Billed in arrears on what was actually delivered",
-    ],
-  },
-  {
-    tag: "Wellness budget", label: "Wellness Benefit", slug: "wellness-benefit", price: "₹1,950", unit: "per employee, per month",
-    note: "A capped monthly food allowance the employee spends on any plan or dish. You fund the cap, they top up the rest.",
-    bullets: [
-      "Cap set per band; unspent balance does not roll over",
-      "Employee sees the subsidy split at checkout",
-      "Participation and macro-adherence report each month",
-    ],
-  },
-  {
-    tag: "Leadership", label: "Executive Health", slug: "executive-health", price: "₹4,600", unit: "per employee, per month",
-    note: "All four meals on the Luxury tier with a dietician on the account and a quarterly bloodwork slot.",
-    bullets: [
-      "Four weighed meals a day, six mornings a week",
-      "Named dietician, monthly 30-minute consult",
-      "Quarterly at-home panel feeding the recalibration engine",
-    ],
-  },
-];
-
-export const CORP_CHANNELS = [
-  {
-    key: "gyms", label: "Gyms and studios", slug: "gyms",
-    blurb: "Sell a member a fed week, not a supplement tub. Vouchers are bought in blocks and redeemed at face value.",
-    lines: [
-      { what: "Member voucher block", price: "₹210 each", detail: "Blocks of 50. Face value ₹250, the member pays nothing extra." },
-      { what: "Trial-day block", price: "₹360 each", detail: "Minimum 25, against a ₹420 list price. Breakfast plus lunch." },
-      { what: "Desk QR and macro dashboard", price: "Free", detail: "A live count of which members are eating to their macros." },
-    ],
-  },
-  {
-    key: "events", label: "Exhibitions and events", slug: "exhibitions",
-    blurb: "Expo counters, corporate fairs and race-day tables, with a per-event code so the stall is measurable.",
-    lines: [
-      { what: "Expo counter, per day", price: "₹18,000", detail: "120 sampling portions, branded counter, scan-to-order QR." },
-      { what: "Race-day recovery table", price: "₹26,000", detail: "250 boxes at 30g protein each, at the finish line." },
-      { what: "Per-event attribution code", price: "Free", detail: "Every scan tracked from the stall through to the first order." },
-    ],
-  },
-  {
-    key: "nutrabay", label: "NutraBay supply", slug: "nutrabay",
-    blurb: "We do not hold supplement stock. Evidence entries with a verified product match link to Nutrabay through tracked retailer checkout.",
-    lines: [
-      { what: "Verified product matches", price: "Affiliate", detail: "Recommended against your plan and linked to tracked Nutrabay listings." },
-      { what: "Corporate supplement bundle", price: "12% off list", detail: "50+ seats. Whey, creatine, multivitamin, omega-3." },
-      { what: "Reorder from the dashboard", price: "Free", detail: "One tap from the supplement tab, nothing re-entered." },
-    ],
-  },
-];
-
-/** What a corporate account includes, in the owner's terms. */
-export const CORPORATE_INCLUDES = [
-  { t: "Team meal programs", d: "Daily healthy meals for your employees, personalised by goal and dietary preference, delivered to the office or to homes." },
-  { t: "Wellness as a benefit", d: "Offer FitFuel as a health benefit, with optional tracking and progress that supports a genuine wellness culture." },
-  { t: "Flexible billing", d: "Consolidated monthly invoicing, GST-compliant, with simple onboarding for your team." },
-  { t: "Tiered options", d: "Standard, Premium and Luxury tiers so each employee can choose the level that suits them." },
-];
-
-/** The live seat-band quote. Four bands × three meal counts, arithmetic shown. */
-export function corpQuote(seats: number, mealsPerSeat: number) {
-  const band = CORP_TIERS.find((t) => t.seats === seats) ?? CORP_TIERS[2];
-  const meals = band.seats * mealsPerSeat * CORP_WORKING_DAYS;
-  const subtotal = meals * band.perMeal;
-  const gst = Math.round(subtotal * 0.05);
-  return {
-    band,
-    meals,
-    subtotal,
-    gst,
-    total: subtotal + gst,
-    perSeat: `${rs(Math.round((subtotal + gst) / band.seats))} per employee · ${band.off} list`,
-    foot:
-      `Estimated on ${band.seats} seats × ${mealsPerSeat}${mealsPerSeat === 1 ? " meal" : " meals"} × ` +
-      `${CORP_WORKING_DAYS} working days. Billed in arrears on meals actually delivered; a skipped day is not invoiced.`,
-  };
-}
-
-/* ── The moats, as figures ─────────────────────────────────────────────────── */
-
-export const CUISINES = [
-  "Maharashtrian", "Punjabi", "Andhra", "Rajasthani", "Gujarati", "Bengali", "South Indian",
-  "Chettinad", "Kashmiri", "Hyderabadi", "Sindhi", "Odia", "Malabar",
-];
-
-export const COACH_FIGURES = ["−0.45 kg/wk gap", "cap: ±300 kcal", "1,800 → 1,690"];
-
-export const APP_SCREENS = [
-  { key: "today", tag: "Today", label: "The day", note: "Plan day, four meals, the live delivery window and one tap to log.", stat: "Day 7 of 30 · 1,430 kcal" },
-  { key: "nutrition", tag: "Nutrition", label: "Diary & macros", note: "Delivered meals arrive logged; anything else you add from the food table.", stat: "154 foods tracked" },
-  { key: "training", tag: "Training", label: "The split", note: "Sets, reps and rest programmed into the week, burn fed back into today's net.", stat: "952 exercises · 14 equipment types" },
-  { key: "body", tag: "Body", label: "Thirteen readings", note: "Weight, body fat, muscle, water, visceral fat and BMR off one step on the scale.", stat: "78.2 kg · −2.2 kg in 8 weeks" },
-  { key: "progress", tag: "Progress", label: "Weekly review", note: "What was eaten, what was trained, and whether the plan needs recalibrating.", stat: "86% consistency · 12/14 eaten" },
-];
-
-export const APP_ROWS = [
-  { n: "952", label: "Exercise library", note: "Filmed, filtered by equipment and muscle, programmed into your week." },
-  { n: "154", label: "Food diary", note: "Your delivered meals log themselves; anything else you eat you add." },
-  { n: "30d", label: "Body metrics", note: "Weight, waist, photos and the trend line the coach reads." },
-  { n: "86%", label: "Consistency score", note: "One number for whether the plan is actually being eaten." },
-  { n: "46", label: "Evidence entries", note: "Reviewed against your plan, with verified products linked to tracked retailer checkout." },
-];
-
-/* ── The footer the design draws ───────────────────────────────────────────── */
-
-export const FOOTER_COLS: { title: string; links: { label: string; meta: string; href: string }[] }[] = [
-  {
-    title: "Eat tonight",
-    links: [
-      { label: "The full menu", meta: "48", href: "/menu" },
-      { label: "Order direct, skip the apps", meta: "−40%", href: "/menu/card" },
-      { label: "Salads and keto", meta: "16", href: "/menu?course=salads" },
-      { label: "Breakfast, by 08:00", meta: "10", href: "/menu?course=breakfast" },
-    ],
-  },
-  {
-    title: "Eat daily",
-    links: [
-      { label: "Goal and condition plans", meta: "126", href: "/plans" }, // STALE hardcoded total, dead-only (see AISLES note)
-      { label: "Trial day", meta: "₹420", href: "/plans?trial=true" },
-      { label: "Digital plans, cook it yourself", meta: "PDF", href: "/plans/digital" },
-      { label: "Supplements", meta: "46", href: "/supplements" },
-    ],
-  },
-  {
-    title: "For business",
-    links: [
-      { label: "Corporate accounts", meta: "from ₹102", href: "/corporate" },
-      { label: "Gyms and studios", meta: "vouchers", href: "/partners" },
-      { label: "Exhibitions and events", meta: "per day", href: "/partners" },
-      { label: "Partner programmes", meta: "8", href: "/partners" },
-    ],
-  },
-  {
-    title: "Your account",
-    links: [
-      { label: "Today's dashboard", meta: "day 7", href: "/dashboard" },
-      { label: "Orders and invoices", meta: "5", href: "/dashboard/orders" },
-      { label: "Referral credit", meta: "₹300", href: "/dashboard/referrals" },
-      { label: "Body metrics", meta: "13", href: "/dashboard/body-metrics" },
-    ],
-  },
-];
-
-export const DELIVERY_AREA_LINE =
-  "Kharadi · Viman Nagar · Kalyani Nagar · Koregaon Park · Magarpatta · Amanora · Hadapsar · " +
-  "Wagholi · Mundhwa · Yerwada · Lohegaon · Chandan Nagar · Vadgaon Sheri · Keshav Nagar · Manjri";

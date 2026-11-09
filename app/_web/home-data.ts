@@ -11,6 +11,33 @@
 //
 import type { FitnessGoal } from "@/lib/tdee";
 
+/* ── Band counts and quotes ────────────────────────────────────────────────
+   Moved here from app/_web/HomeBands.tsx (deleted 2026-11-09: the component
+   was never mounted). The types stay live: app/page.tsx, FitFuelApp,
+   HomeExperience and HomeSections all type their band props with them. */
+
+export type Quote = {
+  id: string;
+  name: string;
+  location: string;
+  planLabel: string;
+  resultLabel: string;
+  quote: string;
+};
+
+export type BandCounts = {
+  dishes: number;
+  plans: number;
+  conditionPlans: number;
+  exercises: number;
+  supplements: number;
+  recipes: number;
+  retailerLinks: number;
+  retailerNetworks: number;
+  marketplaceProducts: number;
+  activePartners: number;
+};
+
 // NOTHING IN THIS FILE IS A PRICE THAT A CUSTOMER PAYS. Plan prices come from
 // the seeded PlanPrice matrix and the trial from lib/trial-price.ts, both
 // resolved on the server — lib/trial-price.ts exists precisely to stop a second

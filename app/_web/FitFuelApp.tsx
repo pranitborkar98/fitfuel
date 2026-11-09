@@ -42,7 +42,7 @@ import type { Dish } from "@/app/_hp/menu-types";
 import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
-import type { BandCounts, Quote } from "./HomeBands";
+import type { BandCounts, Quote } from "./home-data";
 import HomeSections, { type HomeSectionsProps } from "./HomeSections";
 import HomeExperience, { HomeProductLinks } from "./HomeExperience";
 import CustomerTabBar from "./CustomerTabBar";

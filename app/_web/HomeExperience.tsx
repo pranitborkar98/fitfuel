@@ -7,7 +7,7 @@ import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
 
 import { GOALS } from "./home-data";
-import type { Quote } from "./HomeBands";
+import type { Quote } from "./home-data";
 import x from "./experience.module.css";
 import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
 import productStyles from "@/app/_kitchen/product-network.module.css";
