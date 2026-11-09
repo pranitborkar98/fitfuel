@@ -16,8 +16,9 @@
 // secondary action for the 32 price-on-request dishes, and the owner was right
 // to kill it: an order does not leave our own domain to be finished inside
 // another company's app. Unpriced dishes now say so in place and stay in the
-// basket until a price exists. lib/menu-cart still exports composeOrder() for
-// other callers; this drawer no longer uses it.
+// basket until a price exists. The WhatsApp composer (lib/menu-cart
+// composeOrder()) was removed with the dead exit: it had no callers left.
+// This drawer never used it.
 
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, X, CreditCard } from "lucide-react";

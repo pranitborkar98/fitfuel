@@ -46,7 +46,7 @@ import {
   WEDGE_COLS,
   wedgeRows,
 } from "./home-data";
-import type { BandCounts } from "./HomeBands";
+import type { BandCounts } from "./home-data";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
 import r from "./refresh.module.css";

@@ -33,9 +33,11 @@
 // with quantities, add-ons and a total is a real order — it just clears
 // through a person instead of PayU.
 //
-// WHEN THE TWO BLOCKERS CLEAR, exactly one thing changes: `composeOrder()`
-// gets a sibling that POSTs the same `CartLine[]` to /api/orders. Nothing in
-// the UI, the storage layer or this file's maths has to move. That is why the
+// WHEN THE TWO BLOCKERS CLEAR, exactly one thing changes: the priced lines
+// settle through /api/orders/dishes, which already exists. The WhatsApp
+// handoff that used to sit here (`composeOrder()`) was removed 2026-11-09
+// with the dead WhatsApp exit: it had zero callers left. Nothing in the UI,
+// the storage layer or this file's maths has to move. That is why the
 // totals below are computed here rather than inside a component.
 
 import type { AddOn, MenuItem, MenuCategoryKey } from "./menu-alacarte";
@@ -168,43 +170,4 @@ export function receipt(lines: CartLine[]): CartReceipt {
     gstRs,
     totalRs: subtotalRs + deliveryRs + packagingRs + gstRs,
   };
-}
-
-/* ── Settlement ────────────────────────────────────────────────────────────
-   The WhatsApp handoff. Everything the kitchen needs to price and pack the
-   order without a second round trip. */
-
-const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
-
-/**
- * Compose the order message.
- *
- * Deliberately plain text with no marketing: this lands in a human's WhatsApp
- * and gets read on a phone in a kitchen. Quantities and the running total are
- * spelled out so the customer and the kitchen are reading the same numbers.
- *
- * NOTE ON THE TOTAL. It is labelled as excluding delivery, because no
- * single-meal delivery fee has been set. Printing a bare total that later
- * grows by Rs 50 on the doorstep is the exact complaint this business does not
- * want, so the message says plainly that delivery is confirmed on reply.
- */
-export function composeOrder(lines: CartLine[], enquiries: Dish[] = []): string {
-  const parts: string[] = ["Hi FitFuel, I'd like to order these:", ""];
-
-  for (const l of lines) {
-    const addOn = l.addOn ? ` + ${l.addOn.what.toLowerCase()}` : "";
-    parts.push(`${l.qty} × ${l.dish.name}${addOn} — ${rs(l.lineRs)}`);
-  }
-
-  if (lines.length) {
-    parts.push("", `Subtotal ${rs(totals(lines).subtotalRs)} (before delivery)`);
-  }
-
-  if (enquiries.length) {
-    parts.push("", "And could you price these for me:");
-    for (const d of enquiries) parts.push(`- ${d.name}`);
-  }
-
-  parts.push("", "Please confirm delivery to my area and the total.");
-  return parts.join("\n");
 }

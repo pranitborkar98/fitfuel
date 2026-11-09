@@ -102,9 +102,9 @@ test("plan counters return null instead of throwing when the database is unreach
 // detail, metadata, and the modules they import). Dead files are NOT in
 // this list on purpose: app/_hp/*, app/_hp/v2/*, app/_web/Behind.tsx,
 // app/_web/HomeBands.tsx, app/_shop/Shop.tsx and app/_shop/Chrome.tsx
-// still contain "126" and are deleted by the dead-code cleanup (piece 4),
-// not here. app/menu/[dish]/page.tsx is excluded too: its "126" counts
-// RecipeStep rows, not plans.
+// held "126" and were deleted by the dead-code cleanup (piece 4), so they
+// no longer exist to check. app/menu/[dish]/page.tsx is excluded too: its
+// "126" counts RecipeStep rows, not plans.
 
 const LIVE_SURFACES_WITHOUT_ANY_126_OR_113 = [
   "app/plans/page.tsx",
@@ -152,12 +152,12 @@ test("/plans metadata reads through the source of truth", () => {
   assert.doesNotMatch(src, /const ORDERABLE =/);
 });
 
-test("catalog.ts keeps its stale 126s only as annotated dead-only literals", () => {
-  // AISLES, PLAN_CATS and the footer meta in app/_shop/catalog.ts still
-  // hold 126, but their only consumers are dead Shop.tsx / Chrome.tsx.
-  // They are left for piece 4 to delete; the annotation is the contract
-  // that nobody copies them into a live surface meanwhile.
+test("catalog.ts holds no hardcoded 126 at all", () => {
+  // Piece 4 deleted AISLES and FOOTER_COLS (the two annotated dead-only
+  // 126s) and relabelled the live PLAN_CATS heading from "All 126" to
+  // "All plans", matching the filter chip text. No 126 literal may return.
   const src = read("app/_shop/catalog.ts");
-  assert.match(src, /STALE, DEAD-ONLY: the "Meal plans" n below is a hardcoded 126/);
-  assert.match(src, /STALE hardcoded total, dead-only \(see AISLES note\)/);
+  assert.ok(!src.includes("126"), "catalog.ts still contains 126");
+  assert.ok(!src.includes("113"), "catalog.ts still contains 113");
+  assert.match(src, /\{ key: "all", label: "All plans" \}/);
 });
