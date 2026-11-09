@@ -58,6 +58,10 @@ interface Props {
   initialEntries: FoodEntry[];
   mealTypes: MealType[];
   goal: Goal;
+  /** Resolved (clamped) daily calories from the server resolver. The
+   *  displayed Target, Meter, and remaining use this; `goal` stays the
+   *  stored row and seeds the edit-dialog draft. */
+  resolvedCalories?: number;
   initialWaterMl: number;
   initialDate: string;
   mealPlanAccess: MealPlanAccess;
@@ -175,14 +179,20 @@ const INPUT: React.CSSProperties = {
 
 /* ── main ───────────────────────────────────────────────────────────────── */
 
-export default function NutritionClient({ initialEntries, mealTypes, goal, initialWaterMl, initialDate, mealPlanAccess }: Props) {
+export default function NutritionClient({ initialEntries, mealTypes, goal, resolvedCalories, initialWaterMl, initialDate, mealPlanAccess }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return parseDateOnly(initialDate) ?? new Date(`${initialDate}T00:00:00.000Z`);
   });
   const [entries, setEntries] = useState<FoodEntry[]>(initialEntries);
   const [waterMl, setWaterMl] = useState(initialWaterMl);
   const [burnedKcal, setBurnedKcal] = useState(0);
-  const [currentGoal, setCurrentGoal] = useState<Goal>(goal);
+  const [currentGoal, setCurrentGoal] = useState<Goal>({
+    ...goal,
+    // Displayed target is the resolved value, not the raw stored row: the
+    // stored row is unclamped, so a male user who saved 1300 kcal sees 1500
+    // here. The dialog draft below still starts from the stored row.
+    calories: resolvedCalories ?? goal.calories,
+  });
 
   // Which day the state above actually holds. The skeleton is derived from it
   // rather than set by the effect, so nothing calls setState synchronously in
@@ -510,8 +520,16 @@ export default function NutritionClient({ initialEntries, mealTypes, goal, initi
         );
       }
       const saved = await res.json();
-      setCurrentGoal({ ...goalDraft, ...saved });
-      setGoalDraft((current) => ({ ...current, ...saved }));
+      // Displayed target uses the resolved value the server returns, not
+      // the raw stored row (which is unclamped). The draft keeps the stored
+      // row, so reopening the dialog shows what was actually saved.
+      const { resolvedCalories: savedResolved, ...savedGoal } = saved as Goal & {
+        resolvedCalories?: unknown;
+      };
+      const displayCalories =
+        typeof savedResolved === "number" ? savedResolved : savedGoal.calories;
+      setCurrentGoal({ ...goalDraft, ...savedGoal, calories: displayCalories });
+      setGoalDraft((current) => ({ ...current, ...savedGoal }));
       setShowGoals(false);
       setNotice("Daily targets updated.");
     } catch (e) {

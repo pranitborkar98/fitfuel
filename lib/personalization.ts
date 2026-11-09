@@ -1,6 +1,7 @@
 // lib/personalization.ts — builds the personalised stats block for the digital plan PDF.
 // Sources, in priority order: checkout overrides → saved UserProfile/BodyMetric → plan defaults.
 // Field names verified against schema.prisma (Decision #61).
+import { getCalorieTarget } from "@/lib/calorie-target-server";
 import { prisma } from "@/lib/prisma";
 import type { DigitalPlanData } from "./digital-plan-types";
 
@@ -105,7 +106,13 @@ export async function getPersonalization(
   if (!bmi && heightCm && currentWeightKg) bmi = currentWeightKg / Math.pow(heightCm / 100, 2);
   bmi = bmi ? Math.round(bmi * 10) / 10 : undefined;
 
-  const calorieTarget = profile?.calorieTarget ?? planCalories;
+  // With a user, the calorie target comes from the one shared resolver
+  // (NutritionGoal first, then profile, active plan, plan average, default),
+  // not from the profile row alone. Without a user (checkout overrides) the
+  // saved profile is absent, so the plan-derived value still applies.
+  const calorieTarget = opts.userId
+    ? (await getCalorieTarget(opts.userId)).calories
+    : profile?.calorieTarget ?? planCalories;
   const maintenanceCalories = profile?.tdee ?? undefined;
   const dailyDeficit = maintenanceCalories ? maintenanceCalories - calorieTarget : undefined;
 

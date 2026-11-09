@@ -1,6 +1,7 @@
 // lib/calorie-target-server.ts
-// Server-only companion to lib/calorie-target.ts: fetches the four stored
-// inputs for a user and runs them through the shared resolver. Do not import
+// Server-only companion to lib/calorie-target.ts: fetches the stored inputs
+// for a user (profile target and gender, active-plan target, NutritionGoal,
+// plan average) and runs them through the shared resolver. Do not import
 // this from client components; import the constants and the pure resolver
 // from lib/calorie-target.ts instead.
 //
@@ -23,7 +24,7 @@ export async function getCalorieTarget(
   const [profile, activePlan, goal] = await Promise.all([
     prisma.userProfile.findUnique({
       where: { userId },
-      select: { calorieTarget: true },
+      select: { calorieTarget: true, gender: true },
     }),
     prisma.userActivePlan.findFirst({
       where: { userId, status: "active", startDate: { lte: day }, endDate: { gte: day } },
@@ -44,5 +45,6 @@ export async function getCalorieTarget(
     activePlanCalorieTarget: activePlan?.calorieTarget ?? null,
     nutritionGoalCalories: goal?.calories ?? null,
     planAvgCaloriesPerDay: activePlan?.mealPlan?.avgCaloriesPerDay ?? null,
+    sex: profile?.gender ?? null,
   });
 }

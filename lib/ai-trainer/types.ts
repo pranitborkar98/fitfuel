@@ -3,6 +3,8 @@
 // 30 days of MealLog is rolled up to averages plus the few meals with extreme
 // ratings. The serialised form targets ~1.5-2k tokens.
 
+import type { CalorieTargetSource } from "@/lib/calorie-target";
+
 export type TrainerGoal =
   | "LOSE_WEIGHT"
   | "GAIN_MUSCLE"
@@ -46,7 +48,9 @@ export interface TrainerContext {
     calorieTarget: number;
     // "default" means nothing in the system set a target and this is a generic
     // fallback — the coach must not present it as the user's number.
-    calorieTargetSource: "plan" | "profile" | "default";
+    // The five sources are the resolver's (lib/calorie-target.ts): the stored
+    // NutritionGoal wins, then profile, active plan, plan average, default.
+    calorieTargetSource: CalorieTargetSource;
     proteinTarget: number | null;
     carbTarget: number | null;
     fatTarget: number | null;

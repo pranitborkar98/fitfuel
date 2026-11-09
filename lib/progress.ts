@@ -143,7 +143,7 @@ export async function getProgressData(userId: string): Promise<ProgressData> {
       }),
       prisma.userProfile.findUnique({
         where: { userId },
-        select: { targetWeightKg: true, weightKg: true, calorieTarget: true },
+        select: { targetWeightKg: true, weightKg: true, calorieTarget: true, gender: true },
       }),
       prisma.nutritionGoal.findUnique({
         where: { userId },
@@ -199,6 +199,7 @@ export async function getProgressData(userId: string): Promise<ProgressData> {
     activePlanCalorieTarget: activePlan?.calorieTarget ?? null,
     nutritionGoalCalories: nutritionGoal?.calories ?? null,
     planAvgCaloriesPerDay: mp?.avgCaloriesPerDay ?? null,
+    sex: profile?.gender ?? null,
   });
   const proteinTarget = activePlan?.proteinTarget ?? mp?.avgProteinGrams ?? 0;
   const carbTarget = activePlan?.carbTarget ?? mp?.avgCarbsGrams ?? 0;
