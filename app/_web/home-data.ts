@@ -76,9 +76,9 @@ export const DAY_STEPS: DayStep[] = [
   {
     at: "06:30",
     label: "Portioned for you",
-    line: "Your calorie target becomes a kitchen portion factor. Every meal is weighed in grams before sealing.",
+    line: "Your calorie target sets the weight of every meal. Every meal is weighed in grams before sealing.",
     img: "/images/brand/meals-weighed-in-kitchen.webp",
-    alt: "Illustration of an Indian meal being portioned on a kitchen scale",
+    alt: "A meal tray being weighed on a kitchen scale",
   },
   {
     at: "07:30",
@@ -219,6 +219,39 @@ export const CONDITIONS: ConditionLink[] = [
   { label: "Shravan", slug: "shravan" },
 ];
 
+/* ── The homepage wall shows 8 of the 29, plus a "See all" link ─────────────
+   2026-11-10 conversion restructure. Three rules, all applied here so the
+   wall cannot drift from them:
+
+   1. One chip per plan page. PCOD shares the PCOS sheet and Cholesterol
+      shares the Heart health sheet, so the second label of each pair is
+      dropped, not the plan. The first label in list order is kept.
+   2. Cancer recovery and Kidney health are NOT on the homepage wall
+      (regulated-claim caution). This is a homepage-links-only removal: the
+      plans, their slugs and their routes are untouched and still reachable
+      from /plans and search. Do not "fix" this list by re-adding them.
+   3. Eight chips, in list order. The rest of the catalogue is one tap away
+      on the "See all" link beside them.
+
+   The full 29 stay in CONDITIONS above; other surfaces that need the whole
+   list do not use this. */
+const WALL_EXCLUDED_SLUGS = new Set([
+  "cancer-recovery-veg",
+  "kidney-health-veg",
+]);
+
+export const HOMEPAGE_CONDITIONS: ConditionLink[] = (() => {
+  const seen = new Set<string>();
+  const out: ConditionLink[] = [];
+  for (const c of CONDITIONS) {
+    if (WALL_EXCLUDED_SLUGS.has(c.slug)) continue;
+    if (seen.has(c.slug)) continue;
+    seen.add(c.slug);
+    out.push(c);
+  }
+  return out.slice(0, 8);
+})();
+
 export const FAQS: { q: string; a: string }[] = [
   {
     q: "Can I skip a day?",
@@ -272,77 +305,84 @@ export const priceKey = (duration: string, meals: string, diet: string) =>
 
    The two figures in the last column are the live ones — 952 exercises and the
    condition-plan count — and they are passed in rather than typed here so this
-   table cannot drift from the catalogue the rest of the page describes. */
+   table cannot drift from the catalogue the rest of the page describes.
+
+   2026-11-10 conversion restructure: the columns changed. The old table
+   compared against a fitness app and a supplement brand, neither of which is
+   what a Pune customer weighs FitFuel against. The columns are now the three
+   real alternatives: healthy options on Zomato/Swiggy, a local tiffin, and
+   cooking at home. Competitor cells state only what the category structurally
+   does or does not do; no prices, features or ratings are claimed for them. */
 export type WedgeRow = {
   what: string;
+  aggregator: string;
   tiffin: string;
-  app: string;
-  supp: string;
+  home: string;
   us: string;
 };
 
 export const WEDGE_COLS = [
-  "A tiffin service",
-  "A fitness app",
-  "A supplement brand",
+  "Healthy options on Zomato/Swiggy",
+  "Local tiffin",
+  "Cooking at home",
 ] as const;
 
 export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[] {
   return [
     {
       what: "Calculates for your body",
+      aggregator: "No, you pick from a restaurant menu",
       tiffin: "No, one shared menu",
-      app: "Yes, but it does not cook the result",
-      supp: "No",
+      home: "Only if you work it out yourself",
       us: "Live weight from your scale, plus height, age, activity and goal",
     },
     {
       what: "Cooks your food",
+      aggregator: "Yes, the restaurant cooks it",
       tiffin: "Yes, to one shared menu",
-      app: "No",
-      supp: "No",
+      home: "Yes, you cook it",
       us: "Yes, to your calculated target",
     },
     {
       what: "Weighs the portion",
+      aggregator: "No, the restaurant portions it",
       tiffin: "No, ladled by eye",
-      app: "No, you estimate it",
-      supp: "Only the scoop",
-      us: "In grams, against your portion factor",
+      home: "Only if you weigh it yourself",
+      us: "Weighed in grams, to your target",
     },
     {
       what: "Logs what you ate",
+      aggregator: "No",
       tiffin: "No",
-      app: "Only what you type in",
-      supp: "No",
+      home: "Only what you log yourself",
       us: "Pre-filled from the meal we cooked; you confirm it",
     },
     {
       what: "Programmes your training",
+      aggregator: "No",
       tiffin: "No",
-      app: "Sometimes, sold separately",
-      supp: "No",
+      home: "No, unless you plan it",
       us: `${exercises.toLocaleString("en-IN")} exercises, in your week`,
     },
     {
       what: "Tracks the body, not the intent",
+      aggregator: "No",
       tiffin: "No",
-      app: "If you own the scale and remember",
-      supp: "No",
+      home: "Only if you track it yourself",
       us: "Measured weight from compatible scales; other body-composition values labelled as estimates",
     },
     {
       what: "Moves the target when you stall",
+      aggregator: "No",
       tiffin: "No",
-      app: "No, it just keeps counting",
-      supp: "No",
+      home: "Only if you recalculate it",
       us: "Recalculated from your own numbers",
     },
     {
       what: "Built for a diagnosis",
-      tiffin: "No",
-      app: "Generic macro maths",
-      supp: "No",
+      aggregator: "No, general menus",
+      tiffin: "No, one shared menu",
+      home: "Only if you plan it",
       us: `${conditionPlans} condition plans`,
     },
   ];

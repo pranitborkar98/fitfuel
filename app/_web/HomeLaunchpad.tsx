@@ -7,15 +7,16 @@ import {
   TrendingUp,
   Sparkles,
 } from "lucide-react";
-import { HOME_CAPABILITIES } from "./home-capabilities";
 import s from "./home-launchpad.module.css";
 
 export default function HomeLaunchpad() {
+  /* Renders inside the single dashboard section (DashboardBand in
+     HomeSections), under its h2 — so this heading is an h3, not an h2. */
   return (
     <section className={s.launchpad} aria-labelledby="daily-tools-heading">
       <div className={s.heading}>
         <div>
-          <h2 id="daily-tools-heading">Your daily tools</h2>
+          <h3 id="daily-tools-heading">Your daily tools</h3>
         </div>
         <Link href="/dashboard-preview">Explore a sample day</Link>
       </div>
@@ -68,21 +69,11 @@ export default function HomeLaunchpad() {
           </span>
         </button>
       </nav>
-      <details className={s.explore}>
-      <summary>Explore all services and how they work</summary>
-      <nav
-        className={s.directory}
-        aria-label="Explore the full FitFuel product"
-      >
-        {HOME_CAPABILITIES.map((item) => (
-          <a key={item.id} href={`#${item.id}`}>
-            {item.label}
-          </a>
-        ))}
-        <Link href="/corporate">Corporate meals</Link>
-        <Link href="/partners">Gyms & partners</Link>
-      </nav>
-      </details>
+      {/* 2026-11-10 conversion restructure: the "Explore all services"
+          directory is gone. It was 13 links (the 11 homepage capabilities
+          plus Corporate meals and Gyms & partners) and the strip is removed
+          from the homepage by the brief. The pages themselves are untouched
+          and stay reachable from the footer, the rail menu and /services. */}
     </section>
   );
 }

@@ -44,6 +44,88 @@
   .placeLabel { display: none; }
 }
 
+/* ── Primary nav in the homepage header ─────────────────────────────────
+ * The rail sidebar and the in-page mode tabs are gone; Order and Plans live
+ * here on desktop and in the bottom bar on a phone. Hidden below 1024px,
+ * where the bottom bar is the nav. Buttons, not links: switching the
+ * catalogue is in-page state. The active one carries the same lime rule as
+ * the marketing navbar's current link. */
+.primaryNav {
+  display: none;
+}
+
+.trialCta {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .primaryNav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .primaryNav button {
+    position: relative;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding-inline: 12px;
+    border: 0;
+    border-radius: var(--fk-r);
+    background: transparent;
+    color: var(--fk-ink-3);
+    font: 600 0.86rem/1 var(--fk-sans);
+    cursor: pointer;
+  }
+
+  .primaryNav button:hover {
+    color: var(--fk-ink);
+    background: var(--fk-surface);
+  }
+
+  .primaryNav button[aria-pressed="true"] {
+    color: var(--fk-ink);
+  }
+
+  .primaryNav button[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    bottom: 5px;
+    left: 12px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--fk-green);
+  }
+
+  /* The rail's trial card, as a header link. Desktop only: the phone keeps
+     its inline offer row above the first card. Same lime treatment as the
+     marketing navbar's trial link. */
+  .trialCta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding-inline: 15px;
+    border: 1px solid var(--fk-green);
+    border-radius: var(--fk-r);
+    background: var(--fk-green);
+    color: var(--fk-on-green);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .trialCta:hover {
+    background: var(--fk-green-deep);
+  }
+}
+
 /* ── The home deck ──────────────────────────────────────────────────────
  * This is deliberately an application home, not a marketing hero. It answers
  * "what can I do now?" first, then proves the food with a real plan day. */
@@ -320,7 +402,7 @@
 
 .catalogControls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 390px);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: var(--fk-s-4);
   margin-bottom: 14px !important;
@@ -409,6 +491,15 @@
 .sideRail {
   top: 96px !important;
   max-height: calc(100dvh - 120px) !important;
+}
+
+/* No rail: the catalogue body is a single column once the sidebar is gone.
+   AppChrome keeps its own rail on product pages, so this override lives
+   here (homepage only) and not in app.module.css, which both shells share. */
+@media (min-width: 1024px) {
+  .bodyNoRail {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 .planSummary {

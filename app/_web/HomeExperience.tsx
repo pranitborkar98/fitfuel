@@ -1,18 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useSession } from "next-auth/react";
 
 import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
 
-import { GOALS } from "./home-data";
 import type { Quote } from "./home-data";
 import x from "./experience.module.css";
-import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
-import productStyles from "@/app/_kitchen/product-network.module.css";
-import HomeToday from "./HomeToday";
-import HomeLaunchpad from "./HomeLaunchpad";
 import hub from "./home-workspace.module.css";
 
 const ICON = {
@@ -71,19 +67,23 @@ function timeGreeting() {
 
 export default function HomeExperience({
   week,
-  goal,
   target,
   cutoffLabel,
   trialTotal,
-  onBrowseMeals,
 }: {
   week: Dish[];
-  goal: string;
   target: Target;
   cutoffLabel: string;
   trialTotal: string;
-  onBrowseMeals: () => void;
 }) {
+  /* Account widgets (daily tools, today at a glance) are for signed-in
+     members only. useSession is how the homepage knows: HomeToday already
+     reads it the same way. While the session is still loading we show the
+     visitor layout, so nobody is ever stuck on "Loading your account…";
+     the widgets appear once the session resolves. Anonymous visitors get
+     the hero and the sample-day preview, never an account panel. */
+  const { data: session, status } = useSession();
+  const signedIn = status === "authenticated" && Boolean(session?.user?.id);
   /* Seven days arrive from getWeek(); the preview used to show day 1 only and
      drop the other six. Grouped by day so every fetched day is previewable. */
   const days = useMemo(() => {
@@ -109,9 +109,11 @@ export default function HomeExperience({
     planCalories: planKcal,
   });
   const scaledKcal = Math.round(planKcal * serving.factor);
-  const activeGoal = GOALS.find((item) => item.key === goal) ?? GOALS[1];
+  /* No goal is assumed before the visitor chooses one. The old text named the
+     currently selected goal ("maintain plan") in a message the visitor had
+     not chosen; this one names only the trial day and delivery. */
   const whatsapp = waLink(
-    `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to my address.`,
+    `Hi FitFuel! I want to try the ${trialTotal} trial day and check delivery to my address.`,
   );
 
   const moveMealFocus = (
@@ -151,25 +153,34 @@ export default function HomeExperience({
 
   return (
     <div className={`${x.home} ${hub.workspace}`} id="main-content" aria-labelledby="home-title">
-      <section className={`${x.hero} ${hub.hero}`} aria-label="FitFuel daily food app">
+      <section
+        className={`${x.hero} ${hub.hero}${signedIn ? "" : ` ${hub.heroGuest}`}`}
+        aria-label="FitFuel daily food app"
+      >
         <div className={`${x.heroCopy} ${hub.heading}`}>
+          {/* Signed-in members get the time greeting; a first-time visitor
+              gets the trial price instead. The greeting was part of the
+              account feel a logged-out visitor used to see. */}
           <p className={x.eyebrow} suppressHydrationWarning>
-            {timeGreeting()}
+            {signedIn ? timeGreeting() : `First day ${trialTotal}`}
           </p>
           <h1 id="home-title" className={`${x.title} ${hub.title}`}>
-            Your day, with FitFuel.
+            Chef-cooked meals, weighed to your macros.
           </h1>
           <p className={x.lede}>
-            Order food, follow your plan and keep today up to date.
+            Four meals a day, delivered in Pune by 10 AM.
           </p>
 
+          {/* One primary action (start the trial) and one secondary (check
+              the pincode). The old four-way choice is gone: "Order a meal"
+              just scrolled to the catalogue below, and the trial link sat
+              second. Coach and WhatsApp stay below as support, not as
+              competing calls to action. */}
           <div className={x.heroActions}>
-            <button type="button" onClick={onBrowseMeals}>
-              Order a meal <Icon path={ICON.arrow} size={18} />
-            </button>
-            <Link href="/plans?trial=true">
-              Try breakfast + lunch · {trialTotal}
+            <Link href="/plans?trial=true" className={x.heroPrimary}>
+              Start your trial · {trialTotal} <Icon path={ICON.arrow} size={18} />
             </Link>
+            <Link href="/locations">Check my pincode</Link>
           </div>
         </div>
 
@@ -182,41 +193,13 @@ export default function HomeExperience({
               <Icon path={ICON.message} size={18} /> Order on WhatsApp
             </a>
           </div>
-
-          <ol className={x.operation} aria-label="How FitFuel handles your day">
-            <li>
-              <Icon path={ICON.scale} size={18} />
-              <span>
-                <b>Set</b>
-                <small>Your target</small>
-              </span>
-            </li>
-            <li>
-              <Icon path={ICON.spark} size={18} />
-              <span>
-                <b>Calculate</b>
-                <small>Calories + macros</small>
-              </span>
-            </li>
-            <li>
-              <Icon path={ICON.check} size={18} />
-              <span>
-                <b>Weigh</b>
-                <small>Every meal</small>
-              </span>
-            </li>
-            <li>
-              <Icon path={ICON.route} size={18} />
-              <span>
-                <b>Adjust</b>
-                <small>From progress</small>
-              </span>
-            </li>
-          </ol>
         </div>
 
-        <div className={hub.tools}><HomeLaunchpad /></div>
-        <div className={hub.daily}><HomeToday /></div>
+        {/* 2026-11-10 conversion restructure: the daily-tools and today
+            widgets left the hero. They now live in the single dashboard
+            section below the catalogue (DashboardBand in HomeSections), so
+            the hero is the trial and the menu preview only. The hero grid
+            no longer names the "tools" and "day" rows. */}
         <div className={`${x.menuPreview} ${hub.menu}`}>
           <div className={x.previewHead}>
             <span>
@@ -352,6 +335,49 @@ export default function HomeExperience({
           ) : null}
         </div>
       </section>
+
+      {/* ── How it works ───────────────────────────────────────────────────
+            The old Set / Calculate / Weigh / Adjust strip sat under the hero
+            (and was hidden by the workspace layout). It is now the 3-step
+            section directly below the hero. Set and Calculate are one step:
+            the visitor sets a target and the kitchen works out the numbers,
+            so the split was two halves of the same moment. */}
+      <section className={x.howItWorks} aria-labelledby="how-it-works-title">
+        <h2 id="how-it-works-title">How it works</h2>
+        <p>Three steps between you and a day of food that fits your target.</p>
+        <ol className={x.howSteps}>
+          <li>
+            <Icon path={ICON.scale} size={18} />
+            <span>
+              <b>Set your target</b>
+              <small>
+                Tell us your goal, weight and activity. We work out the
+                calories and protein for your day.
+              </small>
+            </span>
+          </li>
+          <li>
+            <Icon path={ICON.check} size={18} />
+            <span>
+              <b>We weigh every meal</b>
+              <small>
+                Your kitchen portions each meal in grams and labels it with
+                your numbers.
+              </small>
+            </span>
+          </li>
+          <li>
+            <Icon path={ICON.route} size={18} />
+            <span>
+              <b>Adjust from progress</b>
+              <small>
+                Your weight and diary feed back in, so the target moves with
+                you.
+              </small>
+            </span>
+          </li>
+        </ol>
+      </section>
     </div>
   );
 }
@@ -359,15 +385,11 @@ export default function HomeExperience({
 export function HomeProductLinks({
   aiConfigured,
   exerciseCount,
-  marketplaceProducts,
-  activePartners,
   quotes,
   onBrowsePlans,
 }: {
   aiConfigured: boolean;
   exerciseCount: number;
-  marketplaceProducts: number;
-  activePartners: number;
   quotes: Quote[];
   onBrowsePlans: () => void;
 }) {
@@ -377,8 +399,8 @@ export function HomeProductLinks({
         <header className={x.productMapHead}>
           <h2 id="product-map-title">Plan the rest of your week</h2>
           <p>
-            Start with delivered food, use a nationwide digital plan, run your
-            week in the member app or browse supplements on Nutrabay.
+            Start with delivered food, use a nationwide digital plan, or run your
+            week in the member app.
           </p>
         </header>
 
@@ -389,7 +411,7 @@ export function HomeProductLinks({
             </span>
             <span>
               <small>Delivered nutrition</small>
-              <b>Meals weighed to your accepted target</b>
+              <b>Meals weighed to your target</b>
             </span>
             <Icon path={ICON.arrow} size={17} />
           </button>
@@ -415,49 +437,29 @@ export function HomeProductLinks({
             </span>
             <Icon path={ICON.arrow} size={17} />
           </Link>
-          <Link href="/products">
-            <span className={x.quickIcon}>
-              <Icon path={ICON.spark} size={20} />
-            </span>
-            <span>
-              <small>Supplements from Nutrabay</small>
-              <b>
-                {marketplaceProducts.toLocaleString("en-IN")} products, with ingredient guidance where available
-              </b>
-            </span>
-            <Icon path={ICON.arrow} size={17} />
-          </Link>
         </nav>
 
+        {/* 2026-11-10 conversion restructure: the supplements card left this
+            rail. Supplements appear once on the homepage, as the slim
+            Nutrabay strip (RetailBand in HomeSections). */}
         <nav className={x.businessRail} aria-label="FitFuel for organisations">
           <Link href="/corporate">
             <span>For teams</span>
             <b>Labelled office meals, personalised per employee</b>
             <Icon path={ICON.arrow} size={17} />
           </Link>
-          <Link href="/partners">
-            <span>For gyms and trainers</span>
-            <b>
-              Referral tracking and payouts
-              {activePartners > 0
-                ? `, with ${activePartners.toLocaleString("en-IN")} active now`
-                : ""}
-            </b>
-            <Icon path={ICON.arrow} size={17} />
-          </Link>
         </nav>
       </section>
 
-      <section className={productStyles.productFeature} aria-labelledby="daily-product-title">
-        <div><h2 id="daily-product-title">A dashboard for the days between orders</h2><p>Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.</p><Link href="/dashboard-preview">Try the dashboard preview <Icon path={ICON.arrow} size={18} /></Link><br /><Link href="/services">Explore all FitFuel services <Icon path={ICON.arrow} size={18} /></Link></div>
-        <ol className={productStyles.featureSteps}>
-          <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
-          <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>
-          <li><b>Review before changing your target</b>Use your weekly review and coach to understand progress.</li>
-        </ol>
-      </section>
-      <PartnerNetwork />
+      {/* 2026-11-10 conversion restructure: the dashboard card and the
+          partner network left this file. The dashboard content is now the
+          single DashboardBand in HomeSections, and the partner cards
+          (including the "Coming soon" gym, corporate and trainer slots) are
+          off the homepage entirely. PartnerNetwork itself is untouched: it
+          still renders on /partners, /corporate and /services. */}
 
+      {/* Testimonials stay: chintu confirmed 2026-11-10 18:08 IST to keep
+          them as they are, overriding the verdict's remove-by-default. */}
       {/* All three fetched testimonials. Only the first ever rendered; the
           other two were queried and dropped. One card each, same shape. The
           heading is visible now: the section had only an aria-label, so it

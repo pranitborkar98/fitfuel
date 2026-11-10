@@ -7,6 +7,7 @@
 import type { Metadata } from "next";
 import LocationsClient from "./LocationsClient";
 import { safeJsonLd } from "@/lib/content-safety";
+import { abs } from "@/lib/site";
 
 // Kept in sync with the zones rendered in LocationsClient.
 const AREAS = [
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Meal Delivery Areas in Pune",
     description: "Where FitFuel delivers, with morning and evening delivery windows.",
-    url: "https://fitfuel.in/locations",
+    url: abs("/locations"),
     type: "website",
   },
 };
@@ -35,7 +36,7 @@ const areaLd = {
   name: "FitFuel meal delivery",
   serviceType: "Meal delivery",
   provider: { "@type": "Organization", name: "FitFuel", "@id": "https://fitfuel.in/#organization" },
-  url: "https://fitfuel.in/locations",
+  url: abs("/locations"),
   areaServed: AREAS.map((name) => ({
     "@type": "Place",
     name: `${name}, Pune`,

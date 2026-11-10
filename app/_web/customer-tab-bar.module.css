@@ -56,10 +56,6 @@
   white-space: nowrap;
 }
 
-.labelShort {
-  display: none;
-}
-
 .active {
   color: var(--fk-green-deep);
   background: var(--fk-green-wash);
@@ -89,16 +85,6 @@
 @media (min-width: 1024px) {
   .bar {
     display: none;
-  }
-}
-
-@media (max-width: 420px) {
-  .labelLong {
-    display: none;
-  }
-
-  .labelShort {
-    display: block;
   }
 }
 

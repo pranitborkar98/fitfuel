@@ -6,6 +6,7 @@
 
 import type { Metadata } from "next";
 import AboutClient from "./AboutClient";
+import { abs } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About FitFuel",
     description: "The kitchen, the app and the people behind FitFuel Pune.",
-    url: "https://fitfuel.in/about",
+    url: abs("/about"),
     type: "website",
   },
 };

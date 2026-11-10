@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Search, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCart } from "@/app/_cart/CartProvider";
-import { COURSES, type ShopDish } from "@/app/_shop/catalog";
+import { COURSES, isAiImageSrc, type ShopDish } from "@/app/_shop/catalog";
 import styles from "./menu.module.css";
 
 type Props = {
@@ -101,6 +101,13 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
                     </Link>
                     <div className={styles.cardBody}>
                       <span className={styles.course}>{dish.categoryLabel}</span>
+                      {/* The picture above is an AI illustration when its src
+                          came from the ai/ tree, never a photograph of the
+                          delivered meal. It reads on the course line directly
+                          under the picture. */}
+                      {isAiImageSrc(images[dish.id]) ? (
+                        <span className={styles.aiTag}>AI illustration</span>
+                      ) : null}
                       <h3><Link href={`/menu/${dish.id}`}>{dish.name}</Link></h3>
                       <p>{dish.blurb}</p>
                       <div className={styles.macros}>

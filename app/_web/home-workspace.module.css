@@ -3,10 +3,17 @@
 }
 .workspace .hero {
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
-  grid-template-areas: "copy copy" "tools tools" "menu day" "support day";
+  grid-template-areas: "copy copy" "menu menu" "support support";
   gap: 18px 24px;
   padding: 26px 0 0;
   border-bottom: 0;
+}
+/* 2026-11-10 conversion restructure: the daily-tools and today widgets
+   left the hero for the single dashboard section below the catalogue, so
+   the hero grid no longer names the "tools" and "day" rows. .heroGuest
+   below now matches the base grid. */
+.workspace .heroGuest {
+  grid-template-areas: "copy copy" "menu menu" "support support";
 }
 .workspace .heading {
   display: grid;
@@ -69,9 +76,6 @@
 .workspace .hero .menu [role="tab"] small {
   font-size: 13px;
 }
-.support > ol {
-  display: none;
-}
 .daily {
   grid-area: day;
   min-width: 0;
@@ -96,7 +100,10 @@
   color: var(--fk-green);
   font: 600 13px/1.5 var(--fk-sans);
 }
-.workspace .today h2 {
+/* The today widget used to render in the hero, under .workspace. It now
+   renders in the dashboard section below the catalogue, so the heading rule
+   is no longer scoped to the workspace. */
+.today h3 {
   margin: 4px 0 0;
   font: 600 22px/1.2 var(--fk-sans);
 }
@@ -255,9 +262,12 @@
 @media (max-width: 900px) {
   .workspace .hero {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "copy" "tools" "menu" "day" "support";
+    grid-template-areas: "copy" "menu" "support";
     gap: 16px;
     padding-top: 20px;
+  }
+  .workspace .heroGuest {
+    grid-template-areas: "copy" "menu" "support";
   }
   .workspace .heading {
     display: block;

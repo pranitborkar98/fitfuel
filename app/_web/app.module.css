@@ -2264,6 +2264,16 @@
   text-align: center;
 }
 
+/* The menu's one macro footnote. The per-card "Macros estimated" label is
+   gone; this single line under the menu carries the same fact once. */
+.menuNote {
+  margin: 0;
+  padding: 0 0 var(--fk-s-7);
+  font-size: var(--fk-t-base);
+  color: var(--fk-ink-3);
+  text-align: center;
+}
+
 /* The grid reserved 104px of bottom padding for the order bar. With a control
    sitting under it that gap became a hole; the wrap carries the spacing now. */
 .grid {
@@ -2943,9 +2953,12 @@
 
    A course group is one <li class="courseHead"> followed by one <li> per
    dish, so the phone cap of 2 dishes hides children from the 4th on and
-   the tablet cap of 4 hides children from the 6th. Opening a course adds
-   .courseOpen to the group, which lifts the cap; the "Show all" button is
-   hidden on a desktop, where the full course is already visible. The
+   the tablet cap of 4 hides children from the 6th. The grouped view renders
+   six dishes per course; the caps above apply inside those six, so server
+   and client paint the identical range. Opening a course adds
+   .courseOpen to the group, which lifts the cap and renders the rest; the
+   "Show all" button is hidden on a desktop for a course of six or fewer,
+   where everything is already visible. The
    filtered flat list is capped at 12 the same way below 1024px, lifted by
    .gridOpen when the customer expands it; its "Show all" control lives in
    .dishShowAll, hidden on a desktop for the same reason. The flat-list rule
@@ -2974,6 +2987,18 @@
   .courseMore,
   .dishShowAll {
     display: none;
+  }
+}
+
+/* A course with more than six dishes keeps its "Show all" button on a
+   desktop too: only six render until it is opened. The rule above still
+   hides the plain button, so this later rule — same specificity, later in
+   the sheet — wins for the courses that carry it. A course of six or fewer
+   never gets the class, so its button stays hidden on a desktop, where
+   everything is already visible. */
+@media (min-width: 1024px) {
+  .courseMoreDesktop {
+    display: inline-block;
   }
 }
 
@@ -4525,6 +4550,15 @@
   color: var(--fk-green-deep);
 }
 
+/* ── The merged dashboard section ─────────────────────────────────────────
+   2026-11-10 conversion restructure: DashboardBand stacks five former
+   sections (tools, today, preview cards, directory, coach) inside one
+   band. The stack rule is the only rhythm between them: each block after
+   the first gets one spacing token above it. */
+.dashboardStack > * + * {
+  margin-top: var(--fk-s-6);
+}
+
 /* ── 6. The coach and the receipt ───────────────────────────────────────── */
 .coachWrap {
   display: grid;
@@ -4675,6 +4709,9 @@
   align-content: start;
 }
 .receiptKicker {
+  /* The kicker is an h2 now (TrialReceiptBand): it carries the section
+     heading, so the browser's default h2 margins are zeroed here. */
+  margin: 0;
   font-size: var(--fk-t-xs);
   font-weight: 700;
   color: var(--fk-ink-3);
