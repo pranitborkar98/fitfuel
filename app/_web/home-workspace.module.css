@@ -123,6 +123,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  counter-reset: today;
 }
 .guestDay li {
   display: flex;
@@ -131,6 +132,17 @@
   padding: 12px 0;
   border-bottom: 1px solid var(--fk-line);
   font-size: 13px;
+  counter-increment: today;
+}
+/* Numbered, so the sign-in-gated panel reads as three ordered parts of the
+   day rather than an empty box with three loose lines. */
+.guestDay li::before {
+  content: counter(today, decimal-leading-zero);
+  flex: none;
+  color: var(--fk-green);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .guestDay li span {
   color: var(--fk-ink-2);

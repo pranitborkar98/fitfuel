@@ -980,6 +980,15 @@
   letter-spacing: -0.03em;
   line-height: 1.04;
 }
+/* Same opener tick as the band headings below the catalogue. */
+.productMapHead h2::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  margin-bottom: 16px;
+  background: var(--fk-green);
+}
 
 .productMapHead p {
   max-width: 62ch;
@@ -1096,18 +1105,43 @@
 /* ── Proof: all three fetched testimonials ───────────────────────────────
    Was a single strip showing quotes[0] only, the quote truncated to one
    line. Three cards now, one per fetched row; one column on a phone, three
-   across from 900px. */
+   across from 900px. The section had no visible heading at all — only an
+   aria-label — so it reads as its own band now, numbered cards and all. */
 .proof {
   margin-top: var(--fk-s-7);
+  padding-top: var(--fk-s-7);
+  border-top: 1px solid var(--fk-line-2);
+}
+
+.proofTitle {
+  max-width: 18ch;
+  margin: 0 0 var(--fk-s-5);
+  color: var(--fk-ink);
+  font-family: var(--fk-display);
+  font-size: clamp(1.75rem, 3.2vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+}
+/* Same opener tick as the band headings below the catalogue. */
+.proofTitle::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  margin-bottom: 16px;
+  background: var(--fk-green);
 }
 
 .proofList {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--fk-s-4);
+  counter-reset: proof;
 }
 
 .proofCard {
+  position: relative;
   display: grid;
   gap: var(--fk-s-3);
   align-content: start;
@@ -1116,9 +1150,23 @@
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
+  counter-increment: proof;
+}
+/* Numbered, so three text-only quotes read as three ordered results rather
+   than three loose cards. Absolute, so it costs the quote no room. */
+.proofCard::after {
+  content: counter(proof, decimal-leading-zero);
+  position: absolute;
+  top: var(--fk-s-5);
+  right: var(--fk-s-5);
+  color: var(--fk-green);
+  font-size: var(--fk-t-sm);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .proofCard > b {
+  padding-right: 36px;
   color: var(--fk-green-deep);
   font-size: var(--fk-t-base);
 }

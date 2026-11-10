@@ -36,9 +36,9 @@ export default function PartnerNetwork() {
         ))}
       </div>
       <p className={s.disclosure}>
-        XYZ names are layout placeholders, not signed partners or endorsements.
-        Nutrabay is linked through an affiliate relationship, not presented as
-        an exclusive partnership.
+        Gym, workplace and trainer programmes are not yet live. Nutrabay is
+        linked through an affiliate relationship, not presented as an
+        exclusive partnership.
       </p>
     </section>
   );

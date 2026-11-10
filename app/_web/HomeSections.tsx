@@ -220,7 +220,7 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
   const rows = wedgeRows(counts.exercises, counts.conditionPlans);
 
   return (
-    <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="wedge-h">
+    <section className={`${s.band2} ${s.bandWarm}`} aria-labelledby="wedge-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
@@ -681,7 +681,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
   }
 
   return (
-    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="plan-h">
+    <section className={`${s.band2} ${s.bandWarm}`} aria-labelledby="plan-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>

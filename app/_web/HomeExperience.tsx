@@ -457,9 +457,14 @@ export function HomeProductLinks({
       <PartnerNetwork />
 
       {/* All three fetched testimonials. Only the first ever rendered; the
-          other two were queried and dropped. One card each, same shape. */}
+          other two were queried and dropped. One card each, same shape. The
+          heading is visible now: the section had only an aria-label, so it
+          read as three loose quotes with no band of its own. */}
       {quotes.length ? (
-        <section className={x.proof} aria-label="Customer results">
+        <section className={x.proof} aria-labelledby="proof-title">
+          <h2 id="proof-title" className={x.proofTitle}>
+            Customer results
+          </h2>
           <div className={x.proofList}>
             {quotes.map((quote) => (
               <blockquote key={quote.id} className={x.proofCard} data-reveal="up">

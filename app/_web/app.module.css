@@ -1338,12 +1338,14 @@
   text-decoration: underline;
 }
 
-/* ── Footer ─────────────────────────────────────────────────────────────── */
+/* ── Footer ───────────────────────────────────────────────────────────────
+   No margin-top: the close band already ends with 64px of its own bottom
+   padding, and a margin here opened a bare strip of page ground between the
+   trial close and the footer — an empty black band with nothing in it. */
 .footer {
   border-top: 1px solid var(--fk-line);
   background: var(--fk-warm);
   padding: var(--fk-s-8) var(--fk-gutter) var(--fk-s-6);
-  margin-top: var(--fk-s-8);
 }
 .footerGrid {
   display: grid;
@@ -2960,6 +2962,35 @@
    hue the course happens to land on. */
 .wellFoot {
   background: linear-gradient(to top, rgba(7, 7, 7, 0.55), transparent 46%);
+  /* A finished edge: one lime hairline along the foot of the well, so the
+     colour field reads as a deliberate panel rather than a gradient that
+     simply runs out. */
+  border-bottom: 1px solid color-mix(in srgb, var(--fk-green) 45%, transparent);
+}
+/* The honest label on an empty well, in the house wording the /menu well
+   already uses: the photograph arrives with the final kitchen listing, and
+   until then the slot says so instead of sitting silent. A status note, not
+   a stand-in for the dish — the dish name, macros and price are all in the
+   card body below it, and this says nothing about the food itself. Hidden
+   on a phone, where the well is a 104px square and the label would fill it. */
+.shotPlaceholder .wellLabel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  padding: 3px 8px;
+  border-radius: var(--fk-r-sm);
+  background: color-mix(in srgb, #000 55%, transparent);
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+@media (max-width: 639px) {
+  .shotPlaceholder .wellLabel {
+    display: none;
+  }
 }
 
 /* The only mark on the card that is about the READER rather than the dish: it
@@ -3007,9 +3038,11 @@
 /* ══════════════════════════════════════════════════════════════════════════
    THE BANDS BELOW THE CATALOG
 
-   Eight of them, alternating paper and surface so each reads as its own
-   section without a rule between every pair. Marketing density, not app
-   density: one idea per band, display type at the head of each.
+   Nine of them, and no two neighbours share a ground: paper, surface and warm
+   alternate down the page, so each reads as its own section without a rule
+   between every pair. Marketing density, not app density: one idea per band,
+   display type at the head of each, opened by the same short lime tick so the
+   eye learns where a section starts.
    ══════════════════════════════════════════════════════════════════════════ */
 .band2 {
   border-top: 1px solid var(--fk-line);
@@ -3019,6 +3052,12 @@
 }
 .bandSurface {
   background: var(--fk-surface);
+}
+/* The third ground, for bands whose own cards already sit on surface (the
+   plan calculator's summary, the wedge table's paper wrap): it keeps the
+   alternation going without dropping a band back to the page ground. */
+.bandWarm {
+  background: var(--fk-warm);
 }
 .bandWrap {
   max-width: var(--fk-max);
@@ -3049,6 +3088,17 @@
   margin: 0;
   max-width: 22ch;
   text-wrap: balance;
+}
+/* The section opener: one short lime tick above every band heading, the same
+   device on every band so the eye learns where a section starts. A tick, not
+   a kicker — it says nothing twice, it only marks the break. */
+.bandH2::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  margin-bottom: 16px;
+  background: var(--fk-green);
 }
 .bandH2Narrow {
   max-width: 16ch;
@@ -3286,6 +3336,7 @@
   gap: var(--fk-s-4);
   margin: 0;
   padding: 0;
+  counter-reset: preview;
 }
 .productPreviewGrid > li {
   min-width: 0;
@@ -3303,6 +3354,7 @@
   background: var(--fk-paper);
   color: var(--fk-ink);
   text-decoration: none;
+  counter-increment: preview;
   transition:
     transform var(--fk-dur) var(--fk-ease),
     border-color var(--fk-dur) var(--fk-ease),
@@ -3323,6 +3375,14 @@
   color: var(--fk-green-deep);
   font-size: var(--fk-t-xs);
   font-weight: 700;
+}
+/* The four dashboard surfaces are numbered in their head row, so the
+   text-only band reads as four ordered parts of one product rather than
+   four loose cards. */
+.productPreviewHead > span:first-child::before {
+  content: counter(preview, decimal-leading-zero) " · ";
+  color: var(--fk-green);
+  font-variant-numeric: tabular-nums;
 }
 .productPreviewHead > small {
   color: var(--fk-ink-3);
@@ -4446,6 +4506,15 @@
   line-height: 1.08;
   letter-spacing: -0.02em;
   color: var(--fk-ink);
+}
+/* Same opener tick as .bandH2 — the coach band heads its section too. */
+.coachH::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  margin-bottom: 16px;
+  background: var(--fk-green);
 }
 .coachLede {
   margin: 0 0 26px;

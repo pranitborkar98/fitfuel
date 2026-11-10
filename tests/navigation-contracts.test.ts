@@ -71,8 +71,12 @@ test("each advertised service leads to an implemented local page", () => {
 test("public organisation examples cannot look like confirmed partners", () => {
   for (const partner of PUBLIC_PARTNERS) {
     if (partner.placeholder) {
-      assert.equal(partner.status, "Placeholder");
-      assert.match(partner.description, /example.*future approved/i);
+      /* Unbuilt programmes are shown as coming soon under their programme
+         name — never under a made-up partner name, and never as a signed
+         partner. */
+      assert.equal(partner.status, "Coming soon");
+      assert.match(partner.name, /programme$/i);
+      assert.match(partner.description, /being built/i);
     } else {
       assert.equal(partner.name, "Nutrabay");
       assert.equal(partner.status, "Affiliate retailer");

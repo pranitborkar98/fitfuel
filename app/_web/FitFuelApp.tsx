@@ -787,6 +787,12 @@ export default function FitFuelApp({
             onClick={() => setSheet(d)}
             aria-label={`See ${d.name}`}
           >
+            {/* The slot says what it is, in the wording the /menu well already
+                uses: the photograph arrives with the final kitchen listing.
+                A status note, not a stand-in for the dish. */}
+            <span className={s.wellLabel} aria-hidden="true">
+              Photo added with final kitchen listing
+            </span>
             <span className={s.wellGrain} aria-hidden="true" />
             <span className={s.wellGloss} aria-hidden="true" />
             <span className={s.wellFoot} aria-hidden="true" />
