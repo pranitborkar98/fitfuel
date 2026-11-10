@@ -134,7 +134,7 @@ function shopDish(d: Dish): ShopDish {
     macroLine: `${protein}P · ${carbs}C · ${fat}F`,
     bars: macroBars(protein, carbs, fat, kcal),
     shortBlurb: d.blurb.length > 62 ? `${d.blurb.slice(0, 60).trim()}…` : d.blurb,
-    priceLabel: isOrderable(d) ? rs(d.price ?? 0) : "Not priced yet",
+    priceLabel: isOrderable(d) ? rs(d.price ?? 0) : "Price on request",
   };
 }
 

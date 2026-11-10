@@ -451,7 +451,7 @@
   color: var(--fk-green-deep);
 }
 .dishBlurb {
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   line-height: 1.45;
   color: var(--fk-ink-3);
   margin: 0;
@@ -462,7 +462,7 @@
   overflow: hidden;
 }
 .macroLine {
-  font-family: var(--fk-mono);
+  font-family: var(--fk-sans);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--fk-ink-3);
@@ -1649,7 +1649,7 @@
 .donutUnit {
   fill: var(--fk-ink-3);
   font-family: var(--fk-sans);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-anchor: middle;
@@ -2255,7 +2255,7 @@
 }
 .showAllNote {
   margin: 0;
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-base);
   color: var(--fk-ink-3);
   text-align: center;
 }
@@ -2808,7 +2808,7 @@
 }
 .railOfferNote {
   margin: 6px 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--fk-t-base);
   line-height: 1.4;
   color: var(--fk-ink-2);
 }
@@ -2903,7 +2903,7 @@
   display: block;
   margin-top: 4px;
   max-width: 74ch;
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   line-height: 1.45;
   color: var(--fk-ink-3);
 }
@@ -3834,7 +3834,7 @@
 .dayLine {
   display: block;
   margin-top: 6px;
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -4450,7 +4450,7 @@
 .coachLede {
   margin: 0 0 26px;
   max-width: 52ch;
-  font-size: 0.9375rem;
+  font-size: var(--fk-t-base);
   line-height: 1.55;
   color: var(--fk-ink-3);
 }
@@ -4617,7 +4617,7 @@
 }
 .receiptNote {
   margin-top: 12px;
-  font-size: 0.8125rem;
+  font-size: var(--fk-t-base);
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -4666,7 +4666,7 @@
 }
 .areaNote {
   margin: 14px 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--fk-t-base);
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -4730,7 +4730,7 @@
   margin: 0;
   padding: 0 60px 22px 44px;
   max-width: 70ch;
-  font-size: 0.9375rem;
+  font-size: var(--fk-t-base);
   line-height: 1.6;
   color: var(--fk-ink-2);
   animation: fkFadeUp var(--fk-dur-slow) var(--fk-ease) both;
@@ -5433,7 +5433,7 @@
 .app .numbersLede {
   margin: 0;
   max-width: 52ch;
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -5724,7 +5724,7 @@
 .mapLabel,
 .mapKitchenLabel {
   font-family: var(--fk-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
 }
 .mapRingLabel {
@@ -5820,7 +5820,7 @@
   color: var(--fk-ink);
 }
 .closeStepLine {
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   line-height: 1.55;
   color: var(--fk-ink-2);
 }
@@ -5933,7 +5933,7 @@
   width: 100%;
   min-width: 720px;
   border-collapse: collapse;
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
 }
 .spec th,
 .spec td {
@@ -6024,7 +6024,7 @@
     padding: 13px 16px;
     border-bottom: 1px solid rgba(132, 204, 22, 0.2);
     background: rgba(132, 204, 22, 0.07);
-    font-size: var(--fk-t-sm);
+    font-size: var(--fk-t-base);
     font-weight: 700;
     line-height: 1.45;
     color: var(--fk-ink);
@@ -6043,10 +6043,14 @@
   .wedgeAlternatives > div:last-child {
     border-bottom: 0;
   }
-  .wedgeAlternatives dt,
-  .wedgeAlternatives dd {
+  .wedgeAlternatives dt {
     margin: 0;
     font-size: var(--fk-t-xs);
+    line-height: 1.45;
+  }
+  .wedgeAlternatives dd {
+    margin: 0;
+    font-size: var(--fk-t-base);
     line-height: 1.45;
   }
   .wedgeAlternatives dt {

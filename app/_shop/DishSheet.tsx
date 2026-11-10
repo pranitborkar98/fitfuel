@@ -19,7 +19,7 @@ import type { AddOn } from "@/lib/menu-alacarte";
 import { rs, type ShopDish } from "./catalog";
 import Sheet, { SheetClose } from "./Sheet";
 import Slot, { type SlotMap } from "./Slot";
-import { C, MONO, SANS, body, display, figure, label, num, sub } from "./theme";
+import { C, SANS, body, display, figure, label, num, sub } from "./theme";
 
 const NONE = "None" as const;
 
@@ -63,16 +63,16 @@ export default function DishSheet({
       </div>
 
       <div style={{ padding: 16 }}>
-        <span style={{ display: "block", ...label(10, { letterSpacing: "0.18em", color: C.lime }) }}>{dish.categoryLabel}</span>
+        <span style={{ display: "block", ...label(12, { color: C.lime }) }}>{dish.categoryLabel}</span>
         <h2 id="dish-sheet-title" style={display(28, { margin: "10px 0 0", lineHeight: 1.06, letterSpacing: "-0.02em" })}>{dish.name}</h2>
-        <p style={body(13.5, { margin: "11px 0 0" })}>{dish.blurb}</p>
+        <p style={body(16, { margin: "11px 0 0" })}>{dish.blurb}</p>
         {dish.variantNote && <p style={body(12.5, { margin: "9px 0 0", color: C.dim })}>{dish.variantNote}</p>}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: C.rule, border: `1px solid ${C.rule}`, marginTop: 18 }}>
           {macroCells.map(([k, v]) => (
             <span key={k} style={{ padding: "11px 9px", background: C.panel }}>
               <b style={figure(22, { display: "block" })}>{v}</b>
-              <span style={{ display: "block", marginTop: 7, ...label(10, { letterSpacing: "0.04em" }) }}>{k}</span>
+              <span style={{ display: "block", marginTop: 7, ...label(12) }}>{k}</span>
             </span>
           ))}
         </div>
@@ -84,13 +84,13 @@ export default function DishSheet({
             ))}
           </span>
         )}
-        <span style={{ display: "block", marginTop: 8, ...label(10, { letterSpacing: "0.12em" }) }}>
+        <span style={{ display: "block", marginTop: 8, ...label(12) }}>
           Protein · carbs · fat · kitchen estimate
         </span>
 
         {hasAddOns && (
           <fieldset style={{ marginTop: 20, border: 0, padding: 0, margin: "20px 0 0" }}>
-            <legend style={{ ...label(10, { letterSpacing: "0.06em" }), marginBottom: 10, padding: 0 }}>Add protein</legend>
+            <legend style={{ ...label(12), marginBottom: 10, padding: 0 }}>Add protein</legend>
             <div style={{ display: "flex", flexDirection: "column", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
               {rows.map((a) => {
                 const on = a.kind === NONE ? !addOn : addOn === a.kind;
@@ -121,8 +121,8 @@ export default function DishSheet({
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.rule}` }}>
           <span>
-            <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }) }}>Unit</span>
-            <b style={figure(30, { display: "block", marginTop: 6 })}>{dish.orderable ? rs(unit) : "On request"}</b>
+            <span style={{ display: "block", ...label(12) }}>Unit</span>
+            <b style={figure(30, { display: "block", marginTop: 6 })}>{dish.orderable ? rs(unit) : "Price on request"}</b>
           </span>
           {dish.orderable ? (
             <button
@@ -146,13 +146,13 @@ export default function DishSheet({
                 fontFamily: SANS, fontWeight: 600, fontSize: 15, letterSpacing: "0", textTransform: "none",
               }}
             >
-              {asked ? "Price asked" : "Ask the price"}
+              {asked ? "Price asked" : "Ask price"}
             </button>
           )}
         </div>
 
         {!dish.orderable && (
-          <p style={body(12, { margin: "12px 0 0", color: C.dim, fontFamily: MONO, letterSpacing: "0.02em" })}>
+          <p style={body(16, { margin: "12px 0 0", color: C.dim })}>
             This dish is cooked and on the menu but not priced yet, so it cannot be ordered
             here. Asking keeps it in your basket, and it becomes orderable the moment the
             kitchen sets a price.

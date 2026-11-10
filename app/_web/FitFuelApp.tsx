@@ -1513,7 +1513,7 @@ export default function FitFuelApp({
                     ) : (
                       <>
                         There are {planCount} plans across goals, sports and{" "}
-                        {goalCount} conditions.{" "}
+                        medical conditions.{" "}
                       </>
                     )
                   ) : mode === "supps" ? (

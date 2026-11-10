@@ -30,7 +30,7 @@
   grid-column: 1;
   margin: 0;
   max-width: none;
-  font-size: 15px;
+  font-size: 16px;
 }
 .heading > div {
   grid-column: 2;
@@ -115,7 +115,7 @@
 }
 .guestDay p {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--fk-ink-2);
 }

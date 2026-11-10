@@ -151,7 +151,7 @@ function DayBand() {
           </div>
           <p className={s.bandLede}>
             Your live weight, profile and goal set the calorie target. Your
-            assigned kitchen turns that target into portion grams, weighs every
+            nearest FitFuel kitchen turns that target into portion grams, weighs every
             meal, labels it to you and sends it with the local delivery team.
           </p>
         </div>
@@ -311,7 +311,7 @@ function DigitalPlansBand({ counts }: { counts: BandCounts }) {
           <div className={s.digitalCopy} data-reveal="left">
             <span className={s.serviceSignal}>Available across India</span>
             <h2 id="digital-h" className={s.bandH2}>
-              The full FitFuel plan, even when you cook at home.
+              The full FitFuel plan, even when you cook at home
             </h2>
             <p>
               Choose a goal or condition and get 30 planned days, measured
@@ -400,7 +400,7 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
         <div className={s.bandHead}>
           <div>
             <h2 id="inside-h" className={s.bandH2}>
-              Food, body, training and guidance in one place.
+              Food, body, training and guidance in one place
             </h2>
           </div>
           <p className={s.bandLede}>
@@ -515,7 +515,7 @@ function RetailBand({
         <div className={s.bandHead}>
           <div>
             <h2 id="retail-h" className={s.bandH2}>
-              Supplements from Nutrabay, with ingredient guidance.
+              Supplements from Nutrabay, with ingredient guidance
             </h2>
           </div>
           <p className={s.bandLede}>
@@ -962,8 +962,7 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
             <b className="fk-num">{trial.total}</b>
           </span>
           <span className={s.receiptNote}>
-            No aggregator sits in the middle, so the cut that usually leaves the
-            rupee stays in the food.
+            No aggregator takes a cut, so more of what you pay goes into the food.
           </span>
         </div>
       </div>

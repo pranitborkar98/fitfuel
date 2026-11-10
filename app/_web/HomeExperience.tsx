@@ -373,7 +373,7 @@ export function HomeProductLinks({
     <div className={x.home}>
       <section className={x.productMap} aria-labelledby="product-map-title">
         <header className={x.productMapHead}>
-          <h2 id="product-map-title">Plan the rest of your week.</h2>
+          <h2 id="product-map-title">Plan the rest of your week</h2>
           <p>
             Start with delivered food, use a nationwide digital plan, run your
             week in the member app or browse supplements on Nutrabay.
@@ -447,7 +447,7 @@ export function HomeProductLinks({
       </section>
 
       <section className={productStyles.productFeature} aria-labelledby="daily-product-title">
-        <div><h2 id="daily-product-title">A dashboard for the days between orders.</h2><p>Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.</p><Link href="/dashboard-preview">Try the dashboard preview <Icon path={ICON.arrow} size={18} /></Link><br /><Link href="/services">Explore all FitFuel services <Icon path={ICON.arrow} size={18} /></Link></div>
+        <div><h2 id="daily-product-title">A dashboard for the days between orders</h2><p>Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.</p><Link href="/dashboard-preview">Try the dashboard preview <Icon path={ICON.arrow} size={18} /></Link><br /><Link href="/services">Explore all FitFuel services <Icon path={ICON.arrow} size={18} /></Link></div>
         <ol className={productStyles.featureSteps}>
           <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
           <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>

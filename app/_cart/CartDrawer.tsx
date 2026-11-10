@@ -354,7 +354,7 @@ export default function CartDrawer() {
           text-transform: none; letter-spacing: 0.04em; color: var(--fk-ink-2);
         }
         .ff-enq-note {
-          margin: 0 0 12px; font-family: var(--fk-sans); font-size: 12.5px; line-height: 1.55;
+          margin: 0 0 12px; font-family: var(--fk-sans); font-size: 16px; line-height: 1.55;
           color: var(--fk-ink-3);
         }
         .ff-enq-row {
@@ -369,7 +369,7 @@ export default function CartDrawer() {
         }
         .ff-rec-label {
           display: block; margin-bottom: 12px;
-          font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
+          font-family: var(--fk-sans); font-size: 12px;
           letter-spacing: 0.02em; text-transform: none; color: var(--fk-ink-3);
         }
         .ff-rec { margin: 0 0 14px; display: flex; flex-direction: column; gap: 9px; }
@@ -377,7 +377,7 @@ export default function CartDrawer() {
           display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
         }
         .ff-rec dt {
-          font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
+          font-family: var(--fk-sans); font-size: 12px;
           letter-spacing: 0.02em; text-transform: none; color: var(--fk-ink-3);
         }
         .ff-rec dd {
@@ -395,7 +395,7 @@ export default function CartDrawer() {
           letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
         }
         .ff-foot-note {
-          margin: 10px 0 14px; font-family: var(--fk-sans); font-size: 12px; line-height: 1.55;
+          margin: 10px 0 14px; font-family: var(--fk-sans); font-size: 16px; line-height: 1.55;
           color: var(--fk-ink-3);
         }
         /* THE PRIMARY ACTION, and it has to look like it.
@@ -416,7 +416,7 @@ export default function CartDrawer() {
         .ff-nothing {
           margin: 0; padding: 12px 14px; border-radius: 8px;
           background: var(--fk-warm); border: 1px solid var(--fk-line);
-          font-family: var(--fk-sans); font-size: 13.5px; line-height: 1.5;
+          font-family: var(--fk-sans); font-size: 16px; line-height: 1.5;
           color: var(--fk-ink-2);
         }
         .ff-send:focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 3px; }
