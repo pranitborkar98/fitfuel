@@ -2126,12 +2126,12 @@ async function seedRecipes() {
   }
 
   // ---------------------------------------------------------------------------
-  // STEP 3: Wire up to the meal plan (build its 30-day schedule through the
+  // STEP 3: Wire up to the meal plan (build its 60-day schedule through the
   // generic builder in lib/plan-schedule.ts). The recipe query below is the
   // plan-specific part: this plan's menu is the weight_loss recipes tagged
   // VEGETARIAN. The rotation itself lives in the builder.
   // ---------------------------------------------------------------------------
-  console.log('\n📅 Step 3: Building 30-day schedule for weight-loss-veg...\n')
+  console.log('\n📅 Step 3: Building 60-day schedule for weight-loss-veg...\n')
 
   // Load all seeded recipes for this plan
   const recipes = await prisma.recipe.findMany({
@@ -2140,7 +2140,7 @@ async function seedRecipes() {
 
   const rebuilt = await rebuildPlanSchedule(prisma, {
     planSlug: 'weight-loss-veg',
-    days: 30,
+    days: 60,
     recipes,
   })
 
@@ -2152,7 +2152,7 @@ async function seedRecipes() {
     if (recipes.length === 0) {
       console.log('⚠️  No weight_loss VEG recipes found — schedule cannot be built.')
     } else {
-      console.log(`✅ Schedule built: ${rebuilt.slotsCreated} slots across 30 days`)
+      console.log(`✅ Schedule built: ${rebuilt.slotsCreated} slots across 60 days`)
       console.log(`   BREAKFAST: ${rebuilt.recipesBySlot.BREAKFAST} unique recipes rotating`)
       console.log(`   LUNCH:     ${rebuilt.recipesBySlot.LUNCH} unique recipes rotating`)
       console.log(`   SNACK:     ${rebuilt.recipesBySlot.SNACK} unique recipes rotating`)
@@ -2177,7 +2177,7 @@ async function seedRecipes() {
   console.log('NEXT STEPS:')
   console.log('  1. Open Prisma Studio: npx prisma studio')
   console.log('  2. Check: recipes table — should have 30 rows, all cuisineType Indian')
-  console.log('  3. Check: plan_schedule_slots — should have 120 rows (30 days × 4 slots)')
+  console.log('  3. Check: plan_schedule_slots — should have 240 rows (60 days × 4 slots)')
   console.log('  4. Check: meal_plans — weight-loss-veg should be isActive: true')
   console.log('  5. Verify one recipe has correct ingredient links (no null foodItemId)')
   console.log('  6. If all good → move to seed-recipes-weight-loss-egg.ts')
