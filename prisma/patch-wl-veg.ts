@@ -322,10 +322,10 @@ async function patch() {
     console.log(`✅ Continental_Indian | LUNCH | ${MISSING_LUNCH.recipe.name} (${MISSING_LUNCH.ingredients.length} ing, ${MISSING_LUNCH.steps.length} steps) ${errs > 0 ? `⚠️ ${errs} missing keys` : ''}`)
   }
 
-  // ── Step 4: Rebuild the 30-day schedule with 30 recipes ──────────────────
+  // ── Step 4: Rebuild the 60-day schedule with 30 recipes ──────────────────
   // Same generic builder as the seed (lib/plan-schedule.ts): the recipe
   // query below is this plan's menu, the rotation lives in the builder.
-  console.log('\n📅 Step 4: Rebuilding 30-day schedule with all 30 recipes...\n')
+  console.log('\n📅 Step 4: Rebuilding 60-day schedule with all 30 recipes...\n')
 
   const recipes = await prisma.recipe.findMany({
     where: { planCategories: { has: 'weight_loss' }, dietaryTags: { has: 'VEGETARIAN' } },
@@ -333,7 +333,7 @@ async function patch() {
 
   const rebuilt = await rebuildPlanSchedule(prisma, {
     planSlug: 'weight-loss-veg',
-    days: 30,
+    days: 60,
     recipes,
   })
 
@@ -341,7 +341,7 @@ async function patch() {
     console.log('⚠️  MealPlan "weight-loss-veg" not found')
   } else {
     console.log(`🗑️  Cleared ${rebuilt.deleted} existing schedule slots`)
-    console.log(`✅ Schedule rebuilt: ${rebuilt.slotsCreated} slots across 30 days`)
+    console.log(`✅ Schedule rebuilt: ${rebuilt.slotsCreated} slots across 60 days`)
     console.log(`   BREAKFAST: ${rebuilt.recipesBySlot.BREAKFAST} unique recipes`)
     console.log(`   LUNCH:     ${rebuilt.recipesBySlot.LUNCH} unique recipes`)
     console.log(`   SNACK:     ${rebuilt.recipesBySlot.SNACK} unique recipes`)
@@ -358,11 +358,11 @@ async function patch() {
   console.log(`📊 Final verification:`)
   console.log(`   Recipes (wl-veg):     ${recipeCount}  (expected: 30)`)
   console.log(`   RecipeIngredients:    ${ingCount}`)
-  console.log(`   ScheduleSlots:        ${slotCount}  (expected: 120)`)
+  console.log(`   ScheduleSlots:        ${slotCount}  (expected: 240)`)
   console.log(`   Null ingredient IDs:  ${nullIngCount} (expected: 0)`)
   console.log('─────────────────────────────────────────────────')
 
-  if (recipeCount === 30 && slotCount === 120) {
+  if (recipeCount === 30 && slotCount === 240) {
     console.log('✅ weight-loss-veg plan is COMPLETE and verified.')
     console.log('\nNEXT: npx tsx prisma/seed-recipes-weight-loss-egg.ts')
   } else {

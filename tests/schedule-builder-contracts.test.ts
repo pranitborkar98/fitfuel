@@ -86,30 +86,30 @@ test("patch adds exactly one lunch, the 10th", () => {
   assert.equal(recipes[0].id, "continental-paneer-bhurji-brown-rice-wl-veg");
 });
 
-test("generic builder matches the hardcoded path for the 29-recipe seed menu: 120 slots", () => {
+test("generic builder matches the hardcoded path for the 29-recipe seed menu: 240 slots", () => {
   const recipes = menuFromSeed(read("prisma/seed-recipes-weight-loss-veg.ts"));
-  const generic = buildScheduleSlots({ days: 30, recipes });
-  const hardcoded = hardcodedSchedule(30, recipes);
-  assert.equal(generic.length, 120);
+  const generic = buildScheduleSlots({ days: 60, recipes });
+  const hardcoded = hardcodedSchedule(60, recipes);
+  assert.equal(generic.length, 240);
   assert.deepEqual(generic, hardcoded);
 });
 
-test("generic builder matches the hardcoded path for the 30-recipe patched menu: 120 slots", () => {
+test("generic builder matches the hardcoded path for the 30-recipe patched menu: 240 slots", () => {
   const seed = menuFromSeed(read("prisma/seed-recipes-weight-loss-veg.ts"));
   const patch = menuFromSeed(read("prisma/patch-wl-veg.ts"));
   const recipes = [...seed, ...patch];
   assert.equal(recipes.length, 30);
-  const generic = buildScheduleSlots({ days: 30, recipes });
-  const hardcoded = hardcodedSchedule(30, recipes);
-  assert.equal(generic.length, 120);
+  const generic = buildScheduleSlots({ days: 60, recipes });
+  const hardcoded = hardcodedSchedule(60, recipes);
+  assert.equal(generic.length, 240);
   assert.deepEqual(generic, hardcoded);
 });
 
 test("the patched menu changes only lunch rotation: other slots identical, lunch days 1-9 identical", () => {
   const seed = menuFromSeed(read("prisma/seed-recipes-weight-loss-veg.ts"));
   const patch = menuFromSeed(read("prisma/patch-wl-veg.ts"));
-  const before = buildScheduleSlots({ days: 30, recipes: seed });
-  const after = buildScheduleSlots({ days: 30, recipes: [...seed, ...patch] });
+  const before = buildScheduleSlots({ days: 60, recipes: seed });
+  const after = buildScheduleSlots({ days: 60, recipes: [...seed, ...patch] });
   assert.deepEqual(
     after.filter((d) => d.mealSlot !== "LUNCH"),
     before.filter((d) => d.mealSlot !== "LUNCH"),
@@ -144,13 +144,13 @@ test("a menu missing a slot skips that slot and still rotates the rest", () => {
   assert.deepEqual(buildScheduleSlots({ days: 0, recipes: breakfastOnly }), []);
 });
 
-test("every draft carries servingMultiplier 1, days 1-30, slots in eating order", () => {
+test("every draft carries servingMultiplier 1, days 1-60, slots in eating order", () => {
   assert.deepEqual([...SCHEDULE_SLOT_ORDER], ["BREAKFAST", "LUNCH", "SNACK", "DINNER"]);
   const seed = menuFromSeed(read("prisma/seed-recipes-weight-loss-veg.ts"));
   const patch = menuFromSeed(read("prisma/patch-wl-veg.ts"));
-  const drafts = buildScheduleSlots({ days: 30, recipes: [...seed, ...patch] });
+  const drafts = buildScheduleSlots({ days: 60, recipes: [...seed, ...patch] });
   assert.ok(drafts.every((d) => d.servingMultiplier === 1.0));
-  for (let day = 1; day <= 30; day++) {
+  for (let day = 1; day <= 60; day++) {
     const dayDrafts = drafts.filter((d) => d.dayNumber === day);
     assert.equal(dayDrafts.length, 4);
     assert.deepEqual(
@@ -158,6 +158,53 @@ test("every draft carries servingMultiplier 1, days 1-30, slots in eating order"
       ["BREAKFAST", "LUNCH", "SNACK", "DINNER"],
     );
   }
+});
+
+test("the 60-day build satisfies the readiness gate: 240 slots, days 1-60, 4 per day, unique day+slot", () => {
+  const seed = menuFromSeed(read("prisma/seed-recipes-weight-loss-veg.ts"));
+  const patch = menuFromSeed(read("prisma/patch-wl-veg.ts"));
+  const drafts = buildScheduleSlots({ days: 60, recipes: [...seed, ...patch] });
+  // 60 days * 4 meals = cycleLengthDays * mealsPerDay, the readiness gate.
+  assert.equal(drafts.length, 240);
+  const days = new Set(drafts.map((d) => d.dayNumber));
+  assert.equal(days.size, 60);
+  assert.equal(Math.min(...days), 1);
+  assert.equal(Math.max(...days), 60);
+  const pairs = new Set(drafts.map((d) => `${d.dayNumber}:${d.mealSlot}`));
+  assert.equal(pairs.size, 240);
+  for (let day = 1; day <= 60; day++) {
+    const dayDrafts = drafts.filter((d) => d.dayNumber === day);
+    assert.equal(dayDrafts.length, 4);
+    assert.deepEqual(
+      dayDrafts.map((d) => d.mealSlot),
+      ["BREAKFAST", "LUNCH", "SNACK", "DINNER"],
+    );
+  }
+});
+
+test("the 60-day rotation wraps at each slot's menu size", () => {
+  const seed = menuFromSeed(read("prisma/seed-recipes-weight-loss-veg.ts"));
+  const patch = menuFromSeed(read("prisma/patch-wl-veg.ts"));
+  const drafts = buildScheduleSlots({ days: 60, recipes: [...seed, ...patch] });
+  const slot = (day: number, mealSlot: ScheduleMealSlot) =>
+    drafts.find((d) => d.dayNumber === day && d.mealSlot === mealSlot)!.recipeId;
+  // Breakfast has 8 recipes: day 9 repeats day 1, day 33 repeats day 1,
+  // and day 31 repeats day 7 ((31 - 1) % 8 == 6), not day 1.
+  assert.equal(slot(9, "BREAKFAST"), slot(1, "BREAKFAST"));
+  assert.equal(slot(33, "BREAKFAST"), slot(1, "BREAKFAST"));
+  assert.equal(slot(31, "BREAKFAST"), slot(7, "BREAKFAST"));
+  assert.notEqual(slot(31, "BREAKFAST"), slot(1, "BREAKFAST"));
+  // Lunch has 10 recipes: day 11 repeats day 1, day 31 repeats day 1.
+  assert.equal(slot(11, "LUNCH"), slot(1, "LUNCH"));
+  assert.equal(slot(31, "LUNCH"), slot(1, "LUNCH"));
+  // Snack has 5 recipes: day 6 repeats day 1, day 31 repeats day 1.
+  assert.equal(slot(6, "SNACK"), slot(1, "SNACK"));
+  assert.equal(slot(31, "SNACK"), slot(1, "SNACK"));
+  // Dinner has 7 recipes: day 8 repeats day 1, day 29 repeats day 1.
+  assert.equal(slot(8, "DINNER"), slot(1, "DINNER"));
+  assert.equal(slot(29, "DINNER"), slot(1, "DINNER"));
+  // Day 60 is a full day: (60 - 1) % 8 == 3, so its breakfast is day 4's.
+  assert.equal(slot(60, "BREAKFAST"), slot(4, "BREAKFAST"));
 });
 
 test("rebuildPlanSchedule clears the plan's slots and writes the generic drafts, in order", async () => {
@@ -175,7 +222,7 @@ test("rebuildPlanSchedule clears the plan's slots and writes the generic drafts,
       deleteMany: async (args: unknown) => {
         deleteCalls++;
         deletedWhere = args;
-        return { count: 120 };
+        return { count: 240 };
       },
       create: async (args: { data: unknown }) => {
         created.push(args.data);
@@ -185,21 +232,21 @@ test("rebuildPlanSchedule clears the plan's slots and writes the generic drafts,
   } as unknown as PrismaClient;
   const result = await rebuildPlanSchedule(stub, {
     planSlug: "weight-loss-veg",
-    days: 30,
+    days: 60,
     recipes,
   });
   assert.deepEqual(result, {
     mealPlanId: "plan-wl-veg",
-    deleted: 120,
-    slotsCreated: 120,
+    deleted: 240,
+    slotsCreated: 240,
     recipesBySlot: { BREAKFAST: 8, LUNCH: 10, SNACK: 5, DINNER: 7 },
   });
   assert.equal(deleteCalls, 1);
   assert.deepEqual(deletedWhere, { where: { mealPlanId: "plan-wl-veg" } });
   // The rows written are the oracle rows, with the plan id attached, in
   // the same order the hardcoded loop created them.
-  assert.equal(created.length, 120);
-  const expected = hardcodedSchedule(30, recipes).map((d) => ({
+  assert.equal(created.length, 240);
+  const expected = hardcodedSchedule(60, recipes).map((d) => ({
     mealPlanId: "plan-wl-veg",
     dayNumber: d.dayNumber,
     mealSlot: d.mealSlot,
@@ -252,7 +299,7 @@ test("both seed files route through the generic builder and keep the same menu q
       `${file} must import the generic builder`,
     );
     assert.ok(src.includes("rebuildPlanSchedule(prisma, {"), `${file} must call the builder`);
-    assert.ok(src.includes("days: 30,"), `${file} must still build a 30-day schedule`);
+    assert.ok(src.includes("days: 60,"), `${file} must build a 60-day schedule`);
     // The menu query is the plan-specific part and stays in the plan file.
     assert.ok(
       src.includes("planCategories: { has: 'weight_loss' }"),
