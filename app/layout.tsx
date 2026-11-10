@@ -12,6 +12,7 @@ import { CartProvider } from "@/app/_cart/CartProvider";
 import CartDrawer from "@/app/_cart/CartDrawer";
 import { SessionProvider } from "next-auth/react";
 import ReferralCapture from "@/components/ReferralCapture";
+import { SITE_URL } from "@/lib/site";
 import { TRIAL_TOTAL_LABEL } from "@/lib/trial-price";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -101,12 +102,12 @@ export const metadata: Metadata = {
   // Was "FitFuel - Verified Nutrition": no city, no product, no intent.
   title: { default: TITLE, template: "%s | FitFuel" },
   description: DESCRIPTION,
-  metadataBase: new URL("https://fitfuel.in"),
+  metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: "https://fitfuel.in",
+    url: SITE_URL,
     siteName: "FitFuel",
     // The explicit /og-image.png entry that used to sit here 404s, and it
     // silently overrode the working file-based app/opengraph-image.tsx.

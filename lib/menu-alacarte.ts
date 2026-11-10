@@ -111,7 +111,7 @@ export const MENU: MenuCategory[] = [
     items: [
       { name: "Mediterranean Power Bowl", blurb: "Quinoa, hummus, grilled zucchini and peppers, chickpeas, olives, lemon-olive oil.", price: 100, provisional: true },
       { name: "Thai Buddha Bowl", blurb: "Brown rice or quinoa with grilled tofu or chicken, peanut sauce, crushed peanuts and lime.", price: 100, provisional: true },
-      { name: "Indian Detox Bowl", blurb: "Sprouted moong with cucumber, tomato and carrot, lemon, rock salt and roasted cumin.", price: 100, provisional: true },
+      { name: "Sprouted moong bowl", blurb: "Sprouted moong with cucumber, tomato and carrot, lemon, rock salt and roasted cumin.", price: 100, provisional: true },
       { name: "Green Goddess Bowl", blurb: "Millets, green beans, sautéed spinach and avocado under a green tahini dressing.", price: 100, provisional: true },
       { name: "Mexican Fiesta Bowl", blurb: "Brown rice, black beans and corn with sautéed peppers, salsa or guacamole.", price: 100, provisional: true },
       { name: "Protein-Packed Fitness Bowl", blurb: "Quinoa with grilled tofu or chicken, edamame and sautéed greens, lemon-herb dressing.", price: 100, provisional: true },
@@ -151,17 +151,17 @@ export const MENU: MenuCategory[] = [
   },
   {
     key: "juices",
-    label: "Detox juices",
+    label: "Cold-pressed juices",
     note: "Cold-pressed the morning they go out. No concentrate, no added sugar.",
     items: [
-      { name: "Green Detox Juice", blurb: "Spinach, cucumber, green apple, lemon and ginger.", price: 100, provisional: true },
+      { name: "Spinach, cucumber and green apple juice", blurb: "Spinach, cucumber, green apple, lemon and ginger.", price: 100, provisional: true },
       { name: "Ironman Juice", blurb: "Beetroot, carrot, spinach and apple with lemon.", price: 100, provisional: true },
-      { name: "Magic Juice for Eyes and Skin", blurb: "Carrot and orange with ginger, turmeric and chia.", price: 100, provisional: true },
+      { name: "Carrot and orange juice with ginger, turmeric and chia", blurb: "Carrot and orange with ginger, turmeric and chia.", price: 100, provisional: true },
       { name: "Beet and Carrot Juice", blurb: "Beetroot and carrot pressed with ginger and lemon.", price: 100, provisional: true },
-      { name: "Skin Detox Elixir", blurb: "Cucumber, green apple and mint with lemon and coconut water.", price: 100, provisional: true },
+      { name: "Cucumber, green apple and mint cooler", blurb: "Cucumber, green apple and mint with lemon and coconut water.", price: 100, provisional: true },
       { name: "Ash Gourd Juice", blurb: "Ash gourd with lime and black salt. Drunk fresh, on an empty stomach.", price: 100, provisional: true },
       { name: "Glow-Boosting Juice", blurb: "Orange, carrot, beetroot and apple with flax.", price: 100, provisional: true },
-      { name: "Ajwain Period Pain Reliever", blurb: "Carom seed infusion with lemon and honey, served warm.", price: 100, provisional: true },
+      { name: "Ajwain, lemon and honey, served warm", blurb: "Carom seed infusion with lemon and honey, served warm.", price: 100, provisional: true },
     ],
   },
 ];

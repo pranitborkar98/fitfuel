@@ -6,7 +6,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
-import type { ShopDish } from "@/app/_shop/catalog";
+import { isAiImageSrc, type ShopDish } from "@/app/_shop/catalog";
 import s from "./dish.module.css";
 
 type Props = {
@@ -86,7 +86,14 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
           </div>
 
           <div className={s.head}>
-            <p className={s.course}>{dish.categoryLabel}</p>
+            {/* The picture above is an AI illustration when its src came from
+                the ai/ tree, never a photograph of the delivered meal. The
+                tag needs its own class: the course line is uppercase, and
+                the label stays in sentence case. */}
+            <p className={s.course}>
+              {dish.categoryLabel}
+              {isAiImageSrc(imageSrc) ? <span className={s.aiTag}>AI illustration</span> : null}
+            </p>
             <h1 className={s.title}>{dish.name}</h1>
             <p className={s.blurb}>{dish.blurb}</p>
 

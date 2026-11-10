@@ -28,8 +28,8 @@ export const CUSTOMER_NAV: readonly CustomerNavItem[] = [
   {
     kind: "catalog",
     key: "dishes",
-    label: "Meals",
-    accessibleLabel: "single meals",
+    label: "Order",
+    accessibleLabel: "order a meal",
     href: "/?mode=dishes#catalog",
   },
   {

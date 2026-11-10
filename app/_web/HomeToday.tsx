@@ -36,12 +36,14 @@ const endpoints = {
 
 export default function HomeToday() {
   const { data: session, status } = useSession();
+  /* Renders inside the single dashboard section (DashboardBand in
+     HomeSections), under its h2 — so this heading is an h3, not an h2. */
   return (
     <section className={s.today} aria-labelledby="home-today-title">
       <header>
         <div>
           <span className={s.eyebrow}>Your account</span>
-          <h2 id="home-today-title">Today at a glance</h2>
+          <h3 id="home-today-title">Today at a glance</h3>
         </div>
         <Link href="/dashboard" aria-label="Open your full dashboard">
           <ArrowUpRight size={22} />

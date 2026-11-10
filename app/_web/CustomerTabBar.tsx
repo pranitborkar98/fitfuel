@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import {
   CUSTOMER_NAV,
@@ -38,6 +39,28 @@ function Icon({ name }: { name: CustomerNavKey }) {
   );
 }
 
+/**
+ * ONE label in the DOM at every width.
+ *
+ * The bar used to render both the long label ("Supplements") and the short
+ * one ("Supps") and hide one with a CSS breakpoint, so both strings were in
+ * the DOM and a missed breakpoint showed "SupplementsSupps". The breakpoint
+ * is now a matchMedia query: exactly one label renders, long above 420px and
+ * short at or below it. State starts wide so the server render and the first
+ * client render agree; the effect corrects narrow phones after mount.
+ */
+function useNarrowLabels(): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 420px)");
+    const update = () => setNarrow(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return narrow;
+}
+
 export default function CustomerTabBar({
   mode = "dishes",
   onCatalogSelect,
@@ -50,6 +73,7 @@ export default function CustomerTabBar({
   const pathname = usePathname() || "";
   const active = activeKey ?? activeCustomerNav(pathname, mode);
   const switchesHomepage = pathname === "/" && !!onCatalogSelect;
+  const narrow = useNarrowLabels();
 
   return (
     <nav className={s.bar} aria-label="FitFuel">
@@ -58,18 +82,9 @@ export default function CustomerTabBar({
         const content = (
           <>
             <Icon name={item.key} />
-            {item.shortLabel ? (
-              <>
-                <span className={`${s.label} ${s.labelLong}`}>
-                  {item.label}
-                </span>
-                <span className={`${s.label} ${s.labelShort}`}>
-                  {item.shortLabel}
-                </span>
-              </>
-            ) : (
-              <span className={s.label}>{item.label}</span>
-            )}
+            <span className={s.label}>
+              {item.shortLabel && narrow ? item.shortLabel : item.label}
+            </span>
           </>
         );
 

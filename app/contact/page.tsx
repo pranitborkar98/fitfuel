@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import ContactClient from "./ContactClient";
 import { safeJsonLd } from "@/lib/content-safety";
+import { abs } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Contact FitFuel Pune",
     description: "WhatsApp, email or visit the Kharadi kitchen.",
-    url: "https://fitfuel.in/contact",
+    url: abs("/contact"),
     type: "website",
   },
 };
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 const contactLd = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
-  url: "https://fitfuel.in/contact",
+  url: abs("/contact"),
   mainEntity: {
     "@type": "Organization",
     name: "FitFuel",

@@ -1,5 +1,14 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { dishSlot, isAiImageSrc, SHOP_DISHES } from "@/app/_shop/catalog";
+
+const read = (p: string) => readFileSync(resolve(p), "utf8");
 
 import { computeRecalibration } from "@/lib/coach/recalibration";
 import type { WeeklySummary } from "@/lib/coach/types";
@@ -34,7 +43,7 @@ import {
   clampCalorieTarget,
   resolveCalorieTarget,
 } from "@/lib/calorie-target";
-import { MENU_FROM, MENU_STATS } from "@/lib/menu-alacarte";
+import { MENU, MENU_FROM, MENU_STATS } from "@/lib/menu-alacarte";
 import { DISHES, ENQUIRY_COUNT, isOrderable, ORDERABLE_COUNT, receipt, resolveLines } from "@/lib/menu-cart";
 import { goalsPatchSchema } from "@/lib/validation/schemas";
 
@@ -403,4 +412,132 @@ test("a stored provisional line drops out of the basket instead of pricing", () 
     gstRs: 0,
     totalRs: 0,
   });
+});
+
+// ── Conversion restructure: menu track (2026-11-10) ────────────────────────
+// The homepage menu defaults to the 16 priced dishes, the 32 unpriced ones
+// sit under "Coming soon", and the dish card carries photo, name, kcal,
+// protein, price and Add — nothing else.
+
+test("menu dish names carry no medical claims", () => {
+  // The renames, at the source of truth.
+  const names = MENU.flatMap((c) => c.items.map((i) => i.name));
+  assert.ok(names.includes("Ajwain, lemon and honey, served warm"));
+  assert.ok(names.includes("Carrot and orange juice with ginger, turmeric and chia"));
+  assert.ok(names.includes("Sprouted moong bowl"));
+  assert.ok(names.includes("Spinach, cucumber and green apple juice"));
+  assert.ok(names.includes("Cucumber, green apple and mint cooler"));
+  // The category renamed with them.
+  assert.equal(MENU.find((c) => c.key === "juices")?.label, "Cold-pressed juices");
+  // No dish or category name left making a health claim.
+  const labels = [...names, ...MENU.map((c) => c.label)];
+  for (const label of labels) {
+    assert.doesNotMatch(label, /detox/i, label);
+    assert.doesNotMatch(label, /period pain/i, label);
+    assert.doesNotMatch(label, /reliever/i, label);
+    assert.doesNotMatch(label, /magic juice for eyes/i, label);
+  }
+});
+
+test("every dish id resolves a kitchen macro estimate", () => {
+  // MACROS is keyed by the derived dish id, so renaming a dish without
+  // moving its row silently zeroes its kcal and protein. Pin the join.
+  const src = read("app/_shop/catalog.ts");
+  const rows = [...src.matchAll(/^  "([^"]+)": \[(\d+), (\d+), (\d+), (\d+)\],$/gm)];
+  assert.equal(rows.length, 48);
+  for (const [, id, kcal] of rows) assert.ok(Number(kcal) > 0, id);
+  for (const d of DISHES) {
+    assert.ok(
+      rows.some(([, id]) => id === d.id),
+      `no macro row for ${d.id}`,
+    );
+  }
+});
+
+test("homepage dish cards are slim and priced-first", () => {
+  const app = read("app/_web/FitFuelApp.tsx");
+  // Removed from the card: the per-card estimate label, the per-gram price
+  // and the "Price on request" price slot.
+  assert.doesNotMatch(app, /Macros estimated from the recipe/);
+  assert.doesNotMatch(app, /per gram of protein/);
+  assert.doesNotMatch(app, /Price on request/);
+  // The donut still exists for plan cards, exactly once — not on dish cards.
+  assert.equal(app.match(/<MacroSplit/g)?.length, 1);
+  // What the card keeps: one kcal and protein line, and "Coming soon" for
+  // the unpriced slot.
+  assert.match(app, /g protein/);
+  assert.match(app, /<span className=\{s\.askPrice\}>Coming soon<\/span>/);
+  // The menu defaults to priced dishes, with the rest under one heading.
+  assert.match(app, /d\.category === c\.key && d\.orderable/);
+  assert.match(app, /const comingSoon = results\.filter\(\(d\) => !d\.orderable\)/);
+  assert.match(app, /<b>Coming soon<\/b>/);
+  // Six render per course, the rest on "Show all".
+  assert.match(app, /list\.slice\(0, 6\)/);
+  assert.match(app, /comingSoon\.slice\(0, 6\)/);
+  // One macro footnote for the whole menu, worded from the estimate rule.
+  assert.match(app, /Calorie and protein figures are kitchen estimates/);
+  assert.match(app, /not weighed per portion/);
+});
+
+test("the photo-less wells keep their placeholder sentence", () => {
+  // Item 4 (clean no-image cards) was CANCELLED by chintu's decision: the
+  // wells stay exactly as they are until the image track wires AI food-image
+  // placeholders in. The sentence is the fallback for a slot with no image,
+  // not a card feature, and the AI-illustration label belongs to that track.
+  assert.match(read("app/_web/FitFuelApp.tsx"), /Photo added with final kitchen listing/);
+  assert.match(read("app/_hp/DishImage.tsx"), /Photo added with final kitchen listing/);
+  assert.match(read("app/menu/MenuCatalog.tsx"), /Photo added with final kitchen listing/);
+});
+
+test("homepage images are capped below 3840px", () => {
+  const config = read("next.config.ts");
+  assert.match(config, /deviceSizes: \[640, 750, 828, 1080, 1200, 1920\]/);
+  assert.doesNotMatch(config, /3840/);
+  // The CSS-only caps survive: phone 2, tablet 4 per course.
+  const css = read("app/_web/app.module.css");
+  assert.match(css, /\.courseGroup:not\(\.courseOpen\) > li:nth-child\(n \+ 4\)/);
+  assert.match(css, /\.courseGroup:not\(\.courseOpen\) > li:nth-child\(n \+ 6\)/);
+  assert.match(css, /\.courseMoreDesktop/);
+});
+/* ── Dish and hero image coverage (conv-images) ───────────────────────────
+   The 48 dishes resolve to files on disk, not to a labelled well: a dish
+   with no file renders "Photo added with final kitchen listing", and after
+   the AI placeholder set landed there must be none left. The check reads
+   the same lookup order DishImage uses, real photography first, then the
+   ai/ tree, so a real photograph dropped in later keeps the test green.
+   Paths resolve from this file, never from process.cwd(), so the suite
+   passes however the runner is invoked. */
+
+const publicDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
+
+const hasDishImage = (name: string): boolean => {
+  const slot = dishSlot(name);
+  return [".jpg", ".jpeg", ".png", ".webp"].some(
+    (ext) =>
+      existsSync(join(publicDir, "images", "dishes", `${slot}${ext}`)) ||
+      existsSync(join(publicDir, "images", "ai", "dishes", `${slot}${ext}`)),
+  );
+};
+
+test("every dish on the menu has an image file, so no card renders the labelled well", () => {
+  assert.equal(SHOP_DISHES.length, 48);
+  assert.deepEqual(
+    SHOP_DISHES.filter((d) => !hasDishImage(d.name)).map((d) => d.name),
+    [],
+  );
+});
+
+test("the hero trial-day spread exists in the ai/ tree for the restructured hero", () => {
+  assert.equal(
+    existsSync(join(publicDir, "images", "ai", "hero", "hero-week-spread.webp")),
+    true,
+  );
+});
+
+test("the AI-illustration flag follows the public path, not a data field", () => {
+  assert.equal(isAiImageSrc("/images/ai/dishes/pineapple-cucumber-salad.webp"), true);
+  assert.equal(isAiImageSrc("/images/dishes/pineapple-cucumber-salad.jpg"), false);
+  assert.equal(isAiImageSrc(undefined), false);
+  assert.equal(isAiImageSrc(null), false);
+
 });

@@ -39,6 +39,18 @@ export function dishSlot(name: string): string {
   return dishId(name).split("-").slice(0, 6).join("-");
 }
 
+/* ── AI-illustration flag ──────────────────────────────────────────────────
+   No per-dish data flag is needed, and none is stored: the public path IS
+   the flag. Real photography lives under public/images/<folder>/ and AI
+   illustrations under public/images/ai/<folder>/, and both resolvers
+   (app/_hp/DishImage.tsx, lib/site-images.ts) already encode exactly that
+   split. So a src from the ai/ tree is an illustration, never a photograph,
+   and dropping a real photograph in later unlabels the dish automatically.
+   The real path wins the lookup and the label disappears with no edit here. */
+
+export const isAiImageSrc = (src: string | undefined | null): boolean =>
+  !!src && src.startsWith("/images/ai/");
+
 /* ── Kitchen estimates, per portion: [kcal, protein g, carbs g, fat g] ────── */
 
 const MACROS: Record<string, [number, number, number, number]> = {
@@ -60,7 +72,7 @@ const MACROS: Record<string, [number, number, number, number]> = {
   "keto-avocado-smoothie": [395, 9, 18, 33],
   "mediterranean-power-bowl": [520, 19, 62, 21],
   "thai-buddha-bowl": [545, 22, 64, 22],
-  "indian-detox-bowl": [300, 16, 42, 8],
+  "sprouted-moong-bowl": [300, 16, 42, 8],
   "green-goddess-bowl": [470, 15, 55, 21],
   "mexican-fiesta-bowl": [530, 18, 72, 18],
   "protein-packed-fitness-bowl": [560, 34, 58, 20],
@@ -82,14 +94,14 @@ const MACROS: Record<string, [number, number, number, number]> = {
   "banana-walnut-energy-bar": [230, 7, 30, 10],
   "coconut-cashew-keto-bar": [260, 8, 12, 22],
   "double-chocolate-protein-bar": [255, 15, 24, 11],
-  "green-detox-juice": [110, 2, 24, 1],
+  "spinach-cucumber-and-green-apple-juice": [110, 2, 24, 1],
   "ironman-juice": [140, 3, 31, 1],
-  "magic-juice-for-eyes-and-skin": [135, 2, 29, 2],
+  "carrot-and-orange-juice-with-ginger-turmeric-and-chia": [135, 2, 29, 2],
   "beet-and-carrot-juice": [125, 2, 28, 1],
-  "skin-detox-elixir": [100, 1, 22, 1],
+  "cucumber-green-apple-and-mint-cooler": [100, 1, 22, 1],
   "ash-gourd-juice": [60, 1, 12, 0],
   "glow-boosting-juice": [150, 2, 34, 1],
-  "ajwain-period-pain-reliever": [70, 0, 17, 0],
+  "ajwain-lemon-and-honey-served-warm": [70, 0, 17, 0],
 };
 
 /** Protein / carbs / fat as a share of the dish's own calories. The three

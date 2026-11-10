@@ -16,7 +16,7 @@ import { useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import type { AddOn } from "@/lib/menu-alacarte";
-import { rs, type ShopDish } from "./catalog";
+import { isAiImageSrc, rs, type ShopDish } from "./catalog";
 import Sheet, { SheetClose } from "./Sheet";
 import Slot, { type SlotMap } from "./Slot";
 import { C, SANS, body, display, figure, label, num, sub } from "./theme";
@@ -63,7 +63,13 @@ export default function DishSheet({
       </div>
 
       <div style={{ padding: 16 }}>
-        <span style={{ display: "block", ...label(12, { color: C.lime }) }}>{dish.categoryLabel}</span>
+        {/* The picture above is an AI illustration when its src came from the
+            ai/ tree, never a photograph of the delivered meal. It reads on
+            the category line directly under the picture. */}
+        <span style={{ display: "block", ...label(12, { color: C.lime }) }}>
+          {dish.categoryLabel}
+          {isAiImageSrc(images[dish.slot]) ? " · AI illustration" : ""}
+        </span>
         <h2 id="dish-sheet-title" style={display(28, { margin: "10px 0 0", lineHeight: 1.06, letterSpacing: "-0.02em" })}>{dish.name}</h2>
         <p style={body(16, { margin: "11px 0 0" })}>{dish.blurb}</p>
         {dish.variantNote && <p style={body(12.5, { margin: "9px 0 0", color: C.dim })}>{dish.variantNote}</p>}

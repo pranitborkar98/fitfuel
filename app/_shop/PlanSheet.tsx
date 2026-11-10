@@ -12,9 +12,9 @@
 // PayU collects cannot disagree. "3,614 prices, all published" is a claim the
 // page makes two sections above this one; this is where it is kept.
 //
-// Premium and Luxury are priced at × 1.25 and × 1.5 and say so, because those
-// kitchens do not exist yet. Their CTA joins a waitlist rather than pretending
-// to sell something.
+// Premium and Luxury are coming soon because those kitchens do not exist
+// yet, so no price is shown for them. Their CTA joins a waitlist rather than
+// pretending to sell something.
 
 import Link from "next/link";
 import { useState } from "react";
@@ -22,7 +22,7 @@ import { useState } from "react";
 import { buildCheckoutUrl } from "@/lib/plan-tier-pricing";
 import { decomposePrice } from "@/lib/pricing-decomposition";
 import {
-  DELIVERY_COUNT, DIETS, DURATIONS, MEALS, TIERS, planSubtotal, rs, tierMultiplier,
+  DELIVERY_COUNT, DIETS, DURATIONS, MEALS, TIERS, planSubtotal, rs,
   type DietKey, type MealKey, type PlanDurationKey, type ShopPlan, type Tier,
 } from "./catalog";
 import Sheet, { SheetClose } from "./Sheet";
@@ -86,7 +86,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
             <button key={t.key} type="button" onClick={() => setTier(t.key)} aria-pressed={tier === t.key} style={seg(tier === t.key, { flex: 1 })}>
               <span style={{ display: "block", fontFamily: SANS, fontWeight: 600, fontSize: 15, lineHeight: 1, textTransform: "none" }}>{t.label}</span>
               <span style={{ display: "block", marginTop: 6, fontFamily: SANS, fontSize: 12, letterSpacing: "0", textTransform: "none" }}>
-                {t.available ? "orderable" : "waitlist"}
+                {t.available ? "orderable" : "Coming soon"}
               </span>
             </button>
           ))}
@@ -151,7 +151,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
                   </span>
                 </span>
                 <span style={{ display: "block", marginTop: 8, ...num(12.5, { color: "inherit" }) }}>
-                  {sub == null ? "—" : rs(decomposePrice({ subtotalRs: sub, duration: d.key }).totalRs)}
+                  {!tierRow.available ? "Coming soon" : sub == null ? "—" : rs(decomposePrice({ subtotalRs: sub, duration: d.key }).totalRs)}
                 </span>
               </button>
             );
@@ -218,27 +218,36 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
         )}
       </div>
 
-      {/* The receipt */}
+      {/* The receipt. A coming soon tier shows no receipt: every figure in it
+          would be a Standard figure multiplied up, not a price for this tier. */}
       <div style={{ padding: "20px 16px 0" }}>
-        <span style={{ display: "block", ...label(12), marginBottom: 12 }}>The receipt, before you pay</span>
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          {receipt.map(([k, v, struck]) => (
-            <span key={k} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <span style={kStyle}>{k}</span>
-              <span style={struck ? { ...vStyle, color: C.dim, textDecoration: "line-through" } : vStyle}>{v}</span>
-            </span>
-          ))}
-        </div>
+        {tierRow.available ? (
+          <>
+            <span style={{ display: "block", ...label(12), marginBottom: 12 }}>The receipt, before you pay</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {receipt.map(([k, v, struck]) => (
+                <span key={k} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+                  <span style={kStyle}>{k}</span>
+                  <span style={struck ? { ...vStyle, color: C.dim, textDecoration: "line-through" } : vStyle}>{v}</span>
+                </span>
+              ))}
+            </div>
 
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: `1px solid ${C.rule2}` }}>
-          <span>
-            <span style={{ display: "block", fontFamily: SANS, fontSize: 12, letterSpacing: "0", textTransform: "none", color: C.ink }}>Total</span>
-            <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}>
-              {rs(Math.round(p.totalRs / mealsTotal))} a meal · {mealsTotal} meals
-            </span>
-          </span>
-          <b style={figure(34, { color: C.lime })}>{rs(p.totalRs)}</b>
-        </div>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: `1px solid ${C.rule2}` }}>
+              <span>
+                <span style={{ display: "block", fontFamily: SANS, fontSize: 12, letterSpacing: "0", textTransform: "none", color: C.ink }}>Total</span>
+                <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}>
+                  {rs(Math.round(p.totalRs / mealsTotal))} a meal · {mealsTotal} meals
+                </span>
+              </span>
+              <b style={figure(34, { color: C.lime })}>{rs(p.totalRs)}</b>
+            </div>
+          </>
+        ) : (
+          <p style={{ margin: "0 0 4px", fontFamily: SANS, fontSize: 16, lineHeight: 1.6, color: C.dim }}>
+            {tierRow.label} is coming soon. Join the waitlist and we will tell you when those kitchens open.
+          </p>
+        )}
 
         {tierRow.available ? (
           <Link
@@ -277,7 +286,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
         <p style={{ margin: "11px 0 20px", fontFamily: SANS, fontSize: 16, lineHeight: 1.6, color: C.dim }}>
           {tierRow.available
             ? "Order before 9pm and the first delivery is tomorrow morning, between 7:00 and 10:00 AM. Skip or restore upcoming days from Today before the kitchen cut-off."
-            : `${tierRow.label} prices are an estimate at × ${tierMultiplier(tier).toFixed(2)} of Standard until those kitchens open.`}
+            : `${tierRow.label} is coming soon. Join the waitlist and we will tell you when those kitchens open.`}
         </p>
       </div>
     </Sheet>
