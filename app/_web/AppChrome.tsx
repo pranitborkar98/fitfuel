@@ -195,8 +195,8 @@ export default function AppChrome({
         {/* A SENTENCE, not a time. Passing cutoffLabel() straight in rendered
             the strip as the bare word "9pm", which states nothing. This is the
             single-meal promise the homepage shows over the dish catalog — the
-            9pm/8am line is the SUBSCRIPTION schedule and would be the wrong
-            claim over one salad. */}
+            9pm cut-off and 7–10 AM morning delivery line is the SUBSCRIPTION
+            schedule and would be the wrong claim over one salad. */}
         <div className={s.cutoff}>
           <p className={s.cutoffRow}>
             <span>

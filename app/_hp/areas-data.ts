@@ -9,7 +9,7 @@
 //
 // THE COORDINATES ARE REAL and they are the point. A map traced by hand is a
 // drawing of a claim; this one is plotted, so the shape it makes is the actual
-// shape of what one kitchen in Kharadi can reach by 08:00. Values are the
+// shape of what the kitchen can reach in the 7–10 AM morning delivery window. Values are the
 // standard published centroids for each suburb, to four decimal places, which
 // is roughly 10m and far finer than a homepage map needs.
 //

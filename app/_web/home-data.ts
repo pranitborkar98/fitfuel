@@ -376,7 +376,7 @@ export const SURFACES: Surface[] = [
   {
     href: "/dashboard/nutrition",
     name: "The diary",
-    stat: "154",
+    stat: "56",
     desc:
       "FitFuel meals arrive pre-filled with weighed macros for one-tap confirmation. Everything else you add per gram from an Indian food database, with water alongside it.",
   },

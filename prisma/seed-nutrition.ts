@@ -32,7 +32,7 @@ async function main() {
   }
   console.log(`✅ Upserted ${mealTypes.length} meal types`);
 
-  // ── 2. Food Items (50 common Indian foods, per 100g) ───────
+  // ── 2. Food Items (56 common Indian foods, per 100g) ───────
   // Fields: name, brand, category, per100Calories, per100Protein, per100Carbs, per100Fat, per100Fiber
   const foods = [
     // ── Grains & Staples ──
