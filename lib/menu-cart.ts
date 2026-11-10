@@ -68,7 +68,7 @@ export const DISH_BY_ID: ReadonlyMap<string, Dish> = new Map(DISHES.map((d) => [
  * Can this dish be added to a basket that shows a total?
  *
  * A dish is orderable when the kitchen has set its price. `provisional` rows
- * are the Rs 100 placeholder and a null price is "on request"; neither can
+ * are the Rs 100 placeholder and a null price is "Price on request"; neither can
  * carry a number a customer might hold us to. See blocker 1 in the header.
  */
 export function isOrderable(d: Pick<MenuItem, "price" | "provisional">): boolean {

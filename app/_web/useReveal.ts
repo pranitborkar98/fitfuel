@@ -30,8 +30,19 @@
 
 import { useEffect, useRef } from "react";
 
-const EASE = "cubic-bezier(.22,.61,.36,1)";
-const TILT_TRANSITION = `transform 320ms ${EASE}, border-color 200ms ease`;
+// Durations are read from the --fk-dur* tokens, not hardcoded: the token
+// layer collapses them under prefers-reduced-motion, and the 150–300ms
+// guidance in tokens.css is the law for entrances. The fallbacks match the
+// token values so the hook still behaves in an environment without the
+// stylesheet loaded (tests, SSR). The hook still bails entirely under
+// prefers-reduced-motion before any of this is read.
+const readDur = (name: string, fallback: string) => {
+  if (typeof document === "undefined") return fallback;
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
+    fallback
+  );
+};
 
 export function useReveal<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -40,6 +51,18 @@ export function useReveal<T extends HTMLElement>() {
     const root = ref.current;
     if (!root || typeof window.matchMedia !== "function") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const durSlow = readDur("--fk-dur-slow", "320ms");
+    const dur = readDur("--fk-dur", "220ms");
+    const EASE = "cubic-bezier(.22,.61,.36,1)";
+    const REVEAL_TRANSITION = `opacity ${durSlow} ${EASE}, transform ${durSlow} ${EASE}`;
+    /* A progress rail is a fill, not an entrance: four slow-token lengths,
+       still token-derived so it tracks any token change. */
+    const RAIL_TRANSITION = `width calc(${durSlow} * 4) ${EASE}`;
+    /* Count-up runs three slow-token lengths; the number lands as the rail
+       and the reveal settle. */
+    const COUNT_MS = (parseFloat(durSlow) || 320) * 3;
+    const TILT_TRANSITION = `transform ${durSlow} ${EASE}, border-color ${dur} ease`;
 
     const seen = {
       reveal: new WeakSet<Element>(),
@@ -54,7 +77,7 @@ export function useReveal<T extends HTMLElement>() {
       if (!isFinite(target)) return;
       const t0 = performance.now();
       const step = (t: number) => {
-        const k = Math.min(1, (t - t0) / 900);
+        const k = Math.min(1, (t - t0) / COUNT_MS);
         const eased = 1 - Math.pow(1 - k, 3);
         el.textContent = Math.round(target * eased).toLocaleString("en-IN");
         if (k < 1) requestAnimationFrame(step);
@@ -65,7 +88,7 @@ export function useReveal<T extends HTMLElement>() {
     const show = (el: HTMLElement, delay: number) => {
       io.unobserve(el);
       window.setTimeout(() => {
-        el.style.transition = `opacity 620ms ${EASE}, transform 620ms ${EASE}`;
+        el.style.transition = REVEAL_TRANSITION;
         el.style.opacity = "1";
         if (el.dataset.reveal) el.style.transform = "none";
         if (el.dataset.rail) el.style.width = el.dataset.rail;
@@ -127,7 +150,7 @@ export function useReveal<T extends HTMLElement>() {
         if (seen.rail.has(el)) return;
         seen.rail.add(el);
         el.style.width = "0%";
-        el.style.transition = `width 1400ms ${EASE}`;
+        el.style.transition = RAIL_TRANSITION;
         io.observe(el);
       });
 
@@ -145,9 +168,9 @@ export function useReveal<T extends HTMLElement>() {
         seen.tilt.add(el);
         const art = el.querySelector("img");
         /* MEASURED: every tilt card is also a reveal card, and show() writes
-           `transition: opacity 620ms, transform 620ms` over whatever was there
-           — so the pointer tilt inherited the entrance easing and trailed the
-           cursor by half a second. The tilt timing is (re)claimed on the first
+           its token-derived reveal transition over whatever was there — so the
+           pointer tilt inherited the entrance easing and trailed the cursor
+           by half a second. The tilt timing is (re)claimed on the first
            pointer event after a reveal, once, behind a flag rather than a
            string compare on every pointermove. */
         let owned = false;
@@ -180,7 +203,7 @@ export function useReveal<T extends HTMLElement>() {
         };
         el.style.transition = TILT_TRANSITION;
         el.style.transformStyle = "preserve-3d";
-        if (art) art.style.transition = `transform 420ms ${EASE}`;
+        if (art) art.style.transition = `transform ${durSlow} ${EASE}`;
         el.addEventListener("pointermove", move);
         el.addEventListener("pointerleave", leave);
         cleanups.push(() => {

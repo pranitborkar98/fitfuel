@@ -149,10 +149,14 @@ function hashOf(id: string): number {
 
 export function field(hue: number): React.CSSProperties {
   const h = ((hue % 360) + 360) % 360;
+  /* Lit enough to read as a deliberate colour field, not a dark void: the
+     well is a reserved surface in the course's family colour, and at the old
+     22%/18% lightness the 24 photo-less cards read as one flat dark gradient.
+     Same hues, same jitter, same shape — only the light comes up. */
   return {
     backgroundImage:
-      `radial-gradient(120% 100% at 20% 0%, hsl(${h} 45% 22% / 0.85), transparent 62%),` +
-      `radial-gradient(90% 90% at 90% 100%, hsl(${(h + 48) % 360} 40% 18% / 0.7), transparent 60%)`,
+      `radial-gradient(120% 100% at 20% 0%, hsl(${h} 52% 30% / 0.9), transparent 62%),` +
+      `radial-gradient(90% 90% at 90% 100%, hsl(${(h + 48) % 360} 46% 24% / 0.75), transparent 60%)`,
   };
 }
 

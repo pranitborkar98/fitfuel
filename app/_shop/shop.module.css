@@ -135,11 +135,11 @@
 }
 
 .up {
-  animation: ffup 0.2s ease-out;
+  animation: ffup var(--fk-dur) var(--fk-ease);
 }
 
 .sheet {
-  animation: ffsheet 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ffsheet var(--fk-dur-slow) var(--fk-ease);
 }
 
 .pulse {
@@ -167,16 +167,16 @@
 
 .row {
   border-left: 2px solid transparent;
-  transition: background 0.18s ease, border-color 0.18s ease;
+  transition: background var(--fk-dur-fast) var(--fk-ease), border-color var(--fk-dur-fast) var(--fk-ease);
 }
 
 .tile {
-  transition: border-color 0.18s ease;
+  transition: border-color var(--fk-dur-fast) var(--fk-ease);
 }
 
 .under {
   border-bottom: 1px solid transparent;
-  transition: border-color 0.18s ease;
+  transition: border-color var(--fk-dur-fast) var(--fk-ease);
 }
 
 /* ── Reveal ───────────────────────────────────────────────────────────────

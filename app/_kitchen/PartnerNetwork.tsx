@@ -8,7 +8,7 @@ export default function PartnerNetwork() {
     <section className={s.network} aria-labelledby="partner-network-title">
       <header className={s.sectionHead}>
         <div>
-          <h2 id="partner-network-title">Supplements, gyms and workplaces.</h2>
+          <h2 id="partner-network-title">Supplements, gyms and workplaces</h2>
           <p>
             Our supplement retailer and the partner programmes we are building
             around your daily routine.
@@ -36,7 +36,7 @@ export default function PartnerNetwork() {
         ))}
       </div>
       <p className={s.disclosure}>
-        XYZ names are layout placeholders, not signed partners or endorsements.
+        Gym, company and trainer places are not signed partners or endorsements.
         Nutrabay is linked through an affiliate relationship, not presented as
         an exclusive partnership.
       </p>

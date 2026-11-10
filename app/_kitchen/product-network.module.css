@@ -58,8 +58,12 @@
   background: var(--fk-green-wash);
   border-color: var(--fk-green);
 }
+/* A slot that is not live yet reads as unfilled: dashed border on the page
+   ground, against the retailer's lit green-wash. The status pill on it now
+   says "Coming soon" (see lib/public-partners.ts). */
 .partnerGrid .placeholder {
   border-style: dashed;
+  background: var(--fk-paper);
 }
 .status {
   border: 1px solid var(--fk-line-strong);
@@ -70,7 +74,7 @@
 }
 .partnerGrid p {
   color: var(--fk-ink-2);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.65;
   margin: 14px 0;
 }
@@ -111,6 +115,15 @@
     serif;
   margin: 0 0 18px;
 }
+/* Same opener tick as the band headings on the homepage. */
+.productFeature h2::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  margin-bottom: 16px;
+  background: var(--fk-green);
+}
 .productFeature p {
   font-size: 16px;
   line-height: 1.65;
@@ -130,19 +143,29 @@
   outline: 2px solid var(--fk-green);
   outline-offset: 4px;
 }
+/* Layered a step above the feature card: the three steps sit on the page
+   ground inside their own bordered panel, so the dashboard band reads as
+   copy plus a structured list rather than one flat text block. */
 .featureSteps {
   margin: 0;
-  padding-left: 24px;
+  padding: 8px 20px 8px 42px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-paper);
 }
 .featureSteps li {
-  padding: 14px 0 14px 8px;
+  padding: 16px 0 16px 8px;
   border-bottom: 1px solid var(--fk-line-2);
   color: var(--fk-ink-2);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
+}
+.featureSteps li:last-child {
+  border-bottom: 0;
 }
 .featureSteps li::marker {
   color: var(--fk-green);
+  font-weight: 700;
 }
 .featureSteps b {
   display: block;

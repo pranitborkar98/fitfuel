@@ -45,7 +45,7 @@ export type MenuItem = {
   name: string;
   /** The menu-card line. One sentence, sensory, no marketing adjectives. */
   blurb: string;
-  /** Rupees. Null is still permitted and still renders "On request". */
+  /** Rupees. Null is still permitted and still renders "Price on request". */
   price: number | null;
   /**
    * TRUE means `price` is the Rs 100 placeholder, not a real price. Kept as a
