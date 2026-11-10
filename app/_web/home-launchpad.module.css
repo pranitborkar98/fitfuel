@@ -85,6 +85,16 @@
   font-size: 13px;
   text-decoration: none;
 }
+/* Hover and selected states ease through the motion tokens instead of
+   snapping: the tile border and the link colour settle over one token
+   length. Colour and border only; nothing here moves layout. */
+.launchpad a,
+.launchpad button {
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease);
+}
 .launchpad a:hover,
 .launchpad button:hover {
   border-color: var(--fk-green);

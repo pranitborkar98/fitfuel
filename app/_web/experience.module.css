@@ -1158,6 +1158,22 @@
   }
 }
 
+/* ── Interactive feedback ────────────────────────────────────────────────
+   Every button and link in the hero experience — the Day 1–7 tabs, the meal
+   tabs, the goal and plan pickers, the coach card — changes colour, border
+   or background on hover and on selection. Until now those changes snapped
+   instantly: this file carried no transition at all. One scoped rule eases
+   them all through the motion tokens, so a selected tab settles instead of
+   flashing and no state change moves layout. Colour and border only, which
+   is everything these hovers change. The reduced-motion block at the end of
+   this file collapses the durations to 1ms. */
+.home :is(button, a) {
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease);
+}
+
 .home :is(button, a):focus-visible {
   outline: 3px solid var(--fk-green-deep);
   outline-offset: 3px;

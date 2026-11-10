@@ -590,7 +590,7 @@
   inset: -1px;
   border-radius: inherit;
   border: 2px solid var(--fk-green);
-  animation: addShock 520ms var(--fk-ease) forwards;
+  animation: addShock var(--fk-dur-slow) var(--fk-ease) forwards;
   pointer-events: none;
 }
 /* 44px SQUARE, not 40. These were 40px wide against a 44px minimum, and the
@@ -1309,7 +1309,7 @@
 }
 .qtyPop {
   display: inline-block;
-  animation: qtyPop 320ms var(--fk-ease);
+  animation: qtyPop var(--fk-dur-slow) var(--fk-ease);
 }
 .add,
 .stepBtn {
@@ -1596,7 +1596,9 @@
   /* Start the ring at twelve o'clock rather than three. */
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
-  animation: arcIn 640ms var(--fk-ease) both;
+  /* Two slow-token lengths: the ring draw keeps its old 640ms pace, but the
+     pace is now derived from the token instead of hardcoded. */
+  animation: arcIn calc(var(--fk-dur-slow) * 2) var(--fk-ease) both;
 }
 /* Sweeping the dash in from zero reads as a measurement resolving. It is a
    bounded, one-shot repaint on a 64px box — not a permanent animation. */
@@ -3598,7 +3600,7 @@
 }
 .app a.retailImage img {
   padding: 18px;
-  transition: transform 320ms var(--fk-ease);
+  transition: transform var(--fk-dur-slow) var(--fk-ease);
 }
 .app a.retailImage:hover img {
   transform: scale(1.035);
@@ -3757,8 +3759,8 @@
 .dayGrid > li {
   background: var(--fk-paper);
   transition:
-    border-color 180ms ease,
-    transform 220ms var(--fk-ease);
+    border-color var(--fk-dur-fast) var(--fk-ease),
+    transform var(--fk-dur) var(--fk-ease);
 }
 .dayShot {
   position: relative;
@@ -3770,7 +3772,7 @@
   overflow: hidden;
 }
 .dayShot img {
-  transition: transform 360ms var(--fk-ease);
+  transition: transform var(--fk-dur-slow) var(--fk-ease);
 }
 @media (hover: hover) and (pointer: fine) {
   .dayGrid > li:hover .dayShot img {
@@ -4760,6 +4762,10 @@
   background: var(--fk-green-wash);
   overflow: hidden;
 }
+/* The glow is static. It used to drift on an 18s infinite loop: an ambient
+   pan of a background gradient with no function, on the trial band, and the
+   one infinite animation on the page that was not a deliberate cue like the
+   steam. The gradient is unchanged at rest. */
 .closeGlow {
   position: absolute;
   inset: -10%;
@@ -4768,7 +4774,6 @@
     rgba(132, 204, 22, 0.18),
     transparent 62%
   );
-  animation: fkDrift 18s ease-in-out infinite;
 }
 .closeGrain {
   position: absolute;
@@ -4779,15 +4784,6 @@
     transparent 1.4px
   );
   background-size: 8px 8px;
-}
-@keyframes fkDrift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(3%, -2%, 0) scale(1.06);
-  }
 }
 .closeWrap {
   position: relative;
@@ -4874,7 +4870,6 @@
    sets when motion is allowed, so they need nothing here. These two run from
    CSS on their own, so they are stopped explicitly. */
 @media (prefers-reduced-motion: reduce) {
-  .closeGlow,
   .faqA {
     animation: none;
   }
