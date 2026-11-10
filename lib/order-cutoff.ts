@@ -50,8 +50,8 @@ const DAY_MS = 86_400_000;
 /**
  * How far before a delivery date the cutoff falls, in milliseconds.
  *
- * A delivery on date D is stamped at UTC midnight of D and eaten at 08:00 IST
- * that morning. Its cutoff is 21:00 IST on D-1, which in UTC is
+ * A delivery on date D is stamped at UTC midnight of D and eaten in the
+ * 7–10 AM morning window that morning. Its cutoff is 21:00 IST on D-1, which in UTC is
  * D_midnight − 24h + (21:00 − 05:30) = D_midnight − 8.5h.
  */
 const CUTOFF_BEFORE_DELIVERY_MS =
