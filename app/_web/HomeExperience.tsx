@@ -245,6 +245,8 @@ export default function HomeExperience({
                   key={d.day}
                   type="button"
                   role="tab"
+                  id={`week-tab-${index}`}
+                  aria-controls="meal-preview-panel"
                   aria-selected={activeDay === index}
                   tabIndex={activeDay === index ? 0 : -1}
                   className={activeDay === index ? x.weekTabActive : x.weekTab}

@@ -145,7 +145,14 @@ export default function CartDrawer() {
                       <button onClick={() => setQty(l.id, l.qty - 1)} aria-label={`One fewer ${l.dish.name}`}>
                         <Minus size={13} aria-hidden="true" />
                       </button>
-                      <span className="ff-step-n" aria-live="polite">{l.qty}</span>
+                      <span className="ff-step-n" aria-live="polite">
+                        {/* Same announcement as the dish-card stepper: the
+                            visible figure is aria-hidden and the hidden text
+                            carries "3 in order", so the live region does not
+                            announce a bare number. */}
+                        <span aria-hidden="true">{l.qty}</span>
+                        <span className="ff-sr-only">{l.qty} in order</span>
+                      </span>
                       <button onClick={() => setQty(l.id, l.qty + 1)} aria-label={`One more ${l.dish.name}`}>
                         <Plus size={13} aria-hidden="true" />
                       </button>
@@ -335,6 +342,13 @@ export default function CartDrawer() {
           color: var(--fk-ink); min-width: 26px; text-align: center;
           border-left: 1px solid var(--fk-line); border-right: 1px solid var(--fk-line);
           line-height: 30px; font-variant-numeric: tabular-nums;
+        }
+        /* Screen-reader-only text for the quantity announcement. The drawer
+           is not inside the .fk subtree, so the shared .fk-sr-only rule does
+           not reach it — this is the same clip pattern, local to the drawer. */
+        .ff-sr-only {
+          position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+          overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
         }
         /* "Remove" was an 18px-tall text hit. It stays visually a text link but
            carries the full 44px target — padding, not type size, so the line

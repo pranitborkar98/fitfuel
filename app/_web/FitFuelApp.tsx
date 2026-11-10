@@ -416,6 +416,9 @@ function AddControl({ dish }: { dish: ShopDish }) {
         className={`${s.add} ${s.ghost} ${asked ? s.ghostOn : ""}`}
         onClick={() => cart.toggleEnquiry(dish.id)}
         aria-pressed={asked}
+        aria-label={
+          asked ? `Price requested for ${dish.name}` : `Ask the price of ${dish.name}`
+        }
       >
         {asked ? "Price asked" : "Ask price"}
       </button>
@@ -424,7 +427,12 @@ function AddControl({ dish }: { dish: ShopDish }) {
 
   if (qty === 0) {
     return (
-      <button type="button" className={s.add} onClick={() => cart.add(dish.id)}>
+      <button
+        type="button"
+        className={s.add}
+        onClick={() => cart.add(dish.id)}
+        aria-label={`Add ${dish.name} to your order`}
+      >
         Add
       </button>
     );
@@ -448,14 +456,17 @@ function AddControl({ dish }: { dish: ShopDish }) {
           The live region is the OUTER span and stays mounted — re-creating an
           aria-live element is how announcements get dropped. The inner span
           carries key={qty} so it remounts and replays the CSS animation, which
-          is why this needs no timers, no state and no injected nodes. */}
-      <span
-        className={s.stepQty}
-        aria-live="polite"
-        aria-label={`${qty} in order`}
-      >
-        <span key={qty} className={s.qtyPop}>
+          is why this needs no timers, no state and no injected nodes. The
+          announcement is the quantity, not the bare number: the visible figure
+          is aria-hidden and the screen-reader-only text carries "3 in order".
+          An aria-label on the outer span did nothing — a span has no accessible
+          name without a role — so the announcement used to be just "3". */}
+      <span className={s.stepQty} aria-live="polite">
+        <span key={qty} className={s.qtyPop} aria-hidden="true">
           {qty}
+        </span>
+        <span key={`sr-${qty}`} className="fk-sr-only">
+          {qty} in order
         </span>
       </span>
       <button
@@ -1476,7 +1487,7 @@ export default function FitFuelApp({
                         : "A person preparing a measured supplement serving"
                     }
                     fill
-                    loading="eager"
+                    loading="lazy"
                     sizes="(min-width: 1024px) 38vw, 100vw"
                     className={r.cardImage}
                   />

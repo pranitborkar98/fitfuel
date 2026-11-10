@@ -661,7 +661,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
     render?: (key: K, label: string) => React.ReactNode;
   }) {
     return (
-      <div className={s.axis}>
+      <div className={s.axis} role="group" aria-label={opts.label}>
         <span className={s.axisLabel}>{opts.label}</span>
         <div className={s.axisOpts}>
           {opts.options.map((o) => (
