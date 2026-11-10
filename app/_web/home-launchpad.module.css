@@ -101,6 +101,10 @@
   }
 }
 @media (max-width: 650px) {
+  /* Two columns, not three: at 360px three tiles are ~100px each and the
+     labels wrap to two or three lines. Two across is ~155px a tile, so
+     "Food diary" and "AI coach" sit on one line. */
+  .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tools small { display: none; }
   .tools b { font-size: 13px; }
   .tools a, .tools button { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 12px 6px; min-height: 80px; }

@@ -2929,6 +2929,50 @@
   color: var(--fk-green-deep);
 }
 
+/* ── THE DISH RANGE, CAPPED BY CSS SO THE FIRST PAINT IS ALREADY RIGHT ───
+   The caps used to be JS (useMediaQuery + PER_COURSE in FitFuelApp): the
+   server, which has no matchMedia, rendered the phone layout and the client
+   upgraded after hydration, so a desktop first paint briefly showed two
+   dishes per course before the full range appeared. These rules replace
+   that hook. The server renders every dish; the stylesheet hides the ones
+   past the cap, so server and client paint the identical range.
+
+   A course group is one <li class="courseHead"> followed by one <li> per
+   dish, so the phone cap of 2 dishes hides children from the 4th on and
+   the tablet cap of 4 hides children from the 6th. Opening a course adds
+   .courseOpen to the group, which lifts the cap; the "Show all" button is
+   hidden on a desktop, where the full course is already visible. The
+   filtered flat list is capped at 12 the same way below 1024px, lifted by
+   .gridOpen when the customer expands it; its "Show all" control lives in
+   .dishShowAll, hidden on a desktop for the same reason. The flat-list rule
+   is scoped to .dishGrid on purpose: the plans and supplements grids share
+   .grid and expand past 12 by JS (their caps are purchase decisions, not
+   screen room), so an unscoped rule would hide their expanded cards below
+   1024px with no way back. Plans and supplements are untouched by these
+   rules: their lists never carry a 13th child before expanding, and their
+   controls stay visible at every width. */
+@media (max-width: 639px) {
+  .courseGroup:not(.courseOpen) > li:nth-child(n + 4) {
+    display: none;
+  }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .courseGroup:not(.courseOpen) > li:nth-child(n + 6) {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .dishGrid:not(.gridOpen) > li:nth-child(n + 13) {
+    display: none;
+  }
+}
+@media (min-width: 1024px) {
+  .courseMore,
+  .dishShowAll {
+    display: none;
+  }
+}
+
 /* ── The empty well ─────────────────────────────────────────────────────────
    Three layers over the course-hued ground: a fine dot texture, a diagonal
    gloss, and a monogram in a ring. See the warning in FitFuelApp.tsx — the
@@ -4929,10 +4973,13 @@
    ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 639px) {
   /* ── 3. One row ───────────────────────────────────────────
-     With the search field gone the row is brand + location + basket, which fits
-     375px with room to spare — so the location button KEEPS ITS WORD here. An
-     earlier cut reduced it to the pin alone to make space for the field; there
-     is no longer a field to make space for, and an unlabelled pin is worse. */
+     The row is brand + location + AI coach + basket: the AI coach button
+     joined the header after this note was written, so the location button
+     no longer keeps its word at every phone width. Below 420px its label
+     is hidden (refresh.module.css) and it is the pin alone — the accessible
+     name still says "Check delivery availability near you" — and from 421px
+     up the word stays. The row fits at 360px either way: brand, three
+     44px controls and the gaps come to roughly 270px of 320px of content. */
   .topRow {
     gap: var(--fk-s-2);
     padding: 6px var(--fk-gutter);
@@ -5054,6 +5101,28 @@
   }
   .closeWrap {
     padding: var(--fk-s-7) var(--fk-gutter);
+  }
+}
+
+/* ── The day bar's target picker, on a narrow phone ───────────────────────
+   At 360px the three target buttons ("Cut / Maintain / Build") beside the
+   "Set your numbers" button fill the row to within a few pixels: the
+   segmented control's min-content is ~175px and the numbers button ~135px
+   against 320px of content, so any font-metric difference clips "Maintain"
+   behind the control's overflow:hidden. At 320px it is ~36px over. Below
+   420px the picker takes its own full-width row and the numbers button
+   drops underneath, also full width — one extra 44px row, and nothing can
+   clip. Above 420px the single row has room (content 381px and up). */
+@media (max-width: 420px) {
+  .goalPick {
+    flex-wrap: wrap;
+  }
+  .goalSeg {
+    flex: 1 1 100%;
+  }
+  .numbersBtn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 
@@ -6216,18 +6285,10 @@
   .surfaceGo {
     display: none;
   }
-  /* Two of the seven days fit a phone screen; the rest is a sideways scroll,
-     same as the wedge. */
-  .spec {
-    min-width: 640px;
-  }
-  .spec th,
-  .spec td {
-    padding: 11px var(--fk-s-3);
-  }
-  .spec tbody th {
-    min-width: 96px;
-  }
+  /* The comparison table's phone rules used to live here. They are gone with
+     the table itself: below 1024px the table is display:none and each
+     capability renders as a card (.wedgeCards), so a 640px min-width and
+     cell padding for a table that never paints were dead rules. */
 }
 
 @media (prefers-reduced-motion: reduce) {
