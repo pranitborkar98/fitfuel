@@ -497,6 +497,286 @@
   line-height: 1.5;
 }
 
+/* ── Smart scale ────────────────────────────────────────────────────────
+   Directly after how it works, before the menu. One band, two columns on
+   desktop: the device and the three Bluetooth steps on the left, the BMI
+   gauge and the reused weight-trend chart on the right. A phone stacks
+   them in the same order. The device and the gauge are drawn SVG, not
+   photographs: no photograph of a scale exists. */
+.scaleBand {
+  margin-top: clamp(28px, 4vw, 44px);
+  padding-top: clamp(22px, 3vw, 32px);
+  border-top: 1px solid var(--fk-line-2);
+}
+
+.scaleBand h2 {
+  margin: 0;
+  color: var(--fk-ink);
+  font: 750 clamp(1.5rem, 2.4vw, 2.1rem)/1.1 var(--fk-sans);
+  letter-spacing: -0.03em;
+}
+
+.scaleBand h3 {
+  margin: 0 0 12px;
+  color: var(--fk-ink);
+  font: 700 var(--fk-t-md)/1.3 var(--fk-sans);
+  letter-spacing: -0.02em;
+}
+
+.scaleLede {
+  max-width: 62ch;
+  margin: 10px 0 0;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  line-height: 1.6;
+}
+
+.scaleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.scaleStack {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.scalePanel {
+  min-width: 0;
+  padding: clamp(18px, 2.4vw, 26px);
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+}
+
+.scaleTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.scaleLiveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fk-green);
+  box-shadow: 0 0 0 5px rgba(132, 204, 22, 0.1);
+  animation: scale-pulse 2s ease-in-out infinite;
+}
+
+@keyframes scale-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.scaleCaption {
+  max-width: 62ch;
+  margin: 12px 0 0;
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+  line-height: 1.6;
+}
+
+.scaleSteps {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--fk-line-2);
+  counter-reset: scale-step;
+}
+
+.scaleSteps li {
+  display: grid;
+  gap: 4px;
+  padding-left: 34px;
+  counter-increment: scale-step;
+  position: relative;
+}
+
+.scaleSteps li + li {
+  margin-top: 16px;
+}
+
+.scaleSteps li::before {
+  content: counter(scale-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--fk-green);
+  border-radius: 50%;
+  color: var(--fk-green);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scaleSteps b {
+  color: var(--fk-ink);
+  font-size: var(--fk-t-base);
+  line-height: 1.3;
+}
+
+.scaleSteps span {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+  line-height: 1.6;
+}
+
+.scaleBmiValue {
+  margin: 4px 0 0;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-base);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.scaleBmiValue b {
+  color: var(--fk-ink);
+  font-size: var(--fk-t-lg);
+}
+
+.scaleBmiValue span {
+  color: var(--fk-green);
+  font-weight: 700;
+}
+
+.scaleSubhead {
+  margin-top: clamp(28px, 4vw, 40px);
+}
+
+.scaleMetrics {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1px;
+  margin: 18px 0 0;
+  padding: 0;
+  border: 1px solid var(--fk-line-2);
+  background: var(--fk-line-2);
+}
+
+.scaleMetrics li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 14px;
+  background: var(--fk-surface);
+  color: var(--fk-ink);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.scaleMetrics li small {
+  color: var(--fk-ink-3);
+  font-weight: 600;
+}
+
+.scaleMeasured,
+.scaleEstimate {
+  flex: none;
+  font-size: var(--fk-t-xs);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.scaleMeasured {
+  color: var(--fk-green);
+}
+
+.scaleEstimate {
+  color: var(--fk-ink-3);
+}
+
+.scaleDisclaimer {
+  max-width: 72ch;
+  margin: 16px 0 0;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  line-height: 1.6;
+}
+
+.scaleMail {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.scaleMail li {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 20px;
+  border-right: 1px solid var(--fk-line-2);
+}
+
+.scaleMail li:first-child {
+  padding-left: 0;
+}
+
+.scaleMail li:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.scaleMail b {
+  color: var(--fk-ink);
+  font-size: var(--fk-t-base);
+  line-height: 1.3;
+}
+
+.scaleMail span {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+  line-height: 1.6;
+}
+
+.scaleCtaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin: 24px 0 0;
+}
+
+.scaleCtaRow > span {
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+  line-height: 1.5;
+}
+
+.scaleCta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: #070707;
+  font-size: var(--fk-t-base);
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+}
+
 .appTools {
   display: grid;
   grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.88fr) minmax(0, 0.94fr);
@@ -1449,6 +1729,32 @@
   }
 
   .howSteps li:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  /* The scale band stacks in the same order it reads on desktop: device
+     and steps first, then the gauge and the trend. The mail row stacks
+     instead of squeezing three times into one column. */
+  .scaleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .scaleMail {
+    grid-template-columns: 1fr;
+  }
+
+  .scaleMail li {
+    padding: 0 0 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--fk-line-2);
+  }
+
+  .scaleMail li + li {
+    padding-top: 16px;
+  }
+
+  .scaleMail li:last-child {
     padding-bottom: 0;
     border-bottom: 0;
   }

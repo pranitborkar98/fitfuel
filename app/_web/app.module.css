@@ -4774,6 +4774,145 @@
   color: var(--fk-ink-3);
 }
 
+/* ── Homepage visualisation ───────────────────────────────────────────────
+   2026-11-10 homepage-viz track: three places where text did all the work.
+   Charts are SVG with a 360-wide viewBox (labels render at full size on a
+   phone) or fluid HTML; nothing here sets a fixed pixel width. Bars are
+   square, following the progress screen. */
+.vizPanel {
+  padding: var(--fk-s-6);
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+}
+.vizH {
+  font-family: var(--fk-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--fk-ink);
+  margin: 0 0 8px;
+}
+.vizLede {
+  margin: 0 0 18px;
+  max-width: 62ch;
+  font-size: var(--fk-t-base);
+  line-height: 1.55;
+  color: var(--fk-ink-3);
+}
+.vizNote {
+  margin: 12px 0 0;
+  max-width: 68ch;
+  font-size: var(--fk-t-sm);
+  line-height: 1.5;
+  color: var(--fk-ink-3);
+}
+.vizPanel .bandActions,
+.sampleDay .bandActions {
+  margin-top: 18px;
+}
+
+/* The sample day, inside the trial receipt. Separated from the money above
+   by the same hairline the receipt rows use. */
+.sampleDay {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--fk-line);
+}
+.macroBar {
+  display: flex;
+  height: 18px;
+  overflow: hidden;
+}
+.macroBar > span {
+  display: block;
+  height: 100%;
+}
+.macroLegend {
+  list-style: none;
+  margin: 12px 0 20px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.macroLegend > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fk-t-sm);
+  line-height: 1.4;
+  color: var(--fk-ink-2);
+}
+.macroLegend i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+/* The weighing process, under the day timeline. Photo beside the steps on
+   desktop, stacked on a phone. */
+.weighFlow {
+  margin-top: var(--fk-s-6);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fk-s-5);
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .weighFlow {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--fk-s-7);
+  }
+}
+.weighPhoto {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-warm);
+  overflow: hidden;
+}
+.weighSteps {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  overflow: hidden;
+  background: var(--fk-line);
+}
+.weighSteps > li {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: var(--fk-paper);
+}
+.weighN {
+  flex: none;
+  font-family: var(--fk-mono);
+  font-size: var(--fk-t-base);
+  font-weight: 700;
+  color: var(--fk-green);
+}
+.weighSteps b {
+  display: block;
+  font-size: var(--fk-t-base);
+  line-height: 1.35;
+  color: var(--fk-ink);
+}
+.weighSteps li > span:last-child > span {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--fk-t-base);
+  line-height: 1.5;
+  color: var(--fk-ink-2);
+}
+
 /* ── 7. Areas and questions ─────────────────────────────────────────────── */
 .areaList {
   list-style: none;

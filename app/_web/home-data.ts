@@ -10,6 +10,12 @@
 // Shared data lives here.
 //
 import type { FitnessGoal } from "@/lib/tdee";
+import type { CaloriePoint } from "@/lib/progress";
+/* Runtime import, not type-only: the sample day below is the single source
+   of truth for its own totals, so the homepage sums the same meals the
+   dashboard preview renders rather than retyping them. sample-data.ts
+   imports only types from the dashboard, so this pulls in data, not pages. */
+import { SAMPLE_DAY } from "@/app/dashboard-preview/sample-data";
 
 /* ── Band counts and quotes ────────────────────────────────────────────────
    Moved here from app/_web/HomeBands.tsx (deleted 2026-11-09: the component
@@ -169,6 +175,65 @@ export const COACH_WEEKS: { w: string; kg: number; note: string }[] = [
   { w: "Week 3", kg: 78.0, note: "Stall flagged" },
   { w: "Week 4", kg: 78.1, note: "Target recommendation: 1,700 kcal" },
 ];
+
+/* ── The progress screen's calorie chart, as an example shape ─────────────
+   An ILLUSTRATION of lib/progress.ts's calorie chart, not a customer's data:
+   thirty days of net calories against the 2,000 kcal target the sample plan
+   carries (SAMPLE_PLAN.calorieTarget in app/dashboard-preview/sample-data.ts,
+   and the Maintain goal above). The burn is the sample workout's own figure,
+   180 kcal (SAMPLE_DAY.workout.estimatedCalories), so "in" is net plus 180
+   on every day. Five days run over target, so the chart shows both bar
+   colours the progress screen uses. The chart draws bars only; the dates are
+   axis positions, never shown. The copy next to the chart says "Example
+   shape" so nobody reads these as somebody's readings. */
+const EXAMPLE_CALORIE_NETS = [
+  1820, 1950, 2010, 1780, 1890, 1960, 1740, 1880, 2030, 1910,
+  1830, 1970, 1760, 1900, 2050, 1840, 1920, 1790, 1980, 1870,
+  2010, 1750, 1930, 1860, 1990, 1810, 1940, 2070, 1850, 1900,
+];
+const EXAMPLE_CALORIE_BURN = 180;
+
+export const EXAMPLE_CALORIES: { days: CaloriePoint[]; target: number } = {
+  target: 2000,
+  days: EXAMPLE_CALORIE_NETS.map((net, i) => ({
+    date: `2026-10-${String(i + 1).padStart(2, "0")}`,
+    in: net + EXAMPLE_CALORIE_BURN,
+    out: EXAMPLE_CALORIE_BURN,
+    net,
+  })),
+};
+
+/* ── The sample day's totals, summed from its own meals ────────────────────
+   The dashboard preview's sample day (SAMPLE_DAY above) is the only place
+   the homepage quotes a day's macros from. These are summed here, never
+   typed, so the macro visual in HomeCharts cannot drift from the preview. */
+export function sampleDayTotals() {
+  return SAMPLE_DAY.meals.reduce(
+    (t, m) => ({
+      kcal: t.kcal + m.recipe.caloriesPerServing,
+      protein: t.protein + m.recipe.proteinGrams,
+      carbs: t.carbs + m.recipe.carbsGrams,
+      fat: t.fat + m.recipe.fatGrams,
+    }),
+    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+}
+
+/** Calories per gram, and shares normalised to 100 — FitFuelApp's method
+ *  (4 kcal/g for protein and carbs, 9 for fat), so the shares always sum to
+ *  100 even when the stated kcal disagrees slightly with the macros. */
+export function macroShares(proteinG: number, carbsG: number, fatG: number) {
+  const kcal = [proteinG * 4, carbsG * 4, fatG * 9];
+  const total = kcal[0] + kcal[1] + kcal[2];
+  const raw = kcal.map((k) => (k / total) * 100);
+  const base = raw.map((r) => Math.floor(r));
+  const left = 100 - base.reduce((a, b) => a + b, 0);
+  const order = raw
+    .map((r, i) => i)
+    .sort((a, b) => raw[b] - base[b] - (raw[a] - base[a]));
+  for (let i = 0; i < left; i++) base[order[i % order.length]] += 1;
+  return { protein: base[0], carbs: base[1], fat: base[2] };
+}
 
 /* ── The 29 conditions, each pointing at the plan that cooks for it ─────────
    These chips used to link to `/plans?q=<label>`. A link sweep found that

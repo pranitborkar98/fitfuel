@@ -50,6 +50,7 @@ import type { BandCounts } from "./home-data";
 import { useReveal } from "./useReveal";
 import HomeLaunchpad from "./HomeLaunchpad";
 import HomeToday from "./HomeToday";
+import { ExampleCalorieChart, SampleDayVisual, WeighingFlow } from "./HomeCharts";
 import productStyles from "@/app/_kitchen/product-network.module.css";
 import s from "./app.module.css";
 import r from "./refresh.module.css";
@@ -202,6 +203,11 @@ function DayBand() {
             </li>
           ))}
         </ol>
+
+        {/* The weighing process itself, as steps: the timeline above says
+            when, this says how a portion is weighed. Reuses the real
+            weighing photograph; no meal is drawn as a diagram. */}
+        <WeighingFlow />
       </div>
     </section>
   );
@@ -518,7 +524,11 @@ function DashboardBand({ counts }: { counts: BandCounts }) {
                 const stall = i === 2;
                 return (
                   <li key={w.w} data-reveal="up">
-                    <span className={s.weekBar}>
+                    {/* The bar is decoration: the figure beside it prints the
+                        same kilograms and the same change as text, so a
+                        screen reader gets the numbers once, not a shape
+                        with no data followed by the same data again. */}
+                    <span className={s.weekBar} aria-hidden="true">
                       <span
                         className={stall ? s.weekFillStall : s.weekFill}
                         style={{ height: `${h}%` }}
@@ -548,6 +558,11 @@ function DashboardBand({ counts }: { counts: BandCounts }) {
               </span>
             </p>
           </div>
+
+          {/* The progress screen's calorie chart, as a labelled example shape:
+              the weight trend above is the coach's example month, this is the
+              calorie half of the same screen. */}
+          <ExampleCalorieChart />
         </div>
       </div>
     </section>
@@ -950,6 +965,11 @@ function TrialReceiptBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
           <span className={s.receiptNote}>
             No aggregator takes a cut, so more of what you pay goes into the food.
           </span>
+
+          {/* What a day of it adds up to, drawn from the sample day the
+              dashboard preview already shows. Plan/trial context only: no
+              macro visual goes on a dish card. */}
+          <SampleDayVisual />
         </div>
       </div>
     </section>
