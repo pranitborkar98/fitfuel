@@ -33,7 +33,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import { receipt } from "@/lib/menu-cart";
@@ -416,6 +416,9 @@ function AddControl({ dish }: { dish: ShopDish }) {
         className={`${s.add} ${s.ghost} ${asked ? s.ghostOn : ""}`}
         onClick={() => cart.toggleEnquiry(dish.id)}
         aria-pressed={asked}
+        aria-label={
+          asked ? `Price requested for ${dish.name}` : `Ask the price of ${dish.name}`
+        }
       >
         {asked ? "Price asked" : "Ask price"}
       </button>
@@ -424,7 +427,12 @@ function AddControl({ dish }: { dish: ShopDish }) {
 
   if (qty === 0) {
     return (
-      <button type="button" className={s.add} onClick={() => cart.add(dish.id)}>
+      <button
+        type="button"
+        className={s.add}
+        onClick={() => cart.add(dish.id)}
+        aria-label={`Add ${dish.name} to your order`}
+      >
         Add
       </button>
     );
@@ -448,14 +456,17 @@ function AddControl({ dish }: { dish: ShopDish }) {
           The live region is the OUTER span and stays mounted — re-creating an
           aria-live element is how announcements get dropped. The inner span
           carries key={qty} so it remounts and replays the CSS animation, which
-          is why this needs no timers, no state and no injected nodes. */}
-      <span
-        className={s.stepQty}
-        aria-live="polite"
-        aria-label={`${qty} in order`}
-      >
-        <span key={qty} className={s.qtyPop}>
+          is why this needs no timers, no state and no injected nodes. The
+          announcement is the quantity, not the bare number: the visible figure
+          is aria-hidden and the screen-reader-only text carries "3 in order".
+          An aria-label on the outer span did nothing — a span has no accessible
+          name without a role — so the announcement used to be just "3". */}
+      <span className={s.stepQty} aria-live="polite">
+        <span key={qty} className={s.qtyPop} aria-hidden="true">
           {qty}
+        </span>
+        <span key={`sr-${qty}`} className="fk-sr-only">
+          {qty} in order
         </span>
       </span>
       <button
@@ -468,26 +479,6 @@ function AddControl({ dish }: { dish: ShopDish }) {
       </button>
     </span>
   );
-}
-
-/** Match a media query. useSyncExternalStore, not useState + an effect: the
- *  server has no matchMedia, so the server snapshot is false (the phone
- *  layout) and the client swaps in the measured value after hydration. */
-function useMediaQuery(query: string): boolean {
-  const subscribe = useCallback(
-    (onChange: () => void) => {
-      if (typeof window.matchMedia !== "function") return () => {};
-      const mq = window.matchMedia(query);
-      mq.addEventListener("change", onChange);
-      return () => mq.removeEventListener("change", onChange);
-    },
-    [query],
-  );
-  const getSnapshot = useCallback(() => {
-    if (typeof window.matchMedia !== "function") return false;
-    return window.matchMedia(query).matches;
-  }, [query]);
-  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
 export default function FitFuelApp({
@@ -652,28 +643,34 @@ export default function FitFuelApp({
     [supplements, suppCat, normalizedQuery],
   );
 
-  /* ── THE DISH RANGE IS RESPONSIVE, NOT ONE CAP FOR EVERY SCREEN ────────
+  /* ── THE DISH RANGE IS RESPONSIVE, AND THE CAP IS CSS, NOT JS ─────────
      A phone shows two dishes per course, a tablet four, and a desktop the
-     full course. The old PER_COURSE = 2 ran at every width, so a desktop —
-     with a three-column grid and room to spare — showed only 2 dishes per
-     course and hid the range behind a tap. */
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const isTablet = useMediaQuery("(min-width: 640px)");
+     full course; a filtered flat list shows twelve below 1024px and the full
+     range on a desktop. The old PER_COURSE = 2 ran at every width, so a
+     desktop — with a three-column grid and room to spare — showed only 2
+     dishes per course and hid the range behind a tap. Piece 5 fixed the
+     range with a useMediaQuery hook, but the server has no matchMedia: it
+     rendered the phone layout and the client upgraded after hydration, so a
+     desktop first paint briefly showed the phone counts. The caps now live
+     in app.module.css as :nth-child rules on the rendered lists
+     (.courseGroup / .dishGrid), so server and client render the identical DOM
+     and the first paint is already the right range at every width. The
+     "Show all" controls stay JS state — opening a course or expanding a
+     filtered list adds .courseOpen / .gridOpen, which lifts the CSS cap —
+     and the per-course button is hidden by CSS on a desktop, where every
+     dish is already visible. The smallest course carries 6 dishes, so the
+     button is never a no-op on a tablet: it always reveals dishes 5 and 6.
 
-  /* ── THE GRID WAS SEVENTY PER CENT OF THE PAGE ─────────────────────────
-     Measured: 48 dish cards ran 13,396px of a 19,058px page — sixteen phone
-     screens of near-identical cards — and every argument for the business sat
-     underneath it. Scale at 13,920px, conditions at 14,360, proof at 15,224,
-     all seven services at 16,002. Nobody scrolls to screen twenty, so none of
-     it existed.
-
-     Nothing is removed. The first twelve are shown, the rest are one tap away,
-     and search and the filter chips still run over the FULL catalogue — so
-     typing "pcos" or "keto" still reaches every match instantly. What changes
-     is that the page stops being a wall before it has said anything.
-
-     Twelve, not six: on a 4-column desktop grid that is three full rows, so
-     the catalogue still reads as a catalogue rather than a teaser. */
+     Why twelve, and why a cap at all: measured, 48 dish cards ran 13,396px
+     of a 19,058px page — sixteen phone screens of near-identical cards —
+     and every argument for the business sat underneath it. Nobody scrolls
+     to screen twenty, so none of it existed. Nothing is removed. The first
+     twelve are shown, the rest are one tap away, and search and the filter
+     chips still run over the FULL catalogue — so typing "pcos" or "keto"
+     still reaches every match instantly. What changes is that the page stops
+     being a wall before it has said anything. Twelve, not six: on a
+     4-column desktop grid that is three full rows, so the catalogue still
+     reads as a catalogue rather than a teaser. */
   const PREVIEW = 12;
   /* Keyed on the filter signature rather than reset in an effect — expanding
      "keto" and then searching "juice" should not silently keep you expanded,
@@ -684,12 +681,12 @@ export default function FitFuelApp({
   const cap = <T,>(list: T[]): T[] =>
     expanded ? list : list.slice(0, PREVIEW);
 
-  /* The flat dish list follows the same rule as the grouped one: a desktop
-     shows the full filtered range, a phone or tablet keeps the 12-card cap
-     and the "Show all" control. Plans and supplements keep PREVIEW at every
-     width — their caps are about two different purchases, not screen room. */
-  const dishCap = (list: ShopDish[]): ShopDish[] =>
-    expanded || isDesktop ? list : list.slice(0, PREVIEW);
+  /* The flat dish list follows the same rule as the grouped one, with the
+     cap in CSS (see above): a desktop shows the full filtered range, a
+     phone or tablet keeps the 12-card cap and the "Show all" control.
+     Plans and supplements keep PREVIEW at every width — their caps are
+     about two different purchases, not screen room — so they keep the JS
+     cap() below, which is viewport-independent and cannot flash. */
 
   /* The "show the rest" control, under whichever grid is live.
      A render HELPER, not a component: declaring a component inside render gives
@@ -727,16 +724,6 @@ export default function FitFuelApp({
      course chip is already a narrowing, and narrowing twice reads as a bug, so
      a filtered view falls back to one flat capped list. */
   const grouped = mode === "dishes" && course === "all" && !onlyOrderable;
-
-  /** Dishes per course in the grouped view: two on a phone, four on a tablet,
-   *  the full course on a desktop. The phone cap keeps the first view to 12
-   *  photographed meals instead of sixteen phone screens of cards; a desktop
-   *  grid has the room, so it shows the whole range with no extra tap. */
-  const PER_COURSE = isDesktop
-    ? Number.POSITIVE_INFINITY
-    : isTablet
-      ? 4
-      : 2;
 
   /**
    * ONE DISH CARD.
@@ -787,6 +774,12 @@ export default function FitFuelApp({
             onClick={() => setSheet(d)}
             aria-label={`See ${d.name}`}
           >
+            {/* The slot says what it is, in the wording the /menu well already
+                uses: the photograph arrives with the final kitchen listing.
+                A status note, not a stand-in for the dish. */}
+            <span className={s.wellLabel} aria-hidden="true">
+              Photo added with final kitchen listing
+            </span>
             <span className={s.wellGrain} aria-hidden="true" />
             <span className={s.wellGloss} aria-hidden="true" />
             <span className={s.wellFoot} aria-hidden="true" />
@@ -1461,6 +1454,28 @@ export default function FitFuelApp({
               </p>
             </div>
 
+            {/* ── THE OFFER, INLINE BELOW 1024px ─────────────────────────────
+                The rail carries this offer on a desktop, but the rail does not
+                exist on a phone — so the same offer stays inline here, above
+                the first card, in every mode. CSS shows exactly one of the
+                two: .offer is display:none at and above 1024px (see
+                app.module.css), and the rail is display:none below it. The
+                row was missing from the markup while its CSS and this note's
+                promise stood, so a phone saw the trial only in the hero and
+                the close band; restored, with the rail card's own words. */}
+            <div className={s.offer}>
+              <div className={s.offerText}>
+                <b>First day · Two meals, {trialTotal}</b>
+                <span>
+                  Breakfast and lunch weighed to your macros. Nothing to
+                  cancel.
+                </span>
+              </div>
+              <Link href="/plans?trial=true" className={s.add}>
+                Start the trial
+              </Link>
+            </div>
+
             {mode !== "dishes" ? (
               <div className={r.modeFeature}>
                 <div className={r.modeFeatureImage} data-tilt>
@@ -1476,7 +1491,7 @@ export default function FitFuelApp({
                         : "A person preparing a measured supplement serving"
                     }
                     fill
-                    loading="eager"
+                    loading="lazy"
                     sizes="(min-width: 1024px) 38vw, 100vw"
                     className={r.cardImage}
                   />
@@ -1513,7 +1528,7 @@ export default function FitFuelApp({
                     ) : (
                       <>
                         There are {planCount} plans across goals, sports and{" "}
-                        {goalCount} conditions.{" "}
+                        medical conditions.{" "}
                       </>
                     )
                   ) : mode === "supps" ? (
@@ -1758,11 +1773,12 @@ export default function FitFuelApp({
                   const list = results.filter((d) => d.category === c.key);
                   if (!list.length) return null;
                   const open = !!openCourse[c.key];
-                  const shown = open ? list : list.slice(0, PER_COURSE);
                   const cover = list.find((d) => images[d.slot]);
                   return (
                     <li key={c.key} className={s.courseSpan}>
-                      <ul className={s.courseGroup}>
+                      <ul
+                        className={`${s.courseGroup} ${open ? s.courseOpen : ""}`}
+                      >
                         <li className={`${s.courseHead} ${r.courseHead}`}>
                           {cover ? (
                             <button
@@ -1788,7 +1804,13 @@ export default function FitFuelApp({
                             </span>
                             <span className={s.courseNote}>{c.note}</span>
                           </span>
-                          {!open && list.length > PER_COURSE ? (
+                          {/* The button's threshold is the phone cap (2):
+                              CSS hides the button entirely on a desktop,
+                              where the full course is already visible, and on
+                              a tablet the cap is 4. Every course carries at
+                              least 6 dishes, so the button always reveals
+                              more there. */}
+                          {!open && list.length > 2 ? (
                             <button
                               type="button"
                               className={s.courseMore}
@@ -1800,7 +1822,7 @@ export default function FitFuelApp({
                             </button>
                           ) : null}
                         </li>
-                        {shown.map((d) => dishCard(d))}
+                        {list.map((d) => dishCard(d))}
                       </ul>
                     </li>
                   );
@@ -1808,10 +1830,19 @@ export default function FitFuelApp({
               </ul>
             ) : (
               <>
-                <ul className={`${s.grid} ${r.productGrid}`}>
-                  {dishCap(results).map((d) => dishCard(d))}
+                <ul
+                  className={`${s.grid} ${s.dishGrid} ${r.productGrid} ${expanded ? s.gridOpen : ""}`}
+                >
+                  {results.map((d) => dishCard(d))}
                 </ul>
-                {isDesktop ? null : showAllControl(results.length, "dishes")}
+                {/* The control is CSS-hidden on a desktop, where the full
+                    filtered range is already visible (see the cap comment
+                    above PREVIEW). Plans and supplements keep their own
+                    control visible at every width — their 12-cap is a
+                    purchase decision, not screen room. */}
+                <div className={s.dishShowAll}>
+                  {showAllControl(results.length, "dishes")}
+                </div>
               </>
             )}
           </div>

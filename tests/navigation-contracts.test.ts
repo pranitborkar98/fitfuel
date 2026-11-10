@@ -71,8 +71,9 @@ test("each advertised service leads to an implemented local page", () => {
 test("public organisation examples cannot look like confirmed partners", () => {
   for (const partner of PUBLIC_PARTNERS) {
     if (partner.placeholder) {
-      assert.equal(partner.status, "Placeholder");
-      assert.match(partner.description, /example.*future approved/i);
+      assert.equal(partner.status, "Coming soon");
+      assert.doesNotMatch(partner.name, /XYZ/);
+      assert.match(partner.description, /future approved/i);
     } else {
       assert.equal(partner.name, "Nutrabay");
       assert.equal(partner.status, "Affiliate retailer");
