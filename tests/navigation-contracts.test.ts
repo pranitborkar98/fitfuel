@@ -37,9 +37,13 @@ test("homepage redesign retains the complete product, not just catalogue links",
   assert.match(history, /private, no-store/);
 });
 
-test("conversion restructure: partner cards and the services strip are off the homepage", () => {
+test("partner cards are back on the homepage; the services strip stays off it", () => {
+  // Restored 2026-11-11 on chintu's call (see
+  // tests/homepage-partners-contracts.test.ts): the PR #16 removal of
+  // PartnerNetwork from the homepage is reverted. The services strip
+  // stays off the homepage, as the conversion restructure decided.
   const experience = readFileSync(resolve("app/_web/HomeExperience.tsx"), "utf8");
-  assert.doesNotMatch(experience, /<PartnerNetwork/);
+  assert.match(experience, /<PartnerNetwork \/>/);
   assert.doesNotMatch(experience, /active now/);
   assert.doesNotMatch(experience, /For gyms and trainers/);
   const launchpad = readFileSync(resolve("app/_web/HomeLaunchpad.tsx"), "utf8");
@@ -99,7 +103,12 @@ test("conversion restructure: supplements appear once, as a slim strip", () => {
   assert.match(sections, /Browse \{counts\.marketplaceProducts/);
   const experience = readFileSync(resolve("app/_web/HomeExperience.tsx"), "utf8");
   assert.doesNotMatch(experience, /Supplements from Nutrabay/);
-  assert.doesNotMatch(experience, /<PartnerNetwork/);
+  // Restored 2026-11-11 on chintu's call (see
+  // tests/homepage-partners-contracts.test.ts): PartnerNetwork is back on
+  // the homepage, before testimonials. The strip stays the only Nutrabay
+  // product listing; PartnerNetwork links to /products, it does not list
+  // the catalogue a second time.
+  assert.match(experience, /<PartnerNetwork \/>/);
 });
 
 test("testimonials stay on the homepage: chintu confirmed keeping them", () => {

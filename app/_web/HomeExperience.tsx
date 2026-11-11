@@ -10,6 +10,7 @@ import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
 
 import type { Quote } from "./home-data";
+import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
 import x from "./experience.module.css";
 import hub from "./home-workspace.module.css";
 
@@ -758,12 +759,11 @@ export function HomeProductLinks({
         </nav>
       </section>
 
-      {/* 2026-11-10 conversion restructure: the dashboard card and the
-          partner network left this file. The dashboard content is now the
-          single DashboardBand in HomeSections, and the partner cards
-          (including the "Coming soon" gym, corporate and trainer slots) are
-          off the homepage entirely. PartnerNetwork itself is untouched: it
-          still renders on /partners, /corporate and /services. */}
+      {/* Partner network restored 2026-11-11 on chintu's call: PR #16 had
+          taken it off the homepage. It renders here, before testimonials,
+          as it did at 139fae4. The dashboard content stays the single
+          DashboardBand in HomeSections. */}
+      <PartnerNetwork />
 
       {/* Testimonials stay: chintu confirmed 2026-11-10 18:08 IST to keep
           them as they are, overriding the verdict's remove-by-default. */}

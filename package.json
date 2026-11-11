@@ -11,7 +11,7 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
-    "test:contracts": "tsx --test tests/product-contracts.test.ts tests/navigation-contracts.test.ts tests/plan-count-contracts.test.ts tests/schedule-builder-contracts.test.ts tests/payu-contracts.test.ts tests/homepage-a11y-contracts.test.ts tests/homepage-scale-contracts.test.ts tests/homepage-viz-contracts.test.ts tests/homepage-viz-a11y-contracts.test.ts",
+    "test:contracts": "tsx --test tests/product-contracts.test.ts tests/navigation-contracts.test.ts tests/plan-count-contracts.test.ts tests/schedule-builder-contracts.test.ts tests/payu-contracts.test.ts tests/homepage-a11y-contracts.test.ts tests/homepage-scale-contracts.test.ts tests/homepage-viz-contracts.test.ts tests/homepage-viz-a11y-contracts.test.ts tests/homepage-partners-contracts.test.ts",
     "catalog:nutrabay": "node scripts/build-nutrabay-catalog.mjs",
     "seed:nutrabay": "tsx prisma/seed-nutrabay-links.ts",
     "seed:nutrabay-catalog": "tsx prisma/seed-nutrabay-catalog.ts",
