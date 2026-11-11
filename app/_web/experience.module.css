@@ -56,6 +56,14 @@
   text-wrap: balance;
 }
 
+/* 2026-11-11 redesign piece 1: the one emphasized word per headline, in
+   lime. Lime #84cc16 on the #070707 ground is 9.9:1, so a large display word
+   in lime clears AA by a wide margin. */
+.titleAccent {
+  color: var(--fk-green);
+  font-style: normal;
+}
+
 .lede {
   max-width: 48ch;
   margin: 20px 0 0;
@@ -309,6 +317,23 @@
   object-fit: cover;
 }
 
+/* 2026-11-11 redesign piece 1: the feature meal crossfades when the active
+   meal changes (auto-advance or tab). The Image remounts on key change (see
+   HomeExperience), so the animation re-runs. 320ms slow token; the
+   prefers-reduced-motion block at the end of this file collapses it to 1ms. */
+.featureMeal > img {
+  animation: hero-fade var(--fk-dur-slow) var(--fk-ease);
+}
+
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .scrim,
 .kitchenScrim {
   position: absolute;
@@ -363,21 +388,29 @@
   text-align: center;
 }
 
+/* ── Meal mosaic ─────────────────────────────────────────────────────────
+   2026-11-11 redesign piece 1: the four trial-day meals are a staggered
+   mosaic, not a flat row of pills (CookUnity's stepped-collage idea). Each
+   tab is a vertical food card — full-width photograph on top, slot and name
+   below — and the 2nd and 4th cards sit 10px lower, so the row steps. The
+   tabs keep their tab semantics (roving tabindex, arrow keys); only the
+   presentation changes. The stagger is a static offset, not animation, so
+   it needs no reduced-motion handling. */
 .mealGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .mealGrid button {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: start;
   min-width: 0;
-  min-height: 66px;
-  padding: 6px;
+  min-height: 0;
+  padding: 0 0 8px;
   overflow: hidden;
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-sm);
@@ -385,6 +418,11 @@
   color: var(--fk-ink);
   text-align: left;
   cursor: pointer;
+}
+
+.mealGrid button:nth-child(2),
+.mealGrid button:nth-child(4) {
+  transform: translateY(10px);
 }
 
 .mealGrid button:hover {
@@ -399,16 +437,17 @@
 
 .mealThumb {
   position: relative;
-  width: 52px;
-  height: 52px;
+  width: 100%;
+  height: 88px;
   overflow: hidden;
-  border-radius: var(--fk-r-sm);
+  border-radius: var(--fk-r-sm) var(--fk-r-sm) 0 0;
 }
 
 .mealGrid button > span:last-child {
   display: grid;
   gap: 3px;
   min-width: 0;
+  padding: 8px 10px 0;
 }
 
 .mealGrid small {
@@ -420,7 +459,7 @@
 .mealGrid b {
   overflow: hidden;
   color: var(--fk-ink);
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-sm);
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1587,17 +1626,11 @@
     font-size: clamp(2.8rem, 4.7vw, 4rem);
   }
 
-  .mealGrid button {
-    grid-template-columns: 1fr;
-  }
-
+  /* 2026-11-11 redesign piece 1: the mosaic is a vertical food card at
+     every width — the thumbnail stays full-width and the name stays
+     visible. The old rule flattened the tabs to a 48px strip with no name. */
   .mealThumb {
-    width: 100%;
-    height: 48px;
-  }
-
-  .mealGrid b {
-    display: none;
+    height: 72px;
   }
 
   .planGrid button {
@@ -1636,17 +1669,11 @@
     min-height: 430px;
   }
 
-  .mealGrid button {
-    grid-template-columns: 60px minmax(0, 1fr);
-  }
-
+  /* 2026-11-11 redesign piece 1: the mosaic stays a vertical food card
+     when the hero stacks — the old rule flattened it back to a 60px
+     thumbnail row. */
   .mealThumb {
-    width: 60px;
-    height: 54px;
-  }
-
-  .mealGrid b {
-    display: block;
+    height: 76px;
   }
 
   .appTools {
@@ -1819,22 +1846,16 @@
     line-clamp: 3;
   }
 
+  /* 2026-11-11 redesign piece 1: two mosaic columns on a phone, the right
+     column stepped down (the base nth-child stagger). The old rule flattened
+     the tabs back to a 52px thumbnail row. */
   .mealGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mealGrid button {
-    grid-template-columns: 52px minmax(0, 1fr);
-    min-height: 68px;
+    gap: 10px;
   }
 
   .mealThumb {
-    width: 52px;
-    height: 52px;
-  }
-
-  .mealGrid b {
-    font-size: var(--fk-t-xs);
+    height: 84px;
   }
 
   .appTools {
@@ -1941,19 +1962,10 @@
     min-height: 270px;
   }
 
-  .mealGrid button {
-    grid-template-columns: 46px minmax(0, 1fr);
-    min-height: 62px;
-  }
-
-  .mealThumb {
-    width: 46px;
-    height: 46px;
-  }
-
-  .mealGrid b {
-    display: none;
-  }
+  /* 2026-11-11 redesign piece 1: no flattening at the narrowest widths either —
+     the mosaic stays a vertical food card with the meal name visible at 390px,
+     per the ≤720px rules above. The old rule here turned each tab into a
+     46px thumbnail row and hid the name. */
 
   .cardHead {
     align-items: stretch;
