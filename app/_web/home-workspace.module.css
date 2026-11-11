@@ -1,37 +1,65 @@
 .workspace {
   padding-bottom: 20px;
 }
+/* 2026-11-11 redesign piece 1 (hero re-skin): the hero is TWO columns on
+   desktop — the type on the left, the four-meal preview as the visual on the
+   right (CookUnity's typographic column + food visual). The old stacked
+   layout (copy / menu / support full width) made the headline a line of text
+   above an empty box. The lime glow is one restrained radial behind the
+   visual column, not a band: black stays the stage, the food is the brightest
+   thing on it. */
 .workspace .hero {
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
-  grid-template-areas: "copy copy" "menu menu" "support support";
-  gap: 18px 24px;
-  padding: 26px 0 0;
+  grid-template-columns: minmax(340px, 0.9fr) minmax(520px, 1.1fr);
+  grid-template-areas: "copy menu" "support menu";
+  gap: 24px clamp(28px, 4vw, 64px);
+  padding: clamp(40px, 6vw, 72px) 0 clamp(36px, 4vw, 56px);
   border-bottom: 0;
+  background:
+    radial-gradient(
+      640px 340px at 82% 16%,
+      rgba(132, 204, 22, 0.09),
+      transparent 70%
+    );
 }
 /* 2026-11-10 conversion restructure: the daily-tools and today widgets
    left the hero for the single dashboard section below the catalogue, so
    the hero grid no longer names the "tools" and "day" rows. .heroGuest
-   below now matches the base grid. */
+   below now matches the base grid.
+   2026-11-11 redesign piece 1: the base grid is two columns again (copy |
+   menu), so the guest areas must match it — the old "copy copy" / "menu
+   menu" stack undid the two-column hero for every logged-out visitor,
+   which is the audience the hero is for. */
 .workspace .heroGuest {
-  grid-template-areas: "copy copy" "menu menu" "support support";
+  grid-template-areas: "copy menu" "support menu";
 }
+/* 2026-11-11 redesign piece 1: the copy column stacks — eyebrow, headline,
+   lede, then the actions below. The old rule put the actions in a second
+   column beside the headline; at the new 64-80px scale that squeezed the
+   headline to ~200px and wrapped it word by word. The CTAs sit under the
+   lede, still above the fold. */
 .workspace .heading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 6px 24px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 0;
 }
 .heading > p:first-child {
   grid-column: 1;
   margin: 0;
   font-size: 14px;
 }
+/* 2026-11-11 redesign piece 1: the headline IS the design. The old rule set
+   it at clamp(28px, 3vw, 40px) in sans — and because this selector outranks
+   experience.module.css .title, the 48-78px serif there never rendered. The
+   hero headline is now huge serif display, 64-80px desktop (the 2026 measured
+   median is 64px; Sweetgreen runs 70-80px), light/medium weight, one lime
+   word per the accent span in HomeExperience. */
 .workspace .title {
   grid-column: 1;
-  max-width: none;
-  font: 600 clamp(28px, 3vw, 40px)/1.15 var(--fk-sans);
-  letter-spacing: -0.025em;
-  text-wrap: initial;
+  max-width: 12ch;
+  font: 560 clamp(3.5rem, 5.2vw, 5rem) / 0.98 var(--fk-display);
+  letter-spacing: -0.038em;
+  text-wrap: balance;
 }
 .heading > p:not(:first-child) {
   grid-column: 1;
@@ -40,8 +68,8 @@
   font-size: 16px;
 }
 .heading > div {
-  grid-column: 2;
-  grid-row: 1 / 4;
+  grid-column: 1;
+  grid-row: auto;
   margin: 0;
 }
 .workspace .menu {
@@ -49,7 +77,7 @@
   align-self: start;
 }
 .workspace .menu [role="tabpanel"] {
-  min-height: 238px;
+  min-height: 340px;
 }
 .workspace .menu [role="tabpanel"] b {
   font-size: clamp(24px, 2.5vw, 34px);
@@ -57,21 +85,17 @@
 .workspace .support {
   grid-area: support;
 }
-.workspace .hero .menu [role="tablist"] {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.workspace .hero .menu [role="tab"] {
+/* 2026-11-11 redesign piece 1: the DAY tabs stay compact pills. The MEAL
+   tabs are NOT pills — they are the staggered mosaic (styled in
+   experience.module.css), so the two display:none rules that used to hide
+   their thumbnails and names are gone. The day tablist is the one without
+   aria-orientation; the meal tablist carries aria-orientation="horizontal". */
+.workspace .hero .menu [role="tablist"]:not([aria-orientation]) [role="tab"] {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   min-height: 50px;
   padding: 8px;
-}
-.workspace .hero .menu [role="tab"] > span:first-child {
-  display: none;
-}
-.workspace .hero .menu [role="tab"] b {
-  display: none;
 }
 .workspace .hero .menu [role="tab"] small {
   font-size: 13px;
@@ -274,13 +298,16 @@
   }
   .workspace .title {
     margin: 5px 0 8px;
-    font-size: 29px;
+    /* 2026-11-11 redesign piece 1: the phone headline is huge serif too,
+       40-52px, not the old 29px sans. */
+    font: 560 clamp(2.5rem, 10vw, 3.25rem)/1 var(--fk-display);
+    letter-spacing: -0.03em;
   }
   .heading > div {
     margin-top: 16px;
   }
   .workspace .menu [role="tabpanel"] {
-    min-height: 205px;
+    min-height: 320px;
   }
   .workspace .menu [role="tabpanel"] b {
     font-size: 24px;

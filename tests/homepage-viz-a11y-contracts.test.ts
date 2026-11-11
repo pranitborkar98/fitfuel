@@ -111,8 +111,16 @@ test("no viz file reads the viewport in JavaScript", () => {
   for (const file of [HOME_CHARTS, TREND_CHART, HOME_EXPERIENCE, "app/_web/home-data.ts"]) {
     const src = read(file);
     assert.doesNotMatch(src, /useMediaQuery/, `${file}: no useMediaQuery (hydration flash)`);
-    assert.doesNotMatch(src, /matchMedia/, `${file}: no matchMedia`);
     assert.doesNotMatch(src, /innerWidth/, `${file}: no window.innerWidth`);
+    /* matchMedia is banned for VIEWPORT reads only. The reduced-motion
+       preference is the one sanctioned exception (2026-11-11 hero
+       re-skin): it gates JS intervals, which CSS cannot stop, and it goes
+       through useSyncExternalStore with a server snapshot in
+       usePrefersReducedMotion.ts, so there is no hydration flash. A width
+       query here is still a failure. */
+    for (const [, query] of src.matchAll(/matchMedia\(([^)]*)\)/g)) {
+      assert.doesNotMatch(query, /width/, `${file}: matchMedia must not read the viewport width`);
+    }
   }
 });
 

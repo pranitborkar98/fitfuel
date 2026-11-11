@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useSession } from "next-auth/react";
 
 import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import type { WeightPoint } from "@/lib/progress";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 import { WeightTrendChart } from "./WeightTrendChart";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
@@ -106,6 +107,27 @@ export default function HomeExperience({
   const mealTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const dayMeals = days[activeDay]?.meals ?? [];
   const activeMeal = dayMeals[activeMealIndex] ?? dayMeals[0];
+  /* 2026-11-11 redesign piece 1: the hero carousel auto-advances every 6s,
+     so the hero moves without the visitor doing anything (the cheapest motion
+     on the page). It stops the moment the visitor takes over: hovering or
+     focusing the preview pauses it, and it never runs under
+     prefers-reduced-motion. The timer resets on every meal change, manual or
+     automatic, so a manual pick gets a full 6s before the next advance. */
+  /* Reduced motion gates the auto-advance (see the interval below). Read
+     through the hook, not inline matchMedia: the hook uses
+     useSyncExternalStore with a server snapshot, so there is no hydration
+     flash and no setState-in-effect. */
+  const reduceMotion = usePrefersReducedMotion();
+  const previewPaused = useRef(false);
+  const autoAdvance = !reduceMotion && dayMeals.length > 1;
+  useEffect(() => {
+    if (!autoAdvance) return;
+    const id = window.setInterval(() => {
+      if (previewPaused.current) return;
+      setActiveMealIndex((i) => (i + 1) % dayMeals.length);
+    }, 6000);
+    return () => window.clearInterval(id);
+  }, [autoAdvance, dayMeals.length, activeMealIndex, activeDay]);
   const planKcal = dayMeals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
   const serving = servingScaleForTarget({
     calorieTarget: target.kcal,
@@ -168,7 +190,8 @@ export default function HomeExperience({
             {signedIn ? timeGreeting() : `First day ${trialTotal}`}
           </p>
           <h1 id="home-title" className={`${x.title} ${hub.title}`}>
-            Chef-cooked meals, weighed to your macros.
+            Chef-cooked meals, weighed to your{" "}
+            <span className={x.titleAccent}>macros.</span>
           </h1>
           <p className={x.lede}>
             Four meals a day, delivered in Pune by 10 AM.
@@ -203,7 +226,24 @@ export default function HomeExperience({
             section below the catalogue (DashboardBand in HomeSections), so
             the hero is the trial and the menu preview only. The hero grid
             no longer names the "tools" and "day" rows. */}
-        <div className={`${x.menuPreview} ${hub.menu}`}>
+        {/* Hovering or focusing the preview pauses the auto-advance (see the
+            interval above): a visitor reading a meal should not have it
+            pulled away. */}
+        <div
+          className={`${x.menuPreview} ${hub.menu}`}
+          onMouseEnter={() => {
+            previewPaused.current = true;
+          }}
+          onMouseLeave={() => {
+            previewPaused.current = false;
+          }}
+          onFocus={() => {
+            previewPaused.current = true;
+          }}
+          onBlur={() => {
+            previewPaused.current = false;
+          }}
+        >
           <div className={x.previewHead}>
             <span>
               <small>
@@ -257,10 +297,16 @@ export default function HomeExperience({
               className={x.featureMeal}
               role="tabpanel"
               aria-labelledby={`meal-preview-tab-${activeDay}-${activeMealIndex}`}
-              aria-live="polite"
+              /* While the carousel auto-advances, the panel is not a live
+                 region: announcing a new meal every 6 seconds would talk over
+                 a screen-reader user who never asked for it. The tabs are
+                 the controls and announce themselves; manual changes (reduced
+                 motion, or a single meal) keep aria-live="polite". */
+              aria-live={autoAdvance ? "off" : "polite"}
               data-tilt
             >
               <Image
+                key={activeMeal.slot}
                 src={PLAN_IMAGES[activeMeal.slot]}
                 alt={activeMeal.name}
                 fill
