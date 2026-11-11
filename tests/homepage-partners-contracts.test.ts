@@ -14,6 +14,12 @@ import { PUBLIC_PARTNERS } from "../lib/public-partners";
 // hold generic placeholders only: any word on a placeholder tile that is
 // not a category word, "Coming soon" or "Your logo here" is a made-up
 // company name, and the test fails on it.
+//
+// Merge 2026-11-11 (homepage-fix-partners): the four partner cards and
+// the "Partner places coming soon" logo wall below them said the same
+// thing twice, so they are one section now. The tests below pin that:
+// one section, one heading, no card grid, and the apply links on the
+// groups instead of on cards.
 
 const read = (p: string) => readFileSync(resolve(p), "utf8");
 
@@ -68,9 +74,10 @@ test("the Nutrabay tile is the one real tile, text wordmark only", () => {
   assert.doesNotMatch(network, /\.(png|jpg|jpeg|webp|svg|avif)/i);
   assert.doesNotMatch(network, /<Image/);
   // Nutrabay is the only proper name in the logo wall: the name appears
-  // four times in the file (wordmark comment, the PUBLIC_PARTNERS lookup,
-  // the tile aria-label, the disclosure) and nowhere else as a tile.
-  assert.equal((network.match(/Nutrabay/g) ?? []).length, 4);
+  // five times in the file (merge comment, wordmark comment, the
+  // PUBLIC_PARTNERS lookup, the tile aria-label, the disclosure) and
+  // nowhere else as a tile.
+  assert.equal((network.match(/Nutrabay/g) ?? []).length, 5);
 });
 
 test("placeholder logo rows: 6 tiles each, 4 categories, no invented names", () => {
@@ -126,6 +133,49 @@ test("franchise copy uses only the llms.txt wording, no terms or fees", () => {
     network,
     /fee|royalt|investment|territor|lakh|crore|₹|Pune|Kharadi|Mumbai/i,
   );
+});
+
+test("partners is ONE section: one heading, no card grid, no second coming-soon block", () => {
+  const network = read("app/_kitchen/PartnerNetwork.tsx");
+  assert.equal((network.match(/<section/g) ?? []).length, 1, "one section");
+  assert.equal((network.match(/<h2/g) ?? []).length, 1, "one heading");
+  assert.match(network, /<h2 id="partner-network-title">Supplements, gyms and workplaces<\/h2>/);
+  // The merged-away blocks leave no trace: no card grid, no second
+  // heading for the wall, no wall wrapper, and the cards' map is gone
+  // (the Nutrabay lookup is a .find, not a .map).
+  assert.doesNotMatch(network, /partnerGrid/);
+  assert.doesNotMatch(network, /logoWall/);
+  assert.doesNotMatch(network, /Partner places coming soon/);
+  assert.doesNotMatch(network, /PUBLIC_PARTNERS\.map/);
+  // Group titles sit directly under the section h2, so they are h3,
+  // not the h4 the wall used to nest under its own h3.
+  assert.doesNotMatch(network, /<h4/);
+  assert.match(network, /<h3 className=\{s\.logoGroupTitle\}>/);
+  const css = read("app/_kitchen/product-network.module.css");
+  assert.doesNotMatch(css, /\.partnerGrid/);
+  assert.doesNotMatch(css, /\.logoWall/);
+});
+
+test("the apply links live on the groups, not on cards", () => {
+  // The data already carried each group's destination and label; the
+  // merge is what renders them.
+  assert.deepEqual(
+    PLACEHOLDER_LOGO_GROUPS.map((g) => [g.key, g.href, g.action]),
+    [
+      ["gym", "/partners/apply?type=gym", "Apply as a gym"],
+      ["corporate", "/corporate", "Explore team meals"],
+      ["trainer", "/partners/apply?type=trainer", "Apply as a trainer"],
+      ["franchise", "/contact", "Enquire via the contact page"],
+    ],
+  );
+  const network = read("app/_kitchen/PartnerNetwork.tsx");
+  assert.match(network, /<Link href=\{group\.href\}>/);
+  assert.match(network, /\{group\.action\}/);
+  // The Supplements group links the same way, from the Nutrabay row.
+  assert.match(network, /<Link href=\{nutrabay\.href\}>/);
+  assert.match(network, /\{nutrabay\.action\}/);
+  // Every group renders its header row: label on the left, link right.
+  assert.match(network, /className=\{s\.logoGroupHead\}/);
 });
 
 test("the honest disclosure stays verbatim", () => {

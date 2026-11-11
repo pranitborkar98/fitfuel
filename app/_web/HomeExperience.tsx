@@ -630,7 +630,7 @@ function ScaleBand() {
       <ul className={x.scaleMetrics}>
         {SCALE_METRICS.map((m) => (
           <li key={m.name}>
-            <span>
+            <span className={x.scaleMetricName}>
               {m.name}
               {m.unit ? <small> {m.unit}</small> : null}
             </span>
@@ -693,11 +693,13 @@ function ScaleBand() {
 export function HomeProductLinks({
   aiConfigured,
   exerciseCount,
+  marketplaceProducts,
   quotes,
   onBrowsePlans,
 }: {
   aiConfigured: boolean;
   exerciseCount: number;
+  marketplaceProducts: number;
   quotes: Quote[];
   onBrowsePlans: () => void;
 }) {
@@ -745,11 +747,25 @@ export function HomeProductLinks({
             </span>
             <Icon path={ICON.arrow} size={17} />
           </Link>
+          <Link href="/products">
+            <span className={x.quickIcon}>
+              <Icon path={ICON.spark} size={20} />
+            </span>
+            <span>
+              <small>Supplements from Nutrabay</small>
+              <b>
+                {marketplaceProducts.toLocaleString("en-IN")} products, with ingredient guidance where available
+              </b>
+            </span>
+            <Icon path={ICON.arrow} size={17} />
+          </Link>
         </nav>
 
-        {/* 2026-11-10 conversion restructure: the supplements card left this
-            rail. Supplements appear once on the homepage, as the slim
-            Nutrabay strip (RetailBand in HomeSections). */}
+        {/* 2026-11-11 homepage fix: the supplements card is back in this
+            rail. PR #16 took it out and left the 4-column grid with 3 items,
+            so the 4th cell rendered as an empty grey box. The card links to
+            /products; the product cards themselves live in the RetailBand
+            showcase in HomeSections, so supplements are listed once. */}
         <nav className={x.businessRail} aria-label="FitFuel for organisations">
           <Link href="/corporate">
             <span>For teams</span>

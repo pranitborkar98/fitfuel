@@ -569,15 +569,18 @@ function DashboardBand({ counts }: { counts: BandCounts }) {
   );
 }
 
-/* ── 2e. Supplements, as one slim strip ────────────────────────────────────
-   2026-11-10 conversion restructure: supplements appear once on the
-   homepage, here. The old band was a four-card product grid with two big
-   buttons; the strip keeps the same real products (name, retailer price,
-   evidence link) as one row of links plus the single browse action. The
-   other supplement mentions are gone: the preview card in the old
-   dashboard band, the Nutrabay card inside PartnerNetwork, and the
-   supplements card in the product map. The disclosure stays: it is an
-   affiliate statement, not decoration. */
+/* ── 2e. Supplements, as real product cards ─────────────────────────────────
+   2026-11-11 homepage fix, on chintu's call: the slim text-only strip PR #16
+   left here did not show the catalogue he built, so the card grid is back.
+   This is the pre-restructure RetailBand, restored: the same four preview
+   products RetailBand already receives (whey protein, creatine, omega-3,
+   magnesium), each with its photograph, the retailer product name and price,
+   an evidence link and a buy link. The buy link is product.buy.url, the
+   tracked /api/supplements/click route that redirects to the Nutrabay
+   affiliate URL, the same path /supplements uses. Nothing is listed twice:
+   the text-only link list is gone, and the full catalogue stays on
+   /products. The disclosure stays verbatim: it is an affiliate statement,
+   not decoration. */
 function RetailBand({
   products,
   counts,
@@ -600,26 +603,64 @@ function RetailBand({
           </p>
         </div>
 
-        <nav className={s.moreSurfaces} aria-label="Nutrabay products on FitFuel">
-          <span>On Nutrabay</span>
-          <ul>
-            {products.map((product) => (
-              <li key={product.slug}>
-                <Link href={`/supplements#${product.slug}`}>
-                  {product.name}
-                  <span>
-                    {product.buy.priceRs
-                      ? `₹${product.buy.priceRs.toLocaleString("en-IN")}`
-                      : "See retailer"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <p className={s.retailNote}>
+          Evidence first. Retailer choice stays yours.{" "}
+          {counts.supplements.toLocaleString("en-IN")} researched supplements
+          and {counts.retailerLinks.toLocaleString("en-IN")} tracked retailer
+          listings.
+        </p>
+
         <div className={s.bandActions}>
           <Link href="/products" className={s.bandPrimary}>Browse {counts.marketplaceProducts.toLocaleString("en-IN")} Nutrabay products</Link>
+          <Link href="/supplements" className={s.bandSecondary}>Read the ingredient guide</Link>
         </div>
+        <ul className={s.retailGrid}>
+          {products.map((product) => (
+            <li key={product.slug} data-reveal="up">
+              <article className={s.retailCard}>
+                <Link
+                  href={`/supplements#${product.slug}`}
+                  className={s.retailImage}
+                  aria-label={`Read the evidence for ${product.name}`}
+                >
+                  <Image
+                    src={product.imageUrl}
+                    alt={`Nutrabay product listed for ${product.name}`}
+                    fill
+                    sizes="(min-width: 1100px) 25vw, (min-width: 640px) 48vw, 50vw"
+                    style={{ objectFit: "contain" }}
+                    loading="lazy"
+                  />
+                </Link>
+                <div className={s.retailBody}>
+                  <span>{product.category}</span>
+                  <h3>{product.name}</h3>
+                  <p>{product.buy.label}</p>
+                  <div className={s.retailFoot}>
+                    <span>
+                      <b>
+                        {product.buy.priceRs
+                          ? `₹${product.buy.priceRs.toLocaleString("en-IN")}`
+                          : "See retailer"}
+                      </b>
+                      <small>
+                        {product.linkCount} option{product.linkCount === 1 ? "" : "s"}
+                      </small>
+                    </span>
+                    <Link href={`/supplements#${product.slug}`}>Evidence</Link>
+                    <a
+                      href={product.buy.url}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                    >
+                      Buy
+                    </a>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
         <p className={s.retailDisclosure}>
           Listed prices may change. Confirm price, stock and delivery on
           Nutrabay before purchase. Ingredient guidance is not medical advice.

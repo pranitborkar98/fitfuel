@@ -37,7 +37,7 @@ test("homepage redesign retains the complete product, not just catalogue links",
   assert.match(history, /private, no-store/);
 });
 
-test("partner cards are back on the homepage; the services strip stays off it", () => {
+test("partner network is back on the homepage; the services strip stays off it", () => {
   // Restored 2026-11-11 on chintu's call (see
   // tests/homepage-partners-contracts.test.ts): the PR #16 removal of
   // PartnerNetwork from the homepage is reverted. The services strip
@@ -95,17 +95,22 @@ test("conversion restructure: comparison names the real alternatives", () => {
   assert.match(sections, /row\.home/);
 });
 
-test("conversion restructure: supplements appear once, as a slim strip", () => {
+test("supplements showcase restored: real product cards, not a slim strip", () => {
+  // 2026-11-11 homepage fix, on chintu's call: the slim strip PR #16 left
+  // did not show the catalogue he built, so the RetailBand card grid is
+  // back and the quickRail supplements card with it. The pins below are
+  // the full contract; tests/homepage-fix-rails-contracts.test.ts pins the
+  // rails, the buy links and the product names and prices.
   const sections = readFileSync(resolve("app/_web/HomeSections.tsx"), "utf8");
   assert.match(sections, /function RetailBand/);
-  assert.doesNotMatch(sections, /retailGrid/);
-  assert.doesNotMatch(sections, /retailCard/);
+  assert.match(sections, /retailGrid/);
+  assert.match(sections, /retailCard/);
   assert.match(sections, /Browse \{counts\.marketplaceProducts/);
   const experience = readFileSync(resolve("app/_web/HomeExperience.tsx"), "utf8");
-  assert.doesNotMatch(experience, /Supplements from Nutrabay/);
+  assert.match(experience, /Supplements from Nutrabay/);
   // Restored 2026-11-11 on chintu's call (see
   // tests/homepage-partners-contracts.test.ts): PartnerNetwork is back on
-  // the homepage, before testimonials. The strip stays the only Nutrabay
+  // the homepage, before testimonials. The showcase stays the only Nutrabay
   // product listing; PartnerNetwork links to /products, it does not list
   // the catalogue a second time.
   assert.match(experience, /<PartnerNetwork \/>/);

@@ -1,6 +1,6 @@
 .network {
   width: 100%;
-  padding: clamp(32px, 5vw, 64px) 0;
+  padding: clamp(28px, 4vw, 48px) 0;
   color: var(--fk-ink);
 }
 .sectionHead {
@@ -8,7 +8,7 @@
   align-items: end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 26px;
+  margin-bottom: 20px;
 }
 .sectionHead h2 {
   margin: 0;
@@ -40,57 +40,6 @@
   outline: 2px solid var(--fk-green-deep);
   outline-offset: 4px;
 }
-.partnerGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-.partnerGrid article {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  padding: 22px;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r-lg);
-  background: var(--fk-surface);
-}
-.partnerGrid .retailer {
-  background: var(--fk-green-wash);
-  border-color: var(--fk-green);
-}
-/* A slot that is not live yet reads as unfilled: dashed border on the page
-   ground, against the retailer's lit green-wash. The status pill on it now
-   says "Coming soon" (see lib/public-partners.ts). */
-.partnerGrid .placeholder {
-  border-style: dashed;
-  background: var(--fk-paper);
-}
-.status {
-  border: 1px solid var(--fk-line-strong);
-  border-radius: var(--fk-r-sm);
-  padding: 4px 8px;
-  font-size: 12px;
-  color: var(--fk-ink-2);
-}
-.partnerGrid p {
-  color: var(--fk-ink-2);
-  font-size: 16px;
-  line-height: 1.65;
-  margin: 14px 0;
-}
-.partnerGrid .role {
-  color: var(--fk-ink-3);
-  font-size: 13px;
-  margin: 24px 0 6px;
-}
-.partnerGrid h3 {
-  margin: 0;
-  font-size: 25px;
-  font-weight: 650;
-}
-.partnerGrid a {
-  margin-top: auto;
-}
 .disclosure {
   color: var(--fk-ink-3);
   font-size: 13px;
@@ -99,53 +48,49 @@
   max-width: 100ch;
 }
 /* Partner logo rows (2026-11-11): six generic tiles per category, plus the
-   one real Nutrabay tile. The rows scroll sideways, so at 390px the tiles
-   never push the page wider: the section stays the viewport width and the
-   row itself takes the overflow. Tiles are 96px tall, well over the 44px
-   target floor. No new images: wordmark and lucide glyphs only. */
-.logoWall {
-  margin-top: 28px;
-  padding-top: 28px;
-  border-top: 1px solid var(--fk-line-2);
-}
-.logoWallTitle {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 650;
-}
-.logoWallLede {
-  max-width: 65ch;
-  margin: 10px 0 0;
-  color: var(--fk-ink-2);
-  font-size: 16px;
-  line-height: 1.6;
-}
+   one real Nutrabay tile. Merged 2026-11-11: the four partner cards above
+   the wall are gone, so the rows ARE the section now, one group per
+   partner kind, each with its apply link on its header row. The rows
+   scroll sideways, so at 390px the tiles never push the page wider: the
+   section stays the viewport width and the row itself takes the overflow.
+   Tiles are 96px tall at minimum, well over the 44px target floor. No new
+   images: wordmark and lucide glyphs only. */
 .logoGroup {
-  margin-top: 22px;
+  margin-top: 18px;
+}
+/* Label on the left, the group's apply link on the right: the link the
+   old partner card carried, now on the group it belongs to. */
+.logoGroupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 .logoGroupTitle {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 16px;
   font-weight: 650;
 }
 .logoRow {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
-  padding: 2px 2px 10px;
+  padding: 2px 2px 8px;
   overflow-x: auto;
   list-style: none;
   scroll-behavior: smooth;
 }
 .logoTile {
-  flex: 0 0 132px;
+  flex: 0 0 120px;
   min-height: 96px;
   display: flex;
   flex-direction: column;
   align-items: start;
   justify-content: center;
-  gap: 4px;
-  padding: 14px;
+  gap: 3px;
+  padding: 12px;
   border: 1px dashed var(--fk-line-strong);
   border-radius: var(--fk-r-lg);
   background: var(--fk-paper);
@@ -180,10 +125,10 @@
   flex-direction: column;
   align-items: start;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   width: 100%;
   min-height: 96px;
-  padding: 14px;
+  padding: 12px;
   border-radius: var(--fk-r-lg);
 }
 .logoWordmark {
@@ -193,7 +138,7 @@
 }
 .franchiseNote {
   max-width: 75ch;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   color: var(--fk-ink-2);
   font-size: 16px;
   line-height: 1.6;
@@ -278,17 +223,15 @@
   color: var(--fk-ink);
   margin-bottom: 4px;
 }
-@media (max-width: 1100px) {
-  .partnerGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 @media (max-width: 680px) {
-  .partnerGrid,
   .productFeature {
     grid-template-columns: 1fr;
   }
   .sectionHead {
+    align-items: start;
+    flex-direction: column;
+  }
+  .logoGroupHead {
     align-items: start;
     flex-direction: column;
   }
