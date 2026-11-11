@@ -16,9 +16,8 @@
 // secondary action for the 32 price-on-request dishes, and the owner was right
 // to kill it: an order does not leave our own domain to be finished inside
 // another company's app. Unpriced dishes now say so in place and stay in the
-// basket until a price exists. The WhatsApp composer (lib/menu-cart
-// composeOrder()) was removed with the dead exit: it had no callers left.
-// This drawer never used it.
+// basket until a price exists. lib/menu-cart still exports composeOrder() for
+// other callers; this drawer no longer uses it.
 
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, X, CreditCard } from "lucide-react";
@@ -145,14 +144,7 @@ export default function CartDrawer() {
                       <button onClick={() => setQty(l.id, l.qty - 1)} aria-label={`One fewer ${l.dish.name}`}>
                         <Minus size={13} aria-hidden="true" />
                       </button>
-                      <span className="ff-step-n" aria-live="polite">
-                        {/* Same announcement as the dish-card stepper: the
-                            visible figure is aria-hidden and the hidden text
-                            carries "3 in order", so the live region does not
-                            announce a bare number. */}
-                        <span aria-hidden="true">{l.qty}</span>
-                        <span className="ff-sr-only">{l.qty} in order</span>
-                      </span>
+                      <span className="ff-step-n" aria-live="polite">{l.qty}</span>
                       <button onClick={() => setQty(l.id, l.qty + 1)} aria-label={`One more ${l.dish.name}`}>
                         <Plus size={13} aria-hidden="true" />
                       </button>
@@ -343,13 +335,6 @@ export default function CartDrawer() {
           border-left: 1px solid var(--fk-line); border-right: 1px solid var(--fk-line);
           line-height: 30px; font-variant-numeric: tabular-nums;
         }
-        /* Screen-reader-only text for the quantity announcement. The drawer
-           is not inside the .fk subtree, so the shared .fk-sr-only rule does
-           not reach it — this is the same clip pattern, local to the drawer. */
-        .ff-sr-only {
-          position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-          overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
-        }
         /* "Remove" was an 18px-tall text hit. It stays visually a text link but
            carries the full 44px target — padding, not type size, so the line
            does not grow. */
@@ -368,7 +353,7 @@ export default function CartDrawer() {
           text-transform: none; letter-spacing: 0.04em; color: var(--fk-ink-2);
         }
         .ff-enq-note {
-          margin: 0 0 12px; font-family: var(--fk-sans); font-size: 16px; line-height: 1.55;
+          margin: 0 0 12px; font-family: var(--fk-sans); font-size: 12.5px; line-height: 1.55;
           color: var(--fk-ink-3);
         }
         .ff-enq-row {
@@ -383,7 +368,7 @@ export default function CartDrawer() {
         }
         .ff-rec-label {
           display: block; margin-bottom: 12px;
-          font-family: var(--fk-sans); font-size: 12px;
+          font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
           letter-spacing: 0.02em; text-transform: none; color: var(--fk-ink-3);
         }
         .ff-rec { margin: 0 0 14px; display: flex; flex-direction: column; gap: 9px; }
@@ -391,7 +376,7 @@ export default function CartDrawer() {
           display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
         }
         .ff-rec dt {
-          font-family: var(--fk-sans); font-size: 12px;
+          font-family: var(--font-mono), ui-monospace, monospace; font-size: 12px;
           letter-spacing: 0.02em; text-transform: none; color: var(--fk-ink-3);
         }
         .ff-rec dd {
@@ -409,7 +394,7 @@ export default function CartDrawer() {
           letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
         }
         .ff-foot-note {
-          margin: 10px 0 14px; font-family: var(--fk-sans); font-size: 16px; line-height: 1.55;
+          margin: 10px 0 14px; font-family: var(--fk-sans); font-size: 12px; line-height: 1.55;
           color: var(--fk-ink-3);
         }
         /* THE PRIMARY ACTION, and it has to look like it.
@@ -430,7 +415,7 @@ export default function CartDrawer() {
         .ff-nothing {
           margin: 0; padding: 12px 14px; border-radius: 8px;
           background: var(--fk-warm); border: 1px solid var(--fk-line);
-          font-family: var(--fk-sans); font-size: 16px; line-height: 1.5;
+          font-family: var(--fk-sans); font-size: 13.5px; line-height: 1.5;
           color: var(--fk-ink-2);
         }
         .ff-send:focus-visible { outline: 3px solid var(--fk-green-deep); outline-offset: 3px; }

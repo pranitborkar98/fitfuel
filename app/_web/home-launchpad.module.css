@@ -11,7 +11,7 @@
   gap: 16px;
   margin-bottom: 16px;
 }
-.heading h3 {
+.heading h2 {
   margin: 0;
   font: 600 24px/1.2 var(--fk-sans);
 }
@@ -85,16 +85,6 @@
   font-size: 13px;
   text-decoration: none;
 }
-/* Hover and selected states ease through the motion tokens instead of
-   snapping: the tile border and the link colour settle over one token
-   length. Colour and border only; nothing here moves layout. */
-.launchpad a,
-.launchpad button {
-  transition:
-    background-color var(--fk-dur) var(--fk-ease),
-    color var(--fk-dur) var(--fk-ease),
-    border-color var(--fk-dur) var(--fk-ease);
-}
 .launchpad a:hover,
 .launchpad button:hover {
   border-color: var(--fk-green);
@@ -111,10 +101,6 @@
   }
 }
 @media (max-width: 650px) {
-  /* Two columns, not three: at 360px three tiles are ~100px each and the
-     labels wrap to two or three lines. Two across is ~155px a tile, so
-     "Food diary" and "AI coach" sit on one line. */
-  .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tools small { display: none; }
   .tools b { font-size: 13px; }
   .tools a, .tools button { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 12px 6px; min-height: 80px; }
@@ -122,6 +108,6 @@
     align-items: center;
     gap: 12px;
   }
-  .heading h3 { font-size: 17px; }
+  .heading h2 { font-size: 17px; }
   .heading > a { font-size: 13px; }
 }

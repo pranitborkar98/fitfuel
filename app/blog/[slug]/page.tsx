@@ -25,7 +25,6 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { safeJsonLd, sanitizeRichHtml } from "@/lib/content-safety";
-import { abs } from "@/lib/site";
 import { Go, Idx, Row, k } from "@/app/_ui/Kit";
 import { Band, Shell, Wrap, p as pg } from "@/app/_ui/Page";
 import { DIM, INK, SECTION, body, display, label, num } from "@/app/_ui/theme";
@@ -59,7 +58,7 @@ export async function generateMetadata({
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      url: abs(`/blog/${post.slug}`),
+      url: `https://fitfuel.in/blog/${post.slug}`,
       siteName: "FitFuel",
       type: "article",
       images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
@@ -91,7 +90,7 @@ export default async function BlogArticlePage({
     dateModified: post.updatedAt.toISOString(),
     author: { "@type": "Organization", name: post.authorName },
     publisher: { "@type": "Organization", name: "FitFuel" },
-    mainEntityOfPage: abs(`/blog/${post.slug}`),
+    mainEntityOfPage: `https://fitfuel.in/blog/${post.slug}`,
   };
 
   return (

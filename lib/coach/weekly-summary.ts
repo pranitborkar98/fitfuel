@@ -57,7 +57,7 @@ export async function buildWeeklySummary(userId: string): Promise<WeeklySummary>
 
   const profile = await prisma.userProfile.findUnique({
     where: { userId },
-    select: { fitnessGoal: true, gender: true },
+    select: { fitnessGoal: true },
   });
   const rawGoal = profile?.fitnessGoal ?? null;
   const goal: Goal | null = rawGoal && VALID_GOALS.includes(rawGoal) ? rawGoal : null;
@@ -67,7 +67,6 @@ export async function buildWeeklySummary(userId: string): Promise<WeeklySummary>
   return {
     hasPlan: data.hasPlan,
     goal,
-    gender: profile?.gender ?? null,
 
     currentWeightKg: data.weight.currentWeight,
     targetWeightKg: data.weight.targetWeight,

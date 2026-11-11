@@ -1,15 +1,9 @@
-// lib/payu-config.ts
-// Single config point for PayU. Operator setup: see docs/payu-setup.md.
 import "server-only";
-
-import { PAYU_PAYMENT_URLS, PAYU_REFUND_URLS, resolvePayuMode, type PayuMode } from "@/lib/payu-mode";
 
 export type PayuConfig = {
   key: string;
   salt: string;
-  mode: PayuMode;
   paymentUrl: string;
-  refundUrl: string;
   baseUrl: string;
 };
 
@@ -22,13 +16,6 @@ export function getPayuConfig(): PayuConfig | null {
   const configuredBase = process.env.NEXT_PUBLIC_BASE_URL?.trim();
   if (!key || !salt || !configuredBase) return null;
 
-  // PAYU_MODE selects the PayU environment. Values: "sandbox" (default),
-  // "test", "production", "live". Anything else falls back to sandbox, so a
-  // typo can never silently route a test payment at the live gateway. Live
-  // payments need PAYU_MODE=production plus the live merchant key and salt;
-  // there are no live credentials in this codebase.
-  const mode = resolvePayuMode(process.env.PAYU_MODE);
-
   try {
     const parsed = new URL(configuredBase);
     if (!/^https?:$/.test(parsed.protocol)) return null;
@@ -36,9 +23,7 @@ export function getPayuConfig(): PayuConfig | null {
     return {
       key,
       salt,
-      mode,
-      paymentUrl: PAYU_PAYMENT_URLS[mode],
-      refundUrl: PAYU_REFUND_URLS[mode],
+      paymentUrl: "https://secure.payu.in/_payment",
       baseUrl: configuredBase.replace(/\/$/, ""),
     };
   } catch {

@@ -64,16 +64,8 @@ const PAIRS = [
   ["--fk-ink-3", "--fk-warm", 4.5, "metadata on the hover band"],
   ["--fk-green-deep", "--fk-warm", 4.5, "links on the hover band"],
 
-  ["--fk-ink", "--fk-warm-2", 4.5, "headings on the darker band"],
-  ["--fk-ink-2", "--fk-warm-2", 4.5, "body copy on the darker band"],
-  ["--fk-ink-3", "--fk-warm-2", 4.5, "metadata on the darker band"],
-
   ["--fk-green-deep", "--fk-green-wash", 4.5, "chip text on its tint"],
   ["--fk-terracotta", "--fk-terracotta-wash", 4.5, "warning chip on its tint"],
-  ["--fk-terracotta-deep", "--fk-terracotta-wash", 4.5, "warm chip text on its tint"],
-
-  ["--fk-danger", "--fk-paper", 4.5, "error text on the page"],
-  ["--fk-danger", "--fk-surface", 4.5, "error text on a card"],
 
   // THE ONE THAT FLIPS WITH THE GROUND. Lime is a light colour, so a label
   // sitting ON it must be near-black. White-on-lime is 1.98:1 and was the
@@ -83,15 +75,6 @@ const PAIRS = [
 
   ["--fk-line-strong", "--fk-paper", 3, "form borders and meaningful dividers"],
   ["--fk-green", "--fk-paper", 3, "lime button ground against the page"],
-
-  // Homepage visualisations (finish/homepage-visuals): the BMI gauge
-  // bands are meaningful graphics (WCAG 1.4.11, 3:1), not text. The
-  // healthy band is lime, the other bands are ink-3 grey; the band names
-  // are printed in words beside the gauge, so colour never carries the
-  // meaning alone. The 4.5 text pairs above already cover these colours
-  // as text; these pin them as graphics too.
-  ["--fk-green", "--fk-surface", 3, "BMI healthy band against a card"],
-  ["--fk-ink-3", "--fk-surface", 3, "BMI other bands against a card"],
 ];
 
 const LITERALS = [

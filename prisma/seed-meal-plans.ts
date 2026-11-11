@@ -1,11 +1,6 @@
 // prisma/seed-meal-plans.ts
 // Run: npx tsx prisma/seed-meal-plans.ts
-// Seeds ALL MealPlan definitions — 119 plans across 3 categories (STANDARD 27,
-// LIFESTYLE_MEDICAL 70, SPORTS 22), all tier STANDARD, all isActive: false at
-// seed. Counted from this file 2026-11-09; the old header ("113 variants
-// across 8 categories") was wrong on both counts. prisma/seed.ts carries a
-// second, 15-row MEAL_PLANS list (8 slugs overlap, 7 new), so a database
-// seeded with both files holds 126 rows — see lib/plan-counts.ts.
+// Seeds ALL MealPlan definitions — 113 variants across 8 categories
 // Depends on: 9A schema migration complete
 
 import 'dotenv/config'

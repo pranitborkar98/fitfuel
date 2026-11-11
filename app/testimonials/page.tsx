@@ -21,7 +21,6 @@ import type { Metadata } from "next";
 
 import { prisma } from "@/lib/prisma";
 import { decodeRow } from "@/lib/decode-entities";
-import { abs } from "@/lib/site";
 import { Idx, Tiles, Tile, k } from "@/app/_ui/Kit";
 import { Band, Masthead, Shell, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, MUTE, SECTION, body, label, num } from "@/app/_ui/theme";
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "FitFuel Reviews",
     description: "Published member feedback across Pune.",
-    url: abs("/testimonials"),
+    url: "https://fitfuel.in/testimonials",
     siteName: "FitFuel",
     type: "website",
   },

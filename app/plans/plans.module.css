@@ -90,7 +90,9 @@
 .setLabel {
   font-family: var(--fk-sans);
   font-weight: 700;
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
   min-width: 74px;
 }

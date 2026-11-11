@@ -10,48 +10,6 @@
 // Shared data lives here.
 //
 import type { FitnessGoal } from "@/lib/tdee";
-import type { CaloriePoint } from "@/lib/progress";
-/* Runtime import, not type-only: the sample day below is the single source
-   of truth for its own totals, so the homepage sums the same meals the
-   dashboard preview renders rather than retyping them. sample-data.ts
-   imports only types from the dashboard, so this pulls in data, not pages. */
-import { SAMPLE_DAY } from "@/app/dashboard-preview/sample-data";
-
-/* ── Band counts and quotes ────────────────────────────────────────────────
-   Moved here from app/_web/HomeBands.tsx (deleted 2026-11-09: the component
-   was never mounted). The types stay live: app/page.tsx, FitFuelApp,
-   HomeExperience and HomeSections all type their band props with them. */
-
-export type Quote = {
-  id: string;
-  name: string;
-  location: string;
-  planLabel: string;
-  resultLabel: string;
-  quote: string;
-};
-
-export type BandCounts = {
-  dishes: number;
-  /* Plan CONCEPTS, not rows: distinct subCategory values, the same number
-     the homepage catalogue renders as cards (one card per concept). The
-     row total must never be stated here — the bands describe the
-     catalogue, and the catalogue shows concepts. Rows vs concepts vs
-     live/active is defined in lib/plan-counts.ts. */
-  plans: number;
-  /* Distinct LIFESTYLE_MEDICAL subCategory values, for the same reason:
-     the wedge's "condition plans" and the conditions band's "plans for a
-     condition" describe the same catalogue, so they count the condition
-     concepts the catalogue renders, not the condition rows. */
-  conditionPlans: number;
-  exercises: number;
-  supplements: number;
-  recipes: number;
-  retailerLinks: number;
-  retailerNetworks: number;
-  marketplaceProducts: number;
-  activePartners: number;
-};
 
 // NOTHING IN THIS FILE IS A PRICE THAT A CUSTOMER PAYS. Plan prices come from
 // the seeded PlanPrice matrix and the trial from lib/trial-price.ts, both
@@ -82,9 +40,9 @@ export const DAY_STEPS: DayStep[] = [
   {
     at: "06:30",
     label: "Portioned for you",
-    line: "Your calorie target sets the weight of every meal. Every meal is weighed in grams before sealing.",
+    line: "Your calorie target becomes a kitchen portion factor. Every meal is weighed in grams before sealing.",
     img: "/images/brand/meals-weighed-in-kitchen.webp",
-    alt: "A meal tray being weighed on a kitchen scale",
+    alt: "Illustration of an Indian meal being portioned on a kitchen scale",
   },
   {
     at: "07:30",
@@ -94,7 +52,7 @@ export const DAY_STEPS: DayStep[] = [
     alt: "The kitchen line packing labelled trays",
   },
   {
-    at: "7–10 AM",
+    at: "08:00",
     label: "At your door",
     line: "Your meals arrive with their calories and macros already filled into your diary.",
     img: "/images/ai/story/pune-delivery.webp",
@@ -176,70 +134,11 @@ export const COACH_WEEKS: { w: string; kg: number; note: string }[] = [
   { w: "Week 4", kg: 78.1, note: "Target recommendation: 1,700 kcal" },
 ];
 
-/* ── The progress screen's calorie chart, as an example shape ─────────────
-   An ILLUSTRATION of lib/progress.ts's calorie chart, not a customer's data:
-   thirty days of net calories against the 2,000 kcal target the sample plan
-   carries (SAMPLE_PLAN.calorieTarget in app/dashboard-preview/sample-data.ts,
-   and the Maintain goal above). The burn is the sample workout's own figure,
-   180 kcal (SAMPLE_DAY.workout.estimatedCalories), so "in" is net plus 180
-   on every day. Five days run over target, so the chart shows both bar
-   colours the progress screen uses. The chart draws bars only; the dates are
-   axis positions, never shown. The copy next to the chart says "Example
-   shape" so nobody reads these as somebody's readings. */
-const EXAMPLE_CALORIE_NETS = [
-  1820, 1950, 2010, 1780, 1890, 1960, 1740, 1880, 2030, 1910,
-  1830, 1970, 1760, 1900, 2050, 1840, 1920, 1790, 1980, 1870,
-  2010, 1750, 1930, 1860, 1990, 1810, 1940, 2070, 1850, 1900,
-];
-const EXAMPLE_CALORIE_BURN = 180;
-
-export const EXAMPLE_CALORIES: { days: CaloriePoint[]; target: number } = {
-  target: 2000,
-  days: EXAMPLE_CALORIE_NETS.map((net, i) => ({
-    date: `2026-10-${String(i + 1).padStart(2, "0")}`,
-    in: net + EXAMPLE_CALORIE_BURN,
-    out: EXAMPLE_CALORIE_BURN,
-    net,
-  })),
-};
-
-/* ── The sample day's totals, summed from its own meals ────────────────────
-   The dashboard preview's sample day (SAMPLE_DAY above) is the only place
-   the homepage quotes a day's macros from. These are summed here, never
-   typed, so the macro visual in HomeCharts cannot drift from the preview. */
-export function sampleDayTotals() {
-  return SAMPLE_DAY.meals.reduce(
-    (t, m) => ({
-      kcal: t.kcal + m.recipe.caloriesPerServing,
-      protein: t.protein + m.recipe.proteinGrams,
-      carbs: t.carbs + m.recipe.carbsGrams,
-      fat: t.fat + m.recipe.fatGrams,
-    }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-  );
-}
-
-/** Calories per gram, and shares normalised to 100 — FitFuelApp's method
- *  (4 kcal/g for protein and carbs, 9 for fat), so the shares always sum to
- *  100 even when the stated kcal disagrees slightly with the macros. */
-export function macroShares(proteinG: number, carbsG: number, fatG: number) {
-  const kcal = [proteinG * 4, carbsG * 4, fatG * 9];
-  const total = kcal[0] + kcal[1] + kcal[2];
-  const raw = kcal.map((k) => (k / total) * 100);
-  const base = raw.map((r) => Math.floor(r));
-  const left = 100 - base.reduce((a, b) => a + b, 0);
-  const order = raw
-    .map((r, i) => i)
-    .sort((a, b) => raw[b] - base[b] - (raw[a] - base[a]));
-  for (let i = 0; i < left; i++) base[order[i % order.length]] += 1;
-  return { protein: base[0], carbs: base[1], fat: base[2] };
-}
-
 /* ── The 29 conditions, each pointing at the plan that cooks for it ─────────
    These chips used to link to `/plans?q=<label>`. A link sweep found that
    `app/plans/page.tsx` reads exactly two search params — `diet` and `trial` —
    and has never read `q`, so all 29 landed on the unfiltered list of every
-   plan. The reader tapped "PCOS" and got every plan with no explanation.
+   plan. The reader tapped "PCOS" and got 126 plans with no explanation.
 
    So they resolve to the plan itself. Every slug below was checked against the
    database (grouped by subCategory, VEG variant preferred) and every one of
@@ -283,39 +182,6 @@ export const CONDITIONS: ConditionLink[] = [
   { label: "Navratri", slug: "navratri" },
   { label: "Shravan", slug: "shravan" },
 ];
-
-/* ── The homepage wall shows 8 of the 29, plus a "See all" link ─────────────
-   2026-11-10 conversion restructure. Three rules, all applied here so the
-   wall cannot drift from them:
-
-   1. One chip per plan page. PCOD shares the PCOS sheet and Cholesterol
-      shares the Heart health sheet, so the second label of each pair is
-      dropped, not the plan. The first label in list order is kept.
-   2. Cancer recovery and Kidney health are NOT on the homepage wall
-      (regulated-claim caution). This is a homepage-links-only removal: the
-      plans, their slugs and their routes are untouched and still reachable
-      from /plans and search. Do not "fix" this list by re-adding them.
-   3. Eight chips, in list order. The rest of the catalogue is one tap away
-      on the "See all" link beside them.
-
-   The full 29 stay in CONDITIONS above; other surfaces that need the whole
-   list do not use this. */
-const WALL_EXCLUDED_SLUGS = new Set([
-  "cancer-recovery-veg",
-  "kidney-health-veg",
-]);
-
-export const HOMEPAGE_CONDITIONS: ConditionLink[] = (() => {
-  const seen = new Set<string>();
-  const out: ConditionLink[] = [];
-  for (const c of CONDITIONS) {
-    if (WALL_EXCLUDED_SLUGS.has(c.slug)) continue;
-    if (seen.has(c.slug)) continue;
-    seen.add(c.slug);
-    out.push(c);
-  }
-  return out.slice(0, 8);
-})();
 
 export const FAQS: { q: string; a: string }[] = [
   {
@@ -370,84 +236,77 @@ export const priceKey = (duration: string, meals: string, diet: string) =>
 
    The two figures in the last column are the live ones — 952 exercises and the
    condition-plan count — and they are passed in rather than typed here so this
-   table cannot drift from the catalogue the rest of the page describes.
-
-   2026-11-10 conversion restructure: the columns changed. The old table
-   compared against a fitness app and a supplement brand, neither of which is
-   what a Pune customer weighs FitFuel against. The columns are now the three
-   real alternatives: healthy options on Zomato/Swiggy, a local tiffin, and
-   cooking at home. Competitor cells state only what the category structurally
-   does or does not do; no prices, features or ratings are claimed for them. */
+   table cannot drift from the catalogue the rest of the page describes. */
 export type WedgeRow = {
   what: string;
-  aggregator: string;
   tiffin: string;
-  home: string;
+  app: string;
+  supp: string;
   us: string;
 };
 
 export const WEDGE_COLS = [
-  "Healthy options on Zomato/Swiggy",
-  "Local tiffin",
-  "Cooking at home",
+  "A tiffin service",
+  "A fitness app",
+  "A supplement brand",
 ] as const;
 
 export function wedgeRows(exercises: number, conditionPlans: number): WedgeRow[] {
   return [
     {
       what: "Calculates for your body",
-      aggregator: "No, you pick from a restaurant menu",
       tiffin: "No, one shared menu",
-      home: "Only if you work it out yourself",
+      app: "Yes, but it does not cook the result",
+      supp: "No",
       us: "Live weight from your scale, plus height, age, activity and goal",
     },
     {
       what: "Cooks your food",
-      aggregator: "Yes, the restaurant cooks it",
       tiffin: "Yes, to one shared menu",
-      home: "Yes, you cook it",
+      app: "No",
+      supp: "No",
       us: "Yes, to your calculated target",
     },
     {
       what: "Weighs the portion",
-      aggregator: "No, the restaurant portions it",
       tiffin: "No, ladled by eye",
-      home: "Only if you weigh it yourself",
-      us: "Weighed in grams, to your target",
+      app: "No, you estimate it",
+      supp: "Only the scoop",
+      us: "In grams, against your portion factor",
     },
     {
       what: "Logs what you ate",
-      aggregator: "No",
       tiffin: "No",
-      home: "Only what you log yourself",
+      app: "Only what you type in",
+      supp: "No",
       us: "Pre-filled from the meal we cooked; you confirm it",
     },
     {
       what: "Programmes your training",
-      aggregator: "No",
       tiffin: "No",
-      home: "No, unless you plan it",
+      app: "Sometimes, sold separately",
+      supp: "No",
       us: `${exercises.toLocaleString("en-IN")} exercises, in your week`,
     },
     {
       what: "Tracks the body, not the intent",
-      aggregator: "No",
       tiffin: "No",
-      home: "Only if you track it yourself",
+      app: "If you own the scale and remember",
+      supp: "No",
       us: "Measured weight from compatible scales; other body-composition values labelled as estimates",
     },
     {
       what: "Moves the target when you stall",
-      aggregator: "No",
       tiffin: "No",
-      home: "Only if you recalculate it",
+      app: "No, it just keeps counting",
+      supp: "No",
       us: "Recalculated from your own numbers",
     },
     {
       what: "Built for a diagnosis",
-      aggregator: "No, general menus",
-      tiffin: "No, one shared menu",
-      home: "Only if you plan it",
+      tiffin: "No",
+      app: "Generic macro maths",
+      supp: "No",
       us: `${conditionPlans} condition plans`,
     },
   ];
@@ -481,7 +340,7 @@ export const SURFACES: Surface[] = [
   {
     href: "/dashboard/nutrition",
     name: "The diary",
-    stat: "56",
+    stat: "154",
     desc:
       "FitFuel meals arrive pre-filled with weighed macros for one-tap confirmation. Everything else you add per gram from an Indian food database, with water alongside it.",
   },

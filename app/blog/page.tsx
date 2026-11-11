@@ -18,7 +18,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { prisma } from "@/lib/prisma";
-import { abs } from "@/lib/site";
 import { Idx, Row, Go, k } from "@/app/_ui/Kit";
 import { Masthead, Shell, Wrap } from "@/app/_ui/Page";
 import { DIM, INK, SECTION, body, display, label, num } from "@/app/_ui/theme";
@@ -36,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "FitFuel Blog",
     description: "Practical nutrition and training guidance, India-first.",
-    url: abs("/blog"),
+    url: "https://fitfuel.in/blog",
     siteName: "FitFuel",
     type: "website",
   },

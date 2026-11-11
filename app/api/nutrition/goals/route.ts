@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
-import { getCalorieTarget } from "@/lib/calorie-target-server";
 import { prisma } from "@/lib/prisma";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { readJson } from "@/lib/validation/core";
@@ -22,14 +21,8 @@ export async function GET(req: NextRequest) {
   const goal = await prisma.nutritionGoal.findUnique({
     where: { userId: session.user.id },
   });
-  if (goal) return NextResponse.json(goal);
 
-  // No explicit goal row: show the user's unified calorie target (the same
-  // resolver the dashboard ring and progress charts use) instead of the flat
-  // 2000 default. A stored row always wins here, because it is the value the
-  // goals dialog edits.
-  const resolved = await getCalorieTarget(session.user.id);
-  return NextResponse.json({ ...DEFAULTS, calories: resolved.calories, userId: session.user.id });
+  return NextResponse.json(goal ?? { ...DEFAULTS, userId: session.user.id });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -65,10 +58,5 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
-  // The response carries the resolved calorie target alongside the stored
-  // row: after the precedence flip the stored row wins, but the displayed
-  // target is the resolved (clamped) value, so the client needs both. The
-  // stored row itself is returned unchanged and stays the edit-dialog draft.
-  const resolved = await getCalorieTarget(session.user.id);
-  return NextResponse.json({ ...goal, resolvedCalories: resolved.calories });
+  return NextResponse.json(goal);
 }

@@ -10,7 +10,6 @@
 // renders, so the coach can never quote a number the user's charts disagree with.
 
 import { prisma } from "@/lib/prisma";
-import { getCalorieTarget } from "@/lib/calorie-target-server";
 import { getProgressData, type ProgressData } from "@/lib/progress";
 import { getRecommendedSupplements } from "@/lib/supplement-recommender";
 import type {
@@ -138,7 +137,7 @@ export async function buildTrainerContext(userId: string): Promise<TrainerContex
 
   const progress = await getProgressData(userId);
 
-  const [user, profile, activePlan, ratedLogs, workouts, snapshots, supplements, resolvedTarget] =
+  const [user, profile, activePlan, ratedLogs, workouts, snapshots, supplements] =
     await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
       prisma.userProfile.findUnique({
@@ -207,7 +206,6 @@ export async function buildTrainerContext(userId: string): Promise<TrainerContex
         select: { score: true },
       }),
       getRecommendedSupplements(userId).catch(() => null),
-      getCalorieTarget(userId),
     ]);
 
   const mp = activePlan?.mealPlan ?? null;
@@ -226,12 +224,7 @@ export async function buildTrainerContext(userId: string): Promise<TrainerContex
     last7Macro.filter((d) => trackedKeys.has(d.date)).reduce((a, d) => a + d.protein, 0) / denom
   );
 
-  // The daily target and its source come from the one shared resolver
-  // (lib/calorie-target-server.ts), not a local derivation: the old code
-  // rebuilt the chain here and resurrected a profile-TDEE rung the resolver
-  // deliberately excludes (TDEE is an expenditure estimate, not a target).
-  const targetKcal = resolvedTarget.calories;
-  const calorieTargetSource = resolvedTarget.source;
+  const targetKcal = progress.calories.target;
   const adherencePct =
     daysTracked > 0 && targetKcal > 0
       ? round(Math.min(100, (avgKcalIn / targetKcal) * 100))
@@ -311,6 +304,12 @@ export async function buildTrainerContext(userId: string): Promise<TrainerContex
   const last30 = weighInsWithin(progress.weight.series, 30);
   const trend30dKg =
     last30.length >= 2 ? round(last30[last30.length - 1].w - last30[0].w, 1) : null;
+
+  // Which rung of progress.ts's fallback chain produced the calorie target.
+  const planKcal = activePlan?.calorieTarget ?? mp?.avgCaloriesPerDay ?? null;
+  const profileKcal = profile?.calorieTarget ?? profile?.tdee ?? null;
+  const calorieTargetSource: "plan" | "profile" | "default" =
+    planKcal !== null ? "plan" : profileKcal !== null ? "profile" : "default";
 
   // A 0g macro target means "never set", not "eat no protein".
   const orNull = (n: number) => (n > 0 ? n : null);

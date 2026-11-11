@@ -27,16 +27,15 @@
 //      single-meal delivery fee, minimum order or cutoff decided to charge
 //      against anyway.
 //
-// So the basket settles nowhere yet: it ends in the basket itself. Nothing is
-// sent anywhere, no WhatsApp message, no order, no enquiry. The priced lines
-// carry a full receipt (see below) so the totals are real when a checkout path
-// lands; the enquiry rows never touch a number.
+// So the basket settles on WhatsApp, itemised. That is not a downgrade: the
+// business already takes single-meal orders there (lib/trust-marks.ts), it is
+// the channel Indian food ordering actually runs on, and a composed message
+// with quantities, add-ons and a total is a real order — it just clears
+// through a person instead of PayU.
 //
-// WHEN THE TWO BLOCKERS CLEAR, exactly one thing changes: the priced lines
-// settle through /api/orders/dishes, which already exists. The WhatsApp
-// handoff that used to sit here (`composeOrder()`) was removed 2026-11-09
-// with the dead WhatsApp exit: it had zero callers left. Nothing in the UI,
-// the storage layer or this file's maths has to move. That is why the
+// WHEN THE TWO BLOCKERS CLEAR, exactly one thing changes: `composeOrder()`
+// gets a sibling that POSTs the same `CartLine[]` to /api/orders. Nothing in
+// the UI, the storage layer or this file's maths has to move. That is why the
 // totals below are computed here rather than inside a component.
 
 import type { AddOn, MenuItem, MenuCategoryKey } from "./menu-alacarte";
@@ -68,7 +67,7 @@ export const DISH_BY_ID: ReadonlyMap<string, Dish> = new Map(DISHES.map((d) => [
  * Can this dish be added to a basket that shows a total?
  *
  * A dish is orderable when the kitchen has set its price. `provisional` rows
- * are the Rs 100 placeholder and a null price is "Price on request"; neither can
+ * are the Rs 100 placeholder and a null price is "on request"; neither can
  * carry a number a customer might hold us to. See blocker 1 in the header.
  */
 export function isOrderable(d: Pick<MenuItem, "price" | "provisional">): boolean {
@@ -116,8 +115,8 @@ export function resolveLines(stored: StoredLine[]): CartLine[] {
 }
 
 /** One person ordering lunch. A basket of 40 salads is a data-entry accident
- *  or someone testing the form, and either way the cap keeps a mistake from
- *  becoming a 40-salad receipt. */
+ *  or someone testing the form, and either way the kitchen should hear about
+ *  it on WhatsApp rather than have it silently accepted. */
 export const MAX_QTY = 20;
 
 export type CartTotals = { count: number; subtotalRs: number };
@@ -169,4 +168,43 @@ export function receipt(lines: CartLine[]): CartReceipt {
     gstRs,
     totalRs: subtotalRs + deliveryRs + packagingRs + gstRs,
   };
+}
+
+/* ── Settlement ────────────────────────────────────────────────────────────
+   The WhatsApp handoff. Everything the kitchen needs to price and pack the
+   order without a second round trip. */
+
+const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+/**
+ * Compose the order message.
+ *
+ * Deliberately plain text with no marketing: this lands in a human's WhatsApp
+ * and gets read on a phone in a kitchen. Quantities and the running total are
+ * spelled out so the customer and the kitchen are reading the same numbers.
+ *
+ * NOTE ON THE TOTAL. It is labelled as excluding delivery, because no
+ * single-meal delivery fee has been set. Printing a bare total that later
+ * grows by Rs 50 on the doorstep is the exact complaint this business does not
+ * want, so the message says plainly that delivery is confirmed on reply.
+ */
+export function composeOrder(lines: CartLine[], enquiries: Dish[] = []): string {
+  const parts: string[] = ["Hi FitFuel, I'd like to order these:", ""];
+
+  for (const l of lines) {
+    const addOn = l.addOn ? ` + ${l.addOn.what.toLowerCase()}` : "";
+    parts.push(`${l.qty} × ${l.dish.name}${addOn} — ${rs(l.lineRs)}`);
+  }
+
+  if (lines.length) {
+    parts.push("", `Subtotal ${rs(totals(lines).subtotalRs)} (before delivery)`);
+  }
+
+  if (enquiries.length) {
+    parts.push("", "And could you price these for me:");
+    for (const d of enquiries) parts.push(`- ${d.name}`);
+  }
+
+  parts.push("", "Please confirm delivery to my area and the total.");
+  return parts.join("\n");
 }

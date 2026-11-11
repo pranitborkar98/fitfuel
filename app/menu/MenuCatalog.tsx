@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Search, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCart } from "@/app/_cart/CartProvider";
-import { COURSES, isAiImageSrc, type ShopDish } from "@/app/_shop/catalog";
+import { COURSES, type ShopDish } from "@/app/_shop/catalog";
 import styles from "./menu.module.css";
 
 type Props = {
@@ -23,10 +23,6 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
   const [course, setCourse] = useState(validCourse);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [visibleCount, setVisibleCount] = useState(12);
-  /* A resolved image that fails to load at runtime renders the same labelled
-     well as a dish with no image at all, never a broken-image icon. The set
-     holds dish ids, so one bad file cannot blank the rest of the grid. */
-  const [failedImages, setFailedImages] = useState<ReadonlySet<string>>(new Set());
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -44,7 +40,7 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
     <div className={`${styles.page} fk`}>
       <section className={styles.hero}>
         <div className={styles.wrap}>
-          <p className={styles.kicker}>Single dishes from your nearest FitFuel kitchen</p>
+          <p className={styles.kicker}>Single dishes from the Kharadi kitchen</p>
           <h1>Pick what you actually want to eat.</h1>
           <p className={styles.deck}>
             Browse {dishes.length} salads, bowls, breakfasts, bars and juices. {pricedCount} have kitchen-approved prices and can go straight into your basket; the rest stay visible without a placeholder price.
@@ -87,27 +83,14 @@ export default function MenuCatalog({ dishes, images, initialCourse, initialQuer
                 return (
                   <article key={dish.id} className={styles.card}>
                     <Link href={`/menu/${dish.id}`} className={styles.photo} aria-label={`View ${dish.name}`}>
-                      {images[dish.id] && !failedImages.has(dish.id) ? (
-                        <Image
-                          src={images[dish.id]}
-                          alt={dish.name}
-                          fill
-                          sizes="(max-width: 680px) 100vw, (max-width: 1050px) 50vw, 33vw"
-                          onError={() => setFailedImages((prev) => new Set(prev).add(dish.id))}
-                        />
+                      {images[dish.id] ? (
+                        <Image src={images[dish.id]} alt={dish.name} fill sizes="(max-width: 680px) 100vw, (max-width: 1050px) 50vw, 33vw" />
                       ) : (
                         <span><small>Photo added with final kitchen listing</small>{dish.categoryLabel}</span>
                       )}
                     </Link>
                     <div className={styles.cardBody}>
                       <span className={styles.course}>{dish.categoryLabel}</span>
-                      {/* The picture above is an AI illustration when its src
-                          came from the ai/ tree, never a photograph of the
-                          delivered meal. It reads on the course line directly
-                          under the picture. */}
-                      {isAiImageSrc(images[dish.id]) ? (
-                        <span className={styles.aiTag}>AI illustration</span>
-                      ) : null}
                       <h3><Link href={`/menu/${dish.id}`}>{dish.name}</Link></h3>
                       <p>{dish.blurb}</p>
                       <div className={styles.macros}>

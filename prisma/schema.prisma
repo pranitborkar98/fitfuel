@@ -323,7 +323,7 @@ model PlanPrice {
   productId String?
   product   MealPlanProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  // New link — MealPlan (Phase 9)
+  // New link — MealPlan (Phase 9, 103 variants)
   mealPlanId String?
   mealPlan   MealPlan? @relation(fields: [mealPlanId], references: [id])
 

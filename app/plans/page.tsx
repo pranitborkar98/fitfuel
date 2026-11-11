@@ -12,18 +12,13 @@
 // does a single lookup instead of a per-card one.
 //
 // CORPORATE and DIGITAL are excluded, though today that filter changes nothing:
-// all seeded rows are STANDARD, LIFESTYLE_MEDICAL or SPORTS. It is here so
+// all 126 seeded rows are STANDARD, LIFESTYLE_MEDICAL or SPORTS. It is here so
 // that a digital or corporate row seeded later cannot land in a count the page
 // states out loud, or behind a "Start this" CTA that goes to a checkout which
 // cannot sell it. Digital plans have their own route and their own checkout;
 // corporate is a quote.
 import { prisma } from "@/lib/prisma";
 import { cutoffLabel } from "@/lib/order-cutoff";
-import {
-  ORDERABLE_PLAN_CATEGORIES,
-  countActiveOrderablePlans,
-  plansMetadataDescription,
-} from "@/lib/plan-counts";
 import PlansNarrowed, { type PlanRow } from "./PlansNarrowed";
 import { DIETS, DURATIONS, type DietKey, type DurationKey } from "@/lib/plan-tier-pricing";
 import { hasCompletePlanSchedule } from "@/lib/plan-readiness";
@@ -31,17 +26,17 @@ import { publicPlanDescription } from "@/lib/plan-public-copy";
 
 export const dynamic = "force-dynamic";
 
+/** The categories a customer can actually order from this page. */
+const ORDERABLE = ["STANDARD", "LIFESTYLE_MEDICAL", "SPORTS"] as const;
+
 export async function generateMetadata() {
-  // Counted live (lib/plan-counts.ts). ROWS, not concepts: /plans lists one
-  // card per active orderable row (one per diet variant), so this is the
-  // number of rows a customer can buy — a different number from the
-  // homepage's concepts count by design. With zero active plans, or with
-  // the database unreachable, the description states no number at all
-  // rather than "explore 0 plan concepts".
-  const n = await countActiveOrderablePlans();
+  const n = await prisma.mealPlan.count({ where: { category: { in: [...ORDERABLE] }, isActive: true } });
   return {
     title: "Meal Plans in Pune",
-    description: plansMetadataDescription(n),
+    description:
+      `Set diet, length and meals a day, see the whole price with delivery, packaging and GST in it, ` +
+      `then explore ${n} plan concepts. Published kitchen menus are clearly marked before checkout, across ` +
+      `weight loss, muscle gain, Jain, sports and condition-support nutrition.`,
     // Canonical points at the bare path so the ?diet= and ?trial= variants
     // consolidate here instead of competing as separate URLs.
     alternates: { canonical: "/plans" },
@@ -64,7 +59,7 @@ export default async function PlansPage({
   const initialDuration: DurationKey = trial === "true" ? "TRIAL_DAY" : "ONE_MONTH";
 
   const rows = await prisma.mealPlan.findMany({
-    where: { category: { in: [...ORDERABLE_PLAN_CATEGORIES] }, isActive: true },
+    where: { category: { in: [...ORDERABLE] }, isActive: true },
     orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }],
     select: {
       id: true, slug: true, name: true, displayName: true, tagline: true,

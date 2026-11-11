@@ -56,14 +56,6 @@
   text-wrap: balance;
 }
 
-/* 2026-11-11 redesign piece 1: the one emphasized word per headline, in
-   lime. Lime #84cc16 on the #070707 ground is 9.9:1, so a large display word
-   in lime clears AA by a wide margin. */
-.titleAccent {
-  color: var(--fk-green);
-  font-style: normal;
-}
-
 .lede {
   max-width: 48ch;
   margin: 20px 0 0;
@@ -104,21 +96,6 @@
   background: var(--fk-green-deep);
 }
 
-/* The primary call to action is a link (it navigates to /plans), so it needs
-   the button treatment explicitly: the base rule above styles <button>, and
-   the plain <a> rule below is the secondary. */
-.heroActions a.heroPrimary {
-  border: 1px solid var(--fk-green);
-  background: var(--fk-green);
-  color: var(--fk-on-green);
-}
-
-.heroActions a.heroPrimary:hover {
-  border-color: var(--fk-green-deep);
-  background: var(--fk-green-deep);
-  color: var(--fk-on-green);
-}
-
 .heroActions a {
   border: 1px solid var(--fk-line-strong);
   background: var(--fk-surface);
@@ -151,6 +128,49 @@
 
 .assistance a:hover, .assistance button:hover {
   color: var(--fk-green-deep);
+}
+
+.operation {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 26px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--fk-line-2);
+}
+
+.operation li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 10px;
+  border-right: 1px solid var(--fk-line-2);
+  color: var(--fk-green-deep);
+}
+
+.operation li:first-child {
+  padding-left: 0;
+}
+.operation li:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+.operation li > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.operation b {
+  color: var(--fk-ink);
+  font-size: var(--fk-t-xs);
+  line-height: 1.2;
+}
+.operation small {
+  color: var(--fk-ink-3);
+  font-size: 0.6875rem;
+  line-height: 1.2;
 }
 
 .menuPreview {
@@ -214,94 +234,6 @@
   background: var(--fk-green);
 }
 
-/* ── Week tabs ─────────────────────────────────────────────────────────────
-   The seven fetched days of the one plan with a menu. One row of 44px tabs,
-   scrollable on a phone rather than squeezed. */
-.weekTabs {
-  display: flex;
-  gap: 8px;
-  margin-top: var(--fk-s-4);
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
-}
-
-.weekTab,
-.weekTabActive {
-  flex: none;
-  min-height: var(--fk-tap);
-  padding: 0 16px;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r-full);
-  background: transparent;
-  color: var(--fk-ink-2);
-  font-family: var(--fk-sans);
-  font-size: var(--fk-t-sm);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.weekTabActive {
-  border-color: var(--fk-green);
-  background: var(--fk-green-wash);
-  color: var(--fk-green-deep);
-}
-
-/* ── Steam ─────────────────────────────────────────────────────────────────
-   Three rising wisps over the hot feature meal. Pure CSS: blurred light
-   strokes that rise, widen and fade. They sit above the photograph and below
-   the scrim, so the copy stays readable. Off entirely under
-   prefers-reduced-motion (see the media query at the end of this file). */
-.steam {
-  position: absolute;
-  z-index: 1;
-  top: 12%;
-  left: 50%;
-  display: flex;
-  gap: 26px;
-  pointer-events: none;
-  transform: translateX(-50%);
-}
-
-.steam i {
-  display: block;
-  width: 10px;
-  height: 64px;
-  border-radius: var(--fk-r-full);
-  background: rgba(247, 247, 245, 0.55);
-  filter: blur(7px);
-  opacity: 0;
-  animation: steam-rise 4.8s ease-out infinite;
-}
-
-.steam i:nth-child(2) {
-  height: 84px;
-  animation-delay: 1.6s;
-}
-
-.steam i:nth-child(3) {
-  height: 56px;
-  animation-delay: 3.2s;
-}
-
-@keyframes steam-rise {
-  0% {
-    opacity: 0;
-    transform: translateY(26px) scaleX(1);
-  }
-  25% {
-    opacity: 0.7;
-  }
-  60% {
-    opacity: 0.35;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-46px) scaleX(1.8);
-  }
-}
-
 .featureMeal {
   position: relative;
   min-height: 340px;
@@ -315,23 +247,6 @@
 .planImage img,
 .kitchenCard > img {
   object-fit: cover;
-}
-
-/* 2026-11-11 redesign piece 1: the feature meal crossfades when the active
-   meal changes (auto-advance or tab). The Image remounts on key change (see
-   HomeExperience), so the animation re-runs. 320ms slow token; the
-   prefers-reduced-motion block at the end of this file collapses it to 1ms. */
-.featureMeal > img {
-  animation: hero-fade var(--fk-dur-slow) var(--fk-ease);
-}
-
-@keyframes hero-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .scrim,
@@ -388,29 +303,21 @@
   text-align: center;
 }
 
-/* ── Meal mosaic ─────────────────────────────────────────────────────────
-   2026-11-11 redesign piece 1: the four trial-day meals are a staggered
-   mosaic, not a flat row of pills (CookUnity's stepped-collage idea). Each
-   tab is a vertical food card — full-width photograph on top, slot and name
-   below — and the 2nd and 4th cards sit 10px lower, so the row steps. The
-   tabs keep their tab semantics (roving tabindex, arrow keys); only the
-   presentation changes. The stagger is a static offset, not animation, so
-   it needs no reduced-motion handling. */
 .mealGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .mealGrid button {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  align-items: start;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
   min-width: 0;
-  min-height: 0;
-  padding: 0 0 8px;
+  min-height: 66px;
+  padding: 6px;
   overflow: hidden;
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-sm);
@@ -418,11 +325,6 @@
   color: var(--fk-ink);
   text-align: left;
   cursor: pointer;
-}
-
-.mealGrid button:nth-child(2),
-.mealGrid button:nth-child(4) {
-  transform: translateY(10px);
 }
 
 .mealGrid button:hover {
@@ -437,410 +339,31 @@
 
 .mealThumb {
   position: relative;
-  width: 100%;
-  height: 88px;
+  width: 52px;
+  height: 52px;
   overflow: hidden;
-  border-radius: var(--fk-r-sm) var(--fk-r-sm) 0 0;
+  border-radius: var(--fk-r-sm);
 }
 
 .mealGrid button > span:last-child {
   display: grid;
   gap: 3px;
   min-width: 0;
-  padding: 8px 10px 0;
 }
 
 .mealGrid small {
   color: var(--fk-green-deep);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
 }
 
 .mealGrid b {
   overflow: hidden;
   color: var(--fk-ink);
-  font-size: var(--fk-t-sm);
+  font-size: 0.6875rem;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* ── How it works ────────────────────────────────────────────────────────
-   The three steps, as a section directly below the hero. Own classes, not
-   .operation: the old strip was hidden by the workspace layout
-   (.support > ol) and by the landscape rule, and neither hiding rule may
-   touch this section. */
-.howItWorks {
-  margin-top: clamp(28px, 4vw, 44px);
-  padding-top: clamp(22px, 3vw, 32px);
-  border-top: 1px solid var(--fk-line-2);
-}
-
-.howItWorks h2 {
-  margin: 0;
-  color: var(--fk-ink);
-  font: 750 clamp(1.5rem, 2.4vw, 2.1rem)/1.1 var(--fk-sans);
-  letter-spacing: -0.03em;
-}
-
-.howItWorks > p {
-  max-width: 62ch;
-  margin: 10px 0 0;
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-sm);
-  line-height: 1.6;
-}
-
-.howSteps {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  margin: 22px 0 0;
-  padding: 0;
-}
-
-.howSteps li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  min-width: 0;
-  padding: 0 20px;
-  border-right: 1px solid var(--fk-line-2);
-  color: var(--fk-green-deep);
-}
-
-.howSteps li:first-child {
-  padding-left: 0;
-}
-.howSteps li:last-child {
-  padding-right: 0;
-  border-right: 0;
-}
-
-.howSteps li > span {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.howSteps b {
-  color: var(--fk-ink);
-  font-size: var(--fk-t-base);
-  line-height: 1.3;
-}
-
-.howSteps small {
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-sm);
-  line-height: 1.5;
-}
-
-/* ── Smart scale ────────────────────────────────────────────────────────
-   Directly after how it works, before the menu. One band, two columns on
-   desktop: the device and the three Bluetooth steps on the left, the BMI
-   gauge and the reused weight-trend chart on the right. A phone stacks
-   them in the same order. The device and the gauge are drawn SVG, not
-   photographs: no photograph of a scale exists. */
-.scaleBand {
-  margin-top: clamp(28px, 4vw, 44px);
-  padding-top: clamp(22px, 3vw, 32px);
-  border-top: 1px solid var(--fk-line-2);
-}
-
-.scaleBand h2 {
-  margin: 0;
-  color: var(--fk-ink);
-  font: 750 clamp(1.5rem, 2.4vw, 2.1rem)/1.1 var(--fk-sans);
-  letter-spacing: -0.03em;
-}
-
-.scaleBand h3 {
-  margin: 0 0 12px;
-  color: var(--fk-ink);
-  font: 700 var(--fk-t-md)/1.3 var(--fk-sans);
-  letter-spacing: -0.02em;
-}
-
-.scaleLede {
-  max-width: 62ch;
-  margin: 10px 0 0;
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-sm);
-  line-height: 1.6;
-}
-
-.scaleGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  gap: 16px;
-  align-items: start;
-  margin-top: 24px;
-}
-
-.scaleStack {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-
-.scalePanel {
-  min-width: 0;
-  padding: clamp(18px, 2.4vw, 26px);
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r);
-  background: var(--fk-surface);
-}
-
-.scaleTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 8px;
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-sm);
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.scaleLiveDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--fk-green);
-  box-shadow: 0 0 0 5px rgba(132, 204, 22, 0.1);
-  animation: scale-pulse 2s ease-in-out infinite;
-}
-
-@keyframes scale-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
-.scaleCaption {
-  max-width: 62ch;
-  margin: 12px 0 0;
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-sm);
-  line-height: 1.6;
-}
-
-.scaleSteps {
-  list-style: none;
-  margin: 22px 0 0;
-  padding: 20px 0 0;
-  border-top: 1px solid var(--fk-line-2);
-  counter-reset: scale-step;
-}
-
-.scaleSteps li {
-  display: grid;
-  gap: 4px;
-  padding-left: 34px;
-  counter-increment: scale-step;
-  position: relative;
-}
-
-.scaleSteps li + li {
-  margin-top: 16px;
-}
-
-.scaleSteps li::before {
-  content: counter(scale-step);
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--fk-green);
-  border-radius: 50%;
-  color: var(--fk-green);
-  font-size: var(--fk-t-sm);
-  font-weight: 700;
-  line-height: 1;
-}
-
-.scaleSteps b {
-  color: var(--fk-ink);
-  font-size: var(--fk-t-base);
-  line-height: 1.3;
-}
-
-.scaleSteps span {
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-sm);
-  line-height: 1.6;
-}
-
-.scaleBmiValue {
-  margin: 4px 0 0;
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-base);
-  line-height: 1.4;
-  text-align: center;
-}
-
-.scaleBmiValue b {
-  color: var(--fk-ink);
-  font-size: var(--fk-t-lg);
-}
-
-.scaleBmiValue span {
-  color: var(--fk-green);
-  font-weight: 700;
-}
-
-.scaleSubhead {
-  margin-top: clamp(28px, 4vw, 40px);
-}
-
-/* The metrics grid is a spec sheet, not a set of cards: five columns on a
-   desktop wrap, three on a tablet, one on a phone. Every cell is at
-   least 250px wide, so the longest name and unit ("Subcutaneous fat %",
-   about 140px at this size) plus the Measured or Estimate tag (about
-   60px) fits on one line with room to spare. The old 200px floor gave
-   212px cells on a 1919px viewport, about 30px short, which is why the
-   % wrapped onto a second line. Rows are 6px padded instead of 48px
-   tall, so the grid is no taller than before at any width despite the
-   extra row on desktop: four rows of about 32px replace three rows of
-   48px, and the shorter rows win back more than the extra rows cost
-   on tablet and phone too. The grid background is transparent, not the
-   line colour: 18 items in 5 columns leave 2 empty slots in the last
-   row, and a line-coloured background would paint them as grey boxes.
-   Transparent slots read as page ground, so the grid ends where the
-   items end. */
-.scaleMetrics {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1px;
-  margin: 18px 0 0;
-  padding: 0;
-  border: 1px solid var(--fk-line-2);
-  background: transparent;
-}
-
-.scaleMetrics li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 6px 12px;
-  background: var(--fk-surface);
-  color: var(--fk-ink);
-  font-size: var(--fk-t-sm);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-/* The name and its unit are one unbroken run: the name must never wrap
-   mid-word, so this span does not wrap at all. The 250px column floor
-   leaves room for it on every viewport. */
-.scaleMetricName {
-  flex: 1 1 auto;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-/* The unit reads at the same size as the name. It used to inherit the
-   browser <small> size, about 12px, which read as a tiny subscript
-   next to a 14px name. */
-.scaleMetrics li small {
-  color: var(--fk-ink-3);
-  font-size: inherit;
-  font-weight: 600;
-}
-
-.scaleMeasured,
-.scaleEstimate {
-  flex: none;
-  font-size: var(--fk-t-xs);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.scaleMeasured {
-  color: var(--fk-green);
-}
-
-.scaleEstimate {
-  color: var(--fk-ink-3);
-}
-
-.scaleDisclaimer {
-  max-width: 72ch;
-  margin: 16px 0 0;
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-sm);
-  line-height: 1.6;
-}
-
-.scaleMail {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  margin: 18px 0 0;
-  padding: 0;
-}
-
-.scaleMail li {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding: 0 20px;
-  border-right: 1px solid var(--fk-line-2);
-}
-
-.scaleMail li:first-child {
-  padding-left: 0;
-}
-
-.scaleMail li:last-child {
-  padding-right: 0;
-  border-right: 0;
-}
-
-.scaleMail b {
-  color: var(--fk-ink);
-  font-size: var(--fk-t-base);
-  line-height: 1.3;
-}
-
-.scaleMail span {
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-sm);
-  line-height: 1.6;
-}
-
-.scaleCtaRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 16px;
-  margin: 24px 0 0;
-}
-
-.scaleCtaRow > span {
-  color: var(--fk-ink-3);
-  font-size: var(--fk-t-sm);
-  line-height: 1.5;
-}
-
-.scaleCta {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 20px;
-  border-radius: var(--fk-r);
-  background: var(--fk-green);
-  color: #070707;
-  font-size: var(--fk-t-base);
-  font-weight: 700;
-  line-height: 1;
-  text-decoration: none;
 }
 
 .appTools {
@@ -972,7 +495,7 @@
 }
 .targetStats dt {
   color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   line-height: 1.25;
 }
 .targetStats dd {
@@ -1173,7 +696,7 @@
 
 .planCopy small {
   color: var(--fk-green-deep);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
 }
 
@@ -1369,15 +892,6 @@
   letter-spacing: -0.03em;
   line-height: 1.04;
 }
-/* Same opener tick as the band headings below the catalogue. */
-.productMapHead h2::before {
-  content: "";
-  display: block;
-  width: 56px;
-  height: 3px;
-  margin-bottom: 16px;
-  background: var(--fk-green);
-}
 
 .productMapHead p {
   max-width: 62ch;
@@ -1441,7 +955,7 @@
 
 .quickRail small {
   color: var(--fk-green-deep);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -1454,7 +968,7 @@
 
 .businessRail {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
   margin-top: 1px;
   overflow: hidden;
@@ -1491,124 +1005,55 @@
   line-height: 1.35;
 }
 
-/* ── Proof: all three fetched testimonials ───────────────────────────────
-   Was a single strip showing quotes[0] only, the quote truncated to one
-   line. Three cards now, one per fetched row; one column on a phone, three
-   across from 900px. The section had no visible heading at all — only an
-   aria-label — so it reads as its own band now, numbered cards and all. */
-.proof {
-  margin-top: var(--fk-s-7);
-  padding-top: var(--fk-s-7);
+.proofLine {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  margin-top: 10px;
+  padding: 12px 16px;
   border-top: 1px solid var(--fk-line-2);
+  border-bottom: 1px solid var(--fk-line-2);
 }
 
-.proofTitle {
-  max-width: 18ch;
-  margin: 0 0 var(--fk-s-5);
-  color: var(--fk-ink);
-  font-family: var(--fk-display);
-  font-size: clamp(1.75rem, 3.2vw, 2.8rem);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.04;
-}
-/* Same opener tick as the band headings below the catalogue. */
-.proofTitle::before {
-  content: "";
-  display: block;
-  width: 56px;
-  height: 3px;
-  margin-bottom: 16px;
-  background: var(--fk-green);
-}
-
-.proofList {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--fk-s-4);
-  counter-reset: proof;
-}
-
-.proofCard {
-  position: relative;
-  display: grid;
-  gap: var(--fk-s-3);
-  align-content: start;
-  margin: 0;
-  padding: var(--fk-s-5);
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r-lg);
-  background: var(--fk-surface);
-  counter-increment: proof;
-}
-/* Numbered, so three text-only quotes read as three ordered results rather
-   than three loose cards. Absolute, so it costs the quote no room. */
-.proofCard::after {
-  content: counter(proof, decimal-leading-zero);
-  position: absolute;
-  top: var(--fk-s-5);
-  right: var(--fk-s-5);
-  color: var(--fk-green);
-  font-size: var(--fk-t-sm);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.proofCard > b {
-  padding-right: 36px;
+.proofLine > b {
   color: var(--fk-green-deep);
   font-size: var(--fk-t-base);
+  white-space: nowrap;
 }
 
-.proofCard p {
+.proofLine blockquote {
+  overflow: hidden;
   margin: 0;
   color: var(--fk-ink);
   font-family: var(--fk-display);
-  font-size: var(--fk-t-lg);
+  font-size: var(--fk-t-base);
   line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.proofCard > span {
+.proofLine > span {
   color: var(--fk-ink-3);
   font-size: var(--fk-t-xs);
+  white-space: nowrap;
 }
 
-.proofMore {
+.proofLine > a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: var(--fk-tap);
-  margin-top: var(--fk-s-4);
+  min-height: 44px;
   color: var(--fk-ink);
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-xs);
   font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.proofMore:hover {
+.proofLine > a:hover {
   color: var(--fk-green-deep);
-}
-
-@media (min-width: 900px) {
-  .proofList {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* ── Interactive feedback ────────────────────────────────────────────────
-   Every button and link in the hero experience — the Day 1–7 tabs, the meal
-   tabs, the goal and plan pickers, the coach card — changes colour, border
-   or background on hover and on selection. Until now those changes snapped
-   instantly: this file carried no transition at all. One scoped rule eases
-   them all through the motion tokens, so a selected tab settles instead of
-   flashing and no state change moves layout. Colour and border only, which
-   is everything these hovers change. The reduced-motion block at the end of
-   this file collapses the durations to 1ms. */
-.home :is(button, a) {
-  transition:
-    background-color var(--fk-dur) var(--fk-ease),
-    color var(--fk-dur) var(--fk-ease),
-    border-color var(--fk-dur) var(--fk-ease);
 }
 
 .home :is(button, a):focus-visible {
@@ -1626,11 +1071,17 @@
     font-size: clamp(2.8rem, 4.7vw, 4rem);
   }
 
-  /* 2026-11-11 redesign piece 1: the mosaic is a vertical food card at
-     every width — the thumbnail stays full-width and the name stays
-     visible. The old rule flattened the tabs to a 48px strip with no name. */
+  .mealGrid button {
+    grid-template-columns: 1fr;
+  }
+
   .mealThumb {
-    height: 72px;
+    width: 100%;
+    height: 48px;
+  }
+
+  .mealGrid b {
+    display: none;
   }
 
   .planGrid button {
@@ -1669,11 +1120,17 @@
     min-height: 430px;
   }
 
-  /* 2026-11-11 redesign piece 1: the mosaic stays a vertical food card
-     when the hero stacks — the old rule flattened it back to a 60px
-     thumbnail row. */
+  .mealGrid button {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
   .mealThumb {
-    height: 76px;
+    width: 60px;
+    height: 54px;
+  }
+
+  .mealGrid b {
+    display: block;
   }
 
   .appTools {
@@ -1714,6 +1171,14 @@
     grid-template-columns: 1fr;
     align-items: start;
     gap: 10px;
+  }
+
+  .proofLine {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .proofLine > span {
+    display: none;
   }
 }
 
@@ -1765,52 +1230,19 @@
     font-size: var(--fk-t-xs);
   }
 
-  /* The section keeps its descriptions on a phone: it stacks instead of
-     hiding them, which is the point of moving it out of the strip. */
-  .howSteps {
-    grid-template-columns: 1fr;
-    gap: 0;
+  .operation {
+    margin-top: 14px;
   }
 
-  .howSteps li {
-    padding: 0 0 16px;
-    border-right: 0;
-    border-bottom: 1px solid var(--fk-line-2);
+  .operation li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+    padding-inline: 8px;
   }
 
-  .howSteps li + li {
-    padding-top: 16px;
-  }
-
-  .howSteps li:last-child {
-    padding-bottom: 0;
-    border-bottom: 0;
-  }
-
-  /* The scale band stacks in the same order it reads on desktop: device
-     and steps first, then the gauge and the trend. The mail row stacks
-     instead of squeezing three times into one column. */
-  .scaleGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .scaleMail {
-    grid-template-columns: 1fr;
-  }
-
-  .scaleMail li {
-    padding: 0 0 16px;
-    border-right: 0;
-    border-bottom: 1px solid var(--fk-line-2);
-  }
-
-  .scaleMail li + li {
-    padding-top: 16px;
-  }
-
-  .scaleMail li:last-child {
-    padding-bottom: 0;
-    border-bottom: 0;
+  .operation small {
+    display: none;
   }
 
   .menuPreview {
@@ -1846,16 +1278,22 @@
     line-clamp: 3;
   }
 
-  /* 2026-11-11 redesign piece 1: two mosaic columns on a phone, the right
-     column stepped down (the base nth-child stagger). The old rule flattened
-     the tabs back to a 52px thumbnail row. */
   .mealGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+  }
+
+  .mealGrid button {
+    grid-template-columns: 52px minmax(0, 1fr);
+    min-height: 68px;
   }
 
   .mealThumb {
-    height: 84px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .mealGrid b {
+    font-size: 0.6875rem;
   }
 
   .appTools {
@@ -1946,6 +1384,17 @@
     grid-column: 2;
     grid-row: 1 / span 2;
   }
+
+  .proofLine {
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+  }
+
+  .proofLine blockquote {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    white-space: normal;
+  }
 }
 
 @media (max-width: 420px) {
@@ -1957,15 +1406,28 @@
     grid-template-columns: 1fr;
   }
 
+  .operation b {
+    font-size: 0.6875rem;
+  }
+
   .featureMeal,
   .menuUnavailable {
     min-height: 270px;
   }
 
-  /* 2026-11-11 redesign piece 1: no flattening at the narrowest widths either —
-     the mosaic stays a vertical food card with the meal name visible at 390px,
-     per the ≤720px rules above. The old rule here turned each tab into a
-     46px thumbnail row and hid the name. */
+  .mealGrid button {
+    grid-template-columns: 46px minmax(0, 1fr);
+    min-height: 62px;
+  }
+
+  .mealThumb {
+    width: 46px;
+    height: 46px;
+  }
+
+  .mealGrid b {
+    display: none;
+  }
 
   .cardHead {
     align-items: stretch;
@@ -2036,6 +1498,10 @@
   .featureMeal {
     min-height: 300px;
   }
+
+  .operation {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2046,9 +1512,5 @@
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
-  }
-
-  .steam {
-    display: none;
   }
 }

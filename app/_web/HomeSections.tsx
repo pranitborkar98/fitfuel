@@ -38,7 +38,7 @@ import {
 import { decomposePrice } from "@/lib/pricing-decomposition";
 
 import {
-  HOMEPAGE_CONDITIONS,
+  CONDITIONS,
   COACH_WEEKS,
   DAY_STEPS,
   FAQS,
@@ -46,12 +46,8 @@ import {
   WEDGE_COLS,
   wedgeRows,
 } from "./home-data";
-import type { BandCounts } from "./home-data";
+import type { BandCounts } from "./HomeBands";
 import { useReveal } from "./useReveal";
-import HomeLaunchpad from "./HomeLaunchpad";
-import HomeToday from "./HomeToday";
-import { ExampleCalorieChart, SampleDayVisual, WeighingFlow } from "./HomeCharts";
-import productStyles from "@/app/_kitchen/product-network.module.css";
 import s from "./app.module.css";
 import r from "./refresh.module.css";
 
@@ -83,7 +79,7 @@ const MEALS_PER_DAY: Record<MealKey, number> = {
 
 export type HomeSectionsProps = {
   counts: BandCounts;
-  /** Distinct subCategory values across the seeded plans — goals and conditions. */
+  /** Distinct subCategory values across the 126 plans — goals and conditions. */
   goalCount: number;
   /** The seeded PlanPrice matrix, one row per (diet × duration × meals). */
   prices: PriceRow[];
@@ -120,19 +116,17 @@ export default function HomeSections({
 
   return (
     <div ref={revealRef}>
-      <DashboardBand counts={counts} />
-      <TrialReceiptBand trial={trial} />
+      <ProductPreviewBand counts={counts} />
+      <CoachBand trial={trial} />
       <PlanBand prices={prices} />
       <ConditionsBand counts={counts} goalCount={goalCount} />
-      <DigitalPlansBand counts={counts} />
+      <DigitalPlansBand />
       <DayBand />
       <WedgeBand counts={counts} />
       <RetailBand products={retailProducts} counts={counts} />
       <DeliveryFaqBand cutoffLabel={cutoffLabel} />
       <CtaBand
         trialTotal={trial.total}
-        /* counts.plans is the concepts count (one card per concept in the
-           catalogue), not the row total — see BandCounts in home-data.ts. */
         planCount={counts.plans}
         cutoffLabel={cutoffLabel}
       />
@@ -155,7 +149,7 @@ function DayBand() {
           </div>
           <p className={s.bandLede}>
             Your live weight, profile and goal set the calorie target. Your
-            nearest FitFuel kitchen turns that target into portion grams, weighs every
+            assigned kitchen turns that target into portion grams, weighs every
             meal, labels it to you and sends it with the local delivery team.
           </p>
         </div>
@@ -203,11 +197,6 @@ function DayBand() {
             </li>
           ))}
         </ol>
-
-        {/* The weighing process itself, as steps: the timeline above says
-            when, this says how a portion is weighed. Reuses the real
-            weighing photograph; no meal is drawn as a diagram. */}
-        <WeighingFlow />
       </div>
     </section>
   );
@@ -220,8 +209,8 @@ function DayBand() {
 
    It sits HERE, directly after the platform band, because that band says what
    we run and this one says why none of the cheaper things does it. Answering
-   "why not an aggregator, a tiffin, or cooking at home" after the reader has
-   already scrolled past the price is answering it too late.
+   "why not a tiffin service" after the reader has already scrolled past the
+   price is answering it too late.
 
    The desktop keeps the full table. A phone gets one complete capability at a
    time because horizontal panning hid the FitFuel answer off-screen. */
@@ -229,7 +218,7 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
   const rows = wedgeRows(counts.exercises, counts.conditionPlans);
 
   return (
-    <section className={`${s.band2} ${s.bandWarm}`} aria-labelledby="wedge-h">
+    <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="wedge-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
@@ -241,15 +230,15 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
             A supported Bluetooth scale reads your weight live. FitFuel uses
             the saved trend with your profile, activity and goal to calculate
             and recalibrate the target. The kitchen then weighs each portion to
-            your target.
+            the accepted number.
           </p>
         </div>
 
         <div className={`${s.specWrap} ${s.specDesktop}`} data-reveal="up">
           <table className={s.spec}>
             <caption className="fk-sr-only">
-              What healthy options on Zomato/Swiggy, a local tiffin, cooking
-              at home and FitFuel each do
+              What a tiffin service, a fitness app, a supplement brand and
+              FitFuel each do
             </caption>
             <thead>
               <tr>
@@ -268,9 +257,9 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
               {rows.map((r) => (
                 <tr key={r.what}>
                   <th scope="row">{r.what}</th>
-                  <td>{r.aggregator}</td>
                   <td>{r.tiffin}</td>
-                  <td>{r.home}</td>
+                  <td>{r.app}</td>
+                  <td>{r.supp}</td>
                   <td className={s.specMine}>{r.us}</td>
                 </tr>
               ))}
@@ -288,16 +277,16 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
               <p className={s.wedgeCardAnswer}>{row.us}</p>
               <dl className={s.wedgeAlternatives}>
                 <div>
-                  <dt>Zomato/Swiggy</dt>
-                  <dd>{row.aggregator}</dd>
-                </div>
-                <div>
                   <dt>Tiffin</dt>
                   <dd>{row.tiffin}</dd>
                 </div>
                 <div>
-                  <dt>Cooking at home</dt>
-                  <dd>{row.home}</dd>
+                  <dt>Fitness app</dt>
+                  <dd>{row.app}</dd>
+                </div>
+                <div>
+                  <dt>Supplement</dt>
+                  <dd>{row.supp}</dd>
                 </div>
               </dl>
             </li>
@@ -312,7 +301,7 @@ function WedgeBand({ counts }: { counts: BandCounts }) {
    Digital plans are not a fallback for an uncovered postcode. They are a
    product FitFuel can sell everywhere in India today, so they get a complete
    sales block instead of one small card under local kitchen services. */
-function DigitalPlansBand({ counts }: { counts: BandCounts }) {
+function DigitalPlansBand() {
   return (
     <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="digital-h">
       <div className={s.bandWrap}>
@@ -320,7 +309,7 @@ function DigitalPlansBand({ counts }: { counts: BandCounts }) {
           <div className={s.digitalCopy} data-reveal="left">
             <span className={s.serviceSignal}>Available across India</span>
             <h2 id="digital-h" className={s.bandH2}>
-              The full FitFuel plan, even when you cook at home
+              The full FitFuel plan, even when you cook at home.
             </h2>
             <p>
               Choose a goal or condition and get 30 planned days, measured
@@ -330,11 +319,7 @@ function DigitalPlansBand({ counts }: { counts: BandCounts }) {
             </p>
             <ul className={s.digitalProofs}>
               <li>30 days planned</li>
-              <li>
-                {counts.recipes > 0
-                  ? `${counts.recipes.toLocaleString("en-IN")} recipes, measured in grams`
-                  : "Recipes measured in grams"}
-              </li>
+              <li>Recipes measured in grams</li>
               <li>Macros for every meal</li>
               <li>Four weekly grocery lists</li>
             </ul>
@@ -348,7 +333,7 @@ function DigitalPlansBand({ counts }: { counts: BandCounts }) {
             </div>
           </div>
 
-          <div className={s.digitalPack} data-reveal="scale" data-tilt aria-label="Digital plan contents preview">
+          <div className={s.digitalPack} data-reveal="scale" aria-label="Digital plan contents preview">
             <div className={s.digitalPackHead}>
               <span>
                 <small>Your digital plan</small>
@@ -388,31 +373,11 @@ function DigitalPlansBand({ counts }: { counts: BandCounts }) {
   );
 }
 
-/* ── 2d. The dashboard, in one section ─────────────────────────────────────
-   2026-11-10 conversion restructure: five dashboard sections became one.
-   What merged where, so no purpose vanishes silently:
-
-   - "Daily tools" (HomeLaunchpad, was in the hero) — the six tool links,
-     now the first block below. Its "Explore all services" directory is
-     GONE with the strip, not merged.
-   - "Today at a glance" (HomeToday, was in the hero) — the live day widget,
-     guest sample day included, now the second block.
-   - "A dashboard for the days between orders" (the productFeature card in
-     HomeExperience) — its copy, its three steps and its dashboard-preview
-     link are the section intro. Its "Explore all FitFuel services" link is
-     gone with the strip.
-   - "Food, body, training and guidance" (this band's old four preview
-     cards) — the body-measurements and training cards stay. The Today card
-     is dropped because HomeToday above IS the today view, and the
-     Supplements card is dropped because supplements get one slim strip
-     (RetailBand below), not a second mention here. The "Also inside"
-     directory stays.
-   - "AI coach and weekly review" (CoachBand's left card) — the whole coach
-     block, now the last block, keeping its id="coach-h" anchor.
-
-   The trial receipt that shared CoachBand's grid is NOT dashboard content;
-   it lives on as TrialReceiptBand directly below. */
-function DashboardBand({ counts }: { counts: BandCounts }) {
+/* ── 2d. Show the product ──────────────────────────────────────────────────
+   The old directory named nine dashboard routes but never showed a reader
+   what any of them looked like. Four compact, honest examples make the joined
+   up product visible without turning the homepage into nine more screens. */
+function ProductPreviewBand({ counts }: { counts: BandCounts }) {
   const more = SURFACES.filter(
     (surface) =>
       ![
@@ -422,9 +387,6 @@ function DashboardBand({ counts }: { counts: BandCounts }) {
         "/dashboard/supplements",
       ].includes(surface.href),
   );
-  /* Bars plot the loss from baseline, magnified so a 0.4 kg spread is
-     readable: the stall in week 3 has to be visible, not implied. */
-  const base = COACH_WEEKS[0].kg;
 
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="inside-h">
@@ -432,155 +394,104 @@ function DashboardBand({ counts }: { counts: BandCounts }) {
         <div className={s.bandHead}>
           <div>
             <h2 id="inside-h" className={s.bandH2}>
-              Your dashboard for the days between orders
+              Food, body, training and guidance in one place.
             </h2>
           </div>
           <p className={s.bandLede}>
-            Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.
+            This is the product behind the delivery. Meals arrive pre-filled,
+            scale readings build the trend, training changes the day&apos;s net
+            calories and supplement research stays separate from selling stock.
           </p>
         </div>
 
-        <div className={s.dashboardStack}>
-          <div>
-            <Link href="/dashboard-preview" className={s.bandPrimary}>Try the dashboard preview</Link>
-          </div>
-          <ol className={productStyles.featureSteps}>
-            <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
-            <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>
-            <li><b>Review before changing your target</b>Use your weekly review and coach to understand progress.</li>
-          </ol>
-
-          <HomeLaunchpad />
-
-          <HomeToday />
-
-          <ul className={s.productPreviewGrid}>
-            <li data-reveal="up">
-              <Link href="/dashboard/body-metrics" className={`${s.productPreviewCard} ${s.previewScale}`}>
-                <span className={s.productPreviewHead}>
-                  <span>Body measurements</span>
-                  <small className={s.liveReading}><i aria-hidden="true" /> Example live reading</small>
-                </span>
-                <span className={`${s.scaleNumber} fk-num`}>78.2 <small>kg</small></span>
-                <h3>Your actual weight enters the loop.</h3>
-                <p>
-                  Weight is measured directly from a supported Bluetooth scale.
-                  The saved trend drives weekly recalculation. Other composition
-                  figures are clearly marked as estimates.
-                </p>
-              </Link>
-            </li>
-
-            <li data-reveal="up">
-              <Link href="/dashboard/exercises" className={`${s.productPreviewCard} ${s.previewTraining}`}>
-                <span className={s.productPreviewHead}>
-                  <span>Training</span>
-                  <small>Example session · {counts.exercises.toLocaleString("en-IN")} exercises</small>
-                </span>
-                <h3>Your session is already programmed.</h3>
-                <ul className={s.trainingRows}>
-                  <li><span>Goblet squat</span><b>3 × 10</b></li>
-                  <li><span>Dumbbell press</span><b>3 × 12</b></li>
-                  <li><span>Plank</span><b>3 × 45 sec</b></li>
-                </ul>
-                <span className={s.previewFoot}>Sets, reps, load and rest feed into today</span>
-              </Link>
-            </li>
-          </ul>
-
-          <nav className={s.moreSurfaces} aria-label="More FitFuel dashboard screens">
-            <span>Also inside</span>
-            <ul>
-              {more.map((surface) => (
-                <li key={surface.href}>
-                  <Link href={surface.href}>
-                    {surface.name}
-                    <span>Open</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div className={s.coachCard}>
-            <h3 id="coach-h" className={s.coachH}>
-              AI coach and weekly review, connected to your progress
-            </h3>
-            <p className={s.coachLede}>
-              Ask the AI coach about your logged meals, workouts and progress.
-              The weekly review reads your weight trend against your goal and current target. You see
-              the calculation before deciding whether to change anything. An
-              example month:
-            </p>
-
-            <div className={s.bandActions}>
-              <button type="button" className={s.bandPrimary} onClick={() => document.getElementById("fitfuel-coach-trigger")?.click()}>Open AI coach</button>
-              <Link href="/dashboard/coach" className={s.bandSecondary}>Open weekly review</Link>
-            </div>
-            <ol className={s.weekRow}>
-              {COACH_WEEKS.map((w, i) => {
-                const lost = base - w.kg;
-                const h = Math.max(10, Math.min(100, 12 + (lost / 0.5) * 88));
-                const stall = i === 2;
-                return (
-                  <li key={w.w} data-reveal="up">
-                    {/* The bar is decoration: the figure beside it prints the
-                        same kilograms and the same change as text, so a
-                        screen reader gets the numbers once, not a shape
-                        with no data followed by the same data again. */}
-                    <span className={s.weekBar} aria-hidden="true">
-                      <span
-                        className={stall ? s.weekFillStall : s.weekFill}
-                        style={{ height: `${h}%` }}
-                      />
-                    </span>
-                    <span className={s.weekFig}>
-                      <b className="fk-num">{w.kg.toFixed(1)} kg</b>
-                      <span className="fk-num">
-                        {i === 0 ? "baseline" : lost > 0 ? `−${lost.toFixed(1)} kg` : "+0.1 kg"}
-                      </span>
-                    </span>
-                    <span className={s.weekName}>{w.w}</span>
-                    <span className={s.weekNote}>{w.note}</span>
-                  </li>
-                );
-              })}
-            </ol>
-
-            <p className={s.coachSum}>
-              <span className="fk-num">2,000 kcal</span>
-              <i aria-hidden="true">−</i>
-              <span className="fk-num">300 kcal</span>
-              <i aria-hidden="true">=</i>
-              <b className="fk-num">1,700 kcal</b>
-              <span className={s.coachSumNote}>
-                The engine&apos;s maximum single change after the trend leaves its goal range.
+        <ul className={s.productPreviewGrid}>
+          <li data-reveal="up">
+            <Link href="/dashboard" className={`${s.productPreviewCard} ${s.previewToday}`}>
+              <span className={s.productPreviewHead}>
+                <span>Today dashboard</span>
+                <small>Example member day</small>
               </span>
-            </p>
-          </div>
+              <h3>Everything for today, already joined up.</h3>
+              <dl className={s.todayNumbers}>
+                <div><dt>Eaten</dt><dd className="fk-num">1,430 kcal</dd></div>
+                <div><dt>Exercise</dt><dd className="fk-num">280 kcal</dd></div>
+                <div><dt>Net left</dt><dd className="fk-num">850 kcal</dd></div>
+              </dl>
+              <span className={s.todayTrack} aria-hidden="true"><i /></span>
+              <span className={s.previewFoot}>Meals, delivery, water and progress on one screen</span>
+            </Link>
+          </li>
 
-          {/* The progress screen's calorie chart, as a labelled example shape:
-              the weight trend above is the coach's example month, this is the
-              calorie half of the same screen. */}
-          <ExampleCalorieChart />
-        </div>
+          <li data-reveal="up">
+            <Link href="/dashboard/body-metrics" className={`${s.productPreviewCard} ${s.previewScale}`}>
+              <span className={s.productPreviewHead}>
+                <span>Body measurements</span>
+                <small className={s.liveReading}><i aria-hidden="true" /> Example live reading</small>
+              </span>
+              <span className={`${s.scaleNumber} fk-num`}>78.2 <small>kg</small></span>
+              <h3>Your actual weight enters the loop.</h3>
+              <p>
+                Weight is measured directly from a supported Bluetooth scale.
+                The saved trend drives weekly recalculation. Other composition
+                figures are clearly marked as estimates.
+              </p>
+            </Link>
+          </li>
+
+          <li data-reveal="up">
+            <Link href="/dashboard/exercises" className={`${s.productPreviewCard} ${s.previewTraining}`}>
+              <span className={s.productPreviewHead}>
+                <span>Training</span>
+                <small>Example session · {counts.exercises.toLocaleString("en-IN")} exercises</small>
+              </span>
+              <h3>Your session is already programmed.</h3>
+              <ul className={s.trainingRows}>
+                <li><span>Goblet squat</span><b>3 × 10</b></li>
+                <li><span>Dumbbell press</span><b>3 × 12</b></li>
+                <li><span>Plank</span><b>3 × 45 sec</b></li>
+              </ul>
+              <span className={s.previewFoot}>Sets, reps, load and rest feed into today</span>
+            </Link>
+          </li>
+
+          <li data-reveal="up">
+            <Link href="/dashboard/supplements" className={`${s.productPreviewCard} ${s.previewSupplements}`}>
+              <span className={s.productPreviewHead}>
+                <span>Supplements</span>
+                <small>{counts.supplements.toLocaleString("en-IN")} researched</small>
+              </span>
+              <h3>Evidence first. Retailer choice stays yours.</h3>
+              <ul className={s.supplementRows}>
+                <li><span>Creatine monohydrate</span><b>Evidence</b></li>
+                <li><span>Omega-3</span><b>Goal match</b></li>
+                <li>
+                  <span>Tracked retailer products</span>
+                  <b>{counts.retailerLinks.toLocaleString("en-IN")}</b>
+                </li>
+              </ul>
+              <span className={s.previewFoot}>FitFuel holds no supplement stock</span>
+            </Link>
+          </li>
+        </ul>
+
+        <nav className={s.moreSurfaces} aria-label="More FitFuel dashboard screens">
+          <span>Also inside</span>
+          <ul>
+            {more.map((surface) => (
+              <li key={surface.href}>
+                <Link href={surface.href}>
+                  {surface.name}
+                  <span>Open</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </section>
   );
 }
 
-/* ── 2e. Supplements, as real product cards ─────────────────────────────────
-   2026-11-11 homepage fix, on chintu's call: the slim text-only strip PR #16
-   left here did not show the catalogue he built, so the card grid is back.
-   This is the pre-restructure RetailBand, restored: the same four preview
-   products RetailBand already receives (whey protein, creatine, omega-3,
-   magnesium), each with its photograph, the retailer product name and price,
-   an evidence link and a buy link. The buy link is product.buy.url, the
-   tracked /api/supplements/click route that redirects to the Nutrabay
-   affiliate URL, the same path /supplements uses. Nothing is listed twice:
-   the text-only link list is gone, and the full catalogue stays on
-   /products. The disclosure stays verbatim: it is an affiliate statement,
-   not decoration. */
 function RetailBand({
   products,
   counts,
@@ -594,21 +505,15 @@ function RetailBand({
         <div className={s.bandHead}>
           <div>
             <h2 id="retail-h" className={s.bandH2}>
-              Supplements from Nutrabay, with ingredient guidance
+              Supplements from Nutrabay, with ingredient guidance.
             </h2>
           </div>
           <p className={s.bandLede}>
-            Nutrabay handles payment and fulfilment. FitFuel may earn
+            Browse the Nutrabay catalogue and read ingredient guidance where
+            available. Nutrabay handles payment and fulfilment. FitFuel may earn
             a commission from qualifying purchases.
           </p>
         </div>
-
-        <p className={s.retailNote}>
-          Evidence first. Retailer choice stays yours.{" "}
-          {counts.supplements.toLocaleString("en-IN")} researched supplements
-          and {counts.retailerLinks.toLocaleString("en-IN")} tracked retailer
-          listings.
-        </p>
 
         <div className={s.bandActions}>
           <Link href="/products" className={s.bandPrimary}>Browse {counts.marketplaceProducts.toLocaleString("en-IN")} Nutrabay products</Link>
@@ -627,7 +532,7 @@ function RetailBand({
                     src={product.imageUrl}
                     alt={`Nutrabay product listed for ${product.name}`}
                     fill
-                    sizes="(min-width: 1100px) 25vw, (min-width: 640px) 48vw, 50vw"
+                    sizes="(min-width: 1100px) 25vw, (min-width: 640px) 48vw, 100vw"
                     style={{ objectFit: "contain" }}
                     loading="lazy"
                   />
@@ -677,10 +582,9 @@ function RetailBand({
    server, run through lib/pricing-decomposition for GST — the same two modules
    /plans and checkout use. The saving row is measured against the one-week rate
    for the same meal combo, so it is a real comparison rather than a percentage
-   somebody typed. Premium and Luxury have no MealPlan rows yet, so they are
-   marked Coming soon, show no prices, and their button says so instead of
-   taking money. */
-/* planCount went with the "plans" eyebrow. The count is still on the page
+   somebody typed. Premium and Luxury have no MealPlan rows yet, so they price
+   as estimates and their button says so instead of taking money. */
+/* planCount went with the "126 plans" eyebrow. The count is still on the page
    — the platform band leads with it, and the close offers "See the N plans". */
 function PlanBand({ prices }: { prices: PriceRow[] }) {
   const [duration, setDuration] = useState<DurationKey>("ONE_MONTH");
@@ -747,7 +651,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
     render?: (key: K, label: string) => React.ReactNode;
   }) {
     return (
-      <div className={s.axis} role="group" aria-label={opts.label}>
+      <div className={s.axis}>
         <span className={s.axisLabel}>{opts.label}</span>
         <div className={s.axisOpts}>
           {opts.options.map((o) => (
@@ -767,7 +671,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
   }
 
   return (
-    <section className={`${s.band2} ${s.bandWarm}`} aria-labelledby="plan-h">
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="plan-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
@@ -828,7 +732,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
                     onClick={() => setTier(t.key)}
                     aria-pressed={tier === t.key}
                   >
-                    <b>{t.label}{!t.available ? " (Coming soon)" : ""}</b>
+                    <b>{t.label}{!t.available ? " (estimate)" : ""}</b>
                     <span>{t.tagline}</span>
                   </button>
                 ))}
@@ -843,7 +747,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
             </b>
             <span className={s.planSumNote}>{tierMeta.tagline}</span>
 
-            {sum && tierMeta.available ? (
+            {sum ? (
               <>
                 <span className={s.planRows}>
                   <span>
@@ -875,23 +779,19 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
                   <span className="fk-num">{rs(sum.perDay)} a day</span>
                 </span>
 
-                <Link href={href} className={s.planCta}>
-                  See {dietMeta.label.toLowerCase()} plans
-                </Link>
+                {tierMeta.available ? (
+                  <Link href={href} className={s.planCta}>
+                    See {dietMeta.label.toLowerCase()} plans
+                  </Link>
+                ) : (
+                  <Link href={href} className={`${s.planCta} ${s.planCtaGhost}`}>
+                    Compare available plans
+                  </Link>
+                )}
                 <span className={s.planFine}>
-                  Delivery, packaging and 5% GST included. Pro-rata refund on unserved days.
-                </span>
-              </>
-            ) : sum ? (
-              /* Coming soon tiers show no prices: the per-meal rate and total
-                 above are Standard figures, and a multiplier of Standard is
-                 not a Premium or Luxury price. */
-              <>
-                <Link href={href} className={`${s.planCta} ${s.planCtaGhost}`}>
-                  Compare available plans
-                </Link>
-                <span className={s.planFine}>
-                  {`${tierMeta.label} is coming soon. Nothing is charged from here.`}
+                  {tierMeta.available
+                    ? "Delivery, packaging and 5% GST included. Pro-rata refund on unserved days."
+                    : `${tierMeta.label} is priced as an estimate against Standard until those plans are cooking. Nothing is charged from here.`}
                 </span>
               </>
             ) : (
@@ -920,12 +820,7 @@ const DIET_ENUM: Record<DietKey, string> = {
 
 /* ── 5. Cooked for a diagnosis ──────────────────────────────────────────────
    The hardest thing here for a tiffin service to copy, and the reason a
-   diabetic or PCOS customer picks us over a cheaper box.
-
-   2026-11-10 conversion restructure: the wall shows 8 chips, not all 29.
-   HOMEPAGE_CONDITIONS (home-data.ts) already applies the rules: one chip
-   per plan page, no Cancer recovery or Kidney health chips on the homepage
-   wall. The stats beside the wall still count the whole catalogue. */
+   diabetic or PCOS customer picks us over a cheaper box. */
 function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: number }) {
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="cond-h">
@@ -939,8 +834,6 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
             plans. If you have a diagnosed condition, confirm suitability with
             your clinician before ordering. A meal plan does not replace treatment.
           </p>
-          {/* counts.plans and counts.conditionPlans are concept counts,
-              matching the catalogue cards — see BandCounts in home-data.ts. */}
           {counts.plans > 0 ? <div className={s.condStats}>
             <span>
               <b data-count={counts.conditionPlans}>{counts.conditionPlans}</b>
@@ -958,7 +851,7 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
         </div>
         <div>
           <ul className={s.condChips}>
-            {HOMEPAGE_CONDITIONS.map((c) => (
+            {CONDITIONS.map((c) => (
               <li key={c.label} data-reveal="scale">
                 {/* Straight to the plan. See the note in home-data.ts — the
                     `?q=` these used to carry was read by nothing. */}
@@ -967,7 +860,7 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
             ))}
             <li>
               <Link href="/plans" className={s.condMore}>
-                {goalCount > 0 ? `See all ${goalCount}` : "See every plan"}
+                See every plan
               </Link>
             </li>
           </ul>
@@ -977,19 +870,72 @@ function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: 
   );
 }
 
-/* ── 6. One trial day, itemised ─────────────────────────────────────────────
-   2026-11-10 conversion restructure: this is what is left of CoachBand
-   after the coach moved into the single dashboard section (DashboardBand
-   above). The receipt is NOT dashboard content, so it keeps its own band:
-   the trial, itemised from lib/trial-price.ts, with the total a customer
-   actually pays. The kicker is the section heading, so a screen reader
-   lands on a named section instead of an unnamed card. */
-function TrialReceiptBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
+/* ── 6. The coach, and one trial day itemised ───────────────────────────────
+   Left: what lib/coach/recalibration.ts does, drawn. Right: the trial receipt,
+   every line of it from lib/trial-price.ts. */
+function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
+  /* Bars plot the loss from baseline, magnified so a 0.4 kg spread is
+     readable: the stall in week 3 has to be visible, not implied. */
+  const base = COACH_WEEKS[0].kg;
+
   return (
-    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="trial-h">
-      <div className={s.bandWrap}>
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="coach-h">
+      <div className={`${s.bandWrap} ${s.coachWrap}`}>
+        <div className={s.coachCard}>
+          <h2 id="coach-h" className={s.coachH}>
+            AI coach and weekly review, connected to your progress
+          </h2>
+          <p className={s.coachLede}>
+            Ask the AI coach about your logged meals, workouts and progress.
+            The weekly review reads your weight trend against your goal and current target. You see
+            the calculation before deciding whether to change anything. An
+            example month:
+          </p>
+
+          <div className={s.bandActions}>
+            <button type="button" className={s.bandPrimary} onClick={() => document.getElementById("fitfuel-coach-trigger")?.click()}>Open AI coach</button>
+            <Link href="/dashboard/coach" className={s.bandSecondary}>Open weekly review</Link>
+          </div>
+          <ol className={s.weekRow}>
+            {COACH_WEEKS.map((w, i) => {
+              const lost = base - w.kg;
+              const h = Math.max(10, Math.min(100, 12 + (lost / 0.5) * 88));
+              const stall = i === 2;
+              return (
+                <li key={w.w} data-reveal="up">
+                  <span className={s.weekBar}>
+                    <span
+                      className={stall ? s.weekFillStall : s.weekFill}
+                      style={{ height: `${h}%` }}
+                    />
+                  </span>
+                  <span className={s.weekFig}>
+                    <b className="fk-num">{w.kg.toFixed(1)} kg</b>
+                    <span className="fk-num">
+                      {i === 0 ? "baseline" : lost > 0 ? `−${lost.toFixed(1)} kg` : "+0.1 kg"}
+                    </span>
+                  </span>
+                  <span className={s.weekName}>{w.w}</span>
+                  <span className={s.weekNote}>{w.note}</span>
+                </li>
+              );
+            })}
+          </ol>
+
+          <p className={s.coachSum}>
+            <span className="fk-num">2,000 kcal</span>
+            <i aria-hidden="true">−</i>
+            <span className="fk-num">300 kcal</span>
+            <i aria-hidden="true">=</i>
+            <b className="fk-num">1,700 kcal</b>
+            <span className={s.coachSumNote}>
+              The engine&apos;s maximum single change after the trend leaves its goal range.
+            </span>
+          </p>
+        </div>
+
         <div className={s.receiptCard}>
-          <h2 id="trial-h" className={s.receiptKicker}>One trial day, itemised</h2>
+          <span className={s.receiptKicker}>One trial day, itemised</span>
           <b className={s.receiptH}>{trial.total}, nothing added later</b>
           <span className={s.receiptRows}>
             {trial.rows.map((r) => (
@@ -1004,13 +950,9 @@ function TrialReceiptBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
             <b className="fk-num">{trial.total}</b>
           </span>
           <span className={s.receiptNote}>
-            No aggregator takes a cut, so more of what you pay goes into the food.
+            No aggregator sits in the middle, so the cut that usually leaves the
+            rupee stays in the food.
           </span>
-
-          {/* What a day of it adds up to, drawn from the sample day the
-              dashboard preview already shows. Plan/trial context only: no
-              macro visual goes on a dish card. */}
-          <SampleDayVisual />
         </div>
       </div>
     </section>
@@ -1132,7 +1074,7 @@ function CtaBand({
 
      Every line below is a fact stated somewhere else on this page or modelled
      in a real module: the cutoff is lib/order-cutoff, the drop window is the
-     day band's own morning window, and the trial
+     day band's own 04:00→08:00, the area count is areas-data, and the trial
      total is lib/trial-price. Nothing here is a new promise. */
   const steps: { n: string; label: string; line: string }[] = [
     {
@@ -1146,7 +1088,7 @@ function CtaBand({
       line: "Your nearest FitFuel kitchen cooks from the recipe sheet and weighs every portion.",
     },
     {
-      n: "Morning",
+      n: "By 08:00",
       label: "Breakfast and lunch, at your door",
       line: "Your delivery window is confirmed for your address. Your macros are ready in the diary.",
     },
@@ -1175,7 +1117,7 @@ function CtaBand({
             </Link>
           </div>
         </div>
-        <span className={s.closeShot} data-tilt>
+        <span className={s.closeShot}>
           <Image
             src="/images/brand/weekly-meal-delivery.webp"
             alt="Illustration of a weekly Indian meal delivery with four prepared meals"

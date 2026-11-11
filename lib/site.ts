@@ -9,14 +9,10 @@
 // domain and canonicals declaring another, which is the exact signal that
 // makes a crawler distrust both.
 //
-// Rule: canonical URLs always use the origin that is actually serving the
-// site. fitfuel.in is the production domain, but it is not serving this
-// deployment yet, so the fallback below is the live deployment
-// (https://fitfuel-eosin.vercel.app) until launch. Flip FALLBACK back to
-// https://fitfuel.in at launch; the env override still wins for any
-// non-preview host set explicitly.
+// Rule: canonical URLs always use the production domain. A preview deployment
+// should not be publishing its own hostname into a sitemap.
 
-const FALLBACK = "https://fitfuel-eosin.vercel.app";
+const FALLBACK = "https://fitfuel.in";
 
 function normalise(u: string | undefined): string | null {
   if (!u) return null;
@@ -27,7 +23,7 @@ function normalise(u: string | undefined): string | null {
 
 // NEXT_PUBLIC_SITE_URL is the explicit override. NEXT_PUBLIC_BASE_URL is kept
 // for backwards compatibility but is ignored when it points at a preview host,
-// so previews inherit the live canonical rather than competing with it.
+// so previews inherit the production canonical rather than competing with it.
 const configured = normalise(process.env.NEXT_PUBLIC_SITE_URL)
   ?? normalise(process.env.NEXT_PUBLIC_BASE_URL);
 

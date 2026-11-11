@@ -54,7 +54,7 @@ export default function Loading() {
         }
       `}</style>
       <div className="ldWrap">
-        <span className="ldTxt">Loading FitFuel</span>
+        <span className="ldTxt">Plating your page</span>
         <div className="ldTrack" aria-hidden="true" />
       </div>
     </main>

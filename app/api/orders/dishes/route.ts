@@ -31,7 +31,6 @@ import { DISH_BY_ID, MAX_QTY, isOrderable, receipt, resolveLines } from "@/lib/m
 import { resolveCheckoutCustomer } from "@/lib/checkout-customer";
 import { auth } from "@/lib/auth";
 import { getPayuConfig } from "@/lib/payu-config";
-import { buildPayuInitHash } from "@/lib/payu-hash";
 import { captureCheckoutReferral } from "@/lib/checkout-referral";
 
 function genOrderNumber(): string {
@@ -105,7 +104,8 @@ export async function POST(req: NextRequest) {
     const productinfo = `FitFuel ${resolved.length} dish${resolved.length === 1 ? "" : "es"}`;
 
     // Identical formula to the plan route. All udf fields empty.
-    const hash = buildPayuInitHash({ key: payu.key, txnid, amount: payuAmount, productinfo, firstname, email, salt: payu.salt });
+    const hashString = `${payu.key}|${txnid}|${payuAmount}|${productinfo}|${firstname}|${email}|||||||||||${payu.salt}`;
+    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
     await prisma.$transaction(async (tx) => {
       const addr = await tx.address.create({

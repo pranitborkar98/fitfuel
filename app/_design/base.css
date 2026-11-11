@@ -13,10 +13,10 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* app/layout.tsx inline-styles <body> to the OLD dark ground for the legacy
-   pages. Without this, the black ground stops at the storefront's own box and
-   the dead near-black shows through on overscroll and on any viewport taller
-   than the content. `:has()` lets the ground follow the page that opted in,
-   instead of flipping the default for 27 pages that are not ready for it. */
+   pages. Without this, warm paper stops at the storefront's own box and the
+   dead near-black shows through on overscroll and on any viewport taller than
+   the content. `:has()` lets the ground follow the page that opted in, instead
+   of flipping the default for 27 pages that are not ready for it. */
 html:has(.fk),
 body:has(.fk),
 main:has(.fk) {
@@ -237,7 +237,7 @@ main:has(.fk) {
 
 /* ── Images ─────────────────────────────────────────────────────────────────
    Food is the brightest thing on the page. A hair more saturation and warmth
-   makes a plated photograph read appetising against the black ground; it is applied
+   makes a plated photograph read appetising against warm paper; it is applied
    here once rather than baked into the files, so a real photograph swapping in
    for a placeholder inherits the same grade automatically. */
 .fk .fk-food {

@@ -16,22 +16,15 @@
 // lib/site-images.ts explains at length why a doorstep illustrated with a bowl
 // of vegetables is worse than no picture at all.
 //
-// A slot with no photograph falls back to a recessed well: panel-2 with an
-// inset hairline, nothing else. Silence, not wallpaper. It used to fall back
-// to a DishGlyph macro diagram for dishes; that branch was removed 2026-11-09
-// (piece 6) because the sheet mounts this component on a surface where
-// someone is choosing what to eat, and AGENTS.md bans a macro ring, a glyph
-// or a typographic stand-in there. The small MacroSplit ring in the card body
-// beside the name and price is a different question (piece 5, question 6, for
-// the owner) and is untouched by this change.
-//
-// A photograph that EXISTS at build time but fails to load at runtime (a
-// file dropped from the deploy, a bad cache) falls back to the same well via
-// onError, never a broken-image icon.
+// A dish slot falls back to its DishGlyph: the macro fingerprint drawn from
+// that dish's own protein, carbs and fat. It is generated, it is never wrong
+// about the food, and it is the same fallback /menu and the plates already use.
+// Every other slot falls back to a recessed well — panel-2 with an inset
+// hairline, nothing else. Silence, not wallpaper.
 
-import { useState } from "react";
 import Image from "next/image";
 
+import DishGlyph from "@/app/_hp/DishGlyph";
 import { C } from "./theme";
 
 export type SlotMap = Record<string, string>;
@@ -40,6 +33,7 @@ export default function Slot({
   images,
   name,
   alt,
+  dish,
   sizes = "(max-width: 860px) 50vw, 300px",
   priority = false,
 }: {
@@ -48,14 +42,12 @@ export default function Slot({
   /** The slug to look up. */
   name: string;
   alt: string;
+  /** Present when this slot is a dish, which gives it a real fallback. */
+  dish?: { name: string; kcal: number; protein: number; carbs: number; fat: number };
   sizes?: string;
   priority?: boolean;
 }) {
-  /* A resolved src that fails to load at runtime renders the well, exactly as
-     if no file existed. The state is per slot: one bad file must not blank
-     every other photograph on the page. */
-  const [failed, setFailed] = useState(false);
-  const src = failed ? undefined : images[name];
+  const src = images[name];
 
   if (src) {
     return (
@@ -66,12 +58,36 @@ export default function Slot({
         sizes={sizes}
         quality={75}
         priority={priority}
-        onError={() => setFailed(true)}
         /* Food keeps its colour and takes the one unified grade. People and
            places take the lime duotone, which is applied
            by the caller that knows which it is holding. */
         style={{ objectFit: "cover", filter: "saturate(1.06) contrast(1.07)" }}
       />
+    );
+  }
+
+  if (dish && dish.kcal > 0) {
+    return (
+      <span
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          background: C.panel2,
+          overflow: "hidden",
+        }}
+      >
+        <DishGlyph
+          name={dish.name}
+          kcal={dish.kcal}
+          protein={dish.protein}
+          carbs={dish.carbs}
+          fat={dish.fat}
+          size={112}
+        />
+      </span>
     );
   }
 
