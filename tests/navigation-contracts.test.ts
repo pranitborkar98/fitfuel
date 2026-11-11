@@ -13,10 +13,11 @@ test("homepage redesign retains the complete product, not just catalogue links",
   assert.equal(HOME_CAPABILITIES.length, 11);
   const app = readFileSync(resolve("app/_web/FitFuelApp.tsx"), "utf8");
   assert.match(app, /<HomeSections/);
-  const experience = readFileSync(resolve("app/_web/HomeExperience.tsx"), "utf8");
-  assert.match(experience, /<HomeLaunchpad/);
-  assert.match(experience, /<HomeToday/);
   const sections = readFileSync(resolve("app/_web/HomeSections.tsx"), "utf8");
+  // Phase 2 (§2.7): the daily tools moved out of the hero into the product
+  // preview band, so they render from HomeSections now, not HomeExperience.
+  assert.match(sections, /<HomeLaunchpad/);
+  assert.match(sections, /<HomeToday/);
   for (const { id } of HOME_CAPABILITIES.filter((item) => item.id !== "catalog")) {
     assert.ok(sections.includes(`id="${id}"`), `Missing homepage capability: ${id}`);
   }

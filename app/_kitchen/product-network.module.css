@@ -14,7 +14,7 @@
   margin: 0;
   max-width: 24ch;
   font:
-    550 clamp(28px, 3.5vw, 44px)/1.1 var(--fk-display),
+    600 var(--fk-t-h2)/1.1 var(--fk-display),
     Georgia,
     serif;
   letter-spacing: -0.02em;
@@ -57,6 +57,19 @@
 .partnerGrid .retailer {
   background: var(--fk-green-wash);
   border-color: var(--fk-green);
+}
+/* The real retailer reads as a wordmark: display face, larger than the
+   placeholder names, with a lime status pill. Placeholders keep the dashed
+   border and the neutral pill, so the one real tile is unmistakable. */
+.partnerGrid .retailer h3 {
+  font-family: var(--fk-display);
+  font-size: 28px;
+  font-weight: 600;
+}
+.partnerGrid .retailer .status {
+  border-color: rgba(132, 204, 22, 0.5);
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
 }
 .partnerGrid .placeholder {
   border-style: dashed;
@@ -106,7 +119,7 @@
 }
 .productFeature h2 {
   font:
-    550 clamp(30px, 4vw, 48px)/1.1 var(--fk-display),
+    600 var(--fk-t-h2)/1.1 var(--fk-display),
     Georgia,
     serif;
   margin: 0 0 18px;
@@ -133,6 +146,109 @@
 .featureSteps {
   margin: 0;
   padding-left: 24px;
+}
+
+/* ── The dashboard, shown instead of described ─────────────────────────────
+   A CSS-built app card in the style of the digital-plan pack: the same
+   example figures the product-preview band already shows, labelled as an
+   example. No screenshot asset, no invented numbers. */
+.featureVisual {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+  min-width: 0;
+}
+.appCard {
+  padding: 20px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-paper);
+  box-shadow: var(--fk-shadow-2);
+}
+.appCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--fk-green-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+.appCardHead small {
+  color: var(--fk-ink-3);
+  font-size: 11px;
+  font-weight: 650;
+}
+.appStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  overflow: hidden;
+  background: var(--fk-line);
+}
+.appStats div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: var(--fk-surface);
+}
+.appStats dt {
+  color: var(--fk-ink-3);
+  font-size: 11px;
+}
+.appStats dd {
+  margin: 0;
+  color: var(--fk-ink);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.appTrack {
+  display: block;
+  height: 7px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-warm-2);
+}
+.appTrack i {
+  display: block;
+  width: 62%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--fk-green);
+}
+.appRows {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--fk-line-2);
+}
+.appRows li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--fk-line);
+}
+.appRows li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.appRows span {
+  color: var(--fk-ink-3);
+  font-size: 13px;
+}
+.appRows b {
+  color: var(--fk-ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
 }
 .featureSteps li {
   padding: 14px 0 14px 8px;
@@ -163,5 +279,9 @@
   .sectionHead {
     align-items: start;
     flex-direction: column;
+  }
+  .sectionHead h2,
+  .productFeature h2 {
+    font-size: 1.875rem;
   }
 }

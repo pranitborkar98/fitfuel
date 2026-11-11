@@ -746,6 +746,7 @@ export default function FitFuelApp({
             <span className={s.wellGrain} aria-hidden="true" />
             <span className={s.wellGloss} aria-hidden="true" />
             <span className={s.wellFoot} aria-hidden="true" />
+            <span className={s.wellCourse}>{d.categoryLabel}</span>
             {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
           </button>
         ) : (
@@ -770,6 +771,28 @@ export default function FitFuelApp({
         )}
 
         <div className={`${s.cardBody} ${r.productBody}`}>
+          {/* The macro band is the FIRST element of the card body, directly
+              under the photo well — adjacent to the photograph, never inside
+              it and never replacing it. When a dish has no macro data
+              MacroSplit returns null and there is no band, not an empty one. */}
+          {d.kcal ? (
+            <MacroSplit
+              p={d.protein}
+              c={d.carbs}
+              f={d.fat}
+              kcal={d.kcal}
+              /* THE LINE THE WHOLE DAY BAR EXISTS FOR. Grams are a fact about
+                 the dish; this is what the dish does to the day the visitor
+                 said they wanted, and it moves when they change the target. */
+              /* Short labels: the full "10% of your protein · 16% of your
+                 calories" was cut to "cal…" by the band's ellipsis even at
+                 full 4-column width, so the same data reads in compact form. */
+              contrib={
+                `${Math.round((d.protein / target.protein) * 100)}% protein · ` +
+                `${Math.round((d.kcal / target.kcal) * 100)}% calories`
+              }
+            />
+          ) : null}
           {/* Course and badges share one line. The badges were an overlay on
               the image well; as text beside the course they survive the mobile
               row layout, stop covering the photograph, and read as what they
@@ -790,21 +813,6 @@ export default function FitFuelApp({
             {d.name}
           </Link>
           <p className={`${s.dishBlurb} ${r.productDescription}`}>{d.blurb}</p>
-          {d.kcal ? (
-            <MacroSplit
-              p={d.protein}
-              c={d.carbs}
-              f={d.fat}
-              kcal={d.kcal}
-              /* THE LINE THE WHOLE DAY BAR EXISTS FOR. Grams are a fact about
-                 the dish; this is what the dish does to the day the visitor
-                 said they wanted, and it moves when they change the target. */
-              contrib={
-                `${Math.round((d.protein / target.protein) * 100)}% of your protein · ` +
-                `${Math.round((d.kcal / target.kcal) * 100)}% of your calories`
-              }
-            />
-          ) : null}
           {d.orderable && (d.addOns?.length || d.variantNote) ? (
             <button
               type="button"
@@ -835,6 +843,12 @@ export default function FitFuelApp({
             )}
             <AddControl dish={d} />
           </div>
+          <Link
+            href={`/menu/${d.id}`}
+            className={`${s.add} ${s.ghost} ${s.seeDish}`}
+          >
+            See dish
+          </Link>
         </div>
       </li>
     );
@@ -960,6 +974,12 @@ export default function FitFuelApp({
               <Icon d={I.spark} size={18} />
               <span>AI coach</span>
             </Link>
+            <Link href="/plans?trial=true" className={s.trialCta}>
+              <span className={s.trialCtaFull}>
+                Start the trial · {trialTotal}
+              </span>
+              <span className={s.trialCtaShort}>Trial {trialTotal}</span>
+            </Link>
             <button
               type="button"
               className={s.iconBtn}
@@ -981,6 +1001,9 @@ export default function FitFuelApp({
         target={target}
         cutoffLabel={cutoffLabel}
         trialTotal={trialTotal}
+        planRows={bandCounts.plans}
+        goalCount={goalCount}
+        licence={licence}
         onBrowseMeals={() => switchMode("dishes", true)}
       />
 
@@ -1025,26 +1048,31 @@ export default function FitFuelApp({
             </button>
           </div>
 
-          <label className={r.search}>
-            <span className="fk-sr-only">{searchPlaceholder}</span>
-            <Icon d={I.search} size={18} />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={searchPlaceholder}
-              autoComplete="off"
-            />
-            {query ? (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                aria-label="Clear search"
-              >
-                <Icon d={I.x} size={16} />
-              </button>
-            ) : null}
-          </label>
+          <div className={r.searchWrap}>
+            <label className={r.searchLabel} htmlFor="catalog-search">
+              {searchPlaceholder}
+            </label>
+            <div className={r.search}>
+              <Icon d={I.search} size={18} />
+              <input
+                id="catalog-search"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={searchPlaceholder}
+                autoComplete="off"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Clear search"
+                >
+                  <Icon d={I.x} size={16} />
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {mode === "supps" ? (
@@ -1243,7 +1271,7 @@ export default function FitFuelApp({
               <span>
                 {basketCount
                   ? `${basketCount} item${basketCount === 1 ? "" : "s"} · incl. GST`
-                  : "delivery from ₹49"}
+                  : "Delivery ₹50"}
               </span>
             </span>
             {basketCount > 0 ? (
@@ -1394,7 +1422,7 @@ export default function FitFuelApp({
                 {mode === "supps"
                   ? `${suppResults.length} of ${supplements.length} · researched, not stocked`
                   : mode === "plans"
-                    ? `${planResults.length} of ${planCount} plans · ${goalCount} goals and conditions`
+                    ? `${planResults.length} plans · ${bandCounts.plans} diet variants · ${bandCounts.conditionPlans} for a condition`
                     : `${results.length} dish${results.length === 1 ? "" : "es"}` +
                       (orderableCount !== results.length
                         ? ` · ${orderableCount} priced tonight, from ${menuFrom}`
@@ -1402,19 +1430,43 @@ export default function FitFuelApp({
               </p>
             </div>
 
-            {mode !== "dishes" ? (
-              <div className={r.modeFeature}>
+            {/* Phone inline offer: the rail does not exist on a phone, so the
+                trial prompt lives here, directly under the result bar, until
+                the close. Desktop hides it (the rail card carries the offer). */}
+            <div className={s.offer}>
+              <span className={s.offerShot}>
+                <Image
+                  src="/images/hero-bowl.jpg"
+                  alt=""
+                  fill
+                  sizes="96px"
+                  style={{ objectFit: "cover" }}
+                />
+              </span>
+              <span className={s.offerText}>
+                <b>Two meals, {trialTotal}</b>
+                <span>
+                  Breakfast and lunch weighed to your macros. Nothing to
+                  cancel.
+                </span>
+              </span>
+              <Link href="/plans?trial=true" className={s.offerCta}>
+                Start the trial
+              </Link>
+            </div>
+
+            <div className={r.modeFeature}>
                 <div className={r.modeFeatureImage}>
                   <Image
                     src={
-                      mode === "plans"
-                        ? "/images/hero-bowl-v2.png"
-                        : "/images/supplements.jpg"
+                      mode === "supps"
+                        ? "/images/supplements.jpg"
+                        : "/images/hero-bowl-v2.png"
                     }
                     alt={
-                      mode === "plans"
-                        ? "A balanced FitFuel meal with paneer, rice, greens, chickpeas and raita"
-                        : "A person preparing a measured supplement serving"
+                      mode === "supps"
+                        ? "A person preparing a measured supplement serving"
+                        : "A balanced FitFuel meal with paneer, rice, greens, chickpeas and raita"
                     }
                     fill
                     loading="eager"
@@ -1424,25 +1476,30 @@ export default function FitFuelApp({
                 </div>
                 <div className={r.modeFeatureCopy}>
                   <span>
-                    {mode === "plans"
-                      ? "Complete nutrition"
-                      : "Evidence before products"}
+                    {mode === "dishes"
+                      ? "From the kitchen"
+                      : mode === "plans"
+                        ? "Complete nutrition"
+                        : "Evidence before products"}
                   </span>
                   <h3>
-                    {mode === "plans"
-                      ? "A menu, a target and a feedback loop you use every day."
-                      : "Understand the evidence, dosage and timing before you choose a product."}
+                    {mode === "dishes"
+                      ? "Chef-cooked meals, weighed to your macros."
+                      : mode === "plans"
+                        ? "A menu, a target and a feedback loop you use every day."
+                        : "Understand the evidence, dosage and timing before you choose a product."}
                   </h3>
                   <p>
-                    {mode === "plans"
-                      ? "Choose your goal, diet and meal schedule. Your diary arrives pre-filled, your training counts, and the coach proposes changes only when the trend supports them."
-                      : bandCounts.retailerLinks > 0
-                        ? `FitFuel does not hold supplement stock. Read the evidence first, then choose from ${bandCounts.retailerLinks.toLocaleString("en-IN")} tracked retailer listings. Affiliate commission never changes the evidence tier.`
-                        : "FitFuel does not hold supplement stock. The catalogue explains mechanisms, benefits, warnings, timing and study depth before any retailer choice."}
+                    {mode === "dishes"
+                      ? "Four meals a day, weighed in grams to your target and at your door by 8am."
+                      : mode === "plans"
+                        ? "Choose your goal, diet and meal schedule. Your diary arrives pre-filled, your training counts, and the coach proposes changes only when the trend supports them."
+                        : bandCounts.retailerLinks > 0
+                          ? `FitFuel does not hold supplement stock. Read the evidence first, then choose from ${bandCounts.retailerLinks.toLocaleString("en-IN")} tracked retailer listings. Affiliate commission never changes the evidence tier.`
+                          : "FitFuel does not hold supplement stock. The catalogue explains mechanisms, benefits, warnings, timing and study depth before any retailer choice."}
                   </p>
                 </div>
               </div>
-            ) : null}
 
             {noResults ? (
               <div className={s.empty}>
@@ -1550,7 +1607,7 @@ export default function FitFuelApp({
                             .filter(Boolean)
                             .join(" · ") || "Dosage on the page"}
                         </p>
-                        <div className={s.cardFoot}>
+                        <div className={`${s.cardFoot} ${s.suppFoot}`}>
                           <span className={s.priceBlock}>
                             <b className={s.askPrice}>
                               {x.buy?.priceRs
@@ -1576,7 +1633,7 @@ export default function FitFuelApp({
                               href={x.buy.url}
                               target="_blank"
                               rel="noopener noreferrer sponsored"
-                              className={s.add}
+                              className={`${s.add} ${s.addOutline}`}
                             >
                               Buy
                             </a>
@@ -1760,7 +1817,6 @@ export default function FitFuelApp({
         exerciseCount={bandCounts.exercises}
         marketplaceProducts={bandCounts.marketplaceProducts}
         activePartners={bandCounts.activePartners}
-        quotes={quotes}
         onBrowsePlans={() => switchMode("plans", true)}
       />
       <HomeSections
@@ -1769,6 +1825,7 @@ export default function FitFuelApp({
         prices={prices}
         trial={trial}
         cutoffLabel={cutoffLabel}
+        quotes={quotes}
         retailProducts={supplements.flatMap((item) =>
           item.imageUrl && item.buy && ["whey-protein", "creatine", "omega3", "magnesium"].includes(item.slug)
             ? [{ slug: item.slug, name: item.name, category: item.category, imageUrl: item.imageUrl, linkCount: item.linkCount, buy: item.buy }]
@@ -1778,6 +1835,17 @@ export default function FitFuelApp({
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className={s.footer}>
+        <div className={s.footerTop}>
+          <div>
+            <h2 className={s.footerTopH}>Start with the food</h2>
+            <p className={s.footerTopP}>
+              Try breakfast and lunch for {trial.total}
+            </p>
+          </div>
+          <Link href="/plans?trial=true" className={s.footerTrial}>
+            Start the trial
+          </Link>
+        </div>
         <div className={s.footerGrid}>
           {FOOTER.map((col) => (
             <div key={col.title}>
@@ -1792,6 +1860,9 @@ export default function FitFuelApp({
             </div>
           ))}
         </div>
+        <p className={s.footerDisclosure}>
+          Food images are illustrative and may include AI-generated imagery. Dish names, ingredients, macros and prices are product data.
+        </p>
         <p className={s.footerBase}>
           <span>© {new Date().getFullYear()} FitFuel</span>
           <span>

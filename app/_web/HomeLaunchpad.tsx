@@ -15,7 +15,7 @@ export default function HomeLaunchpad() {
     <section className={s.launchpad} aria-labelledby="daily-tools-heading">
       <div className={s.heading}>
         <div>
-          <h2 id="daily-tools-heading">Your daily tools</h2>
+          <h3 id="daily-tools-heading">Your daily tools</h3>
         </div>
         <Link href="/dashboard-preview">Explore a sample day</Link>
       </div>

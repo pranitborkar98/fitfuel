@@ -2,75 +2,40 @@
   padding-bottom: 20px;
 }
 .workspace .hero {
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
-  grid-template-areas: "copy copy" "tools tools" "menu day" "support day";
-  gap: 18px 24px;
-  padding: 26px 0 0;
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  grid-template-areas: "copy menu" "support menu";
+  gap: 24px clamp(28px, 4vw, 64px);
+  padding: clamp(32px, 5vw, 64px) 0 clamp(30px, 4vw, 52px);
   border-bottom: 0;
 }
 .workspace .heading {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 6px 24px;
+  display: block;
 }
 .heading > p:first-child {
-  grid-column: 1;
   margin: 0;
   font-size: 14px;
 }
 .workspace .title {
-  grid-column: 1;
-  max-width: none;
-  font: 600 clamp(28px, 3vw, 40px)/1.15 var(--fk-sans);
-  letter-spacing: -0.025em;
-  text-wrap: initial;
+  max-width: 12ch;
+  margin: 0;
+  font: 600 var(--fk-t-hero)/1 var(--fk-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 .heading > p:not(:first-child) {
-  grid-column: 1;
   margin: 0;
-  max-width: none;
-  font-size: 15px;
-}
-.heading > div {
-  grid-column: 2;
-  grid-row: 1 / 4;
-  margin: 0;
+  max-width: 48ch;
+  font-size: var(--fk-t-md);
 }
 .workspace .menu {
   grid-area: menu;
   align-self: start;
 }
 .workspace .menu [role="tabpanel"] {
-  min-height: 238px;
-}
-.workspace .menu [role="tabpanel"] b {
-  font-size: clamp(24px, 2.5vw, 34px);
+  min-height: 400px;
 }
 .workspace .support {
   grid-area: support;
-}
-.workspace .hero .menu [role="tablist"] {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.workspace .hero .menu [role="tab"] {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-height: 50px;
-  padding: 8px;
-}
-.workspace .hero .menu [role="tab"] > span:first-child {
-  display: none;
-}
-.workspace .hero .menu [role="tab"] b {
-  display: none;
-}
-.workspace .hero .menu [role="tab"] small {
-  font-size: 13px;
-}
-.support > ol {
-  display: none;
 }
 .daily {
   grid-area: day;
@@ -96,9 +61,17 @@
   color: var(--fk-green);
   font: 600 13px/1.5 var(--fk-sans);
 }
-.workspace .today h2 {
+/* The heading is an h2, so it takes the section h2 token (40-56px desktop,
+   30px on a phone) rather than the base .fk h2 clamp, which sets it at
+   60px desktop / 37px phone and wraps it to 3 lines on a phone. The rule
+   is not scoped to .workspace: HomeToday now lives in the product-preview
+   band, outside the hero workspace, so the old .workspace prefix never
+   matched there. */
+.today > header h2 {
   margin: 4px 0 0;
-  font: 600 22px/1.2 var(--fk-sans);
+  font: 600 var(--fk-t-h2)/1.05 var(--fk-display);
+  letter-spacing: -0.022em;
+  text-wrap: balance;
 }
 .today > header a {
   display: grid;
@@ -243,7 +216,7 @@
 @media (max-width: 900px) {
   .workspace .hero {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "copy" "tools" "menu" "day" "support";
+    grid-template-areas: "copy" "menu" "support";
     gap: 16px;
     padding-top: 20px;
   }
@@ -252,21 +225,23 @@
   }
   .workspace .title {
     margin: 5px 0 8px;
-    font-size: 29px;
-  }
-  .heading > div {
-    margin-top: 16px;
+    font-size: 40px;
   }
   .workspace .menu [role="tabpanel"] {
-    min-height: 205px;
-  }
-  .workspace .menu [role="tabpanel"] b {
-    font-size: 24px;
+    min-height: 300px;
   }
   .today {
     padding: 18px;
   }
   .workspace .support {
     margin: 0;
+  }
+}
+@media (max-width: 639px) {
+  /* The h2 token floors at 40px; the section-h2 phone size is 30px, same
+     as every other section heading. At 30px "Today at a glance" fits its
+     card on one line instead of wrapping to three. */
+  .today > header h2 {
+    font-size: 30px;
   }
 }

@@ -11,7 +11,12 @@
   gap: 16px;
   margin-bottom: 16px;
 }
-.heading h2 {
+/* An h3, not an h2: this is a sub-heading inside the product-preview band,
+   whose section h2 is "Food, body, training and guidance in one place."
+   As an h2 it sat at 24px, below the 40px section-h2 floor; as an h3 the
+   24px size is the h3 scale. The .launchpad prefix outranks the base
+   .fk h3 rule. */
+.launchpad .heading h3 {
   margin: 0;
   font: 600 24px/1.2 var(--fk-sans);
 }
@@ -29,7 +34,11 @@
 }
 .tools {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* The launchpad now also lives in a half-width cell inside the product
+     preview band, so the grid fits itself to the width it is given instead
+     of assuming a full-width row: six across when there is room, three
+     across in the preview cell. */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 .tools a,
@@ -106,8 +115,12 @@
   .tools a, .tools button { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 12px 6px; min-height: 80px; }
   .heading {
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
   }
-  .heading h2 { font-size: 17px; }
+  /* h3 scale holds on a phone too (24px, not the old 17px): the heading
+     row wraps so the "Explore a sample day" link drops below it rather
+     than squeezing the heading. */
+  .launchpad .heading h3 { font-size: 24px; }
   .heading > a { font-size: 13px; }
 }

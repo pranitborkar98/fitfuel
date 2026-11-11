@@ -1,18 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
 
 import { GOALS } from "./home-data";
-import type { Quote } from "./HomeBands";
 import x from "./experience.module.css";
 import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
 import productStyles from "@/app/_kitchen/product-network.module.css";
-import HomeToday from "./HomeToday";
-import HomeLaunchpad from "./HomeLaunchpad";
 import hub from "./home-workspace.module.css";
 
 const ICON = {
@@ -56,25 +53,15 @@ const PLAN_IMAGES: Record<string, string> = {
 
 type Target = { kcal: number; protein: number; personal: boolean };
 
-function timeGreeting() {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      hourCycle: "h23",
-      timeZone: "Asia/Kolkata",
-    }).format(new Date()),
-  );
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 export default function HomeExperience({
   week,
   goal,
   target,
   cutoffLabel,
   trialTotal,
+  planRows,
+  goalCount,
+  licence,
   onBrowseMeals,
 }: {
   week: Dish[];
@@ -82,12 +69,45 @@ export default function HomeExperience({
   target: Target;
   cutoffLabel: string;
   trialTotal: string;
+  /** Live DB row count (126), for the proof line under the CTAs. */
+  planRows: number;
+  /** Distinct goals and conditions (59), for the same proof line. */
+  goalCount: number;
+  licence: string;
   onBrowseMeals: () => void;
 }) {
   const meals = week.filter((dish) => dish.day === 1).slice(0, 4);
   const [activeMealIndex, setActiveMealIndex] = useState(0);
   const mealTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const activeMeal = meals[activeMealIndex] ?? meals[0];
+  /* ── HERO MOSAIC AUTO-ADVANCE ──────────────────────────────────────────
+     The featured meal rotates every 6 seconds. A manual pick pauses it for
+     30 seconds, hovering or focusing the mosaic pauses it while the visitor
+     is looking, and the pause button pauses it until resumed. Reduced motion
+     means manual only — no auto-advance, no count-up, no sweep. */
+  const [paused, setPaused] = useState(false);
+  const [hoverPaused, setHoverPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const resumeAtRef = useRef(0);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  useEffect(() => {
+    if (paused || hoverPaused || reducedMotion || meals.length < 2) return;
+    const id = window.setInterval(() => {
+      if (Date.now() < resumeAtRef.current) return;
+      setActiveMealIndex((i) => (i + 1) % meals.length);
+    }, 6000);
+    return () => window.clearInterval(id);
+  }, [paused, hoverPaused, reducedMotion, meals.length]);
+  const selectMeal = (index: number) => {
+    setActiveMealIndex(index);
+    resumeAtRef.current = Date.now() + 30000;
+  };
   const planKcal = meals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
   const serving = servingScaleForTarget({
     calorieTarget: target.kcal,
@@ -113,6 +133,7 @@ export default function HomeExperience({
 
     event.preventDefault();
     setActiveMealIndex(next);
+    resumeAtRef.current = Date.now() + 30000;
     mealTabRefs.current[next]?.focus();
   };
 
@@ -120,24 +141,35 @@ export default function HomeExperience({
     <div className={`${x.home} ${hub.workspace}`} id="main-content" aria-labelledby="home-title">
       <section className={`${x.hero} ${hub.hero}`} aria-label="FitFuel daily food app">
         <div className={`${x.heroCopy} ${hub.heading}`}>
-          <p className={x.eyebrow} suppressHydrationWarning>
-            {timeGreeting()}
+          <p className={x.eyebrow}>
+            Breakfast and lunch · {trialTotal} · Nothing to cancel.
           </p>
           <h1 id="home-title" className={`${x.title} ${hub.title}`}>
-            Your day, with FitFuel.
+            Chef-cooked meals, weighed to{" "}
+            <span className={x.limeWord}>macros.</span>
           </h1>
           <p className={x.lede}>
-            Order food, follow your plan and keep today up to date.
+            Four meals cooked in our kitchen, weighed in grams to your target,
+            at your door by 8am.
           </p>
 
           <div className={x.heroActions}>
-            <button type="button" onClick={onBrowseMeals}>
-              Order a meal <Icon path={ICON.arrow} size={18} />
-            </button>
-            <Link href="/plans?trial=true">
-              Try breakfast + lunch · {trialTotal}
+            <Link href="/plans?trial=true" className={x.heroPrimary}>
+              Start the trial for {trialTotal}{" "}
+              <Icon path={ICON.arrow} size={18} />
             </Link>
+            <button
+              type="button"
+              className={x.heroGhost}
+              onClick={onBrowseMeals}
+            >
+              See tonight&apos;s menu <Icon path={ICON.arrow} size={18} />
+            </button>
           </div>
+          <p className={x.heroProof}>
+            {planRows.toLocaleString("en-IN")} plans · {goalCount} goals and
+            conditions · FSSAI {licence}
+          </p>
         </div>
 
         <div className={`${x.heroSupport} ${hub.support}`}>
@@ -182,9 +214,13 @@ export default function HomeExperience({
           </ol>
         </div>
 
-        <div className={hub.tools}><HomeLaunchpad /></div>
-        <div className={hub.daily}><HomeToday /></div>
-        <div className={`${x.menuPreview} ${hub.menu}`}>
+        <div
+          className={`${x.menuPreview} ${hub.menu}`}
+          onMouseEnter={() => setHoverPaused(true)}
+          onMouseLeave={() => setHoverPaused(false)}
+          onFocusCapture={() => setHoverPaused(true)}
+          onBlurCapture={() => setHoverPaused(false)}
+        >
           <div className={x.previewHead}>
             <span>
               <small>Sample four-meal day</small>
@@ -199,6 +235,7 @@ export default function HomeExperience({
 
           {activeMeal ? (
             <div
+              key={activeMealIndex}
               id="meal-preview-panel"
               className={x.featureMeal}
               role="tabpanel"
@@ -226,6 +263,19 @@ export default function HomeExperience({
                 Illustrative AI-generated food image; not a photograph of the
                 delivered meal.
               </span>
+              <button
+                type="button"
+                className={x.mosaicPause}
+                onClick={() => setPaused((p) => !p)}
+                aria-pressed={paused}
+                aria-label={
+                  paused
+                    ? "Resume the meal preview"
+                    : "Pause the meal preview"
+                }
+              >
+                {paused ? "Play" : "Pause"}
+              </button>
             </div>
           ) : (
             <div className={x.menuUnavailable}>
@@ -252,7 +302,7 @@ export default function HomeExperience({
                   className={
                     activeMealIndex === index ? x.mealActive : undefined
                   }
-                  onClick={() => setActiveMealIndex(index)}
+                  onClick={() => selectMeal(index)}
                   onKeyDown={(event) => moveMealFocus(event, index)}
                   ref={(element) => {
                     mealTabRefs.current[index] = element;
@@ -285,17 +335,14 @@ export function HomeProductLinks({
   exerciseCount,
   marketplaceProducts,
   activePartners,
-  quotes,
   onBrowsePlans,
 }: {
   aiConfigured: boolean;
   exerciseCount: number;
   marketplaceProducts: number;
   activePartners: number;
-  quotes: Quote[];
   onBrowsePlans: () => void;
 }) {
-  const proof = quotes[0];
   return (
     <div className={x.home}>
       <section className={x.productMap} aria-labelledby="product-map-title">
@@ -309,92 +356,163 @@ export function HomeProductLinks({
 
         <nav className={x.quickRail} aria-label="Choose a FitFuel product">
           <button type="button" onClick={onBrowsePlans}>
-            <span className={x.quickIcon}>
-              <Icon path={ICON.route} size={20} />
+            <span className={x.quickPhoto}>
+              <Image
+                src="/images/brand/weekly-meal-delivery.webp"
+                alt=""
+                fill
+                sizes="(min-width: 1100px) 25vw, (min-width: 640px) 50vw, 100vw"
+                style={{ objectFit: "cover" }}
+                loading="lazy"
+              />
             </span>
-            <span>
-              <small>Delivered nutrition</small>
-              <b>Meals weighed to your accepted target</b>
+            <span className={x.quickBody}>
+              <span>
+                <small>Delivered nutrition</small>
+                <b>Meals weighed to your accepted target</b>
+              </span>
+              <Icon path={ICON.arrow} size={17} />
             </span>
-            <Icon path={ICON.arrow} size={17} />
           </button>
           <Link href="/plans/digital#digital-options">
-            <span className={x.quickIcon}>
-              <Icon path={ICON.check} size={20} />
+            <span className={x.quickPhoto}>
+              <Image
+                src="/images/brand/weekday-lunch.webp"
+                alt=""
+                fill
+                sizes="(min-width: 1100px) 25vw, (min-width: 640px) 50vw, 100vw"
+                style={{ objectFit: "cover" }}
+                loading="lazy"
+              />
             </span>
-            <span>
-              <small>Available across India</small>
-              <b>Digital plans, recipes and grocery lists</b>
+            <span className={x.quickBody}>
+              <span>
+                <small>Available across India</small>
+                <b>Digital plans, recipes and grocery lists</b>
+              </span>
+              <Icon path={ICON.arrow} size={17} />
             </span>
-            <Icon path={ICON.arrow} size={17} />
           </Link>
           <Link href="/dashboard-preview">
-            <span className={x.quickIcon}>
-              <Icon path={ICON.scale} size={20} />
+            {/* No dashboard screenshot exists, so this card carries a lime-wash
+                icon tile in place of a photo — never an empty well. */}
+            <span className={x.quickIconArea} aria-hidden="true">
+              <span className={x.quickIcon}>
+                <Icon path={ICON.scale} size={24} />
+              </span>
             </span>
-            <span>
-              <small>Explore the dashboard</small>
-              <b>
-                Food diary, weight, {exerciseCount.toLocaleString("en-IN")} exercises and {aiConfigured ? "AI coach" : "weekly review"}
-              </b>
+            <span className={x.quickBody}>
+              <span>
+                <small>Explore the dashboard</small>
+                <b>
+                  Food diary, weight, {exerciseCount.toLocaleString("en-IN")} exercises and {aiConfigured ? "AI coach" : "weekly review"}
+                </b>
+              </span>
+              <Icon path={ICON.arrow} size={17} />
             </span>
-            <Icon path={ICON.arrow} size={17} />
           </Link>
           <Link href="/products">
-            <span className={x.quickIcon}>
-              <Icon path={ICON.spark} size={20} />
+            <span className={x.quickPhoto}>
+              <Image
+                src="/images/supplements.jpg"
+                alt=""
+                fill
+                sizes="(min-width: 1100px) 25vw, (min-width: 640px) 50vw, 100vw"
+                style={{ objectFit: "cover" }}
+                loading="lazy"
+              />
             </span>
-            <span>
-              <small>Supplements from Nutrabay</small>
-              <b>
-                {marketplaceProducts.toLocaleString("en-IN")} products, with ingredient guidance where available
-              </b>
+            <span className={x.quickBody}>
+              <span>
+                <small>Supplements from Nutrabay</small>
+                <b>
+                  {marketplaceProducts.toLocaleString("en-IN")} products, with ingredient guidance where available
+                </b>
+              </span>
+              <Icon path={ICON.arrow} size={17} />
             </span>
-            <Icon path={ICON.arrow} size={17} />
           </Link>
         </nav>
 
         <nav className={x.businessRail} aria-label="FitFuel for organisations">
           <Link href="/corporate">
-            <span>For teams</span>
-            <b>Labelled office meals, personalised per employee</b>
-            <Icon path={ICON.arrow} size={17} />
+            <span className={x.businessCopy}>
+              <span>
+                <span className={x.businessLabel}>For teams</span>
+                <b>Labelled office meals, personalised per employee</b>
+              </span>
+              <Icon path={ICON.arrow} size={17} />
+            </span>
+            <span className={x.businessPhoto}>
+              <Image
+                src="/images/corporate.jpg"
+                alt=""
+                fill
+                sizes="(min-width: 1100px) 25vw, 100vw"
+                style={{ objectFit: "cover" }}
+                loading="lazy"
+              />
+            </span>
           </Link>
           <Link href="/partners">
-            <span>For gyms and trainers</span>
-            <b>
-              Referral tracking and payouts
-              {activePartners > 0
-                ? `, with ${activePartners.toLocaleString("en-IN")} active now`
-                : ""}
-            </b>
-            <Icon path={ICON.arrow} size={17} />
+            <span className={x.businessCopy}>
+              <span>
+                <span className={x.businessLabel}>For gyms and trainers</span>
+                <b>
+                  Referral tracking and payouts
+                  {activePartners > 0
+                    ? `, with ${activePartners.toLocaleString("en-IN")} active now`
+                    : ""}
+                </b>
+              </span>
+              <Icon path={ICON.arrow} size={17} />
+            </span>
+            <span className={x.businessPhoto}>
+              <Image
+                src="/images/gym.jpg"
+                alt=""
+                fill
+                sizes="(min-width: 1100px) 25vw, 100vw"
+                style={{ objectFit: "cover" }}
+                loading="lazy"
+              />
+            </span>
           </Link>
         </nav>
       </section>
 
       <section className={productStyles.productFeature} aria-labelledby="daily-product-title">
         <div><h2 id="daily-product-title">A dashboard for the days between orders.</h2><p>Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.</p><Link href="/dashboard-preview">Try the dashboard preview <Icon path={ICON.arrow} size={18} /></Link><br /><Link href="/services">Explore all FitFuel services <Icon path={ICON.arrow} size={18} /></Link></div>
-        <ol className={productStyles.featureSteps}>
-          <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
-          <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>
-          <li><b>Review before changing your target</b>Use your weekly review and coach to understand progress.</li>
-        </ol>
+        <div className={productStyles.featureVisual}>
+          {/* CSS-built dashboard preview, in the style of the digital-plan pack:
+              the same example figures the product-preview band already shows
+              (1,430 kcal eaten / 280 kcal exercise / 850 kcal net left),
+              labelled "Example member day". No screenshot asset, no invented
+              numbers. */}
+          <div className={productStyles.appCard} aria-label="Example member day in the FitFuel dashboard">
+            <div className={productStyles.appCardHead}>
+              <span>Today</span>
+              <small>Example member day</small>
+            </div>
+            <dl className={productStyles.appStats}>
+              <div><dt>Eaten</dt><dd className="fk-num">1,430 kcal</dd></div>
+              <div><dt>Exercise</dt><dd className="fk-num">280 kcal</dd></div>
+              <div><dt>Net left</dt><dd className="fk-num">850 kcal</dd></div>
+            </dl>
+            <span className={productStyles.appTrack} aria-hidden="true"><i /></span>
+            <ul className={productStyles.appRows}>
+              <li><span>Next meal</span><b>Planned meals and delivery days</b></li>
+              <li><span>Today&apos;s workout</span><b>Your session is already programmed</b></li>
+            </ul>
+          </div>
+          <ol className={productStyles.featureSteps}>
+            <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
+            <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>
+            <li><b>Review before changing your target</b>Use your weekly review and coach to understand progress.</li>
+          </ol>
+        </div>
       </section>
       <PartnerNetwork />
-
-      {proof ? (
-        <aside className={x.proofLine} aria-label="Customer result">
-          <b>{proof.resultLabel}</b>
-          <blockquote>“{proof.quote}”</blockquote>
-          <span>
-            {proof.name} · {proof.planLabel}
-          </span>
-          <Link href="/testimonials">
-            More stories <Icon path={ICON.arrow} size={16} />
-          </Link>
-        </aside>
-      ) : null}
     </div>
   );
 }

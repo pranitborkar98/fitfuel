@@ -41,6 +41,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
 import Sheet, { SheetClose } from "@/app/_shop/Sheet";
+import { TRIAL_TOTAL_GLYPH } from "@/lib/trial-price";
 import CustomerTabBar from "./CustomerTabBar";
 import s from "./app.module.css";
 
@@ -181,6 +182,17 @@ export default function AppChrome({
                 {area}
               </Link>
             )}
+            {/* Same trial CTA as the homepage header (FitFuelApp.tsx): lime
+                filled on desktop, collapsing to a short "Trial ₹420" pill on
+                a phone via .trialCtaFull / .trialCtaShort. Dish pages render
+                through this shell, not the homepage header, so without this
+                the trial had no prompt here at all. */}
+            <Link href="/plans?trial=true" className={s.trialCta}>
+              <span className={s.trialCtaFull}>
+                Start the trial · {TRIAL_TOTAL_GLYPH}
+              </span>
+              <span className={s.trialCtaShort}>Trial {TRIAL_TOTAL_GLYPH}</span>
+            </Link>
             <button
               type="button"
               className={s.iconBtn}

@@ -46,7 +46,9 @@ import {
   WEDGE_COLS,
   wedgeRows,
 } from "./home-data";
-import type { BandCounts } from "./HomeBands";
+import type { BandCounts, Quote } from "./HomeBands";
+import HomeLaunchpad from "./HomeLaunchpad";
+import HomeToday from "./HomeToday";
 import { useReveal } from "./useReveal";
 import s from "./app.module.css";
 import r from "./refresh.module.css";
@@ -87,6 +89,8 @@ export type HomeSectionsProps = {
   trial: { rows: { k: string; v: string }[]; total: string };
   /** The order cutoff sentence, from lib/order-cutoff. */
   cutoffLabel: string;
+  /** Featured Testimonial rows, already fetched in app/page.tsx. */
+  quotes: Quote[];
   /** Real retailer products with evidence entries and tracked buy routes. */
   retailProducts: RetailPreview[];
 };
@@ -111,11 +115,13 @@ export default function HomeSections({
   trial,
   cutoffLabel,
   retailProducts,
+  quotes,
 }: HomeSectionsProps) {
   const revealRef = useReveal<HTMLDivElement>();
 
   return (
     <div ref={revealRef}>
+      <ProofBand quotes={quotes} />
       <ProductPreviewBand counts={counts} />
       <CoachBand trial={trial} />
       <PlanBand prices={prices} />
@@ -137,6 +143,15 @@ export default function HomeSections({
 /* ── 1. The day ─────────────────────────────────────────────────────────────
    The single strongest thing we have and it was on no route: one kitchen, four
    hours, our own drivers. Every step now carries a photograph. */
+/* The two AI illustrations in this band are the kitchen-portioning image and
+   the delivery image (PLAN §1.14): one lives under /images/brand/, so the
+   /images/ai/ prefix alone does not catch both. Both get the sr-only label
+   and a visible "AI illustration" caption under the image. */
+const isAiStepImage = (img?: string) =>
+  !!img &&
+  (img.startsWith("/images/ai/") ||
+    img === "/images/brand/meals-weighed-in-kitchen.webp");
+
 function DayBand() {
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="day-h">
@@ -154,9 +169,14 @@ function DayBand() {
           </p>
         </div>
 
-        {/* Grows to full width as the band arrives — the four hours, drawn. */}
+        {/* Grows to full width as the band arrives — the four hours, drawn,
+            with a dot at each step boundary. */}
         <span aria-hidden="true" className={s.dayRail}>
           <span data-rail="100%" />
+          <span className={s.dayDot} style={{ left: "0%" }} />
+          <span className={s.dayDot} style={{ left: "33.333%" }} />
+          <span className={s.dayDot} style={{ left: "66.666%" }} />
+          <span className={s.dayDot} style={{ left: "100%" }} />
         </span>
 
         <ol className={s.dayGrid}>
@@ -183,14 +203,17 @@ function DayBand() {
                     <span>kcal ready to confirm</span>
                   </span>
                 )}
-                {step.img?.startsWith("/images/ai/") ? (
+                {isAiStepImage(step.img) ? (
                   <span className="fk-sr-only">
                     Illustrative AI-generated image; not a photograph of FitFuel staff or a customer.
                   </span>
                 ) : null}
               </span>
+              {isAiStepImage(step.img) ? (
+                <span className={s.dayAi}>AI illustration</span>
+              ) : null}
               <span className={s.dayBody}>
-                <b className={`${s.dayAt} fk-num`}>{step.at}</b>
+                <b className={s.dayAt}>{step.at}</b>
                 <b className={s.dayLabel}>{step.label}</b>
                 <span className={s.dayLine}>{step.line}</span>
               </span>
@@ -373,6 +396,59 @@ function DigitalPlansBand() {
   );
 }
 
+/* ── Proof, restored ────────────────────────────────────────────────────────
+   The three featured testimonials were fetched in app/page.tsx all along and
+   only quotes[0] ever reached the screen, as the single proof line in
+   HomeExperience. The other two were fetched and dropped. This band renders
+   all three, verbatim — quotes, names, locations, plan and result labels —
+   in the position the old proof band held, directly after the partner
+   network and before the product preview. The single proof line is removed
+   with it; keeping both would duplicate quotes[0] on one page. The
+   Conditions half of HomeBands stays unrendered: it duplicates the
+   conditions band below. */
+function ProofBand({ quotes }: { quotes: Quote[] }) {
+  if (quotes.length === 0) return null;
+
+  return (
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="proof-h">
+      <div className={s.bandWrap}>
+        <div className={s.bandHead}>
+          <div>
+            <h2 id="proof-h" className={s.bandH2}>
+              From people eating it
+            </h2>
+          </div>
+        </div>
+
+        <ul className={s.proofGrid}>
+          {quotes.map((q) => (
+            <li key={q.id} className={s.proofCard} data-reveal="up">
+              <span aria-hidden="true" className={s.proofMark}>
+                &ldquo;
+              </span>
+              <span className={s.proofResult}>{q.resultLabel}</span>
+              <blockquote className={s.proofQuote}>
+                &ldquo;{q.quote}&rdquo;
+              </blockquote>
+              <p className={s.proofWho}>
+                <b>{q.name}</b>
+                <span>{q.location}</span>
+              </p>
+              <p className={s.proofMeta}>{q.planLabel}</p>
+            </li>
+          ))}
+        </ul>
+
+        <div className={s.proofMore}>
+          <Link href="/testimonials" className={s.bandSecondary}>
+            More stories
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ── 2d. Show the product ──────────────────────────────────────────────────
    The old directory named nine dashboard routes but never showed a reader
    what any of them looked like. Four compact, honest examples make the joined
@@ -389,7 +465,7 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
   );
 
   return (
-    <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="inside-h">
+    <section className={`${s.band2} ${s.bandPaper}`} aria-labelledby="inside-h">
       <div className={s.bandWrap}>
         <div className={s.bandHead}>
           <div>
@@ -428,7 +504,7 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
                 <span>Body measurements</span>
                 <small className={s.liveReading}><i aria-hidden="true" /> Example live reading</small>
               </span>
-              <span className={`${s.scaleNumber} fk-num`}>78.2 <small>kg</small></span>
+              <span className={s.scaleNumber}>78.2 <small>kg</small></span>
               <h3>Your actual weight enters the loop.</h3>
               <p>
                 Weight is measured directly from a supported Bluetooth scale.
@@ -473,6 +549,18 @@ function ProductPreviewBand({ counts }: { counts: BandCounts }) {
             </Link>
           </li>
         </ul>
+
+        {/* The daily tools leave the hero for here: second-visit content,
+            moved intact — both components render exactly as they did under
+            the catalog, on the same card treatment as the preview cards. */}
+        <div className={s.dailyToolsRow}>
+          <div className={s.dailyToolsCard} data-reveal="up">
+            <HomeLaunchpad />
+          </div>
+          <div data-reveal="up">
+            <HomeToday />
+          </div>
+        </div>
 
         <nav className={s.moreSurfaces} aria-label="More FitFuel dashboard screens">
           <span>Also inside</span>
@@ -533,7 +621,7 @@ function RetailBand({
                     alt={`Nutrabay product listed for ${product.name}`}
                     fill
                     sizes="(min-width: 1100px) 25vw, (min-width: 640px) 48vw, 100vw"
-                    style={{ objectFit: "contain" }}
+                    style={{ objectFit: "cover" }}
                     loading="lazy"
                   />
                 </Link>
@@ -552,15 +640,18 @@ function RetailBand({
                         {product.linkCount} option{product.linkCount === 1 ? "" : "s"}
                       </small>
                     </span>
-                    <Link href={`/supplements#${product.slug}`}>Evidence</Link>
-                    <a
-                      href={product.buy.url}
-                      target="_blank"
-                      rel="noopener noreferrer sponsored"
-                    >
-                      Buy
-                    </a>
                   </div>
+                  <a
+                    className={s.retailBuy}
+                    href={product.buy.url}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                  >
+                    Buy
+                  </a>
+                  <Link className={s.retailEvidence} href={`/supplements#${product.slug}`}>
+                    Evidence
+                  </Link>
                 </div>
               </article>
             </li>
@@ -775,7 +866,7 @@ function PlanBand({ prices }: { prices: PriceRow[] }) {
                 </span>
 
                 <span className={s.planTotal}>
-                  <b className="fk-num">{rs(sum.total)}</b>
+                  <b>{rs(sum.total)}</b>
                   <span className="fk-num">{rs(sum.perDay)} a day</span>
                 </span>
 
@@ -824,46 +915,49 @@ const DIET_ENUM: Record<DietKey, string> = {
 function ConditionsBand({ counts, goalCount }: { counts: BandCounts; goalCount: number }) {
   return (
     <section className={`${s.band2} ${s.bandSurface}`} aria-labelledby="cond-h">
-      <div className={`${s.bandWrap} ${s.splitWrap}`}>
-        <div>
-          <h2 id="cond-h" className={`${s.bandH2} ${s.bandH2Narrow}`}>
-            Plans for your goals and dietary needs
-          </h2>
-          <p className={s.condLede}>
-            Explore condition-focused menus alongside fitness and lifestyle
-            plans. If you have a diagnosed condition, confirm suitability with
-            your clinician before ordering. A meal plan does not replace treatment.
-          </p>
-          {counts.plans > 0 ? <div className={s.condStats}>
-            <span>
-              <b data-count={counts.conditionPlans}>{counts.conditionPlans}</b>
-              <span>plans for a condition</span>
-            </span>
-            <span>
-              <b data-count={goalCount}>{goalCount}</b>
-              <span>goals and conditions</span>
-            </span>
-            <span>
-              <b>{counts.plans}</b>
-              <span>plans in the catalogue</span>
-            </span>
-          </div> : null}
-        </div>
-        <div>
-          <ul className={s.condChips}>
-            {CONDITIONS.map((c) => (
-              <li key={c.label} data-reveal="scale">
-                {/* Straight to the plan. See the note in home-data.ts — the
-                    `?q=` these used to carry was read by nothing. */}
-                <Link href={`/plans/${c.slug}`}>{c.label}</Link>
+      <div className={s.bandWrap}>
+        <h2 id="cond-h" className={s.bandH2}>
+          Plans for your goals and dietary needs
+        </h2>
+        {counts.plans > 0 ? <div className={s.condStats}>
+          <span>
+            <b data-count={counts.conditionPlans}>{counts.conditionPlans}</b>
+            <span>plans for a condition</span>
+          </span>
+          <span>
+            <b data-count={goalCount}>{goalCount}</b>
+            <span>goals and conditions</span>
+          </span>
+          <span>
+            <b>{counts.plans}</b>
+            <span>plans in the catalogue</span>
+          </span>
+        </div> : null}
+        <div className={s.splitWrap}>
+          <div>
+            <p className={s.condLede}>
+              Explore condition-focused menus alongside fitness and lifestyle
+              plans. If you have a diagnosed condition, confirm suitability with
+              your clinician before ordering. A meal plan does not replace treatment.
+            </p>
+          </div>
+          <div>
+            <p className={s.condCount}>{CONDITIONS.length} conditions</p>
+            <ul className={s.condChips}>
+              {CONDITIONS.map((c) => (
+                <li key={c.label} data-reveal="scale">
+                  {/* Straight to the plan. See the note in home-data.ts — the
+                      `?q=` these used to carry was read by nothing. */}
+                  <Link href={`/plans/${c.slug}`}>{c.label}</Link>
+                </li>
+              ))}
+              <li>
+                <Link href="/plans" className={s.condMore}>
+                  See every plan
+                </Link>
               </li>
-            ))}
-            <li>
-              <Link href="/plans" className={s.condMore}>
-                See every plan
-              </Link>
-            </li>
-          </ul>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -902,7 +996,7 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
               const h = Math.max(10, Math.min(100, 12 + (lost / 0.5) * 88));
               const stall = i === 2;
               return (
-                <li key={w.w} data-reveal="up">
+                <li key={w.w} data-reveal="up" className={stall ? s.weekStall : undefined}>
                   <span className={s.weekBar}>
                     <span
                       className={stall ? s.weekFillStall : s.weekFill}
@@ -922,16 +1016,26 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
             })}
           </ol>
 
-          <p className={s.coachSum}>
-            <span className="fk-num">2,000 kcal</span>
-            <i aria-hidden="true">−</i>
-            <span className="fk-num">300 kcal</span>
+          <div
+            className={s.coachSum}
+            role="group"
+            aria-label="Recalibration: 2,000 kcal minus 300 kcal equals 1,700 kcal"
+          >
+            <span className={s.coachTile}>
+              <b className="fk-num">2,000 kcal</b>
+            </span>
+            <i aria-hidden="true">&minus;</i>
+            <span className={s.coachTile}>
+              <b className="fk-num">300 kcal</b>
+            </span>
             <i aria-hidden="true">=</i>
-            <b className="fk-num">1,700 kcal</b>
+            <span className={`${s.coachTile} ${s.coachTileResult}`}>
+              <b className="fk-num">1,700 kcal</b>
+            </span>
             <span className={s.coachSumNote}>
               The engine&apos;s maximum single change after the trend leaves its goal range.
             </span>
-          </p>
+          </div>
         </div>
 
         <div className={s.receiptCard}>
@@ -947,7 +1051,7 @@ function CoachBand({ trial }: { trial: HomeSectionsProps["trial"] }) {
           </span>
           <span className={s.receiptTotal}>
             <span>You pay</span>
-            <b className="fk-num">{trial.total}</b>
+            <b>{trial.total}</b>
           </span>
           <span className={s.receiptNote}>
             No aggregator sits in the middle, so the cut that usually leaves the
@@ -1017,7 +1121,7 @@ function DeliveryFaqBand({ cutoffLabel }: { cutoffLabel: string }) {
             {FAQS.map((f, i) => {
               const isOpen = open === i;
               return (
-                <li key={f.q} data-reveal="left">
+                <li key={f.q} data-reveal="left" className={isOpen ? s.faqOpen : undefined}>
                   <button
                     type="button"
                     className={s.faqBtn}
@@ -1099,7 +1203,7 @@ function CtaBand({
       <span aria-hidden="true" className={s.closeGlow} />
       <span aria-hidden="true" className={s.closeGrain} />
       <div className={s.closeWrap}>
-        <div>
+        <div className={s.closeCopy}>
           <h2 id="close-h" className={s.closeH}>
             Eat one day of it before you decide.
           </h2>
@@ -1122,7 +1226,7 @@ function CtaBand({
             src="/images/brand/weekly-meal-delivery.webp"
             alt="Illustration of a weekly Indian meal delivery with four prepared meals"
             fill
-            sizes="(min-width: 900px) 320px, 60vw"
+            sizes="(min-width: 900px) 50vw, 100vw"
             style={{ objectFit: "cover" }}
             loading="lazy"
           />
@@ -1132,7 +1236,7 @@ function CtaBand({
       <ol className={s.closeSteps}>
         {steps.map((st) => (
           <li key={st.n} data-reveal="up">
-            <b className={`${s.closeStepN} fk-num`}>{st.n}</b>
+            <b className={s.closeStepN}>{st.n}</b>
             <b className={s.closeStepLabel}>{st.label}</b>
             <span className={s.closeStepLine}>{st.line}</span>
           </li>

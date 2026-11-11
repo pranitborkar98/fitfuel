@@ -20,8 +20,49 @@
   position: sticky;
   top: 0;
   z-index: var(--fk-z-header);
-  background: var(--fk-paper);
+  /* The one backdrop blur on the page: the sticky header, 88% paper. */
+  background: color-mix(in srgb, var(--fk-paper) 88%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--fk-line);
+}
+
+/* Trial CTA in the header bar itself: lime filled on desktop, collapsing to
+   a short "Trial ₹420" pill on a phone (the long label hides there). */
+.trialCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--fk-tap);
+  padding: 0 16px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font-family: var(--fk-sans);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.trialCta:hover {
+  background: var(--fk-green-deep);
+  border-color: var(--fk-green-deep);
+  color: var(--fk-on-green);
+}
+.trialCtaShort {
+  display: none;
+}
+@media (max-width: 639px) {
+  .trialCtaFull {
+    display: none;
+  }
+  .trialCtaShort {
+    display: inline;
+  }
+  .trialCta {
+    padding: 0 12px;
+  }
 }
 
 /* ONE ROW, TWO ENDS. This was a two-row grid with named areas because brand +
@@ -283,12 +324,12 @@
   background: var(--fk-warm);
 }
 .fchipOn {
-  background: var(--fk-ink);
-  border-color: var(--fk-ink);
-  color: var(--fk-paper);
+  background: var(--fk-green-wash);
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
 }
 .fchipOn:hover {
-  background: var(--fk-ink);
+  background: var(--fk-green-wash);
 }
 .fcount {
   font-family: var(--fk-mono);
@@ -364,8 +405,8 @@
 /* ── Dish grid ──────────────────────────────────────────────────────────── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--fk-s-4);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--fk-s-5);
   padding-bottom: var(--fk-s-7);
 }
 
@@ -382,7 +423,7 @@
 }
 .card:hover {
   box-shadow: var(--fk-shadow-2);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
 }
 
 /* The image well. Where a photograph is missing the well stays a warm surface
@@ -418,6 +459,15 @@
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+/* The course-hued well is a .shotPlaceholder, and its `span` rule uppercases
+   every span inside it — including this tag, so an imageless card read
+   "530 KCAL" while a photo well read "520 kcal". The tag is a figure, not a
+   label, and reads lowercase on both well types. Specificity beats
+   `.shotPlaceholder span` (0,1,1) with (0,2,0); the course name keeps its
+   uppercase from that rule. */
+.shotPlaceholder .kcalTag {
+  text-transform: none;
 }
 
 .cardBody {
@@ -766,13 +816,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: var(--fk-tap);
+  min-height: 48px;
   padding: 0 14px;
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r);
   background: transparent;
   font-family: var(--fk-sans);
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   font-weight: 600;
   color: var(--fk-ink-2);
   cursor: pointer;
@@ -783,13 +833,17 @@
   color: var(--fk-ink);
 }
 .modeOn {
-  background: var(--fk-green);
+  background: var(--fk-green-wash);
   border-color: var(--fk-green);
-  color: var(--fk-on-green);
+  color: var(--fk-green-deep);
 }
 .modeOn:hover {
-  background: var(--fk-green);
-  color: var(--fk-on-green);
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
+}
+.modeOn .fcount {
+  color: var(--fk-green-deep);
+  opacity: 1;
 }
 @media (min-width: 640px) {
   .modeRow {
@@ -1006,8 +1060,36 @@
 .planFoot .add {
   flex: 1 1 0;
   min-width: 0;
+  min-height: 48px;
   padding: 0 10px;
   font-size: var(--fk-t-sm);
+}
+
+/* Per-card action (Sweetgreen rule: no card without an action). The dish's
+   own detail action: full-width ghost link to the dish page, last row of
+   the card. The add control stays the buying action above it. */
+.seeDish {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* Lime-outline 48px action: the supplement "Buy" (and any card action that
+   must read as a choice, not the one filled buy). */
+.addOutline {
+  min-height: 48px;
+  border: 1px solid var(--fk-green);
+  background: transparent;
+  color: var(--fk-green-deep);
+}
+.addOutline:hover {
+  background: var(--fk-green-wash);
+  border-color: var(--fk-green-deep);
+  color: var(--fk-green-deep);
+}
+
+/* Supplement card foot: every action on the card is 48px, buy or evidence. */
+.suppFoot .add {
+  min-height: 48px;
 }
 
 /* The add-on line is a real control now, not a paragraph pretending to be one. */
@@ -1160,7 +1242,7 @@
    Gated on (hover: hover) and (pointer: fine) so a touch device never pays for
    a transform it cannot drive. Touch gets a press response instead, below. */
 .card:hover {
-  transform: translateY(var(--lift, -3px));
+  transform: translateY(var(--lift, -4px));
   border-color: color-mix(in srgb, var(--fk-green) 40%, var(--fk-line));
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.55),
@@ -1169,7 +1251,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    transform: perspective(900px) translateY(var(--lift, -3px))
+    transform: perspective(900px) translateY(var(--lift, -4px))
       rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   }
 
@@ -1349,9 +1431,51 @@
 /* ── Footer ─────────────────────────────────────────────────────────────── */
 .footer {
   border-top: 1px solid var(--fk-line);
-  background: var(--fk-warm);
+  background: var(--fk-warm-2);
   padding: var(--fk-s-8) var(--fk-gutter) var(--fk-s-6);
   margin-top: var(--fk-s-8);
+}
+/* The close CTA from the unrendered global footer, moved here where it
+   renders: trial line on top of the link columns. */
+.footerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  margin: 0 auto var(--fk-s-6);
+  padding-bottom: var(--fk-s-6);
+  border-bottom: 1px solid var(--fk-line);
+}
+.footerTopH {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--fk-ink);
+}
+.footerTopP {
+  margin: 6px 0 0;
+  font-size: var(--fk-t-base);
+  color: var(--fk-ink-2);
+}
+.app a.footerTrial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font-size: var(--fk-t-base);
+  font-weight: 700;
+  text-decoration: none;
+}
+.app a.footerTrial:hover {
+  background: var(--fk-green-deep);
+  color: var(--fk-on-green);
 }
 .footerGrid {
   display: grid;
@@ -1362,11 +1486,11 @@
 }
 .footerTitle {
   font-family: var(--fk-sans);
-  font-size: var(--fk-t-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--fk-ink-3);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fk-ink-2);
   margin: 0 0 var(--fk-s-2);
 }
 .footerList {
@@ -1390,6 +1514,13 @@
 }
 .app .footerList a:hover {
   color: var(--fk-green-deep);
+}
+.footerDisclosure {
+  max-width: 1440px;
+  margin: var(--fk-s-5) auto 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--fk-ink-3);
 }
 .footerBase {
   display: flex;
@@ -1593,6 +1724,8 @@
 .donut {
   flex: none;
   display: block;
+  width: 72px;
+  height: 72px;
   overflow: visible;
 }
 .donutTrack {
@@ -1608,7 +1741,7 @@
   /* Start the ring at twelve o'clock rather than three. */
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
-  animation: arcIn 640ms var(--fk-ease) both;
+  animation: arcIn var(--fk-dur-slow) var(--fk-ease) both;
 }
 /* Sweeping the dash in from zero reads as a measurement resolving. It is a
    bounded, one-shot repaint on a 64px box — not a permanent animation. */
@@ -1649,7 +1782,7 @@
 .donutNum {
   fill: var(--fk-ink);
   font-family: var(--fk-mono);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-anchor: middle;
@@ -1661,7 +1794,7 @@
 .donutUnit {
   fill: var(--fk-ink-3);
   font-family: var(--fk-sans);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-anchor: middle;
@@ -1687,16 +1820,16 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--fk-mono);
-  font-size: var(--fk-t-xs);
+  font-family: var(--fk-sans);
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  color: var(--fk-ink-3);
+  color: var(--fk-ink-2);
 }
 /* The swatch reuses the segment class, so a colour can never drift between the
    bar and its key. */
 .macroKey i {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   flex: none;
 }
@@ -1729,6 +1862,24 @@
   gap: 8px;
   padding: var(--fk-s-4);
   aspect-ratio: 16 / 10;
+  /* Hairline inner border, so the well edge reads against the card. */
+  box-shadow: inset 0 0 0 1px var(--fk-line-2);
+}
+/* The course label on an imageless well: top-left, 13px semibold, ink-2 —
+   the well names what it is instead of being a coloured rectangle. No
+   initial letter, no icon, no macro ring inside the well. */
+.shotPlaceholder .wellCourse {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: var(--fk-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fk-ink-2);
+  padding: 0;
+  text-align: left;
 }
 /* The label sits bottom-left over the field, with a scrim so it stays legible
    whatever hue the hash produced. */
@@ -1891,14 +2042,17 @@
   .macro {
     gap: 9px;
     margin-top: 2px;
+    /* No edge bleed here: the card is side-by-side on a phone and the body
+       is its own column, so the band spans the body column, not the card. */
+    margin-inline: 0;
   }
   .donut {
-    width: 44px;
-    height: 44px;
+    width: 72px;
+    height: 72px;
   }
   .macroKey {
     gap: 5px;
-    font-size: 11.5px;
+    font-size: 13px;
     /* Three stacked keys at the default leading came to 61px against a 44px
        ring. Tightened, they sit at roughly the ring's own height, which is what
        makes the block cost nothing. */
@@ -2592,7 +2746,7 @@
   border-radius: var(--fk-r-full);
   background: rgba(132, 204, 22, 0.1);
   border: 1px solid rgba(132, 204, 22, 0.28);
-  font-size: var(--fk-t-xs);
+  font-size: 13px;
   font-weight: 600;
   color: var(--fk-green-deep);
   white-space: nowrap;
@@ -2616,7 +2770,7 @@
    phone, where three columns would leave the meters 90px each. */
 .dayBar {
   border-top: 1px solid var(--fk-line);
-  background: var(--fk-warm);
+  background: var(--fk-paper);
 }
 .dayBarInner {
   max-width: var(--fk-max);
@@ -2654,12 +2808,12 @@
   background: var(--fk-paper);
 }
 .goalBtn {
-  min-height: 36px;
+  min-height: 48px;
   padding: 0 14px;
   border: 0;
   background: transparent;
   font-family: var(--fk-sans);
-  font-size: 0.8125rem;
+  font-size: var(--fk-t-sm);
   font-weight: 600;
   color: var(--fk-ink-3);
   cursor: pointer;
@@ -2690,7 +2844,8 @@
   gap: var(--fk-s-4);
   margin: 0;
   font-family: var(--fk-mono);
-  font-size: 0.8125rem;
+  font-size: 20px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--fk-ink-2);
 }
@@ -2706,7 +2861,7 @@
 .dayTrack {
   position: relative;
   display: block;
-  height: 8px;
+  height: 12px;
   border-radius: var(--fk-r-full);
   background: var(--fk-warm-2);
   overflow: hidden;
@@ -2760,19 +2915,21 @@
   align-items: center;
   min-height: var(--fk-tap);
   padding: 0 18px;
-  border: 0;
+  border: 1px solid var(--fk-green);
   border-radius: var(--fk-r);
-  background: var(--fk-green);
-  color: var(--fk-on-green);
+  background: transparent;
+  color: var(--fk-green-deep);
   font-family: var(--fk-sans);
   font-size: 0.9375rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color var(--fk-dur) var(--fk-ease);
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    color var(--fk-dur) var(--fk-ease);
 }
 .dayView:hover {
-  background: var(--fk-green-deep);
+  background: var(--fk-green-wash);
 }
 .dayEmpty {
   display: inline-flex;
@@ -2809,16 +2966,16 @@
 }
 .railOfferKicker {
   margin: 0;
-  font-size: 0.6875rem;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--fk-green);
 }
 .railOfferPrice {
   margin: 6px 0 0;
   font-family: var(--fk-display);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.15;
   color: var(--fk-ink);
@@ -2834,7 +2991,7 @@
   align-items: center;
   justify-content: center;
   margin-top: 12px;
-  min-height: var(--fk-tap);
+  min-height: 48px;
   border-radius: var(--fk-r);
   background: var(--fk-green);
   color: var(--fk-on-green);
@@ -2852,6 +3009,39 @@
   .offer {
     display: none;
   }
+}
+
+/* Phone inline offer: the same trial, compact, directly under the result
+   bar — the rail does not exist on a phone, so without this row the trial
+   prompt vanishes between the hero and the close. Image left 96px, copy
+   right, CTA. */
+.offerShot {
+  position: relative;
+  flex: none;
+  width: 96px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: var(--fk-r);
+  background: var(--fk-warm);
+}
+.app a.offerCta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--fk-tap);
+  padding: 0 16px;
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.app a.offerCta:hover {
+  background: var(--fk-green-deep);
+  color: var(--fk-on-green);
 }
 
 /* ── The lede ───────────────────────────────────────────────────────────── */
@@ -2879,11 +3069,27 @@
 }
 .courseGroup {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
-  gap: var(--fk-s-4);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--fk-s-5);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+@media (max-width: 1180px) {
+  .courseGroup {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 820px) {
+  .courseGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 639px) {
+  .courseGroup {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--fk-s-4);
+  }
 }
 .courseHead {
   grid-column: 1 / -1;
@@ -2926,7 +3132,7 @@
 }
 .courseMore {
   flex: none;
-  min-height: 40px;
+  min-height: var(--fk-tap);
   padding: 0 14px;
   border: 1px solid var(--fk-line-strong);
   border-radius: var(--fk-r);
@@ -2998,29 +3204,36 @@
   text-transform: uppercase;
 }
 
-/* ── The macro panel ────────────────────────────────────────────────────────
-   The ring and its key were loose in the card body. Boxed on the paper ground
-   they read as one readout, and the contribution line has somewhere to sit. */
+/* ── The macro band ─────────────────────────────────────────────────────────
+   The ring and its key are no longer loose in the card body. They sit in
+   their own band directly under the photo well — the first element of the
+   card body — on the raised ground, bleeding to the card edges between two
+   hairlines. The photograph stays on top on every card, imaged or not; the
+   band never replaces it. */
 .macro {
   align-items: center;
   gap: 14px;
-  margin: 8px 0 0;
-  padding: 12px;
-  border-radius: 10px;
-  background: var(--fk-paper);
-  border: 1px solid var(--fk-line);
+  margin: 0 calc(-1 * clamp(16px, 2vw, 22px));
+  padding: 12px 16px;
+  border-top: 1px solid var(--fk-line);
+  border-bottom: 1px solid var(--fk-line);
+  border-radius: 0;
+  background: var(--fk-raised);
 }
 .macroContrib {
   grid-column: 1 / -1;
   display: block;
+  overflow: hidden;
   margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--fk-line);
-  font-family: var(--fk-mono);
-  font-size: var(--fk-t-xs);
+  padding-top: 0;
+  border-top: 0;
+  font-family: var(--fk-sans);
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
-  color: var(--fk-green);
+  color: var(--fk-ink-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -3042,12 +3255,7 @@
 .bandWrap {
   max-width: var(--fk-max);
   margin-inline: auto;
-  padding: var(--fk-s-7) var(--fk-gutter);
-}
-@media (min-width: 900px) {
-  .bandWrap {
-    padding: var(--fk-s-8) var(--fk-gutter);
-  }
+  padding: var(--fk-section-y) var(--fk-gutter);
 }
 .bandHead {
   display: flex;
@@ -3060,7 +3268,7 @@
 .bandH2 {
   scroll-margin-top: 180px;
   font-family: var(--fk-display);
-  font-size: clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem);
+  font-size: var(--fk-t-h2);
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.022em;
@@ -3076,7 +3284,7 @@
   margin: 0;
   max-width: 46ch;
   font-size: var(--fk-t-base);
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--fk-ink-3);
 }
 .bandLedeWide {
@@ -3185,13 +3393,16 @@
 }
 .digitalPack {
   min-width: 0;
+  width: 100%;
+  max-width: 480px;
+  justify-self: center;
   overflow: hidden;
   border: 1px solid rgba(132, 204, 22, 0.3);
   border-radius: var(--fk-r-lg);
   background:
     radial-gradient(circle at 100% 0, rgba(132, 204, 22, 0.12), transparent 34%),
-    var(--fk-surface);
-  box-shadow: 0 26px 70px -44px rgba(132, 204, 22, 0.5);
+    var(--fk-warm-2);
+  box-shadow: var(--fk-shadow-2);
 }
 .digitalPackHead {
   display: flex;
@@ -3237,12 +3448,12 @@
 .digitalDayNo {
   color: var(--fk-green);
   font-family: var(--fk-mono);
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   font-weight: 700;
 }
 .digitalTarget {
   color: var(--fk-ink-2);
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-sm);
   font-weight: 650;
   text-align: right;
 }
@@ -3266,11 +3477,11 @@
 }
 .digitalMeals li > b {
   color: var(--fk-ink);
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
 }
 .digitalMeals li > small {
   color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-sm);
   line-height: 1.4;
 }
 .digitalPackFoot {
@@ -3297,6 +3508,81 @@
   }
 }
 
+/* ── Proof, restored ────────────────────────────────────────────────────────
+   Three verbatim testimonials on paper, cards on surface, one lime eyebrow
+   per card and a decorative opening quote mark. Renders nothing when the
+   featured-testimonial query is empty. */
+.proofGrid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fk-s-4);
+  margin: 0;
+  padding: 0;
+}
+.proofCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-2);
+}
+.proofMark {
+  font-family: var(--fk-display);
+  font-size: 4rem;
+  font-weight: 600;
+  line-height: 0.6;
+  color: var(--fk-green);
+  opacity: 0.2;
+}
+.proofResult {
+  color: var(--fk-green-deep);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.proofQuote {
+  margin: 0;
+  color: var(--fk-ink);
+  font-family: var(--fk-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.proofWho {
+  margin: auto 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fk-t-sm);
+}
+.proofWho b {
+  color: var(--fk-ink);
+  font-weight: 600;
+}
+.proofWho span {
+  color: var(--fk-ink-3);
+}
+.proofMeta {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--fk-line);
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+}
+.proofMore {
+  margin-top: 24px;
+}
+@media (min-width: 720px) {
+  .proofGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* ── The app, shown instead of merely listed ────────────────────────────── */
 .productPreviewGrid {
   list-style: none;
@@ -3319,9 +3605,10 @@
   overflow: hidden;
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-lg);
-  background: var(--fk-paper);
+  background: var(--fk-surface);
   color: var(--fk-ink);
   text-decoration: none;
+  box-shadow: var(--fk-shadow-1);
   transition:
     transform var(--fk-dur) var(--fk-ease),
     border-color var(--fk-dur) var(--fk-ease),
@@ -3377,7 +3664,7 @@
   display: grid;
   gap: 6px;
   padding: 13px;
-  background: var(--fk-surface);
+  background: var(--fk-paper);
 }
 .todayNumbers dt {
   color: var(--fk-ink-3);
@@ -3424,14 +3711,27 @@
   border-radius: 50%;
   background: var(--fk-green);
   box-shadow: 0 0 0 5px rgba(132, 204, 22, 0.1);
+  animation: fkPulse 2.4s ease-out infinite;
+}
+@keyframes fkPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(132, 204, 22, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(132, 204, 22, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(132, 204, 22, 0);
+  }
 }
 .scaleNumber {
   display: block;
   margin-top: 24px;
   color: var(--fk-green);
   font-family: var(--fk-display);
-  font-size: clamp(3.4rem, 7vw, 5.6rem);
+  font-size: 3.5rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.05em;
   line-height: 0.9;
 }
@@ -3512,6 +3812,34 @@
   color: var(--fk-green-deep);
   font-size: 0.6875rem;
 }
+
+/* ── The daily tools, in their final home ───────────────────────────────────
+   "Your daily tools" and "Today at a glance" moved out of the hero and sit
+   here, under the four preview cards. The launchpad gets the same card
+   treatment as the preview cards; HomeToday already is a card, so its cell
+   carries no second frame. */
+.dailyToolsRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--fk-s-4);
+  margin-top: var(--fk-s-4);
+}
+.dailyToolsRow > div {
+  min-width: 0;
+}
+.dailyToolsCard {
+  height: 100%;
+  padding: 22px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
+}
+@media (min-width: 900px) {
+  .dailyToolsRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (min-width: 720px) {
   .productPreviewGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3583,6 +3911,9 @@
   .app a.productPreviewCard {
     transition: none;
   }
+  .liveReading i {
+    animation: none;
+  }
 }
 
 /* ── Real supplement products ─────────────────────────────────────────── */
@@ -3603,6 +3934,14 @@
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
+  transition:
+    transform var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease);
+}
+.retailCard:hover {
+  border-color: rgba(132, 204, 22, 0.5);
+  transform: translateY(-4px);
 }
 .app a.retailImage {
   position: relative;
@@ -3611,12 +3950,9 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border-bottom: 1px solid var(--fk-line);
-  background:
-    radial-gradient(circle at 50% 42%, rgba(132, 204, 22, 0.1), transparent 48%),
-    #f7f7f4;
+  background: var(--fk-warm);
 }
 .app a.retailImage img {
-  padding: 18px;
   transition: transform 320ms var(--fk-ease);
 }
 .app a.retailImage:hover img {
@@ -3635,7 +3971,9 @@
 .retailBody h3 {
   margin: 0;
   color: var(--fk-ink);
-  font-size: var(--fk-t-md);
+  font-family: var(--fk-display);
+  font-size: 1.25rem;
+  font-weight: 600;
   line-height: 1.25;
 }
 .app .retailBody > p {
@@ -3651,9 +3989,9 @@
   line-clamp: 2;
 }
 .retailFoot {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 5px;
   padding-top: 14px;
@@ -3665,32 +4003,44 @@
 }
 .retailFoot b {
   color: var(--fk-ink);
-  font-size: var(--fk-t-base);
+  font-size: 1.25rem;
 }
 .retailFoot small {
   color: var(--fk-ink-3);
   font-size: 0.6875rem;
 }
-.app .retailFoot > a {
-  display: inline-flex;
+.app a.retailBuy {
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--fk-tap);
-  padding: 0 12px;
-  border: 1px solid var(--fk-line-strong);
+  min-height: 48px;
+  margin-top: 12px;
+  border: 1px solid var(--fk-green);
   border-radius: var(--fk-r);
-  color: var(--fk-ink);
-  font-size: var(--fk-t-xs);
+  background: transparent;
+  color: var(--fk-green-deep);
+  font-size: var(--fk-t-sm);
   font-weight: 700;
   text-decoration: none;
+  transition:
+    background-color var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease);
 }
-.app .retailFoot > a:last-child {
-  border-color: var(--fk-green);
-  background: var(--fk-green);
-  color: var(--fk-on-green);
+.app a.retailBuy:hover {
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
 }
-.app .retailFoot > a:hover {
-  border-color: var(--fk-green-deep);
+.app a.retailEvidence {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 4px;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  text-decoration: none;
+}
+.app a.retailEvidence:hover {
+  color: var(--fk-green-deep);
 }
 .retailDisclosure {
   margin: 16px 0 0;
@@ -3738,9 +4088,19 @@
   margin-bottom: 18px;
   border-radius: var(--fk-r-full);
   background: var(--fk-warm-2);
-  overflow: hidden;
 }
-.dayRail > span {
+.dayDot {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  box-sizing: border-box;
+  border: 2px solid var(--fk-paper);
+  border-radius: 50%;
+  background: var(--fk-green);
+}
+.dayRail > span[data-rail] {
   position: absolute;
   inset: 0 auto 0 0;
   width: 100%;
@@ -3784,7 +4144,7 @@
   display: grid;
   place-items: center;
   width: 100%;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 4 / 3;
   background: var(--fk-warm);
   overflow: hidden;
 }
@@ -3833,15 +4193,22 @@
   text-transform: uppercase;
   color: var(--fk-ink-2);
 }
+.dayAi {
+  display: block;
+  padding: 8px 20px 0;
+  color: var(--fk-ink-3);
+  font-size: 0.75rem;
+}
 .dayBody {
   display: block;
   padding: 18px 20px 22px;
 }
 .dayAt {
   display: block;
-  font-family: var(--fk-mono);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-family: var(--fk-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--fk-green);
 }
 .dayLabel {
@@ -3855,7 +4222,7 @@
 .dayLine {
   display: block;
   margin-top: 6px;
-  font-size: var(--fk-t-sm);
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -4148,6 +4515,15 @@
   .planGrid {
     grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
   }
+  /* Axes in a 2×2 grid on desktop (Length + Diet / Meals + Tier). The tier
+     cards stack in one column here: three across a half-width axis would
+     squeeze "Premium (estimate)" to a sliver. */
+  .planAxes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .planAxes .tierOpts {
+    grid-template-columns: 1fr;
+  }
 }
 .planAxes {
   display: grid;
@@ -4204,9 +4580,17 @@
 .axisOn,
 .axisOn:hover {
   border-color: var(--fk-green);
-  background: var(--fk-green);
-  color: var(--fk-on-green);
+  background: var(--fk-green-wash);
+  color: var(--fk-green-deep);
   font-weight: 700;
+}
+/* 48px axis buttons (the 44px floor later in this file is the minimum, not
+   the size — this more specific rule is the size). */
+.planAxes .axisBtn {
+  min-height: 48px;
+}
+.tierOpts .tierBtn {
+  min-height: 48px;
 }
 .dietDot {
   width: 8px;
@@ -4325,6 +4709,11 @@
   color: var(--fk-ink);
   white-space: nowrap;
 }
+/* The per-meal rate is the figure the eye lands on: 20px, the other rows
+   stay 14px. */
+.planRows > span:first-child b {
+  font-size: 1.25rem;
+}
 .planSave {
   color: var(--fk-green);
 }
@@ -4336,9 +4725,9 @@
   margin-top: var(--fk-s-4);
 }
 .planTotal b {
-  font-family: var(--fk-mono);
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: var(--fk-display);
+  font-size: 2.5rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--fk-ink);
   line-height: 1;
@@ -4390,22 +4779,28 @@
 .condStats {
   display: flex;
   gap: var(--fk-s-5);
-  margin-top: var(--fk-s-5);
+  margin: var(--fk-s-5) 0 var(--fk-s-6);
   padding-top: 20px;
   border-top: 1px solid var(--fk-line-2);
 }
 .condStats b {
   display: block;
   font-family: var(--fk-display);
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 600;
   color: var(--fk-green);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .condStats > span > span {
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-sm);
   color: var(--fk-ink-3);
+}
+.condCount {
+  margin: 0 0 12px;
+  color: var(--fk-green-deep);
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 .condChips {
   list-style: none;
@@ -4418,24 +4813,26 @@
 .app .condChips a {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 15px;
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-full);
   background: var(--fk-paper);
   color: var(--fk-ink-2);
-  font-size: var(--fk-t-sm);
+  font-size: 0.9375rem;
   font-weight: 500;
   text-decoration: none;
   transition:
     border-color var(--fk-dur-fast) ease,
     color var(--fk-dur-fast) ease,
-    background-color var(--fk-dur-fast) ease;
+    background-color var(--fk-dur-fast) ease,
+    transform var(--fk-dur) var(--fk-ease);
 }
 .app .condChips a:hover {
   border-color: var(--fk-green);
   background: var(--fk-green-wash);
   color: var(--fk-green-deep);
+  transform: translateY(-2px);
 }
 .app .condChips a.condMore {
   border-style: dashed;
@@ -4468,9 +4865,17 @@
   border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
 }
+/* The receipt is the page's warm card: the warm ground, a 2px lime top rule,
+   and the total in Newsreader. It must look like a receipt, not like another
+   text card. */
+.receiptCard {
+  padding: 24px;
+  background: var(--fk-warm-2);
+  border-top: 2px solid var(--fk-green);
+}
 .coachH {
   font-family: var(--fk-display);
-  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
+  font-size: var(--fk-t-h2);
   font-weight: 600;
   margin: 0 0 8px;
   line-height: 1.08;
@@ -4500,7 +4905,7 @@
 .weekBar {
   position: relative;
   display: block;
-  height: 118px;
+  height: 120px;
   border-radius: var(--fk-r);
   background: var(--fk-warm-2);
   overflow: hidden;
@@ -4538,10 +4943,15 @@
 }
 .weekFig b {
   font-family: var(--fk-mono);
-  font-size: var(--fk-t-base);
+  font-size: 1.25rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--fk-ink);
+}
+/* The stall week reads amber everywhere its numbers appear, not only in the
+   hatched bar — the "Stall flagged" note under it says the same in words. */
+.weekStall .weekFig span {
+  color: var(--fk-terracotta);
 }
 .weekFig span {
   font-family: var(--fk-mono);
@@ -4560,28 +4970,62 @@
   line-height: 1.4;
   color: var(--fk-ink-2);
 }
+/* The recalibration as a three-tile equation: current target, change, new
+   target. The note spans the full width underneath. */
 .coachSum {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
   margin: 26px 0 0;
-  padding: var(--fk-s-4) 18px;
-  border: 1px solid rgba(132, 204, 22, 0.32);
-  border-radius: 12px;
-  background: var(--fk-green-wash);
   font-family: var(--fk-mono);
-  font-size: var(--fk-t-sm);
   color: var(--fk-green-deep);
 }
 .coachSum i {
   font-style: normal;
+  font-size: 1.25rem;
   color: var(--fk-ink-3);
 }
-.coachSum b {
+.coachTile {
+  display: grid;
+  place-items: center;
+  padding: 16px 8px;
+  border: 1px solid var(--fk-line-2);
+  border-radius: 12px;
+  background: var(--fk-paper);
+}
+.coachTile b {
+  font-size: clamp(1rem, 4.5vw, 1.5rem);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-ink);
+  white-space: nowrap;
+}
+/* On a phone the tiles are ~81px wide and "1,700 kcal" at 17.55px mono is
+   110px, so the figure could not fit on one line in its tile at any
+   readable size (even 18px mono is ~108px against ~77px of tile interior).
+   Shrinking the type to fit would make it unreadable, and wrapping splits
+   the number from its unit. Instead the equation reflows to a column on a
+   phone: tile, operator, tile, operator, tile, each tile full width, the
+   figure kept on one line at 20px with the number and unit together. */
+@media (max-width: 639px) {
+  .coachSum {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .coachSum i {
+    justify-self: center;
+  }
+  .coachTile b {
+    font-size: 1.25rem;
+    white-space: nowrap;
+  }
+}
+.coachTileResult b {
+  color: var(--fk-green);
 }
 .coachSumNote {
+  grid-column: 1 / -1;
   font-family: var(--fk-sans);
   font-size: 0.8125rem;
   color: var(--fk-ink-2);
@@ -4618,7 +5062,7 @@
   gap: var(--fk-s-4);
   padding: 12px 0;
   border-bottom: 1px solid var(--fk-line);
-  font-size: var(--fk-t-sm);
+  font-size: var(--fk-t-base);
   line-height: 1.35;
   color: var(--fk-ink-2);
 }
@@ -4644,9 +5088,9 @@
   color: var(--fk-ink-3);
 }
 .receiptTotal b {
-  font-family: var(--fk-mono);
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: var(--fk-display);
+  font-size: 1.75rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--fk-green);
   line-height: 1;
@@ -4717,6 +5161,11 @@
 .faqList > li {
   border-bottom: 1px solid var(--fk-line);
 }
+/* The open question carries a lime left rule, so the open state reads even
+   without the sign. */
+.faqOpen {
+  box-shadow: inset 2px 0 0 var(--fk-green);
+}
 .faqBtn {
   width: 100%;
   display: grid;
@@ -4737,9 +5186,9 @@
   color: var(--fk-green);
 }
 .faqQ {
-  font-family: var(--fk-display);
-  font-size: 1.1875rem;
-  font-weight: 500;
+  font-family: var(--fk-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
   color: var(--fk-ink);
   line-height: 1.3;
 }
@@ -4766,7 +5215,7 @@
   margin: 0;
   padding: 0 60px 22px 44px;
   max-width: 70ch;
-  font-size: 0.9375rem;
+  font-size: var(--fk-t-base);
   line-height: 1.6;
   color: var(--fk-ink-2);
   animation: fkFadeUp var(--fk-dur-slow) var(--fk-ease) both;
@@ -4789,11 +5238,14 @@
   }
 }
 
-/* ── 8. The close ───────────────────────────────────────────────────────── */
+/* ── 8. The close ─────────────────────────────────────────────────────────
+   The darkest, most photographic close on the page: copy on paper left, the
+   delivery photograph full-bleed on the right half at desktop width. The
+   glow and grain stay — this and the hero are the only two glows. */
 .close {
   position: relative;
   border-top: 1px solid var(--fk-line);
-  background: var(--fk-green-wash);
+  background: var(--fk-paper);
   overflow: hidden;
 }
 .closeGlow {
@@ -4827,23 +5279,30 @@
 }
 .closeWrap {
   position: relative;
-  max-width: var(--fk-max);
-  margin-inline: auto;
-  padding: var(--fk-s-8) var(--fk-gutter);
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr;
-  align-items: center;
-  gap: var(--fk-s-6);
+  align-items: stretch;
+  gap: 0;
+}
+.closeCopy {
+  padding: var(--fk-section-y) var(--fk-gutter) var(--fk-s-6);
 }
 @media (min-width: 900px) {
   .closeWrap {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--fk-s-7);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .closeCopy {
+    /* Lines the copy up with the 1440px content column the rest of the page
+       sits in, while the photograph bleeds to the viewport edge. */
+    padding: var(--fk-section-y) var(--fk-s-7) var(--fk-s-6) max(var(--fk-gutter), calc((100vw - var(--fk-max)) / 2));
   }
 }
 .closeH {
   font-family: var(--fk-display);
-  font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  font-size: var(--fk-t-h2);
   font-weight: 600;
   margin: 0;
   line-height: 1.08;
@@ -4897,13 +5356,11 @@
 .closeShot {
   position: relative;
   display: block;
-  width: 320px;
-  max-width: 70vw;
-  aspect-ratio: 1;
-  border-radius: var(--fk-r-lg);
+  width: 100%;
+  min-height: 420px;
   overflow: hidden;
-  border: 1px solid rgba(132, 204, 22, 0.42);
-  justify-self: start;
+  border: 0;
+  border-radius: 0;
 }
 
 /* The entrance effects are opt-in through data attributes that useReveal only
@@ -4970,7 +5427,7 @@
      earlier cut reduced it to the pin alone to make space for the field; there
      is no longer a field to make space for, and an unlabelled pin is worse. */
   .topRow {
-    gap: var(--fk-s-2);
+    gap: 6px;
     padding: 6px var(--fk-gutter);
   }
   .brand {
@@ -4980,8 +5437,14 @@
     padding: 0 12px;
     font-size: var(--fk-t-xs);
   }
+  /* Dish pages overflow by 1px on a 390px phone: the header row's
+     min-content (wordmark + "Check delivery" + trial pill + basket) is
+     1px wider than the viewport, so .topActions ends at 391px. The
+     row and the actions group each give up 2px of gap here (6px of
+     headroom), which pulls the basket button back inside without
+     touching the 20px gutters or clipping anything. */
   .topActions {
-    gap: 6px;
+    gap: 4px;
   }
 
   /* ── 2. The mode row is the tab bar ─────────────────────────────────────
@@ -5000,9 +5463,11 @@
      44px rule is not negotiable — then the two meters with their figures
      directly above them.
 
-     The basket column is gone: its total is already in the header badge and,
-     the moment anything is in the basket, in the fixed order bar. Three copies
-     of one number, on the screen with the least room for any of them. */
+     The basket stays as a compact row of its own (total + delivery figure +
+     basket button), not a third column: hiding it hid the delivery figure,
+     "Basket empty" and "View order" entirely on a phone, and the header badge
+     carries only a count, not the total. The fixed order bar appears only
+     once something is in the basket. */
   .dayBarInner {
     gap: 8px;
     padding: 8px var(--fk-gutter);
@@ -5034,9 +5499,22 @@
   }
   /* The sentence the meters already say, in words. First to go: it is the only
      part of this bar that is explanation rather than instrument. */
-  .dayNote,
-  .dayBasket {
+  .dayNote {
     display: none;
+  }
+  /* The basket as its own row under the meters: total left, "Delivery ₹50" /
+     "Basket empty" under it, and the 44px "View order" button (or the empty
+     state) right. Same content as desktop, stacked instead of columned. */
+  .dayBasket {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--fk-s-3);
+    padding-top: 8px;
+    border-top: 1px solid var(--fk-line);
+  }
+  .dayBasketFig {
+    text-align: left;
   }
 
   /* ── The lede ───────────────────────────────────────────────────────────
@@ -5058,22 +5536,24 @@
     overflow: hidden;
   }
 
-  /* The course note is the kitchen's sentence about a course, and at this
-     width it pushed the first card of every group down by two lines. The
-     heading and the count carry the group on a phone. */
+  /* The course note is the kitchen's sentence about a course. PLAN §2.4 keeps
+     title + count + kitchen note on the head with no phone exception, and the
+     head already wraps "Show all" to its own row at this width, so the note
+     sits under the title inside the copy column instead of pushing the cards
+     down by a full extra row. */
   .courseNote {
-    display: none;
+    display: block;
   }
   .courseHead {
     padding: var(--fk-s-4) 0 6px;
   }
 
   /* ── The bands ──────────────────────────────────────────────────────────
-     64px of vertical padding per band is eight bands' worth of scrolling on a
-     phone before the close. */
-  .bandWrap {
-    padding: var(--fk-s-6) var(--fk-gutter);
-  }
+     Section padding is --fk-section-y (64px floor on a phone); the old 48px
+     override below it is gone, so bands keep the same rhythm as desktop.
+     Headings drop to the 30px phone size in the media query after the
+     specificity-fix block below — a (0,1,0) rule here would lose to the
+     (0,2,0) .app rules. */
   .coachCard,
   .receiptCard,
   .axis {
@@ -5088,8 +5568,9 @@
   .faqA {
     padding: 0 4px 18px 4px;
   }
-  .closeWrap {
-    padding: var(--fk-s-7) var(--fk-gutter);
+  .closeShot {
+    min-height: 0;
+    aspect-ratio: 16 / 10;
   }
 }
 
@@ -5141,8 +5622,13 @@
 
    Two of those are figures that exist to be glanced at. A figure that takes
    four lines is not glanced at, it is decoded, and it was pushing the thing it
-   annotates off the screen. Both come out on the phone and both stay on
+   annotates off the screen. Both came out on the phone then, and stayed on
    desktop, where they read in one line each and cost nothing.
+
+   REVERSED in the Phase 1 fixes: the compact contribution copy ("10% protein
+   · 16% calories") and the single-column phone grid mean neither line takes
+   four lines any more, so both are back on the phone — see the rule below.
+   The well drop and the card shortening stand.
 
    The well drops to 104. It stays — the owner ruled the placeholders
    intentional on 2026-08-18 and a photograph drops into it with no layout
@@ -5161,27 +5647,21 @@
     grid-template-columns: minmax(0, 1fr) 116px;
   }
 
-  /* Four lines of 12px mono in a 69px column. The price above it is the number
-     someone is actually reading; this is arithmetic on it. */
-  .perProtein {
-    display: none;
-  }
+  /* ── The two glanced-at figures, back on the phone ───────────────────────
+     This block used to hide both of them at phone width: the contribution line
+     took four lines inside a 139px macro panel and "₹16 per gram of protein"
+     took four lines inside a 69px price column, on a card 335px wide with a
+     124px side well.
 
-  /* Same reasoning. The day bar at the top of the screen already says what is
-     left of the target, in a sentence, at full width — this line says the same
-     thing per dish inside 139px, and pays 61px for it. */
-  .macroContrib {
-    display: none;
-  }
+     That space constraint no longer applies. The grid is a single full-width
+     column on a phone, the contribution copy is now the compact "10% protein
+     · 16% calories" (one line, ellipsis as backstop), and the macro band is
+     the point of this redesign — hiding its line on the smallest screen hid
+     the redesign where it matters most. Both lines stay on desktop unchanged
+     and now show on a phone too; only the panel padding tightens here. */
   .macro {
     padding: 8px;
     gap: 8px;
-  }
-
-  /* With the contribution line gone the panel has one row, so its bottom rule
-     and padding have nothing to separate. */
-  .macro > span:last-child {
-    padding-bottom: 0;
   }
 }
 
@@ -5270,14 +5750,14 @@
 
 .app .bandH2 {
   font-weight: 600;
-  font-size: clamp(1.75rem, 1.3rem + 1.7vw, 2.625rem);
-  line-height: 1.05;
-  letter-spacing: -0.022em;
+  font-size: var(--fk-t-h2);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
 }
 
 .app .coachH {
   font-weight: 600;
-  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
+  font-size: var(--fk-t-h2);
   line-height: 1.08;
   letter-spacing: -0.02em;
   /* .fk h2 zeroes this the same way it zeroed the size. */
@@ -5286,21 +5766,31 @@
 
 .app .closeH {
   font-weight: 600;
-  font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  font-size: var(--fk-t-h2);
   line-height: 1.08;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+}
+
+/* The footer close line is an h2 too, so the base .fk h2 clamp was setting
+   it at 60px desktop / 37px phone. Same fix as the section headings: the
+   h2 token, 30px on a phone. */
+.app .footerTopH {
+  font-weight: 600;
+  font-size: var(--fk-t-h2);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
 }
 
 /* The worst of them. A footer column label is a 11px uppercase kicker; it was
    set at the h1-adjacent end of the display scale, four times, side by side. */
 .app .footerTitle {
   font-family: var(--fk-sans);
-  font-size: var(--fk-t-xs);
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--fk-ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fk-ink-2);
   /* Same rule, same loss: the column label was sitting on its first link. */
   margin: 0 0 var(--fk-s-2);
 }
@@ -5311,6 +5801,18 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.015em;
+}
+
+/* Phone size for the band headings. This has to live AFTER the .app rules
+   above and carry the same (0,2,0) specificity — the (0,1,0) version that
+   used to sit in the ≤639px block never applied. */
+@media (max-width: 639px) {
+  .app .bandH2,
+  .app .coachH,
+  .app .closeH,
+  .app .footerTopH {
+    font-size: 1.875rem;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -5849,12 +6351,11 @@
   }
 }
 .closeStepN {
-  font-family: var(--fk-mono);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--fk-green-deep);
+  font-family: var(--fk-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fk-green);
 }
 .closeStepLabel {
   font-family: var(--fk-display);
@@ -5882,16 +6383,18 @@
 @media (min-width: 780px) {
   .closeAssure {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
   }
 }
 .app .closeAssure a {
   display: grid;
   gap: 4px;
   min-height: var(--fk-tap);
-  padding: var(--fk-s-4);
-  border: 1px solid rgba(132, 204, 22, 0.24);
-  border-radius: var(--fk-r);
-  background: rgba(7, 7, 7, 0.26);
+  padding: 16px 4px 0;
+  border: 0;
+  border-top: 1px solid var(--fk-line-2);
+  border-radius: 0;
+  background: transparent;
   color: var(--fk-ink);
   text-decoration: none;
   transition:
@@ -5899,8 +6402,8 @@
     background-color var(--fk-dur) var(--fk-ease);
 }
 .app .closeAssure a:hover {
-  border-color: var(--fk-green);
-  background: rgba(7, 7, 7, 0.42);
+  border-top-color: var(--fk-green);
+  background: transparent;
   color: var(--fk-ink);
 }
 .app .closeAssure b {
@@ -5912,12 +6415,6 @@
   font-size: var(--fk-t-xs);
   line-height: 1.5;
   color: var(--fk-ink-2);
-}
-
-/* The close now carries three rows, so its own block padding comes off the
-   bottom — the steps and the assurances bring their own. */
-.closeWrap {
-  padding-bottom: var(--fk-s-6);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5991,11 +6488,11 @@
   position: sticky;
   top: 0;
   background: var(--fk-warm);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fk-ink-2);
   white-space: nowrap;
 }
 .spec tbody th {
@@ -6003,26 +6500,33 @@
   left: 0;
   min-width: 190px;
   background: var(--fk-paper);
+  font-size: var(--fk-t-base);
   font-weight: 600;
   color: var(--fk-ink);
 }
 .spec td {
   color: var(--fk-ink-3);
+  font-size: 0.9375rem;
 }
 .spec tbody tr:last-child th,
 .spec tbody tr:last-child td {
   border-bottom: 0;
 }
 /* Our column is lit, and it is lit with GROUND rather than with colour alone —
-   the sentence in it is ink either way, so the emphasis survives greyscale. */
+   the sentence in it is ink either way, so the emphasis survives greyscale.
+   The 2px lime left rule marks the column edge; the header cell carries the
+   same wash so the highlight runs the full height of the table. */
 .spec .specUs {
   color: var(--fk-green);
   background: var(--fk-green-wash);
+  box-shadow: inset 2px 0 0 var(--fk-green);
 }
 .spec .specMine {
   color: var(--fk-ink);
-  background: rgba(132, 204, 22, 0.06);
+  background: var(--fk-green-wash);
+  font-size: var(--fk-t-base);
   font-weight: 500;
+  box-shadow: inset 2px 0 0 var(--fk-green);
 }
 .wedgeCards {
   display: none;

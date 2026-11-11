@@ -28,10 +28,16 @@
      from the app at `/` to any of the 57 interior routes is not a 3/255 step
      in the page colour. Imperceptible alone, but it is free to remove. */
   --fk-paper: #070707; /* the page */
-  --fk-surface: #131311; /* a card, LIGHTER than the page — on a dark ground a
-                            raised surface must lift, not recess */
+  --fk-surface: #171715; /* a card, LIGHTER than the page — on a dark ground a
+                            raised surface must lift, not recess. ~9 lightness
+                            points above paper; ink on it stays ≈16:1 */
   --fk-warm: #1a1a17; /* hover / secondary band */
   --fk-warm-2: #232320;
+  --fk-raised: #1d1d19; /* inset bands inside cards (macro band, sticky plan
+                           summary) — one step between surface and warm-2 */
+  --fk-band-light: #232320; /* alias of warm-2, named for its job: the single
+                               lightest-dark band, if a section needs one more
+                               step. Use at most once per page. */
   --fk-ink-bg: #000000; /* the one true black, for full-bleed media only */
 
   /* ── Ink ─────────────────────────────────────────────────────────────────
@@ -51,6 +57,8 @@
                                ground that is lighter, not darker */
   --fk-green-wash: #1b2410; /* tint band behind a selected state */
   --fk-on-green: #070707; /* text ON lime */
+  /* Lime usage: primary actions, active states, links, one headline word per
+     section. Nowhere else. */
 
   /* Kept so nothing that references them breaks. Amber is the warning colour
      and is legible here; it was not on paper. */
@@ -88,11 +96,12 @@
      Warm-tinted and shallow. Shadows lift real overlays (sheets, menus,
      sticky bars). There are no coloured glows and no backdrop-filter glass:
      both were on the reject-on-sight list and both still look like 2022. */
-  /* On a black ground a drop shadow is invisible. Elevation is carried by the
-     surface value and the hairline instead; these stay only so components that
-     reference them do not break, and only the overlay tier does real work. */
-  --fk-shadow-1: none;
-  --fk-shadow-2: 0 2px 10px rgba(0, 0, 0, 0.5);
+  /* On a black ground a drop shadow is invisible on its own. Elevation is
+     carried by the surface value and the inset top light instead; the drop
+     part is subtle and the lift reads through the surface change + the inset
+     light, which is why both are in the same token. */
+  --fk-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04);
+  --fk-shadow-2: 0 12px 32px -16px rgba(0, 0, 0, 0.75), 0 1px 0 rgba(255, 255, 255, 0.04);
   --fk-shadow-3: 0 18px 48px rgba(0, 0, 0, 0.7);
 
   /* ── Type ────────────────────────────────────────────────────────────────
@@ -124,6 +133,8 @@
   --fk-t-2xl: clamp(1.875rem, 1.4rem + 2.2vw, 2.75rem);
   --fk-t-3xl: clamp(2.25rem, 1.5rem + 3.4vw, 3.75rem);
   --fk-t-4xl: clamp(2.75rem, 1.6rem + 5vw, 5rem);
+  --fk-t-hero: clamp(4rem, 7vw, 5rem); /* 64–80px hero headline */
+  --fk-t-h2: clamp(2.5rem, 4vw, 3.5rem); /* 40–56px section headline */
 
   --fk-lh-tight: 1.08; /* display only */
   --fk-lh-snug: 1.25; /* sub-heads */
@@ -144,10 +155,12 @@
   --fk-s-9: 96px;
   --fk-s-10: 128px;
 
-  --fk-section-y: clamp(56px, 8vw, 112px);
+  --fk-section-y: clamp(64px, 8vw, 128px);
   --fk-gutter: clamp(20px, 5vw, 40px);
   --fk-measure: 62ch; /* 60–75 char line length for long-form copy */
   --fk-wrap: 1200px;
+  /* One glow, two uses (hero mosaic, close); nowhere else. */
+  --fk-glow: radial-gradient(closest-side, rgba(132, 204, 22, 0.1), transparent);
 
   /* ── Motion ──────────────────────────────────────────────────────────────
      150–300ms, ease-out entering. Restrained on purpose: motion here is

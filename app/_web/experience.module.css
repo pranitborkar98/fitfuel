@@ -11,7 +11,7 @@
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(320px, 0.82fr) minmax(560px, 1.18fr);
+  grid-template-columns: minmax(320px, 0.42fr) minmax(560px, 0.58fr);
   grid-template-areas:
     "copy menu"
     "support menu";
@@ -45,15 +45,19 @@
 }
 
 .title {
-  max-width: 11ch;
+  max-width: 12ch;
   margin: 0;
   color: var(--fk-ink);
   font-family: var(--fk-display);
-  font-size: clamp(3rem, 4.8vw, 4.9rem);
+  font-size: var(--fk-t-hero);
   font-weight: 560;
-  letter-spacing: -0.038em;
-  line-height: 0.98;
+  letter-spacing: -0.03em;
+  line-height: 1;
   text-wrap: balance;
+}
+
+.limeWord {
+  color: var(--fk-green);
 }
 
 .lede {
@@ -100,6 +104,41 @@
   border: 1px solid var(--fk-line-strong);
   background: var(--fk-surface);
   color: var(--fk-ink);
+}
+
+/* Primary / secondary are swapped from the old hero: the trial is the lime
+   action, "See tonight's menu" is the ghost. The classes exist because the
+   primary is a link and the secondary a button, and the base rules style them
+   the other way round. */
+.heroActions a.heroPrimary {
+  border-color: var(--fk-green);
+  background: var(--fk-green);
+  color: var(--fk-on-green);
+}
+
+.heroActions a.heroPrimary:hover {
+  border-color: var(--fk-green-deep);
+  background: var(--fk-green-deep);
+  color: var(--fk-on-green);
+}
+
+.heroActions button.heroGhost {
+  border: 1px solid var(--fk-line-strong);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
+}
+
+.heroActions button.heroGhost:hover {
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
+}
+
+.heroProof {
+  margin: 18px 0 0;
+  color: var(--fk-ink-3);
+  font-size: var(--fk-t-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
 }
 
 .heroActions a:hover {
@@ -164,12 +203,12 @@
 }
 .operation b {
   color: var(--fk-ink);
-  font-size: var(--fk-t-xs);
+  font-size: var(--fk-t-sm);
   line-height: 1.2;
 }
 .operation small {
   color: var(--fk-ink-3);
-  font-size: 0.6875rem;
+  font-size: 13px;
   line-height: 1.2;
 }
 
@@ -180,7 +219,11 @@
   padding: 10px;
   border: 1px solid var(--fk-line-2);
   border-radius: var(--fk-r-lg);
-  background: var(--fk-surface);
+  /* The single lime glow on the page (the other use is the close, Phase 2):
+     behind the mosaic only, top-right, 480px. */
+  background:
+    var(--fk-glow) top right / 480px 480px no-repeat,
+    var(--fk-surface);
 }
 
 .previewHead {
@@ -240,6 +283,42 @@
   overflow: hidden;
   border-radius: var(--fk-r);
   background: var(--fk-warm);
+  animation: mosaicIn var(--fk-dur-slow) var(--fk-ease);
+}
+
+/* The featured meal crossfades on every advance (the panel remounts per
+   active meal). One 320ms fade, not a slide. */
+@keyframes mosaicIn {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mosaicPause {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--fk-tap);
+  min-height: var(--fk-tap);
+  padding: 0 14px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r-full);
+  background: color-mix(in srgb, #000 72%, transparent);
+  color: var(--fk-ink);
+  font: 700 13px/1 var(--fk-sans);
+  cursor: pointer;
+}
+
+.mosaicPause:hover {
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
 }
 
 .featureMeal > img,
@@ -364,6 +443,125 @@
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ── HERO MOSAIC ────────────────────────────────────────────────────────────
+   The four meal tabs are the mosaic tiles: one large featured meal above,
+   four tiles below it in a stepped row. The stagger is tile 2 lifted 24px,
+   tile 4 lifted 12px, tiles 1 and 3 at baseline — a stepped edge visible at
+   a glance. Each tile is a vertical card (image top, slot + name below), not
+   the old 52px-thumb row. The `.menuPreview` prefix out-specifies the
+   responsive tab rules below, which still govern the phone thumb row. */
+.menuPreview .mealGrid {
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.menuPreview .mealGrid button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.menuPreview .mealThumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.menuPreview .mealGrid button > span:last-child {
+  gap: 2px;
+}
+
+.menuPreview .mealGrid small {
+  font-size: 13px;
+}
+
+.menuPreview .mealGrid b {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.menuPreview .mealGrid button:nth-child(2) {
+  transform: translateY(-24px);
+}
+
+.menuPreview .mealGrid button:nth-child(4) {
+  transform: translateY(-12px);
+}
+
+/* ── PHASE 1 PARK: DAILY TOOLS UNDER THE CATALOG ───────────────────────────
+   Two columns on desktop (tools wide, today narrow), stacked on a phone.
+   The wrap matches the catalog's 1440px measure and gutters. */
+.dailyToolsWrap {
+  width: min(100%, 1440px);
+  margin-inline: auto;
+  padding: 0 var(--fk-gutter) clamp(36px, 5vw, 64px);
+}
+
+.dailyTools {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* The launchpad's 6-across row was drawn for full width; in the parked
+   two-column slot it becomes 3×2 so no label wraps or truncates. (Matched on
+   the nav's aria-label because the launchpad's own module owns its class.) */
+.dailyTools nav[aria-label="Daily FitFuel tools"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .dailyTools {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Phone: the mosaic stacks to featured + a 4-column thumb row. The stagger
+   goes away (no room for a stepped edge at 390px) and the dish names hide —
+   the slot label stays, so every tab keeps a visible name. */
+@media (max-width: 720px) {
+  .menuPreview .mealGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .menuPreview .mealGrid button {
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .menuPreview .mealGrid button:nth-child(2),
+  .menuPreview .mealGrid button:nth-child(4) {
+    transform: none;
+  }
+
+  .menuPreview .mealThumb {
+    aspect-ratio: 1 / 1;
+  }
+
+  .menuPreview .mealGrid b {
+    display: none;
+  }
+
+  .menuPreview .mealGrid small {
+    font-size: 13px;
+  }
 }
 
 .appTools {
@@ -887,7 +1085,7 @@
   margin: 0;
   color: var(--fk-ink);
   font-family: var(--fk-display);
-  font-size: clamp(1.75rem, 3.2vw, 2.8rem);
+  font-size: var(--fk-t-h2);
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.04;
@@ -901,108 +1099,177 @@
   line-height: 1.6;
 }
 
+/* ── Product map: photo-led directory cards ─────────────────────────────────
+   Four quick cards and two business bands. Cards with a real photograph lead
+   with it (16/9); the dashboard card has no screenshot, so it carries a
+   lime-wash icon tile in the same slot instead of an empty well. */
 .quickRail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   margin-top: 20px;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r);
-  background: var(--fk-line-2);
-  gap: 1px;
-  overflow: hidden;
 }
 
 .quickRail button,
 .quickRail a {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  min-height: 88px;
-  padding: 12px 14px;
-  border: 0;
+  padding: 0;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  overflow: hidden;
   background: var(--fk-surface);
   color: var(--fk-ink);
   font: inherit;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: var(--fk-shadow-1);
+  transition:
+    transform var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease),
+    box-shadow var(--fk-dur-slow) var(--fk-ease);
 }
 
 .quickRail button:hover,
 .quickRail a:hover {
-  background: var(--fk-warm);
+  border-color: rgba(132, 204, 22, 0.5);
+  background: var(--fk-surface);
   color: var(--fk-ink);
+  box-shadow: var(--fk-shadow-2);
+  transform: translateY(-4px);
+}
+
+.quickPhoto {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--fk-warm);
+}
+
+.quickIconArea {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--fk-green-wash);
 }
 
 .quickIcon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--fk-line-strong);
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(132, 204, 22, 0.45);
   border-radius: var(--fk-r);
   color: var(--fk-green-deep);
 }
 
-.quickRail button > span:nth-child(2),
-.quickRail a > span:nth-child(2) {
+.quickBody {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+.quickBody > span {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 
-.quickRail small {
+.quickBody > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--fk-green-deep);
+}
+
+.quickBody small {
   color: var(--fk-green-deep);
   font-size: 0.6875rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
-.quickRail b {
+.quickBody b {
   color: var(--fk-ink);
-  font-size: var(--fk-t-xs);
-  line-height: 1.3;
+  font-size: var(--fk-t-sm);
+  line-height: 1.35;
 }
 
 .businessRail {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  margin-top: 1px;
-  overflow: hidden;
-  border: 1px solid var(--fk-line-2);
-  border-radius: var(--fk-r);
-  background: var(--fk-line-2);
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .businessRail a {
   display: grid;
-  grid-template-columns: minmax(0, 0.34fr) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
-  min-height: 72px;
-  padding: 12px 16px;
-  background: var(--fk-paper);
+  grid-template-columns: minmax(0, 1fr) 40%;
+  min-height: 148px;
+  padding: 0;
+  border: 1px solid var(--fk-line-2);
+  border-radius: var(--fk-r-lg);
+  overflow: hidden;
+  background: var(--fk-surface);
   color: var(--fk-ink);
   text-decoration: none;
+  box-shadow: var(--fk-shadow-1);
+  transition:
+    transform var(--fk-dur) var(--fk-ease),
+    border-color var(--fk-dur) var(--fk-ease),
+    box-shadow var(--fk-dur-slow) var(--fk-ease);
 }
 
 .businessRail a:hover {
-  background: var(--fk-warm);
+  border-color: rgba(132, 204, 22, 0.5);
+  background: var(--fk-surface);
   color: var(--fk-ink);
+  box-shadow: var(--fk-shadow-2);
+  transform: translateY(-4px);
 }
 
-.businessRail a > span {
+.businessCopy {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+}
+
+.businessCopy > span {
+  display: grid;
+  gap: 6px;
+}
+
+.businessLabel {
   color: var(--fk-green-deep);
   font-size: var(--fk-t-xs);
   font-weight: 700;
 }
 
-.businessRail a > b {
-  font-size: var(--fk-t-sm);
+.businessCopy b {
+  font-size: var(--fk-t-base);
+  font-weight: 600;
   line-height: 1.35;
+}
+
+.businessCopy > svg {
+  color: var(--fk-green-deep);
+}
+
+.businessPhoto {
+  position: relative;
+  display: block;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--fk-warm);
 }
 
 .proofLine {
@@ -1324,6 +1591,10 @@
     font-size: 1.75rem;
   }
 
+  .productMapHead h2 {
+    font-size: 1.875rem;
+  }
+
   .planGrid button {
     grid-template-columns: 88px minmax(0, 1fr) auto;
     min-height: 106px;
@@ -1366,23 +1637,21 @@
     grid-template-columns: 1fr;
   }
 
+  /* Phone: the photograph leads, copy below it. */
   .businessRail a {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 4px 12px;
-    min-height: 76px;
+    grid-template-columns: 1fr;
+    min-height: 0;
   }
 
-  .businessRail a > span {
-    grid-column: 1;
+  .businessPhoto {
+    grid-row: 1;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
   }
 
-  .businessRail a > b {
-    grid-column: 1;
-  }
-
-  .businessRail a > svg {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+  .businessCopy {
+    grid-row: 2;
+    padding: 16px;
   }
 
   .proofLine {
