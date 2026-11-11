@@ -3698,10 +3698,15 @@
 }
 
 /* ── Real supplement products ─────────────────────────────────────────── */
+/* 2026-11-11 homepage fix: the base grid is 2 columns, not 1. The four
+   preview cards used to stack four tall on a phone; two across keeps the
+   showcase to two short rows. The foot reflows below 640px so the price
+   takes its own row and Evidence and Buy share the next, both still 44px
+   targets. */
 .retailGrid {
   list-style: none;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--fk-s-4);
   margin: 0;
   padding: 0;
@@ -3804,11 +3809,38 @@
 .app .retailFoot > a:hover {
   border-color: var(--fk-green-deep);
 }
+.retailNote {
+  margin: 18px 0 0;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  line-height: 1.55;
+}
 .retailDisclosure {
   margin: 16px 0 0;
   color: var(--fk-ink-3);
   font-size: var(--fk-t-xs);
   line-height: 1.55;
+}
+@media (max-width: 639px) {
+  .retailGrid {
+    gap: 12px;
+  }
+  .retailBody {
+    gap: 6px;
+    padding: 12px;
+  }
+  .retailBody h3 {
+    font-size: var(--fk-t-base);
+  }
+  .retailFoot {
+    grid-template-columns: 1fr 1fr;
+  }
+  .retailFoot > span {
+    grid-column: 1 / -1;
+  }
+  .app .retailFoot > a {
+    padding: 0 8px;
+  }
 }
 @media (min-width: 640px) {
   .retailGrid {

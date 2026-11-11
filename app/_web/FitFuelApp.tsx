@@ -1791,6 +1791,7 @@ export default function FitFuelApp({
       <HomeProductLinks
         aiConfigured={aiConfigured}
         exerciseCount={bandCounts.exercises}
+        marketplaceProducts={bandCounts.marketplaceProducts}
         quotes={quotes}
         onBrowsePlans={() => switchMode("plans", true)}
       />

@@ -189,3 +189,96 @@ test("the scale visual is drawn SVG, not a photograph or a new binary image", ()
   assert.match(SCALE, /role="img"/);
   assert.match(SCALE, /Illustration of a Bluetooth scale/);
 });
+
+// Readability fix (2026-11-11, homepage-fix-readability track). Chintu
+// found the metrics grid unreadable: 200px cells were about 30px too
+// narrow on a 1919px viewport, so "Subcutaneous fat %" split the % onto
+// a second line and "Visceral fat level" wrapped. These pins keep the
+// fix from regressing. They are layout-independent on purpose: they pin
+// the column floor, the nowrap span and the width budget, not pixels
+// measured in one browser.
+
+test("metric names read on one line: name and unit share one nowrap span", () => {
+  const css = read("app/_web/experience.module.css");
+  const list = SCALE.slice(SCALE.indexOf('<ul className={x.scaleMetrics}>'));
+  assert.ok(list.length > 100, "metrics list must exist in ScaleBand");
+  // One span holds the name and its unit, and the tag sits outside it.
+  const spanOpen = list.indexOf("<span className={x.scaleMetricName}>");
+  assert.ok(spanOpen > 0, "name span must carry the scaleMetricName class");
+  const afterSpan = list.slice(spanOpen);
+  assert.ok(afterSpan.indexOf("{m.name}") < afterSpan.indexOf("</span>"), "name must be inside the span");
+  assert.ok(
+    afterSpan.indexOf("{m.unit ? <small> {m.unit}</small> : null}") <
+      afterSpan.indexOf("</span>"),
+    "unit must be inside the same span as the name",
+  );
+  assert.ok(
+    afterSpan.indexOf("{m.measured ? \"Measured\" : \"Estimate\"}") >
+      afterSpan.indexOf("</span>"),
+    "Measured/Estimate tag must stay outside the name span",
+  );
+  // The span never wraps, so a name cannot split mid-word.
+  assert.match(css, /\.scaleMetricName \{[^}]*white-space: nowrap;[^}]*\}/);
+});
+
+test("metrics grid columns are wide enough for the longest name plus its tag", () => {
+  const css = read("app/_web/experience.module.css");
+  const grid = css.match(
+    /\.scaleMetrics \{[^}]*grid-template-columns: repeat\(auto-fill, minmax\((\d+)px, 1fr\)\);[^}]*\}/,
+  );
+  assert.ok(grid, "scaleMetrics must use an auto-fill minmax grid");
+  const floor = Number(grid[1]);
+  // Widest-cell budget, measured 2026-11-11 with PIL against two
+  // reference sans fonts at bold (heavier than the real 600 weight, so
+  // conservative): longest name and unit "Subcutaneous fat %" is
+  // 133.7px in Liberation Sans Bold and 138.9px in Noto Sans Bold at
+  // 14px; widest tag "Measured" is 59.4px at 12px bold; plus 12px
+  // padding each side and a 10px gap. 140 + 60 + 24 + 10 = 234.
+  assert.ok(floor >= 234, `column floor ${floor}px must cover the 234px widest-cell budget`);
+});
+
+test("metric units read at name size, not as tiny subscripts", () => {
+  const css = read("app/_web/experience.module.css");
+  assert.match(css, /\.scaleMetrics li small \{[^}]*font-size: inherit;[^}]*\}/);
+});
+
+test("wider metrics columns do not make the grid taller, at any width", () => {
+  const css = read("app/_web/experience.module.css");
+  const liRule = css.match(/\.scaleMetrics li \{[^}]*\}/);
+  assert.ok(liRule, "scaleMetrics li rule must exist");
+  // No 48px min-height forcing tall rows: the row height is the text
+  // line plus its vertical padding, about 32px.
+  assert.doesNotMatch(liRule[0], /min-height:/);
+  const pad = liRule[0].match(/padding: (\d+)px (\d+)px;/);
+  assert.ok(pad, "scaleMetrics li must set its padding");
+  assert.ok(Number(pad[1]) <= 8, `vertical padding ${pad[1]}px must stay small enough to hold the height`);
+  const row = 14 * 1.4 + 2 * Number(pad[1]);
+  const floor = Number(
+    css.match(/\.scaleMetrics \{[^}]*minmax\((\d+)px, 1fr\)/)?.[1],
+  );
+  assert.ok(floor > 0, "column floor must parse");
+  const cols = (content: number, min: number) =>
+    Math.max(1, Math.floor((content + 1) / (min + 1)));
+  const height = (content: number, min: number, rowH: number) => {
+    const rows = Math.ceil(18 / cols(content, min));
+    return rows * rowH + (rows - 1) * 1;
+  };
+  // Content widths from .home (1360px cap, gutter clamp 20px/5vw/40px):
+  // 1919px desktop, 1180px, 980px, 720px, 560px and 390px phone.
+  // Old grid: 200px floor, 48px rows.
+  for (const content of [1280, 1100, 900, 648, 504, 350]) {
+    assert.ok(
+      height(content, floor, row) <= height(content, 200, 48),
+      `metrics grid at ${content}px content must be no taller than before`,
+    );
+  }
+});
+
+test("metrics grid has no visible empty cells: grid background is transparent", () => {
+  const css = read("app/_web/experience.module.css");
+  // 18 items in 5 desktop columns leave 2 empty slots in the last row.
+  // A line-coloured grid background would paint those slots as grey
+  // boxes (the same defect as the rails). Transparent slots read as
+  // page ground, so the grid ends where the items end.
+  assert.match(css, /\.scaleMetrics \{[^}]*background: transparent;[^}]*\}/);
+});

@@ -657,24 +657,38 @@
   margin-top: clamp(28px, 4vw, 40px);
 }
 
+/* The metrics grid is a spec sheet, not a set of cards: five columns on a
+   desktop wrap, three on a tablet, one on a phone. Every cell is at
+   least 250px wide, so the longest name and unit ("Subcutaneous fat %",
+   about 140px at this size) plus the Measured or Estimate tag (about
+   60px) fits on one line with room to spare. The old 200px floor gave
+   212px cells on a 1919px viewport, about 30px short, which is why the
+   % wrapped onto a second line. Rows are 6px padded instead of 48px
+   tall, so the grid is no taller than before at any width despite the
+   extra row on desktop: four rows of about 32px replace three rows of
+   48px, and the shorter rows win back more than the extra rows cost
+   on tablet and phone too. The grid background is transparent, not the
+   line colour: 18 items in 5 columns leave 2 empty slots in the last
+   row, and a line-coloured background would paint them as grey boxes.
+   Transparent slots read as page ground, so the grid ends where the
+   items end. */
 .scaleMetrics {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1px;
   margin: 18px 0 0;
   padding: 0;
   border: 1px solid var(--fk-line-2);
-  background: var(--fk-line-2);
+  background: transparent;
 }
 
 .scaleMetrics li {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 48px;
-  padding: 10px 14px;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 12px;
   background: var(--fk-surface);
   color: var(--fk-ink);
   font-size: var(--fk-t-sm);
@@ -682,8 +696,21 @@
   line-height: 1.4;
 }
 
+/* The name and its unit are one unbroken run: the name must never wrap
+   mid-word, so this span does not wrap at all. The 250px column floor
+   leaves room for it on every viewport. */
+.scaleMetricName {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* The unit reads at the same size as the name. It used to inherit the
+   browser <small> size, about 12px, which read as a tiny subscript
+   next to a 14px name. */
 .scaleMetrics li small {
   color: var(--fk-ink-3);
+  font-size: inherit;
   font-weight: 600;
 }
 
@@ -1388,7 +1415,7 @@
 
 .businessRail {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 1px;
   margin-top: 1px;
   overflow: hidden;
