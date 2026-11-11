@@ -38,7 +38,7 @@ export const TRIAL = decomposePrice({
 export const TRIAL_TOTAL_RS = TRIAL.totalRs;
 
 /** "Rs 420" — for prose and buttons. */
-export const TRIAL_TOTAL_LABEL = `Rs ${TRIAL_TOTAL_RS.toLocaleString("en-IN")}`;
+export const TRIAL_TOTAL_LABEL = `₹${TRIAL_TOTAL_RS.toLocaleString("en-IN")}`;
 
 /** "₹420" — for surfaces already using the glyph rather than the word. */
 export const TRIAL_TOTAL_GLYPH = `₹${TRIAL_TOTAL_RS.toLocaleString("en-IN")}`;

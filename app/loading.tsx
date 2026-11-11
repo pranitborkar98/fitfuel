@@ -1,20 +1,17 @@
 // app/loading.tsx — branded route loading state.
 //
-// Was a 46px border-radius:999px ring spinning against #080808 in #a3e635.
-// A circle is the one shape this system does not have, and lime-light is
-// reserved for a single live value rather than a decoration that appears on
-// every route transition.
-//
-// It is now the house device: a hairline, with a lime segment travelling along
-// it under a mono label. Square, 1px, no glow. Dead under prefers-reduced-
-// motion, where the rule simply sits there at rest.
+// Cream paper, leaf-green sweep, ink text, sentence case — the v2 theme,
+// not the old black ground with a lime segment. The house device is kept:
+// a hairline, with a green segment travelling along it under a plain label.
+// Square, 1px, no glow. Dead under prefers-reduced-motion, where the rule
+// simply sits there at rest.
 export default function Loading() {
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: "#070707",
-        color: "#f7f7f5",
+        background: "#FAF6EF",
+        color: "#1D1A15",
         display: "flex",
         alignItems: "center",
         padding: "120px clamp(18px,4vw,40px)",
@@ -29,7 +26,7 @@ export default function Loading() {
         .ldTrack {
           position: relative;
           height: 1px;
-          background: #232320;
+          background: #E0D9C8;
           overflow: hidden;
           margin-top: 18px;
         }
@@ -38,16 +35,14 @@ export default function Loading() {
           position: absolute;
           inset: 0 auto 0 0;
           width: 25%;
-          background: #84cc16;
+          background: #1E5B3A;
           animation: ffSweep 1.15s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
         .ldTxt {
-          font-family: var(--font-mono), monospace;
+          font-family: var(--fk-sans), system-ui, sans-serif;
           font-weight: 500;
-          font-size: 12px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: #85857e;
+          font-size: 14px;
+          color: #57503F;
         }
         @media (prefers-reduced-motion: reduce) {
           .ldTrack::after { animation: none; width: 100%; opacity: 0.4; }

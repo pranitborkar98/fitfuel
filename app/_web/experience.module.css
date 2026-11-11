@@ -1536,10 +1536,19 @@
   .featureCopy b {
     display: -webkit-box;
     overflow: hidden;
-    font-size: clamp(1.55rem, 7vw, 2.15rem);
+    /* Small enough, with enough lines, for the longest dish name to fit:
+       at 7vw with a 3-line clamp the featured name cut off mid-name
+       ("Maharashtrian Moong Dal Chilla with Green…") on a 390px phone. */
+    font-size: clamp(1.25rem, 5.5vw, 1.6rem);
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+  }
+
+  /* The taller name pushes the kcal line down into the Pause button's
+     corner; keep the line clear of it (it wraps to two lines if needed). */
+  .featureText > span {
+    padding-right: 96px;
   }
 
   .mealGrid {
@@ -1864,6 +1873,15 @@
   font-weight: 560;
 }
 
+/* Scoped `.dayStrip .dayStripScaled`: the global `.fk p { margin: 0 }` in
+   app/_design/base.css is (0,1,1) and beats a bare module class (0,1,0). */
+.dayStrip .dayStripScaled {
+  margin: -6px 0 12px;
+  color: var(--fk-ink-3);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .dayStripBar {
   display: flex;
   height: 10px;
@@ -1899,12 +1917,13 @@
 }
 
 .dayStripChips li > b {
-  overflow: hidden;
   color: var(--fk-ink);
   font-size: 13px;
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Wraps instead of ellipsising: "355 kcal · 24.5g protein" does not fit
+     one line in a quarter of the mosaic card, and the ellipsis cut the
+     protein figure mid-word ("24.5g p…"). */
+  white-space: normal;
 }
 
 .dayStripFallback {

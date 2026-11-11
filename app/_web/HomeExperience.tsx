@@ -107,14 +107,36 @@ export default function HomeExperience({
     resumeAtRef.current = Date.now() + 30000;
   };
   const planKcal = meals.reduce((sum, meal) => sum + (meal.kcal ?? 0), 0);
-  const serving = servingScaleForTarget({
-    calorieTarget: target.kcal,
-    planCalories: planKcal,
-  });
-  const scaledKcal = Math.round(planKcal * serving.factor);
+  /* Portions scale ONLY to a target the visitor set themselves. The default
+     2,000 kcal target is not personal (target.personal === false), so scaling
+     the sample day to it showed 1,859 kcal in the mosaic while the strip, the
+     proof band and the app widget all showed the day as cooked (1,430) — two
+     totals for one day on one screen. With no personal target the mosaic and
+     the strip show the day as cooked; once the visitor sets their numbers,
+     both scale together, and the strip says so. */
+  const serving = target.personal
+    ? servingScaleForTarget({
+        calorieTarget: target.kcal,
+        planCalories: planKcal,
+      })
+    : { factor: 1, requestedFactor: 1, clamped: false };
+  /* Exact values at factor 1 (24.5g protein stays 24.5g), rounded only once
+     a personal target scales the portions. */
+  const scaleNum = (n: number | null | undefined) =>
+    serving.factor === 1 ? (n ?? 0) : Math.round((n ?? 0) * serving.factor);
+  const scaledMeals = meals.map((meal) => ({
+    ...meal,
+    kcal: scaleNum(meal.kcal),
+    protein: scaleNum(meal.protein),
+    carbs: scaleNum(meal.carbs),
+    fat: scaleNum(meal.fat),
+  }));
+  const scaledKcal = scaledMeals.reduce((sum, meal) => sum + meal.kcal, 0);
+  const scaledTotals = dayTotals(scaledMeals);
+  const activeScaled = scaledMeals[activeMealIndex] ?? scaledMeals[0];
   /* The trial day's own arithmetic, computed from the same four meals — the
-     day strip under the mosaic and the proof band read these sums, never a
-     typed total. */
+     proof band reads these sums, never a typed total. The macro bar shares
+     are unchanged by uniform scaling, so the strip bar reads them too. */
   const dayOneTotals = dayTotals(meals);
   const dayShares = macroShares(dayOneTotals);
   const activeGoal = GOALS.find((item) => item.key === goal) ?? GOALS[1];
@@ -257,10 +279,10 @@ export default function HomeExperience({
                   {/* The macro ring sits NEXT TO the photo, never instead of
                       it — the same ring as the dish cards, at 56px. */}
                   <MacroSplit
-                    p={Math.round((activeMeal.protein ?? 0) * serving.factor)}
-                    c={Math.round((activeMeal.carbs ?? 0) * serving.factor)}
-                    f={Math.round((activeMeal.fat ?? 0) * serving.factor)}
-                    kcal={Math.round((activeMeal.kcal ?? 0) * serving.factor)}
+                    p={activeScaled?.protein ?? 0}
+                    c={activeScaled?.carbs ?? 0}
+                    f={activeScaled?.fat ?? 0}
+                    kcal={activeScaled?.kcal ?? 0}
                     small
                     hideKeys
                   />
@@ -268,9 +290,8 @@ export default function HomeExperience({
                     <small>{SLOT_LABEL[activeMeal.slot] ?? activeMeal.slot}</small>
                     <b>{activeMeal.name}</b>
                     <span className="fk-num">
-                      {Math.round((activeMeal.kcal ?? 0) * serving.factor)} kcal ·{" "}
-                      {Math.round((activeMeal.protein ?? 0) * serving.factor)}g
-                      protein
+                      {activeScaled?.kcal ?? 0} kcal ·{" "}
+                      {activeScaled?.protein ?? 0}g protein
                     </span>
                   </span>
                 </span>
@@ -374,9 +395,15 @@ export default function HomeExperience({
               <p className={x.dayStripHead}>
                 <span>Today&apos;s trial day</span>
                 <b className="fk-num">
-                  {dayOneTotals.kcal.toLocaleString("en-IN")} kcal
+                  {scaledKcal.toLocaleString("en-IN")} kcal
                 </b>
               </p>
+              {serving.factor !== 1 ? (
+                <p className={x.dayStripScaled}>
+                  Portions scaled to your{" "}
+                  {target.kcal.toLocaleString("en-IN")} kcal target.
+                </p>
+              ) : null}
               <span className={x.dayStripBar} aria-hidden="true">
                 <i
                   style={{
@@ -398,10 +425,10 @@ export default function HomeExperience({
                 />
               </span>
               <span className="fk-sr-only">
-                {`${dayOneTotals.protein} grams protein, ${dayOneTotals.carbs} grams carbohydrate, ${dayOneTotals.fat} grams fat.`}
+                {`${scaledTotals.protein} grams protein, ${scaledTotals.carbs} grams carbohydrate, ${scaledTotals.fat} grams fat.`}
               </span>
               <ul className={x.dayStripChips}>
-                {meals.map((meal) => (
+                {scaledMeals.map((meal) => (
                   <li key={meal.slot}>
                     <span>{SLOT_LABEL[meal.slot] ?? meal.slot}</span>
                     <b className="fk-num">

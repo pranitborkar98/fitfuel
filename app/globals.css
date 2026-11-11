@@ -42,7 +42,7 @@
   --lime:       var(--ff-lime);
   --lime-light: var(--ff-lime-light);
   --lime-dark:  #65a30d;
-  --lime-glow:  rgba(132, 204, 22, 0.15);
+  --lime-glow:  rgba(30, 91, 58, 0.15);
 
   --bg-primary:    var(--ff-bg);
   --bg-card:       var(--ff-panel-2);
@@ -52,7 +52,7 @@
   --border:       var(--ff-rule);
   --border-mid:   var(--ff-rule-2);
   --border-hover: #4a4a45;
-  --border-lime:  rgba(132, 204, 22, 0.25);
+  --border-lime:  rgba(30, 91, 58, 0.25);
 
   /* Was a cool Tailwind gray ramp running alongside the warm --ff-* ramp.
      Two ramps meant two colour temperatures on one page. Now aliased. */
@@ -109,10 +109,12 @@ main[data-surface="marketing"] {
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--lime); }
 
-/* ── Selection ── */
+/* ── Selection ──
+   Solid leaf green with white text: readable on the cream paper and on the
+   forest bands alike (the old lime tint was unreadable on dark ground). */
 ::selection {
-  background: rgba(132, 204, 22, 0.18);
-  color: var(--lime-light);
+  background: #1E5B3A;
+  color: #FFFFFF;
 }
 
 /* ── Typography ──
@@ -280,14 +282,14 @@ main[data-surface="marketing"] {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(132, 204, 22, 0.08);
+  background: rgba(30, 91, 58, 0.08);
   color: var(--ff-lime-light);
   font-family: var(--ff-cond);
   font-size: 0.75rem;          /* was 11px — below the 12px floor */
   font-weight: 700;
   padding: 0.3125rem 0.875rem;
   border-radius: var(--ff-radius);
-  border: 1px solid rgba(132, 204, 22, 0.20);
+  border: 1px solid rgba(30, 91, 58, 0.20);
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
@@ -492,7 +494,7 @@ main[data-surface="marketing"] {
   text-transform: uppercase;
   line-height: 1;
 }
-.ff-area[data-base] { background: rgba(132, 204, 22, .06); }
+.ff-area[data-base] { background: rgba(30, 91, 58, .06); }
 .ff-area-base {
   font-weight: 700;
   font-size: 11px;
@@ -660,7 +662,7 @@ main[data-surface="marketing"] {
   margin-top: clamp(38px, 4.6vw, 62px);
   padding: clamp(24px, 3vw, 38px) clamp(22px, 2.6vw, 34px);
   border-left: 2px solid var(--ff-lime);
-  background: rgba(132, 204, 22, .05);
+  background: rgba(30, 91, 58, .05);
 }
 
 @media (max-width: 860px) {
@@ -878,7 +880,7 @@ main[data-surface="marketing"] {
   margin-top: clamp(28px, 3.4vw, 44px);
   padding: clamp(18px, 2.2vw, 26px) clamp(20px, 2.4vw, 30px);
   border-left: 2px solid var(--ff-lime);
-  background: rgba(132, 204, 22, .05);
+  background: rgba(30, 91, 58, .05);
 }
 .ff-alc-addon-row {
   display: flex;
@@ -1002,7 +1004,7 @@ main[data-surface="marketing"] {
   margin-top: clamp(32px, 4vw, 52px);
   padding: clamp(18px, 2.2vw, 26px) clamp(20px, 2.4vw, 30px);
   border-left: 2px solid var(--ff-lime);
-  background: rgba(132, 204, 22, .05);
+  background: rgba(30, 91, 58, .05);
 }
 
 @media (max-width: 900px) {
@@ -1260,7 +1262,7 @@ main[data-surface="marketing"] {
       transform: scale(1.8);
       background: var(--ff-lime);
       border-color: var(--ff-lime);
-      box-shadow: 0 0 16px rgba(132, 204, 22, .55);
+      box-shadow: 0 0 16px rgba(30, 91, 58, .55);
     }
   }
 }
@@ -1429,7 +1431,7 @@ main[data-surface="marketing"] {
       right: 0;
       top: 50%;
       height: 1px;
-      background: linear-gradient(90deg, var(--ff-lime) 0%, rgba(132, 204, 22, .22) 42%, transparent 82%);
+      background: linear-gradient(90deg, var(--ff-lime) 0%, rgba(30, 91, 58, .22) 42%, transparent 82%);
       transform: translateY(-.5px);
       pointer-events: none;
     }
@@ -1515,7 +1517,7 @@ main[data-surface="marketing"] {
       height: 1px;
       pointer-events: none;
       background: linear-gradient(90deg, transparent, var(--ff-lime) 22%, var(--ff-lime) 72%, transparent);
-      box-shadow: 0 0 14px rgba(132, 204, 22, .55);
+      box-shadow: 0 0 14px rgba(30, 91, 58, .55);
       opacity: 0;
       animation: ff-scan linear both;
       animation-timeline: view();
@@ -2396,8 +2398,8 @@ main[data-surface="marketing"] {
 .ff-hl-atmos {
   transform: translateZ(-700px) scale(1.7);
   background:
-    radial-gradient(60% 50% at 24% 18%, rgba(132, 204, 22, .16), transparent 62%),
-    radial-gradient(70% 60% at 82% 82%, rgba(132, 204, 22, .07), transparent 66%),
+    radial-gradient(60% 50% at 24% 18%, rgba(30, 91, 58, .16), transparent 62%),
+    radial-gradient(70% 60% at 82% 82%, rgba(30, 91, 58, .07), transparent 66%),
     #050504;
 }
 
@@ -2786,8 +2788,11 @@ body::after {
   left: 8px;
   z-index: 9999;
   transform: translateY(-150%);
-  background: var(--lime);
-  color: #0a0a0a;
+  /* Explicit leaf green + white: `var(--lime)` is #1E5B3A in the v2 scope
+     (where #0a0a0a text was 2.46:1) and #84cc16 in the legacy scope (where
+     white would be 1.9:1). One explicit pair is readable in both. */
+  background: #1E5B3A;
+  color: #FFFFFF;
   font-weight: 700;
   font-size: 13px;
   padding: 10px 16px;
@@ -2802,7 +2807,7 @@ body::after {
 }
 .skip-link:focus {
   transform: translateY(0);
-  outline: 2px solid var(--lime-light);
+  outline: 2px solid #FAF6EF;
   outline-offset: 2px;
 }
 

@@ -99,7 +99,7 @@ export type MacroBar = { pct: number; color: string };
 export function macroBars(protein: number, carbs: number, fat: number, kcal: number): MacroBar[] {
   if (!kcal) return [];
   return [
-    { pct: Math.round(((protein * 4) / kcal) * 100), color: "#84cc16" },
+    { pct: Math.round(((protein * 4) / kcal) * 100), color: "#1E5B3A" },
     { pct: Math.round(((carbs * 4) / kcal) * 100), color: "#9a9a94" },
     { pct: Math.round(((fat * 9) / kcal) * 100), color: "#5f5f59" },
   ];

@@ -177,7 +177,7 @@ export const COACH_CHAT: ChatBubble[] = [
   },
   {
     from: "coach",
-    text: "Week 3 held at 78.0 kg after 78.1 kg in week 2, and week 4 is 78.1 kg. One flat week is a stall flag, not a trend, but two flat weeks in a row is enough to act on. The weekly review proposes 1,700 kcal, down 300 kcal from 2,000 kcal. That is the largest single change the engine makes.",
+    text: "Week 3 held at 78.0 kg after 78.1 kg in week 2, and week 4 is 78.1 kg. One flat week is a stall flag, not a trend, but two near-flat weeks in a row is enough to act on. The weekly review proposes 1,700 kcal, down 300 kcal from 2,000 kcal. That is the largest single change the engine makes.",
   },
 ];
 

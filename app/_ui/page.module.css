@@ -360,7 +360,7 @@
 .a {
   color: var(--fk-green);
   text-decoration: none;
-  border-bottom: 1px solid rgba(132, 204, 22, 0.4);
+  border-bottom: 1px solid rgba(30, 91, 58, 0.4);
   transition: border-color 0.2s linear;
 }
 .a:hover {
@@ -449,7 +449,7 @@
 .qaBody a {
   color: var(--fk-green);
   text-decoration: none;
-  border-bottom: 1px solid rgba(132, 204, 22, 0.4);
+  border-bottom: 1px solid rgba(30, 91, 58, 0.4);
 }
 .qaBody a:hover {
   border-bottom-color: var(--fk-green);

@@ -1,7 +1,7 @@
 .shell {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 78% -8%, rgb(132 204 22 / 6%), transparent 30rem),
+    radial-gradient(circle at 78% -8%, rgb(30 91 58 / 6%), transparent 30rem),
     var(--fk-paper);
   color: var(--fk-ink);
   font-family: var(--fk-sans);
@@ -266,7 +266,7 @@
   .navRowOn {
     color: var(--fk-green-deep);
     background: var(--fk-green-wash);
-    border-color: rgb(132 204 22 / 28%);
+    border-color: rgb(30 91 58 / 28%);
   }
 
   .navRowOn .navLabel { color: var(--fk-ink); }
@@ -291,14 +291,14 @@
     padding: 12px;
     color: var(--fk-ink-2);
     background:
-      radial-gradient(circle at 100% 0, rgb(132 204 22 / 16%), transparent 7rem),
+      radial-gradient(circle at 100% 0, rgb(30 91 58 / 16%), transparent 7rem),
       var(--fk-surface);
     border: 1px solid var(--fk-line-2);
     border-radius: var(--fk-r);
     text-decoration: none;
   }
 
-  .orderCard:hover { border-color: rgb(132 204 22 / 38%); }
+  .orderCard:hover { border-color: rgb(30 91 58 / 38%); }
 
   .orderCardIcon {
     width: 36px;
@@ -365,7 +365,7 @@
     height: 7px;
     background: var(--fk-green);
     border-radius: 50%;
-    box-shadow: 0 0 0 4px rgb(132 204 22 / 12%);
+    box-shadow: 0 0 0 4px rgb(30 91 58 / 12%);
   }
 
   .toolsButton { display: none; }

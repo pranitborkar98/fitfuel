@@ -1093,9 +1093,13 @@ export function GoalsBand({
                 </span>
                 <span className={s.goalBoxBody}>
                   <b>{box.label}</b>
-                  <span className="fk-num">
-                    {goalBoxCounts[box.key] ?? 0} plans
-                  </span>
+                  {/* No count with no data: the empty state showed
+                      "Weight loss 0 plans". */}
+                  {(goalBoxCounts[box.key] ?? 0) > 0 ? (
+                    <span className="fk-num">
+                      {goalBoxCounts[box.key]} plans
+                    </span>
+                  ) : null}
                 </span>
               </button>
             </li>
@@ -1117,25 +1121,23 @@ export function GoalsBand({
           </span>
         </div> : null}
 
-        <div className={s.splitWrap}>
-          <div>
-            <p className={s.condCount}>{CONDITIONS.length} conditions</p>
-            <ul className={s.condChips}>
-              {CONDITIONS.map((c) => (
-                <li key={c.label} data-reveal="scale">
-                  {/* Straight to the plan. See the note in home-data.ts — the
-                      `?q=` these used to carry was read by nothing. */}
-                  <Link href={`/plans/${c.slug}`}>{c.label}</Link>
-                </li>
-              ))}
-              <li>
-                <Link href="/plans" className={s.condMore}>
-                  See every plan
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
+        {/* Full width, not the narrow left column of .splitWrap: the chips
+            occupied ~40% of the band and left ~800px of empty sand. */}
+        <p className={s.condCount}>{CONDITIONS.length} conditions</p>
+        <ul className={s.condChips}>
+          {CONDITIONS.map((c) => (
+            <li key={c.label} data-reveal="scale">
+              {/* Straight to the plan. See the note in home-data.ts — the
+                  `?q=` these used to carry was read by nothing. */}
+              <Link href={`/plans/${c.slug}`}>{c.label}</Link>
+            </li>
+          ))}
+          <li>
+            <Link href="/plans" className={s.condMore}>
+              See every plan
+            </Link>
+          </li>
+        </ul>
       </div>
     </section>
   );

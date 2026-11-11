@@ -27,9 +27,14 @@
   border-bottom: 1px solid var(--fk-line);
 }
 
-/* Trial CTA in the header bar itself: lime filled on desktop, collapsing to
-   a short "Trial ₹420" pill on a phone (the long label hides there). */
-.trialCta {
+/* Trial CTA in the header bar itself: green filled on desktop, collapsing to
+   a short "Trial ₹420" pill on a phone (the long label hides there).
+   Scoped `:global(.fk) a.trialCta`: the global `.fk a { color: inherit }`
+   rule in app/_design/base.css is (0,1,1) and beat the bare module class
+   (0,1,0), leaving dark ink on the green button at 1.0:1. The `:global`
+   matters — a plain `.fk` here is hashed by CSS Modules and matches nothing,
+   which is why the first attempt at this fix did not take effect. */
+:global(.fk) a.trialCta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -45,7 +50,7 @@
   text-decoration: none;
   white-space: nowrap;
 }
-.trialCta:hover {
+:global(.fk) a.trialCta:hover {
   background: var(--fk-green-deep);
   border-color: var(--fk-green-deep);
   color: var(--fk-on-green);
@@ -1102,6 +1107,9 @@
   text-underline-offset: 3px;
   cursor: pointer;
   text-align: left;
+  /* Balance the wrap so a price ("Rs 280") does not orphan onto a line
+     of its own. */
+  text-wrap: balance;
 }
 .addOnHint:hover {
   color: var(--fk-green-deep);
@@ -6520,7 +6528,11 @@
   padding: 0;
 }
 @media (max-width: 1023px) {
-  .specDesktop {
+  /* Scoped to the matrix: the unconditional `.wedgeMatrix { display: grid }`
+     later in this file is (0,1,0), the same as the bare `.specDesktop`, so
+     source order let the desktop table render on phones and push the page
+     10px wider than the viewport. */
+  .wedgeMatrix.specDesktop {
     display: none;
   }
   .wedgeCards {
@@ -6903,9 +6915,13 @@
   font-size: 14px;
   line-height: 1.4;
   color: var(--fk-ink);
+  /* Two lines, then ellipsis: the names ("Maharashtrian Moong Dal Chilla
+     with Green Chutney & Pomegranate Raita") never fit one line in this
+     column, and a single-line ellipsis cut them mid-name. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* The total re-plays a short fade on diet change (keyed by the total). */
@@ -6931,7 +6947,10 @@
   margin-bottom: 24px;
 }
 
-.appH2 {
+/* Scoped `.gForest .appH2`: the global `.fk h2` rule in
+   app/_design/base.css is (0,1,1) and beat this bare module class (0,1,0),
+   leaving dark ink on the forest ground at 1.12:1. */
+.gForest .appH2 {
   margin: 0;
   font-family: var(--fk-display);
   font-size: var(--fk-t-h2);
@@ -7227,8 +7246,13 @@
   background: var(--fk-surface);
 }
 
-.digitalFanLabel {
-  margin: 20px 0 0;
+/* Scoped `.digitalFan .digitalFanLabel`: the global `.fk p { margin: 0 }` in
+   app/_design/base.css is (0,1,1) and beat the bare module class (0,1,0), so
+   the first attempt at this fix never took effect. Inset clear of the front
+   page's rotated bottom-left corner, which dips ~12px and covered the start
+   of this label ("Pre…"). */
+.digitalFan .digitalFanLabel {
+  margin: 32px 0 0 32px;
   font-size: 13px;
   color: var(--fk-ink-3);
 }
