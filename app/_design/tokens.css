@@ -2,15 +2,23 @@
    FITFUEL CUSTOMER DESIGN TOKENS
    The single source of truth for the customer-facing product.
 
-   CURRENT DIRECTION: AGENTS.md records the owner's 2026-08-18 choice of black
-   and lime. Keep that palette. Sentence case, readable type, food imagery,
-   visible focus and comfortable touch targets are equally part of the design.
-   The rejected warm-paper experiment is history, not a migration target.
+   CURRENT DIRECTION (2026-11-11): light, warm, editorial. Cream paper,
+   deep leaf green, burnt terracotta, with dark forest green used exactly
+   twice (the app section and the close/footer) so dark reads as premium
+   because it is rare. The owner granted full access to remove the theme and
+   change colours on 2026-11-11 ("if you want to remove theme change colours
+   the world is yours"), which lifts the 2026-08-18 black-and-lime palette
+   choice recorded in AGENTS.md. That is the ONLY house rule lifted: sentence
+   case, no em dashes, no meal-as-diagram, AA contrast, 44px targets, one h1
+   and the rest all stand.
 
-   Never add a `--ff-*` value here, and never map an `--fk-*` token onto one.
-
-   FitFuel serves customers through their nearest kitchen. These tokens give
-   ordering, planning and supplement shopping a shared visual foundation.
+   Token NAMES are kept where possible even where the plan's §1.2 deletion
+   list names them, because --fk-warm (27 files), --fk-green-wash (17),
+   --fk-on-green (20) and --fk-line-2 (40) are referenced across the app:
+   deleting the names would silently unstyle those surfaces. Their VALUES
+   are the new palette. Only the zero-reference names are gone:
+   --fk-band-light, --fk-turmeric, --fk-ink-bg, --fk-glow (its one use in
+   the hero is removed with it).
 
    Every value below was checked against WCAG 2.1. Ratios are recorded inline
    and re-verified by scripts/check-contrast.mjs, which fails the build on a
@@ -19,74 +27,74 @@
 
 :root {
   /* ── Ground ──────────────────────────────────────────────────────────────
-     BLACK AND LIME, confirmed in AGENTS.md on 2026-08-18.
-
-     What does NOT come back is the part he actually called unparseable:
-     uppercase-everything, 8.5px labels, mono captions, tracked-out display type.
-     The palette is his; the legibility rules are not up for renegotiation. */
-  /* EXACTLY the legacy --ff-bg. The two ramps now share a ground, so moving
-     from the app at `/` to any of the 57 interior routes is not a 3/255 step
-     in the page colour. Imperceptible alone, but it is free to remove. */
-  --fk-paper: #070707; /* the page */
-  --fk-surface: #171715; /* a card, LIGHTER than the page — on a dark ground a
-                            raised surface must lift, not recess. ~9 lightness
-                            points above paper; ink on it stays ≈16:1 */
-  --fk-warm: #1a1a17; /* hover / secondary band */
-  --fk-warm-2: #232320;
-  --fk-raised: #1d1d19; /* inset bands inside cards (macro band, sticky plan
-                           summary) — one step between surface and warm-2 */
-  --fk-band-light: #232320; /* alias of warm-2, named for its job: the single
-                               lightest-dark band, if a section needs one more
-                               step. Use at most once per page. */
-  --fk-ink-bg: #000000; /* the one true black, for full-bleed media only */
+     Warm cream paper. Cards are white and lift by edge + shadow, not tint. */
+  --fk-paper: #FAF6EF; /* the page */
+  --fk-surface: #FFFFFF; /* a card on cream */
+  --fk-surface-warm: #F3EEE2; /* alternate section ground */
+  --fk-sand: #EAE2CF; /* deepest warm band; dish wells (imageless) base */
+  --fk-warm: #F3EEE2; /* alias of surface-warm, kept for its 27 references */
+  --fk-warm-2: #EAE2CF; /* alias of sand */
+  --fk-raised: #F3EEE2; /* inset bands inside cards (macro band, sticky plan
+                           summary) — one step below paper on a light ground */
 
   /* ── Ink ─────────────────────────────────────────────────────────────────
      One ramp. Ratios are against --fk-paper and verified by
      npm run design:contrast, which reads these very hex values. */
-  --fk-ink: #f7f7f5; /* 18.1:1 — headings, prices */
-  --fk-ink-2: #c6c6c0; /* 11.4:1 — body copy */
-  --fk-ink-3: #9a9a94; /*  6.6:1 — metadata, captions */
+  --fk-ink: #1D1A15; /* ~15:1 — headings, prices */
+  --fk-ink-2: #57503F; /* ~7:1 — body copy */
+  --fk-ink-3: #6F6955; /* ~5.1:1 — metadata, captions (14px min) */
 
   /* ── Accents ─────────────────────────────────────────────────────────────
-     Lime is the single chromatic value, as it always was. It is bright enough
-     to carry text on this ground, which is why on-lime text must be near-black
-     rather than white. */
-  --fk-green: #84cc16; /*  9.9:1 on paper */
-  --fk-green-deep: #a3e635; /* 13.0:1 — hover, focus ring; BRIGHTER on dark,
-                               because "deep" means more contrast, and on a dark
-                               ground that is lighter, not darker */
-  --fk-green-wash: #1b2410; /* tint band behind a selected state */
-  --fk-on-green: #070707; /* text ON lime */
-  /* Lime usage: primary actions, active states, links, one headline word per
-     section. Nowhere else. */
+     Deep leaf green is the primary accent: buttons, links, active states.
+     White text sits on it (~7:1). Terracotta is the ONE emphasis colour:
+     one word per headline, the ₹420 price, stall flags — large text only,
+     never body copy. Lime #84cc16 appears nowhere in v2. */
+  --fk-green: #1E5B3A; /* ~7.4:1 on paper */
+  --fk-green-deep: #143D27; /* button hover, focus ring */
+  --fk-green-wash: #E2EBDD; /* selected state tint, FitFuel column wash */
+  --fk-on-green: #FFFFFF; /* text ON a green button */
+  --fk-accent: #C14E1D; /* ~4.4:1 on paper — large text / emphasis only */
+  --fk-amber: #A16207; /* carb swatch, "stall flagged" tag (with a text
+                           label, never colour alone) */
+  /* Kept as aliases so the four files referencing them keep working; the
+     values are the new palette, not the old amber. */
+  --fk-terracotta: #C14E1D;
+  --fk-terracotta-deep: #9A3D15;
+  --fk-terracotta-wash: #F6E3D3;
 
-  /* Kept so nothing that references them breaks. Amber is the warning colour
-     and is legible here; it was not on paper. */
-  --fk-terracotta: #f59e0b; /*  9.6:1 on paper */
-  --fk-terracotta-deep: #fbbf24;
-  --fk-terracotta-wash: #2a1e07;
-  --fk-turmeric: #f59e0b;
+  /* ── The dark bands ──────────────────────────────────────────────────────
+     Used exactly twice: the app section (forest) and the close/footer
+     (forest-2). Cream text on forest is ~14:1. */
+  --fk-forest: #12291C;
+  --fk-forest-2: #0D2016;
+  --fk-cream-on-dark: #F5F1E6;
 
   /* ── Lines ───────────────────────────────────────────────────────────────
      Decorative hairlines may sit under 3:1 (WCAG exempts pure decoration).
      Anything that communicates — an input boundary, a selected state — must
-     use --fk-line-strong, which clears 3:1. */
-  --fk-line: #232320;
-  --fk-line-2: #33332f;
-  --fk-line-strong: #5f5f59; /* 3.2:1 on paper — form borders, meaningful dividers */
+     use --fk-line-strong, which clears 3:1. (Plan §1.2 listed #C6BCA1 here;
+     measured at 1.7:1 on paper it does not clear 3:1, so the value is
+     darkened in the same hue to #968A6E, 3.1:1.) */
+  --fk-line: #E3DCCB;
+  --fk-line-2: #D8CFB8;
+  --fk-line-strong: #968A6E; /* 3.1:1 on paper — form borders, meaningful dividers */
 
   /* ── Status ──────────────────────────────────────────────────────────────
      Never the only carrier of meaning: every status pairs with an icon or a
      word in the components that use them. */
-  --fk-ok: #84cc16;
-  --fk-warn: #f59e0b;
-  --fk-danger: #f87171;
+  --fk-ok: #1E5B3A;
+  --fk-warn: #A16207;
+  --fk-danger: #B3261E;
+
+  /* ── Macro ring ──────────────────────────────────────────────────────────
+     Protein / carbs / fat arcs on white. Swatches are decorative; the keys
+     next to them are ink text. */
+  --fk-ring-p: #1E5B3A;
+  --fk-ring-c: #D97706;
+  --fk-ring-f: #C14E1D;
 
   /* ── Radius ──────────────────────────────────────────────────────────────
-     The old system banned radius outright; that ban is history. But the
-     16–20px pill-and-bento look is the house style of every dark SaaS landing
-     page and reads as generic, so the scale stops early. Food packaging has
-     soft corners; dashboards do not have 999px pills. */
+     Food packaging has soft corners; dashboards do not have 999px pills. */
   --fk-r-sm: 4px;
   --fk-r: 8px;
   --fk-r-lg: 14px;
@@ -94,36 +102,21 @@
 
   /* ── Elevation ───────────────────────────────────────────────────────────
      Warm-tinted and shallow. Shadows lift real overlays (sheets, menus,
-     sticky bars). There are no coloured glows and no backdrop-filter glass:
-     both were on the reject-on-sight list and both still look like 2022. */
-  /* On a black ground a drop shadow is invisible on its own. Elevation is
-     carried by the surface value and the inset top light instead; the drop
-     part is subtle and the lift reads through the surface change + the inset
-     light, which is why both are in the same token. */
-  --fk-shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04);
-  --fk-shadow-2: 0 12px 32px -16px rgba(0, 0, 0, 0.75), 0 1px 0 rgba(255, 255, 255, 0.04);
-  --fk-shadow-3: 0 18px 48px rgba(0, 0, 0, 0.7);
+     sticky bars). No coloured glows and no backdrop-filter glass. */
+  --fk-shadow-1: 0 1px 2px rgba(29, 26, 21, 0.06);
+  --fk-shadow-2: 0 12px 32px -12px rgba(29, 26, 21, 0.18), 0 2px 8px rgba(29, 26, 21, 0.06);
+  --fk-shadow-3: 0 24px 64px -16px rgba(13, 32, 22, 0.45);
 
   /* ── Type ────────────────────────────────────────────────────────────────
-     Three faces, each with one job.
-
-     Newsreader (display) is the change that matters. A warm editorial serif
-     is what makes a food page read as food; a condensed athletic grotesque
-     set in uppercase at weight 900 is what made the old page read as a
-     trading terminal. Headlines are SENTENCE CASE — AGENTS.md is explicit
-     that we write for a customer, not for a reader of the spec.
-
-     This is NOT Fraunces, which was proposed and rejected twice. The
-     objection then was a fourth face shipping to every visitor while being
-     used on two preview routes. Newsreader is the primary display face of
-     the actual storefront, and Barlow Condensed's weight list is cut from ten
-     files to two in the same change, so total font payload goes DOWN. */
+     Newsreader (display serif) + Archivo (sans body). No third face.
+     Mono survives ONLY for tabular figures (kcal/protein/₹ amounts), never
+     for prose or captions. Headlines are SENTENCE CASE. */
   --fk-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --fk-sans: var(--font-archivo), system-ui, sans-serif;
   --fk-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
 
-  /* Type scale, 1.25 major third, clamped so it scales with the viewport
-     without the 10x kinetic display type the old system used. */
+  /* Type scale. Hero h1 is clamp(56px, 7.2vw, 88px); section h2 is
+     clamp(36px, 4vw, 52px). */
   --fk-t-xs: 0.75rem; /* 12px — legal, never body */
   --fk-t-sm: 0.875rem; /* 14px */
   --fk-t-base: 1rem; /* 16px — minimum body size, avoids iOS auto-zoom */
@@ -133,17 +126,16 @@
   --fk-t-2xl: clamp(1.875rem, 1.4rem + 2.2vw, 2.75rem);
   --fk-t-3xl: clamp(2.25rem, 1.5rem + 3.4vw, 3.75rem);
   --fk-t-4xl: clamp(2.75rem, 1.6rem + 5vw, 5rem);
-  --fk-t-hero: clamp(4rem, 7vw, 5rem); /* 64–80px hero headline */
-  --fk-t-h2: clamp(2.5rem, 4vw, 3.5rem); /* 40–56px section headline */
+  --fk-t-hero: clamp(3.5rem, 7.2vw, 5.5rem); /* 56–88px hero headline */
+  --fk-t-h2: clamp(2.25rem, 4vw, 3.25rem); /* 36–52px section headline */
 
-  --fk-lh-tight: 1.08; /* display only */
+  --fk-lh-tight: 0.98; /* display only */
   --fk-lh-snug: 1.25; /* sub-heads */
-  --fk-lh-body: 1.6; /* body copy — 1.5 minimum per WCAG 1.4.12 */
+  --fk-lh-body: 1.65; /* body copy — 1.5 minimum per WCAG 1.4.12 */
 
   /* ── Space ───────────────────────────────────────────────────────────────
-     4px base. Section rhythm is deliberately generous: the owner's standing
-     note is "subtract, don't add", and whitespace is how a page looks
-     confident rather than crowded. */
+     4px base. Section rhythm is deliberately generous: whitespace is how a
+     page looks confident rather than crowded. */
   --fk-s-1: 4px;
   --fk-s-2: 8px;
   --fk-s-3: 12px;
@@ -159,16 +151,15 @@
   --fk-gutter: clamp(20px, 5vw, 40px);
   --fk-measure: 62ch; /* 60–75 char line length for long-form copy */
   --fk-wrap: 1200px;
-  /* One glow, two uses (hero mosaic, close); nowhere else. */
-  --fk-glow: radial-gradient(closest-side, rgba(132, 204, 22, 0.1), transparent);
 
   /* ── Motion ──────────────────────────────────────────────────────────────
-     150–300ms, ease-out entering. Restrained on purpose: motion here is
-     feedback, not decoration. */
+     480ms for crossfades and chart draws, 320ms for tab switches and
+     builder tweens, transform-only where possible. */
   --fk-dur-fast: 140ms;
   --fk-dur: 220ms;
   --fk-dur-slow: 320ms;
-  --fk-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --fk-dur-xslow: 480ms;
+  --fk-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --fk-ease-in: cubic-bezier(0.55, 0.06, 0.68, 0.19);
 
   /* ── Layers ──────────────────────────────────────────────────────────────
@@ -195,5 +186,6 @@
     --fk-dur-fast: 1ms;
     --fk-dur: 1ms;
     --fk-dur-slow: 1ms;
+    --fk-dur-xslow: 1ms;
   }
 }

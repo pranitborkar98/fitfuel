@@ -43,7 +43,22 @@ import DishSheet from "@/app/_shop/DishSheet";
 import PlanSheet from "@/app/_shop/PlanSheet";
 import Slot, { type SlotMap } from "@/app/_shop/Slot";
 import type { BandCounts, Quote } from "./HomeBands";
-import HomeSections, { type HomeSectionsProps } from "./HomeSections";
+import {
+  AppSection,
+  CoachBand,
+  CtaBand,
+  DayBand,
+  DeliveryFaqBand,
+  DigitalPlansBand,
+  GoalsBand,
+  ProofBand,
+  RetailBand,
+  ScaleSection,
+  TrialCore,
+  WedgeBand,
+  type HomeSectionsProps,
+} from "./HomeSections";
+import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
 import HomeExperience, { HomeProductLinks } from "./HomeExperience";
 import CustomerTabBar from "./CustomerTabBar";
 import { GOALS } from "./home-data";
@@ -563,6 +578,8 @@ export default function FitFuelApp({
   const day = useMemo(() => {
     let kcal = 0;
     let protein = 0;
+    let carbs = 0;
+    let fat = 0;
     let count = 0;
     for (const d of dishes) {
       const n = cart.qtyOf(d.id);
@@ -570,15 +587,54 @@ export default function FitFuelApp({
       count += n;
       kcal += n * d.kcal;
       protein += n * d.protein;
+      carbs += n * d.carbs;
+      fat += n * d.fat;
     }
     return {
       kcal,
       protein,
+      carbs,
+      fat,
       count,
       gapKcal: Math.max(0, target.kcal - kcal),
       gapProtein: Math.max(0, target.protein - protein),
     };
   }, [dishes, cart, target]);
+
+  /* Trial-day kcal total for the proof band's fourth figure, computed from
+     the seeded day-1 menu — never a typed 1,859. */
+  const dayOneKcal = useMemo(
+    () =>
+      week
+        .filter((d) => d.day === 1)
+        .reduce((n, d) => n + (d.kcal ?? 0), 0),
+    [week],
+  );
+
+  /* Day-1 trial meals for the builder food strip and the digital-plan fan,
+     from the same seeded menu — never typed names or numbers. */
+  const dayOne = useMemo(
+    () =>
+      week
+        .filter((d) => d.day === 1)
+        .map((d) => ({ slot: d.slot, name: d.name, kcal: d.kcal ?? 0 })),
+    [week],
+  );
+
+  /* Live per-box plan counts for the goal boxes. */
+  const goalBoxCounts = useMemo(
+    () => ({
+      "weight-loss": plans.filter((p) =>
+        p.label.toLowerCase().includes("weight loss"),
+      ).length,
+      muscle: plans.filter((p) =>
+        p.label.toLowerCase().includes("muscle"),
+      ).length,
+      medical: plans.filter((p) => p.cat === "LIFESTYLE_MEDICAL").length,
+      sports: plans.filter((p) => p.cat === "SPORTS").length,
+    }),
+    [plans],
+  );
 
   const planResults = useMemo(
     () =>
@@ -747,6 +803,10 @@ export default function FitFuelApp({
             <span className={s.wellGloss} aria-hidden="true" />
             <span className={s.wellFoot} aria-hidden="true" />
             <span className={s.wellCourse}>{d.categoryLabel}</span>
+            {/* The dish name in the well (aria-hidden: the card body prints it
+                as the link below). A tinted well with a name reads as a plate;
+                a tinted well without one reads as a hole. */}
+            <span className={s.wellName} aria-hidden="true">{d.name}</span>
             {d.kcal ? <span className={s.kcalTag}>{d.kcalLabel}</span> : null}
           </button>
         ) : (
@@ -903,6 +963,28 @@ export default function FitFuelApp({
     }
   };
 
+  /* What a goal box does: filter the catalogue to that goal and scroll
+     to it. Mirrors switchMode, but keeps the query — clearing it would
+     undo the weight-loss / muscle part of the filter. */
+  const applyGoalFilter = (filter: { cat: string; query: string }) => {
+    setMode("plans");
+    setPlanCat(filter.cat);
+    setQuery(filter.query);
+    setExpandedFor(null);
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("mode", "plans");
+    const search = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `/${search ? `?${search}` : ""}#catalog`,
+    );
+    requestAnimationFrame(() =>
+      catalogRef.current?.scrollIntoView({ block: "start" }),
+    );
+  };
+
   const searchPlaceholder =
     mode === "plans"
       ? "Search goals, conditions or diets"
@@ -1006,6 +1088,15 @@ export default function FitFuelApp({
         licence={licence}
         onBrowseMeals={() => switchMode("dishes", true)}
       />
+
+      <DayBand />
+      <ProofBand
+        quotes={quotes}
+        counts={bandCounts}
+        goalCount={goalCount}
+        dayOneKcal={dayOneKcal}
+      />
+      <TrialCore prices={prices} trial={trial} dayOne={dayOne} />
 
       {/* ── Rail + content ──────────────────────────────────────────────── */}
       <div
@@ -1221,6 +1312,19 @@ export default function FitFuelApp({
             </button>
           </div>
 
+          {/* The day's summed P/C/F as a live macro ring: adding a dish
+              visibly fills it, the same ring as the dish cards. */}
+          {day.count > 0 ? (
+            <div className={s.dayRing}>
+              <MacroSplit
+                p={day.protein}
+                c={day.carbs}
+                f={day.fat}
+                kcal={day.kcal}
+              />
+            </div>
+          ) : null}
+
           {/* The live region is the METER BLOCK, not the sentence under it.
                 Below 640px that sentence is dropped for room and the figures
                 stay — announcing the change has to survive both layouts, and a
@@ -1420,7 +1524,7 @@ export default function FitFuelApp({
               </h2>
               <p>
                 {mode === "supps"
-                  ? `${suppResults.length} of ${supplements.length} · researched, not stocked`
+                  ? `${suppResults.length} supplements · researched, not stocked`
                   : mode === "plans"
                     ? `${planResults.length} plans · ${bandCounts.plans} diet variants · ${bandCounts.conditionPlans} for a condition`
                     : `${results.length} dish${results.length === 1 ? "" : "es"}` +
@@ -1812,29 +1916,44 @@ export default function FitFuelApp({
         </div>
       </div>
 
-      <HomeProductLinks
-        aiConfigured={aiConfigured}
-        exerciseCount={bandCounts.exercises}
-        marketplaceProducts={bandCounts.marketplaceProducts}
-        activePartners={bandCounts.activePartners}
-        onBrowsePlans={() => switchMode("plans", true)}
-      />
-      <HomeSections
+      <AppSection counts={bandCounts} />
+      <ScaleSection />
+      <CoachBand />
+      <GoalsBand
         counts={bandCounts}
         goalCount={goalCount}
-        prices={prices}
-        trial={trial}
-        cutoffLabel={cutoffLabel}
-        quotes={quotes}
-        retailProducts={supplements.flatMap((item) =>
+        goalBoxCounts={goalBoxCounts}
+        onGoalSelect={applyGoalFilter}
+      />
+      <DigitalPlansBand dayOne={dayOne} />
+      <div className={s.gWhite}>
+        <HomeProductLinks
+          aiConfigured={aiConfigured}
+          exerciseCount={bandCounts.exercises}
+          marketplaceProducts={bandCounts.marketplaceProducts}
+          activePartners={bandCounts.activePartners}
+          onBrowsePlans={() => switchMode("plans", true)}
+        />
+      </div>
+      <WedgeBand counts={bandCounts} />
+      <RetailBand
+        products={supplements.flatMap((item) =>
           item.imageUrl && item.buy && ["whey-protein", "creatine", "omega3", "magnesium"].includes(item.slug)
             ? [{ slug: item.slug, name: item.name, category: item.category, imageUrl: item.imageUrl, linkCount: item.linkCount, buy: item.buy }]
             : [],
         )}
+        counts={bandCounts}
+      />
+      <PartnerNetwork />
+      <DeliveryFaqBand cutoffLabel={cutoffLabel} />
+      <CtaBand
+        trialTotal={trial.total}
+        planCount={bandCounts.plans}
+        cutoffLabel={cutoffLabel}
       />
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className={s.footer}>
+      <footer className={`${s.footer} ${s.gForest2}`}>
         <div className={s.footerTop}>
           <div>
             <h2 className={s.footerTopH}>Start with the food</h2>

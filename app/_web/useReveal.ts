@@ -30,7 +30,7 @@
 
 import { useEffect, useRef } from "react";
 
-const EASE = "cubic-bezier(.22,.61,.36,1)";
+const EASE = "cubic-bezier(.22,1,.36,1)";
 const TILT_TRANSITION = `transform 320ms ${EASE}, border-color 200ms ease`;
 
 export function useReveal<T extends HTMLElement>() {
@@ -65,7 +65,7 @@ export function useReveal<T extends HTMLElement>() {
     const show = (el: HTMLElement, delay: number) => {
       io.unobserve(el);
       window.setTimeout(() => {
-        el.style.transition = `opacity 620ms ${EASE}, transform 620ms ${EASE}`;
+        el.style.transition = `opacity 480ms ${EASE}, transform 480ms ${EASE}`;
         el.style.opacity = "1";
         if (el.dataset.reveal) el.style.transform = "none";
         if (el.dataset.rail) el.style.width = el.dataset.rail;
@@ -114,10 +114,10 @@ export function useReveal<T extends HTMLElement>() {
         el.style.opacity = "0";
         el.style.transform =
           dir === "left"
-            ? "translateX(-18px)"
+            ? "translateX(-16px)"
             : dir === "scale"
               ? "scale(.965)"
-              : "translateY(18px)";
+              : "translateY(16px)";
         el.style.willChange = "opacity, transform";
         if (!el.dataset.revealDelay) el.dataset.revealDelay = String((i % 4) * 70);
         io.observe(el);
@@ -127,7 +127,7 @@ export function useReveal<T extends HTMLElement>() {
         if (seen.rail.has(el)) return;
         seen.rail.add(el);
         el.style.width = "0%";
-        el.style.transition = `width 1400ms ${EASE}`;
+        el.style.transition = `width 900ms ${EASE}`;
         io.observe(el);
       });
 

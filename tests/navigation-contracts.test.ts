@@ -12,12 +12,40 @@ import { NAV } from "../app/_app/nav";
 test("homepage redesign retains the complete product, not just catalogue links", () => {
   assert.equal(HOME_CAPABILITIES.length, 11);
   const app = readFileSync(resolve("app/_web/FitFuelApp.tsx"), "utf8");
-  assert.match(app, /<HomeSections/);
+  // v2 composes the bands by name, in CookUnity order: hero, day, proof,
+  // trial core, catalog, app, scale, coach, goals, digital, product map,
+  // comparison, retail, partners, FAQ, close.
+  const order = [
+    "<HomeExperience",
+    "<DayBand",
+    "<ProofBand",
+    "<TrialCore",
+    "<AppSection",
+    "<ScaleSection",
+    "<CoachBand",
+    "<GoalsBand",
+    "<DigitalPlansBand",
+    "<HomeProductLinks",
+    "<WedgeBand",
+    "<RetailBand",
+    "<PartnerNetwork",
+    "<DeliveryFaqBand",
+    "<CtaBand",
+  ];
+  let last = -1;
+  for (const tag of order) {
+    const at = app.indexOf(tag);
+    assert.ok(at > last, `${tag} missing or out of order in FitFuelApp`);
+    last = at;
+  }
   const sections = readFileSync(resolve("app/_web/HomeSections.tsx"), "utf8");
-  // Phase 2 (§2.7): the daily tools moved out of the hero into the product
-  // preview band, so they render from HomeSections now, not HomeExperience.
-  assert.match(sections, /<HomeLaunchpad/);
-  assert.match(sections, /<HomeToday/);
+  // v2 (Merge A): the daily tools live in the one working AppPreview widget
+  // and the coach is a real chat transcript, not HomeLaunchpad / HomeToday.
+  assert.match(sections, /<AppPreview/);
+  assert.match(sections, /<CoachChat/);
+  assert.match(sections, /<WeightChart/);
+  assert.doesNotMatch(sections, /<HomeLaunchpad/);
+  assert.doesNotMatch(sections, /<HomeToday/);
   for (const { id } of HOME_CAPABILITIES.filter((item) => item.id !== "catalog")) {
     assert.ok(sections.includes(`id="${id}"`), `Missing homepage capability: ${id}`);
   }

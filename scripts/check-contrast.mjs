@@ -46,40 +46,55 @@ const ratio = (a, b) => {
 // `min` is 4.5 for body-size text, 3 for large text and for non-text UI that
 // carries meaning (WCAG 1.4.11). Purely decorative hairlines are NOT listed:
 // they are exempt, and asserting 3:1 on them would be a false requirement.
+//
+// v2 palette (2026-11-11): cream paper, leaf green, terracotta. Terracotta
+// and amber are large-text/emphasis only, so they are checked at 3, not 4.5.
 const PAIRS = [
   ["--fk-ink", "--fk-paper", 4.5, "headings and prices on the page"],
   ["--fk-ink-2", "--fk-paper", 4.5, "body copy on the page"],
   ["--fk-ink-3", "--fk-paper", 4.5, "metadata on the page"],
-  ["--fk-green", "--fk-paper", 4.5, "lime text on the page"],
+  ["--fk-green", "--fk-paper", 4.5, "green text on the page"],
   ["--fk-green-deep", "--fk-paper", 4.5, "links and focus ring on the page"],
-  ["--fk-terracotta", "--fk-paper", 4.5, "warning text on the page"],
+  ["--fk-accent", "--fk-paper", 3, "terracotta emphasis, large text only"],
+  ["--fk-amber", "--fk-paper", 3, "amber tag, large text only"],
 
   ["--fk-ink", "--fk-surface", 4.5, "headings on a card"],
   ["--fk-ink-2", "--fk-surface", 4.5, "body copy on a card"],
   ["--fk-ink-3", "--fk-surface", 4.5, "metadata on a card"],
-  ["--fk-green", "--fk-surface", 4.5, "lime text on a card"],
+  ["--fk-green", "--fk-surface", 4.5, "green text on a card"],
 
-  ["--fk-ink", "--fk-warm", 4.5, "headings on the hover band"],
-  ["--fk-ink-2", "--fk-warm", 4.5, "body copy on the hover band"],
-  ["--fk-ink-3", "--fk-warm", 4.5, "metadata on the hover band"],
-  ["--fk-green-deep", "--fk-warm", 4.5, "links on the hover band"],
+  ["--fk-ink", "--fk-surface-warm", 4.5, "headings on the warm band"],
+  ["--fk-ink-2", "--fk-surface-warm", 4.5, "body copy on the warm band"],
+  ["--fk-ink-3", "--fk-surface-warm", 4.5, "metadata on the warm band"],
+
+  ["--fk-ink", "--fk-sand", 4.5, "headings on sand"],
+  ["--fk-ink-2", "--fk-sand", 4.5, "body copy on sand"],
+  ["--fk-ink", "--fk-green-wash", 4.5, "FitFuel column text on its wash"],
 
   ["--fk-green-deep", "--fk-green-wash", 4.5, "chip text on its tint"],
-  ["--fk-terracotta", "--fk-terracotta-wash", 4.5, "warning chip on its tint"],
+  // Terracotta wash carries ink text (a stall tag's word is ink; the accent
+  // is a dot, never the text). Accent #C14E1D on this wash only reaches
+  // 4.4:1, so accent text on it is not a permitted pair.
+  ["--fk-ink", "--fk-terracotta-wash", 4.5, "ink text on a terracotta tint"],
 
-  // THE ONE THAT FLIPS WITH THE GROUND. Lime is a light colour, so a label
-  // sitting ON it must be near-black. White-on-lime is 1.98:1 and was the
-  // first thing this check caught when the palette changed.
-  ["--fk-on-green", "--fk-green", 4.5, "label ON a lime button"],
-  ["--fk-on-green", "--fk-green-deep", 4.5, "label ON a lime button, hover"],
+  // White text sits ON green now (leaf green is dark, not lime). White-on-
+  // lime was 1.98:1; white-on-leaf-green is ~7:1.
+  ["--fk-on-green", "--fk-green", 4.5, "label ON a green button"],
+  ["--fk-on-green", "--fk-green-deep", 4.5, "label ON a green button, hover"],
+
+  // The two dark bands: cream text on forest.
+  ["--fk-cream-on-dark", "--fk-forest", 4.5, "cream text on the app band"],
+  ["--fk-cream-on-dark", "--fk-forest-2", 4.5, "cream text on the close/footer"],
+  // Green text directly on forest is not a permitted pair (1.9:1). Green
+  // actions on the dark bands are green-fill buttons with white text, covered
+  // by the on-green pairs above; the app window inside is white, covered by
+  // the on-surface pairs.
 
   ["--fk-line-strong", "--fk-paper", 3, "form borders and meaningful dividers"],
-  ["--fk-green", "--fk-paper", 3, "lime button ground against the page"],
+  ["--fk-green", "--fk-paper", 3, "green button ground against the page"],
 ];
 
-const LITERALS = [
-  ["#ffffff", "--fk-paper", 4.5, "pure white text on the page"],
-];
+const LITERALS = [];
 
 let failed = 0;
 let checked = 0;

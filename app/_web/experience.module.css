@@ -52,12 +52,12 @@
   font-size: var(--fk-t-hero);
   font-weight: 560;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 0.98;
   text-wrap: balance;
 }
 
-.limeWord {
-  color: var(--fk-green);
+.accentWord {
+  color: var(--fk-accent);
 }
 
 .lede {
@@ -217,13 +217,10 @@
   align-self: center;
   min-width: 0;
   padding: 10px;
-  border: 1px solid var(--fk-line-2);
+  border: 1px solid var(--fk-line);
   border-radius: var(--fk-r-lg);
-  /* The single lime glow on the page (the other use is the close, Phase 2):
-     behind the mosaic only, top-right, 480px. */
-  background:
-    var(--fk-glow) top right / 480px 480px no-repeat,
-    var(--fk-surface);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
 }
 
 .previewHead {
@@ -265,7 +262,7 @@
   border: 1px solid var(--fk-line-strong);
   border-radius: var(--fk-r-full);
   color: var(--fk-ink-2);
-  font-size: var(--fk-t-xs);
+  font-size: 13px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -311,14 +308,14 @@
   border: 1px solid var(--fk-line-strong);
   border-radius: var(--fk-r-full);
   background: color-mix(in srgb, #000 72%, transparent);
-  color: var(--fk-ink);
+  color: #FFFFFF;
   font: 700 13px/1 var(--fk-sans);
   cursor: pointer;
 }
 
 .mosaicPause:hover {
-  border-color: var(--fk-green);
-  color: var(--fk-green-deep);
+  border-color: var(--fk-cream-on-dark);
+  color: #FFFFFF;
 }
 
 .featureMeal > img,
@@ -354,14 +351,14 @@
 }
 
 .featureCopy small {
-  color: var(--fk-green-deep);
+  color: #E2EBDD;
   font-size: var(--fk-t-sm);
   font-weight: 700;
 }
 
 .featureCopy b {
   max-width: 25ch;
-  color: var(--fk-ink);
+  color: #FFFFFF;
   font-family: var(--fk-display);
   font-size: clamp(1.55rem, 2.7vw, 2.65rem);
   font-weight: 560;
@@ -369,7 +366,7 @@
 }
 
 .featureCopy > span {
-  color: var(--fk-ink-2);
+  color: rgba(255, 255, 255, 0.88);
   font-size: var(--fk-t-sm);
 }
 
@@ -494,11 +491,11 @@
 }
 
 .menuPreview .mealGrid button:nth-child(2) {
-  transform: translateY(-24px);
+  transform: translateY(-28px);
 }
 
 .menuPreview .mealGrid button:nth-child(4) {
-  transform: translateY(-12px);
+  transform: translateY(-14px);
 }
 
 /* ── PHASE 1 PARK: DAILY TOOLS UNDER THE CATALOG ───────────────────────────
@@ -1134,7 +1131,7 @@
 
 .quickRail button:hover,
 .quickRail a:hover {
-  border-color: rgba(132, 204, 22, 0.5);
+  border-color: rgba(30, 91, 58, 0.5);
   background: var(--fk-surface);
   color: var(--fk-ink);
   box-shadow: var(--fk-shadow-2);
@@ -1163,7 +1160,7 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  border: 1px solid rgba(132, 204, 22, 0.45);
+  border: 1px solid rgba(30, 91, 58, 0.45);
   border-radius: var(--fk-r);
   color: var(--fk-green-deep);
 }
@@ -1227,7 +1224,7 @@
 }
 
 .businessRail a:hover {
-  border-color: rgba(132, 204, 22, 0.5);
+  border-color: rgba(30, 91, 58, 0.5);
   background: var(--fk-surface);
   color: var(--fk-ink);
   box-shadow: var(--fk-shadow-2);
@@ -1781,5 +1778,188 @@
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* ── v2 hero: ring row, day strip, empty-state fallback ───────────────────
+   The featured tile carries the macro ring NEXT TO the photo (56px, ring
+   colours from the tokens). The day strip under the mosaic is the trial day
+   as a data visual: total, stacked macro bar, one chip per meal. */
+.featureRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.featureText {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.featureText small {
+  color: #E2EBDD;
+  font-size: var(--fk-t-sm);
+  font-weight: 700;
+}
+
+.featureText b {
+  max-width: 25ch;
+  color: #FFFFFF;
+  font-family: var(--fk-display);
+  font-size: clamp(1.55rem, 2.7vw, 2.65rem);
+  font-weight: 560;
+  line-height: 1.03;
+}
+
+.featureText > span {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: var(--fk-t-sm);
+}
+
+/* Slow zoom on the featured image while it is featured. Transform-only, and
+   the reduced-motion block below kills it (manual only). */
+@media (prefers-reduced-motion: no-preference) {
+  .featureMeal > img {
+    animation: heroZoom 6s linear both;
+  }
+}
+
+@keyframes heroZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+.dayStrip {
+  margin-top: 28px;
+  padding: 18px 20px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
+}
+
+.dayStripHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.dayStripHead > span {
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-sm);
+  font-weight: 600;
+}
+
+.dayStripHead > b {
+  color: var(--fk-ink);
+  font-family: var(--fk-display);
+  font-size: 24px;
+  font-weight: 560;
+}
+
+.dayStripBar {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-sand);
+}
+
+.dayStripBar i {
+  display: block;
+  height: 100%;
+}
+
+.dayStripChips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dayStripChips li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dayStripChips li > span {
+  color: var(--fk-ink-3);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dayStripChips li > b {
+  overflow: hidden;
+  color: var(--fk-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dayStripFallback {
+  margin: 20px 0 0;
+  color: var(--fk-ink-2);
+  font-size: var(--fk-t-base);
+}
+
+.dayStripFallback a {
+  color: var(--fk-green-deep);
+  font-weight: 600;
+}
+
+/* Empty-state fallback: four food photographs with slot labels only. No
+   invented dish names, no invented macros. */
+.menuFallback {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fallbackTile {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-sm);
+  background: var(--fk-surface);
+}
+
+.fallbackTile .mealThumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.fallbackTile > span:last-child {
+  color: var(--fk-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .dayStripChips {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .dayStripChips li {
+    flex: 0 0 auto;
+    min-width: 132px;
+  }
+
+  .menuFallback {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

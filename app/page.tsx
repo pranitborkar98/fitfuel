@@ -52,8 +52,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a09",
-  colorScheme: "dark",
+  themeColor: "#FAF6EF",
+  colorScheme: "light",
 };
 
 const publicSentence = (value: string) => value.replace(/\s*—\s*/g, ". ");

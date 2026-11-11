@@ -1,0 +1,729 @@
+/* app/_web/app-preview.module.css
+   The working tabbed app widget (v2 §3.6) and the coach chat card (§3.8).
+   The widget is a light app window inside the dark forest band — the brightest
+   thing on the page. All text on white; green accents; 44px targets. */
+
+.appWindow {
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-3);
+  overflow: hidden;
+}
+
+.windowBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--fk-line);
+  background: var(--fk-surface-warm);
+}
+
+.windowDots {
+  display: flex;
+  gap: 6px;
+}
+
+.windowDots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--fk-line-strong);
+}
+
+.windowTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fk-ink-2);
+}
+
+.windowLink {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fk-green-deep);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.appBody {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.rail {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 16px 12px;
+  border-right: 1px solid var(--fk-line);
+  background: var(--fk-surface);
+}
+
+.railItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-ink-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.railItem svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--fk-ink-3);
+}
+
+.railItem span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.railItem b {
+  font-size: 14px;
+  color: var(--fk-ink);
+}
+
+.railItem small {
+  font-size: 12px;
+  color: var(--fk-ink-3);
+}
+
+.railItem:hover {
+  border-color: var(--fk-line);
+  background: var(--fk-surface-warm);
+}
+
+.railOn,
+.railOn:hover {
+  border-color: var(--fk-green);
+  background: var(--fk-green-wash);
+}
+
+.railOn svg {
+  color: var(--fk-green);
+}
+
+.panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.tabBar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--fk-line);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.tabBar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  color: var(--fk-ink-2);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tabBar button:hover {
+  color: var(--fk-ink);
+}
+
+.tabBar button svg {
+  color: var(--fk-ink-3);
+}
+
+.tabOn,
+.tabBar button.tabOn {
+  border-bottom-color: var(--fk-green);
+  color: var(--fk-green-deep);
+}
+
+.tabBar button.tabOn svg {
+  color: var(--fk-green);
+}
+
+.tabPanel {
+  min-height: 320px;
+}
+
+.panelH {
+  margin: 0 0 8px;
+  font-family: var(--fk-display);
+  font-size: 26px;
+  font-weight: 560;
+  line-height: 1.1;
+  color: var(--fk-ink);
+}
+
+.panelLede {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--fk-ink-2);
+}
+
+.panelLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--fk-green-deep);
+}
+
+/* ── Today tab ───────────────────────────────────────────────────────────── */
+.statTiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.statTiles > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface-warm);
+}
+
+.statTiles dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fk-ink-3);
+}
+
+.statTiles dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+
+.netTrack {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-sand);
+}
+
+.netTrack i {
+  display: block;
+  height: 100%;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green);
+  transition: width 480ms var(--fk-ease);
+}
+
+.netNote {
+  margin: 8px 0 20px;
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+
+.todaySplit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.todayRows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.todayRow {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.todayRow:hover {
+  border-color: var(--fk-green);
+}
+
+.todayRow > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fk-ink-3);
+}
+
+.todayRow > b {
+  font-weight: 600;
+}
+
+.guestNote {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--fk-line);
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+
+.guestNote a {
+  font-weight: 600;
+  color: var(--fk-green-deep);
+}
+
+/* ── Weight tab ──────────────────────────────────────────────────────────── */
+.weightBig {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-family: var(--fk-display);
+  font-size: 56px;
+  font-weight: 560;
+  line-height: 1;
+  color: var(--fk-ink);
+}
+
+.weightBig small {
+  font-family: var(--fk-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fk-ink-3);
+}
+
+.liveDot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  align-self: center;
+  border-radius: 50%;
+  background: var(--fk-green);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(30, 91, 58, 0.35); }
+  50% { box-shadow: 0 0 0 7px rgba(30, 91, 58, 0); }
+}
+
+.readingsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 12px;
+}
+
+.readingsHead h3 {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: 20px;
+  font-weight: 560;
+  color: var(--fk-ink);
+}
+
+.readingsHead button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-green-deep);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.readingsHead button:hover {
+  background: var(--fk-green-wash);
+}
+
+.metricGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metricTile {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+}
+
+.metricName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fk-ink-3);
+}
+
+.metricTile b {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+
+.metricTile b small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fk-ink-3);
+}
+
+.metricEstimated {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--fk-ink-3) !important;
+}
+
+.metricFine {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--fk-ink-3);
+}
+
+/* ── Training tab ────────────────────────────────────────────────────────── */
+.setRows {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.setRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.setRow:hover {
+  border-color: var(--fk-green);
+}
+
+.setRow b {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.setCheck {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--fk-line-strong);
+  border-radius: 50%;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.setDone {
+  border-color: var(--fk-green);
+  background: var(--fk-green-wash);
+}
+
+.setDone .setCheck {
+  border-color: var(--fk-green);
+  background: var(--fk-green);
+}
+
+.setTrack {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-sand);
+}
+
+.setTrack i {
+  display: block;
+  height: 100%;
+  border-radius: var(--fk-r-full);
+  background: var(--fk-green);
+  transition: width 320ms var(--fk-ease);
+}
+
+.setNote {
+  margin: 8px 0 16px;
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+
+/* ── Supplements tab ─────────────────────────────────────────────────────── */
+.suppRows {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.suppRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+  color: var(--fk-ink);
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.suppRow:hover {
+  border-color: var(--fk-green);
+}
+
+.suppRow b {
+  font-weight: 700;
+  color: var(--fk-green-deep);
+}
+
+/* ── Coach tab ───────────────────────────────────────────────────────────── */
+.coachMini {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface-warm);
+}
+
+.coachMini > span {
+  display: grid;
+  gap: 2px;
+}
+
+.coachMini b {
+  font-size: 22px;
+  color: var(--fk-ink);
+}
+
+.coachMini span > span {
+  font-size: 13px;
+  color: var(--fk-ink-3);
+}
+
+.coachActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Coach chat card (§3.8) ──────────────────────────────────────────────── */
+.chatCard {
+  padding: 20px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
+}
+
+.chatLabel {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fk-ink-3);
+}
+
+.chatLog {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.chatLog p {
+  max-width: 88%;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--fk-r-lg);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.chatMember {
+  justify-self: end;
+  background: var(--fk-surface-warm);
+  color: var(--fk-ink);
+  border-bottom-right-radius: 4px !important;
+}
+
+.chatCoach {
+  justify-self: start;
+  background: var(--fk-green-wash);
+  color: var(--fk-ink);
+  border-bottom-left-radius: 4px !important;
+}
+
+.coachSum {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface-warm);
+}
+
+.coachSum i {
+  font-style: normal;
+  font-size: 20px;
+  color: var(--fk-ink-3);
+}
+
+.coachTile {
+  padding: 8px 12px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+}
+
+.coachTile b {
+  font-size: 18px;
+  color: var(--fk-ink);
+}
+
+.coachTileResult {
+  border-color: var(--fk-green);
+  background: var(--fk-green);
+}
+
+.coachTileResult b {
+  color: #FFFFFF;
+}
+
+.coachSumNote {
+  flex: 1 1 100%;
+  font-size: 13px;
+  color: var(--fk-ink-2);
+}
+
+.chatActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.chatPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: var(--fk-green);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chatPrimary:hover {
+  background: var(--fk-green-deep);
+}
+
+.chatGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--fk-line-strong);
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.chatGhost:hover {
+  border-color: var(--fk-green);
+  color: var(--fk-green-deep);
+}
+
+.chatFine {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--fk-ink-3);
+}
+
+@media (max-width: 900px) {
+  .appBody {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    display: none;
+  }
+
+  .metricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .todaySplit {
+    grid-template-columns: 1fr;
+  }
+
+  .weightBig {
+    font-size: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveDot {
+    animation: none;
+  }
+}

@@ -2,15 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
-import { SLOT_LABEL, type Dish } from "@/app/_hp/menu-types";
+import { SLOT_LABEL, SLOT_ORDER, type Dish } from "@/app/_hp/menu-types";
 import { servingScaleForTarget } from "@/lib/portion-personalization";
 import { waLink } from "@/lib/site";
 
 import { GOALS } from "./home-data";
+import {
+  TRIAL_MEAL_IMAGES,
+  dayTotals,
+  macroShares,
+  proofLine,
+} from "./homepage-v2-data";
+import { MacroSplit } from "./DishVisuals";
 import x from "./experience.module.css";
-import PartnerNetwork from "@/app/_kitchen/PartnerNetwork";
-import productStyles from "@/app/_kitchen/product-network.module.css";
-import hub from "./home-workspace.module.css";
 
 const ICON = {
   spark:
@@ -41,15 +45,9 @@ function Icon({ path, size = 20 }: { path: string; size?: number }) {
   );
 }
 
-const PLAN_IMAGES: Record<string, string> = {
-  BREAKFAST:
-    "/images/ai/recipes/maharashtrian-moong-dal-chilla-with-green.webp",
-  LUNCH:
-    "/images/ai/recipes/chettinad-cauliflower-steak-with-black-pepper.webp",
-  SNACK:
-    "/images/ai/recipes/rajasthani-makhana-chaat-with-tamarind-chutney.webp",
-  DINNER: "/images/ai/recipes/north-indian-palak-paneer-with-jowar.webp",
-};
+/* Day-1 meal images live in homepage-v2-data.ts (TRIAL_MEAL_IMAGES); the
+   builder food strip uses the same map. */
+const PLAN_IMAGES: Record<string, string> = TRIAL_MEAL_IMAGES;
 
 type Target = { kcal: number; protein: number; personal: boolean };
 
@@ -114,6 +112,11 @@ export default function HomeExperience({
     planCalories: planKcal,
   });
   const scaledKcal = Math.round(planKcal * serving.factor);
+  /* The trial day's own arithmetic, computed from the same four meals — the
+     day strip under the mosaic and the proof band read these sums, never a
+     typed total. */
+  const dayOneTotals = dayTotals(meals);
+  const dayShares = macroShares(dayOneTotals);
   const activeGoal = GOALS.find((item) => item.key === goal) ?? GOALS[1];
   const whatsapp = waLink(
     `Hi FitFuel! I want help choosing a ${activeGoal.label.toLowerCase()} plan and checking delivery to my address.`,
@@ -138,15 +141,15 @@ export default function HomeExperience({
   };
 
   return (
-    <div className={`${x.home} ${hub.workspace}`} id="main-content" aria-labelledby="home-title">
-      <section className={`${x.hero} ${hub.hero}`} aria-label="FitFuel daily food app">
-        <div className={`${x.heroCopy} ${hub.heading}`}>
+    <div className={x.home} id="main-content" aria-labelledby="home-title">
+      <section className={x.hero} aria-label="FitFuel daily food app">
+        <div className={x.heroCopy}>
           <p className={x.eyebrow}>
             Breakfast and lunch · {trialTotal} · Nothing to cancel.
           </p>
-          <h1 id="home-title" className={`${x.title} ${hub.title}`}>
+          <h1 id="home-title" className={x.title}>
             Chef-cooked meals, weighed to{" "}
-            <span className={x.limeWord}>macros.</span>
+            <span className={x.accentWord}>macros.</span>
           </h1>
           <p className={x.lede}>
             Four meals cooked in our kitchen, weighed in grams to your target,
@@ -167,12 +170,11 @@ export default function HomeExperience({
             </button>
           </div>
           <p className={x.heroProof}>
-            {planRows.toLocaleString("en-IN")} plans · {goalCount} goals and
-            conditions · FSSAI {licence}
+            {proofLine(planRows, goalCount, licence)}
           </p>
         </div>
 
-        <div className={`${x.heroSupport} ${hub.support}`}>
+        <div className={x.heroSupport}>
           <div className={x.assistance}>
             <button type="button" onClick={() => document.getElementById("fitfuel-coach-trigger")?.click()}>
               <Icon path={ICON.spark} size={18} /> Ask the AI coach
@@ -215,7 +217,7 @@ export default function HomeExperience({
         </div>
 
         <div
-          className={`${x.menuPreview} ${hub.menu}`}
+          className={x.menuPreview}
           onMouseEnter={() => setHoverPaused(true)}
           onMouseLeave={() => setHoverPaused(false)}
           onFocusCapture={() => setHoverPaused(true)}
@@ -251,12 +253,26 @@ export default function HomeExperience({
               />
               <span className={x.scrim} aria-hidden="true" />
               <span className={x.featureCopy}>
-                <small>{SLOT_LABEL[activeMeal.slot] ?? activeMeal.slot}</small>
-                <b>{activeMeal.name}</b>
-                <span className="fk-num">
-                  {Math.round((activeMeal.kcal ?? 0) * serving.factor)} kcal ·{" "}
-                  {Math.round((activeMeal.protein ?? 0) * serving.factor)}g
-                  protein
+                <span className={x.featureRow}>
+                  {/* The macro ring sits NEXT TO the photo, never instead of
+                      it — the same ring as the dish cards, at 56px. */}
+                  <MacroSplit
+                    p={Math.round((activeMeal.protein ?? 0) * serving.factor)}
+                    c={Math.round((activeMeal.carbs ?? 0) * serving.factor)}
+                    f={Math.round((activeMeal.fat ?? 0) * serving.factor)}
+                    kcal={Math.round((activeMeal.kcal ?? 0) * serving.factor)}
+                    small
+                    hideKeys
+                  />
+                  <span className={x.featureText}>
+                    <small>{SLOT_LABEL[activeMeal.slot] ?? activeMeal.slot}</small>
+                    <b>{activeMeal.name}</b>
+                    <span className="fk-num">
+                      {Math.round((activeMeal.kcal ?? 0) * serving.factor)} kcal ·{" "}
+                      {Math.round((activeMeal.protein ?? 0) * serving.factor)}g
+                      protein
+                    </span>
+                  </span>
                 </span>
               </span>
               <span className="fk-sr-only">
@@ -278,8 +294,33 @@ export default function HomeExperience({
               </button>
             </div>
           ) : (
-            <div className={x.menuUnavailable}>
-              The next published menu is being prepared.
+            /* EMPTY-STATE FALLBACK (mandatory, not optional): no published
+               week must never render an empty card. The four food photographs
+               still render with slot labels only — no invented dish names, no
+               invented macros — and the day strip below is replaced by one
+               honest line. */
+            <div
+              className={x.menuFallback}
+              role="group"
+              aria-label="Tonight's menu is being prepared"
+            >
+              {SLOT_ORDER.map((slot) => (
+                <span key={slot} className={x.fallbackTile}>
+                  <span className={x.mealThumb}>
+                    <Image
+                      src={PLAN_IMAGES[slot]}
+                      alt=""
+                      fill
+                      sizes="96px"
+                    />
+                  </span>
+                  <span>{SLOT_LABEL[slot] ?? slot}</span>
+                </span>
+              ))}
+              <span className="fk-sr-only">
+                Illustrative AI-generated food images; not photographs of the
+                delivered meals.
+              </span>
             </div>
           )}
 
@@ -324,6 +365,58 @@ export default function HomeExperience({
               ))}
             </div>
           ) : null}
+
+          {/* The trial day as a data visual: the whole day's arithmetic
+              before the visitor scrolls. Sums are computed from the same
+              four meals above. */}
+          {meals.length ? (
+            <div className={x.dayStrip} aria-label="Today's trial day totals">
+              <p className={x.dayStripHead}>
+                <span>Today&apos;s trial day</span>
+                <b className="fk-num">
+                  {dayOneTotals.kcal.toLocaleString("en-IN")} kcal
+                </b>
+              </p>
+              <span className={x.dayStripBar} aria-hidden="true">
+                <i
+                  style={{
+                    width: `${dayShares.protein * 100}%`,
+                    background: "var(--fk-ring-p)",
+                  }}
+                />
+                <i
+                  style={{
+                    width: `${dayShares.carbs * 100}%`,
+                    background: "var(--fk-ring-c)",
+                  }}
+                />
+                <i
+                  style={{
+                    width: `${dayShares.fat * 100}%`,
+                    background: "var(--fk-ring-f)",
+                  }}
+                />
+              </span>
+              <span className="fk-sr-only">
+                {`${dayOneTotals.protein} grams protein, ${dayOneTotals.carbs} grams carbohydrate, ${dayOneTotals.fat} grams fat.`}
+              </span>
+              <ul className={x.dayStripChips}>
+                {meals.map((meal) => (
+                  <li key={meal.slot}>
+                    <span>{SLOT_LABEL[meal.slot] ?? meal.slot}</span>
+                    <b className="fk-num">
+                      {meal.kcal ?? 0} kcal · {meal.protein ?? 0}g protein
+                    </b>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className={x.dayStripFallback}>
+              Tonight&apos;s menu is being prepared.{" "}
+              <Link href="#catalog">See the 48 dishes below.</Link>
+            </p>
+          )}
         </div>
       </section>
     </div>
@@ -394,7 +487,7 @@ export function HomeProductLinks({
             </span>
           </Link>
           <Link href="/dashboard-preview">
-            {/* No dashboard screenshot exists, so this card carries a lime-wash
+            {/* No dashboard screenshot exists, so this card carries a green-wash
                 icon tile in place of a photo — never an empty well. */}
             <span className={x.quickIconArea} aria-hidden="true">
               <span className={x.quickIcon}>
@@ -481,38 +574,6 @@ export function HomeProductLinks({
         </nav>
       </section>
 
-      <section className={productStyles.productFeature} aria-labelledby="daily-product-title">
-        <div><h2 id="daily-product-title">A dashboard for the days between orders.</h2><p>Your food diary, meals, workouts and measurements live together. Use the daily tools with or without a delivered meal plan.</p><Link href="/dashboard-preview">Try the dashboard preview <Icon path={ICON.arrow} size={18} /></Link><br /><Link href="/services">Explore all FitFuel services <Icon path={ICON.arrow} size={18} /></Link></div>
-        <div className={productStyles.featureVisual}>
-          {/* CSS-built dashboard preview, in the style of the digital-plan pack:
-              the same example figures the product-preview band already shows
-              (1,430 kcal eaten / 280 kcal exercise / 850 kcal net left),
-              labelled "Example member day". No screenshot asset, no invented
-              numbers. */}
-          <div className={productStyles.appCard} aria-label="Example member day in the FitFuel dashboard">
-            <div className={productStyles.appCardHead}>
-              <span>Today</span>
-              <small>Example member day</small>
-            </div>
-            <dl className={productStyles.appStats}>
-              <div><dt>Eaten</dt><dd className="fk-num">1,430 kcal</dd></div>
-              <div><dt>Exercise</dt><dd className="fk-num">280 kcal</dd></div>
-              <div><dt>Net left</dt><dd className="fk-num">850 kcal</dd></div>
-            </dl>
-            <span className={productStyles.appTrack} aria-hidden="true"><i /></span>
-            <ul className={productStyles.appRows}>
-              <li><span>Next meal</span><b>Planned meals and delivery days</b></li>
-              <li><span>Today&apos;s workout</span><b>Your session is already programmed</b></li>
-            </ul>
-          </div>
-          <ol className={productStyles.featureSteps}>
-            <li><b>Know what is next</b>See planned meals, delivery days and recent order status.</li>
-            <li><b>Keep a daily record</b>Log food, water, workouts and weight in your account.</li>
-            <li><b>Review before changing your target</b>Use your weekly review and coach to understand progress.</li>
-          </ol>
-        </div>
-      </section>
-      <PartnerNetwork />
     </div>
   );
 }

@@ -454,7 +454,7 @@
   padding: 4px 9px;
   border-radius: var(--fk-r-full);
   background: color-mix(in srgb, #000 72%, transparent);
-  color: var(--fk-ink);
+  color: #FFFFFF;
   font-family: var(--fk-mono);
   font-size: 12px;
   font-weight: 600;
@@ -1017,15 +1017,9 @@
   border-bottom: 1px solid var(--fk-line);
   cursor: pointer;
   padding: 0;
-  /* A quiet lime wash rather than a flat grey hole: it reads as a reserved
-     surface, not a failed image. */
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--fk-green) 9%, transparent),
-      transparent 70%
-    ),
-    var(--fk-warm);
+  /* The warm tint comes inline from dishField(); this class paints nothing
+     of its own, so a tinted well reads as an intentional plate. */
+  background: none;
 }
 /* Dish wells are empty now, but plan and supplement wells still label
    themselves — this rule is theirs. */
@@ -1712,13 +1706,16 @@
   align-items: center;
   gap: 12px;
   margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--fk-r);
+  background: var(--fk-surface-warm);
 
   /* The three macro colours are declared ONCE here and used by both the arcs
      (stroke) and the key swatches (background), so a colour cannot drift
      between the graphic and its legend. */
-  --mp: var(--fk-green);
-  --mc: #8fb0c9;
-  --mf: var(--fk-terracotta);
+  --mp: var(--fk-ring-p);
+  --mc: var(--fk-ring-c);
+  --mf: var(--fk-ring-f);
 }
 
 .donut {
@@ -1727,6 +1724,11 @@
   width: 72px;
   height: 72px;
   overflow: visible;
+}
+/* 56px ring for the hero featured tile. */
+.donutSm {
+  width: 56px;
+  height: 56px;
 }
 .donutTrack {
   fill: none;
@@ -1861,13 +1863,28 @@
   justify-items: start;
   gap: 8px;
   padding: var(--fk-s-4);
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   /* Hairline inner border, so the well edge reads against the card. */
   box-shadow: inset 0 0 0 1px var(--fk-line-2);
 }
 /* The course label on an imageless well: top-left, 13px semibold, ink-2 —
    the well names what it is instead of being a coloured rectangle. No
    initial letter, no icon, no macro ring inside the well. */
+.shotPlaceholder .wellName {
+  position: absolute;
+  right: 12px;
+  bottom: 38px;
+  left: 12px;
+  padding: 0;
+  font-family: var(--fk-display);
+  font-size: 20px;
+  font-weight: 560;
+  line-height: 1.15;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+  color: var(--fk-ink);
+}
 .shotPlaceholder .wellCourse {
   position: absolute;
   top: 10px;
@@ -1881,14 +1898,10 @@
   padding: 0;
   text-align: left;
 }
-/* The label sits bottom-left over the field, with a scrim so it stays legible
-   whatever hue the hash produced. */
+/* Was the scrim for a label span that no longer exists; the first span child
+   is now wellGrain, so this must paint nothing. */
 .shotPlaceholder > span:first-of-type {
-  align-self: end;
-  padding: 3px 8px;
-  border-radius: var(--fk-r-sm);
-  background: color-mix(in srgb, #000 55%, transparent);
-  color: var(--fk-ink-2);
+  background: none;
 }
 
 /* .badgeRow is gone: the badges were absolutely positioned over the image well
@@ -2744,8 +2757,8 @@
   gap: 7px;
   padding: 5px 11px 5px 9px;
   border-radius: var(--fk-r-full);
-  background: rgba(132, 204, 22, 0.1);
-  border: 1px solid rgba(132, 204, 22, 0.28);
+  background: rgba(30, 91, 58, 0.1);
+  border: 1px solid rgba(30, 91, 58, 0.28);
   font-size: 13px;
   font-weight: 600;
   color: var(--fk-green-deep);
@@ -2756,7 +2769,7 @@
   height: 6px;
   border-radius: var(--fk-r-full);
   background: var(--fk-green);
-  box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.22);
+  box-shadow: 0 0 0 3px rgba(30, 91, 58, 0.22);
 }
 @media (min-width: 900px) {
   .live {
@@ -2769,23 +2782,39 @@
    adding to it — which is the whole reason it is worth a row. Stacks on a
    phone, where three columns would leave the meters 90px each. */
 .dayBar {
-  border-top: 1px solid var(--fk-line);
-  background: var(--fk-paper);
+  border-top: 0;
+  background: transparent;
+  padding: 0 var(--fk-gutter);
 }
 .dayBarInner {
   max-width: var(--fk-max);
   margin-inline: auto;
-  padding: 10px var(--fk-gutter);
+  padding: 20px;
   display: grid;
   gap: var(--fk-s-3);
   align-items: center;
+  border: 1px solid var(--fk-line);
+  border-radius: 14px;
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-1);
 }
 @media (min-width: 900px) {
   .dayBarInner {
-    grid-template-columns: auto minmax(240px, 1fr) auto;
+    grid-template-columns: auto auto minmax(240px, 1fr) auto;
     gap: var(--fk-s-6);
-    padding: 12px var(--fk-gutter);
+    padding: 20px;
   }
+}
+
+/* The live macro ring slot in the day bar. Only rendered once the basket
+   holds a dish; the ring is the same MacroSplit as the dish cards. */
+.dayRing {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.dayRing .macro {
+  margin: 0;
 }
 
 .goalPick {
@@ -2949,7 +2978,7 @@
    screen — dropping the row would have deleted the trial from every phone. */
 .railOffer {
   margin-top: var(--fk-s-5);
-  border: 1px solid rgba(132, 204, 22, 0.42);
+  border: 1px solid var(--fk-line-strong);
   border-radius: var(--fk-r-lg);
   background: var(--fk-green-wash);
   overflow: hidden;
@@ -3167,7 +3196,7 @@
 .wellGrain {
   background-image: radial-gradient(
     circle at 50% 50%,
-    rgba(255, 255, 255, 0.055) 0 1px,
+    rgba(29, 26, 21, 0.07) 0 1px,
     transparent 1.4px
   );
   background-size: 7px 7px;
@@ -3179,10 +3208,10 @@
     transparent 46%
   );
 }
-/* Darkens the foot of the well so the kcal chip keeps its contrast whatever
-   hue the course happens to land on. */
+/* Softens the foot of the well so the dish name and kcal chip stay legible
+   on a light tint. The chip carries its own dark ground. */
 .wellFoot {
-  background: linear-gradient(to top, rgba(7, 7, 7, 0.55), transparent 46%);
+  background: linear-gradient(to top, rgba(29, 26, 21, 0.18), transparent 46%);
 }
 
 /* The only mark on the card that is about the READER rather than the dish: it
@@ -3306,9 +3335,9 @@
   align-items: center;
   min-height: 32px;
   padding: 0 11px;
-  border: 1px solid rgba(132, 204, 22, 0.36);
+  border: 1px solid rgba(30, 91, 58, 0.36);
   border-radius: var(--fk-r-full);
-  background: rgba(132, 204, 22, 0.08);
+  background: rgba(30, 91, 58, 0.08);
   color: var(--fk-green-deep);
   font-size: var(--fk-t-xs);
   font-weight: 700;
@@ -3397,10 +3426,10 @@
   max-width: 480px;
   justify-self: center;
   overflow: hidden;
-  border: 1px solid rgba(132, 204, 22, 0.3);
+  border: 1px solid rgba(30, 91, 58, 0.3);
   border-radius: var(--fk-r-lg);
   background:
-    radial-gradient(circle at 100% 0, rgba(132, 204, 22, 0.12), transparent 34%),
+    radial-gradient(circle at 100% 0, rgba(30, 91, 58, 0.12), transparent 34%),
     var(--fk-warm-2);
   box-shadow: var(--fk-shadow-2);
 }
@@ -3615,7 +3644,7 @@
     background-color var(--fk-dur) var(--fk-ease);
 }
 .app a.productPreviewCard:hover {
-  border-color: rgba(132, 204, 22, 0.5);
+  border-color: rgba(30, 91, 58, 0.5);
   background-color: var(--fk-warm);
   color: var(--fk-ink);
   transform: translateY(-3px);
@@ -3710,18 +3739,18 @@
   height: 7px;
   border-radius: 50%;
   background: var(--fk-green);
-  box-shadow: 0 0 0 5px rgba(132, 204, 22, 0.1);
+  box-shadow: 0 0 0 5px rgba(30, 91, 58, 0.1);
   animation: fkPulse 2.4s ease-out infinite;
 }
 @keyframes fkPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(132, 204, 22, 0.35);
+    box-shadow: 0 0 0 0 rgba(30, 91, 58, 0.35);
   }
   70% {
-    box-shadow: 0 0 0 9px rgba(132, 204, 22, 0);
+    box-shadow: 0 0 0 9px rgba(30, 91, 58, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(132, 204, 22, 0);
+    box-shadow: 0 0 0 0 rgba(30, 91, 58, 0);
   }
 }
 .scaleNumber {
@@ -3940,7 +3969,7 @@
     border-color var(--fk-dur) var(--fk-ease);
 }
 .retailCard:hover {
-  border-color: rgba(132, 204, 22, 0.5);
+  border-color: rgba(30, 91, 58, 0.5);
   transform: translateY(-4px);
 }
 .app a.retailImage {
@@ -4107,7 +4136,7 @@
   border-radius: var(--fk-r-full);
   background: linear-gradient(
     to right,
-    rgba(132, 204, 22, 0.25),
+    var(--fk-green-wash),
     var(--fk-green)
   );
 }
@@ -4166,17 +4195,7 @@
   height: 100%;
   padding: 0 16px;
   text-align: center;
-  background-image:
-    radial-gradient(
-      120% 100% at 20% 0%,
-      hsl(96 45% 22% / 0.85),
-      transparent 62%
-    ),
-    radial-gradient(
-      90% 90% at 90% 100%,
-      hsl(144 40% 18% / 0.7),
-      transparent 60%
-    );
+  background: var(--fk-sand);
 }
 .dayLogged b {
   font-family: var(--fk-mono);
@@ -4187,17 +4206,15 @@
   line-height: 1;
 }
 .dayLogged > span {
-  font-size: 0.6875rem;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: var(--fk-ink-2);
 }
 .dayAi {
   display: block;
   padding: 8px 20px 0;
   color: var(--fk-ink-3);
-  font-size: 0.75rem;
+  font-size: 13px;
 }
 .dayBody {
   display: block;
@@ -4456,8 +4473,8 @@
   align-items: center;
   padding: 4px 10px;
   border-radius: var(--fk-r-full);
-  border: 1px solid rgba(132, 204, 22, 0.32);
-  background: rgba(132, 204, 22, 0.09);
+  border: 1px solid rgba(30, 91, 58, 0.32);
+  background: rgba(30, 91, 58, 0.09);
   font-family: var(--fk-mono);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -4653,7 +4670,7 @@
 .planSum {
   display: grid;
   padding: var(--fk-s-5);
-  border: 1px solid rgba(132, 204, 22, 0.34);
+  border: 1px solid rgba(30, 91, 58, 0.34);
   border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
 }
@@ -4865,7 +4882,7 @@
   border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
 }
-/* The receipt is the page's warm card: the warm ground, a 2px lime top rule,
+/* The receipt is the page's warm card: the warm ground, a 2px green top rule,
    and the total in Newsreader. It must look like a receipt, not like another
    text card. */
 .receiptCard {
@@ -4922,8 +4939,8 @@
 .weekFill {
   background: linear-gradient(
     to top,
-    rgba(132, 204, 22, 0.9),
-    rgba(132, 204, 22, 0.4)
+    rgba(30, 91, 58, 0.9),
+    rgba(30, 91, 58, 0.4)
   );
 }
 /* The stall is hatched, not merely recoloured — colour is never the only
@@ -5036,10 +5053,8 @@
   align-content: start;
 }
 .receiptKicker {
-  font-size: 0.6875rem;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .receiptH {
@@ -5248,35 +5263,6 @@
   background: var(--fk-paper);
   overflow: hidden;
 }
-.closeGlow {
-  position: absolute;
-  inset: -10%;
-  background-image: radial-gradient(
-    70% 120% at 12% 0%,
-    rgba(132, 204, 22, 0.18),
-    transparent 62%
-  );
-  animation: fkDrift 18s ease-in-out infinite;
-}
-.closeGrain {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-    circle at 50% 50%,
-    rgba(255, 255, 255, 0.03) 0 1px,
-    transparent 1.4px
-  );
-  background-size: 8px 8px;
-}
-@keyframes fkDrift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(3%, -2%, 0) scale(1.06);
-  }
-}
 .closeWrap {
   position: relative;
   max-width: none;
@@ -5367,7 +5353,6 @@
    sets when motion is allowed, so they need nothing here. These two run from
    CSS on their own, so they are stopped explicitly. */
 @media (prefers-reduced-motion: reduce) {
-  .closeGlow,
   .faqA {
     animation: none;
   }
@@ -5940,7 +5925,7 @@
 .numbersBtnOn,
 .numbersBtnOn:hover {
   border-style: solid;
-  border-color: rgba(132, 204, 22, 0.42);
+  border-color: rgba(30, 91, 58, 0.42);
   background: var(--fk-green-wash);
   color: var(--fk-green-deep);
   font-family: var(--fk-mono);
@@ -6092,7 +6077,7 @@
   display: grid;
   gap: 12px;
   padding: var(--fk-s-5);
-  border: 1px solid rgba(132, 204, 22, 0.34);
+  border: 1px solid rgba(30, 91, 58, 0.34);
   border-radius: var(--fk-r-lg);
   background: var(--fk-surface);
 }
@@ -6343,7 +6328,7 @@
   align-content: start;
   gap: 6px;
   padding: var(--fk-s-5) 0;
-  border-top: 1px solid rgba(132, 204, 22, 0.24);
+  border-top: 1px solid rgba(30, 91, 58, 0.24);
 }
 @media (min-width: 780px) {
   .closeSteps > li {
@@ -6572,8 +6557,8 @@
   .app .wedgeCardAnswer {
     margin: 0;
     padding: 13px 16px;
-    border-bottom: 1px solid rgba(132, 204, 22, 0.2);
-    background: rgba(132, 204, 22, 0.07);
+    border-bottom: 1px solid rgba(30, 91, 58, 0.2);
+    background: rgba(30, 91, 58, 0.07);
     font-size: var(--fk-t-sm);
     font-weight: 700;
     line-height: 1.45;
@@ -6680,8 +6665,8 @@
   align-items: center;
   padding: 3px 9px;
   border-radius: var(--fk-r-full);
-  border: 1px solid rgba(132, 204, 22, 0.32);
-  background: rgba(132, 204, 22, 0.09);
+  border: 1px solid rgba(30, 91, 58, 0.32);
+  background: rgba(30, 91, 58, 0.09);
   font-family: var(--fk-mono);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -6784,5 +6769,650 @@
   .app .surfaces a,
   .surfaceGo {
     transition: none;
+  }
+}
+
+/* ── v2 section grounds (§1.2 rhythm) ───────────────────────────────────────
+   Appended last so these single-class utilities win over .bandPaper /
+   .bandSurface at equal specificity. No two adjacent sections share a ground;
+   dark appears exactly twice (app, close/footer). */
+.gCream {
+  background: var(--fk-paper);
+}
+.gWhite {
+  background: var(--fk-surface);
+}
+.gSand {
+  background: var(--fk-sand);
+}
+.gForest {
+  background: var(--fk-forest);
+}
+.gForest2 {
+  background: var(--fk-forest-2);
+}
+
+/* ── Proof numbers strip (§3.3) ────────────────────────────────────────────
+   Four headline figures above the three story cards, 48px Newsreader. */
+.proofNumbers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 0 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--fk-line-strong);
+}
+
+.proofNumbers > span {
+  display: grid;
+  gap: 6px;
+}
+
+.proofNumbers b {
+  font-family: var(--fk-display);
+  font-size: 48px;
+  font-weight: 560;
+  line-height: 1;
+  color: var(--fk-ink);
+}
+
+.proofNumbers > span > span {
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+
+@media (max-width: 720px) {
+  .proofNumbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .proofNumbers b {
+    font-size: 36px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   REDESIGN ULTRA v2 (2026-11-11) — section styles for the new bands.
+   Appended at the end so these rules win over earlier ones at equal
+   specificity. Dark-band text overrides live at the bottom of this block. */
+
+/* ── 4. Trial core ─────────────────────────────────────────────────────── */
+.trialGrid {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .trialGrid {
+    grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.35fr);
+  }
+  .trialGrid .receiptCard {
+    position: sticky;
+    top: 96px;
+  }
+}
+
+/* The day-1 food strip inside the builder summary: what the built plan
+   actually cooks on day 1. */
+.foodStrip {
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid var(--fk-line);
+}
+
+.foodStripLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fk-ink-3);
+}
+
+.foodStripItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r);
+  background: var(--fk-surface);
+}
+
+.foodStripItem img {
+  flex: none;
+  width: 56px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.foodStripItem > span:last-child {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.foodStripItem b {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fk-ink-3);
+}
+
+.foodStripItem span span {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--fk-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The total re-plays a short fade on diet change (keyed by the total). */
+.numTween {
+  display: inline-block;
+  animation: numTweenIn 320ms var(--fk-ease);
+}
+
+@keyframes numTweenIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 6. The app, live (dark forest band) ───────────────────────────────── */
+.appHead {
+  max-width: 720px;
+  margin-bottom: 24px;
+}
+
+.appH2 {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: var(--fk-t-h2);
+  font-weight: 560;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--fk-cream-on-dark);
+  text-wrap: balance;
+}
+
+.appLede {
+  margin: 12px 0 0;
+  font-size: 17px;
+  line-height: 1.65;
+  color: rgba(245, 241, 230, 0.82);
+}
+
+.appSteps {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 780px) {
+  .appSteps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.appSteps li {
+  display: grid;
+  gap: 4px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(245, 241, 230, 0.25);
+}
+
+.appSteps b {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fk-cream-on-dark);
+}
+
+.appSteps span {
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(245, 241, 230, 0.75);
+}
+
+.appLinks {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 20px 0 0;
+}
+
+.appLinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--fk-cream-on-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ── 7. Scale section ──────────────────────────────────────────────────── */
+.scaleSplit {
+  display: grid;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .scaleSplit {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+}
+
+.scaleSteps {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.scaleSteps li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--fk-line);
+}
+
+.scaleSteps li:last-child {
+  border-bottom: 1px solid var(--fk-line);
+}
+
+.scaleSteps b {
+  flex: none;
+  width: 64px;
+  font-family: var(--fk-display);
+  font-size: 17px;
+  font-weight: 560;
+  color: var(--fk-green-deep);
+}
+
+.scaleSteps span {
+  font-size: 15px;
+  color: var(--fk-ink-2);
+}
+
+.scaleFine {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+
+.scaleFine a {
+  font-weight: 600;
+  color: var(--fk-green-deep);
+}
+
+/* Readings head + fine print, shared with the app widget's weight tab. */
+.readingsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 32px 0 12px;
+}
+
+.readingsHead h3 {
+  margin: 0;
+  font-family: var(--fk-display);
+  font-size: 20px;
+  font-weight: 560;
+  color: var(--fk-ink);
+}
+
+.readingsHead button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fk-green);
+  border-radius: var(--fk-r);
+  background: transparent;
+  color: var(--fk-green-deep);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.readingsHead button:hover {
+  background: var(--fk-green-wash);
+}
+
+.metricFine {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--fk-ink-3);
+}
+
+/* ── 8. Coach band ─────────────────────────────────────────────────────── */
+.coachSplit {
+  display: grid;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .coachSplit {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+
+.coachChart {
+  margin-top: 16px;
+}
+
+/* ── 9. Goal boxes ─────────────────────────────────────────────────────── */
+.goalBoxes {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 780px) {
+  .goalBoxes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .goalBoxes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.goalBox {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  overflow: hidden;
+  background: var(--fk-surface);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--fk-shadow-1);
+  transition:
+    transform var(--fk-dur) var(--fk-ease),
+    box-shadow var(--fk-dur) var(--fk-ease);
+}
+
+.goalBox:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--fk-shadow-2);
+}
+
+.goalBoxImg {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--fk-surface-warm);
+}
+
+.goalBoxImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--fk-dur-slow) var(--fk-ease);
+}
+
+.goalBox:hover .goalBoxImg img {
+  transform: scale(1.03);
+}
+
+.goalBoxBody {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px 16px;
+}
+
+.goalBoxBody b {
+  font-family: var(--fk-display);
+  font-size: 28px;
+  font-weight: 560;
+  line-height: 1.1;
+  color: var(--fk-ink);
+}
+
+.goalBoxBody span {
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+
+/* ── 10. Digital-plan fan ──────────────────────────────────────────────── */
+.digitalFan {
+  position: relative;
+  min-height: 420px;
+}
+
+.digitalPageBack,
+.digitalPageFront {
+  padding: 24px;
+  border: 1px solid var(--fk-line);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-surface);
+  box-shadow: var(--fk-shadow-2);
+}
+
+.digitalPageBack {
+  position: absolute;
+  inset: 0 0 28px 28px;
+  transform: rotate(1.5deg);
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  color: var(--fk-ink-3);
+  font-size: 14px;
+  background: var(--fk-surface-warm);
+}
+
+.digitalPageFront {
+  position: relative;
+  margin: 28px 28px 0 0;
+  transform: rotate(-2deg);
+  background: var(--fk-surface);
+}
+
+.digitalFanLabel {
+  margin: 20px 0 0;
+  font-size: 13px;
+  color: var(--fk-ink-3);
+}
+
+/* ── 12. Comparison icon matrix ────────────────────────────────────────── */
+.wedgeMatrix {
+  display: grid;
+}
+
+.wedgeMatrixHead,
+.wedgeMatrixRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) repeat(3, minmax(0, 0.75fr)) minmax(0, 1.7fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.wedgeMatrixHead {
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--fk-line-strong);
+}
+
+.wedgeMatrixHead span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fk-ink-3);
+}
+
+.wedgeMatrixHead .wedgeMatrixUs {
+  color: var(--fk-green-deep);
+  font-size: 15px;
+}
+
+.wedgeMatrixRow {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--fk-line);
+}
+
+.wedgeMatrixQ {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+
+.wedgeMatrixCell {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fk-ink-2);
+}
+
+.wedgeMatrixCell i {
+  flex: none;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.wedgeYes {
+  color: var(--fk-green);
+}
+
+.wedgeNo {
+  color: var(--fk-ink-3);
+}
+
+.wedgePart {
+  color: var(--fk-amber);
+}
+
+.wedgeMatrixMine {
+  padding: 12px;
+  margin: -12px 0;
+  border-left: 2px solid var(--fk-green);
+  border-radius: 0 var(--fk-r) var(--fk-r) 0;
+  background: var(--fk-green-wash);
+  color: var(--fk-ink);
+}
+
+/* ── Dark-band text (forest-2 close + footer) ────────────────────────────
+   .gForest2 sets the ground; these overrides carry the text. Specificity
+   beats the light-ground rules above without touching them. */
+.gForest2 .closeH {
+  color: var(--fk-cream-on-dark);
+}
+
+.gForest2 .closeP {
+  color: rgba(245, 241, 230, 0.82);
+}
+
+.gForest2 .closeStepN {
+  color: var(--fk-cream-on-dark);
+}
+
+.gForest2 .closeStepLabel {
+  color: var(--fk-cream-on-dark);
+}
+
+.gForest2 .closeStepLine {
+  color: rgba(245, 241, 230, 0.75);
+}
+
+.gForest2 .closeSteps > li {
+  border-top-color: rgba(245, 241, 230, 0.25);
+}
+
+.app .gForest2 a.closeCta {
+  background: var(--fk-cream-on-dark);
+  color: var(--fk-forest-2);
+}
+
+.app .gForest2 a.closeCta:hover {
+  background: #FFFFFF;
+  color: var(--fk-forest-2);
+}
+
+.app .gForest2 a.closeGhost {
+  border-color: rgba(245, 241, 230, 0.6);
+  color: var(--fk-cream-on-dark);
+}
+
+.app .gForest2 a.closeGhost:hover {
+  border-color: var(--fk-cream-on-dark);
+  background: transparent;
+  color: var(--fk-cream-on-dark);
+}
+
+.app .gForest2 .closeAssure a {
+  border-top-color: rgba(245, 241, 230, 0.25);
+  color: var(--fk-cream-on-dark);
+}
+
+.app .gForest2 .closeAssure a span {
+  color: rgba(245, 241, 230, 0.75);
+}
+
+.gForest2.footer {
+  border-top: 0;
+  margin-top: 0;
+}
+
+.gForest2 .footerTop {
+  border-bottom-color: rgba(245, 241, 230, 0.25);
+}
+
+.gForest2 .footerTopH {
+  color: var(--fk-cream-on-dark);
+}
+
+.gForest2 .footerTopP {
+  color: rgba(245, 241, 230, 0.82);
+}
+
+.gForest2 .footerTitle {
+  color: rgba(245, 241, 230, 0.82);
+}
+
+.app .gForest2 .footerList a {
+  color: rgba(245, 241, 230, 0.75);
+}
+
+.app .gForest2 .footerList a:hover {
+  color: var(--fk-cream-on-dark);
+}
+
+.gForest2 .footerDisclosure {
+  color: rgba(245, 241, 230, 0.6);
+}
+
+.gForest2 .footerBase {
+  border-top-color: rgba(245, 241, 230, 0.25);
+  color: rgba(245, 241, 230, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goalBox,
+  .goalBoxImg img,
+  .numTween {
+    animation: none;
+    transition: none;
+  }
+  .goalBox:hover {
+    transform: none;
   }
 }

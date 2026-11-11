@@ -4,7 +4,7 @@ export const HOME_CAPABILITIES = [
   { id: "day-h", label: "How meals are prepared" },
   { id: "wedge-h", label: "Connected nutrition" },
   { id: "digital-h", label: "Digital plans" },
-  { id: "inside-h", label: "Body & training" },
+  { id: "app-h", label: "Body & training" },
   { id: "retail-h", label: "Nutrabay" },
   { id: "plan-h", label: "Plan calculator" },
   { id: "cond-h", label: "Goals & conditions" },

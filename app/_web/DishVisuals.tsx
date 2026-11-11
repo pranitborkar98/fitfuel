@@ -39,6 +39,8 @@ export function MacroSplit({
   kcal,
   unit = "kcal",
   contrib,
+  small = false,
+  hideKeys = false,
 }: {
   p: number;
   c: number;
@@ -48,6 +50,11 @@ export function MacroSplit({
   /** What this dish does to the target the visitor picked, printed under the
    *  ring. Optional: a plan card has no single day to contribute to. */
   contrib?: string;
+  /** 56px ring for the hero featured tile (the card ring stays 72px). */
+  small?: boolean;
+  /** Ring only, no gram keys — for the hero, where the keys duplicate the
+   *  caption beside it. */
+  hideKeys?: boolean;
 }) {
   const kp = p * 4, kc = c * 4, kf = f * 9;
   const total = kp + kc + kf;
@@ -79,7 +86,7 @@ export function MacroSplit({
         {`${p} grams protein, ${c} grams carbohydrate, ${f} grams fat. ${proteinPct} per cent of calories from protein.`}
       </span>
 
-      <svg className={sx.donut} viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+      <svg className={`${sx.donut} ${small ? sx.donutSm : ""}`} viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
         <circle className={sx.donutTrack} cx="32" cy="32" r={RING_R} />
         {arcs.map((a) => (
           <circle
@@ -115,6 +122,7 @@ export function MacroSplit({
         ) : null}
       </svg>
 
+      {hideKeys ? null : (
       <span className={sx.macroKeys} aria-hidden="true">
         {segs.map((sg) => (
           <span key={sg.key} className={sx.macroKey}>
@@ -123,19 +131,23 @@ export function MacroSplit({
           </span>
         ))}
       </span>
+      )}
 
       {contrib ? <span className={sx.macroContrib}>{contrib}</span> : null}
     </div>
   );
 }
 
-const COURSE_HUE: Record<string, number> = {
-  bowls: 14,      // roast
-  keto: 34,       // butter
-  breakfast: 54,  // morning
-  salads: 96,     // leaf
-  juices: 168,    // cold-press
-  bars: 344,      // berry
+/* Warm tinted wells for the 24 imageless dishes (v2 §3.5). On cream a tinted
+   well reads as an intentional plate; on black it read as a hole. Exact tints
+   committed by the plan; no jitter, no monogram, no ring inside the well. */
+const COURSE_TINT: Record<string, string> = {
+  bowls: "#EFE6D2",
+  keto: "#E6EBDC",
+  breakfast: "#F6E8D8",
+  salads: "#E2EBDD",
+  juices: "#F7E9D3",
+  bars: "#EDE4D6",
 };
 /** Half-width of the within-course spread, in degrees. */
 const HUE_JITTER = 7;
@@ -156,10 +168,9 @@ export function field(hue: number): React.CSSProperties {
   };
 }
 
-/** Dishes: the course sets the family, the id sets the variation within it. */
+/** Dishes: the course sets the tint. A flat warm tint, never a dark hue. */
 export function dishField(d: ShopDish): React.CSSProperties {
-  const base = COURSE_HUE[d.category] ?? 96;
-  return field(base + (hashOf(d.id) % (HUE_JITTER * 2 + 1)) - HUE_JITTER);
+  return { backgroundColor: COURSE_TINT[d.category] ?? "#EFE6D2" };
 }
 
 /** Plans have no course, so they keep the hash. */

@@ -11,11 +11,11 @@
 //   /auth/signin               lime square + bolt, sans 20px/800, raw #84cc16
 //
 // Four marks, three typefaces, and four different places the lime came from —
-// a raw hex, a `LIME` const, `C.lime`, and a CSS token. The uppercase condensed
+// a raw hex, a `GREEN` const, `C.lime`, and a CSS token. The uppercase condensed
 // one was also the exact style AGENTS.md rejects by name.
 //
-// SETTLED 2026-08-20: one wordmark, Newsreader, sentence case, lime "Fuel", no
-// icon. Newsreader because that is what the approved homepage design ships and
+// SETTLED 2026-08-20: one wordmark, Newsreader, sentence case, green "Fuel"
+// (leaf green since the 2026-11-11 palette change), no icon. Newsreader because that is what the approved homepage design ships and
 // what app/_design/tokens.css calls display type; no icon because the design
 // the owner signed off has none, and carrying a bolt on half the surfaces was
 // the inconsistency being removed.
@@ -27,9 +27,8 @@
 // WHY THE COLOURS ARE A FALLBACK CHAIN. This renders inside two different token
 // systems — `--fk-*` on the app half, `--ff-*` on the marketing half — and
 // neither defines the other's names. The chain resolves to whichever is present
-// and to the literal only if a surface has neither. All three are #84cc16
-// today, so the appearance is identical; what the chain buys is that a palette
-// change on either half is still followed here.
+// and to the literal only if a surface has neither. What the chain buys is
+// that a palette change on either half is still followed here.
 //
 // `--font-newsreader` is the Next font variable from app/layout.tsx, set on the
 // document, so it resolves on every route including ones that never load
@@ -39,8 +38,8 @@
 
 import Link from "next/link";
 
-const INK = "var(--fk-ink, var(--ff-ink, #f7f7f5))";
-const LIME = "var(--fk-green, var(--ff-lime, #84cc16))";
+const INK = "var(--fk-ink, var(--ff-ink, #1D1A15))";
+const GREEN = "var(--fk-green, var(--ff-lime, #1E5B3A))";
 const DISPLAY = "var(--font-newsreader), Georgia, 'Times New Roman', serif";
 
 export default function Wordmark({
@@ -95,7 +94,7 @@ export default function Wordmark({
       }
     >
       Fit
-      <em style={{ fontStyle: "normal", color: LIME }}>Fuel</em>
+      <em style={{ fontStyle: "normal", color: GREEN }}>Fuel</em>
     </Link>
   );
 }
