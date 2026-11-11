@@ -98,6 +98,111 @@
   margin-top: 16px;
   max-width: 100ch;
 }
+/* Partner logo rows (2026-11-11): six generic tiles per category, plus the
+   one real Nutrabay tile. The rows scroll sideways, so at 390px the tiles
+   never push the page wider: the section stays the viewport width and the
+   row itself takes the overflow. Tiles are 96px tall, well over the 44px
+   target floor. No new images: wordmark and lucide glyphs only. */
+.logoWall {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--fk-line-2);
+}
+.logoWallTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+.logoWallLede {
+  max-width: 65ch;
+  margin: 10px 0 0;
+  color: var(--fk-ink-2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.logoGroup {
+  margin-top: 22px;
+}
+.logoGroupTitle {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 650;
+}
+.logoRow {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 2px 10px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-behavior: smooth;
+}
+.logoTile {
+  flex: 0 0 132px;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px;
+  border: 1px dashed var(--fk-line-strong);
+  border-radius: var(--fk-r-lg);
+  background: var(--fk-paper);
+  color: var(--fk-ink-2);
+}
+.logoTile svg {
+  color: var(--fk-ink-3);
+}
+.logoTileWord {
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--fk-ink);
+}
+.logoTileStatus {
+  font-size: 14px;
+  color: var(--fk-ink-2);
+}
+.logoTileHint {
+  font-size: 14px;
+  color: var(--fk-ink-3);
+}
+/* The one real tile: solid green border on the green wash, like the
+   Nutrabay card above, so a real partner never reads as a placeholder. */
+.logoTileReal {
+  border-style: solid;
+  border-color: var(--fk-green);
+  background: var(--fk-green-wash);
+  padding: 0;
+}
+.logoTileLink {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 96px;
+  padding: 14px;
+  border-radius: var(--fk-r-lg);
+}
+.logoWordmark {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fk-ink);
+}
+.franchiseNote {
+  max-width: 75ch;
+  margin: 12px 0 0;
+  color: var(--fk-ink-2);
+  font-size: 16px;
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logoRow {
+    scroll-behavior: auto;
+  }
+}
 .productFeature {
   display: grid;
   grid-template-columns: 1fr 1fr;
