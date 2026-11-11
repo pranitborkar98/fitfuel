@@ -3,7 +3,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { safeJsonLd } from '@/lib/content-safety'
-import { abs } from '@/lib/site'
 import { hasCompletePlanSchedule } from '@/lib/plan-readiness'
 import { publicPlanAudience, publicPlanDescription, publicPlanPrinciples } from '@/lib/plan-public-copy'
 import PlanDetailClient, { type Plan, type PriceRow, type Slot } from './PlanDetailClient'
@@ -176,7 +175,7 @@ export default async function PlanPage({ params }: Props) {
     description: serializablePlan.description ?? serializablePlan.tagline ?? `${serializablePlan.name} meal plan delivered in Pune.`,
     category: 'Meal plan',
     brand: { '@type': 'Brand', name: 'FitFuel' },
-    url: abs(`/plans/${serializablePlan.slug}`),
+    url: `https://fitfuel.in/plans/${serializablePlan.slug}`,
     additionalProperty: [
       { '@type': 'PropertyValue', name: 'Calories per day', value: serializablePlan.avgCaloriesPerDay },
       { '@type': 'PropertyValue', name: 'Protein per day (g)', value: serializablePlan.avgProteinGrams },
@@ -192,7 +191,7 @@ export default async function PlanPage({ params }: Props) {
             availability: isReady
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
-            url: abs(`/plans/${serializablePlan.slug}`),
+            url: `https://fitfuel.in/plans/${serializablePlan.slug}`,
             areaServed: { '@type': 'City', name: 'Pune' },
           },
         }

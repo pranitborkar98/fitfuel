@@ -24,17 +24,19 @@ const ORGANISATION = {
     "https://instagram.com/fitfuel.in",
     "https://youtube.com/@fitfuel",
   ],
-  hasCredential: {
-    "@type": "EducationalOccupationalCredential",
-    credentialCategory: "FSSAI Licence",
-    identifier: "21523035002815",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Kharadi",
+    addressLocality: "Pune",
+    addressRegion: "Maharashtra",
+    postalCode: "411014",
+    addressCountry: "IN",
   },
 };
 
-// FoodEstablishment rather than plain LocalBusiness: this is a production
-// kitchen. No address, geo pin or area list here: kitchens are franchise
-// locations, so the FSSAI licence sits on the organisation above and delivery
-// areas are checked against the customer's address.
+// FoodEstablishment rather than plain LocalBusiness: this is a licensed
+// production kitchen, and the FSSAI number is the trust signal that matters
+// most for an Indian food business.
 const KITCHEN = {
   "@type": ["FoodEstablishment", "LocalBusiness"],
   "@id": `${SITE}/#kitchen`,
@@ -43,7 +45,18 @@ const KITCHEN = {
   url: SITE,
   image: `${SITE}/images/hero-bowl-v2.png`,
   priceRange: "₹₹",
-  servesCuisine: ["Indian", "Thai", "Mediterranean", "Mexican", "Asian", "Health food", "High protein"],
+  servesCuisine: ["Indian", "Health food", "High protein"],
+  hasCredential: {
+    "@type": "EducationalOccupationalCredential",
+    credentialCategory: "FSSAI Licence",
+    identifier: "21523035002815",
+  },
+  address: ORGANISATION.address,
+  geo: { "@type": "GeoCoordinates", latitude: 18.5515, longitude: 73.9435 },
+  areaServed: [
+    "Kharadi", "Baner", "Viman Nagar", "Koregaon Park", "Hinjewadi",
+    "Wakad", "Kalyani Nagar", "Magarpatta", "Hadapsar", "Aundh",
+  ].map((n) => ({ "@type": "City", name: `${n}, Pune` })),
 };
 
 const SERVICE = {
@@ -52,6 +65,7 @@ const SERVICE = {
   name: "Chef-cooked macro-tracked meal plan delivery",
   serviceType: "Meal plan subscription",
   provider: { "@id": `${SITE}/#organization` },
+  areaServed: { "@type": "City", name: "Pune" },
   offers: {
     "@type": "Offer",
     name: "Trial day",

@@ -1,8 +1,7 @@
 // lib/plan-tier-pricing.ts — Phase 19A
 // Single source of truth for Standard / Premium / Luxury price matrices.
 // STANDARD is the seeded matrix in PlanPrice. PREMIUM ≈ 1.25× STANDARD, LUXURY ≈ 1.5× STANDARD.
-// Premium/Luxury are Coming soon until those MealPlan rows exist: no
-// Premium/Luxury price is shown anywhere, and their CTA joins the waitlist.
+// Premium/Luxury are estimates until those MealPlan rows exist; shown as "Join waitlist" CTAs.
 
 export type Tier = 'STANDARD' | 'PREMIUM' | 'LUXURY'
 export type DurationKey =
@@ -98,9 +97,7 @@ export function getStandardPrice(
   return row ? row.priceRs : null
 }
 
-// Get tier-adjusted price (Standard is real, Premium/Luxury are × multiplier
-// rounded to nearest ₹). Retained for internal use only: a Coming soon tier
-// never shows this figure.
+// Get tier-adjusted price (Standard is real, Premium/Luxury are × multiplier rounded to nearest ₹).
 export function getTierPrice(
   prices: PriceRow[],
   tier: Tier,

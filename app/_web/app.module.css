@@ -451,7 +451,7 @@
   color: var(--fk-green-deep);
 }
 .dishBlurb {
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-sm);
   line-height: 1.45;
   color: var(--fk-ink-3);
   margin: 0;
@@ -462,7 +462,7 @@
   overflow: hidden;
 }
 .macroLine {
-  font-family: var(--fk-sans);
+  font-family: var(--fk-mono);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--fk-ink-3);
@@ -590,7 +590,7 @@
   inset: -1px;
   border-radius: inherit;
   border: 2px solid var(--fk-green);
-  animation: addShock var(--fk-dur-slow) var(--fk-ease) forwards;
+  animation: addShock 520ms var(--fk-ease) forwards;
   pointer-events: none;
 }
 /* 44px SQUARE, not 40. These were 40px wide against a 44px minimum, and the
@@ -805,6 +805,8 @@
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--fk-green);
   margin: 0;
 }
@@ -855,6 +857,8 @@
   color: var(--fk-ink-3);
   font-size: var(--fk-t-xs);
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .planMeals li > b {
   color: var(--fk-ink-2);
@@ -897,6 +901,8 @@
 .dishCourse {
   font-family: var(--fk-sans);
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--fk-green);
 }
 .dishTop .fk-num {
@@ -973,6 +979,8 @@
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
   padding-inline: 6px;
   text-align: center;
@@ -1309,7 +1317,7 @@
 }
 .qtyPop {
   display: inline-block;
-  animation: qtyPop var(--fk-dur-slow) var(--fk-ease);
+  animation: qtyPop 320ms var(--fk-ease);
 }
 .add,
 .stepBtn {
@@ -1338,14 +1346,12 @@
   text-decoration: underline;
 }
 
-/* ── Footer ───────────────────────────────────────────────────────────────
-   No margin-top: the close band already ends with 64px of its own bottom
-   padding, and a margin here opened a bare strip of page ground between the
-   trial close and the footer — an empty black band with nothing in it. */
+/* ── Footer ─────────────────────────────────────────────────────────────── */
 .footer {
   border-top: 1px solid var(--fk-line);
   background: var(--fk-warm);
   padding: var(--fk-s-8) var(--fk-gutter) var(--fk-s-6);
+  margin-top: var(--fk-s-8);
 }
 .footerGrid {
   display: grid;
@@ -1358,6 +1364,8 @@
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
   margin: 0 0 var(--fk-s-2);
 }
@@ -1533,6 +1541,8 @@
   font-family: var(--fk-sans);
   font-size: var(--fk-t-xs);
   font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--fk-green);
 }
 .serviceGrid b {
@@ -1598,9 +1608,7 @@
   /* Start the ring at twelve o'clock rather than three. */
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
-  /* Two slow-token lengths: the ring draw keeps its old 640ms pace, but the
-     pace is now derived from the token instead of hardcoded. */
-  animation: arcIn calc(var(--fk-dur-slow) * 2) var(--fk-ease) both;
+  animation: arcIn 640ms var(--fk-ease) both;
 }
 /* Sweeping the dash in from zero reads as a measurement resolving. It is a
    bounded, one-shot repaint on a 64px box — not a permanent animation. */
@@ -1653,9 +1661,9 @@
 .donutUnit {
   fill: var(--fk-ink-3);
   font-family: var(--fk-sans);
-  font-size: 12px;
+  font-size: 8px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
   text-anchor: middle;
 }
 
@@ -1890,7 +1898,7 @@
   }
   .macroKey {
     gap: 5px;
-    font-size: var(--fk-t-xs);
+    font-size: 11.5px;
     /* Three stacked keys at the default leading came to 61px against a 44px
        ring. Tightened, they sit at roughly the ring's own height, which is what
        makes the block cost nothing. */
@@ -1902,7 +1910,8 @@
      "Performance" overflowed by 3px and lost its last letters. Smaller, and
      allowed to wrap rather than shave. */
   .shotPlaceholder span {
-    font-size: var(--fk-t-xs);
+    font-size: 10px;
+    letter-spacing: 0.05em;
     white-space: normal;
     overflow-wrap: anywhere;
     line-height: 1.3;
@@ -2259,17 +2268,7 @@
 }
 .showAllNote {
   margin: 0;
-  font-size: var(--fk-t-base);
-  color: var(--fk-ink-3);
-  text-align: center;
-}
-
-/* The menu's one macro footnote. The per-card "Macros estimated" label is
-   gone; this single line under the menu carries the same fact once. */
-.menuNote {
-  margin: 0;
-  padding: 0 0 var(--fk-s-7);
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-xs);
   color: var(--fk-ink-3);
   text-align: center;
 }
@@ -2641,8 +2640,10 @@
   gap: var(--fk-s-3);
 }
 .goalLabel {
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .goalSeg {
@@ -2653,7 +2654,7 @@
   background: var(--fk-paper);
 }
 .goalBtn {
-  min-height: var(--fk-tap);
+  min-height: 36px;
   padding: 0 14px;
   border: 0;
   background: transparent;
@@ -2808,8 +2809,10 @@
 }
 .railOfferKicker {
   margin: 0;
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--fk-green);
 }
 .railOfferPrice {
@@ -2822,7 +2825,7 @@
 }
 .railOfferNote {
   margin: 6px 0 0;
-  font-size: var(--fk-t-base);
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--fk-ink-2);
 }
@@ -2917,13 +2920,13 @@
   display: block;
   margin-top: 4px;
   max-width: 74ch;
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-sm);
   line-height: 1.45;
   color: var(--fk-ink-3);
 }
 .courseMore {
   flex: none;
-  min-height: var(--fk-tap);
+  min-height: 40px;
   padding: 0 14px;
   border: 1px solid var(--fk-line-strong);
   border-radius: var(--fk-r);
@@ -2941,65 +2944,6 @@
 .courseMore:hover {
   border-color: var(--fk-green);
   color: var(--fk-green-deep);
-}
-
-/* ── THE DISH RANGE, CAPPED BY CSS SO THE FIRST PAINT IS ALREADY RIGHT ───
-   The caps used to be JS (useMediaQuery + PER_COURSE in FitFuelApp): the
-   server, which has no matchMedia, rendered the phone layout and the client
-   upgraded after hydration, so a desktop first paint briefly showed two
-   dishes per course before the full range appeared. These rules replace
-   that hook. The server renders every dish; the stylesheet hides the ones
-   past the cap, so server and client paint the identical range.
-
-   A course group is one <li class="courseHead"> followed by one <li> per
-   dish, so the phone cap of 2 dishes hides children from the 4th on and
-   the tablet cap of 4 hides children from the 6th. The grouped view renders
-   six dishes per course; the caps above apply inside those six, so server
-   and client paint the identical range. Opening a course adds
-   .courseOpen to the group, which lifts the cap and renders the rest; the
-   "Show all" button is hidden on a desktop for a course of six or fewer,
-   where everything is already visible. The
-   filtered flat list is capped at 12 the same way below 1024px, lifted by
-   .gridOpen when the customer expands it; its "Show all" control lives in
-   .dishShowAll, hidden on a desktop for the same reason. The flat-list rule
-   is scoped to .dishGrid on purpose: the plans and supplements grids share
-   .grid and expand past 12 by JS (their caps are purchase decisions, not
-   screen room), so an unscoped rule would hide their expanded cards below
-   1024px with no way back. Plans and supplements are untouched by these
-   rules: their lists never carry a 13th child before expanding, and their
-   controls stay visible at every width. */
-@media (max-width: 639px) {
-  .courseGroup:not(.courseOpen) > li:nth-child(n + 4) {
-    display: none;
-  }
-}
-@media (min-width: 640px) and (max-width: 1023px) {
-  .courseGroup:not(.courseOpen) > li:nth-child(n + 6) {
-    display: none;
-  }
-}
-@media (max-width: 1023px) {
-  .dishGrid:not(.gridOpen) > li:nth-child(n + 13) {
-    display: none;
-  }
-}
-@media (min-width: 1024px) {
-  .courseMore,
-  .dishShowAll {
-    display: none;
-  }
-}
-
-/* A course with more than six dishes keeps its "Show all" button on a
-   desktop too: only six render until it is opened. The rule above still
-   hides the plain button, so this later rule — same specificity, later in
-   the sheet — wins for the courses that carry it. A course of six or fewer
-   never gets the class, so its button stays hidden on a desktop, where
-   everything is already visible. */
-@media (min-width: 1024px) {
-  .courseMoreDesktop {
-    display: inline-block;
-  }
 }
 
 /* ── The empty well ─────────────────────────────────────────────────────────
@@ -3033,35 +2977,6 @@
    hue the course happens to land on. */
 .wellFoot {
   background: linear-gradient(to top, rgba(7, 7, 7, 0.55), transparent 46%);
-  /* A finished edge: one lime hairline along the foot of the well, so the
-     colour field reads as a deliberate panel rather than a gradient that
-     simply runs out. */
-  border-bottom: 1px solid color-mix(in srgb, var(--fk-green) 45%, transparent);
-}
-/* The honest label on an empty well, in the house wording the /menu well
-   already uses: the photograph arrives with the final kitchen listing, and
-   until then the slot says so instead of sitting silent. A status note, not
-   a stand-in for the dish — the dish name, macros and price are all in the
-   card body below it, and this says nothing about the food itself. Hidden
-   on a phone, where the well is a 104px square and the label would fill it. */
-.shotPlaceholder .wellLabel {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  padding: 3px 8px;
-  border-radius: var(--fk-r-sm);
-  background: color-mix(in srgb, #000 55%, transparent);
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-xs);
-  font-weight: 700;
-  line-height: 1.4;
-  text-align: left;
-}
-@media (max-width: 639px) {
-  .shotPlaceholder .wellLabel {
-    display: none;
-  }
 }
 
 /* The only mark on the card that is about the READER rather than the dish: it
@@ -3077,8 +2992,10 @@
   border-radius: var(--fk-r-full);
   background: var(--fk-green);
   color: var(--fk-on-green);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* ── The macro panel ────────────────────────────────────────────────────────
@@ -3109,11 +3026,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
    THE BANDS BELOW THE CATALOG
 
-   Nine of them, and no two neighbours share a ground: paper, surface and warm
-   alternate down the page, so each reads as its own section without a rule
-   between every pair. Marketing density, not app density: one idea per band,
-   display type at the head of each, opened by the same short lime tick so the
-   eye learns where a section starts.
+   Eight of them, alternating paper and surface so each reads as its own
+   section without a rule between every pair. Marketing density, not app
+   density: one idea per band, display type at the head of each.
    ══════════════════════════════════════════════════════════════════════════ */
 .band2 {
   border-top: 1px solid var(--fk-line);
@@ -3123,12 +3038,6 @@
 }
 .bandSurface {
   background: var(--fk-surface);
-}
-/* The third ground, for bands whose own cards already sit on surface (the
-   plan calculator's summary, the wedge table's paper wrap): it keeps the
-   alternation going without dropping a band back to the page ground. */
-.bandWarm {
-  background: var(--fk-warm);
 }
 .bandWrap {
   max-width: var(--fk-max);
@@ -3159,17 +3068,6 @@
   margin: 0;
   max-width: 22ch;
   text-wrap: balance;
-}
-/* The section opener: one short lime tick above every band heading, the same
-   device on every band so the eye learns where a section starts. A tick, not
-   a kicker — it says nothing twice, it only marks the break. */
-.bandH2::before {
-  content: "";
-  display: block;
-  width: 56px;
-  height: 3px;
-  margin-bottom: 16px;
-  background: var(--fk-green);
 }
 .bandH2Narrow {
   max-width: 16ch;
@@ -3325,7 +3223,7 @@
   border-radius: var(--fk-r-full);
   background: var(--fk-green-wash);
   color: var(--fk-green-deep);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
 }
 .digitalDay {
@@ -3407,7 +3305,6 @@
   gap: var(--fk-s-4);
   margin: 0;
   padding: 0;
-  counter-reset: preview;
 }
 .productPreviewGrid > li {
   min-width: 0;
@@ -3425,7 +3322,6 @@
   background: var(--fk-paper);
   color: var(--fk-ink);
   text-decoration: none;
-  counter-increment: preview;
   transition:
     transform var(--fk-dur) var(--fk-ease),
     border-color var(--fk-dur) var(--fk-ease),
@@ -3447,17 +3343,9 @@
   font-size: var(--fk-t-xs);
   font-weight: 700;
 }
-/* The four dashboard surfaces are numbered in their head row, so the
-   text-only band reads as four ordered parts of one product rather than
-   four loose cards. */
-.productPreviewHead > span:first-child::before {
-  content: counter(preview, decimal-leading-zero) " · ";
-  color: var(--fk-green);
-  font-variant-numeric: tabular-nums;
-}
 .productPreviewHead > small {
   color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 650;
   text-align: right;
 }
@@ -3493,7 +3381,7 @@
 }
 .todayNumbers dt {
   color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
 }
 .todayNumbers dd {
   margin: 0;
@@ -3622,7 +3510,7 @@
 }
 .moreSurfaces a span {
   color: var(--fk-green-deep);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
 }
 @media (min-width: 720px) {
   .productPreviewGrid {
@@ -3698,15 +3586,10 @@
 }
 
 /* ── Real supplement products ─────────────────────────────────────────── */
-/* 2026-11-11 homepage fix: the base grid is 2 columns, not 1. The four
-   preview cards used to stack four tall on a phone; two across keeps the
-   showcase to two short rows. The foot reflows below 640px so the price
-   takes its own row and Evidence and Buy share the next, both still 44px
-   targets. */
 .retailGrid {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--fk-s-4);
   margin: 0;
   padding: 0;
@@ -3734,7 +3617,7 @@
 }
 .app a.retailImage img {
   padding: 18px;
-  transition: transform var(--fk-dur-slow) var(--fk-ease);
+  transition: transform 320ms var(--fk-ease);
 }
 .app a.retailImage:hover img {
   transform: scale(1.035);
@@ -3786,7 +3669,7 @@
 }
 .retailFoot small {
   color: var(--fk-ink-3);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
 }
 .app .retailFoot > a {
   display: inline-flex;
@@ -3809,38 +3692,11 @@
 .app .retailFoot > a:hover {
   border-color: var(--fk-green-deep);
 }
-.retailNote {
-  margin: 18px 0 0;
-  color: var(--fk-ink-2);
-  font-size: var(--fk-t-sm);
-  line-height: 1.55;
-}
 .retailDisclosure {
   margin: 16px 0 0;
   color: var(--fk-ink-3);
   font-size: var(--fk-t-xs);
   line-height: 1.55;
-}
-@media (max-width: 639px) {
-  .retailGrid {
-    gap: 12px;
-  }
-  .retailBody {
-    gap: 6px;
-    padding: 12px;
-  }
-  .retailBody h3 {
-    font-size: var(--fk-t-base);
-  }
-  .retailFoot {
-    grid-template-columns: 1fr 1fr;
-  }
-  .retailFoot > span {
-    grid-column: 1 / -1;
-  }
-  .app .retailFoot > a {
-    padding: 0 8px;
-  }
 }
 @media (min-width: 640px) {
   .retailGrid {
@@ -3920,8 +3776,8 @@
 .dayGrid > li {
   background: var(--fk-paper);
   transition:
-    border-color var(--fk-dur-fast) var(--fk-ease),
-    transform var(--fk-dur) var(--fk-ease);
+    border-color 180ms ease,
+    transform 220ms var(--fk-ease);
 }
 .dayShot {
   position: relative;
@@ -3933,7 +3789,7 @@
   overflow: hidden;
 }
 .dayShot img {
-  transition: transform var(--fk-dur-slow) var(--fk-ease);
+  transition: transform 360ms var(--fk-ease);
 }
 @media (hover: hover) and (pointer: fine) {
   .dayGrid > li:hover .dayShot img {
@@ -3971,8 +3827,10 @@
   line-height: 1;
 }
 .dayLogged > span {
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--fk-ink-2);
 }
 .dayBody {
@@ -3997,7 +3855,7 @@
 .dayLine {
   display: block;
   margin-top: 6px;
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-sm);
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -4090,8 +3948,10 @@
 .statLabel {
   display: block;
   margin-top: 14px;
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
   color: var(--fk-ink);
 }
 .statNote {
@@ -4232,7 +4092,7 @@
   border: 1px solid rgba(132, 204, 22, 0.32);
   background: rgba(132, 204, 22, 0.09);
   font-family: var(--fk-mono);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
   color: var(--fk-green);
 }
@@ -4302,9 +4162,14 @@
   padding: 22px var(--fk-s-5);
 }
 .axisLabel {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-size: 13px !important;
   display: block;
-  font-size: 13px;
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .axisOpts {
@@ -4419,8 +4284,10 @@
   }
 }
 .planSumKicker {
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--fk-green);
 }
 .planSumLine {
@@ -4582,15 +4449,6 @@
   color: var(--fk-green-deep);
 }
 
-/* ── The merged dashboard section ─────────────────────────────────────────
-   2026-11-10 conversion restructure: DashboardBand stacks five former
-   sections (tools, today, preview cards, directory, coach) inside one
-   band. The stack rule is the only rhythm between them: each block after
-   the first gets one spacing token above it. */
-.dashboardStack > * + * {
-  margin-top: var(--fk-s-6);
-}
-
 /* ── 6. The coach and the receipt ───────────────────────────────────────── */
 .coachWrap {
   display: grid;
@@ -4619,19 +4477,10 @@
   letter-spacing: -0.02em;
   color: var(--fk-ink);
 }
-/* Same opener tick as .bandH2 — the coach band heads its section too. */
-.coachH::before {
-  content: "";
-  display: block;
-  width: 56px;
-  height: 3px;
-  margin-bottom: 16px;
-  background: var(--fk-green);
-}
 .coachLede {
   margin: 0 0 26px;
   max-width: 52ch;
-  font-size: var(--fk-t-base);
+  font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--fk-ink-3);
 }
@@ -4700,8 +4549,10 @@
   color: var(--fk-green);
 }
 .weekName {
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .weekNote {
@@ -4741,11 +4592,10 @@
   align-content: start;
 }
 .receiptKicker {
-  /* The kicker is an h2 now (TrialReceiptBand): it carries the section
-     heading, so the browser's default h2 margins are zeroed here. */
-  margin: 0;
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .receiptH {
@@ -4789,6 +4639,8 @@
 .receiptTotal > span {
   font-size: 0.8125rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .receiptTotal b {
@@ -4801,148 +4653,9 @@
 }
 .receiptNote {
   margin-top: 12px;
-  font-size: var(--fk-t-base);
+  font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--fk-ink-3);
-}
-
-/* ── Homepage visualisation ───────────────────────────────────────────────
-   2026-11-10 homepage-viz track: three places where text did all the work.
-   Charts are SVG with a 360-wide viewBox (labels render at full size on a
-   phone) or fluid HTML; nothing here sets a fixed pixel width. Bars are
-   square, following the progress screen. */
-.vizPanel {
-  padding: var(--fk-s-6);
-  border: 1px solid var(--fk-line);
-  border-radius: var(--fk-r-lg);
-  background: var(--fk-surface);
-}
-.vizH {
-  font-family: var(--fk-display);
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: var(--fk-ink);
-  margin: 0 0 8px;
-}
-.vizLede {
-  margin: 0 0 18px;
-  max-width: 62ch;
-  font-size: var(--fk-t-base);
-  line-height: 1.55;
-  color: var(--fk-ink-3);
-}
-.vizNote {
-  margin: 12px 0 0;
-  max-width: 68ch;
-  font-size: var(--fk-t-sm);
-  line-height: 1.5;
-  color: var(--fk-ink-3);
-}
-.vizPanel .bandActions,
-.sampleDay .bandActions {
-  margin-top: 18px;
-}
-
-/* The sample day, inside the trial receipt. Separated from the money above
-   by the same hairline the receipt rows use. */
-.sampleDay {
-  margin-top: 26px;
-  padding-top: 22px;
-  border-top: 1px solid var(--fk-line);
-}
-.macroBar {
-  display: flex;
-  height: 18px;
-  overflow: hidden;
-}
-.macroBar > span {
-  display: block;
-  height: 100%;
-}
-.macroLegend {
-  list-style: none;
-  margin: 12px 0 20px;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-}
-.macroLegend > li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--fk-t-sm);
-  line-height: 1.4;
-  color: var(--fk-ink-2);
-}
-.macroLegend i {
-  flex: none;
-  width: 12px;
-  height: 12px;
-}
-
-/* The weighing process, under the day timeline. Photo beside the steps on
-   desktop, stacked on a phone. */
-.weighFlow {
-  margin-top: var(--fk-s-6);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--fk-s-5);
-  align-items: start;
-}
-@media (min-width: 900px) {
-  .weighFlow {
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    gap: var(--fk-s-7);
-  }
-}
-.weighPhoto {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: var(--fk-r-lg);
-  background: var(--fk-warm);
-  overflow: hidden;
-}
-.weighSteps {
-  list-style: none;
-  margin: 18px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 1px;
-  border: 1px solid var(--fk-line);
-  border-radius: var(--fk-r-lg);
-  overflow: hidden;
-  background: var(--fk-line);
-}
-.weighSteps > li {
-  display: flex;
-  gap: 14px;
-  padding: 16px;
-  background: var(--fk-paper);
-}
-.weighN {
-  flex: none;
-  font-family: var(--fk-mono);
-  font-size: var(--fk-t-base);
-  font-weight: 700;
-  color: var(--fk-green);
-}
-.weighSteps b {
-  display: block;
-  font-size: var(--fk-t-base);
-  line-height: 1.35;
-  color: var(--fk-ink);
-}
-.weighSteps li > span:last-child > span {
-  display: block;
-  margin-top: 4px;
-  font-size: var(--fk-t-base);
-  line-height: 1.5;
-  color: var(--fk-ink-2);
 }
 
 /* ── 7. Areas and questions ─────────────────────────────────────────────── */
@@ -4989,7 +4702,7 @@
 }
 .areaNote {
   margin: 14px 0 0;
-  font-size: var(--fk-t-base);
+  font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -5053,7 +4766,7 @@
   margin: 0;
   padding: 0 60px 22px 44px;
   max-width: 70ch;
-  font-size: var(--fk-t-base);
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--fk-ink-2);
   animation: fkFadeUp var(--fk-dur-slow) var(--fk-ease) both;
@@ -5083,10 +4796,6 @@
   background: var(--fk-green-wash);
   overflow: hidden;
 }
-/* The glow is static. It used to drift on an 18s infinite loop: an ambient
-   pan of a background gradient with no function, on the trial band, and the
-   one infinite animation on the page that was not a deliberate cue like the
-   steam. The gradient is unchanged at rest. */
 .closeGlow {
   position: absolute;
   inset: -10%;
@@ -5095,6 +4804,7 @@
     rgba(132, 204, 22, 0.18),
     transparent 62%
   );
+  animation: fkDrift 18s ease-in-out infinite;
 }
 .closeGrain {
   position: absolute;
@@ -5105,6 +4815,15 @@
     transparent 1.4px
   );
   background-size: 8px 8px;
+}
+@keyframes fkDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, -2%, 0) scale(1.06);
+  }
 }
 .closeWrap {
   position: relative;
@@ -5191,6 +4910,7 @@
    sets when motion is allowed, so they need nothing here. These two run from
    CSS on their own, so they are stopped explicitly. */
 @media (prefers-reduced-motion: reduce) {
+  .closeGlow,
   .faqA {
     animation: none;
   }
@@ -5245,13 +4965,10 @@
    ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 639px) {
   /* ── 3. One row ───────────────────────────────────────────
-     The row is brand + location + AI coach + basket: the AI coach button
-     joined the header after this note was written, so the location button
-     no longer keeps its word at every phone width. Below 420px its label
-     is hidden (refresh.module.css) and it is the pin alone — the accessible
-     name still says "Check delivery availability near you" — and from 421px
-     up the word stays. The row fits at 360px either way: brand, three
-     44px controls and the gaps come to roughly 270px of 320px of content. */
+     With the search field gone the row is brand + location + basket, which fits
+     375px with room to spare — so the location button KEEPS ITS WORD here. An
+     earlier cut reduced it to the pin alone to make space for the field; there
+     is no longer a field to make space for, and an unlabelled pin is worse. */
   .topRow {
     gap: var(--fk-s-2);
     padding: 6px var(--fk-gutter);
@@ -5373,28 +5090,6 @@
   }
   .closeWrap {
     padding: var(--fk-s-7) var(--fk-gutter);
-  }
-}
-
-/* ── The day bar's target picker, on a narrow phone ───────────────────────
-   At 360px the three target buttons ("Cut / Maintain / Build") beside the
-   "Set your numbers" button fill the row to within a few pixels: the
-   segmented control's min-content is ~175px and the numbers button ~135px
-   against 320px of content, so any font-metric difference clips "Maintain"
-   behind the control's overflow:hidden. At 320px it is ~36px over. Below
-   420px the picker takes its own full-width row and the numbers button
-   drops underneath, also full width — one extra 44px row, and nothing can
-   clip. Above 420px the single row has room (content 381px and up). */
-@media (max-width: 420px) {
-  .goalPick {
-    flex-wrap: wrap;
-  }
-  .goalSeg {
-    flex: 1 1 100%;
-  }
-  .numbersBtn {
-    flex: 1 1 auto;
-    justify-content: center;
   }
 }
 
@@ -5603,6 +5298,8 @@
   font-size: var(--fk-t-xs);
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
   /* Same rule, same loss: the column label was sitting on its first link. */
   margin: 0 0 var(--fk-s-2);
@@ -5774,7 +5471,7 @@
 .app .numbersLede {
   margin: 0;
   max-width: 52ch;
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-sm);
   line-height: 1.5;
   color: var(--fk-ink-3);
 }
@@ -5784,8 +5481,10 @@
   gap: 10px;
 }
 .numbersLabel {
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 .numbersHint {
@@ -5908,8 +5607,10 @@
 }
 .numbersBig > span {
   font-family: var(--fk-sans);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
 }
 
@@ -6065,7 +5766,7 @@
 .mapLabel,
 .mapKitchenLabel {
   font-family: var(--fk-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.04em;
 }
 .mapRingLabel {
@@ -6151,6 +5852,8 @@
   font-family: var(--fk-mono);
   font-size: 0.8125rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--fk-green-deep);
 }
 .closeStepLabel {
@@ -6161,7 +5864,7 @@
   color: var(--fk-ink);
 }
 .closeStepLine {
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-sm);
   line-height: 1.55;
   color: var(--fk-ink-2);
 }
@@ -6274,7 +5977,7 @@
   width: 100%;
   min-width: 720px;
   border-collapse: collapse;
-  font-size: var(--fk-t-base);
+  font-size: var(--fk-t-sm);
 }
 .spec th,
 .spec td {
@@ -6288,8 +5991,10 @@
   position: sticky;
   top: 0;
   background: var(--fk-warm);
-  font-size: var(--fk-t-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--fk-ink-3);
   white-space: nowrap;
 }
@@ -6365,7 +6070,7 @@
     padding: 13px 16px;
     border-bottom: 1px solid rgba(132, 204, 22, 0.2);
     background: rgba(132, 204, 22, 0.07);
-    font-size: var(--fk-t-base);
+    font-size: var(--fk-t-sm);
     font-weight: 700;
     line-height: 1.45;
     color: var(--fk-ink);
@@ -6384,14 +6089,10 @@
   .wedgeAlternatives > div:last-child {
     border-bottom: 0;
   }
-  .wedgeAlternatives dt {
-    margin: 0;
-    font-size: var(--fk-t-xs);
-    line-height: 1.45;
-  }
+  .wedgeAlternatives dt,
   .wedgeAlternatives dd {
     margin: 0;
-    font-size: var(--fk-t-base);
+    font-size: var(--fk-t-xs);
     line-height: 1.45;
   }
   .wedgeAlternatives dt {
@@ -6561,10 +6262,18 @@
   .surfaceGo {
     display: none;
   }
-  /* The comparison table's phone rules used to live here. They are gone with
-     the table itself: below 1024px the table is display:none and each
-     capability renders as a card (.wedgeCards), so a 640px min-width and
-     cell padding for a table that never paints were dead rules. */
+  /* Two of the seven days fit a phone screen; the rest is a sideways scroll,
+     same as the wedge. */
+  .spec {
+    min-width: 640px;
+  }
+  .spec th,
+  .spec td {
+    padding: 11px var(--fk-s-3);
+  }
+  .spec tbody th {
+    min-width: 96px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

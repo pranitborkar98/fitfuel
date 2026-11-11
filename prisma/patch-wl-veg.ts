@@ -12,7 +12,6 @@ import 'dotenv/config'
 import { PrismaClient, MealSlot, PlanTier } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
-import { rebuildPlanSchedule } from '../lib/plan-schedule'
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
 const adapter = new PrismaPg(pool)
@@ -283,8 +282,11 @@ async function patch() {
     include: { ingredients: true },
   })
 
+  let newRecipeId: string
+
   if (existingLunch && existingLunch.ingredients.length > 0) {
     console.log(`⏭️  Already exists with ingredients: ${MISSING_LUNCH.recipe.name}`)
+    newRecipeId = existingLunch.id
   } else {
     let recipe: { id: string }
     if (existingLunch) {
@@ -294,6 +296,7 @@ async function patch() {
       recipe = await prisma.recipe.create({ data: MISSING_LUNCH.recipe })
       console.log(`✅ Created recipe: ${MISSING_LUNCH.recipe.name}`)
     }
+    newRecipeId = recipe.id
 
     let errs = 0
     for (const ing of MISSING_LUNCH.ingredients) {
@@ -322,30 +325,53 @@ async function patch() {
     console.log(`✅ Continental_Indian | LUNCH | ${MISSING_LUNCH.recipe.name} (${MISSING_LUNCH.ingredients.length} ing, ${MISSING_LUNCH.steps.length} steps) ${errs > 0 ? `⚠️ ${errs} missing keys` : ''}`)
   }
 
-  // ── Step 4: Rebuild the 60-day schedule with 30 recipes ──────────────────
-  // Same generic builder as the seed (lib/plan-schedule.ts): the recipe
-  // query below is this plan's menu, the rotation lives in the builder.
-  console.log('\n📅 Step 4: Rebuilding 60-day schedule with all 30 recipes...\n')
+  // ── Step 4: Rebuild the 30-day schedule with 30 recipes ──────────────────
+  console.log('\n📅 Step 4: Rebuilding 30-day schedule with all 30 recipes...\n')
 
-  const recipes = await prisma.recipe.findMany({
-    where: { planCategories: { has: 'weight_loss' }, dietaryTags: { has: 'VEGETARIAN' } },
-  })
-
-  const rebuilt = await rebuildPlanSchedule(prisma, {
-    planSlug: 'weight-loss-veg',
-    days: 60,
-    recipes,
-  })
-
-  if (!rebuilt) {
+  const mealPlan = await prisma.mealPlan.findUnique({ where: { slug: 'weight-loss-veg' } })
+  if (!mealPlan) {
     console.log('⚠️  MealPlan "weight-loss-veg" not found')
   } else {
-    console.log(`🗑️  Cleared ${rebuilt.deleted} existing schedule slots`)
-    console.log(`✅ Schedule rebuilt: ${rebuilt.slotsCreated} slots across 60 days`)
-    console.log(`   BREAKFAST: ${rebuilt.recipesBySlot.BREAKFAST} unique recipes`)
-    console.log(`   LUNCH:     ${rebuilt.recipesBySlot.LUNCH} unique recipes`)
-    console.log(`   SNACK:     ${rebuilt.recipesBySlot.SNACK} unique recipes`)
-    console.log(`   DINNER:    ${rebuilt.recipesBySlot.DINNER} unique recipes`)
+    const deleted = await prisma.planScheduleSlot.deleteMany({ where: { mealPlanId: mealPlan.id } })
+    console.log(`🗑️  Cleared ${deleted.count} existing schedule slots`)
+
+    const recipes = await prisma.recipe.findMany({
+      where: { planCategories: { has: 'weight_loss' }, dietaryTags: { has: 'VEGETARIAN' } },
+    })
+
+    const bySlot: Record<string, typeof recipes> = {
+      BREAKFAST: recipes.filter(r => r.mealType === 'BREAKFAST'),
+      LUNCH:     recipes.filter(r => r.mealType === 'LUNCH'),
+      SNACK:     recipes.filter(r => r.mealType === 'SNACK'),
+      DINNER:    recipes.filter(r => r.mealType === 'DINNER'),
+    }
+
+    let slotsCreated = 0
+    const SLOTS = ['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as const
+
+    for (let day = 1; day <= 30; day++) {
+      for (const slot of SLOTS) {
+        const slotRecipes = bySlot[slot]
+        if (!slotRecipes || slotRecipes.length === 0) continue
+        const recipe = slotRecipes[(day - 1) % slotRecipes.length]
+        await prisma.planScheduleSlot.create({
+          data: {
+            mealPlanId: mealPlan.id,
+            dayNumber: day,
+            mealSlot: slot as any,
+            recipeId: recipe.id,
+            servingMultiplier: 1.0,
+          },
+        })
+        slotsCreated++
+      }
+    }
+
+    console.log(`✅ Schedule rebuilt: ${slotsCreated} slots across 30 days`)
+    console.log(`   BREAKFAST: ${bySlot.BREAKFAST.length} unique recipes`)
+    console.log(`   LUNCH:     ${bySlot.LUNCH.length} unique recipes`)
+    console.log(`   SNACK:     ${bySlot.SNACK.length} unique recipes`)
+    console.log(`   DINNER:    ${bySlot.DINNER.length} unique recipes`)
   }
 
   // ── Step 5: Final verification counts ────────────────────────────────────
@@ -358,11 +384,11 @@ async function patch() {
   console.log(`📊 Final verification:`)
   console.log(`   Recipes (wl-veg):     ${recipeCount}  (expected: 30)`)
   console.log(`   RecipeIngredients:    ${ingCount}`)
-  console.log(`   ScheduleSlots:        ${slotCount}  (expected: 240)`)
+  console.log(`   ScheduleSlots:        ${slotCount}  (expected: 120)`)
   console.log(`   Null ingredient IDs:  ${nullIngCount} (expected: 0)`)
   console.log('─────────────────────────────────────────────────')
 
-  if (recipeCount === 30 && slotCount === 240) {
+  if (recipeCount === 30 && slotCount === 120) {
     console.log('✅ weight-loss-veg plan is COMPLETE and verified.')
     console.log('\nNEXT: npx tsx prisma/seed-recipes-weight-loss-egg.ts')
   } else {

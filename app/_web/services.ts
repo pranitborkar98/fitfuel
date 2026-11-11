@@ -43,7 +43,7 @@ export const SERVICES: Service[] = [
     label: "Ask the coach",
     stat: "Reads your last 30 days",
     blurb:
-      "Why the scale stalled, whether your protein is short, what to eat tonight. Answered against your own logged numbers.",
+      "Why the scale stalled, whether your protein is short, what to eat tonight — answered against your own logged numbers.",
   },
   {
     href: "/dashboard/exercises",

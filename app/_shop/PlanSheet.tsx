@@ -12,9 +12,9 @@
 // PayU collects cannot disagree. "3,614 prices, all published" is a claim the
 // page makes two sections above this one; this is where it is kept.
 //
-// Premium and Luxury are coming soon because those kitchens do not exist
-// yet, so no price is shown for them. Their CTA joins a waitlist rather than
-// pretending to sell something.
+// Premium and Luxury are priced at × 1.25 and × 1.5 and say so, because those
+// kitchens do not exist yet. Their CTA joins a waitlist rather than pretending
+// to sell something.
 
 import Link from "next/link";
 import { useState } from "react";
@@ -22,7 +22,7 @@ import { useState } from "react";
 import { buildCheckoutUrl } from "@/lib/plan-tier-pricing";
 import { decomposePrice } from "@/lib/pricing-decomposition";
 import {
-  DELIVERY_COUNT, DIETS, DURATIONS, MEALS, TIERS, planSubtotal, rs,
+  DELIVERY_COUNT, DIETS, DURATIONS, MEALS, TIERS, planSubtotal, rs, tierMultiplier,
   type DietKey, type MealKey, type PlanDurationKey, type ShopPlan, type Tier,
 } from "./catalog";
 import Sheet, { SheetClose } from "./Sheet";
@@ -63,14 +63,14 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
     ["Usual price", rs(p.mrpRs), true],
   ];
 
-  const kStyle: React.CSSProperties = { ...label(12) };
+  const kStyle: React.CSSProperties = { ...label(11, { letterSpacing: "0.12em" }) };
   const vStyle: React.CSSProperties = { ...num(12.5) };
 
   return (
     <Sheet onClose={onClose} labelledBy="plan-sheet-title">
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "15px 16px", borderBottom: `1px solid ${C.rule}` }}>
         <span>
-          <span style={{ display: "block", ...label(12), marginBottom: 8 }}>Configure your plan</span>
+          <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 8 }}>Configure your plan</span>
           <b id="plan-sheet-title" style={display(28, { display: "block", lineHeight: 1.06, letterSpacing: "-0.025em" })}>
             {plan.label} ({dietRow.short})
           </b>
@@ -80,13 +80,13 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
 
       {/* Tier */}
       <div style={{ padding: "16px 16px 0" }}>
-        <span style={{ display: "block", ...label(12), marginBottom: 9 }}>Tier</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>Tier</span>
         <div style={{ display: "flex", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {TIERS.map((t) => (
             <button key={t.key} type="button" onClick={() => setTier(t.key)} aria-pressed={tier === t.key} style={seg(tier === t.key, { flex: 1 })}>
               <span style={{ display: "block", fontFamily: SANS, fontWeight: 600, fontSize: 15, lineHeight: 1, textTransform: "none" }}>{t.label}</span>
-              <span style={{ display: "block", marginTop: 6, fontFamily: SANS, fontSize: 12, letterSpacing: "0", textTransform: "none" }}>
-                {t.available ? "orderable" : "Coming soon"}
+              <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "none" }}>
+                {t.available ? "orderable" : "waitlist"}
               </span>
             </button>
           ))}
@@ -95,7 +95,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
 
       {/* Diet */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(12), marginBottom: 9 }}>Diet</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>Diet</span>
         <div className={s.rail} style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 2 }}>
           {DIETS.map((d) => {
             const on = diet === d.key;
@@ -125,12 +125,12 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
 
       {/* Meals a day */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(12), marginBottom: 9 }}>Meals a day</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>Meals a day</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {MEALS.map((m) => (
             <button key={m.key} type="button" onClick={() => setMeal(m.key)} aria-pressed={meal === m.key} style={seg(meal === m.key)}>
               <span style={{ display: "block", fontFamily: SANS, fontWeight: 600, fontSize: 16, lineHeight: 1, textTransform: "none" }}>{m.short}</span>
-              <span style={{ display: "block", marginTop: 6, fontFamily: SANS, fontSize: 12, letterSpacing: "0", textTransform: "none" }}>{m.time}</span>
+              <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "none" }}>{m.time}</span>
             </button>
           ))}
         </div>
@@ -138,7 +138,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
 
       {/* How long */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(12), marginBottom: 9 }}>How long</span>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>How long</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: C.rule, border: `1px solid ${C.rule}` }}>
           {DURATIONS.map((d) => {
             const sub = planSubtotal(diet, d.key, meal, tier);
@@ -146,12 +146,12 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
               <button key={d.key} type="button" onClick={() => setDuration(d.key)} aria-pressed={duration === d.key} style={seg(duration === d.key)}>
                 <span style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
                   <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, lineHeight: 1, textTransform: "none" }}>{d.label}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0", textTransform: "none", color: C.dim }}>
+                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "none", color: C.dim }}>
                     {d.days === 1 ? "1 day" : `${d.days} days`}
                   </span>
                 </span>
                 <span style={{ display: "block", marginTop: 8, ...num(12.5, { color: "inherit" }) }}>
-                  {!tierRow.available ? "Coming soon" : sub == null ? "—" : rs(decomposePrice({ subtotalRs: sub, duration: d.key }).totalRs)}
+                  {sub == null ? "—" : rs(decomposePrice({ subtotalRs: sub, duration: d.key }).totalRs)}
                 </span>
               </button>
             );
@@ -165,12 +165,12 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
           panel in a stretched grid row dragged three neighbouring cards down
           with it.
 
-          Only one plan row currently has a seeded day-one schedule, so the
+          1 of 126 plan rows currently has a seeded day-one schedule, so the
           empty branch is the one nearly everyone sees. It says what is true and
           points at the page that carries the full 30 days, rather than
           pretending the section is missing. */}
       <div style={{ padding: "18px 16px 0" }}>
-        <span style={{ display: "block", ...label(12), marginBottom: 9 }}>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 9 }}>
           What you eat on day one
         </span>
         {plan.meals && plan.meals.length > 0 ? (
@@ -183,7 +183,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
                   gap: 10, alignItems: "baseline",
                 }}
               >
-                <span style={{ ...label(12) }}>
+                <span style={{ ...label(10, { letterSpacing: "0.06em" }) }}>
                   {SLOT_LABEL[m.slot] ?? m.slot}
                 </span>
                 <span style={{ fontFamily: SANS, fontSize: 13.5, color: C.ink, minWidth: 0 }}>
@@ -195,7 +195,7 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
           </ul>
         ) : (
           <>
-            <p style={{ margin: 0, fontFamily: SANS, fontSize: 16, lineHeight: 1.55, color: C.dim }}>
+            <p style={{ margin: 0, fontFamily: SANS, fontSize: 13, lineHeight: 1.55, color: C.dim }}>
               The 30-day menu for this plan is published monthly and is not seeded
               here yet. The macros you picked above are the daily target the
               kitchen cooks to.
@@ -218,36 +218,27 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
         )}
       </div>
 
-      {/* The receipt. A coming soon tier shows no receipt: every figure in it
-          would be a Standard figure multiplied up, not a price for this tier. */}
+      {/* The receipt */}
       <div style={{ padding: "20px 16px 0" }}>
-        {tierRow.available ? (
-          <>
-            <span style={{ display: "block", ...label(12), marginBottom: 12 }}>The receipt, before you pay</span>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-              {receipt.map(([k, v, struck]) => (
-                <span key={k} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-                  <span style={kStyle}>{k}</span>
-                  <span style={struck ? { ...vStyle, color: C.dim, textDecoration: "line-through" } : vStyle}>{v}</span>
-                </span>
-              ))}
-            </div>
+        <span style={{ display: "block", ...label(10, { letterSpacing: "0.06em" }), marginBottom: 12 }}>The receipt, before you pay</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {receipt.map(([k, v, struck]) => (
+            <span key={k} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <span style={kStyle}>{k}</span>
+              <span style={struck ? { ...vStyle, color: C.dim, textDecoration: "line-through" } : vStyle}>{v}</span>
+            </span>
+          ))}
+        </div>
 
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: `1px solid ${C.rule2}` }}>
-              <span>
-                <span style={{ display: "block", fontFamily: SANS, fontSize: 12, letterSpacing: "0", textTransform: "none", color: C.ink }}>Total</span>
-                <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}>
-                  {rs(Math.round(p.totalRs / mealsTotal))} a meal · {mealsTotal} meals
-                </span>
-              </span>
-              <b style={figure(34, { color: C.lime })}>{rs(p.totalRs)}</b>
-            </div>
-          </>
-        ) : (
-          <p style={{ margin: "0 0 4px", fontFamily: SANS, fontSize: 16, lineHeight: 1.6, color: C.dim }}>
-            {tierRow.label} is coming soon. Join the waitlist and we will tell you when those kitchens open.
-          </p>
-        )}
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 13, borderTop: `1px solid ${C.rule2}` }}>
+          <span>
+            <span style={{ display: "block", fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", textTransform: "none", color: C.ink }}>Total</span>
+            <span style={{ display: "block", marginTop: 6, fontFamily: MONO, fontSize: 12, letterSpacing: "0", color: C.dim }}>
+              {rs(Math.round(p.totalRs / mealsTotal))} a meal · {mealsTotal} meals
+            </span>
+          </span>
+          <b style={figure(34, { color: C.lime })}>{rs(p.totalRs)}</b>
+        </div>
 
         {tierRow.available ? (
           <Link
@@ -283,10 +274,10 @@ export default function PlanSheet({ plan, onClose }: { plan: PlanSheetPlan; onCl
           </Link>
         )}
 
-        <p style={{ margin: "11px 0 20px", fontFamily: SANS, fontSize: 16, lineHeight: 1.6, color: C.dim }}>
+        <p style={{ margin: "11px 0 20px", fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.dim }}>
           {tierRow.available
-            ? "Order before 9pm and the first delivery is tomorrow morning, between 7:00 and 10:00 AM. Skip or restore upcoming days from Today before the kitchen cut-off."
-            : `${tierRow.label} is coming soon. Join the waitlist and we will tell you when those kitchens open.`}
+            ? "Order before 9pm and the first delivery is tomorrow at 08:00. Skip or restore upcoming days from Today before the kitchen cut-off."
+            : `${tierRow.label} prices are an estimate at × ${tierMultiplier(tier).toFixed(2)} of Standard until those kitchens open.`}
         </p>
       </div>
     </Sheet>

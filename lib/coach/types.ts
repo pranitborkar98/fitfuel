@@ -4,8 +4,6 @@
 // and swaps to an LLM later WITHOUT changing these contracts: same WeeklySummary
 // in, same WeeklyReview out.
 
-import type { CalorieTargetSex } from "@/lib/calorie-target";
-
 export type Goal =
   | "LOSE_WEIGHT"
   | "GAIN_MUSCLE"
@@ -16,9 +14,6 @@ export type Goal =
 export interface WeeklySummary {
   hasPlan: boolean;
   goal: Goal | null;
-  /** Optional sex for the recalibration floor (MALE/OTHER floor at 1500,
-   *  FEMALE or unknown at 1200). Absent on older callers; defaults to 1200. */
-  gender?: CalorieTargetSex | null;
 
   // weight
   currentWeightKg: number | null;

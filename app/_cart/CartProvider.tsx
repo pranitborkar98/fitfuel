@@ -7,10 +7,8 @@
 //   lines      — priced dishes, with quantity and an optional add-on. These
 //                carry a total.
 //   enquiries  — the 32 dishes still on a placeholder price. A customer can
-//                mark them "ask me the price" and they sit in the basket
-//                alongside the priced lines, but they never touch a number
-//                and nothing is sent anywhere: there is no checkout or
-//                message handoff for an enquiry.
+//                mark them "ask me the price" and they ride along on the same
+//                WhatsApp message, but they never touch a number.
 //
 // Keeping them apart is the whole point. One list with a nullable price means
 // every total in the UI has to remember to skip some rows, and eventually one

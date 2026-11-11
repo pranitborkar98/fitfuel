@@ -56,8 +56,8 @@ export default function Areas() {
             </h2>
           </div>
           <p className={v.rise} style={{ ...body(16.5), maxWidth: "48ch" }}>
-            Cooked from 04:00 in your nearest FitFuel kitchen, at your door in the morning.
-            Check delivery availability for your address below.
+            Cooked from 04:00 in {KITCHEN}, at your door by 08:00. {AREAS_AT.length + 1} areas,
+            one kitchen. We would rather serve east Pune properly than the whole city badly.
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export default function Areas() {
           <svg
             viewBox={`0 0 ${W} ${H}`}
             role="img"
-            aria-label={`Delivery map: your nearest FitFuel kitchen and ${AREAS_AT.length} delivered areas, all within ${SPAN} kilometres`}
+            aria-label={`Delivery map: the ${KITCHEN} kitchen and ${AREAS_AT.length} delivered areas of east Pune, all within ${SPAN} kilometres`}
           >
             {/* 2km graticule. */}
             {Array.from({ length: Math.floor(SPAN / 2) * 2 + 1 }, (_, i) => i - Math.floor(SPAN / 2)).map(
@@ -152,7 +152,7 @@ export default function Areas() {
         </figure>
 
         <div className={s.chips} style={{ borderTop: 0 }}>
-          <span className={`${s.chip} ${s.chipHome}`}>Your nearest kitchen</span>
+          <span className={`${s.chip} ${s.chipHome}`}>{KITCHEN} · the kitchen</span>
           {AREAS_AT.map((a) => (
             <span key={a.name} className={s.chip}>
               {a.name}

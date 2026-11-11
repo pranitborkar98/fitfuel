@@ -111,7 +111,7 @@
   right: 14px;
   bottom: 12px;
   color: var(--fk-ink-2);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 650;
 }
 
@@ -209,7 +209,7 @@
 .receipt dt, .receipt dd { margin: 0; }
 .receipt .totalRow { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--fk-line-2); color: var(--fk-ink); font-weight: 750; }
 .checkoutButton { width: 100%; margin-top: 20px; }
-.receipt small { display: flex; align-items: flex-start; gap: 7px; margin-top: 15px; color: var(--fk-ink-3); font-size: 12px; line-height: 1.5; }
+.receipt small { display: flex; align-items: flex-start; gap: 7px; margin-top: 15px; color: var(--fk-ink-3); font-size: 11px; line-height: 1.5; }
 .receipt small svg { flex: 0 0 auto; margin-top: 1px; }
 .receipt .unavailable { padding: 14px; border: 1px solid var(--fk-line-2); color: var(--fk-ink-2); line-height: 1.5; }
 

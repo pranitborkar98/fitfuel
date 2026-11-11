@@ -6,7 +6,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { useState } from "react";
 
 import { useCart } from "@/app/_cart/CartProvider";
-import { isAiImageSrc, type ShopDish } from "@/app/_shop/catalog";
+import type { ShopDish } from "@/app/_shop/catalog";
 import s from "./dish.module.css";
 
 type Props = {
@@ -22,9 +22,6 @@ const rs = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: Props) {
   const cart = useCart();
   const [addOn, setAddOn] = useState<string>("");
-  /* A resolved image that fails to load at runtime renders the same labelled
-     well as a dish with no image at all, never a broken-image icon. */
-  const [imageFailed, setImageFailed] = useState(false);
   const qty = cart.qtyOf(dish.id);
 
   const chosen = dish.addOns?.find((a) => a.kind === addOn);
@@ -69,7 +66,7 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
           {/* The image slot, kept as a placeholder. Drop a file into
               public/images/dishes/<slug> and it fills with no layout change. */}
           <div className={s.shot}>
-            {imageSrc && !imageFailed ? (
+            {imageSrc ? (
               <Image
                 src={imageSrc}
                 alt={dish.name}
@@ -78,7 +75,6 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
                 style={{ objectFit: "cover" }}
                 loading="eager"
                 fetchPriority="high"
-                onError={() => setImageFailed(true)}
               />
             ) : (
               <span className={s.shotLabel}>{dish.categoryLabel}</span>
@@ -86,14 +82,7 @@ export default function DishPage({ dish, related, licence, imageSrc, jsonLd }: P
           </div>
 
           <div className={s.head}>
-            {/* The picture above is an AI illustration when its src came from
-                the ai/ tree, never a photograph of the delivered meal. The
-                tag needs its own class: the course line is uppercase, and
-                the label stays in sentence case. */}
-            <p className={s.course}>
-              {dish.categoryLabel}
-              {isAiImageSrc(imageSrc) ? <span className={s.aiTag}>AI illustration</span> : null}
-            </p>
+            <p className={s.course}>{dish.categoryLabel}</p>
             <h1 className={s.title}>{dish.name}</h1>
             <p className={s.blurb}>{dish.blurb}</p>
 

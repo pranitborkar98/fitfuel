@@ -962,8 +962,47 @@
   .deep .lift:hover { transform: none; }
 }
 
+/* ── dish glyph ───────────────────────────────────────────────────────
+   The generated macro composition that replaced the empty space where a
+   photograph would be. Centred, with room to breathe, and it rotates very
+   slightly as the card comes forward so it reads as a physical dial rather
+   than a printed chart. */
+.glyph {
+  display: flex;
+  justify-content: center;
+  padding: clamp(18px, 2.4vw, 26px) 0 clamp(14px, 2vw, 20px);
+}
+@supports (animation-timeline: view()) {
+  .glyph svg {
+    animation: glyphTurn linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 46%;
+  }
+}
+@keyframes glyphTurn {
+  from { opacity: 0; transform: rotate(-24deg) scale(0.86); }
+  to   { opacity: 1; transform: none; }
+}
+/* A legend so three colours are never the only thing carrying meaning. */
+.glyphKey {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #85857e;
+}
+.glyphKey b { font-weight: 500; }
+.glyphKey i { display: inline-block; width: 10px; height: 3px; margin-right: 6px; vertical-align: middle; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph svg { animation: none; opacity: 1; transform: none; }
+}
+
 /* ── dish photograph ──────────────────────────────────────────────────
-   Occupies the same slot the labelled photo well does, so a card looks
+   Occupies the same slot the generated glyph does, so a card looks
    deliberate whether or not a photograph exists for that dish yet. */
 .dishShot {
   position: relative;
@@ -974,32 +1013,6 @@
   margin: clamp(14px, 2vw, 20px) 0 clamp(12px, 1.6vw, 16px);
 }
 .dishShot img { object-fit: cover; filter: saturate(1.06) contrast(1.07); }
-
-/* A dish with no photograph yet: a labelled well, not a diagram. The small
-   line says when the photo arrives; the dish name says what it will be of.
-   Same shape as the menu catalogue's photo well, in this slot's dark tones. */
-.dishShot > span {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 20px;
-  color: #f7f7f5;
-  font-family: var(--fk-display), Georgia, serif;
-  font-size: 25px;
-  line-height: 1.05;
-  text-align: right;
-}
-.dishShot > span small {
-  max-width: 24ch;
-  margin-bottom: auto;
-  color: #85857e;
-  font-family: var(--fk-sans), system-ui, sans-serif;
-  font-size: 12px;
-  line-height: 1.4;
-}
 @supports (animation-timeline: view()) {
   .dishShot img {
     animation: shotIn linear both;
@@ -1082,8 +1095,8 @@
 }
 .shelfItem:hover { background: #111110; }
 
-/* DishImage renders either .dishShot with a photograph or .dishShot with a
-   labelled photo well. Both carry their own margins for the contexts they were
+/* DishImage renders either .dishShot (a photograph) or .glyph (the macro
+   fingerprint). Both carry their own margins for the contexts they were
    written for; inside a shelf tile the media is flush to the top edge. */
 .shelfMedia > :global(figure),
 .shelfMedia > :global(div) { margin: 0; padding: 0; border: 0; }
@@ -1191,7 +1204,7 @@
 
 /* The wide pair: media left, copy right. */
 .dishWide { display: grid; grid-template-columns: minmax(150px, 38%) 1fr; gap: clamp(16px, 2vw, 26px); align-items: start; }
-.dishWide > :global(figure) { margin: 0; }
+.dishWide > :global(figure), .dishWide > :global(.glyphSlot) { margin: 0; }
 .dishWide .dishCopy { min-width: 0; }
 
 @media (max-width: 900px) {

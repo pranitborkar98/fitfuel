@@ -3,7 +3,6 @@
 // Computes daily calorie balance: meals in - workout out vs target
 
 import { prisma } from "@/lib/prisma";
-import { resolveCalorieTarget } from "@/lib/calorie-target";
 
 export interface DailyCalorieBalance {
   caloriesIn: number;       // from confirmed plan meals today
@@ -26,42 +25,28 @@ export async function getDailyCalorieBalance(
   const day = new Date(date);
   day.setUTCHours(0, 0, 0, 0);
 
-  // 1. Get the daily calorie target — one shared precedence for every
-  // surface (see lib/calorie-target.ts): stored NutritionGoal, profile
-  // override, active-plan target, plan average, then the safe default.
-  // The active-plan lookup keeps its existing date window and ordering.
-  const [activePlan, profile, goal] = await Promise.all([
-    prisma.userActivePlan.findFirst({
-      where: { userId, status: "active", startDate: { lte: day }, endDate: { gte: day } },
-      orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
-      select: {
-        calorieTarget: true,
-        proteinTarget: true,
-        mealPlan: {
-          select: {
-            avgCaloriesPerDay: true,
-            avgProteinGrams: true,
-          },
+  // 1. Get active plan for targets
+  // UserActivePlan.calorieTarget + proteinTarget are personalised overrides
+  // (written by onboarding). Fall back to mealPlan averages if null.
+  const activePlan = await prisma.userActivePlan.findFirst({
+    where: { userId, status: "active", startDate: { lte: day }, endDate: { gte: day } },
+    orderBy: [{ isDigital: "asc" }, { createdAt: "desc" }],
+    select: {
+      calorieTarget: true,
+      proteinTarget: true,
+      mealPlan: {
+        select: {
+          avgCaloriesPerDay: true,
+          avgProteinGrams: true,
         },
       },
-    }),
-    prisma.userProfile.findUnique({
-      where: { userId },
-      select: { calorieTarget: true, gender: true },
-    }),
-    prisma.nutritionGoal.findUnique({
-      where: { userId },
-      select: { calories: true },
-    }),
-  ]);
-
-  const { calories: calorieTarget } = resolveCalorieTarget({
-    profileCalorieTarget: profile?.calorieTarget ?? null,
-    activePlanCalorieTarget: activePlan?.calorieTarget ?? null,
-    nutritionGoalCalories: goal?.calories ?? null,
-    planAvgCaloriesPerDay: activePlan?.mealPlan?.avgCaloriesPerDay ?? null,
-    sex: profile?.gender ?? null,
+    },
   });
+
+  const calorieTarget =
+    activePlan?.calorieTarget ??
+    activePlan?.mealPlan?.avgCaloriesPerDay ??
+    1600;
 
   const proteinTarget =
     activePlan?.proteinTarget ??

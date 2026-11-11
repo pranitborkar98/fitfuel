@@ -3,11 +3,11 @@
 // compare the measured weight trend against the goal's target rate and recommend
 // a calorie-target adjustment. No LLM, no DB — just the energy-balance math.
 
-import { calorieFloorForSex } from "@/lib/calorie-target";
 import type { Goal, Recalibration, WeeklySummary } from "./types";
 
 const KCAL_PER_KG = 7700; // approx energy in 1 kg of body mass
 const MAX_DELTA = 300; // cap a single recalibration to ±300 kcal/day (no big swings)
+const FLOOR = 1200; // never recommend a target below this
 
 // Target weekly weight change (kg/week) per goal.
 const EXPECTED_RATE: Record<Goal, number> = {
@@ -76,11 +76,9 @@ export function computeRecalibration(summary: WeeklySummary): Recalibration {
   }
 
   // Compute the intake change that would close the gap, capped + floored.
-  // The floor is sex-aware (same rule as the calorie resolver): 1500 for
-  // MALE/OTHER, 1200 for FEMALE or unknown sex.
   const rawDelta = (-gap * KCAL_PER_KG) / 7; // gap>0 (too heavy) → eat less; gap<0 → eat more
   const delta = Math.round(clamp(rawDelta, -MAX_DELTA, MAX_DELTA) / 10) * 10;
-  const recommendedTarget = Math.max(calorieFloorForSex(summary.gender), currentTarget + delta);
+  const recommendedTarget = Math.max(FLOOR, currentTarget + delta);
   const actualDelta = recommendedTarget - currentTarget;
 
   const status = classify(goal, expected, actual, tol);

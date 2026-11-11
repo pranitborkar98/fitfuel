@@ -178,7 +178,7 @@
   margin-bottom: auto;
   color: var(--fk-ink-3);
   font-family: var(--fk-sans);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -190,13 +190,6 @@
   color: var(--fk-green-deep);
   font-size: 12px;
   font-weight: 650;
-}
-
-.aiTag {
-  margin-left: 8px;
-  color: var(--fk-ink-3);
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .cardBody h3 {
@@ -227,7 +220,7 @@
   border-top: 1px solid var(--fk-line);
   color: var(--fk-ink-3);
   font-family: var(--fk-mono);
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .cardFoot {
@@ -255,11 +248,11 @@
 
 .cardFoot a {
   display: inline-flex;
-  min-height: var(--fk-tap);
+  min-height: 32px;
   align-items: center;
   gap: 5px;
   color: var(--fk-ink-3);
-  font-size: 12px;
+  font-size: 11px;
   text-decoration: none;
 }
 

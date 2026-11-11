@@ -392,6 +392,77 @@ main[data-surface="marketing"] {
 
 @media (max-width: 900px) { .ff-ptypes { grid-template-columns: repeat(2, 1fr); } }
 
+/* ── TRUST MARKS ───────────────────────────────────────────────────────
+   The external layer: where you can order, what you can pay with, who
+   licenses the kitchen. components/TrustStrip.tsx + lib/trust-marks.ts.
+
+   These styles did not exist for four days. The component was written,
+   the data file was written, and neither was imported or styled, so the
+   whole row sat on disk unrendered while the homepage was rebuilt around
+   it nine times. If you are reading this because a section vanished
+   again: grep for the class name before rebuilding the section.
+
+   Marks are typographic, never image files. Same hairline-grid language
+   as .ff-ptypes so the two rows read as one system. */
+.ff-markhead {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ff-rule);
+  margin-bottom: 1px;
+}
+.ff-marks {
+  display: grid;
+  /* auto-fit, not a fixed count: the groups are 3, 4 and 6 marks long. */
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 1px;
+  background: var(--ff-rule);
+  border: 1px solid var(--ff-rule);
+}
+.ff-mark {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  min-height: 92px;
+  padding: 18px;
+  background: var(--ff-bg);
+}
+.ff-mark-name {
+  font-family: var(--ff-cond);
+  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  line-height: 1;
+  color: var(--ff-ink);
+}
+.ff-mark-note { font-size: 12.5px; color: var(--ff-dim); line-height: 1.4; }
+
+/* A held slot is dimmed AND labelled. Encoding "not yet live" in contrast
+   alone fails at a glance and fails outright for anyone who cannot see the
+   difference, so .ff-mark-soon prints the words next to it. */
+.ff-mark[data-soon] { background: var(--ff-panel); }
+.ff-mark[data-soon] .ff-mark-name { color: var(--ff-dim); }
+.ff-mark-soon {
+  font-family: var(--ff-cond);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ff-dim);
+  margin-top: 3px;
+}
+/* A mark that links out. Only set once a real URL exists in lib/trust-marks.ts,
+   so this never dresses up a dead cell as clickable. */
+.ff-mark[data-link] { text-decoration: none; transition: background .18s ease; }
+.ff-mark[data-link]:hover { background: var(--ff-panel-2); }
+.ff-mark-soon[data-go] { color: var(--ff-lime); }
+
+@media (max-width: 640px) {
+  .ff-markhead { flex-direction: column; gap: 8px; }
+  .ff-marks { grid-template-columns: repeat(2, 1fr); }
+  .ff-mark { min-height: 84px; padding: 15px; }
+}
+
 /* ── DELIVERY AREAS ────────────────────────────────────────────────────
    app/_home/Coverage.tsx. Same hairline grid as .ff-marks and .ff-ptypes,
    one step quieter: these are place names to scan for your own, not marks

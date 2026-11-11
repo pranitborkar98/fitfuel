@@ -1,6 +1,4 @@
-/** Public display only. Partnership slots that are not live yet are shown
- *  as coming soon, under their partnership name — never under a made-up
- *  partner name. */
+/** Public display only. Placeholder slots are not approved partner accounts. */
 export const PUBLIC_PARTNERS = [
   {
     name: "Nutrabay",
@@ -13,32 +11,32 @@ export const PUBLIC_PARTNERS = [
     action: "Browse supplements",
   },
   {
-    name: "Gym partnerships",
+    name: "XYZ Gym",
     role: "Gym partner",
-    status: "Coming soon",
+    status: "Placeholder",
     placeholder: true,
     description:
-      "A place for a future approved gym. Member referrals, a tracked code and agreed rewards.",
+      "Reserved example for a future approved gym. Member referrals, a tracked code and agreed rewards.",
     href: "/partners/apply?type=gym",
     action: "Apply as a gym",
   },
   {
-    name: "Corporate partnerships",
+    name: "XYZ Company",
     role: "Corporate partner",
-    status: "Coming soon",
+    status: "Placeholder",
     placeholder: true,
     description:
-      "A place for a future approved employer. Employee meal programmes with terms agreed for each workplace.",
+      "Reserved example for a future approved employer. Employee meal programmes with terms agreed for each workplace.",
     href: "/corporate",
     action: "Explore team meals",
   },
   {
-    name: "Trainer partnerships",
+    name: "XYZ Trainer",
     role: "Trainer partner",
-    status: "Coming soon",
+    status: "Placeholder",
     placeholder: true,
     description:
-      "A place for a future approved trainer. Refer clients and track eligible rewards in the partner dashboard.",
+      "Reserved example for a future approved trainer. Refer clients and track eligible rewards in the partner dashboard.",
     href: "/partners/apply?type=trainer",
     action: "Apply as a trainer",
   },

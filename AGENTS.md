@@ -37,11 +37,9 @@ are there for a reason". Do not open a brief by asking for photography.
 What holds instead:
 
 - FitFuel sells food. Food has to look like food and make someone hungry. A
-  photograph of a dish beats any diagram of that dish. A macro ring is
-  allowed beside a photo well, where it adds information to a meal the
-  customer can already see. What stays banned is a ring, a glyph or a
-  typographic stand-in FOR the dish photo, on a surface where someone is
-  choosing what to eat: the photograph is the meal, never the diagram.
+  photograph of a dish beats any diagram of that dish. Never represent a meal
+  with a macro ring, a glyph or a typographic stand-in on a surface where
+  someone is choosing what to eat.
 - Write for a customer ordering lunch in a FitFuel service area, not for a
   reader of the spec. Sentence case, ordinary words, numbers where a number is
   the point.

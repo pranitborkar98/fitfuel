@@ -8,7 +8,6 @@ import 'dotenv/config'
 import { PrismaClient, MealSlot, PlanTier } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
-import { rebuildPlanSchedule } from '../lib/plan-schedule'
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
 const adapter = new PrismaPg(pool)
@@ -2089,7 +2088,8 @@ async function seedRecipes() {
       console.log(`♻️  Re-seeding orphaned recipe: ${def.recipe.name}`)
       recipe = existing
     } else {
-      recipe = await prisma.recipe.create({ data: def.recipe })
+      const { glycaemicIndex: _g, ...recipeData } = def.recipe as any
+      recipe = await prisma.recipe.create({ data: recipeData })
     }
 
     let errs = 0
@@ -2126,42 +2126,65 @@ async function seedRecipes() {
   }
 
   // ---------------------------------------------------------------------------
-  // STEP 3: Wire up to the meal plan (build its 60-day schedule through the
-  // generic builder in lib/plan-schedule.ts). The recipe query below is the
-  // plan-specific part: this plan's menu is the weight_loss recipes tagged
-  // VEGETARIAN. The rotation itself lives in the builder.
+  // STEP 3: Wire up to the meal plan (find weight-loss-veg plan and build schedule)
   // ---------------------------------------------------------------------------
-  console.log('\n📅 Step 3: Building 60-day schedule for weight-loss-veg...\n')
+  console.log('\n📅 Step 3: Building 30-day schedule for weight-loss-veg...\n')
 
-  // Load all seeded recipes for this plan
-  const recipes = await prisma.recipe.findMany({
-    where: { planCategories: { has: 'weight_loss' }, dietaryTags: { has: 'VEGETARIAN' } },
-  })
-
-  const rebuilt = await rebuildPlanSchedule(prisma, {
-    planSlug: 'weight-loss-veg',
-    days: 60,
-    recipes,
-  })
-
-  if (!rebuilt) {
+  const mealPlan = await prisma.mealPlan.findUnique({ where: { slug: 'weight-loss-veg' } })
+  if (!mealPlan) {
     console.log('⚠️  MealPlan "weight-loss-veg" not found — run seed-meal-plans.ts first.')
   } else {
-    if (rebuilt.deleted > 0) console.log(`🗑️  Cleared ${rebuilt.deleted} existing schedule slots`)
+    // Delete existing slots for this plan before re-seeding
+    const deleted = await prisma.planScheduleSlot.deleteMany({ where: { mealPlanId: mealPlan.id } })
+    if (deleted.count > 0) console.log(`🗑️  Cleared ${deleted.count} existing schedule slots`)
+
+    // Load all seeded recipes for this plan
+    const recipes = await prisma.recipe.findMany({
+      where: { planCategories: { has: 'weight_loss' }, dietaryTags: { has: 'VEGETARIAN' } },
+    })
 
     if (recipes.length === 0) {
       console.log('⚠️  No weight_loss VEG recipes found — schedule cannot be built.')
     } else {
-      console.log(`✅ Schedule built: ${rebuilt.slotsCreated} slots across 60 days`)
-      console.log(`   BREAKFAST: ${rebuilt.recipesBySlot.BREAKFAST} unique recipes rotating`)
-      console.log(`   LUNCH:     ${rebuilt.recipesBySlot.LUNCH} unique recipes rotating`)
-      console.log(`   SNACK:     ${rebuilt.recipesBySlot.SNACK} unique recipes rotating`)
-      console.log(`   DINNER:    ${rebuilt.recipesBySlot.DINNER} unique recipes rotating`)
+      // Build rotation: cycle through recipes by mealSlot across 30 days
+      const bySlot: Record<string, typeof recipes> = {
+        BREAKFAST: recipes.filter(r => r.mealType === 'BREAKFAST'),
+        LUNCH:     recipes.filter(r => r.mealType === 'LUNCH'),
+        SNACK:     recipes.filter(r => r.mealType === 'SNACK'),
+        DINNER:    recipes.filter(r => r.mealType === 'DINNER'),
+      }
+
+      let slotsCreated = 0
+      const SLOTS = ['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER'] as const
+
+      for (let day = 1; day <= 30; day++) {
+        for (const slot of SLOTS) {
+          const slotRecipes = bySlot[slot]
+          if (!slotRecipes || slotRecipes.length === 0) continue
+          const recipe = slotRecipes[(day - 1) % slotRecipes.length]
+          await prisma.planScheduleSlot.create({
+            data: {
+              mealPlanId: mealPlan.id,
+              dayNumber: day,
+              mealSlot: slot as any,
+              recipeId: recipe.id,
+              servingMultiplier: 1.0,
+            },
+          })
+          slotsCreated++
+        }
+      }
+
+      console.log(`✅ Schedule built: ${slotsCreated} slots across 30 days`)
+      console.log(`   BREAKFAST: ${bySlot.BREAKFAST.length} unique recipes rotating`)
+      console.log(`   LUNCH:     ${bySlot.LUNCH.length} unique recipes rotating`)
+      console.log(`   SNACK:     ${bySlot.SNACK.length} unique recipes rotating`)
+      console.log(`   DINNER:    ${bySlot.DINNER.length} unique recipes rotating`)
     }
 
     // Flip the plan to isActive now that it has data
     await prisma.mealPlan.update({
-      where: { id: rebuilt.mealPlanId },
+      where: { id: mealPlan.id },
       data: { isActive: true },
     })
     console.log('\n✅ MealPlan "weight-loss-veg" → isActive: true')
@@ -2177,7 +2200,7 @@ async function seedRecipes() {
   console.log('NEXT STEPS:')
   console.log('  1. Open Prisma Studio: npx prisma studio')
   console.log('  2. Check: recipes table — should have 30 rows, all cuisineType Indian')
-  console.log('  3. Check: plan_schedule_slots — should have 240 rows (60 days × 4 slots)')
+  console.log('  3. Check: plan_schedule_slots — should have 120 rows (30 days × 4 slots)')
   console.log('  4. Check: meal_plans — weight-loss-veg should be isActive: true')
   console.log('  5. Verify one recipe has correct ingredient links (no null foodItemId)')
   console.log('  6. If all good → move to seed-recipes-weight-loss-egg.ts')

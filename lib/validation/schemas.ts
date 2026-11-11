@@ -6,7 +6,6 @@
 // with those maps in the route files.
 
 import { z } from "zod";
-import { CALORIE_CEILING_KCAL, CALORIE_FLOOR_KCAL } from "@/lib/calorie-target";
 import { isDateOnly } from "@/lib/date-only";
 
 /* ───────────────────────── Shared primitives ───────────────────────── */
@@ -311,21 +310,8 @@ export const foodsPostSchema = z.object({
 export type FoodsPostInput = z.infer<typeof foodsPostSchema>;
 
 /* ── nutrition/goals (PATCH) ── */
-// Calories carry the shared 1200 kcal floor (lib/calorie-target.ts): a goal
-// below it is rejected, so a 0 or starvation-level target can no longer be
-// saved. The other fields keep their existing bounds (0..max via zNum);
-// no new macro rules are invented here.
-// The write-time minimum stays 1200 for everyone: this schema cannot know
-// the user's sex, so it cannot enforce the 1500 floor for MALE/OTHER. That
-// floor is applied at read time by the resolver instead (lib/calorie-target.ts
-// calorieFloorForSex), so a male goal saved at 1300 reads back as 1500.
 export const goalsPatchSchema = z.object({
-  calories: z.coerce
-    .number()
-    .finite()
-    .min(CALORIE_FLOOR_KCAL, "Calorie goal must be at least 1200 kcal")
-    .max(CALORIE_CEILING_KCAL)
-    .optional(),
+  calories: zNum(20_000).optional(),
   protein: zNum(2000).optional(),
   carbs: zNum(5000).optional(),
   fat: zNum(2000).optional(),
